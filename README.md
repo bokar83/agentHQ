@@ -1,6 +1,6 @@
 # agentsHQ
 
-**Owner:** Boubacar Diallo — Catalyst Works Consulting  
+**Owner:** Boubacar Barry — Catalyst Works Consulting  
 **VPS:** 72.60.209.109 (Ubuntu 24.04, Docker)  
 **n8n:** https://n8n.srv1040886.hstgr.cloud  
 **Version:** 2.0
