@@ -1,0 +1,7 @@
+.env
+*.pyc
+__pycache__/
+postgres_data/
+waha_sessions/
+agent_outputs/
+logs/
