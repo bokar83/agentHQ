@@ -6,8 +6,6 @@ waha_sessions/
 agent_outputs/
 logs/
 skills/
-skills/
 zzzArchive/
 outputs/
-zzzArchive/
-outputs/
+.qdrant_data/
