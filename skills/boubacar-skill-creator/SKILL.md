@@ -1,6 +1,6 @@
 ---
 name: boubacar-skill-creator
-description: Use when Boubacar wants to create a new Claude Code skill, improve an existing skill, or capture a workflow as a reusable skill. Knows Boubacar's voice, style, and working patterns. Gets smarter with each skill created. Use this instead of the generic skill-creator when working in this project.
+description: Use when creating a new Claude Code skill, improving an existing skill, or capturing a repeatable workflow as a skill — specifically when working in Boubacar's agentsHQ project. Use this instead of the generic skill-creator. Triggers when user says "create a skill", "build a skill", "turn this into a skill", or "I want a skill for X".
 ---
 
 # Boubacar Skill Creator
@@ -15,8 +15,13 @@ Before anything else, load identity context:
 2. Read `skills/boubacar-skill-creator/patterns/instincts.json` — learned behaviors (apply any with confidence ≥ 0.75 automatically)
 3. Read `skills/boubacar-skill-creator/patterns/voice-domains.json` — which domains get voice injection
 4. Read `skills/boubacar-skill-creator/patterns/skill-taxonomy.json` — Boubacar's growing skill map
+5. Read `skills/boubacar-skill-creator/patterns/session-tracker.json` — check `skills_since_reflection`
 
-Greet with a brief: "I know you. Here's what I remember about how we work..." (1-3 bullet summary of top instincts). Keep it short.
+Greet with a brief: "I know you. Here's what I remember about how we work..." (1-3 bullet summary of top instincts, confidence ≥ 0.75 only). Keep it short.
+
+**CHECK-IN TRIGGER:** If `skills_since_reflection` >= 3:
+> "Quick check-in — I haven't done a reflection pass in [skills_since_reflection] skills. Let me surface what I've learned about how you work. Still accurate?"
+> Show the top 3 instincts by confidence. Ask if they still hold.
 
 ## Step 2 — Understand Intent
 
@@ -97,6 +102,10 @@ The reflector will:
 
 Only store confirmed learnings. Update `instincts.json` + mirror to `docs/memory/skill_creator_learnings.md`.
 
+After confirmed learnings are stored, update `patterns/session-tracker.json`:
+- Set `skills_since_reflection` to 0
+- Set `last_reflection_date` to today's date (YYYY-MM-DD)
+
 **CHECK-IN TRIGGER (standing):** If this is the 3rd+ skill created without a reflection pass:
 > "Quick check-in — I haven't done a reflection pass in a while. Let me surface what I've learned about how you work. Still accurate?"
 
@@ -108,6 +117,11 @@ python -m scripts.package_skill <path/to/skill>
 ```
 
 Update `patterns/skill-taxonomy.json` — add new skill to its domain bucket.
+
+After packaging, update `patterns/session-tracker.json`:
+- Increment `skills_created_total` by 1
+- Increment `skills_since_reflection` by 1
+- Set `last_skill_created` to the skill name just packaged
 
 **CHECK-IN TRIGGER:** Before packaging:
 > "Before I package: anything you'd want future-you to know when using this skill?"
@@ -127,5 +141,7 @@ Never fire more than one check-in per step. If multiple triggers fire at once, p
 - `patterns/instincts.json` — learned behaviors
 - `patterns/voice-domains.json` — voice injection rules
 - `patterns/skill-taxonomy.json` — skill domain map
+- `patterns/session-tracker.json` — skills-since-reflection counter
 - `agents/reflector.md` — post-session learning extraction
-- `references/voice-guide.md` — Boubacar's voice rules in detail
+- `references/voice-guide.md` — Boubacar's voice rules in detail (read when voice injection is ON)
+- `references/check-in-triggers.md` — full check-in trigger logic and priority order
