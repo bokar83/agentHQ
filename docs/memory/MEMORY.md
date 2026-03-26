@@ -15,3 +15,7 @@ At the start of each session, tell Claude: "Read D:\Ai_Sandbox\agentsHQ\docs\mem
 ## Feedback
 
 - [feedback_general.md](feedback_general.md) — corrections and preferences to always apply
+
+## Skill Creator
+
+- [skill_creator_learnings.md](skill_creator_learnings.md) — active instincts applied during skill creation sessions
