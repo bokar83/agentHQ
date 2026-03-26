@@ -1,0 +1,23 @@
+{
+  "skill_name": "sheet-mint",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I want to build a sellable Google Sheets template for freelancers to track their income, expenses, and invoices. Something they can buy on Etsy for $15. It should have a dashboard, a monthly P&L, and an invoice log. Make it look professional with a dark navy and gold color scheme.",
+      "expected_output": "A fully functional Google Sheets spreadsheet created in Google Drive via GWS CLI, with a shareable link output. Should include a dashboard tab, P&L tab, invoice log tab, and a hidden reference tab. Color scheme should use dark navy and gold. A BUILD_PROMPT.md should be saved to the testingSandbox folder.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "Can you make me a habit tracker spreadsheet I can sell? I want it to track 10 daily habits across a full month, show a streak counter, have a weekly summary, and use a clean minimal design with soft greens and whites. People on Etsy love these.",
+      "expected_output": "A Google Sheets habit tracker created via GWS CLI with a monthly tracking grid, streak counters using formulas, a weekly summary tab, and a clean green/white color scheme. Shareable link output. BUILD_PROMPT.md saved to testingSandbox.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Build me a wedding budget planner spreadsheet. I want to track vendors, deposits paid, balances due, a total budget vs actual spend dashboard, and a guest count tracker. Make it elegant — blush pink and rose gold. This is going on Etsy for $18.",
+      "expected_output": "A Google Sheets wedding planner with vendor tracker, budget dashboard, guest tracker tabs. Blush/rose gold color scheme. All formulas functional. Shareable link output. BUILD_PROMPT.md saved to testingSandbox.",
+      "files": []
+    }
+  ]
+}
