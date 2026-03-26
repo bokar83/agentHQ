@@ -1,0 +1,4 @@
+{
+  "inject_voice": ["leGriot", "consulting", "social-media", "client-facing", "personal-agents"],
+  "stay_technical": ["infrastructure", "scripts", "api-wrappers", "git", "data-processing"]
+}

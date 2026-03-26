@@ -1,0 +1,42 @@
+[
+  {
+    "id": "prefers-minimal-first-draft",
+    "domain": "all",
+    "observation": "Boubacar prefers a lean first draft before adding complexity. Start minimal, expand only when needed.",
+    "confidence": 0.80,
+    "evidence_count": 3,
+    "last_updated": "2026-03-25"
+  },
+  {
+    "id": "build-daily-cadence",
+    "domain": "all",
+    "observation": "Boubacar works in daily build cycles. Skills should be deployable same-session, not multi-day projects.",
+    "confidence": 0.90,
+    "evidence_count": 5,
+    "last_updated": "2026-03-25"
+  },
+  {
+    "id": "theory-of-constraints-framing",
+    "domain": "consulting",
+    "observation": "Boubacar structures consulting outputs as: one bold diagnosis + actionable recommendations. Avoid wishy-washy multi-answer outputs.",
+    "confidence": 0.85,
+    "evidence_count": 4,
+    "last_updated": "2026-03-25"
+  },
+  {
+    "id": "no-fabrication",
+    "domain": "leGriot",
+    "observation": "leGriot voice NEVER fabricates stories. Signals hypotheticals as 'Imagine if...' Always authentic.",
+    "confidence": 1.00,
+    "evidence_count": 10,
+    "last_updated": "2026-03-25"
+  },
+  {
+    "id": "telegram-preferred",
+    "domain": "personal-agents",
+    "observation": "Boubacar prefers Telegram over WhatsApp for bot interactions. Default to Telegram for personal agent outputs.",
+    "confidence": 0.90,
+    "evidence_count": 5,
+    "last_updated": "2026-03-25"
+  }
+]
