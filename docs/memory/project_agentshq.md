@@ -19,6 +19,7 @@ type: project
 - **Router:** Claude Haiku classifies task type → routes to correct crew
 - **11 agents:** Planner, Researcher, Copywriter, Web Builder, App Builder, Code, Consulting, Social Media (leGriot), QA, Orchestrator, Agent Creator
 - **9 crews:** Website, Research, Consulting, Social, Code, Writing, App, AgentCreation, Unknown
+- **Agent Teams:** Parallel crew execution pattern — `POST /run-team` endpoint, `run_parallel_team()` + `build_team_synthesis_crew()` in crews.py
 - **Models:** All via OpenRouter — MODEL_REGISTRY in agents.py (see Pending Code Fixes below)
 - **Memory:** Qdrant (vector, semantic search) + PostgreSQL (archive)
 
@@ -43,19 +44,24 @@ type: project
 
 ## Key Files
 
-- orchestrator/orchestrator.py — main FastAPI service (398 lines)
-- orchestrator/agents.py — 11 agent definitions with dynamic model selection (366 lines)
-- orchestrator/crews.py — 9 crew assemblies (692 lines)
-- orchestrator/router.py — task classification via Claude Haiku (165 lines)
-- orchestrator/tools.py — 5 custom tools + MCP stubs (284 lines)
-- orchestrator/memory.py — Qdrant + PostgreSQL memory system (204 lines)
+- orchestrator/orchestrator.py — main FastAPI service + /run-team endpoint
+- orchestrator/agents.py — 11 agent definitions with dynamic model selection
+- orchestrator/crews.py — 9 sequential crews + agent teams parallel functions
+- orchestrator/router.py — task classification via Claude Haiku
+- orchestrator/tools.py — 5 custom tools + MCP stubs
+- orchestrator/memory.py — Qdrant + PostgreSQL memory system
 - docker-compose.yml — 4 containers (postgres, qdrant, waha, orchestrator)
 - infrasctructure/.env — all secrets (note: typo in folder name "infrasctructure")
+- skills/CatalystWorksSkills/ — custom skills tracked in git (agent-teams, sheet-mint)
+- docs/memory/ — session memory files (read at start of every session)
 
 ## Skills Directory
 
-- skills/community — 1,264 community skills (NOT runtime agent tools)
-- skills/superpowers — 14 methodology skills (workflow discipline FOR DEVELOPMENT)
+- skills/community — community skills (external git repo, NOT tracked here)
+- skills/superpowers — methodology skills (external git repo, NOT tracked here)
+- skills/CatalystWorksSkills/ — custom skills, TRACKED in git
+  - agent-teams/SKILL.md — parallel crew execution pattern (VPS agent teams)
+  - sheet-mint/SKILL.md — spreadsheet generation skill
 
 **Important:** Superpowers skills are the methodology WE use when building new features/agents.
 They are NOT loaded into agents at runtime.

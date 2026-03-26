@@ -193,6 +193,9 @@ def run_team_orchestrator(subtasks: list, original_request: str, from_number: st
     if failed:
         logger.warning(f"[agent-team] {len(failed)} teammate(s) failed: {[f['label'] for f in failed]}")
 
+    if not successful:
+        raise RuntimeError("All teammates failed — no results to synthesize.")
+
     # Phase 2: synthesize
     synthesis_crew = build_team_synthesis_crew(original_request, successful)
     final_result   = synthesis_crew.kickoff()
