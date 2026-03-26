@@ -72,6 +72,12 @@ class TaskResponse(BaseModel):
     execution_time: float = 0.0
     agent_log: list = []
 
+class TeamTaskRequest(BaseModel):
+    subtasks: list           # [{"crew_type": str, "task": str, "label": str}]
+    original_request: str
+    from_number: str = "unknown"
+    session_key: str = "default"
+
 class StatusResponse(BaseModel):
     status: str
     service: str
@@ -167,6 +173,71 @@ def run_orchestrator(task_request: str, from_number: str = "unknown") -> dict:
     }
 
 
+def run_team_orchestrator(subtasks: list, original_request: str, from_number: str = "unknown") -> dict:
+    """
+    Run multiple crews in parallel and synthesize results.
+    Called by POST /run-team.
+
+    subtasks: [{"crew_type": str, "task": str, "label": str}, ...]
+    """
+    from crews import run_parallel_team, build_team_synthesis_crew
+
+    start_time = datetime.now()
+
+    # Phase 1: run all subtasks in parallel
+    teammate_results = run_parallel_team(subtasks)
+
+    successful = [r for r in teammate_results if r["success"]]
+    failed     = [r for r in teammate_results if not r["success"]]
+
+    if failed:
+        logger.warning(f"[agent-team] {len(failed)} teammate(s) failed: {[f['label'] for f in failed]}")
+
+    # Phase 2: synthesize
+    synthesis_crew = build_team_synthesis_crew(original_request, successful)
+    final_result   = synthesis_crew.kickoff()
+    result_str     = str(final_result)
+
+    execution_time = (datetime.now() - start_time).total_seconds()
+
+    # Collect files created
+    files_created = []
+    output_dir = "/app/outputs"
+    if os.path.exists(output_dir):
+        files_created = [
+            f for f in os.listdir(output_dir)
+            if os.path.getmtime(os.path.join(output_dir, f)) >= start_time.timestamp()
+        ]
+
+    # Save to memory
+    try:
+        from memory import save_to_memory
+        save_to_memory(
+            task_request=original_request,
+            task_type="agent_team",
+            result_summary=result_str[:1000],
+            files_created=files_created,
+            execution_time=execution_time,
+            from_number=from_number
+        )
+    except Exception as e:
+        logger.warning(f"Memory save failed (non-fatal): {e}")
+
+    summary = _build_summary("agent_team", result_str, files_created, execution_time)
+
+    return {
+        "success": True,
+        "result": summary,
+        "full_output": result_str,
+        "task_type": "agent_team",
+        "teammate_count": len(subtasks),
+        "teammates_succeeded": len(successful),
+        "teammates_failed": len(failed),
+        "files_created": files_created,
+        "execution_time": execution_time,
+    }
+
+
 def _build_summary(
     task_type: str,
     full_output: str,
@@ -179,6 +250,7 @@ def _build_summary(
     """
     
     type_labels = {
+        "agent_team":    "🤝 Team task complete",
         "website_build": "🌐 Website built",
         "app_build": "⚙️ App built",
         "research_report": "📊 Research complete",
@@ -280,6 +352,48 @@ async def run_task(request: TaskRequest):
             status_code=500,
             detail=f"Agent execution failed: {str(e)}"
         )
+
+
+@app.post("/run-team", response_model=TaskResponse)
+async def run_team(request: TeamTaskRequest):
+    """
+    Run multiple crews in parallel (agent teams pattern).
+
+    The caller decomposes the request into independent subtasks.
+    All subtasks run concurrently; results are synthesized into one output.
+
+    Example body:
+    {
+      "original_request": "I need research + a LinkedIn post + a Python script about AI in HR",
+      "from_number": "7792432594",
+      "subtasks": [
+        {"crew_type": "research_crew", "task": "Research AI in HR", "label": "research"},
+        {"crew_type": "social_crew",   "task": "Write LinkedIn post on AI in HR", "label": "social"},
+        {"crew_type": "code_crew",     "task": "Write CV scorer Python script", "label": "code"}
+      ]
+    }
+    """
+    logger.info(f"/run-team received {len(request.subtasks)} subtasks from {request.from_number}")
+
+    if not request.subtasks:
+        raise HTTPException(status_code=400, detail="subtasks list cannot be empty")
+
+    try:
+        result = run_team_orchestrator(
+            subtasks=request.subtasks,
+            original_request=request.original_request,
+            from_number=request.from_number
+        )
+        return TaskResponse(
+            success=result["success"],
+            result=result["result"],
+            task_type=result["task_type"],
+            files_created=result.get("files_created", []),
+            execution_time=result.get("execution_time", 0.0)
+        )
+    except Exception as e:
+        logger.error(f"/run-team failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Team execution failed: {str(e)}")
 
 
 @app.get("/classify")

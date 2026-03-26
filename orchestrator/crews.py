@@ -23,6 +23,7 @@ See CLAUDE.md for full checklist.
 
 import os
 import logging
+import concurrent.futures
 from crewai import Agent, Task, Crew, Process
 from agents import (
     build_planner_agent,
@@ -658,6 +659,121 @@ def build_unknown_crew(user_request: str) -> Crew:
         verbose=True,
         memory=False,
 
+    )
+
+
+# ══════════════════════════════════════════════════════════════
+# AGENT TEAMS — PARALLEL EXECUTION
+# ══════════════════════════════════════════════════════════════
+
+def run_parallel_team(subtasks: list) -> list:
+    """
+    Run multiple crews in parallel using ThreadPoolExecutor.
+
+    Each subtask is a dict: {"crew_type": str, "task": str, "label": str}
+    Returns a list of result dicts: {"label", "crew_type", "result", "success"}
+
+    Capped at 5 parallel workers to avoid API rate limits.
+    """
+    def _run_one(subtask: dict) -> dict:
+        crew_type = subtask["crew_type"]
+        task = subtask["task"]
+        label = subtask.get("label", crew_type)
+        try:
+            crew = assemble_crew(crew_type, task)
+            result = crew.kickoff()
+            logger.info(f"[agent-team] Teammate '{label}' completed")
+            return {"label": label, "crew_type": crew_type, "result": str(result), "success": True}
+        except Exception as e:
+            logger.error(f"[agent-team] Teammate '{label}' failed: {e}")
+            return {"label": label, "crew_type": crew_type, "result": f"ERROR: {e}", "success": False}
+
+    max_workers = min(len(subtasks), 5)
+    logger.info(f"[agent-team] Dispatching {len(subtasks)} teammates ({max_workers} parallel workers)")
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as pool:
+        futures = {pool.submit(_run_one, st): st for st in subtasks}
+        results = [future.result() for future in concurrent.futures.as_completed(futures)]
+
+    return results
+
+
+def build_team_synthesis_crew(original_request: str, teammate_results: list) -> Crew:
+    """
+    Synthesis step: combines all teammate outputs into one coherent deliverable.
+    Called after run_parallel_team() completes.
+    """
+    consultant = build_consulting_agent()
+    qa = build_qa_agent()
+
+    results_context = "\n\n".join([
+        f"### {r['label'].upper()} (via {r['crew_type']})\n{r['result']}"
+        for r in teammate_results
+    ])
+
+    synthesis_task = Task(
+        description=(
+            f"Original request: {original_request}\n\n"
+            f"Multiple specialist teams completed their work in parallel. "
+            f"Synthesize their outputs into one coherent, well-structured deliverable.\n\n"
+            f"Teammate outputs:\n{results_context}\n\n"
+            f"Produce a unified result that integrates all findings, eliminates redundancy, "
+            f"and presents a clear actionable conclusion. "
+            f"Save the final output using the save_output tool."
+        ),
+        agent=consultant,
+        expected_output="A unified, synthesized deliverable combining all teammate outputs."
+    )
+
+    qa_task = Task(
+        description=(
+            f"Review the synthesized output against the original request: '{original_request}'. "
+            f"Verify it is complete, coherent, and addresses what was asked. "
+            f"Fix anything missing or contradictory."
+        ),
+        agent=qa,
+        expected_output="QUALITY CHECK: PASSED/REVISED + final synthesized deliverable.",
+        context=[synthesis_task]
+    )
+
+    return Crew(
+        agents=[consultant, qa],
+        tasks=[synthesis_task, qa_task],
+        process=Process.sequential,
+        verbose=True,
+        memory=False,
+    )
+
+
+def build_hierarchical_crew(user_request: str, specialist_agents: list) -> Crew:
+    """
+    Mode 2: Hierarchical crew where a manager LLM (Claude Opus) coordinates
+    agents dynamically. Use when agents need to inform each other or debate findings.
+
+    specialist_agents: list of pre-built Agent objects
+    """
+    from agents import select_llm
+
+    tasks = [
+        Task(
+            description=(
+                f"Work on this request as directed by the team lead: {user_request}\n"
+                f"Your role: {agent.role}\n"
+                f"Apply your expertise and report findings clearly."
+            ),
+            agent=agent,
+            expected_output=f"Specialist output from {agent.role}."
+        )
+        for agent in specialist_agents
+    ]
+
+    return Crew(
+        agents=specialist_agents,
+        tasks=tasks,
+        process=Process.hierarchical,
+        manager_llm=select_llm("orchestrator", "complex"),
+        verbose=True,
+        memory=False,
     )
 
 
