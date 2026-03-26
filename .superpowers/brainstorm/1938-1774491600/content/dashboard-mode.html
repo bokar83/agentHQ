@@ -1,0 +1,93 @@
+<h2>How should the main dashboard work?</h2>
+<p class="subtitle">The Financial Health Score tab is the first thing buyers see. Which interaction model fits best?</p>
+
+<div class="split">
+
+  <div class="mockup" data-choice="month" onclick="toggleSelect(this)" style="cursor:pointer">
+    <div class="mockup-header">Option A — Month-by-Month (Dynamic)</div>
+    <div class="mockup-body" style="font-family:sans-serif; font-size:12px; background:#F7F8FA; padding:12px;">
+      <div style="background:#2C3E6B; color:white; padding:8px 12px; border-radius:5px; font-weight:bold; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+        <span>📊 FINANCIAL HEALTH SCORE</span>
+        <span style="background:rgba(255,255,255,0.2); padding:3px 10px; border-radius:12px; font-size:11px;">← March 2026 →</span>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:8px;">
+        <div style="background:white; border:1px solid #E0E7F0; border-radius:5px; padding:8px;">
+          <div style="color:#888; font-size:10px; text-transform:uppercase;">Budget Health</div>
+          <div style="color:#27AE60; font-weight:bold;">✅ On Track</div>
+          <div style="background:#EEF1F8; height:4px; border-radius:2px; margin-top:4px;"><div style="background:#27AE60; height:4px; width:91%; border-radius:2px;"></div></div>
+        </div>
+        <div style="background:white; border:1px solid #E0E7F0; border-radius:5px; padding:8px;">
+          <div style="color:#888; font-size:10px; text-transform:uppercase;">Debt Progress</div>
+          <div style="color:#E67E22; font-weight:bold;">⚠️ Behind</div>
+          <div style="background:#EEF1F8; height:4px; border-radius:2px; margin-top:4px;"><div style="background:#E67E22; height:4px; width:55%; border-radius:2px;"></div></div>
+        </div>
+        <div style="background:white; border:1px solid #E0E7F0; border-radius:5px; padding:8px;">
+          <div style="color:#888; font-size:10px; text-transform:uppercase;">Savings Rate</div>
+          <div style="color:#27AE60; font-weight:bold;">✅ 18%</div>
+          <div style="background:#EEF1F8; height:4px; border-radius:2px; margin-top:4px;"><div style="background:#27AE60; height:4px; width:72%; border-radius:2px;"></div></div>
+        </div>
+        <div style="background:white; border:1px solid #E0E7F0; border-radius:5px; padding:8px;">
+          <div style="color:#888; font-size:10px; text-transform:uppercase;">Net Worth</div>
+          <div style="color:#27AE60; font-weight:bold;">✅ +$820</div>
+          <div style="background:#EEF1F8; height:4px; border-radius:2px; margin-top:4px;"><div style="background:#2C3E6B; height:4px; width:65%; border-radius:2px;"></div></div>
+        </div>
+      </div>
+      <div style="background:#2C3E6B; color:white; text-align:center; padding:6px; border-radius:4px; font-weight:bold;">Score: 87 / 100 — Great month! 🎉</div>
+    </div>
+    <div style="padding:10px 12px; font-size:12px; color:#555;">
+      <b>Buyer changes a cell (e.g., "March") → whole dashboard updates.</b><br>
+      Shows one month at a time. Great for monthly check-ins. More interactive feel.
+    </div>
+  </div>
+
+  <div class="mockup" data-choice="yearly" onclick="toggleSelect(this)" style="cursor:pointer">
+    <div class="mockup-header">Option B — Full Year At-a-Glance</div>
+    <div class="mockup-body" style="font-family:sans-serif; font-size:12px; background:#F7F8FA; padding:12px;">
+      <div style="background:#2C3E6B; color:white; padding:8px 12px; border-radius:5px; font-weight:bold; margin-bottom:10px;">📊 2026 FINANCIAL HEALTH SCORE</div>
+      <table style="width:100%; border-collapse:collapse; font-size:11px;">
+        <tr style="background:#EEF1F8;">
+          <th style="padding:4px 6px; text-align:left;">Category</th>
+          <th style="padding:4px;">Jan</th><th style="padding:4px;">Feb</th><th style="padding:4px;">Mar</th><th style="padding:4px;">Apr</th><th style="padding:4px; color:#aaa;">...</th>
+        </tr>
+        <tr style="border-bottom:1px solid #EEF1F8;">
+          <td style="padding:4px 6px; color:#555;">Budget</td>
+          <td style="padding:4px; text-align:center; color:white; background:#27AE60; border-radius:3px;">✅</td>
+          <td style="padding:4px; text-align:center; color:white; background:#27AE60; border-radius:3px;">✅</td>
+          <td style="padding:4px; text-align:center; color:white; background:#27AE60; border-radius:3px;">✅</td>
+          <td style="padding:4px; text-align:center; color:#aaa;">—</td>
+          <td style="padding:4px; text-align:center; color:#aaa;">—</td>
+        </tr>
+        <tr style="border-bottom:1px solid #EEF1F8;">
+          <td style="padding:4px 6px; color:#555;">Debt</td>
+          <td style="padding:4px; text-align:center; color:white; background:#E67E22; border-radius:3px;">⚠️</td>
+          <td style="padding:4px; text-align:center; color:white; background:#27AE60; border-radius:3px;">✅</td>
+          <td style="padding:4px; text-align:center; color:white; background:#E67E22; border-radius:3px;">⚠️</td>
+          <td style="padding:4px; text-align:center; color:#aaa;">—</td>
+          <td style="padding:4px; text-align:center; color:#aaa;">—</td>
+        </tr>
+        <tr>
+          <td style="padding:4px 6px; color:#555;">Savings</td>
+          <td style="padding:4px; text-align:center; color:white; background:#27AE60; border-radius:3px;">✅</td>
+          <td style="padding:4px; text-align:center; color:white; background:#27AE60; border-radius:3px;">✅</td>
+          <td style="padding:4px; text-align:center; color:white; background:#E74C3C; border-radius:3px;">❌</td>
+          <td style="padding:4px; text-align:center; color:#aaa;">—</td>
+          <td style="padding:4px; text-align:center; color:#aaa;">—</td>
+        </tr>
+      </table>
+      <div style="margin-top:8px; font-size:10px; color:#888; text-align:center;">Year trend visible at a glance</div>
+    </div>
+    <div style="padding:10px 12px; font-size:12px; color:#555;">
+      <b>All 12 months visible simultaneously.</b><br>
+      No selector needed. See the whole year's financial health in one view. Better for annual reviews.
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:16px;">Click directly on the mockup to select. You can also pick <b>Both</b> — one tab for monthly detail, one for yearly overview.</p>
+<div class="options" style="margin-top:8px;">
+  <div class="option" data-choice="both" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content"><h3>Both</h3><p>Monthly detail tab + a compact yearly heatmap row below it. Best of both worlds, slightly more complex to build.</p></div>
+  </div>
+</div>
