@@ -78,8 +78,9 @@ Keep the summary tight. No filler. The goal is signal extraction, not a book rep
 This is the only step that matters. Everything else is setup.
 
 The framework: Boubacar is building to $10K/day in consulting revenue by December 2027.
-The rule: ruthless elimination. If it doesn't directly contribute, ignore it.
+The rule: ruthless elimination — if an activity, project, tool, or idea doesn't directly contribute to that target, it gets ignored or removed.
 The question: **"Is what I'm doing right now getting me closer to $10K/day by December 2027?"**
+The daily non-negotiable: every day ends with one action completed that directly moves toward making money. Cash is king.
 
 Produce this verdict:
 

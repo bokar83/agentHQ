@@ -29,5 +29,12 @@ type: user
 - Content uses Theory of Constraints thinking: one bold diagnosis, actionable recs
 - Platforms: LinkedIn, Instagram, Twitter
 
+## 10K/Day Framework
+The personal focus and execution system. One purpose: $10K/day in consulting revenue by December 2027.
+- **Core rule:** Ruthless elimination — if it doesn't directly contribute to that target, ignore or remove it
+- **The one question:** "Is what I'm doing right now getting me closer to $10K/day by December 2027?" If no, stop.
+- **Daily non-negotiable:** Every day ends with one action completed that directly moves toward making money
+- **Cash is king.** Revenue-generating activities take priority over everything else
+
 ## Agents Being Built (deferred)
 - Journal Agent, Idea Capture Agent, Spend Monitor
