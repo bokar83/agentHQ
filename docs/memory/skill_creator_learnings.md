@@ -18,7 +18,9 @@ Instincts with confidence ≥ 0.75 (applied automatically in skill creation):
 
 Instincts with confidence < 0.75 (surface as suggestions, not applied automatically):
 
-*None yet.*
+| ID | Domain | Observation | Confidence |
+|----|--------|-------------|------------|
+| 10k-verdict-one-move-this-week | personal-agents | When 10K/day verdict is SIGNAL, the one move must be executable this week — concrete, scoped, revenue-linked. Not "think about X". | 0.60 |
 
 ---
 

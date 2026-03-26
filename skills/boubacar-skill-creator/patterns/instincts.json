@@ -38,5 +38,13 @@
     "confidence": 0.90,
     "evidence_count": 5,
     "last_updated": "2026-03-25"
+  },
+  {
+    "id": "10k-verdict-one-move-this-week",
+    "domain": "personal-agents",
+    "observation": "When the 10K/day verdict is SIGNAL, the one move must be executable this week — concrete, scoped, and revenue-linked. Not 'think about X' or 'explore someday'. A real action with a deadline.",
+    "confidence": 0.60,
+    "evidence_count": 1,
+    "last_updated": "2026-03-26"
   }
 ]
