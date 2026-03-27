@@ -1,10 +1,64 @@
-.env
+# ============================================================
+# agentsHQ — .gitignore
+# ============================================================
+
+# ── Python ───────────────────────────────────────────────────
 *.pyc
+*.pyo
 __pycache__/
-postgres_data/
-waha_sessions/
-agent_outputs/
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# ── Environment & Secrets ────────────────────────────────────
+# NEVER commit any file containing real secrets.
+# Only commit *.template or *.example files as placeholders.
+.env
+.env.*
+*.env
+*.env.txt
+*.env.bak
+*.env.old
+*.env.local
+*.env.production
+*.env.staging
+*.env.development
+secrets.json
+secrets.yaml
+secrets.yml
+
+# ── Log files ─────────────────────────────────────────────────
 logs/
-zzzArchive/
-outputs/
+*.log
+**/console-*.log
+**/.playwright-mcp/
+
+# ── Data directories ─────────────────────────────────────────
+postgres_data/
+qdrant_data/
 .qdrant_data/
+waha_sessions/
+
+# ── Output directories ───────────────────────────────────────
+agent_outputs/
+outputs/
+
+# ── Archive (contains old .env files — never commit) ─────────
+zzzArchive/
+
+# ── OS files ─────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDE ──────────────────────────────────────────────────────
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# ── Docker volumes ───────────────────────────────────────────
+volumes/
