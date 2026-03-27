@@ -61,7 +61,29 @@ type: project
 - skills/superpowers — methodology skills (external git repo, NOT tracked here)
 - skills/CatalystWorksSkills/ — custom skills, TRACKED in git
   - agent-teams/SKILL.md — parallel crew execution pattern (VPS agent teams)
-  - sheet-mint/SKILL.md — spreadsheet generation skill
+  - sheet-mint/SKILL.md — spreadsheet generation skill (v2, updated 2026-03-27)
+
+## sheet-mint Skill Status (as of 2026-03-27)
+
+The sheet-mint skill builds sellable Google Sheets templates via GWS CLI and posts them to Etsy.
+
+**Current state:**
+
+- SKILL.md: v2 — includes premium design rules (dark/light color systems, typography hierarchy, REPT progress bars, card structure rules)
+- Phase 2 evals: 3/3 passing (100%)
+- Phase 3 (GWS CLI build): NOT yet fully tested end-to-end — blocked by permission loop
+- Phase 4 (listing/mockup): written, not tested
+
+**Partially built spreadsheet in Drive:**
+
+- Product: Smart 50/30/20 Monthly Budget Planner
+- Spreadsheet ID: `1HpWewlOv4p1YCkzAs0iECWgWQvpLpr2TZbo5rKaNuCQ`
+- URL: [Smart Budget Planner](https://docs.google.com/spreadsheets/d/1HpWewlOv4p1YCkzAs0iECWgWQvpLpr2TZbo5rKaNuCQ/edit)
+- Status: 7 tabs created, _Ref!A1:A13 (months) written. Everything else pending.
+- BUILD_PROMPT.md: `D:\Ai_Sandbox\agentsHQ\zzzArchive\testingSandbox\smart-budget-planner\BUILD_PROMPT.md`
+- SESSION_SUMMARY.md: `D:\Ai_Sandbox\agentsHQ\zzzArchive\testingSandbox\smart-budget-planner\SESSION_SUMMARY.md`
+
+**To resume the build:** Start Claude Code with `claude --dangerously-skip-permissions`, then reference the spreadsheet ID and BUILD_PROMPT.md. Skip Phases 1 and 2 — go straight to Phase 3 execution.
 
 **Important:** Superpowers skills are the methodology WE use when building new features/agents.
 They are NOT loaded into agents at runtime.

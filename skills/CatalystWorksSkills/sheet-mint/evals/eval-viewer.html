@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>sheet-mint Eval Results — Iteration 1</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #0f1117; color: #e2e8f0; padding: 2rem; }
+  h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.25rem; color: #f8fafc; }
+  .subtitle { color: #94a3b8; font-size: 0.9rem; margin-bottom: 2rem; }
+  .banner { background: #1e293b; border: 1px solid #334155; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 2rem; color: #fcd34d; font-size: 0.85rem; }
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2.5rem; }
+  .stat { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 1.25rem; text-align: center; }
+  .stat .value { font-size: 2rem; font-weight: 800; }
+  .stat .label { font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .green { color: #4ade80; }
+  .red { color: #f87171; }
+  .yellow { color: #fbbf24; }
+  .blue { color: #60a5fa; }
+  .eval-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; margin-bottom: 1.5rem; overflow: hidden; }
+  .eval-header { padding: 1rem 1.5rem; background: #162032; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+  .eval-header h2 { font-size: 1rem; font-weight: 600; }
+  .eval-header .eval-id { color: #64748b; font-size: 0.8rem; }
+  .eval-body { display: grid; grid-template-columns: 1fr 1fr; }
+  .run { padding: 1.25rem 1.5rem; }
+  .run:first-child { border-right: 1px solid #334155; }
+  .run-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 0.75rem; }
+  .with-skill .run-label { color: #34d399; }
+  .without-skill .run-label { color: #f87171; }
+  .score-bar { height: 8px; background: #0f1117; border-radius: 4px; margin: 0.5rem 0 1rem; overflow: hidden; }
+  .score-fill { height: 100%; border-radius: 4px; }
+  .with-skill .score-fill { background: linear-gradient(90deg, #059669, #34d399); }
+  .without-skill .score-fill { background: linear-gradient(90deg, #b91c1c, #f87171); }
+  .score-num { font-size: 2rem; font-weight: 800; }
+  .with-skill .score-num { color: #34d399; }
+  .without-skill .score-num { color: #f87171; }
+  .checklist { list-style: none; font-size: 0.82rem; line-height: 1.8; color: #cbd5e1; }
+  .checklist li::before { margin-right: 0.4rem; }
+  .checklist .pass::before { content: "✅"; }
+  .checklist .fail::before { content: "❌"; }
+  .checklist .partial::before { content: "⚠️"; }
+  .notes { margin-top: 0.75rem; font-size: 0.78rem; color: #94a3b8; font-style: italic; border-top: 1px solid #334155; padding-top: 0.75rem; }
+  .diff-badge { background: #1d4ed8; color: #bfdbfe; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 999px; }
+  .improvements { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 1.5rem; margin-top: 1.5rem; }
+  .improvements h3 { font-size: 1rem; font-weight: 600; margin-bottom: 1rem; color: #fbbf24; }
+  .improvements ul { list-style: none; font-size: 0.85rem; color: #cbd5e1; line-height: 2; }
+  .improvements ul li::before { content: "→ "; color: #fbbf24; }
+  .verdict { display: inline-block; padding: 0.3rem 1rem; border-radius: 999px; font-weight: 700; font-size: 0.8rem; }
+  .verdict.pass { background: #065f46; color: #6ee7b7; }
+  .verdict.partial { background: #78350f; color: #fcd34d; }
+</style>
+</head>
+<body>
+
+<h1>⚗️ sheet-mint Eval Results</h1>
+<p class="subtitle">Iteration 1 · 2026-03-26 · 3 evals × 2 conditions (with-skill vs baseline)</p>
+
+<div class="banner">
+  ⚠️ <strong>Phase 3 blocked:</strong> All 6 agents hit the Claude usage cap before executing GWS CLI spreadsheet creation. Scores reflect Phase 1 & 2 only. Re-run Phase 3 after usage resets.
+</div>
+
+<div class="summary-grid">
+  <div class="stat">
+    <div class="value green">57</div>
+    <div class="label">Avg Score (with skill)</div>
+  </div>
+  <div class="stat">
+    <div class="value red">17</div>
+    <div class="label">Avg Score (baseline)</div>
+  </div>
+  <div class="stat">
+    <div class="value blue">+40</div>
+    <div class="label">Avg Differential</div>
+  </div>
+  <div class="stat">
+    <div class="value yellow">3/3</div>
+    <div class="label">BUILD_PROMPT.md Generated</div>
+  </div>
+</div>
+
+<!-- Eval 0 -->
+<div class="eval-card">
+  <div class="eval-header">
+    <div>
+      <div class="eval-id">eval-0</div>
+      <h2>Freelancer Finance Tracker</h2>
+    </div>
+    <span class="diff-badge">+35 differential</span>
+  </div>
+  <div class="eval-body">
+    <div class="run with-skill">
+      <div class="run-label">With Skill</div>
+      <div class="score-num">60</div><span style="color:#64748b;font-size:0.8rem">/100</span>
+      <div class="score-bar"><div class="score-fill" style="width:60%"></div></div>
+      <ul class="checklist">
+        <li class="pass">BUILD_PROMPT.md saved (508 lines)</li>
+        <li class="pass">Tab structure table with sheetIds</li>
+        <li class="pass">Color palette + RGB floats</li>
+        <li class="pass">Formulas included</li>
+        <li class="pass">Sample data specified</li>
+        <li class="pass">Differentiating feature: Year-at-a-Glance tab</li>
+        <li class="fail">Phase 3 — spreadsheet not created (usage cap)</li>
+      </ul>
+      <div class="notes">Strong BUILD_PROMPT. Premium product name "Freelancer Finance Hub". Full 6-tab structure with hidden _Ref tab.</div>
+    </div>
+    <div class="run without-skill">
+      <div class="run-label">Baseline (no skill)</div>
+      <div class="score-num">25</div><span style="color:#64748b;font-size:0.8rem">/100</span>
+      <div class="score-bar"><div class="score-fill" style="width:25%"></div></div>
+      <ul class="checklist">
+        <li class="pass">planning.md saved (87 lines)</li>
+        <li class="partial">Color palette with floats (partial)</li>
+        <li class="partial">Some formulas mentioned</li>
+        <li class="fail">No sheetId assignments</li>
+        <li class="fail">No chart specs</li>
+        <li class="fail">No explicit build order</li>
+        <li class="fail">Phase 3 — hit cap mid-execution</li>
+      </ul>
+      <div class="notes">Decent planning doc but not structured for the Sheets API. Missing sheetIds, chart data ranges, validation specs.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Eval 1 -->
+<div class="eval-card">
+  <div class="eval-header">
+    <div>
+      <div class="eval-id">eval-1</div>
+      <h2>Daily Habit Tracker</h2>
+    </div>
+    <span class="diff-badge">+40 differential</span>
+  </div>
+  <div class="eval-body">
+    <div class="run with-skill">
+      <div class="run-label">With Skill</div>
+      <div class="score-num">55</div><span style="color:#64748b;font-size:0.8rem">/100</span>
+      <div class="score-bar"><div class="score-fill" style="width:55%"></div></div>
+      <ul class="checklist">
+        <li class="pass">BUILD_PROMPT.md saved (485 lines)</li>
+        <li class="pass">Tab structure with sheetIds</li>
+        <li class="pass">Color palette defined</li>
+        <li class="partial">Phase 3 — not reached (usage cap)</li>
+      </ul>
+      <div class="notes">485-line prompt. Skill followed Phase 2 structure correctly.</div>
+    </div>
+    <div class="run without-skill">
+      <div class="run-label">Baseline (no skill)</div>
+      <div class="score-num">15</div><span style="color:#64748b;font-size:0.8rem">/100</span>
+      <div class="score-bar"><div class="score-fill" style="width:15%"></div></div>
+      <ul class="checklist">
+        <li class="fail">No planning doc saved</li>
+        <li class="partial">Was writing gws payload JSON files directly</li>
+        <li class="fail">Hit usage cap mid-execution</li>
+        <li class="fail">No structured build plan</li>
+      </ul>
+      <div class="notes">Tried to jump straight to API calls without a plan doc. Fragile approach — partial JSON files left on disk.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Eval 2 -->
+<div class="eval-card">
+  <div class="eval-header">
+    <div>
+      <div class="eval-id">eval-2</div>
+      <h2>Wedding Budget Planner</h2>
+    </div>
+    <span class="diff-badge">+45 differential</span>
+  </div>
+  <div class="eval-body">
+    <div class="run with-skill">
+      <div class="run-label">With Skill</div>
+      <div class="score-num">55</div><span style="color:#64748b;font-size:0.8rem">/100</span>
+      <div class="score-bar"><div class="score-fill" style="width:55%"></div></div>
+      <ul class="checklist">
+        <li class="pass">BUILD_PROMPT.md saved (456 lines)</li>
+        <li class="pass">Tab structure with sheetIds</li>
+        <li class="pass">Color palette defined</li>
+        <li class="fail">Phase 3 — not reached (usage cap)</li>
+      </ul>
+      <div class="notes">456-line prompt for elegant blush/rose gold wedding planner.</div>
+    </div>
+    <div class="run without-skill">
+      <div class="run-label">Baseline (no skill)</div>
+      <div class="score-num">10</div><span style="color:#64748b;font-size:0.8rem">/100</span>
+      <div class="score-bar"><div class="score-fill" style="width:10%"></div></div>
+      <ul class="checklist">
+        <li class="partial">Partial spec saved (20 lines)</li>
+        <li class="fail">Hit usage cap very early</li>
+        <li class="fail">No sheetIds, no formulas</li>
+        <li class="fail">Phase 3 — not started</li>
+      </ul>
+      <div class="notes">Barely got started. Only color palette section written before cap hit.</div>
+    </div>
+  </div>
+</div>
+
+<div class="improvements">
+  <h3>Iteration 2 Improvements Needed</h3>
+  <ul>
+    <li>Phase 3 evals blocked by usage cap — re-run with dedicated Phase 3 test after reset</li>
+    <li>Phase 1 asks user for confirmation — add <code>EVAL_MODE=true</code> flag to auto-proceed in tests</li>
+    <li>Baseline agents tried to write raw JSON payload files — skill's structured approach is clearly superior</li>
+    <li>Consider adding result.md save as a required step in SKILL.md so output is always parseable</li>
+  </ul>
+
+  <br>
+  <span class="verdict pass">✅ Phase 2 PASS — 3/3 with-skill runs produced structured BUILD_PROMPT.md</span>
+  &nbsp;
+  <span class="verdict partial">⚠️ Phase 3 UNTESTED — rerun needed</span>
+</div>
+
+</body>
+</html>

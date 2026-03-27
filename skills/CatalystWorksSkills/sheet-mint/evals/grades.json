@@ -1,0 +1,105 @@
+{
+  "skill": "sheet-mint",
+  "iteration": 1,
+  "usage_note": "Phase 3 (GWS CLI build) could not be evaluated — agents hit Claude usage cap before executing spreadsheet creation. Grading covers Phase 1 & 2 only.",
+  "results": [
+    {
+      "eval_id": 0,
+      "name": "Freelancer Finance Tracker",
+      "with_skill": {
+        "build_prompt_present": true,
+        "build_prompt_lines": 508,
+        "has_tab_structure_table": true,
+        "has_sheetIds": true,
+        "has_color_palette_with_floats": true,
+        "has_formulas": true,
+        "has_sample_data": true,
+        "has_chart_specs": "likely (file not fully read)",
+        "phase3_spreadsheet_created": false,
+        "phase3_blocked_by": "usage cap",
+        "score": 60,
+        "notes": "Excellent BUILD_PROMPT.md — 508 lines, Year-at-a-Glance differentiator, explicit sheetIds, RGB floats, formulas. Phase 3 not reached."
+      },
+      "without_skill": {
+        "planning_doc_present": true,
+        "planning_doc_lines": 87,
+        "has_tab_structure_table": false,
+        "has_sheetIds": false,
+        "has_color_palette_with_floats": true,
+        "has_formulas": true,
+        "phase3_spreadsheet_created": false,
+        "phase3_blocked_by": "usage cap mid-execution",
+        "score": 25,
+        "notes": "Good planning.md but less structured — no sheetIds, no chart specs, no explicit build order. Was mid-execution when cap hit."
+      },
+      "differential": 35
+    },
+    {
+      "eval_id": 1,
+      "name": "Habit Tracker",
+      "with_skill": {
+        "build_prompt_present": true,
+        "build_prompt_lines": 485,
+        "has_tab_structure_table": true,
+        "has_sheetIds": true,
+        "has_color_palette_with_floats": "likely",
+        "has_formulas": "likely",
+        "phase3_spreadsheet_created": false,
+        "phase3_blocked_by": "usage cap",
+        "score": 55,
+        "notes": "485-line BUILD_PROMPT.md produced. Phase 3 not reached due to usage cap."
+      },
+      "without_skill": {
+        "planning_doc_present": true,
+        "planning_doc_lines": "partial (weekly_summary_payload.json only)",
+        "has_tab_structure_table": false,
+        "has_sheetIds": false,
+        "phase3_spreadsheet_created": false,
+        "phase3_blocked_by": "usage cap mid-execution (was writing gws payloads)",
+        "score": 15,
+        "notes": "Was mid-build writing individual gws payload JSON files when cap hit. No full planning doc saved."
+      },
+      "differential": 40
+    },
+    {
+      "eval_id": 2,
+      "name": "Wedding Budget Planner",
+      "with_skill": {
+        "build_prompt_present": true,
+        "build_prompt_lines": 456,
+        "has_tab_structure_table": true,
+        "has_sheetIds": true,
+        "has_color_palette_with_floats": "likely",
+        "phase3_spreadsheet_created": false,
+        "phase3_blocked_by": "usage cap",
+        "score": 55,
+        "notes": "456-line BUILD_PROMPT.md. Phase 3 not reached."
+      },
+      "without_skill": {
+        "planning_doc_present": true,
+        "planning_doc_lines": 20,
+        "has_tab_structure_table": false,
+        "has_sheetIds": false,
+        "has_color_palette_with_floats": false,
+        "phase3_spreadsheet_created": false,
+        "phase3_blocked_by": "usage cap early",
+        "score": 10,
+        "notes": "Only partial spec written (20 lines visible). Hit cap very early."
+      },
+      "differential": 45
+    }
+  ],
+  "summary": {
+    "avg_with_skill_score": 57,
+    "avg_without_skill_score": 17,
+    "avg_differential": 40,
+    "phase2_pass_rate_with_skill": "3/3 (100%)",
+    "phase2_pass_rate_without_skill": "1/3 (33%)",
+    "phase3_pass_rate": "0/6 — blocked by usage cap on all runs",
+    "verdict": "PASS on Phase 2. Re-run Phase 3 evals needed when usage resets.",
+    "skill_improvement_needed": [
+      "Phase 1 confirmation step blocks automated evals — add auto-proceed mode",
+      "Phase 3 untested — needs a dedicated run with bypassPermissions after usage reset"
+    ]
+  }
+}
