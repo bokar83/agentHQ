@@ -1,0 +1,100 @@
+{
+  "requests": [
+    {
+      "addChart": {
+        "chart": {
+          "spec": {
+            "title": "Actual Allocation",
+            "pieChart": {
+              "legendPosition": "BOTTOM_LEGEND",
+              "pieHole": 0.4,
+              "series": {
+                "sourceRange": {
+                  "sources": [
+                    {"sheetId": 0, "startRowIndex": 14, "endRowIndex": 17, "startColumnIndex": 4, "endColumnIndex": 5}
+                  ]
+                }
+              },
+              "domain": {
+                "sourceRange": {
+                  "sources": [
+                    {"sheetId": 0, "startRowIndex": 14, "endRowIndex": 17, "startColumnIndex": 0, "endColumnIndex": 1}
+                  ]
+                }
+              }
+            },
+            "titleTextFormat": {"bold": true},
+            "backgroundColor": {"red": 1, "green": 1, "blue": 1}
+          },
+          "position": {
+            "overlayPosition": {
+              "anchorCell": {"sheetId": 0, "rowIndex": 8, "columnIndex": 3},
+              "offsetXPixels": 10,
+              "offsetYPixels": 5,
+              "widthPixels": 340,
+              "heightPixels": 240
+            }
+          }
+        }
+      }
+    },
+    {
+      "addChart": {
+        "chart": {
+          "spec": {
+            "title": "Budget vs. Actual",
+            "basicChart": {
+              "chartType": "COLUMN",
+              "legendPosition": "BOTTOM_LEGEND",
+              "axis": [
+                {"position": "BOTTOM_AXIS", "title": "Category"},
+                {"position": "LEFT_AXIS", "title": "Amount ($)"}
+              ],
+              "domains": [
+                {
+                  "domain": {
+                    "sourceRange": {
+                      "sources": [{"sheetId": 0, "startRowIndex": 14, "endRowIndex": 17, "startColumnIndex": 0, "endColumnIndex": 1}]
+                    }
+                  }
+                }
+              ],
+              "series": [
+                {
+                  "series": {
+                    "sourceRange": {
+                      "sources": [{"sheetId": 0, "startRowIndex": 14, "endRowIndex": 17, "startColumnIndex": 2, "endColumnIndex": 3}]
+                    }
+                  },
+                  "targetAxis": "LEFT_AXIS",
+                  "color": {"red": 0.149, "green": 0.275, "blue": 0.325}
+                },
+                {
+                  "series": {
+                    "sourceRange": {
+                      "sources": [{"sheetId": 0, "startRowIndex": 14, "endRowIndex": 17, "startColumnIndex": 4, "endColumnIndex": 5}]
+                    }
+                  },
+                  "targetAxis": "LEFT_AXIS",
+                  "color": {"red": 0.165, "green": 0.616, "blue": 0.561}
+                }
+              ],
+              "headerCount": 0
+            },
+            "titleTextFormat": {"bold": true},
+            "backgroundColor": {"red": 1, "green": 1, "blue": 1}
+          },
+          "position": {
+            "overlayPosition": {
+              "anchorCell": {"sheetId": 0, "rowIndex": 19, "columnIndex": 0},
+              "offsetXPixels": 5,
+              "offsetYPixels": 5,
+              "widthPixels": 480,
+              "heightPixels": 260
+            }
+          }
+        }
+      }
+    }
+  ]
+}
