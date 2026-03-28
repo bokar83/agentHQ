@@ -185,7 +185,7 @@ def get_conversation_history(session_id: str, limit: int = 10) -> list:
         )
         cur = conn.cursor()
         cur.execute("""
-            SELECT role, content, created_at FROM conversation_archive
+            SELECT role, content, created_at FROM agent_conversation_history
             WHERE session_id = %s
             ORDER BY created_at DESC
             LIMIT %s
@@ -201,3 +201,36 @@ def get_conversation_history(session_id: str, limit: int = 10) -> list:
     except Exception as e:
         logger.warning(f"History retrieval failed: {e}")
         return []
+
+
+def save_conversation_turn(session_id: str, role: str, content: str) -> bool:
+    """
+    Save a single conversation turn (user message or assistant reply) to
+    conversation_archive. Used to build session context for follow-up tasks.
+    """
+    try:
+        import psycopg2
+        conn = psycopg2.connect(
+            host=os.environ.get("POSTGRES_HOST", "agentshq-postgres-1"),
+            database=os.environ.get("POSTGRES_DB", "postgres"),
+            user=os.environ.get("POSTGRES_USER", "postgres"),
+            password=os.environ.get("POSTGRES_PASSWORD", ""),
+            port=5432
+        )
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO agent_conversation_history (session_id, role, content, created_at)
+            VALUES (%s, %s, %s, %s)
+        """, (
+            session_id,
+            role,
+            content[:2000],  # cap to avoid bloating history
+            datetime.utcnow().isoformat()
+        ))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    except Exception as e:
+        logger.warning(f"save_conversation_turn failed (non-fatal): {e}")
+        return False

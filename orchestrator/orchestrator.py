@@ -96,35 +96,56 @@ _start_time = time.time()
 # CORE ORCHESTRATION LOGIC
 # ══════════════════════════════════════════════════════════════
 
-def run_orchestrator(task_request: str, from_number: str = "unknown") -> dict:
+def run_orchestrator(task_request: str, from_number: str = "unknown", session_key: str = "default") -> dict:
     """
     Main orchestration function.
-    
-    1. Route: classify the task type
-    2. Assemble: build the right crew
-    3. Execute: run the crew autonomously
-    4. Save: store output to memory
-    5. Return: structured result for the caller
+
+    1. Load session history for context
+    2. Route: classify the task type
+    3. Assemble: build the right crew
+    4. Execute: run the crew autonomously
+    5. Save: store output to memory + conversation history
+    6. Return: structured result for the caller
     """
     start_time = datetime.now()
-    
-    # Step 1: Route
+
+    # Step 1: Load recent conversation history for this session
+    enriched_task = task_request
+    try:
+        from memory import get_conversation_history
+        history = get_conversation_history(session_key, limit=6)
+        if history:
+            history_text = "\n".join(
+                f"[{h['role'].upper()}]: {h['content'][:800]}"
+                for h in history
+            )
+            enriched_task = (
+                f"--- CONVERSATION HISTORY (most recent first) ---\n"
+                f"{history_text}\n"
+                f"--- END HISTORY ---\n\n"
+                f"CURRENT REQUEST: {task_request}"
+            )
+            logger.info(f"Injected {len(history)} history entries for session '{session_key}'")
+    except Exception as e:
+        logger.warning(f"History injection failed (non-fatal): {e}")
+
+    # Step 2: Route
     from router import classify_task, get_crew_type, TASK_TYPES
-    classification = classify_task(task_request)
+    classification = classify_task(task_request)  # classify on raw task, not enriched
     task_type = classification.get("task_type", "unknown")
     is_unknown = classification.get("is_unknown", False)
-    
+
     logger.info(f"Task classified as '{task_type}' (confidence: {classification.get('confidence', 0)})")
-    
-    # Step 2: Assemble crew
+
+    # Step 3: Assemble crew
     from crews import assemble_crew
-    
+
     if is_unknown:
         crew_type = "unknown_crew"
     else:
         crew_type = get_crew_type(task_type) or "unknown_crew"
-    
-    crew = assemble_crew(crew_type, task_request)
+
+    crew = assemble_crew(crew_type, enriched_task)
     
     # Step 3: Execute
     logger.info(f"Kicking off crew: {crew_type}")
@@ -146,9 +167,9 @@ def run_orchestrator(task_request: str, from_number: str = "unknown") -> dict:
         ]
         files_created = recent_files
     
-    # Step 5: Save to memory
+    # Step 5: Save to memory + conversation history
     try:
-        from memory import save_to_memory
+        from memory import save_to_memory, save_conversation_turn
         result_summary = result_str[:1000] if len(result_str) > 1000 else result_str
         save_to_memory(
             task_request=task_request,
@@ -158,10 +179,13 @@ def run_orchestrator(task_request: str, from_number: str = "unknown") -> dict:
             execution_time=execution_time,
             from_number=from_number
         )
+        # Save this exchange to conversation history for follow-up context
+        save_conversation_turn(session_key, "user", task_request)
+        save_conversation_turn(session_key, "assistant", result_summary)
     except Exception as e:
         logger.warning(f"Memory save failed (non-fatal): {e}")
-    
-    # Build WhatsApp-friendly summary
+
+    # Build Telegram-friendly summary
     summary = _build_summary(task_type, result_str, files_created, execution_time)
     
     return {
@@ -343,7 +367,8 @@ async def run_task(request: TaskRequest):
     try:
         result = run_orchestrator(
             task_request=request.task,
-            from_number=request.from_number
+            from_number=request.from_number,
+            session_key=request.session_key
         )
         
         return TaskResponse(
