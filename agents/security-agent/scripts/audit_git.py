@@ -114,9 +114,9 @@ if __name__ == "__main__":
     workspace = sys.argv[1] if len(sys.argv) > 1 else "."
     results = audit_git_hygiene(workspace)
     if results:
-        print(f"⚠️  Found {len(results)} git hygiene issue(s):")
+        print(f"[WARN] Found {len(results)} git hygiene issue(s):")
         print(json.dumps(results, indent=2))
         sys.exit(1)
     else:
-        print("✅ Git hygiene looks good.")
+        print("[OK] Git hygiene looks good.")
         sys.exit(0)
