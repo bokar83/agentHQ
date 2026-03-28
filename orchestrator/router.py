@@ -102,7 +102,7 @@ Respond with a JSON object only. No explanation. No markdown. Just raw JSON:
     "task_type": "<one of the task type keys above, or 'unknown'>",
     "confidence": <0.0 to 1.0>,
     "reasoning": "<one sentence why>",
-    "is_unknown": <true if confidence < 0.6 or truly doesn't fit>,
+    "is_unknown": <true if confidence < 0.75 or truly doesn't fit>,
     "proposed_agent_name": "<if unknown, suggest a name for a new agent>",
     "proposed_agent_description": "<if unknown, describe what the new agent would do>"
 }}"""
