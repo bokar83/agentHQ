@@ -103,23 +103,31 @@ Stubs exist in tools.py for:
 All MCP servers are ACTIVE in Claude's environment — high-value next integration.
 Suggested wiring: consulting_agent → Notion, planner_agent → Google Calendar, researcher_agent → Gmail.
 
-## Known Bugs (as of Day 3)
+## Known Bugs (as of Day 5 — 2026-03-28)
 
-- files_created empty array bug (10s buffer fix applied in orchestrator.py, needs verification)
 - PostgreSQL missing session_id column in conversation_archive table
 - Qdrant client version compatibility (search attribute error, fails silently)
-- Close Webhook node in n8n needs deletion (causes workflow error)
-- Always Save Sub node in n8n is outdated, needs upgrade
+- Always Save Sub node in n8n is outdated — needs upgrade in n8n UI (delete old Execute Workflow node, add new one)
+- No async job queue — long tasks block /run endpoint; implement job_id + /status/{job_id} pattern
 
-## Pending Code Fixes (from Day 4 review)
+## Fixed in Day 5 (2026-03-28)
 
-MODEL_REGISTRY in agents.py uses old model strings — update to:
+- ✅ OpenRouter key replaced (old key was returning 401 "User not found")
+- ✅ MODEL_REGISTRY corrected: `claude-sonnet-4.6`, `claude-haiku-4.5`, `claude-opus-4.6` (OpenRouter uses dot notation)
+- ✅ Router confidence threshold raised from 0.6 → 0.75
+- ✅ Close Webhook node deleted from WhatsApp workflow via n8n REST API
+- ✅ Telegram workflow: added `Has Files?` IF guard before `Send Files via Telegram` (prevents crash on empty files_created)
+- ✅ Security hook emoji encoding fixed (Windows cp1252 crash on push)
+- ✅ /run endpoint tested and confirmed working (20s, success:true)
 
-- `"claude-sonnet": "openrouter/anthropic/claude-sonnet-4-6"`
-- `"claude-haiku":  "openrouter/anthropic/claude-haiku-4-5-20251001"`
-- `"claude-opus":   "openrouter/anthropic/claude-opus-4-6"`
+## n8n API Access (for future programmatic fixes)
 
-Router confidence threshold at 0.6 is too permissive — raise to 0.75.
+- API Key: stored in `/var/lib/docker/volumes/n8n_data/_data/database.sqlite` → `user_api_keys.apiKey`
+- n8n REST API: `http://localhost:5678/api/v1` — use `X-N8N-API-KEY` header
+- Workflow IDs: Telegram=`a6ciAzyqvnXIC9lw`, WhatsApp=`6AVSoNk8dldtolyacdMiv`
+- CLI import (`n8n import:workflow`) fails while n8n is running due to SQLite lock — always use REST API instead
+
+## Pending Code Improvements
 
 No async job queue — long tasks block /run endpoint; implement job_id + /status/{job_id} pattern.
 
@@ -131,7 +139,15 @@ No async job queue — long tasks block /run endpoint; implement job_id + /statu
 
 → Use brainstorming skill before building any of these.
 
-## Day 4 Priority List
+## Day 6 Priority List
+
+1. Test Telegram bot end-to-end: send a real message to @agentsHQ4Bou_bot and confirm reply arrives
+2. Upgrade Always Save Sub node in n8n UI (delete old Execute Workflow node, add fresh one pointing to `CW | SUB - Always Save`)
+3. Test all 6 remaining task types via Telegram: research_report, code_task, general_writing, app_build, agent_creation, consulting_deliverable
+4. Async job queue: implement job_id + /status/{job_id} to prevent timeout on long tasks
+5. PostgreSQL schema fix: add session_id column to conversation_archive
+
+## Day 4 Priority List (reference)
 
 1. Verify files_created fix: `grep -n "start_time.timestamp" /app/orchestrator.py` inside container
 2. Fix Send Files via Telegram n8n node (Chat ID + Document URL expression)
