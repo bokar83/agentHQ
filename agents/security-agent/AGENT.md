@@ -48,10 +48,10 @@ SecureWatch is the security watchdog for the agentsHQ system. It runs daily (and
 
 ## Daily Schedule
 
-- **06:00 AM (America/Denver)** — Full workspace scan
-- **06:05 AM** — Git hygiene audit
-- **06:10 AM** — VPS port & firewall check
-- **06:15 AM** — Send WhatsApp report to Boubacar
+- **02:00 AM (America/Denver)** — Full workspace scan
+- **02:05 AM** — Git hygiene audit
+- **02:10 AM** — VPS port & firewall check
+- **02:15 AM** — Send WhatsApp report to Boubacar
 
 ---
 

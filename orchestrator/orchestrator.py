@@ -33,12 +33,14 @@ from pydantic import BaseModel
 from typing import Optional
 
 # Configure logging
+LOG_DIR = os.environ.get("AGENTS_LOG_DIR", "/app/logs")
+os.makedirs(LOG_DIR, exist_ok=True)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler("/app/logs/orchestrator.log", mode="a")
+        logging.FileHandler(os.path.join(LOG_DIR, "orchestrator.log"), mode="a")
     ]
 )
 logger = logging.getLogger("agentsHQ")
@@ -134,7 +136,7 @@ def run_orchestrator(task_request: str, from_number: str = "unknown") -> dict:
     
     # Step 4: Collect files created
     files_created = []
-    output_dir = "/app/outputs"
+    output_dir = os.environ.get("AGENTS_OUTPUT_DIR", "/app/outputs")
     if os.path.exists(output_dir):
         all_files = os.listdir(output_dir)
         # Get files created in this execution window
@@ -205,7 +207,7 @@ def run_team_orchestrator(subtasks: list, original_request: str, from_number: st
 
     # Collect files created
     files_created = []
-    output_dir = "/app/outputs"
+    output_dir = os.environ.get("AGENTS_OUTPUT_DIR", "/app/outputs")
     if os.path.exists(output_dir):
         files_created = [
             f for f in os.listdir(output_dir)
@@ -434,7 +436,7 @@ def capabilities():
 @app.get("/outputs")
 def list_outputs():
     """List all files created by the agents."""
-    output_dir = "/app/outputs"
+    output_dir = os.environ.get("AGENTS_OUTPUT_DIR", "/app/outputs")
     if not os.path.exists(output_dir):
         return {"files": [], "count": 0}
     
