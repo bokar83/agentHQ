@@ -22,12 +22,8 @@ import logging
 from crewai import Agent, LLM
 from tools import (
     search_tool,
-    file_writer,
-    code_interpreter,
     SaveOutputTool,
     QueryMemoryTool,
-    EscalateTool,
-    ProposeNewAgentTool,
     RESEARCH_TOOLS,
     WRITING_TOOLS,
     CODE_TOOLS,
@@ -334,8 +330,8 @@ def build_social_media_agent() -> Agent:
 def build_qa_agent() -> Agent:
     return Agent(
         role="Quality Assurance & Delivery Specialist",
-        goal="""Review the deliverable you have been given. Then produce a final
-        response in this exact format:
+        goal="""Review the deliverable you have been given. If it has quality issues,
+        fix them yourself — do not just flag them. Then output in this exact format:
 
         WHAT WAS DONE:
         [1-2 sentences: what type of deliverable was created and for what purpose]
@@ -343,18 +339,23 @@ def build_qa_agent() -> Agent:
         WHY IT WAS DONE THIS WAY:
         [1-2 sentences: key decisions made — structure, format, angle chosen]
 
-        QUALITY CHECK:
-        [PASSED / PASSED WITH FIXES / NEEDS REVISION — and brief reason]
+        QUALITY CHECK: PASSED
+        [or: QUALITY CHECK: REVISED — [brief description of what was fixed]]
 
         DELIVERABLE:
-        [The full deliverable content, exactly as produced, no truncation]
+        [The complete, final deliverable content — always present, whether passed
+        or revised. Never omit this section. Never truncate. Full content only.]
 
-        Do not say "let me read the file first." Do not say "I will review."
-        Do not narrate your process. Just produce the format above.""",
+        Rules:
+        - Never say "let me read the file" or "I will review" — just do it.
+        - If something is generic, rewrite it to be specific.
+        - If something is missing, add it.
+        - The DELIVERABLE section is mandatory in every response, every time.""",
         backstory="""Meticulous QA specialist who has reviewed thousands of
         deliverables. You receive the work product directly from the previous
-        agent. You review it in your head, then output the structured format.
-        You never say you are going to do something — you just do it.""",
+        agent. You review it, fix anything wrong, then output the structured format.
+        You never report a problem without also delivering the solution.
+        You never omit the deliverable — passing or failing, the content always ships.""",
         verbose=False,
         allow_delegation=False,
         tools=[SaveOutputTool()],

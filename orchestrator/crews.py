@@ -166,25 +166,21 @@ def build_website_crew(user_request: str) -> Crew:
     task_qa = Task(
         description=f"""
         Review the website built above against the original request.
-
         ORIGINAL REQUEST: {user_request}
 
-        CHECK:
-        1. Does the website fully deliver what was requested?
-        2. Is there any placeholder text or lorem ipsum? (FAIL if yes)
-        3. Is the HTML complete? (starts with DOCTYPE, ends with /html)
-        4. Are all planned sections present?
-        5. Does the design match the business type?
-        6. Is it mobile responsive?
-        7. Would Boubacar be proud to show this to a client?
+        CHECK: no placeholder text, complete HTML, all sections present,
+        mobile responsive, appropriate design. Fix any issues yourself.
 
-        If PASS: Return "QUALITY CHECK: PASSED" + the complete HTML
-        If NEEDS WORK: Fix the issues, return "QUALITY CHECK: REVISED" + corrected HTML
+        OUTPUT FORMAT (mandatory every time):
+        WHAT WAS DONE: [what was built and why]
+        WHY IT WAS DONE THIS WAY: [key design/structure decisions]
+        QUALITY CHECK: PASSED or QUALITY CHECK: REVISED — [what was fixed]
+        DELIVERABLE:
+        [The complete HTML file — always included, never omitted]
 
-        Either way: the final output MUST be the complete HTML file.
-        Save the final version using save_output.
+        Save final version using save_output.
         """,
-        expected_output="QUALITY CHECK: PASSED or REVISED, followed by the complete HTML file",
+        expected_output="Structured QA report followed by complete HTML file",
         agent=qa,
         context=[task_build]
     )
@@ -253,10 +249,16 @@ def build_research_crew(user_request: str) -> Crew:
     task_qa = Task(
         description=f"""
         Review the research report for accuracy, completeness, and clarity.
-        Original request: {user_request}
-        Fix any issues found. Save final version.
+        Fix any issues yourself. Original request: {user_request}
+
+        OUTPUT FORMAT (mandatory every time):
+        WHAT WAS DONE: [what was researched and reported]
+        WHY IT WAS DONE THIS WAY: [structure and angle chosen]
+        QUALITY CHECK: PASSED or QUALITY CHECK: REVISED — [what was fixed]
+        DELIVERABLE:
+        [The complete report — always included, never omitted]
         """,
-        expected_output="QUALITY CHECK: PASSED/REVISED + final report",
+        expected_output="Structured QA report followed by complete research report",
         agent=qa,
         context=[task_write]
     )
@@ -324,10 +326,17 @@ def build_consulting_crew(user_request: str) -> Crew:
 
     task_qa = Task(
         description=f"""
-        Review the consulting deliverable for quality, completeness,
-        and professional standards. Original: {user_request}
+        Review the consulting deliverable for quality, completeness, and
+        professional standards. Fix any issues yourself. Original: {user_request}
+
+        OUTPUT FORMAT (mandatory every time):
+        WHAT WAS DONE: [deliverable type and purpose]
+        WHY IT WAS DONE THIS WAY: [strategic framing chosen]
+        QUALITY CHECK: PASSED or QUALITY CHECK: REVISED — [what was fixed]
+        DELIVERABLE:
+        [The complete consulting deliverable — always included, never omitted]
         """,
-        expected_output="QUALITY CHECK: PASSED/REVISED + final deliverable",
+        expected_output="Structured QA report followed by complete consulting deliverable",
         agent=qa,
         context=[task_consult]
     )
@@ -382,11 +391,18 @@ def build_social_crew(user_request: str) -> Crew:
 
     task_qa = Task(
         description=f"""
-        Review the social content. Does it sound like Boubacar?
-        Is it specific enough? Does it teach or provoke thought?
-        Original: {user_request}
+        Review the social content. Does it sound like Boubacar — direct,
+        specific, earned? Does it teach or provoke thought?
+        If any post is too generic, rewrite it. Original: {user_request}
+
+        OUTPUT FORMAT (mandatory every time):
+        WHAT WAS DONE: [what content was created and for which platform]
+        WHY IT WAS DONE THIS WAY: [voice and angle decisions]
+        QUALITY CHECK: PASSED or QUALITY CHECK: REVISED — [what was fixed]
+        DELIVERABLE:
+        [All posts in full — always included, never omitted, even if revised]
         """,
-        expected_output="QUALITY CHECK: PASSED/REVISED + final content",
+        expected_output="Structured QA report followed by all final posts",
         agent=qa,
         context=[task_write]
     )
@@ -439,11 +455,17 @@ def build_code_crew(user_request: str) -> Crew:
 
     task_qa = Task(
         description=f"""
-        Review the code for correctness, completeness, and quality.
-        Original: {user_request}
-        Check: does it work? Are edge cases handled? Is it readable?
+        Review the code for correctness, completeness, and readability.
+        Fix any issues yourself. Original: {user_request}
+
+        OUTPUT FORMAT (mandatory every time):
+        WHAT WAS DONE: [what was coded and why]
+        WHY IT WAS DONE THIS WAY: [technical approach chosen]
+        QUALITY CHECK: PASSED or QUALITY CHECK: REVISED — [what was fixed]
+        DELIVERABLE:
+        [The complete final code — always included, never omitted]
         """,
-        expected_output="QUALITY CHECK: PASSED/REVISED + final code",
+        expected_output="Structured QA report followed by complete final code",
         agent=qa,
         context=[task_code]
     )
@@ -492,9 +514,16 @@ def build_writing_crew(user_request: str) -> Crew:
     task_qa = Task(
         description=f"""
         Review the document for quality and completeness.
-        Original: {user_request}
+        Fix any issues yourself. Original: {user_request}
+
+        OUTPUT FORMAT (mandatory every time):
+        WHAT WAS DONE: [document type and purpose]
+        WHY IT WAS DONE THIS WAY: [structure and tone chosen]
+        QUALITY CHECK: PASSED or QUALITY CHECK: REVISED — [what was fixed]
+        DELIVERABLE:
+        [The complete document — always included, never omitted]
         """,
-        expected_output="QUALITY CHECK: PASSED/REVISED + final document",
+        expected_output="Structured QA report followed by complete final document",
         agent=qa,
         context=[task_write]
     )
@@ -554,11 +583,17 @@ def build_app_crew(user_request: str) -> Crew:
 
     task_qa = Task(
         description=f"""
-        Test and review the application for:
-        REQUEST: {user_request}
-        Does everything work? Are edge cases handled? Is the UX intuitive?
+        Review the application: does everything work, are edge cases handled,
+        is the UX intuitive? Fix any issues yourself. Original: {user_request}
+
+        OUTPUT FORMAT (mandatory every time):
+        WHAT WAS DONE: [what app was built and why]
+        WHY IT WAS DONE THIS WAY: [tech and UX decisions]
+        QUALITY CHECK: PASSED or QUALITY CHECK: REVISED — [what was fixed]
+        DELIVERABLE:
+        [The complete application code — always included, never omitted]
         """,
-        expected_output="QUALITY CHECK: PASSED/REVISED + final application",
+        expected_output="Structured QA report followed by complete final application",
         agent=qa,
         context=[task_build]
     )
@@ -729,10 +764,15 @@ def build_team_synthesis_crew(original_request: str, teammate_results: list) -> 
         description=(
             f"Review the synthesized output against the original request: '{original_request}'. "
             f"Verify it is complete, coherent, and addresses what was asked. "
-            f"Fix anything missing or contradictory."
+            f"Fix anything missing or contradictory.\n\n"
+            f"OUTPUT FORMAT (mandatory every time):\n"
+            f"WHAT WAS DONE: [what was synthesized]\n"
+            f"WHY IT WAS DONE THIS WAY: [synthesis approach]\n"
+            f"QUALITY CHECK: PASSED or QUALITY CHECK: REVISED — [what was fixed]\n"
+            f"DELIVERABLE:\n[Complete synthesized output — always included, never omitted]"
         ),
         agent=qa,
-        expected_output="QUALITY CHECK: PASSED/REVISED + final synthesized deliverable.",
+        expected_output="Structured QA report followed by complete synthesized deliverable",
         context=[synthesis_task]
     )
 
