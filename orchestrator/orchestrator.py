@@ -129,8 +129,8 @@ def run_orchestrator(task_request: str, from_number: str = "unknown") -> dict:
     # Step 3: Execute
     logger.info(f"Kicking off crew: {crew_type}")
     result = crew.kickoff()
-    result_str = str(result)
-    
+    result_str = result.raw if hasattr(result, 'raw') else str(result)
+
     end_time = datetime.now()
     execution_time = (end_time - start_time).total_seconds()
     
@@ -201,7 +201,7 @@ def run_team_orchestrator(subtasks: list, original_request: str, from_number: st
     # Phase 2: synthesize
     synthesis_crew = build_team_synthesis_crew(original_request, successful)
     final_result   = synthesis_crew.kickoff()
-    result_str     = str(final_result)
+    result_str     = final_result.raw if hasattr(final_result, 'raw') else str(final_result)
 
     execution_time = (datetime.now() - start_time).total_seconds()
 

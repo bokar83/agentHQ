@@ -193,7 +193,7 @@ def build_website_crew(user_request: str) -> Crew:
         agents=[planner, researcher, copywriter, web_builder, qa],
         tasks=[task_plan, task_research, task_copy, task_build, task_qa],
         process=Process.sequential,
-        verbose=True,
+        verbose=False,
         memory=False,
 
     )
@@ -265,7 +265,7 @@ def build_research_crew(user_request: str) -> Crew:
         agents=[planner, researcher, copywriter, qa],
         tasks=[task_plan, task_research, task_write, task_qa],
         process=Process.sequential,
-        verbose=True,
+        verbose=False,
         memory=False,
 
     )
@@ -336,7 +336,7 @@ def build_consulting_crew(user_request: str) -> Crew:
         agents=[planner, researcher, consultant, qa],
         tasks=[task_plan, task_research, task_consult, task_qa],
         process=Process.sequential,
-        verbose=True,
+        verbose=False,
         memory=False,
 
     )
@@ -395,7 +395,7 @@ def build_social_crew(user_request: str) -> Crew:
         agents=[planner, griot, qa],
         tasks=[task_plan, task_write, task_qa],
         process=Process.sequential,
-        verbose=True,
+        verbose=False,
         memory=False,
 
     )
@@ -452,7 +452,7 @@ def build_code_crew(user_request: str) -> Crew:
         agents=[planner, coder, qa],
         tasks=[task_plan, task_code, task_qa],
         process=Process.sequential,
-        verbose=True,
+        verbose=False,
         memory=False,
 
     )
@@ -503,7 +503,7 @@ def build_writing_crew(user_request: str) -> Crew:
         agents=[planner, copywriter, qa],
         tasks=[task_plan, task_write, task_qa],
         process=Process.sequential,
-        verbose=True,
+        verbose=False,
         memory=False,
 
     )
@@ -567,7 +567,7 @@ def build_app_crew(user_request: str) -> Crew:
         agents=[planner, researcher, app_builder, qa],
         tasks=[task_plan, task_research, task_build, task_qa],
         process=Process.sequential,
-        verbose=True,
+        verbose=False,
         memory=False,
 
     )
@@ -621,7 +621,7 @@ def build_agent_creator_crew(user_request: str) -> Crew:
         agents=[orchestrator, agent_creator],
         tasks=[task_assess, task_design],
         process=Process.sequential,
-        verbose=True,
+        verbose=False,
         memory=False,
 
     )
@@ -656,7 +656,7 @@ def build_unknown_crew(user_request: str) -> Crew:
         agents=[orchestrator, agent_creator],
         tasks=[task_assess],
         process=Process.sequential,
-        verbose=True,
+        verbose=False,
         memory=False,
 
     )
@@ -740,7 +740,7 @@ def build_team_synthesis_crew(original_request: str, teammate_results: list) -> 
         agents=[consultant, qa],
         tasks=[synthesis_task, qa_task],
         process=Process.sequential,
-        verbose=True,
+        verbose=False,
         memory=False,
     )
 
@@ -772,7 +772,7 @@ def build_hierarchical_crew(user_request: str, specialist_agents: list) -> Crew:
         tasks=tasks,
         process=Process.hierarchical,
         manager_llm=select_llm("orchestrator", "complex"),
-        verbose=True,
+        verbose=False,
         memory=False,
     )
 
