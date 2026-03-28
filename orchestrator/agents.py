@@ -23,7 +23,6 @@ from crewai import Agent, LLM
 from tools import (
     search_tool,
     file_writer,
-    file_reader,
     code_interpreter,
     SaveOutputTool,
     QueryMemoryTool,
@@ -143,7 +142,7 @@ def build_orchestrator_agent() -> Agent:
         Consulting. You orchestrate tasks across web development, research,
         consulting, marketing, and systems design. You never pretend to
         do something you cannot — you escalate or propose new capabilities.""",
-        verbose=True,
+        verbose=False,
         allow_delegation=True,
         tools=ORCHESTRATION_TOOLS + [search_tool],
         llm=select_llm("orchestrator", "complex"),
@@ -162,7 +161,7 @@ def build_planner_agent() -> Agent:
         Your superpower is taking ambiguous requests and turning them into
         crisp, sequenced work plans. You always check memory for relevant
         past work before planning.""",
-        verbose=True,
+        verbose=False,
         allow_delegation=False,
         tools=[QueryMemoryTool(), search_tool],
         llm=select_llm("planner", "moderate"),
@@ -179,7 +178,7 @@ def build_researcher_agent() -> Agent:
         backstory="""You are a world-class researcher with experience at
         top consulting firms and investigative journalism outlets. You never
         fabricate data. Fast, precise, and thorough.""",
-        verbose=True,
+        verbose=False,
         allow_delegation=False,
         tools=RESEARCH_TOOLS,
         llm=select_llm("researcher", "moderate"),
@@ -197,7 +196,7 @@ def build_copywriter_agent() -> Agent:
         across advertising, brand strategy, web content, and consulting
         communications. You never use phrases like 'we are passionate about'
         or 'world-class'. Specific, vivid, and true.""",
-        verbose=True,
+        verbose=False,
         allow_delegation=False,
         tools=WRITING_TOOLS,
         llm=select_llm("writer", "moderate"),
@@ -214,7 +213,7 @@ def build_web_builder_agent() -> Agent:
         backstory="""You are a frontend developer and UI designer with deep
         expertise in HTML5, CSS3, and vanilla JavaScript. Semantic HTML,
         CSS variables, mobile-first responsiveness, tasteful interactions.""",
-        verbose=True,
+        verbose=False,
         allow_delegation=False,
         tools=WRITING_TOOLS + [SaveOutputTool()],
         llm=select_llm("coder", "moderate"),
@@ -231,7 +230,7 @@ def build_app_builder_agent() -> Agent:
         backstory="""You are a full-stack developer specializing in
         client-side web applications: calculators, dashboards, booking
         systems, and productivity tools. Clean, maintainable code.""",
-        verbose=True,
+        verbose=False,
         allow_delegation=False,
         tools=CODE_TOOLS,
         llm=select_llm("coder", "complex"),
@@ -248,7 +247,7 @@ def build_code_agent() -> Agent:
         backstory="""Senior software engineer across Python, JavaScript,
         TypeScript, Bash, SQL and more. Code that works the first time.
         No TODO comments in production.""",
-        verbose=True,
+        verbose=False,
         allow_delegation=False,
         tools=CODE_TOOLS + RESEARCH_TOOLS,
         llm=select_llm("coder", "complex"),
@@ -293,7 +292,7 @@ def build_consulting_agent() -> Agent:
         Your work makes clients feel seen and challenged at the same time.
         A Catalyst Works deliverable is never generic — it is specific,
         provocative, and immediately actionable.""",
-        verbose=True,
+        verbose=False,
         allow_delegation=False,
         tools=RESEARCH_TOOLS + WRITING_TOOLS,
         llm=select_llm("consultant", "complex"),
@@ -325,7 +324,7 @@ def build_social_media_agent() -> Agent:
         mouth. You write the way he thinks: direct, principled, earned.
         If you need an example and none was given, you signal it clearly
         as hypothetical. Never 'I'm excited to share...' or buzzword soup.""",
-        verbose=True,
+        verbose=False,
         allow_delegation=False,
         tools=RESEARCH_TOOLS + WRITING_TOOLS,
         llm=select_llm("social", "moderate"),
@@ -335,17 +334,32 @@ def build_social_media_agent() -> Agent:
 def build_qa_agent() -> Agent:
     return Agent(
         role="Quality Assurance & Delivery Specialist",
-        goal="""Review every deliverable before it reaches Boubacar.
-        No errors, no placeholders, professional quality.
-        Fix what is wrong. Your sign-off means the work is done.""",
-        backstory="""Meticulous QA specialist who has reviewed thousands
-        of deliverables across web development, consulting documents,
-        research reports, and creative content. You notice everything.""",
-        verbose=True,
+        goal="""Review the deliverable you have been given. Then produce a final
+        response in this exact format:
+
+        WHAT WAS DONE:
+        [1-2 sentences: what type of deliverable was created and for what purpose]
+
+        WHY IT WAS DONE THIS WAY:
+        [1-2 sentences: key decisions made — structure, format, angle chosen]
+
+        QUALITY CHECK:
+        [PASSED / PASSED WITH FIXES / NEEDS REVISION — and brief reason]
+
+        DELIVERABLE:
+        [The full deliverable content, exactly as produced, no truncation]
+
+        Do not say "let me read the file first." Do not say "I will review."
+        Do not narrate your process. Just produce the format above.""",
+        backstory="""Meticulous QA specialist who has reviewed thousands of
+        deliverables. You receive the work product directly from the previous
+        agent. You review it in your head, then output the structured format.
+        You never say you are going to do something — you just do it.""",
+        verbose=False,
         allow_delegation=False,
-        tools=[file_reader, SaveOutputTool()],
+        tools=[SaveOutputTool()],
         llm=select_llm("qa", "moderate"),
-        max_iter=4
+        max_iter=3
     )
 
 
@@ -358,7 +372,7 @@ def build_agent_creator_agent() -> Agent:
         backstory="""AI systems architect who understands what makes agents
         effective. Narrow role, clear goal, realistic backstory, minimal tools.
         Always propose before building.""",
-        verbose=True,
+        verbose=False,
         allow_delegation=False,
         tools=ORCHESTRATION_TOOLS + [QueryMemoryTool()],
         llm=select_llm("orchestrator", "complex"),

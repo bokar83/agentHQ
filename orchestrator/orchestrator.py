@@ -250,42 +250,45 @@ def _build_summary(
     execution_time: float
 ) -> str:
     """
-    Build a concise, WhatsApp-friendly summary of the task result.
-    The full output is saved to disk — the summary goes to the user.
+    Build a Telegram message with the full deliverable content.
+    Always includes: what was done, time taken, files saved, and full output.
     """
-    
+
     type_labels = {
-        "agent_team":    "🤝 Team task complete",
-        "website_build": "🌐 Website built",
-        "app_build": "⚙️ App built",
-        "research_report": "📊 Research complete",
-        "consulting_deliverable": "📋 Deliverable ready",
-        "social_content": "📱 Content created",
-        "code_task": "💻 Code complete",
-        "general_writing": "✍️ Document ready",
-        "agent_creation": "🤖 Agent proposal submitted",
-        "unknown": "✅ Task complete",
+        "agent_team":              "Team task complete",
+        "website_build":           "Website built",
+        "app_build":               "App built",
+        "research_report":         "Research complete",
+        "consulting_deliverable":  "Consulting deliverable ready",
+        "social_content":          "Social content created",
+        "code_task":               "Code task complete",
+        "general_writing":         "Document ready",
+        "agent_creation":          "Agent proposal submitted",
+        "unknown":                 "Task complete",
     }
-    
-    label = type_labels.get(task_type, "✅ Task complete")
-    
+
+    label = type_labels.get(task_type, "Task complete")
+
     lines = [
-        f"{label}!",
-        f"",
-        f"⏱ Completed in {execution_time:.0f}s",
+        f"--- {label} ---",
+        f"Time: {execution_time:.0f}s",
     ]
-    
+
     if files_created:
-        lines.append(f"📁 Files saved: {', '.join(files_created)}")
-    
+        lines.append(f"Files saved: {', '.join(files_created)}")
+
+    lines.append("")  # blank line before content
+
     # Send full output up to Telegram's 4096 char limit
-    # Reserve ~100 chars for the header lines above
-    MAX_CONTENT = 3800
+    # Reserve ~150 chars for the header lines above
+    MAX_CONTENT = 3700
     if full_output and len(full_output) > 50:
         content = full_output.strip()
         if len(content) > MAX_CONTENT:
-            content = content[:MAX_CONTENT] + "\n\n[...truncated — reply 'more' for rest]"
-        lines.append(f"\n{content}")
+            content = content[:MAX_CONTENT] + "\n\n[truncated — full output saved to /app/outputs]"
+        lines.append(content)
+    else:
+        lines.append("[No output content returned by agents]")
 
     return "\n".join(lines)
 
