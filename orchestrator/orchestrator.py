@@ -278,15 +278,15 @@ def _build_summary(
     if files_created:
         lines.append(f"📁 Files saved: {', '.join(files_created)}")
     
-    # Add a brief excerpt of the result (first 300 chars)
+    # Send full output up to Telegram's 4096 char limit
+    # Reserve ~100 chars for the header lines above
+    MAX_CONTENT = 3800
     if full_output and len(full_output) > 50:
-        excerpt = full_output[:300].strip()
-        if len(full_output) > 300:
-            excerpt += "..."
-        lines.append(f"\n{excerpt}")
-    
-    lines.append(f"\n💾 Full output saved to agent outputs directory.")
-    
+        content = full_output.strip()
+        if len(content) > MAX_CONTENT:
+            content = content[:MAX_CONTENT] + "\n\n[...truncated — reply 'more' for rest]"
+        lines.append(f"\n{content}")
+
     return "\n".join(lines)
 
 
