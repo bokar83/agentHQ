@@ -47,9 +47,9 @@ logger = logging.getLogger(__name__)
 # ══════════════════════════════════════════════════════════════
 
 MODEL_REGISTRY = {
-    "claude-sonnet": "openrouter/anthropic/claude-sonnet-4-6",
-    "claude-haiku":  "openrouter/anthropic/claude-haiku-4-5-20251001",
-    "claude-opus":   "openrouter/anthropic/claude-opus-4-6",
+    "claude-sonnet": "openrouter/anthropic/claude-sonnet-4.6",
+    "claude-haiku":  "openrouter/anthropic/claude-haiku-4.5",
+    "claude-opus":   "openrouter/anthropic/claude-opus-4.6",
 }
 
 DEFAULT_MODEL = "claude-sonnet"
