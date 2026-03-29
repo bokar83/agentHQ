@@ -96,49 +96,76 @@ _start_time = time.time()
 # CORE ORCHESTRATION LOGIC
 # ══════════════════════════════════════════════════════════════
 
-def _build_system_context() -> str:
+def _query_system() -> str:
     """
-    Build a live snapshot of the running system to inject into chat.
-    Pulled directly from the loaded modules — always accurate.
+    Live system introspection tool. Called by the chat LLM when the user
+    asks about agents, task types, system config, or capabilities.
+    Always returns accurate data from the running modules — never stale.
     """
-    lines = ["\nSYSTEM CONTEXT (live — answer questions about this directly):"]
+    lines = ["=== agentsHQ LIVE SYSTEM STATE ===\n"]
 
-    # Agents
-    agents = [
-        ("Planner",           "Plans and structures every task before execution"),
-        ("Researcher",        "Finds and synthesizes information from the web"),
-        ("Copywriter",        "Writes reports, documents, articles, and copy"),
-        ("Social Media Agent","Creates posts and content in Boubacar's voice"),
-        ("Consulting Agent",  "Produces frameworks, proposals, diagnostics, strategy briefs"),
-        ("Web Builder",       "Builds complete HTML/CSS websites (single-file)"),
-        ("App Builder",       "Builds interactive web applications"),
-        ("Code Agent",        "Writes, debugs, and explains code in any language"),
-        ("QA Agent",          "Reviews all deliverables, fixes issues, ensures quality"),
-        ("Orchestrator Agent","Handles unknown requests, escalates or improvises"),
-        ("Agent Creator",     "Designs new specialist agents when a gap is identified"),
-    ]
-    lines.append("\nAGENTS (11 total):")
-    for name, desc in agents:
-        lines.append(f"  - {name}: {desc}")
+    # Agent registry — read from agents.py builder functions
+    try:
+        import agents as agent_module
+        builders = [f for f in dir(agent_module) if f.startswith("build_") and f.endswith("_agent")]
+        lines.append(f"AGENTS ({len(builders)} registered):")
+        agent_descriptions = {
+            "build_planner_agent":       "Plans and structures every task before execution",
+            "build_researcher_agent":    "Finds and synthesizes information using web search",
+            "build_copywriter_agent":    "Writes reports, articles, documents, and long-form copy",
+            "build_social_media_agent":  "Creates posts and content in Boubacar's voice (X, LinkedIn, etc.)",
+            "build_consulting_agent":    "Produces frameworks, proposals, diagnostics, strategy briefs",
+            "build_web_builder_agent":   "Builds complete single-file HTML/CSS/JS websites",
+            "build_app_builder_agent":   "Builds interactive web applications",
+            "build_code_agent":          "Writes, debugs, and explains code in any language",
+            "build_qa_agent":            "Reviews all deliverables, fixes issues, ensures professional quality",
+            "build_orchestrator_agent":  "Handles unknown/ambiguous requests, escalates or improvises",
+            "build_agent_creator_agent": "Designs specs for new specialist agents when a gap is identified",
+        }
+        for b in sorted(builders):
+            name = b.replace("build_", "").replace("_agent", "").replace("_", " ").title()
+            desc = agent_descriptions.get(b, "Specialist agent")
+            lines.append(f"  - {name}: {desc}")
+    except Exception as e:
+        lines.append(f"  [Could not load agent list: {e}]")
 
-    # Task types / crews
+    # Task types — read live from router
     try:
         from router import TASK_TYPES
-        lines.append("\nTASK TYPES (what you can ask the crew to do):")
+        lines.append(f"\nTASK TYPES ({len(TASK_TYPES) - 1} actionable):")
         for key, meta in TASK_TYPES.items():
             if key == "chat":
                 continue
             lines.append(f"  - {key}: {meta['description']}")
+            lines.append(f"    trigger keywords: {', '.join(meta.get('keywords', [])[:5])}")
+    except Exception as e:
+        lines.append(f"  [Could not load task types: {e}]")
+
+    # Recent outputs
+    try:
+        output_dir = os.environ.get("AGENTS_OUTPUT_DIR", "/app/outputs")
+        if os.path.exists(output_dir):
+            files = sorted(
+                [f for f in os.listdir(output_dir) if not os.path.isdir(os.path.join(output_dir, f))],
+                key=lambda f: os.path.getmtime(os.path.join(output_dir, f)),
+                reverse=True
+            )[:10]
+            if files:
+                lines.append(f"\nRECENT OUTPUT FILES (last 10 in {output_dir}):")
+                for f in files:
+                    lines.append(f"  - {f}")
+            else:
+                lines.append(f"\nOUTPUT DIRECTORY: {output_dir} (empty)")
     except Exception:
         pass
 
-    # Output location
-    output_dir = os.environ.get("AGENTS_OUTPUT_DIR", "/app/outputs")
-    lines.append(f"\nOUTPUT DIRECTORY: {output_dir}")
-    lines.append("VPS: 72.60.209.109 — orchestrator on port 8000")
-    lines.append("Telegram bot: @agentsHQ4Bou_bot")
-    lines.append("n8n: https://n8n.srv1040886.hstgr.cloud")
-    lines.append("GitHub: https://github.com/bokar83/agentHQ")
+    # Infrastructure
+    lines.append("\nINFRASTRUCTURE:")
+    lines.append("  VPS: 72.60.209.109 — orchestrator on port 8000")
+    lines.append("  Telegram bot: @agentsHQ4Bou_bot")
+    lines.append("  n8n: https://n8n.srv1040886.hstgr.cloud")
+    lines.append("  GitHub: https://github.com/bokar83/agentHQ")
+    lines.append("  Memory: Qdrant (vector) + PostgreSQL (conversation history)")
 
     return "\n".join(lines)
 
@@ -195,32 +222,73 @@ When Boubacar asks you to DO something (write posts, build a website, research a
 remind him that's a crew job — send it as a regular message and the agents will handle it.
 Keep that redirect short. One line max."""
 
-    # Inject live system context so chat can answer "what agents do we have?" etc.
-    system_prompt += _build_system_context()
+    # Tool definition — LLM calls this when it needs live system info
+    tools = [
+        {
+            "type": "function",
+            "function": {
+                "name": "query_system",
+                "description": (
+                    "Query the live agentsHQ system state. Call this when the user asks about: "
+                    "what agents exist, what task types are available, what the system can do, "
+                    "recent output files, infrastructure details, or any question about the "
+                    "system's current configuration and capabilities."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {},
+                    "required": []
+                }
+            }
+        }
+    ]
 
     # Assemble messages: system + history + current message
     messages = [{"role": "system", "content": system_prompt}]
     messages.extend(history_messages)
     messages.append({"role": "user", "content": message})
 
-    # Single LLM call
     try:
-        from crewai import LLM
-        llm = LLM(
-            model="openrouter/anthropic/claude-haiku-4.5",
+        import openai
+        client = openai.OpenAI(
             api_key=os.environ.get("OPENROUTER_API_KEY"),
             base_url="https://openrouter.ai/api/v1",
-            temperature=0.85,
-            extra_headers={
+            default_headers={
                 "HTTP-Referer": "https://agentshq.catalystworks.com",
                 "X-Title": "agentsHQ Chat"
             }
         )
-        response = llm.call(messages)
-        if hasattr(response, "content"):
-            reply = response.content.strip()
+
+        response = client.chat.completions.create(
+            model="anthropic/claude-haiku-4.5",
+            messages=messages,
+            tools=tools,
+            tool_choice="auto",
+            temperature=0.85,
+        )
+
+        msg = response.choices[0].message
+
+        # If the LLM called query_system, execute it and send result back
+        if msg.tool_calls:
+            system_data = _query_system()
+            messages.append(msg)  # assistant message with tool_calls
+            messages.append({
+                "role": "tool",
+                "tool_call_id": msg.tool_calls[0].id,
+                "content": system_data
+            })
+            # Second call with tool result injected
+            followup = client.chat.completions.create(
+                model="anthropic/claude-haiku-4.5",
+                messages=messages,
+                temperature=0.85,
+            )
+            reply = followup.choices[0].message.content.strip()
+            logger.info("Chat used query_system tool")
         else:
-            reply = str(response).strip()
+            reply = msg.content.strip()
+
     except Exception as e:
         logger.error(f"Chat LLM call failed: {e}")
         reply = "Sorry, I hit an error. Try again in a moment."
