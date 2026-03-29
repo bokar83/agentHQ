@@ -244,3 +244,111 @@ The CTA should sound like an offer, not a pitch. It emerges from the post, it do
 | "What do you think?" as the only CTA | No stakes | Ask a specific, answerable question |
 | Posting at 6am local every day regardless of quality | Consistency theater | 3 excellent posts > 7 average posts |
 | Vague thought leadership ("The key to success is...") | Sounds like everyone else | Specific claim with specific evidence |
+
+---
+
+## 9. POST FORMATTING SPEC
+
+### Line Break Cadence — The LinkedIn White Space Technique
+
+LinkedIn collapses posts after ~210 characters with a "see more" cutoff. The visual rhythm of line breaks determines whether people expand the post.
+
+**Rule:** One sentence per line. One blank line between every 2–3 lines. Never more than 3 lines in a row without a break.
+
+```
+Most companies don't have a growth problem.
+
+They have a clarity problem.
+
+They can't describe what they do in a way that makes the right person say:
+"That's exactly what I need."
+
+Here's how to fix that in one afternoon.
+```
+
+**Never:**
+```
+Most companies don't have a growth problem. They have a clarity problem. They can't describe what they do in a way that makes the right person say "That's exactly what I need." Here's how to fix that in one afternoon.
+```
+
+### Hook Line Rules
+
+The hook is the line before "see more." It must work as a standalone sentence.
+
+- **Max length:** 120 characters
+- **No punctuation at the end** of the hook line (period is fine, question mark is fine, nothing is fine — never ellipsis)
+- **Never start with "I"** — LinkedIn's algorithm and readers both respond better to "You", a number, or a direct claim
+- **Hook formats that work:**
+
+| Format | Example |
+|---|---|
+| Contrarian claim | Most consultants are solving the wrong problem |
+| Specific number | 3 things I stopped doing that doubled my close rate |
+| Direct observation | The best clients I've ever had all said the same thing |
+| Named problem | Your pitch deck isn't the problem |
+| Question (use sparingly) | What does it actually cost to have the wrong strategy? |
+
+### Paragraph Max Length
+
+- **3 lines maximum** per paragraph block before a visual break
+- Single-sentence paragraphs are encouraged — they read as punchy and intentional
+- Never write a paragraph that would require scrolling to finish on mobile
+
+### Bold Text on LinkedIn
+
+LinkedIn doesn't support markdown bold. To use **bold**, paste Unicode bold characters.
+
+**Tool:** Use a Unicode bold converter (e.g. YayText or similar)
+**When to use bold:** One phrase per post maximum. The key term or insight only.
+**Never bold:** Entire sentences, your name, generic words like "important" or "key"
+
+```
+𝗠𝗼𝘀𝘁 𝗳𝗼𝘂𝗻𝗱𝗲𝗿𝘀 don't have a sales problem.   ✓ (one bolded phrase)
+𝗠𝗼𝘀𝘁 𝗳𝗼𝘂𝗻𝗱𝗲𝗿𝘀 𝗱𝗼𝗻'𝘁 𝗵𝗮𝘃𝗲 𝗮 𝘀𝗮𝗹𝗲𝘀 𝗽𝗿𝗼𝗯𝗹𝗲𝗺.  ✗ (whole sentence bolded)
+```
+
+### Emoji Rules for LinkedIn
+
+More conservative than X. Emoji on LinkedIn signals informality — use only when it adds meaning.
+
+- **Max:** 1 emoji per post, end of post only
+- **Acceptable contexts:** Announcing something genuinely good, a thread-style list where bullets are replaced by →
+- **Never:** Decorative emoji, emoji in the hook line, multiple emoji in sequence
+
+**Approved:**
+- → (for list items or implication)
+- ✓ (for checklist-style posts)
+
+**Avoid entirely:** 🔥 💯 🚀 🙏 👏 💪 (signal low-effort content on LinkedIn)
+
+### Article vs Post Formatting Differences
+
+| Element | Post | Article |
+|---|---|---|
+| Length | 150–1,300 chars | 800–2,500 words |
+| Hook | Before "see more" cutoff | H1 title + subhead |
+| Sections | Line breaks only | H2 headers required |
+| Images | Optional cover image | Cover image required |
+| Links | End of post | Inline + end of article |
+| CTA | 1 line, optional | Final section, specific |
+| Tone | Conversational, direct | Still direct, slightly more structured |
+
+### CTA Line Formatting
+
+One line. End of post. Optional — not every post needs one.
+
+**Formats that work:**
+```
+If this is where you are, let's talk.
+The diagnostic takes 2 hours. catalystworks.com/diagnostic
+What's the constraint you're working around right now?
+```
+
+**Formats to avoid:**
+```
+Like, comment, and share if you found this valuable! 🙏   ✗
+Drop a "YES" in the comments if this resonates!           ✗
+Follow me for more content like this.                     ✗
+Click the link in my bio.                                 ✗
+```
+

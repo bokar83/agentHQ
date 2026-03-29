@@ -497,10 +497,27 @@ async def run_task(request: TaskRequest):
                 execution_time=0.0
             )
 
-        # Classify first to decide chat vs crew
-        from router import classify_task
-        classification = classify_task(request.task)
-        task_type = classification.get("task_type", "unknown")
+        # Fast pre-check: catch obvious chat patterns without burning an API call
+        # Questions, greetings, status checks, and short messages go straight to chat
+        _msg = request.task.strip().lower()
+        _is_obvious_chat = (
+            len(_msg) < 60 and not any(w in _msg for w in [
+                "write", "create", "build", "research", "analyze", "make",
+                "draft", "generate", "code", "script", "website", "report",
+                "proposal", "post", "email", "article"
+            ])
+        ) or _msg.startswith(("what is my", "what's my", "how much", "do you", "can you tell",
+                               "hey", "hi ", "hello", "thanks", "thank you", "what did",
+                               "do you remember", "remind me", "what have we", "what was"))
+
+        if _is_obvious_chat:
+            task_type = "chat"
+            logger.info(f"Fast-path: routing '{_msg[:50]}' to chat (pre-classifier)")
+        else:
+            # Full LLM classification for everything else
+            from router import classify_task
+            classification = classify_task(request.task)
+            task_type = classification.get("task_type", "unknown")
 
         if task_type == "chat":
             logger.info(f"Routing to chat mode for session '{request.session_key}'")

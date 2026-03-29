@@ -1,6 +1,6 @@
 # X (Twitter) Style Guide — Boubacar Barry / Catalyst Works
 
-**Version:** 1.0
+**Version:** 2.0
 **Last updated:** 2026-03-29
 **For:** Boubacar Barry, Founder — Catalyst Works Consulting
 
@@ -212,3 +212,105 @@ Is it a list of 5+ related insights?
 | Over-tagging: "cc @[big name]" | Looks like attention-seeking unless there's a genuine connection |
 | Deleting posts that get pushback | The pushback is information. Engage or let it stand. |
 | Posting while emotionally activated | Write it, wait 20 minutes, then decide. The best provocations are cool-headed. |
+
+---
+
+## 10. POST FORMATTING SPEC
+
+### Character Counts by Format
+
+| Format | Hard limit | Target range | Notes |
+|---|---|---|---|
+| Single post | 280 | 180–240 | Leave 40+ chars for replies to quote cleanly |
+| Thread opener | 280 | 200–250 | Must stand alone if thread is never read |
+| Thread continuation | 280 | 150–240 | Each post = one complete idea |
+| Thread closer | 280 | 100–180 | CTA or summary — shorter lands harder |
+| Reply | 280 | 60–160 | Punchy. Never a paragraph. |
+
+### Line Break Rules
+
+- **Single posts:** No line breaks. One dense sentence or two short sentences max. Breaks kill momentum on X.
+- **Threads:** One blank line between the post number and the content. No blank lines within a single thread post.
+- **Exception:** A deliberate two-word line break for emphasis is allowed once per thread, never in a single post.
+
+```
+1/
+
+The consultants who can't get clients all have the same problem.
+
+They're selling what they do. Not what changes.
+
+2/
+
+...
+```
+
+### Capitalization Rules
+
+- Sentence case always. Never ALL CAPS (even for emphasis — use the sentence structure instead).
+- Proper nouns: standard capitalization (Catalyst Works, Theory of Constraints, LinkedIn).
+- "I" is always capitalized. All other personal pronouns: lowercase.
+- No title case in posts. Ever.
+
+### Number Formatting
+
+- Spell out one through nine: "three frameworks", "six weeks"
+- Numerals for 10 and above: "10 clients", "47%", "$2M"
+- Percentages: always numeral + % sign, no space: "73%"
+- Money: "$" prefix, abbreviate millions/billions: "$1.2M", "$800K"
+- Never start a post with a numeral — rewrite the sentence
+
+### Thread Numbering Format
+
+```
+1/7
+
+[Post content]
+
+2/7
+
+[Post content]
+```
+
+- Always include total count (1/7 not just 1/)
+- Number on its own line, blank line before content
+- Final post: use the total number, not "end" or "fin"
+
+### Connector Phrases Between Thread Posts
+
+Use sparingly — the connection should be logical, not announced:
+
+| Acceptable | Avoid |
+|---|---|
+| "Here's why:" | "Moving on..." |
+| "The fix:" | "Next up..." |
+| "What I mean:" | "But wait, there's more..." |
+| "Example:" | "As I mentioned above..." |
+| *(no connector — just continue)* | "So basically..." |
+
+### Emoji Rules
+
+**Use:** 0–1 emoji per post. End of post only, never mid-sentence.
+
+**Approved set for Boubacar's voice:**
+- → (arrow — for direction/implication)
+- ↓ (for threads continuing below)
+- . (period as full stop, sometimes used stylistically)
+
+**Avoid:** 🙏 💯 🔥 🚀 👇 (overused, signal low-effort content)
+
+**Never:** Multiple emoji in sequence. Emoji as bullet points.
+
+### Link Formatting
+
+- Place links at the end of the post, never mid-sentence
+- No "click here" — the URL or a 3-word descriptor is enough
+- If the link is the point of the post, put it alone on the last line after a blank line
+- Shorten only if the URL is 50+ characters and ugly — native Twitter cards handle most previews
+
+```
+Most founders don't have a sales problem. They have a clarity problem.
+
+catalystworks.com/diagnostic
+```
+

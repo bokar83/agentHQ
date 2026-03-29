@@ -1,301 +1,441 @@
-# PDF / Document Style Guide — Catalyst Works Consulting
+# PDF Document Design System — Catalyst Works Consulting
 
-**Version:** 1.0
+**Version:** 2.0
 **Last updated:** 2026-03-29
+**Palette:** Coastal Clarity
 **For:** Boubacar Barry, Founder — Catalyst Works Consulting
 
 ---
 
-## 1. Document Philosophy
+## PART 1 — COVER PAGE SPECIFICATION
 
-Every Catalyst Works document makes a claim before it makes an argument. The visual system exists to support comprehension — not to perform sophistication. The reader is almost always a senior executive with limited time and high standards. The design should feel authoritative without being cold. Structured without being bureaucratic.
+The cover page is the first claim the document makes. It must communicate authority before the reader processes a single word. Build it exactly to this spec.
 
-**Three words that should describe every document:** Precise. Legible. Human.
+### Cover Page Layout (top to bottom, A4 — 210 × 297mm)
+
+```text
+┌─────────────────────────────────────────────────────────┐
+│  [FULL-BLEED BACKGROUND: #1B2A4A]                       │
+│                                                         │
+│  [Logo placeholder]          ← top-left, 20mm from     │
+│   22mm from top, 20mm left     top, 20mm from left      │
+│                                                         │
+│  ─────────────────────────────────────────────         │
+│  [CATEGORY TAG]                                         │
+│   Inter 600, 11pt, #C49A2E, letter-spacing 0.12em      │
+│   uppercase — e.g. "DIAGNOSTIC REPORT"                  │
+│   36mm from top                                         │
+│                                                         │
+│  [DOCUMENT TITLE]                                       │
+│   Inter 700, 44pt, #FFFFFF, line-height 1.1             │
+│   max 2 lines, left-aligned                             │
+│   44mm from top                                         │
+│                                                         │
+│  ████ 4px gold rule (#C49A2E), full column width        │
+│       immediately below title, 8mm gap above            │
+│                                                         │
+│  [SUBTITLE]                                             │
+│   Inter 400, 17pt, rgba(255,255,255,0.75), 1 line max   │
+│   8mm below gold rule                                   │
+│                                                         │
+│  [Prepared for: CLIENT NAME]                            │
+│   Inter 500, 12pt, rgba(255,255,255,0.60)               │
+│   16mm below subtitle                                   │
+│                                                         │
+│  ─ ─ ─ ─ ─ ─ ─ ─ ─ 0.5pt divider #E5E7EB 30% opacity  │
+│                                                         │
+│  [Date]                              [Version]          │
+│   left                                right             │
+│   Inter 400, 10pt, rgba(255,255,255,0.50)               │
+│                                                         │
+│                                                         │
+│  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░         │
+│  [Bottom color band: #2D4A7A, bottom 38% of page]       │
+│  Optional: single photo at 20% opacity within band      │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Cover Page Element Specifications
+
+| Element | Font | Size | Weight | Color | Position |
+| --- | --- | --- | --- | --- | --- |
+| Logo placeholder | — | 28mm wide max | — | White version | 20mm top, 20mm left |
+| Category tag | Inter | 11pt | 600 | `#C49A2E` | 36mm from top, 20mm left |
+| Document title | Inter | 44pt | 700 | `#FFFFFF` | 44mm from top, 20mm left |
+| Gold accent bar | — | 4px tall, full column | — | `#C49A2E` | Below title, 8mm gap |
+| Subtitle | Inter | 17pt | 400 | `rgba(255,255,255,0.75)` | 8mm below gold bar |
+| "Prepared for" line | Inter | 12pt | 500 | `rgba(255,255,255,0.60)` | 16mm below subtitle |
+| Thin divider | — | 0.5pt | — | `#E5E7EB` at 30% | 12mm below "prepared for" |
+| Date (left) | Inter | 10pt | 400 | `rgba(255,255,255,0.50)` | 8mm below divider |
+| Version (right) | Inter | 10pt | 400 | `rgba(255,255,255,0.50)` | Same line as date |
+
+### Cover Page Rules
+
+- Background: full-bleed `#1B2A4A`, no white margins visible
+- Title: the diagnosis or deliverable name — never a project code or number
+- No tagline ("Transforming organizations through...") — the title carries the message
+- No more than one image on the cover
+- No logo watermarked across the background at any opacity
+- No stock photo of handshakes, diverse teams around laptops, or arrows pointing up
+- Cover page has no running header or footer
 
 ---
 
-## 2. Palette Selection by Document Type
+## PART 2 — TYPOGRAPHY HIERARCHY
 
-Select the correct palette from the Catalyst Works brand system before you open a template. Use the wrong palette and the document's tone will feel off, regardless of the content quality.
-
-| Document type | Palette |
-|---|---|
-| Client deliverable, report, proposal | Coastal Clarity or Indigo Olive Saffron |
-| Workshop workbook, playbook, course material | Cobalt Grove |
-| Keynote leave-behind, thought leadership piece | Baobab Nightfall |
-| Investor-facing or high-stakes executive briefing | Indigo Olive Saffron |
-
-**Default if uncertain:** Coastal Clarity.
-
----
-
-## 3. Palette Color Values
-
-### Coastal Clarity (default deliverables)
-| Role | Name | Hex |
-|---|---|---|
-| Primary | Ocean Cyan | `#00B7C2` |
-| Base/background dark | Midnight Navy | `#071A2E` |
-| Accent CTA (≤10%) | Orange | `#FF7A00` |
-| Human warmth | Clay | `#B47C57` |
-| Light background | Mist | `#F3F6F9` |
-| Body text | Carbon | `#1E222A` |
-
-### Indigo Olive Saffron (formal/exec)
-| Role | Name | Hex |
-|---|---|---|
-| Primary | Deep Indigo | `#1F2A60` |
-| Secondary | Olive | `#6E8A3A` |
-| Accent | Saffron | `#F2A900` |
-| Human warmth | Clay | `#B47C57` |
-| Light background | Bone | `#F5F3EE` |
-| Body text | Inkwell | `#121316` |
-
-### Cobalt Grove (training/education)
-| Role | Name | Hex |
-|---|---|---|
-| Primary | Cobalt | `#1E5AA6` |
-| Secondary | Grove Green | `#2E8B57` |
-| Accent | Amber | `#FFB000` |
-| Human warmth | Clay | `#B47C57` |
-| Light background | Parchment | `#F7F3ED` |
-| Body text | Obsidian | `#15171A` |
-
-### Baobab Nightfall (story/keynote)
-| Role | Name | Hex |
-|---|---|---|
-| Base | Night Indigo | `#14213D` |
-| Warmth | Sand Clay | `#C18E63` |
-| Accent | Lagoon | `#2BD9C5` |
-| Secondary | Palm Green | `#3F7D3B` |
-| Light background | Dune | `#F5F1E8` |
-| Body text | Sable | `#1B1E22` |
-
----
-
-## 4. Typography
+All measurements given for screen rendering (px) and print (pt). Use pt for print PDFs; px for web-rendered or HTML-to-PDF.
 
 ### Font Stack
 
-**Primary typeface (headings and display):** Inter
-Source: Google Fonts (free, variable font, exceptional legibility at all sizes)
-Alternative if Inter unavailable: Outfit (Google Fonts)
+```text
+Headings:     Inter (Google Fonts) — weights 700, 600
+Body:         Inter — weights 400, 500
+Pull quotes:  Source Serif 4 (Google Fonts) — italic, weight 400
+Monospace:    JetBrains Mono (Google Fonts) — weight 400
+Fallbacks:    Inter → Outfit → -apple-system → sans-serif
+              Source Serif 4 → Lora → Georgia → serif
+              JetBrains Mono → Courier New → monospace
+```
 
-**Secondary typeface (body text and data):** Source Serif 4
-Source: Google Fonts
-Use for long-form body copy in reports and proposals. Adds warmth and legibility to dense text.
-Alternative if unavailable: Lora (Google Fonts)
+### Complete Type Scale
 
-**Monospace (data, codes, references):** JetBrains Mono
-Source: Google Fonts
-Use in tables, data callouts, file references, technical content.
+| Level | Font | Weight | Screen (px) | Print (pt) | Line-height | Color | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Display / Cover | Inter | 700 | 52px | 40pt | 1.10 | `#FFFFFF` | Cover page only |
+| H1 | Inter | 700 | 28px / 22px mobile | 22pt | 1.15 | `#1B2A4A` | One per chapter |
+| H2 | Inter | 600 | 22px | 17pt | 1.25 | `#1B2A4A` | Gold underbar |
+| H3 | Inter | 600 | 17px | 13pt | 1.40 | `#2D4A7A` | No underbar |
+| H4 | Inter | 500 | 15px | 11pt | 1.45 | `#2C2C2C` | Uppercase + tracking |
+| Body | Inter | 400 | 14px | 11pt | 1.57 | `#2C2C2C` | All running text |
+| Lead / intro | Inter | 400 | 16px | 12pt | 1.60 | `#2C2C2C` | First para of section |
+| Small / caption | Inter | 400 | 12px | 9pt | 1.50 | `#6B7280` | Footnotes, source lines |
+| Pull quote | Source Serif 4 | 400 italic | 18px | 14pt | 1.55 | `#C49A2E` | Left-bar decoration |
+| Code / data | JetBrains Mono | 400 | 13px | 10pt | 1.50 | `#E8C86A` on dark bg | Code blocks only |
+| Table header | Inter | 600 | 13px | 10pt | 1.40 | `#FFFFFF` | On `#1B2A4A` bg |
+| Table body | Inter | 400 | 13px | 10pt | 1.45 | `#2C2C2C` | Alternating row bg |
 
----
+### H2 Decoration Rule
 
-### Type Scale
+H2 always carries a 2px solid `#C49A2E` border-bottom. Padding-bottom: 8px. Margin-bottom: 16px. This is non-negotiable — it is the primary visual anchor for section structure.
 
-| Level | Font | Weight | Size | Line Height | Usage |
-|---|---|---|---|---|---|
-| Display / Cover Title | Inter | 700 Bold | 40–52pt | 1.1 | Cover page main title only |
-| H1 | Inter | 700 Bold | 28–32pt | 1.2 | Chapter or section openers |
-| H2 | Inter | 600 SemiBold | 20–24pt | 1.3 | Main section headers within chapters |
-| H3 | Inter | 600 SemiBold | 16–18pt | 1.4 | Subsection headers |
-| H4 | Inter | 500 Medium | 14pt | 1.4 | Minor headings, table headers, sidebar labels |
-| Body | Source Serif 4 | 400 Regular | 11–12pt | 1.6 | All running body text |
-| Caption / footnote | Inter | 400 Regular | 9–10pt | 1.4 | Image captions, footnotes, source attributions |
-| Data / label | JetBrains Mono | 400 Regular | 10pt | 1.4 | Tables, data values, file references |
+```css
+h2 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1.25;
+  color: #1B2A4A;
+  border-bottom: 2px solid #C49A2E;
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+  margin-top: 32px;
+}
+```
 
----
+### H4 Decoration Rule
 
-### Typography Rules
+H4 is uppercase with letter-spacing. No underline. Use it for labels, field headers, table column names.
 
-- **Never** mix more than 2 typefaces in a single document
-- H1 color: Use the palette's Primary color
-- H2 color: Use the palette's Primary color at 80% opacity, or the Base/background dark at full opacity — pick one and be consistent throughout the document
-- H3 and below: Use the body text color (Carbon / Inkwell / Obsidian)
-- Body text: Always body text color. Never primary color for running text.
-- Tracking (letter-spacing): 0 for body, +1–2% for all-caps labels and H4
-- Never use italic for emphasis in body text — use bold. Italics reserved for titles of works, foreign language terms, and formal definitions.
+```css
+h4 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 1.45;
+  color: #2C2C2C;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+  margin-top: 24px;
+}
+```
 
----
+### Typography Rules (Non-Negotiable)
 
-## 5. Layout Grid
-
-### Page Setup (A4 — default)
-- **Page size:** A4 (210 × 297mm) — standard for international client deliverables
-- **Margins:** 25mm top, 20mm bottom, 22mm left, 22mm right
-- **Gutter (between columns):** 6mm
-
-### Column System
-| Layout type | Columns | Use for |
-|---|---|---|
-| Single column | 1 (160mm wide) | Body text, long-form narrative |
-| Two-column | 2 (77mm each, 6mm gutter) | Side-by-side comparison, text + data panel |
-| Three-column | 3 (49mm each, 6mm gutter) | Three-way comparison, icon + text callouts |
-| Wide + narrow | 110mm + 44mm | Text body + sidebar, quote + annotation |
-
-### Spacing Units
-Base unit: **4mm**
-
-| Purpose | Value |
-|---|---|
-| Paragraph spacing (below) | 4mm (1 unit) |
-| Section header margin (above) | 12mm (3 units) |
-| Section header margin (below) | 6mm (1.5 units) |
-| Component internal padding | 8mm (2 units) |
-| Page section separation | 16mm (4 units) |
-| Table cell padding | 3mm (0.75 units) |
-
----
-
-## 6. Cover Page Structure
-
-The cover page establishes authority before the client reads a word. It should feel finished — not like a title slide.
-
-### Cover Page Elements (top to bottom)
-
-1. **Catalyst Works wordmark** — top left, 30mm from top, 22mm from left. Use white version on dark backgrounds, dark version on light.
-2. **Document category tag** — small all-caps label (Inter 500, 9pt, tracked +2%, Primary color). Examples: "DIAGNOSTIC REPORT" / "STRATEGIC BRIEFING" / "WORKSHOP WORKBOOK"
-3. **Title (Display)** — Inter 700, 40–52pt. Left-aligned. Maximum 2 lines. The title is the diagnosis or the deliverable name — never a project code.
-4. **Subtitle** — Inter 400, 16pt, 70% opacity of body text color. One line maximum.
-5. **Client name or "Prepared for:"** — Inter 500, 12pt. Appears below title block.
-6. **Horizontal rule** — 0.5pt, Primary color, full column width
-7. **Date and document version** — Inter 400, 10pt, bottom of the rule
-8. **Cover image or background block** — Full-width color block using the palette's Base/dark color occupies the bottom 40% of the cover. Optional: a single relevant photo at low opacity within this block.
-
-### Cover Page Don'ts
-- No more than one image on the cover
-- No tagline ("Transforming organizations through...") — the document title carries the message
-- No stock photo of people in suits shaking hands
-- No logo watermarked across the background
+- Never mix more than 2 typefaces in one document
+- Never use italic for emphasis — use bold. Italic is reserved for pull quotes, titles of works, and formal definitions
+- Tracking: 0 for all body text; +0.05em for H4 uppercase labels only
+- H1 color: always `#1B2A4A`
+- H2 color: always `#1B2A4A` with gold underbar
+- H3 color: always `#2D4A7A`
+- Body text color: always `#2C2C2C` — never primary color for running text
+- Paragraph spacing: 10px below each paragraph; 0 first-line indent
 
 ---
 
-## 7. Section Header Formatting
+## PART 3 — PAGE LAYOUT
 
-### Chapter / Section Opener Page (new chapter only)
-- Full-page or half-page spread using the palette's Base/dark color as background
-- H1 in white (Inter 700, 32pt)
-- Optional: one-sentence framing statement in the palette's warmth color (Clay / Sand Clay)
-- Chapter number in top-right corner (Inter 700, 80pt, Primary color at 15% opacity — decorative, not primary navigation)
+### Page Setup
 
-### In-Document Headers
-- **H2:** Left-aligned, preceded by a 0.5pt horizontal rule in Primary color running half the column width
-- **H3:** Left-aligned, no rule, 12mm top margin
-- **H4:** Small caps or tracked uppercase, body text color, 8mm top margin
+| Spec | A4 (default) | US Letter |
+| --- | --- | --- |
+| Page size | 210 × 297mm | 8.5 × 11in |
+| Margin top | 25mm | 1in |
+| Margin bottom | 25mm | 1in |
+| Margin left | 20mm | 1in |
+| Margin right | 20mm | 1in |
+| Text column width | 170mm | 6.5in |
+| Gutter (2-col) | 8mm | 0.3in |
 
----
+### Column Grid
 
-## 8. Table and Data Visualization Standards
+| Layout | Columns | Column Width | Use For |
+| --- | --- | --- | --- |
+| Single column | 1 | 170mm / 6.5in | Reports, proposals, narrative sections |
+| Two-column equal | 2 | 81mm each | Comparison tables, side-by-side analysis |
+| Two-column wide+narrow | 1+1 | 110mm + 52mm | Body text + sidebar, annotation layout |
+| Three-column | 3 | 51mm each | Icon callouts, 3-way comparisons |
 
-### Tables
+### Spacing Scale — Print (base unit = 4mm)
 
-| Element | Style |
-|---|---|
-| Header row | Inter 600, 10pt, white text on Primary color background |
-| Alternating rows | Row 1: white / `#FFFFFF`; Row 2: light background color (`#F3F6F9` for Coastal Clarity) |
-| Border | 0.5pt rule in Primary color at 30% opacity for column dividers; no outer border |
-| Cell padding | 3mm vertical, 4mm horizontal |
-| Number alignment | Right-aligned in all numeric columns |
-| Text alignment | Left-aligned in all text columns |
+| Token | Value | Use |
+| --- | --- | --- |
+| `xs` | 4mm | Paragraph spacing below (body) |
+| `sm` | 8mm | Component internal padding |
+| `md` | 12mm | Section header margin above |
+| `lg` | 16mm | Major section separation |
+| `xl` | 24mm | Page section break (visual white space) |
 
-### Data Callout / KPI Box
-Use for single important metrics that deserve visual emphasis.
+### Section Spacing — Screen Pixels (for HTML-to-PDF)
 
-- Background: Primary color (solid)
-- Metric value: Inter 700, 28–36pt, white
-- Metric label: Inter 500, 10pt, white at 80% opacity
-- Minimum width: 50mm; maximum width: 80mm
-- Use in groups of 2–4 across the page
-
-### Charts and Graphs
-- Use the palette's Primary color as the dominant bar/line color
-- Secondary data series: palette's Secondary or Warmth color
-- Grid lines: 0.25pt, body text color at 15% opacity
-- No 3D charts, no pie charts (use horizontal bar charts instead)
-- Every chart needs a title (H4) and a source line (Caption)
-- Chart background: light background color of the palette (not white, not dark)
-
----
-
-## 9. Quote / Callout Box Styling
-
-### Client Quote or Testimonial
-- Left border rule: 3pt, palette Primary color
-- Background: light background color at 60% opacity
-- Quote text: Source Serif 4 italic, 13pt, body text color
-- Attribution: Inter 500, 10pt, body text color at 70% opacity
-- Padding: 8mm left (after the rule), 6mm top and bottom, 12mm right
-
-### Callout / Insight Box
-Use to surface a single key insight within a section.
-
-- Background: Primary color
-- Text: Inter 600, 12pt, white
-- Icon (optional): single line-style icon, white, 16pt, left-aligned within the box
-- Padding: 8mm all sides
-- Full column width or full text width (never floating mid-paragraph)
-
-### Warning / Caution Box
-- Background: Accent color at 10% opacity (Orange `#FF7A00` tint or Saffron `#F2A900` tint)
-- Left border: 3pt, Accent color (solid)
-- Text: Inter 500, 11pt, body text color
-- Use sparingly — maximum one per document section
+| Token | Value | Use |
+| --- | --- | --- |
+| Paragraph spacing | 10px | Below each body paragraph |
+| H3 margin top | 24px | Before each H3 |
+| H2 margin top | 32px | Before each H2 (major section) |
+| H1 margin top | 40px | Chapter openers |
+| Major section break | 48px | Between report sections |
+| Component padding | 16px | Inside callout boxes, code blocks |
 
 ---
 
-## 10. Footer and Header Standards
+## PART 4 — COMPONENTS
 
-### Running Header
-- Font: Inter 400, 8pt, body text color at 50% opacity
-- Content: Document title (left) | Section name (right)
-- Separator: 0.25pt horizontal rule above header text, full page width within margins
+### 4.1 Callout Box (General / Note)
+
+```text
+Background:     #F4F6F8
+Left border:    4px solid #C49A2E
+Padding:        16px (all sides)
+Border-radius:  4px
+Margin:         24px 0
+```
+
+Text inside: Inter 400, 14px, `#2C2C2C`. Label (e.g. "NOTE") in Inter 700, 12px, `#C49A2E`, uppercase.
+
+### 4.2 Warning Box
+
+```text
+Background:     #FFF8F0
+Left border:    4px solid #E07B2E
+Padding:        16px
+Border-radius:  4px
+Margin:         24px 0
+```
+
+Label: Inter 700, 12px, `#E07B2E`, uppercase ("WARNING"). Text: Inter 400, 14px, `#2C2C2C`.
+
+### 4.3 Success / Highlight Box
+
+```text
+Background:     #F0F7F4
+Left border:    4px solid #2D6A4F
+Padding:        16px
+Border-radius:  4px
+Margin:         24px 0
+```
+
+Label: Inter 700, 12px, `#2D6A4F`, uppercase ("KEY FINDING"). Text: Inter 400, 14px, `#2C2C2C`.
+
+### 4.4 Pull Quote
+
+```text
+Left border:    4px solid #C49A2E
+Padding-left:   16px
+Padding-top:    8px
+Padding-bottom: 8px
+Margin:         32px 0
+```
+
+Text: Source Serif 4 italic, 18px, `#C49A2E`. Attribution line below (if any): Inter 400, 12px, `#6B7280`.
+
+### 4.5 Table
+
+```text
+Header row background:    #1B2A4A
+Header text:              Inter 600, 13px, #FFFFFF
+Header cell padding:      10px 14px
+
+Body row odd:             #FFFFFF
+Body row even:            #F4F6F8
+Body text:                Inter 400, 13px, #2C2C2C
+Body cell padding:        10px 14px
+
+Outer border:             1px solid #E5E7EB
+Cell border:              1px solid #E5E7EB
+Number columns:           right-aligned
+Text columns:             left-aligned
+Status columns:           center-aligned
+```
+
+### 4.6 Code Block
+
+```text
+Background:     #2C2C2C
+Text color:     #E8C86A
+Font:           JetBrains Mono, 13px, weight 400
+Line-height:    1.6
+Padding:        16px
+Border-radius:  4px
+Margin:         24px 0
+Overflow:       horizontal scroll if needed (never wrap code)
+```
+
+### 4.7 Numbered List
+
+```text
+Item text:      Inter 400, 14px, #2C2C2C, line-height 1.57
+Number:         Inter 700, 14px, #C49A2E
+Number format:  1. 2. 3. (period, then space)
+Left indent:    20px
+Item gap:       8px between items
+```
+
+### 4.8 Bullet List
+
+```text
+Item text:      Inter 400, 14px, #2C2C2C, line-height 1.57
+Bullet:         6px round dot, color #C49A2E
+Left indent:    20px
+Item gap:       6px between items
+Max nesting:    2 levels (sub-bullet: 4px dot, #6B7280, indent +16px)
+```
+
+### 4.9 Divider (Horizontal Rule)
+
+```text
+Border:     1px solid #E5E7EB
+Margin:     24px 0
+Width:      100% of column
+```
+
+### 4.10 Data / KPI Callout Box
+
+For single metrics that require visual emphasis — use in groups of 2–4.
+
+```text
+Background:    #1B2A4A
+Padding:       24px
+Border-radius: 4px
+Min-width:     120px
+Max-width:     200px
+
+Metric value:  Inter 700, 36px, #C49A2E
+Metric label:  Inter 500, 11px, rgba(255,255,255,0.70), uppercase
+```
+
+### 4.11 Section Chapter Opener Page
+
+Used when starting a major new chapter/section (optional, formal reports only).
+
+```text
+Background:     #1B2A4A (full page or half-page band)
+H1 text:        Inter 700, 32pt, #FFFFFF
+Framing line:   Inter 400, 14pt, #C49A2E, max 1 sentence
+Chapter number: Inter 700, 80pt, rgba(196,154,46,0.15) — top-right, decorative
+```
+
+---
+
+## PART 5 — RUNNING HEADER AND FOOTER
+
+### Running Header (all pages except cover and chapter openers)
+
+```text
+Left text:      "Catalyst Works Consulting" — Inter 400, 10pt, #6B7280
+Right text:     Document title — Inter 400, 10pt, #6B7280
+Separator:      1px solid #E5E7EB, below header, full margin width
+Padding-bottom: 10px above separator
+Position:       16mm from top of page
+```
 
 ### Running Footer
-- Font: Inter 400, 8pt
-- Content: Catalyst Works logo (text version, 30% opacity) left | Page number center | "Confidential" or "© 2026 Catalyst Works" right
-- Page number: Inter 600, 9pt, Primary color
-- Separator: 0.25pt horizontal rule below footer text
 
-### Cover page and section opener pages: No header or footer.
+```text
+Left text:    "Catalyst Works Consulting" — Inter 400, 9pt, #6B7280
+Center text:  Page number — Inter 600, 9pt, #C49A2E
+Right text:   Document date (YYYY-MM-DD) — Inter 400, 9pt, #6B7280
+Separator:    1px solid #E5E7EB, above footer, full margin width
+Position:     16mm from bottom of page
+```
 
 ---
 
-## 11. File Naming Convention
+## PART 6 — FILE NAMING CONVENTION
 
-### Formula
-`[ClientCode]_[DocType]_[Topic]_[YYYYMMDD]_v[X.X].pdf`
+### Format
 
-### Components
-| Component | Description | Example |
-|---|---|---|
-| ClientCode | 3–5 letter client abbreviation, no spaces | `ACMEL` |
-| DocType | Document category | `REPORT`, `PROPOSAL`, `DECK`, `PLAYBOOK`, `BRIEF` |
-| Topic | 1–3 word description, underscores between words | `OrgDesign`, `Q1Review`, `ChangeReadiness` |
-| Date | YYYYMMDD format | `20260329` |
-| Version | Major.Minor | `v1.0`, `v2.3` |
+```text
+YYYYMMDD_DocumentType_ClientOrProject_v1.pdf
+```
+
+### Document Type Values
+
+| Code | Document Type |
+| --- | --- |
+| `REPORT` | Client diagnostic, research report, analysis |
+| `PROPOSAL` | Engagement proposal, SOW |
+| `BRIEF` | Executive briefing, situation summary |
+| `PLAYBOOK` | Workshop workbook, operational guide |
+| `DECK` | Presentation leave-behind |
+| `FRAMEWORK` | Methodology reference document |
 
 ### Examples
-- `ACMEL_REPORT_OrgDesign_20260329_v1.0.pdf`
-- `INTERNAL_PLAYBOOK_DecisionRights_20260115_v2.1.pdf`
-- `CW_BRIEF_LeadershipDiag_20260401_v1.0.pdf`
+
+```text
+20260329_REPORT_OrgDesign_ACMEL_v1.pdf
+20260401_PROPOSAL_ChangeReadiness_TECHCO_v2.pdf
+20260115_PLAYBOOK_DecisionRights_Internal_v1.pdf
+```
 
 ### Rules
-- No spaces in filenames — use underscores
-- Version numbers are mandatory. Never send a file without them.
-- Date is the date of the final version, not the date the project started
-- Internal Catalyst Works documents use `CW` as the client code
+
+- No spaces — use underscores
+- Version number is mandatory on every file sent externally
+- Date is the date of the version being sent, not the project start date
+- Internal Catalyst Works documents use `Internal` as the client/project field
 
 ---
 
-## 12. When to Use PDF vs. Other Formats
+## PART 7 — PALETTE SELECTION BY DOCUMENT TYPE
 
-| Use PDF when | Use another format when |
-|---|---|
-| The document is a formal deliverable to a client | The content needs to be updated frequently (use Notion or Google Docs) |
-| Page layout, branding, and typography matter to perception | The content is a living process (use a shared doc) |
-| The document will be printed or presented in a formal setting | It's a quick communication (email or Slack) |
-| It's a proposal, report, framework, or playbook | The client needs to edit or comment in real time (use Google Docs) |
-| You need version control and delivery confirmation | The content is primarily data (use a spreadsheet with export) |
+This guide uses Coastal Clarity as default. For other document types, use the following palettes from the Catalyst Works brand system:
 
-**The test:** If you'd be embarrassed to have the client see the file open in preview on your screen, it needs to be a PDF with Catalyst Works design standards applied. If it's a working document that both parties will edit, don't lock it in PDF yet.
+| Document type | Palette | Primary color | Accent color |
+| --- | --- | --- | --- |
+| Client deliverable, report | Coastal Clarity | `#1B2A4A` | `#C49A2E` |
+| Proposal, investor brief | Indigo Olive Saffron | `#1F2A60` | `#F2A900` |
+| Workshop workbook, playbook | Cobalt Grove | `#1E5AA6` | `#FFB000` |
+| Keynote leave-behind, thought leadership | Baobab Nightfall | `#14213D` | `#2BD9C5` |
+
+**Default if uncertain:** Coastal Clarity. Apply the Coastal Clarity values from this guide.
+
+---
+
+## PART 8 — PRODUCTION CHECKLIST
+
+Before exporting or sending any PDF, verify every item:
+
+- [ ] Cover page: full-bleed `#1B2A4A` background, no white margin showing
+- [ ] Gold 4px accent bar present below cover page title
+- [ ] Every H2 has gold underbar (2px solid `#C49A2E`)
+- [ ] No italic used for emphasis (only bold for emphasis; italic for quotes and definitions)
+- [ ] Body text is `#2C2C2C`, never a primary color
+- [ ] Table header rows are `#1B2A4A` background with white text
+- [ ] Code blocks use `#2C2C2C` background and `#E8C86A` text in JetBrains Mono
+- [ ] Pull quotes use Source Serif 4 italic in `#C49A2E` with left border
+- [ ] Running header and footer present on all pages except cover
+- [ ] File name follows `YYYYMMDD_DocumentType_ClientOrProject_v1.pdf` format
+- [ ] Version number present in filename
+- [ ] No generic stock imagery (handshakes, diverse teams around laptops)
+- [ ] Fonts embedded in PDF export (not outlined — embedded for accessibility)
