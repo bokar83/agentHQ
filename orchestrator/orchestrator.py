@@ -96,6 +96,86 @@ _start_time = time.time()
 # CORE ORCHESTRATION LOGIC
 # ══════════════════════════════════════════════════════════════
 
+def run_chat(message: str, session_key: str = "default") -> dict:
+    """
+    Direct conversational response — no crew, no tasks.
+    Uses the last 10 turns of session history so the bot remembers
+    everything discussed. Fast (single LLM call, ~2-3 seconds).
+    """
+    start_time = datetime.now()
+
+    # Load conversation history
+    history_messages = []
+    try:
+        from memory import get_conversation_history
+        history = get_conversation_history(session_key, limit=10)
+        for turn in history:
+            role = turn["role"] if turn["role"] in ("user", "assistant") else "user"
+            history_messages.append({"role": role, "content": turn["content"]})
+    except Exception as e:
+        logger.warning(f"Chat history load failed (non-fatal): {e}")
+
+    # Build system prompt
+    system_prompt = """You are Boubacar's personal AI assistant, built into agentsHQ.
+You know Boubacar well — he is the founder of Catalyst Works Consulting, a strategic
+consulting firm. He works across AI, business development, and building systems.
+
+You have memory of your past conversations with him. Refer to it naturally when relevant.
+Be direct, warm, and concise. No corporate speak. No filler phrases.
+
+When Boubacar asks you to DO something (write posts, build a website, research a topic),
+tell him you'll queue it as a task — he can send it as a normal request and the agent
+crew will handle it. For everything else, just talk with him."""
+
+    # Assemble messages: system + history + current message
+    messages = [{"role": "system", "content": system_prompt}]
+    messages.extend(history_messages)
+    messages.append({"role": "user", "content": message})
+
+    # Single LLM call
+    try:
+        from crewai import LLM
+        llm = LLM(
+            model="openrouter/anthropic/claude-haiku-4.5",
+            api_key=os.environ.get("OPENROUTER_API_KEY"),
+            base_url="https://openrouter.ai/api/v1",
+            temperature=0.7,
+            extra_headers={
+                "HTTP-Referer": "https://agentshq.catalystworks.com",
+                "X-Title": "agentsHQ Chat"
+            }
+        )
+        response = llm.call(messages)
+        if hasattr(response, "content"):
+            reply = response.content.strip()
+        else:
+            reply = str(response).strip()
+    except Exception as e:
+        logger.error(f"Chat LLM call failed: {e}")
+        reply = "Sorry, I hit an error. Try again in a moment."
+
+    # Save this exchange to history
+    try:
+        from memory import save_conversation_turn
+        save_conversation_turn(session_key, "user", message)
+        save_conversation_turn(session_key, "assistant", reply)
+    except Exception as e:
+        logger.warning(f"Chat history save failed (non-fatal): {e}")
+
+    execution_time = (datetime.now() - start_time).total_seconds()
+    logger.info(f"Chat response for session '{session_key}' in {execution_time:.1f}s")
+
+    return {
+        "success": True,
+        "result": reply,
+        "full_output": reply,
+        "task_type": "chat",
+        "files_created": [],
+        "execution_time": execution_time,
+        "classification": {"task_type": "chat", "confidence": 1.0, "is_unknown": False}
+    }
+
+
 def run_orchestrator(task_request: str, from_number: str = "unknown", session_key: str = "default") -> dict:
     """
     Main orchestration function.
@@ -362,15 +442,27 @@ async def run_task(request: TaskRequest):
     
     Returns a TaskResponse with result summary and metadata.
     """
-    logger.info(f"Task received from {request.from_number}: {request.task[:100]}...")
-    
+    logger.info(f"Request from {request.from_number}: {request.task[:100]}...")
+
     try:
-        result = run_orchestrator(
-            task_request=request.task,
-            from_number=request.from_number,
-            session_key=request.session_key
-        )
-        
+        # Classify first to decide chat vs crew
+        from router import classify_task
+        classification = classify_task(request.task)
+        task_type = classification.get("task_type", "unknown")
+
+        if task_type == "chat":
+            logger.info(f"Routing to chat mode for session '{request.session_key}'")
+            result = run_chat(
+                message=request.task,
+                session_key=request.session_key
+            )
+        else:
+            result = run_orchestrator(
+                task_request=request.task,
+                from_number=request.from_number,
+                session_key=request.session_key
+            )
+
         return TaskResponse(
             success=result["success"],
             result=result["result"],
@@ -378,9 +470,9 @@ async def run_task(request: TaskRequest):
             files_created=result.get("files_created", []),
             execution_time=result.get("execution_time", 0.0)
         )
-        
+
     except Exception as e:
-        logger.error(f"Orchestrator execution failed: {e}", exc_info=True)
+        logger.error(f"Request failed: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail=f"Agent execution failed: {str(e)}"
