@@ -96,6 +96,53 @@ _start_time = time.time()
 # CORE ORCHESTRATION LOGIC
 # ══════════════════════════════════════════════════════════════
 
+def _build_system_context() -> str:
+    """
+    Build a live snapshot of the running system to inject into chat.
+    Pulled directly from the loaded modules — always accurate.
+    """
+    lines = ["\nSYSTEM CONTEXT (live — answer questions about this directly):"]
+
+    # Agents
+    agents = [
+        ("Planner",           "Plans and structures every task before execution"),
+        ("Researcher",        "Finds and synthesizes information from the web"),
+        ("Copywriter",        "Writes reports, documents, articles, and copy"),
+        ("Social Media Agent","Creates posts and content in Boubacar's voice"),
+        ("Consulting Agent",  "Produces frameworks, proposals, diagnostics, strategy briefs"),
+        ("Web Builder",       "Builds complete HTML/CSS websites (single-file)"),
+        ("App Builder",       "Builds interactive web applications"),
+        ("Code Agent",        "Writes, debugs, and explains code in any language"),
+        ("QA Agent",          "Reviews all deliverables, fixes issues, ensures quality"),
+        ("Orchestrator Agent","Handles unknown requests, escalates or improvises"),
+        ("Agent Creator",     "Designs new specialist agents when a gap is identified"),
+    ]
+    lines.append("\nAGENTS (11 total):")
+    for name, desc in agents:
+        lines.append(f"  - {name}: {desc}")
+
+    # Task types / crews
+    try:
+        from router import TASK_TYPES
+        lines.append("\nTASK TYPES (what you can ask the crew to do):")
+        for key, meta in TASK_TYPES.items():
+            if key == "chat":
+                continue
+            lines.append(f"  - {key}: {meta['description']}")
+    except Exception:
+        pass
+
+    # Output location
+    output_dir = os.environ.get("AGENTS_OUTPUT_DIR", "/app/outputs")
+    lines.append(f"\nOUTPUT DIRECTORY: {output_dir}")
+    lines.append("VPS: 72.60.209.109 — orchestrator on port 8000")
+    lines.append("Telegram bot: @agentsHQ4Bou_bot")
+    lines.append("n8n: https://n8n.srv1040886.hstgr.cloud")
+    lines.append("GitHub: https://github.com/bokar83/agentHQ")
+
+    return "\n".join(lines)
+
+
 def run_chat(message: str, session_key: str = "default") -> dict:
     """
     Direct conversational response — no crew, no tasks.
@@ -147,6 +194,9 @@ TASKS:
 When Boubacar asks you to DO something (write posts, build a website, research a topic),
 remind him that's a crew job — send it as a regular message and the agents will handle it.
 Keep that redirect short. One line max."""
+
+    # Inject live system context so chat can answer "what agents do we have?" etc.
+    system_prompt += _build_system_context()
 
     # Assemble messages: system + history + current message
     messages = [{"role": "system", "content": system_prompt}]
