@@ -26,6 +26,8 @@ import os
 import json
 import logging
 import time
+import uuid
+import threading
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
@@ -87,6 +89,20 @@ class StatusResponse(BaseModel):
     task_types: list
     agents: list
     uptime_seconds: float
+
+class AsyncTaskResponse(BaseModel):
+    job_id: str
+    status: str = "pending"
+    message: str = "Job queued. Poll /status/{job_id} for updates."
+
+class JobStatusResponse(BaseModel):
+    job_id: str
+    status: str          # pending | running | completed | failed
+    task_type: str = ""
+    result: str = ""
+    files_created: list = []
+    execution_time: float = 0.0
+    error: str = ""
 
 # Track service start time
 _start_time = time.time()
@@ -804,6 +820,102 @@ def get_history(session_id: str, limit: int = 10):
         return {"session_id": session_id, "history": history}
     except Exception as e:
         return {"session_id": session_id, "history": [], "error": str(e)}
+
+
+@app.post("/run-async", response_model=AsyncTaskResponse)
+async def run_task_async(request: TaskRequest, background_tasks: BackgroundTasks):
+    """
+    Async task endpoint — returns job_id immediately, runs crew in background.
+
+    Use for any task that might take >30s (website builds, app builds, research).
+    Poll GET /status/{job_id} until status == 'completed' or 'failed'.
+
+    n8n pattern:
+      1. POST /run-async → get job_id (instant)
+      2. Send "working on it..." to Telegram
+      3. Poll /status/{job_id} every 10s
+      4. When completed, send result to Telegram
+    """
+    job_id = str(uuid.uuid4())[:8]  # short 8-char ID, easy to reference
+
+    from memory import create_job
+    create_job(
+        job_id=job_id,
+        session_key=request.session_key,
+        from_number=request.from_number,
+        task=request.task
+    )
+
+    def _run_in_background():
+        from memory import update_job
+        try:
+            update_job(job_id, status="running")
+
+            # Chat tasks don't belong in async — run sync and complete immediately
+            _msg = request.task.strip().lower()
+            _is_chat = (
+                len(_msg) < 60 and not any(w in _msg for w in [
+                    "write", "create", "build", "research", "analyze", "make",
+                    "draft", "generate", "code", "script", "website", "report",
+                    "proposal", "post", "email", "article"
+                ])
+            )
+            if _is_chat:
+                result = run_chat(message=request.task, session_key=request.session_key)
+            else:
+                result = run_orchestrator(
+                    task_request=request.task,
+                    from_number=request.from_number,
+                    session_key=request.session_key
+                )
+
+            update_job(
+                job_id=job_id,
+                status="completed",
+                result=result["result"],
+                task_type=result.get("task_type", "unknown"),
+                files_created=result.get("files_created", []),
+                execution_time=result.get("execution_time", 0.0)
+            )
+            logger.info(f"Async job {job_id} completed ({result.get('task_type')})")
+
+        except Exception as e:
+            logger.error(f"Async job {job_id} failed: {e}", exc_info=True)
+            from memory import update_job as uj
+            uj(job_id=job_id, status="failed", error=str(e))
+
+    background_tasks.add_task(_run_in_background)
+    logger.info(f"Queued async job {job_id} for: {request.task[:60]}...")
+
+    return AsyncTaskResponse(
+        job_id=job_id,
+        status="pending",
+        message=f"Job {job_id} queued. Poll /status/{job_id} for updates."
+    )
+
+
+@app.get("/status/{job_id}", response_model=JobStatusResponse)
+def get_job_status(job_id: str):
+    """
+    Poll this endpoint after calling /run-async.
+    Returns current status: pending | running | completed | failed.
+    When completed, result and files_created are populated.
+    """
+    from memory import get_job
+    job = get_job(job_id)
+
+    if not job:
+        raise HTTPException(status_code=404, detail=f"Job '{job_id}' not found")
+
+    return JobStatusResponse(
+        job_id=job["job_id"],
+        status=job["status"],
+        task_type=job.get("task_type") or "",
+        result=job.get("result") or "",
+        files_created=job.get("files_created") or [],
+        execution_time=job.get("execution_time") or 0.0,
+        error=job.get("error") or ""
+    )
 
 
 # ── Run directly for testing ───────────────────────────────────

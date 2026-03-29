@@ -319,3 +319,85 @@ def get_next_chunk(session_id: str, chunk_size: int = 3700) -> dict:
     except Exception as e:
         logger.warning(f"get_next_chunk failed (non-fatal): {e}")
         return {"found": False, "chunk": "", "has_more": False}
+
+
+# ── Job Queue ─────────────────────────────────────────────────
+
+def create_job(job_id: str, session_key: str, from_number: str, task: str) -> bool:
+    """Insert a new job record with status='pending'."""
+    try:
+        conn = _pg_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO job_queue (job_id, session_key, from_number, task, status, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, 'pending', %s, %s)
+        """, (job_id, session_key, from_number, task,
+              datetime.utcnow().isoformat(), datetime.utcnow().isoformat()))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    except Exception as e:
+        logger.warning(f"create_job failed: {e}")
+        return False
+
+
+def update_job(job_id: str, status: str, result: str = None,
+               task_type: str = None, files_created: list = None,
+               execution_time: float = None, error: str = None) -> bool:
+    """Update a job record with its outcome."""
+    try:
+        conn = _pg_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE job_queue SET
+                status = %s,
+                result = %s,
+                task_type = %s,
+                files_created = %s,
+                execution_time = %s,
+                error = %s,
+                updated_at = %s
+            WHERE job_id = %s
+        """, (status, result, task_type,
+              json.dumps(files_created or []),
+              execution_time, error,
+              datetime.utcnow().isoformat(), job_id))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    except Exception as e:
+        logger.warning(f"update_job failed: {e}")
+        return False
+
+
+def get_job(job_id: str) -> dict:
+    """Retrieve a job record by ID."""
+    try:
+        conn = _pg_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT job_id, status, task_type, result, files_created,
+                   execution_time, error, created_at, updated_at
+            FROM job_queue WHERE job_id = %s
+        """, (job_id,))
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+        if not row:
+            return {}
+        return {
+            "job_id":         row[0],
+            "status":         row[1],
+            "task_type":      row[2],
+            "result":         row[3],
+            "files_created":  row[4] if isinstance(row[4], list) else [],
+            "execution_time": row[5],
+            "error":          row[6],
+            "created_at":     str(row[7]),
+            "updated_at":     str(row[8]),
+        }
+    except Exception as e:
+        logger.warning(f"get_job failed: {e}")
+        return {}
