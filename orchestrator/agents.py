@@ -28,6 +28,9 @@ from tools import (
     WRITING_TOOLS,
     CODE_TOOLS,
     ORCHESTRATION_TOOLS,
+    HUNTER_TOOLS,
+    voice_polisher_tool,
+    scoreboard_tool,
 )
 
 logger = logging.getLogger(__name__)
@@ -114,6 +117,10 @@ def select_llm(agent_role: str, task_complexity: str = "moderate", temperature: 
         ("consultant",  "simple"):   ("claude-sonnet", 0.3),
         ("consultant",  "moderate"): ("claude-sonnet", 0.3),
         ("consultant",  "complex"):  ("claude-opus",   0.3),
+        ("voice",       "complex"):  ("claude-sonnet", 0.8),
+        ("hunter",      "simple"):   ("claude-haiku",  0.2),
+        ("hunter",      "moderate"): ("claude-sonnet", 0.3),
+        ("hunter",      "complex"):  ("claude-sonnet", 0.4),
     }
     key = (agent_role, task_complexity)
     model_alias, default_temp = selection_matrix.get(key, (DEFAULT_MODEL, 0.3))
@@ -163,6 +170,7 @@ def build_planner_agent() -> Agent:
         llm=select_llm("planner", "moderate"),
         max_iter=3
     )
+
 
 
 def build_researcher_agent() -> Agent:
@@ -366,8 +374,10 @@ def build_qa_agent() -> Agent:
 
 def build_agent_creator_agent() -> Agent:
     return Agent(
-        role="AI Systems Architect & Agent Designer",
-        goal="""Design new specialist agents when the system cannot handle
+        role="Agent Creator (Architecture Specialist)",
+        goal="""Generate optimized agent definitions for task types that cannot be
+        handled by the existing crew. Ensure zero redundancy and strict adherence
+        to AGENTS.md protocols. Each agent should be laser-focused on a single type
         a task. Submit proposals via propose_new_agent tool.
         Never duplicate existing capabilities.""",
         backstory="""AI systems architect who understands what makes agents
@@ -378,4 +388,42 @@ def build_agent_creator_agent() -> Agent:
         tools=ORCHESTRATION_TOOLS + [QueryMemoryTool()],
         llm=select_llm("orchestrator", "complex"),
         max_iter=4
+    )
+
+
+def build_boub_ai_voice_agent() -> Agent:
+    return Agent(
+        role="BouB AI Voice — Voice Polisher & Humanization Specialist",
+        goal="""Ensure every piece of content produced by the system sounds natural,
+        human, and perfectly reflects Boubacar Diallo's authoritative, direct,
+        and insightful voice. Eliminate all AI red flags.""",
+        backstory="""You are the ultimate voice polisher for Catalyst Works.
+        You have a clinical eye for 'AI-slop': em-dash abuse, uniform sentence
+        length, and robotic 'throat-clearing' transitions. You rewrite with grit
+        and soul, channeling Boubacar's direct, principle-led style.
+        You understand that simplicity is the ultimate sophistication.""",
+        verbose=False,
+        allow_delegation=False,
+        tools=WRITING_TOOLS + [voice_polisher_tool, search_tool, QueryMemoryTool()],
+        llm=select_llm("voice", "moderate"),
+        max_iter=4
+    )
+
+
+def build_hunter_agent() -> Agent:
+    """Builds the Specialist Agent: The Growth Hunter (Serper Pivot)."""
+    return Agent(
+        role="Growth Hunter — Utah Niche Specialist",
+        goal="Find 5 high-value professional service SMB leads in Utah daily using Serper and LinkedIn dorking.",
+        backstory=(
+            "You are a relentless prospecting specialist. You use advanced Google Search "
+            "and LinkedIn 'dorking' to identify Founders, Owners, and CEOs of service-based "
+            "businesses (Agencies, Legal, Accounting, Marketing, Home Services) in Salt Lake "
+            "and Utah County. You focus on identifying the right LinkedIn profiles to seed the CRM."
+        ),
+        tools=HUNTER_TOOLS,
+        llm=select_llm("hunter", "moderate"),
+        verbose=True,
+        allow_delegation=False,
+        max_iter=5
     )

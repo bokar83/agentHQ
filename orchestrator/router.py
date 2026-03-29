@@ -68,6 +68,16 @@ TASK_TYPES = {
         "keywords": ["create agent", "new agent", "build agent", "add agent", "teach yourself", "learn to", "new skill", "add capability"],
         "crew": "agent_creator_crew",
     },
+    "voice_polishing": {
+        "description": "Humanize text, remove AI markers, and match Boubacar Diallo's specific voice and style",
+        "keywords": ["humanize", "polish voice", "fix ai slop", "make it human", "sound like me", "voice match", "remove em-dashes", "clean text"],
+        "crew": "voice_polisher_crew",
+    },
+    "hunter_task": {
+        "description": "Proactive growth engine: find Utah service SMB leads, add to CRM, and draft discovery messages",
+        "keywords": ["find leads", "get prospects", "utah leads", "smb prospects", "growth engine", "hunting", "outreach", "daily leads", "fill pipeline"],
+        "crew": "hunter_crew",
+    },
 }
 
 
