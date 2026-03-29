@@ -67,6 +67,7 @@ class TaskRequest(BaseModel):
     from_number: str = "unknown"
     session_key: str = "default"
     context: Optional[dict] = None  # optional extra context from caller
+    callback_url: Optional[str] = None  # webhook URL to POST result when async job completes
 
 class TaskResponse(BaseModel):
     success: bool
@@ -879,10 +880,45 @@ async def run_task_async(request: TaskRequest, background_tasks: BackgroundTasks
             )
             logger.info(f"Async job {job_id} completed ({result.get('task_type')})")
 
+            # Fire callback if provided
+            if request.callback_url:
+                try:
+                    import requests as _requests
+                    _requests.post(request.callback_url, json={
+                        "job_id": job_id,
+                        "status": "completed",
+                        "result": result["result"],
+                        "task_type": result.get("task_type", "unknown"),
+                        "files_created": result.get("files_created", []),
+                        "execution_time": result.get("execution_time", 0.0),
+                        "from_number": request.from_number,
+                        "success": True
+                    }, timeout=10)
+                    logger.info(f"Callback fired for job {job_id}")
+                except Exception as cb_err:
+                    logger.warning(f"Callback failed for job {job_id}: {cb_err}")
+
         except Exception as e:
             logger.error(f"Async job {job_id} failed: {e}", exc_info=True)
             from memory import update_job as uj
             uj(job_id=job_id, status="failed", error=str(e))
+
+            # Fire failure callback if provided
+            if request.callback_url:
+                try:
+                    import requests as _requests
+                    _requests.post(request.callback_url, json={
+                        "job_id": job_id,
+                        "status": "failed",
+                        "result": f"Task failed: {str(e)}",
+                        "task_type": "unknown",
+                        "files_created": [],
+                        "execution_time": 0.0,
+                        "from_number": request.from_number,
+                        "success": False
+                    }, timeout=10)
+                except Exception:
+                    pass
 
     background_tasks.add_task(_run_in_background)
     logger.info(f"Queued async job {job_id} for: {request.task[:60]}...")
