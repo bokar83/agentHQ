@@ -892,6 +892,7 @@ async def run_task_async(request: TaskRequest, background_tasks: BackgroundTasks
                         "files_created": result.get("files_created", []),
                         "execution_time": result.get("execution_time", 0.0),
                         "from_number": request.from_number,
+                        "chat_id": (request.context or {}).get("chat_id", request.from_number),
                         "success": True
                     }, timeout=10)
                     logger.info(f"Callback fired for job {job_id}")
@@ -915,6 +916,7 @@ async def run_task_async(request: TaskRequest, background_tasks: BackgroundTasks
                         "files_created": [],
                         "execution_time": 0.0,
                         "from_number": request.from_number,
+                        "chat_id": (request.context or {}).get("chat_id", request.from_number),
                         "success": False
                     }, timeout=10)
                 except Exception:
