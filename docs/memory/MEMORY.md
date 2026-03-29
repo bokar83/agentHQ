@@ -19,3 +19,7 @@ At the start of each session, tell Claude: "Read D:\Ai_Sandbox\agentsHQ\docs\mem
 ## Skill Creator
 
 - [skill_creator_learnings.md](skill_creator_learnings.md) — active instincts applied during skill creation sessions
+
+## Brand
+
+- [brand_catalyst_works.md](brand_catalyst_works.md) — Catalyst Works full color system: 4 palettes with hex codes and usage rules
