@@ -23,6 +23,11 @@ OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 # ── Task Type Registry ─────────────────────────────────────────
 
 TASK_TYPES = {
+    "chat": {
+        "description": "Casual conversation, follow-up questions, greetings, memory recall, or anything that isn't a structured task",
+        "keywords": ["hey", "hi", "hello", "thanks", "what did", "do you remember", "what was", "tell me", "how are", "who am", "what's up", "remind me", "recap", "summary of", "what have we"],
+        "crew": None,  # no crew — handled by run_chat() directly
+    },
     "website_build": {
         "description": "Build a website, landing page, or web presence for a business or project",
         "keywords": ["website", "landing page", "web presence", "homepage", "site", "web page", "online presence"],
@@ -94,6 +99,14 @@ def classify_task(user_request: str) -> dict:
 AVAILABLE TASK TYPES:
 {task_registry_str}
 
+ROUTING RULES:
+- Use "chat" for: greetings, casual questions, follow-ups referencing prior conversation,
+  memory recall ("what did we discuss", "do you remember"), short replies, thanks, or
+  anything that doesn't require a specialist crew to produce a deliverable.
+- Use a specialist type (research_report, social_content, etc.) only when the request
+  clearly asks for a specific deliverable to be produced.
+- When in doubt between "chat" and another type, prefer "chat".
+
 INCOMING REQUEST:
 "{user_request}"
 
@@ -102,7 +115,7 @@ Respond with a JSON object only. No explanation. No markdown. Just raw JSON:
     "task_type": "<one of the task type keys above, or 'unknown'>",
     "confidence": <0.0 to 1.0>,
     "reasoning": "<one sentence why>",
-    "is_unknown": <true if confidence < 0.75 or truly doesn't fit>,
+    "is_unknown": <true if confidence < 0.75 or truly doesn't fit — false for 'chat'>,
     "proposed_agent_name": "<if unknown, suggest a name for a new agent>",
     "proposed_agent_description": "<if unknown, describe what the new agent would do>"
 }}"""
@@ -125,9 +138,14 @@ Respond with a JSON object only. No explanation. No markdown. Just raw JSON:
 
         result = json.loads(content)
 
-        if result.get("task_type") not in TASK_TYPES and result.get("task_type") != "unknown":
+        valid_types = set(TASK_TYPES.keys()) | {"unknown"}
+        if result.get("task_type") not in valid_types:
             result["task_type"] = "unknown"
             result["is_unknown"] = True
+
+        # chat is never "unknown" — it's a first-class type
+        if result.get("task_type") == "chat":
+            result["is_unknown"] = False
 
         logger.info(f"Classified '{user_request[:50]}' as '{result['task_type']}' (confidence: {result['confidence']})")
         return result
