@@ -234,3 +234,88 @@ def save_conversation_turn(session_id: str, role: str, content: str) -> bool:
     except Exception as e:
         logger.warning(f"save_conversation_turn failed (non-fatal): {e}")
         return False
+
+
+def _pg_conn():
+    """Return a psycopg2 connection using env vars."""
+    import psycopg2
+    return psycopg2.connect(
+        host=os.environ.get("POSTGRES_HOST", "agentshq-postgres-1"),
+        database=os.environ.get("POSTGRES_DB", "postgres"),
+        user=os.environ.get("POSTGRES_USER", "postgres"),
+        password=os.environ.get("POSTGRES_PASSWORD", ""),
+        port=5432
+    )
+
+
+def save_overflow(session_id: str, full_output: str, delivered_chars: int, task_type: str = "") -> bool:
+    """Store the full output for a session so 'more' can retrieve the next chunk."""
+    try:
+        conn = _pg_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO pending_overflow (session_id, full_output, delivered_chars, task_type, created_at)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (session_id) DO UPDATE
+            SET full_output = EXCLUDED.full_output,
+                delivered_chars = EXCLUDED.delivered_chars,
+                task_type = EXCLUDED.task_type,
+                created_at = EXCLUDED.created_at
+        """, (session_id, full_output, delivered_chars, task_type, datetime.utcnow().isoformat()))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
+    except Exception as e:
+        logger.warning(f"save_overflow failed (non-fatal): {e}")
+        return False
+
+
+def get_next_chunk(session_id: str, chunk_size: int = 3700) -> dict:
+    """
+    Retrieve the next unsent chunk for a session.
+    Returns: {found: bool, chunk: str, has_more: bool}
+    Advances the delivered_chars pointer after retrieval.
+    """
+    try:
+        conn = _pg_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT full_output, delivered_chars, task_type
+            FROM pending_overflow WHERE session_id = %s
+        """, (session_id,))
+        row = cur.fetchone()
+        if not row:
+            cur.close()
+            conn.close()
+            return {"found": False, "chunk": "", "has_more": False}
+
+        full_output, delivered_chars, task_type = row
+        remaining = full_output[delivered_chars:]
+
+        if not remaining.strip():
+            # Nothing left — clean up
+            cur.execute("DELETE FROM pending_overflow WHERE session_id = %s", (session_id,))
+            conn.commit()
+            cur.close()
+            conn.close()
+            return {"found": True, "chunk": "[No more content — that was everything.]", "has_more": False}
+
+        chunk = remaining[:chunk_size]
+        new_delivered = delivered_chars + len(chunk)
+        has_more = new_delivered < len(full_output)
+
+        if has_more:
+            cur.execute("""
+                UPDATE pending_overflow SET delivered_chars = %s WHERE session_id = %s
+            """, (new_delivered, session_id))
+        else:
+            cur.execute("DELETE FROM pending_overflow WHERE session_id = %s", (session_id,))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+        return {"found": True, "chunk": chunk, "has_more": has_more}
+    except Exception as e:
+        logger.warning(f"get_next_chunk failed (non-fatal): {e}")
+        return {"found": False, "chunk": "", "has_more": False}

@@ -288,7 +288,10 @@ def run_orchestrator(task_request: str, from_number: str = "unknown", session_ke
 
     # Build Telegram-friendly summary
     summary = _build_summary(task_type, result_str, files_created, execution_time)
-    
+
+    # Save overflow so user can reply 'more' if output was truncated
+    _save_overflow_if_needed(session_key, result_str, task_type)
+
     return {
         "success": True,
         "result": summary,
@@ -410,12 +413,23 @@ def _build_summary(
     if full_output and len(full_output) > 50:
         content = full_output.strip()
         if len(content) > MAX_CONTENT:
-            content = content[:MAX_CONTENT] + "\n\n[truncated — full output saved to /app/outputs]"
+            content = content[:MAX_CONTENT] + "\n\n[reply 'more' to see the rest]"
         lines.append(content)
     else:
         lines.append("[No output content returned by agents]")
 
     return "\n".join(lines)
+
+
+def _save_overflow_if_needed(session_key: str, full_output: str, task_type: str) -> None:
+    """Save overflow to DB if output exceeds one Telegram message."""
+    MAX_CONTENT = 3700
+    if full_output and len(full_output.strip()) > MAX_CONTENT:
+        try:
+            from memory import save_overflow
+            save_overflow(session_key, full_output.strip(), MAX_CONTENT, task_type)
+        except Exception as e:
+            logger.warning(f"Overflow save failed (non-fatal): {e}")
 
 
 # ══════════════════════════════════════════════════════════════
@@ -466,6 +480,23 @@ async def run_task(request: TaskRequest):
     logger.info(f"Request from {request.from_number}: {request.task[:100]}...")
 
     try:
+        # "more" command — retrieve next chunk of a truncated output
+        if request.task.strip().lower() in ("more", "more please", "continue", "show more"):
+            from memory import get_next_chunk
+            chunk_result = get_next_chunk(request.session_key)
+            if chunk_result["found"]:
+                suffix = "\n\n[reply 'more' for the rest]" if chunk_result["has_more"] else "\n\n[end of output]"
+                reply = chunk_result["chunk"] + suffix
+            else:
+                reply = "Nothing more to show — that was the full output."
+            return TaskResponse(
+                success=True,
+                result=reply,
+                task_type="more",
+                files_created=[],
+                execution_time=0.0
+            )
+
         # Classify first to decide chat vs crew
         from router import classify_task
         classification = classify_task(request.task)
