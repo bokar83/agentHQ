@@ -923,7 +923,7 @@ async def run_task_async(request: TaskRequest, background_tasks: BackgroundTasks
                     pass
 
     background_tasks.add_task(_run_in_background)
-    logger.info(f"Queued async job {job_id} for: {request.task[:60]}...")
+    logger.info(f"Queued async job {job_id} for: {request.task[:60]}... callback={request.callback_url or 'none'} context={request.context}")
 
     return AsyncTaskResponse(
         job_id=job_id,
