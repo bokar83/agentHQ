@@ -117,19 +117,14 @@ def save_to_memory(
         cur = conn.cursor()
         cur.execute("""
             INSERT INTO conversation_archive
-            (session_id, role, content, created_at, metadata)
+            (from_number, direction, message_text, task_type, timestamp)
             VALUES (%s, %s, %s, %s, %s)
         """, (
             from_number,
-            "agent",
-            result_summary,
-            timestamp,
-            json.dumps({
-                "task_type": task_type,
-                "files": files_created or [],
-                "execution_time": execution_time,
-                "original_request": task_request
-            })
+            "outbound",
+            result_summary[:2000],
+            task_type,
+            timestamp
         ))
         conn.commit()
         cur.close()
