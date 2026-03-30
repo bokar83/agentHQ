@@ -14,17 +14,16 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy and install Python dependencies first (for Docker layer caching)
-COPY requirements.txt .
+# Copy and install Python dependencies
+COPY orchestrator/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy all orchestrator source files
-COPY orchestrator.py .
-COPY router.py .
-COPY crews.py .
-COPY agents.py .
-COPY tools.py .
-COPY memory.py .
+COPY orchestrator/*.py .
+
+# Copy skills and tests
+COPY skills/ skills/
+COPY tests/ tests/
 
 # Create required directories
 RUN mkdir -p /app/outputs /app/logs /app/outputs/proposals

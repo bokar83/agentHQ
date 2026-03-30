@@ -80,8 +80,8 @@ services:
   # Task:   curl -X POST http://localhost:8000/run -H "Content-Type: application/json" -d '{"task":"..."}'
   orchestrator:
     build:
-      context: ./orchestrator
-      dockerfile: Dockerfile
+      context: ./
+      dockerfile: orchestrator/Dockerfile
     container_name: orc-crewai
     restart: unless-stopped
     ports:
@@ -102,6 +102,7 @@ services:
       - GITHUB_USERNAME=${GITHUB_USERNAME}
       - GITHUB_REPO=${GITHUB_REPO}
       - REPORT_EMAIL=${REPORT_EMAIL}
+      - APOLLO_API_KEY=${APOLLO_API_KEY}
     volumes:
       - ./agent_outputs:/app/outputs
       - ./logs:/app/logs
