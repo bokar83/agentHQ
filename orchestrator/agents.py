@@ -449,6 +449,6 @@ def build_prompt_engineer_agent() -> Agent:
         verbose=False,
         allow_delegation=False,
         tools=[],
-        llm=get_llm("claude-sonnet", 0.4),
+        llm=get_llm("claude-sonnet", 0.4),  # temp 0.4 intentional: structured rewriting, not creative generation
         max_iter=3
     )
