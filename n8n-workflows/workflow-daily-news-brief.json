@@ -1,0 +1,226 @@
+{
+  "name": "Daily News Brief → Telegram",
+  "nodes": [
+
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "node-schedule",
+      "name": "Daily at 7am",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [180, 400],
+      "notes": "Fires every day at 7:00 AM server time. Adjust cron expression to match your timezone."
+    },
+
+    {
+      "parameters": {
+        "url": "http://orc-crewai:8000/health",
+        "options": { "timeout": 5000 }
+      },
+      "id": "node-health",
+      "name": "Orchestrator Health Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [400, 400],
+      "onError": "continueErrorOutput"
+    },
+
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "ok",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ]
+        }
+      },
+      "id": "node-health-check",
+      "name": "Is Orchestrator Up?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [620, 400]
+    },
+
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "⚠️ *Daily News Brief skipped* — orchestrator is not responding. Check VPS at 72.60.209.109.",
+        "additionalFields": { "parse_mode": "Markdown" }
+      },
+      "id": "node-down-alert",
+      "name": "Alert: Orchestrator Down",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [840, 240],
+      "credentials": { "telegramApi": { "id": "telegram-bot-creds", "name": "agentsHQ Telegram Bot" } }
+    },
+
+    {
+      "parameters": {
+        "jsCode": "const topics = [\n  'AI breakthroughs, agent releases, and model updates',\n  'US and global economics: Fed, markets, tariffs, macro signals',\n  'Solopreneur and creator economy trends',\n  'Africa tech: startups, investment, infrastructure, fintech',\n  'Business strategy and consulting trends',\n  'Consulting and professional services market shifts',\n  'Automation, no-code, and AI tool releases',\n  'Emerging markets and investment flows'\n];\n\nconst today = new Date().toLocaleDateString('en-US', {\n  weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'\n});\n\nreturn [{\n  json: {\n    task: `Daily news brief for ${today}. Cover all 8 Catalyst Works topics: ${topics.join('; ')}. For each topic find the 1-2 most important stories from the last 48 hours. Include full Catalyst Works impact analysis on every story (client acquisition, AI tool opportunity, business strategy lenses). End with a single This Week Signal sentence.`,\n    from_number: 'n8n-scheduler',\n    session_key: 'daily_news_brief',\n    today\n  }\n}];"
+      },
+      "id": "node-build-task",
+      "name": "Build News Brief Task",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [840, 400]
+    },
+
+    {
+      "parameters": {
+        "url": "http://orc-crewai:8000/run",
+        "method": "POST",
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "task": "={{ $json.task }}",
+          "from_number": "={{ $json.from_number }}",
+          "session_key": "={{ $json.session_key }}"
+        },
+        "options": {
+          "timeout": 300000,
+          "response": { "response": { "fullResponse": true } }
+        }
+      },
+      "id": "node-run-brief",
+      "name": "Run News Brief Crew",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1060, 400],
+      "onError": "continueErrorOutput",
+      "notes": "Timeout set to 5 minutes. News brief crew runs: Planner → Researcher → Copywriter → QA → Voice."
+    },
+
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.body.success }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "equals" }
+            }
+          ]
+        }
+      },
+      "id": "node-success-check",
+      "name": "Brief Succeeded?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1280, 400]
+    },
+
+    {
+      "parameters": {
+        "jsCode": "const result = $input.first().json.body.result || '';\n\n// Extract the DELIVERABLE block from the QA output format\nconst deliverableMatch = result.match(/DELIVERABLE:\\s*([\\s\\S]+)$/i);\nconst brief = deliverableMatch ? deliverableMatch[1].trim() : result.trim();\n\n// Telegram has a 4096 char limit per message — split if needed\nconst MAX_LEN = 4000;\nconst chunks = [];\n\nif (brief.length <= MAX_LEN) {\n  chunks.push(brief);\n} else {\n  // Split on double newlines (section boundaries) to keep stories intact\n  const sections = brief.split(/\\n---\\n/);\n  let current = '';\n  for (const section of sections) {\n    if ((current + section).length > MAX_LEN) {\n      if (current) chunks.push(current.trim());\n      current = section;\n    } else {\n      current += (current ? '\\n---\\n' : '') + section;\n    }\n  }\n  if (current) chunks.push(current.trim());\n}\n\nreturn chunks.map((chunk, i) => ({\n  json: {\n    chunk,\n    part: i + 1,\n    total: chunks.length,\n    is_first: i === 0\n  }\n}));"
+      },
+      "id": "node-format",
+      "name": "Format for Telegram",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 300]
+    },
+
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "={{ $json.is_first ? '📰 *Catalyst Works — Daily News Brief*\\n\\n' + $json.chunk : $json.chunk }}",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "disable_web_page_preview": true
+        }
+      },
+      "id": "node-send-telegram",
+      "name": "Send to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1720, 300],
+      "credentials": { "telegramApi": { "id": "telegram-bot-creds", "name": "agentsHQ Telegram Bot" } },
+      "notes": "Sends each chunk as a separate message to respect Telegram's 4096 char limit."
+    },
+
+    {
+      "parameters": {
+        "jsCode": "const error = $input.first().json;\nconst msg = error?.body?.detail || error?.message || JSON.stringify(error).slice(0, 300);\nreturn [{ json: { error_message: msg } }];"
+      },
+      "id": "node-error-format",
+      "name": "Format Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1500, 520]
+    },
+
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "❌ *Daily News Brief failed*\\n\\nError: `={{ $json.error_message }}`\\n\\nCheck orchestrator logs: `ssh root@72.60.209.109` → `docker logs orc-crewai --tail 50`",
+        "additionalFields": { "parse_mode": "Markdown" }
+      },
+      "id": "node-error-telegram",
+      "name": "Send Error to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1720, 520],
+      "credentials": { "telegramApi": { "id": "telegram-bot-creds", "name": "agentsHQ Telegram Bot" } }
+    }
+
+  ],
+
+  "connections": {
+    "Daily at 7am": {
+      "main": [[{ "node": "Orchestrator Health Check", "type": "main", "index": 0 }]]
+    },
+    "Orchestrator Health Check": {
+      "main": [[{ "node": "Is Orchestrator Up?", "type": "main", "index": 0 }]],
+      "error": [[{ "node": "Alert: Orchestrator Down", "type": "main", "index": 0 }]]
+    },
+    "Is Orchestrator Up?": {
+      "main": [
+        [{ "node": "Build News Brief Task", "type": "main", "index": 0 }],
+        [{ "node": "Alert: Orchestrator Down", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build News Brief Task": {
+      "main": [[{ "node": "Run News Brief Crew", "type": "main", "index": 0 }]]
+    },
+    "Run News Brief Crew": {
+      "main": [[{ "node": "Brief Succeeded?", "type": "main", "index": 0 }]],
+      "error": [[{ "node": "Format Error", "type": "main", "index": 0 }]]
+    },
+    "Brief Succeeded?": {
+      "main": [
+        [{ "node": "Format for Telegram", "type": "main", "index": 0 }],
+        [{ "node": "Format Error", "type": "main", "index": 0 }]
+      ]
+    },
+    "Format for Telegram": {
+      "main": [[{ "node": "Send to Telegram", "type": "main", "index": 0 }]]
+    },
+    "Format Error": {
+      "main": [[{ "node": "Send Error to Telegram", "type": "main", "index": 0 }]]
+    }
+  },
+
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+
+  "meta": {
+    "notes": "SETUP REQUIRED:\n1. Set TELEGRAM_CHAT_ID env variable in n8n (your personal Telegram chat ID — get it from @userinfobot)\n2. Configure 'agentsHQ Telegram Bot' credential with your bot token from TELEGRAM_BOT_TOKEN\n3. Adjust cron time (default: 7am server time). Server is UTC — adjust for your timezone.\n4. Test manually: activate workflow, click 'Test workflow' button in n8n\n5. Optional: change topics in 'Build News Brief Task' node to customize the daily brief\n\nFLOW:\nSchedule (7am) → Health Check → Build Task → Run Crew (5min timeout) → Split into chunks → Telegram\n\nERROR HANDLING:\n- Orchestrator down: sends alert to Telegram immediately\n- Crew failure: sends error with debug command to Telegram\n- Message too long: auto-splits on section boundaries (---)"
+  }
+}
