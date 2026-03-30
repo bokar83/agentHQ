@@ -62,3 +62,9 @@ desktop.ini
 
 # ── Docker volumes ───────────────────────────────────────────
 volumes/
+
+# ── Scratch / temp scripts ───────────────────────────────────
+tmp/
+
+# ── Compiled binaries / local tools ─────────────────────────
+tools/
