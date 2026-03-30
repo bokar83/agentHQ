@@ -85,6 +85,13 @@ TASK_TYPES = {
                      "write me a prompt", "improve prompt", "rewrite this prompt", "make this better"],
         "crew": "prompt_engineer_crew",
     },
+    "news_brief": {
+        "description": "Curate and summarize current news on AI, economics, business, solopreneur topics, Africa tech, or any specified topic — with impact analysis for Catalyst Works",
+        "keywords": ["news", "headlines", "what's happening", "brief me", "news of the day",
+                     "daily brief", "current events", "catch me up", "what's going on",
+                     "trending", "latest in", "news brief", "tell me the news", "what should i know"],
+        "crew": "news_brief_crew",
+    },
 }
 
 
