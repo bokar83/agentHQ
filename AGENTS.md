@@ -1,4 +1,5 @@
 # agentsHQ — Agent System Identity & Operating Rules
+
 **Owner:** Boubacar Diallo  
 **System:** Catalyst Works Consulting — AI-Augmented Practice  
 **Version:** 2.0  
@@ -28,7 +29,7 @@ Every agent in this system operates under a shared identity: we are **Catalyst W
 ## System Architecture
 
 ```
-WhatsApp / HTTP / n8n
+Telegram / HTTP / n8n
         ↓
    Router Agent          ← classifies intent, selects crew
         ↓
@@ -43,9 +44,11 @@ WhatsApp / HTTP / n8n
  │  • App Builder                   │
  │  • Consulting Agent              │
  │  • Social Media Agent (leGriot)  │
+ │  • Hunter Agent (UT Specialist)  │
  │  • Code Agent                    │
  │  • QA Agent                      │
- │  • Agent Creator (future)        │
+ │  • BouB AI Voice (Humanization)  │
+ │  • Agent Creator (Future)        │
  └──────────────────────────────────┘
         ↓
    Output saved → /outputs/
@@ -62,14 +65,16 @@ The Router classifies every incoming request into one of these types. New types 
 
 | Task Type | Trigger Keywords | Primary Crew |
 |---|---|---|
-| `website_build` | website, landing page, web presence | planner, researcher, copywriter, web_builder, qa |
-| `app_build` | app, tool, calculator, dashboard, form, tracker | planner, researcher, app_builder, qa |
-| `research_report` | research, analyze, find, summarize, compare | planner, researcher, copywriter, qa |
-| `consulting_deliverable` | proposal, brief, diagnostic, framework, strategy | planner, researcher, copywriter, qa |
-| `social_content` | post, tweet, LinkedIn, Instagram, caption, social | planner, copywriter, qa |
-| `code_task` | code, script, function, debug, build, automate | planner, code_agent, qa |
-| `general_writing` | write, draft, letter, email, document | planner, copywriter, qa |
-| `unknown` | anything else | router escalates to Boubacar with proposed new agent |
+| `website_build` | website, landing page, web presence | planner, researcher, copywriter, web_builder, qa, boub_ai_voice |
+| `app_build` | app, tool, calculator, dashboard, form, tracker | planner, researcher, app_builder, qa, boub_ai_voice |
+| `research_report` | research, analyze, find, summarize, compare | planner, researcher, copywriter, qa, boub_ai_voice |
+| `consulting_deliverable` | proposal, brief, diagnostic, framework, strategy | planner, researcher, copywriter, qa, boub_ai_voice |
+| `social_content` | post, tweet, LinkedIn, Instagram, caption, social | planner, copywriter, qa, boub_ai_voice |
+| `code_task` | code, script, function, debug, build, automate | planner, code_agent, qa, boub_ai_voice |
+| `general_writing` | write, draft, letter, email, document | planner, copywriter, qa, boub_ai_voice |
+| `voice_polishing` | humanize, polish, voice match | boub_ai_voice |
+| `hunter_task` | find leads, get prospects, utah leads, growth engine | hunter, boub_ai_voice |
+| `unknown` | anything else | router escalates to Boubacar via Telegram with proposed new agent |
 
 ---
 
@@ -145,7 +150,7 @@ Agents query memory at the start of each task to surface relevant past work.
 
 If any agent is uncertain, blocked, or encounters an unknown task type:
 - Do NOT hallucinate a response
-- Send an escalation message to Boubacar via the WhatsApp reply channel
+- Send an escalation message to Boubacar via the Telegram reply channel
 - Include: what was asked, what was tried, what decision is needed
 - Wait for input before continuing
 
