@@ -1023,6 +1023,151 @@ def build_prompt_engineer_crew(user_request: str) -> Crew:
     )
 
 
+def build_news_brief_crew(user_request: str) -> Crew:
+    """
+    Crew for: news_brief
+    Searches for current news across Catalyst Works priority topics,
+    curates the top stories, and delivers a structured executive brief
+    with per-story impact analysis across three lenses:
+    client acquisition, AI tool opportunity, and business strategy.
+    """
+    planner = build_planner_agent()
+    researcher = build_researcher_agent()
+    copywriter = build_copywriter_agent()
+    qa = build_qa_agent()
+
+    task_plan = Task(
+        description=f"""
+        Plan a news briefing for Boubacar Diallo, founder of Catalyst Works Consulting.
+        He is building a $10K/day consulting practice using AI, Theory of Constraints,
+        and a solopreneur model with Africa and emerging markets focus.
+
+        REQUEST: {user_request}
+
+        Determine:
+        1. Is this a focused topic brief or a full daily brief across all default topics?
+        2. If focused: identify the specific topic and search angles to use.
+        3. If full daily brief: confirm all 8 default topics below are covered:
+           - Artificial Intelligence (breakthroughs, tools, model releases, AI agents)
+           - US & Global Economics (Fed, markets, tariffs, recession signals, macro shifts)
+           - Solopreneur & Creator Economy (solo business models, pricing, positioning)
+           - Africa Tech & Business (startups, investment, infrastructure, policy, fintech)
+           - Business Strategy (consulting trends, leadership, competitive moves)
+           - Consulting & Professional Services (market rates, client demand, niche emergence)
+           - Automation & No-Code/AI Tools (new tools, platform changes, workflow automation)
+           - Emerging Markets & Investment (VC flows, trade policy, frontier opportunities)
+        4. Define the search queries (2 per topic for full brief, 3-4 for focused brief).
+        5. Prioritize sources: Reuters, Bloomberg, TechCrunch, HBR, Quartz Africa, Axios,
+           McKinsey Insights, MIT Tech Review, rest.africa, Disrupt Africa, Fast Company.
+        """,
+        expected_output="Briefing plan: topic scope, search queries per topic, source priorities",
+        agent=planner
+    )
+
+    task_research = Task(
+        description=f"""
+        Research current news for Catalyst Works intelligence feed.
+        REQUEST: {user_request}
+
+        Following the briefing plan above:
+        1. Run the defined search queries for each topic.
+        2. For each topic, identify the 1-2 most significant stories from the last 48-72 hours.
+           For a single-topic focused brief, find 3-5 top stories.
+        3. For each story collect:
+           - Headline (sharp, no fluff)
+           - Source outlet and publication date
+           - Core facts (what actually happened — 2-3 sentences max)
+           - Key data point or named source that gives it credibility
+        4. Skip opinion pieces without data. Skip anything older than 72 hours unless
+           critical context requires it.
+        5. Distinguish facts from analysis clearly.
+        """,
+        expected_output="Curated news findings: top stories per topic with headline, source, date, and core facts",
+        agent=researcher,
+        context=[task_plan]
+    )
+
+    task_write = Task(
+        description=f"""
+        Write a Catalyst Works executive news brief.
+        REQUEST: {user_request}
+
+        Using the research findings above, write a structured brief in this exact format:
+
+        # News Brief — [Today's Date]
+        *[Topic: All Topics / or specific topic name]*
+
+        ---
+
+        ## [Story Headline — sharp, no fluff]
+        **Source:** [Outlet Name] | **Date:** [Publication date]
+
+        **What happened:** [1-2 sentences. Facts only. No opinion.]
+
+        **Why it matters:** [1-2 sentences. The signal, not the noise.]
+
+        **Catalyst Works impact:**
+        - **Client acquisition:** [How could this create demand for TOC consulting or AI advisory?]
+        - **AI tool opportunity:** [Is there a tool, workflow, or capability worth adopting?]
+        - **Business strategy:** [Does this shift pricing, positioning, market timing, or competition?]
+
+        ---
+
+        [Repeat for each story]
+
+        ---
+        ## This Week's Signal
+        [One sentence: the single most important thing across all stories and what Boubacar should do, if anything]
+
+        OUTPUT RULES:
+        - Full daily brief: top 1-2 stories per topic
+        - Focused topic brief: top 3-5 stories
+        - Every story gets all three Catalyst Works impact lenses — always
+        - If a lens genuinely doesn't apply, write "No direct impact identified" — never fabricate
+        - Tone: direct, crisp, no hedging — like a smart analyst who respects the reader's time
+        - "This signals X" over "This might mean X". "Watch for Y" over "It remains to be seen"
+        - Save the completed brief using save_output
+        """,
+        expected_output="Complete executive news brief in Markdown, saved to outputs",
+        agent=copywriter,
+        context=[task_plan, task_research]
+    )
+
+    task_qa = Task(
+        description=f"""
+        Review the news brief for accuracy, completeness, and signal quality.
+        Fix any issues yourself. Original request: {user_request}
+
+        Check:
+        - Every story has a source and date
+        - Every story has all three Catalyst Works impact lenses
+        - The "This Week's Signal" is present and actionable
+        - No fabricated facts or sources
+        - Tone is direct and non-hedging throughout
+
+        OUTPUT FORMAT (mandatory every time):
+        WHAT WAS DONE: [topics covered, number of stories, date range]
+        WHY IT WAS DONE THIS WAY: [brief vs full brief decision and sourcing approach]
+        QUALITY CHECK: PASSED or QUALITY CHECK: REVISED — [what was fixed]
+        DELIVERABLE:
+        [The complete news brief — always included, never omitted]
+        """,
+        expected_output="QA report followed by the complete, verified news brief",
+        agent=qa,
+        context=[task_write]
+    )
+
+    task_voice = build_humanization_task([task_qa])
+
+    return Crew(
+        agents=[planner, researcher, copywriter, qa, task_voice.agent],
+        tasks=[task_plan, task_research, task_write, task_qa, task_voice],
+        process=Process.sequential,
+        verbose=False,
+        memory=False,
+    )
+
+
 CREW_REGISTRY = {
     "website_crew":        build_website_crew,
     "app_crew":            build_app_crew,
@@ -1035,6 +1180,7 @@ CREW_REGISTRY = {
     "voice_polisher_crew":    build_voice_polisher_crew,
     "hunter_crew":            build_hunter_crew,
     "prompt_engineer_crew":   build_prompt_engineer_crew,
+    "news_brief_crew":        build_news_brief_crew,
     "unknown_crew":           build_unknown_crew,
 }
 
