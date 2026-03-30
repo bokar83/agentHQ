@@ -24,7 +24,7 @@ See CLAUDE.md for full checklist.
 import os
 import logging
 import concurrent.futures
-from crewai import Agent, Task, Crew, Process
+from crewai import Task, Crew, Process
 from agents import (
     build_planner_agent,
     build_researcher_agent,
@@ -56,29 +56,6 @@ EMBEDDER_CONFIG = {
     }
 }
 
-
-def build_humanization_task(context_tasks: list) -> Task:
-    """
-    Reusable task for the BouB AI Voice agent to verify and polish 
-    the output of any crew.
-    """
-    voice_agent = build_boub_ai_voice_agent()
-    return Task(
-        description="""
-        As the final authority on voice, review the deliverable produced by the crew.
-        
-        1. STRIP AI MARKERS: Use the voice_polisher tool to programmatically clean the text.
-        2. ENFORCE HUMANITY: Rewrite sections that sound robotic, repetitive, or overly formal.
-        3. CHANNEL BOUBACAR: Ensure the tone is direct, opinionated, and diagnosis-first.
-        4. NO HEDGING: Remove 'In my opinion', 'It seems', 'I believe'. State facts and insights clearly.
-        5. VERIFY RED FLAGS: Check for em-dash abuse and uniform sentence lengths.
-        
-        The goal is a deliverable that feels like it was written by Boubacar Diallo himself.
-        """,
-        expected_output="The final, humanized version of the deliverable, free of AI-slop.",
-        agent=voice_agent,
-        context=context_tasks
-    )
 
 
 def build_website_crew(user_request: str) -> Crew:
@@ -211,11 +188,9 @@ def build_website_crew(user_request: str) -> Crew:
         context=[task_build]
     )
 
-    task_voice = build_humanization_task([task_qa])
-
     return Crew(
-        agents=[planner, researcher, copywriter, web_builder, qa, task_voice.agent],
-        tasks=[task_plan, task_research, task_copy, task_build, task_qa, task_voice],
+        agents=[planner, researcher, copywriter, web_builder, qa],
+        tasks=[task_plan, task_research, task_copy, task_build, task_qa],
         process=Process.sequential,
         verbose=False,
         memory=False,
@@ -844,9 +819,7 @@ def build_hunter_crew(user_request: str) -> Crew:
     Finds leads, adds to CRM, and drafts discovery messages.
     """
     hunter = build_hunter_agent()
-    voice = build_boub_ai_voice_agent()
 
-    # Task 1: Find and log 5 leads
     hunting_task = Task(
         description=(
             f"GOAL: Find 5 high-quality Utah service SMB leads.\n"
@@ -858,7 +831,6 @@ def build_hunter_crew(user_request: str) -> Crew:
         expected_output="Confirmation of 5 leads added to CRM with IDs."
     )
 
-    # Task 2: Draft personalized Discovery messages
     outreach_task = Task(
         description=(
             "For the 5 leads just added, draft a 'Discovery' message for each.\n"
@@ -869,21 +841,9 @@ def build_hunter_crew(user_request: str) -> Crew:
         expected_output="5 drafted messages, one for each lead."
     )
 
-    # Task 3: Voice Polish (Humanization)
-    humanization_task = Task(
-        description=(
-            "Review the 5 drafted messages. Remove all AI-isms (em-dashes, robotic transitions).\n"
-            "Ensure the tone is direct and matches Boubacar's style.\n"
-            "Output the final polished messages."
-        ),
-        agent=voice,
-        expected_output="5 final polished, humanized discovery messages.",
-        context=[outreach_task]
-    )
-
     return Crew(
-        agents=[hunter, voice],
-        tasks=[hunting_task, outreach_task, humanization_task],
+        agents=[hunter],
+        tasks=[hunting_task, outreach_task],
         process=Process.sequential,
         verbose=False,
         memory=True
