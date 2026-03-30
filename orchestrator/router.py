@@ -78,6 +78,13 @@ TASK_TYPES = {
         "keywords": ["find leads", "get prospects", "utah leads", "smb prospects", "growth engine", "hunting", "outreach", "daily leads", "fill pipeline"],
         "crew": "hunter_crew",
     },
+    "prompt_engineering": {
+        "description": "Rewrite, improve, or optimize an AI prompt or instruction — not general writing tasks like emails or articles",
+        "keywords": ["improve this prompt", "rewrite prompt", "better prompt", "fix my prompt",
+                     "prompt engineer", "make this prompt", "optimize prompt", "prompt for",
+                     "write me a prompt", "improve prompt", "rewrite this prompt", "make this better"],
+        "crew": "prompt_engineer_crew",
+    },
 }
 
 

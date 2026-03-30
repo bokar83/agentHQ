@@ -992,8 +992,8 @@ def build_prompt_engineer_crew(user_request: str) -> Crew:
 
         YOUR OUTPUT FORMAT (mandatory, every time):
 
-        ORIGINAL PROMPT:
-        [first 200 characters of the original for reference]
+        SOURCE (first 200 chars):
+        [first 200 characters of the original prompt, for reader context]
 
         WHAT WAS IMPROVED:
         • Role: [what changed — e.g., "expert in marketing → strategist who specializes in B2B GTM"]
