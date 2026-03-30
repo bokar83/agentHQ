@@ -499,11 +499,9 @@ def build_code_crew(user_request: str) -> Crew:
         context=[task_code]
     )
 
-    task_voice = build_humanization_task([task_qa])
-
     return Crew(
-        agents=[planner, coder, qa, task_voice.agent],
-        tasks=[task_plan, task_code, task_qa, task_voice],
+        agents=[planner, coder, qa],
+        tasks=[task_plan, task_code, task_qa],
         process=Process.sequential,
         verbose=False,
         memory=False,
@@ -558,11 +556,9 @@ def build_writing_crew(user_request: str) -> Crew:
         context=[task_write]
     )
 
-    task_voice = build_humanization_task([task_qa])
-
     return Crew(
-        agents=[planner, copywriter, qa, task_voice.agent],
-        tasks=[task_plan, task_write, task_qa, task_voice],
+        agents=[planner, copywriter, qa],
+        tasks=[task_plan, task_write, task_qa],
         process=Process.sequential,
         verbose=False,
         memory=False,
@@ -629,11 +625,9 @@ def build_app_crew(user_request: str) -> Crew:
         context=[task_build]
     )
 
-    task_voice = build_humanization_task([task_qa])
-
     return Crew(
-        agents=[planner, researcher, app_builder, qa, task_voice.agent],
-        tasks=[task_plan, task_research, task_build, task_qa, task_voice],
+        agents=[planner, researcher, app_builder, qa],
+        tasks=[task_plan, task_research, task_build, task_qa],
         process=Process.sequential,
         verbose=False,
         memory=False,
