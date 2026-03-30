@@ -1,6 +1,6 @@
 ---
 name: boubacar-prompts
-description: Use when improving, rewriting, or optimizing any AI prompt — agent backstories, task descriptions, system prompts, or one-off queries. Triggers on "improve this prompt", "rewrite this prompt", "make this better", "optimize this prompt", or /prompt-engineer.
+description: Use when improving, rewriting, or optimizing any AI prompt — agent backstories, task descriptions, system prompts, or one-off queries. Triggers on "improve this prompt", "rewrite this prompt", "make this prompt better", "optimize this prompt", or /prompt-engineer.
 ---
 
 # Prompt Engineer — Catalyst Prompt OS
@@ -8,6 +8,8 @@ description: Use when improving, rewriting, or optimizing any AI prompt — agen
 Rewrite any prompt using the 8-step Catalyst Prompt OS algorithm. Works on agent backstories, task descriptions, system prompts, and one-off queries.
 
 ## How to Use
+
+If the user has not yet provided a prompt, ask: "Paste the prompt you'd like me to improve."
 
 When the user provides a prompt to improve:
 1. Run all 8 steps of the algorithm below on the raw prompt
@@ -63,7 +65,7 @@ Format:
 ```
 Here is an example of the output format I want:
 
-[example]
+[write one concrete example that matches the desired tone, length, and structure — use realistic content, not placeholder text]
 ```
 
 ### Step 5 — Task Instructions
