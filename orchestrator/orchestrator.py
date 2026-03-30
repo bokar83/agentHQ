@@ -387,6 +387,11 @@ def run_orchestrator(task_request: str, from_number: str = "unknown", session_ke
     logger.info(f"Kicking off crew: {crew_type}")
     result = crew.kickoff()
     result_str = result.raw if hasattr(result, 'raw') else str(result)
+    try:
+        from skills.boub_voice_mastery.voice_polisher import polish_voice
+        result_str = polish_voice(result_str)
+    except Exception:
+        pass
 
     end_time = datetime.now()
     execution_time = (end_time - start_time).total_seconds()
