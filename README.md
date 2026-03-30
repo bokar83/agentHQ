@@ -9,7 +9,7 @@
 
 ## What This Is
 
-agentsHQ is a self-hosted multi-agent AI system that runs on a private VPS. It receives tasks via WhatsApp or HTTP, routes them to specialist AI agents, and returns real deliverables — websites, research reports, consulting documents, code, social content, and more.
+agentsHQ is a self-hosted multi-agent AI system that runs on a private VPS. It receives tasks via Telegram or HTTP, routes them to specialist AI agents, and returns real deliverables — websites, research reports, consulting documents, code, social content, and more.
 
 It is not a chatbot. It is not an automation tool. It is an autonomous operating system for knowledge work.
 
@@ -17,7 +17,7 @@ It is not a chatbot. It is not an automation tool. It is an autonomous operating
 
 ## Quick Start
 
-**Send a task via WhatsApp** → agent's number → your request in plain language  
+**Send a task via Telegram** → agent's bot → your request in plain language  
 **Send a task via HTTP:**
 ```bash
 curl -X POST http://72.60.209.109:8000/run \
@@ -90,7 +90,7 @@ To manually add a capability:
 
 ## Phase Roadmap
 
-- **Phase 1 (current):** Core agent stack live, WhatsApp interface, basic task types
+- **Phase 1 (current):** Core agent stack live, Telegram interface, basic task types
 - **Phase 2:** leGriot social media agent, memory-informed outputs
 - **Phase 3:** MCP integrations (Notion, Google Calendar, Gmail)
 - **Phase 4:** Agent creator agent, self-expansion loop
