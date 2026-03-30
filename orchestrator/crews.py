@@ -39,6 +39,7 @@ from agents import (
     build_agent_creator_agent,
     build_boub_ai_voice_agent,
     build_hunter_agent,
+    build_prompt_engineer_agent,
 )
 
 logger = logging.getLogger(__name__)
@@ -930,6 +931,98 @@ def build_voice_polisher_crew(text_to_polish: str) -> Crew:
     )
 
 
+def build_prompt_engineer_crew(user_request: str) -> Crew:
+    """
+    Crew for: prompt_engineering
+    Rewrites any prompt using the 8-step Catalyst Prompt OS algorithm.
+    Single-agent, no QA — the multi-output gate in the task IS the self-QA.
+    """
+    agent = build_prompt_engineer_agent()
+
+    task_rewrite = Task(
+        description=f"""
+        Rewrite the following prompt using the Catalyst Prompt OS algorithm:
+
+        ORIGINAL PROMPT:
+        {user_request}
+
+        Follow ALL 8 steps in sequence:
+
+        STEP 1 — DEFINE OBJECTIVE
+        Identify: what exact outcome must this prompt produce? What decision, asset, or action?
+
+        STEP 2 — STEP-BACK THINKING
+        Answer internally before rewriting:
+        - What are the key principles of a high-quality output for this task?
+        - What separates average from exceptional for this specific use case?
+        - What common mistakes does this type of prompt usually produce?
+
+        STEP 3 — BEHAVIOR-FIRST ROLE
+        Replace any "expert" title (or knowledge-only role) with a behavior-first role:
+        "You are a [behavior] who specializes in [domain] explaining this to [audience]."
+        Choose behavior from: storyteller, diagnostician, coach, challenger, precision editor,
+        translator, strategist, skeptic, systems thinker — whichever fits the task.
+
+        STEP 4 — FEW-SHOT EXAMPLE (if applicable)
+        If the prompt targets structured or creative output, add one ideal output example.
+        Skip for conversational or open-ended prompts.
+
+        STEP 5 — TASK INSTRUCTIONS
+        Rewrite task instructions using action verbs (Analyze, Build, Evaluate, Recommend,
+        Compare, Generate, Diagnose). Tie output to real-world impact: revenue, time saved,
+        or risk reduced.
+
+        STEP 6 — OUTPUT FORMAT
+        Add explicit structure:
+        1. Direct Answer
+        2. Reasoning (concise, structured)
+        3. Alternatives + Trade-offs
+        4. Practical Next Action
+        Override with tables, JSON, or code blocks when the task requires it.
+
+        STEP 7 — MULTI-OUTPUT + SELECTION GATE
+        Add this instruction to the prompt:
+        "Generate 2-3 variations. Score each on Clarity, Depth, Usefulness, Actionability (1-5).
+        Select the best. Improve it once more before final output."
+
+        STEP 8 — ITERATION GATE
+        End the rewritten prompt with:
+        "After completing your output, ask yourself: what would make this 10x more useful?
+        Refine once before delivering."
+
+        YOUR OUTPUT FORMAT (mandatory, every time):
+
+        ORIGINAL PROMPT:
+        [first 200 characters of the original for reference]
+
+        WHAT WAS IMPROVED:
+        • Role: [what changed — e.g., "expert in marketing → strategist who specializes in B2B GTM"]
+        • Step-back thinking: [the 3 principles applied]
+        • Output format: [what structure was added]
+        • Multi-output gate: added
+        • Iteration gate: added
+        • Few-shot example: [added / not applicable — reason]
+        • Other: [any other meaningful change]
+
+        IMPROVED PROMPT:
+        [full rewritten prompt — complete, copy-pasteable, no truncation]
+        """,
+        expected_output=(
+            "Structured response with: ORIGINAL PROMPT summary, WHAT WAS IMPROVED bullets, "
+            "and IMPROVED PROMPT as a complete copy-pasteable block."
+        ),
+        agent=agent
+    )
+
+    return Crew(
+        agents=[agent],
+        tasks=[task_rewrite],
+        process=Process.sequential,
+        verbose=False,
+        memory=False,
+    )
+
+
 CREW_REGISTRY = {
     "website_crew":        build_website_crew,
     "app_crew":            build_app_crew,
@@ -939,9 +1032,10 @@ CREW_REGISTRY = {
     "code_crew":           build_code_crew,
     "writing_crew":        build_writing_crew,
     "agent_creator_crew":  build_agent_creator_crew,
-    "voice_polisher_crew": build_voice_polisher_crew,
-    "hunter_crew":         build_hunter_crew,
-    "unknown_crew":        build_unknown_crew,
+    "voice_polisher_crew":    build_voice_polisher_crew,
+    "hunter_crew":            build_hunter_crew,
+    "prompt_engineer_crew":   build_prompt_engineer_crew,
+    "unknown_crew":           build_unknown_crew,
 }
 
 
