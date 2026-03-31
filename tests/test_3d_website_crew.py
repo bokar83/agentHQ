@@ -28,3 +28,34 @@ class TestScrapingToolsBundle:
         assert FirecrawlScrapeTool in tool_types
         assert FirecrawlCrawlTool in tool_types
         assert FirecrawlSearchTool in tool_types
+
+
+# ── Task 2: Upgraded website crew ─────────────────────────────
+
+class TestUpgradedWebsiteCrew:
+
+    def test_researcher_agent_has_scraping_tools(self):
+        """Researcher agent must include all 3 Firecrawl tools."""
+        from agents import build_researcher_agent
+        from tools import FirecrawlScrapeTool, FirecrawlCrawlTool, FirecrawlSearchTool
+        agent = build_researcher_agent()
+        tool_types = [type(t) for t in agent.tools]
+        assert FirecrawlScrapeTool in tool_types
+        assert FirecrawlCrawlTool in tool_types
+        assert FirecrawlSearchTool in tool_types
+
+    def test_website_crew_has_seo_task(self):
+        """Website crew must have a task with 'seo' or 'audit' in description."""
+        from crews import build_website_crew
+        crew = build_website_crew("build a website for a bakery in Austin")
+        seo_tasks = [
+            t for t in crew.tasks
+            if "seo" in t.description.lower() or "audit" in t.description.lower()
+        ]
+        assert len(seo_tasks) >= 1
+
+    def test_website_crew_task_count(self):
+        """Website crew must have exactly 6 tasks (was 5, now +1 SEO audit)."""
+        from crews import build_website_crew
+        crew = build_website_crew("build a website for a dentist")
+        assert len(crew.tasks) == 6
