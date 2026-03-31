@@ -1,7 +1,7 @@
 # BUILD TODAY — agentsHQ True Agent Orchestrator
 # ============================================================
 # What you're building:
-# One WhatsApp message → 5 autonomous agents plan, research,
+# One Telegram message → 5 autonomous agents plan, research,
 # write, build, and QA a complete website → delivered to you.
 # That is a TRUE agent. Not a chatbot. Not automation.
 # ============================================================
@@ -181,20 +181,16 @@ curl http://localhost:8000/
 
 ---
 
-## STEP 6 — Connect WhatsApp via WAHA
-
-1. Open http://72.60.209.109:3000 (WAHA dashboard)
-2. Start a new session named `default`
-3. Scan the QR code with WhatsApp on your phone
-   (Use the Google Voice number on your agent Google account)
-4. Wait for status: CONNECTED
-5. Test: send a message to your agent's WhatsApp number from your personal phone
+## STEP 6 — [DECOMMISSIONED] Connect WhatsApp via WAHA
+# (WhatsApp support has been removed in favor of Telegram)
+# 1. Open http://72.60.209.109:3000 (WAHA dashboard)
+# ...
 
 ---
 
 ## STEP 7 — THE TEST (Moment of Truth)
 
-Send this EXACT message to your agent's WhatsApp number:
+Send this EXACT message to your agent's Telegram bot:
 
 ```
 Create a website for Saveurs d'Afrique — an African fusion
@@ -203,10 +199,10 @@ American cuisine
 ```
 
 WHAT HAPPENS NEXT:
-1. Within 5 seconds: acknowledgment on WhatsApp
+1. Within 5 seconds: acknowledgment on Telegram
    "⏳ Got it. My agents are working on this now..."
-2. Agents start working — watch in n8n Executions tab
-3. After 2-5 minutes: full result delivered on WhatsApp
+2. Agents start working — watch in n8n Executions tab or VPS logs
+3. After 2-5 minutes: full result delivered on Telegram
 4. HTML file saved to ~/agentsHQ/agent_outputs/
 
 Watch the agents think in real time:

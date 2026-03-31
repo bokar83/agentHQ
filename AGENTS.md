@@ -117,7 +117,7 @@ agentsHQ/
 
 When the Router encounters an unknown task type:
 1. It generates a proposed agent definition (role, goal, backstory, tools needed)
-2. It sends the proposal to Boubacar via WhatsApp for approval
+2. It sends the proposal to Boubacar via Telegram for approval
 3. On approval, it creates the agent file in `agents/[agent-name]/`
 4. It registers the new task type in the Router's registry
 5. It updates this AGENTS.md file
