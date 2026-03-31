@@ -32,7 +32,10 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 
 # OpenSpace Evolution Hook
-from skills.openspace_skill.openspace_tool import openspace_tool
+try:
+    from skills.openspace_skill.openspace_tool import openspace_tool
+except ImportError:
+    openspace_tool = None  # type: ignore[assignment]
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
