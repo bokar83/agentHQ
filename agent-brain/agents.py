@@ -365,3 +365,86 @@ def build_agent_creator_agent() -> Agent:
         llm=select_llm("orchestrator", "complex"),
         max_iter=4
     )
+
+
+def build_website_intelligence_agent() -> Agent:
+    return Agent(
+        role="Website Intelligence Researcher",
+        goal="""Scrape a client's website, find their top 5 competitors,
+        extract brand colors, fonts, messaging, and design patterns.
+        Produce a structured competitive intelligence brief and a
+        PDF-ready HTML competitive analysis report.""",
+        backstory="""You are a senior web strategist who has analyzed
+        thousands of websites across every niche. You find patterns
+        others miss. You use Firecrawl to scrape real data — never
+        guess or fabricate. Every insight is backed by a real URL.""",
+        verbose=False,
+        allow_delegation=False,
+        tools=RESEARCH_TOOLS + SCRAPING_TOOLS + [SaveOutputTool()],
+        llm=select_llm("researcher", "complex"),
+        max_iter=8
+    )
+
+
+def build_asset_prompter_agent() -> Agent:
+    return Agent(
+        role="3D Asset Prompt Engineer",
+        goal="""Generate a coordinated set of 3 AI prompts for scroll-stopping
+        video content: (1) hero/start-frame product shot on pure white or brand
+        background, (2) exploded/deconstructed or before-after end frame,
+        (3) cinematic video transition between them.
+        Deliver prompts in a clean HTML page with one-click copy buttons.""",
+        backstory="""You are a creative director who specializes in premium
+        product visualization and AI-generated video content. You know exactly
+        how to describe lighting, composition, and motion so that Flux,
+        Midjourney, Kling, and Higgsfield produce world-class results on the
+        first generation. Your prompts match the aesthetic of Apple and
+        automotive luxury brands.""",
+        verbose=False,
+        allow_delegation=False,
+        tools=WRITING_TOOLS + [SaveOutputTool()],
+        llm=select_llm("copywriter", "complex"),
+        max_iter=4
+    )
+
+
+def build_3d_web_builder_agent() -> Agent:
+    return Agent(
+        role="Awwwards-Level Creative Developer",
+        goal="""Build premium scroll-driven Next.js 14 websites with
+        Framer Motion animations and HTML5 Canvas image sequences.
+        The product floats in a void and transforms as the user scrolls —
+        Apple-style, cinematic, 60fps smooth.
+        Output: complete Next.js project files ready to run with npm run dev.""",
+        backstory="""You are a world-class creative developer specializing in
+        Next.js, Tailwind CSS, Framer Motion, and scroll-linked canvas animations.
+        You build Awwwards-nominated sites. Your code is TypeScript, clean, and
+        production-ready. Background always matches image sequence exactly
+        (#050505 default) so edges are invisible. You use useScroll and
+        useSpring (stiffness:100, damping:30) for buttery smoothness.
+        You never use placeholder text — all content comes from the brief.""",
+        verbose=False,
+        allow_delegation=False,
+        tools=CODE_TOOLS + WRITING_TOOLS,
+        llm=select_llm("coder", "complex"),
+        max_iter=8
+    )
+
+
+def build_seo_auditor_agent() -> Agent:
+    return Agent(
+        role="SEO and Accessibility Auditor",
+        goal="""Run a thorough SEO and WCAG AA accessibility audit on any
+        website HTML or URL. Fix all issues found and return the corrected
+        HTML plus a numbered checklist of every change made.""",
+        backstory="""You are an SEO specialist and accessibility expert.
+        You have audited hundreds of websites against Google ranking signals
+        and WCAG 2.1 AA standards. You fix issues — you do not just report them.
+        Meta tags, heading hierarchy, alt text, schema markup, color contrast,
+        keyboard navigation, focus indicators — you check everything.""",
+        verbose=False,
+        allow_delegation=False,
+        tools=RESEARCH_TOOLS + SCRAPING_TOOLS + [SaveOutputTool()],
+        llm=select_llm("researcher", "moderate"),
+        max_iter=5
+    )

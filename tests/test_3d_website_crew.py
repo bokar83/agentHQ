@@ -59,3 +59,37 @@ class TestUpgradedWebsiteCrew:
         from crews import build_website_crew
         crew = build_website_crew("build a website for a dentist")
         assert len(crew.tasks) == 6
+
+
+# ── Task 3: New specialist agents ─────────────────────────────
+
+class TestNew3DAgents:
+
+    def test_website_intelligence_agent_exists(self):
+        from agents import build_website_intelligence_agent
+        agent = build_website_intelligence_agent()
+        assert agent.role is not None
+
+    def test_website_intelligence_agent_has_scraping_tools(self):
+        from agents import build_website_intelligence_agent
+        from tools import FirecrawlScrapeTool, FirecrawlCrawlTool, FirecrawlSearchTool
+        agent = build_website_intelligence_agent()
+        tool_types = [type(t) for t in agent.tools]
+        assert FirecrawlScrapeTool in tool_types
+        assert FirecrawlCrawlTool in tool_types
+        assert FirecrawlSearchTool in tool_types
+
+    def test_asset_prompter_agent_exists(self):
+        from agents import build_asset_prompter_agent
+        agent = build_asset_prompter_agent()
+        assert agent.role is not None
+
+    def test_3d_web_builder_agent_exists(self):
+        from agents import build_3d_web_builder_agent
+        agent = build_3d_web_builder_agent()
+        assert agent.role is not None
+
+    def test_seo_auditor_agent_exists(self):
+        from agents import build_seo_auditor_agent
+        agent = build_seo_auditor_agent()
+        assert agent.role is not None
