@@ -28,7 +28,7 @@ Merge the following into Claude Code MCP settings:
       "command": "npx",
       "args": ["-y", "firecrawl-mcp"],
       "env": {
-        "FIRECRAWL_API_KEY": "fc-479eab43547a49818f180cffe3cd1c80"
+        "FIRECRAWL_API_KEY": "fc-YOUR_FIRECRAWL_API_KEY_HERE"
       }
     }
   }
@@ -86,7 +86,7 @@ SCRAPING_TOOLS = [FirecrawlScrapeTool(), FirecrawlCrawlTool()]  # new opt-in bun
 # ── WEB SCRAPING ──────────────────────────────────────────────
 # Firecrawl — gives agents the ability to read full web pages and crawl sites
 # Get from: firecrawl.dev > Dashboard > API Keys
-FIRECRAWL_API_KEY=fc-479eab43547a49818f180cffe3cd1c80
+FIRECRAWL_API_KEY=fc-YOUR_FIRECRAWL_API_KEY_HERE
 ```
 
 File: `infrasctructure/.env`

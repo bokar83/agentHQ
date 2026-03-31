@@ -48,7 +48,7 @@ Open `infrasctructure/.env`. Add after the `SERPER_API_KEY` line:
 ```
 # ── WEB SCRAPING ──────────────────────────────────────────────
 # Firecrawl — gives agents the ability to read full web pages and crawl sites
-FIRECRAWL_API_KEY=fc-479eab43547a49818f180cffe3cd1c80
+FIRECRAWL_API_KEY=fc-YOUR_FIRECRAWL_API_KEY_HERE
 ```
 
 - [ ] **Step 3: Add FIRECRAWL_API_KEY to docker-compose.yml**
@@ -693,7 +693,7 @@ Open `C:\Users\HUAWEI\.claude\mcp.json`. Add `firecrawl-mcp` to the `mcpServers`
       "command": "npx",
       "args": ["-y", "firecrawl-mcp"],
       "env": {
-        "FIRECRAWL_API_KEY": "fc-479eab43547a49818f180cffe3cd1c80"
+        "FIRECRAWL_API_KEY": "fc-YOUR_FIRECRAWL_API_KEY_HERE"
       }
     }
   }
@@ -754,7 +754,7 @@ grep firecrawl orchestrator/requirements.txt
 Expected:
 ```
       - FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}
-FIRECRAWL_API_KEY=fc-479eab43547a49818f180cffe3cd1c80
+FIRECRAWL_API_KEY=fc-YOUR_FIRECRAWL_API_KEY_HERE
 firecrawl-py>=4.21.0
 ```
 
