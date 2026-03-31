@@ -155,6 +155,7 @@ VOICE_CONFIG = [
 CHAIRMAN_CONFIG = {
     "capability": "deep_reasoning",
     "max_cost_tier": "high",
+    "model_override": "anthropic/claude-opus-4.6",  # Chairman always uses Opus — synthesis fidelity
     "temperature": 0.2,
 }
 
@@ -191,10 +192,13 @@ class SankofaCouncil:
             )
             self.voice_models[vc["name"]] = model_id
 
-        self.chairman_model = self._select(
-            capability=CHAIRMAN_CONFIG["capability"],
-            max_cost_tier=CHAIRMAN_CONFIG["max_cost_tier"],
-        )
+        if "model_override" in CHAIRMAN_CONFIG:
+            self.chairman_model = CHAIRMAN_CONFIG["model_override"]
+        else:
+            self.chairman_model = self._select(
+                capability=CHAIRMAN_CONFIG["capability"],
+                max_cost_tier=CHAIRMAN_CONFIG["max_cost_tier"],
+            )
         logger.info(f"Sankofa Council models resolved: {self.voice_models}")
         logger.info(f"Chairman model: {self.chairman_model}")
 
