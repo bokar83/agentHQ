@@ -5,7 +5,8 @@ Env vars required:
   GITHUB_TOKEN                  — personal access token (repo scope)
   GITHUB_USERNAME               — GitHub handle (bokar83)
   GITHUB_REPO                   — repo name (agentHQ)
-  GOOGLE_SERVICE_ACCOUNT_JSON   — path to service account JSON on disk
+  GOOGLE_OAUTH_CREDENTIALS_JSON — path to user OAuth credentials JSON on disk
+                                   (exported via: gws auth export --unmasked)
   GOOGLE_DRIVE_FOLDER_ID        — Drive folder ID for outputs
 """
 import os
@@ -29,11 +30,11 @@ try:
 except ImportError:
     MediaInMemoryUpload = None  # type: ignore[assignment,misc]
 
-GITHUB_TOKEN    = os.environ.get("GITHUB_TOKEN", "")
-GITHUB_USERNAME = os.environ.get("GITHUB_USERNAME", "bokar83")
-GITHUB_REPO     = os.environ.get("GITHUB_REPO", "agentHQ")
-DRIVE_FOLDER_ID = os.environ.get("GOOGLE_DRIVE_FOLDER_ID", "")
-SA_JSON_PATH    = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
+GITHUB_TOKEN      = os.environ.get("GITHUB_TOKEN", "")
+GITHUB_USERNAME   = os.environ.get("GITHUB_USERNAME", "bokar83")
+GITHUB_REPO       = os.environ.get("GITHUB_REPO", "agentHQ")
+DRIVE_FOLDER_ID   = os.environ.get("GOOGLE_DRIVE_FOLDER_ID", "")
+OAUTH_CREDS_PATH  = os.environ.get("GOOGLE_OAUTH_CREDENTIALS_JSON", "")
 
 
 def _slugify(text: str) -> str:
@@ -45,12 +46,18 @@ def _slugify(text: str) -> str:
 
 
 def _get_drive_service():
-    """Build and return an authenticated Google Drive service client."""
-    from google.oauth2 import service_account
+    """Build and return an authenticated Google Drive service client using user OAuth."""
+    import json
+    from google.oauth2.credentials import Credentials
     from googleapiclient.discovery import build
-    creds = service_account.Credentials.from_service_account_file(
-        SA_JSON_PATH,
-        scopes=["https://www.googleapis.com/auth/drive.file"]
+    with open(OAUTH_CREDS_PATH) as f:
+        info = json.load(f)
+    creds = Credentials(
+        token=None,
+        refresh_token=info["refresh_token"],
+        client_id=info["client_id"],
+        client_secret=info["client_secret"],
+        token_uri="https://oauth2.googleapis.com/token",
     )
     return build("drive", "v3", credentials=creds)
 
@@ -88,7 +95,7 @@ def save_to_drive(title: str, task_type: str, content: str) -> str:
     Upload a markdown file to Google Drive outputs folder.
     Returns the webViewLink, or empty string on failure.
     """
-    if not DRIVE_FOLDER_ID or not SA_JSON_PATH:
+    if not DRIVE_FOLDER_ID or not OAUTH_CREDS_PATH:
         logger.warning("Drive config incomplete — skipping Drive save")
         return ""
     try:
