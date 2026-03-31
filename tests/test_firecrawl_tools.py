@@ -230,9 +230,34 @@ class TestFirecrawlSearchTool:
 class TestToolBundles:
 
     def test_firecrawl_scrape_in_research_tools(self):
+        # This test targets agent-brain's tools module (inserted at sys.path[0] above).
+        # In agent-brain, FirecrawlScrapeTool is part of RESEARCH_TOOLS.
+        # In orchestrator, it lives in SCRAPING_TOOLS instead — see
+        # test_orchestrator_research_tools_does_not_include_scrape below.
         from tools import RESEARCH_TOOLS, FirecrawlScrapeTool
         tool_types = [type(t) for t in RESEARCH_TOOLS]
         assert FirecrawlScrapeTool in tool_types
+
+    def test_orchestrator_research_tools_does_not_include_scrape(self):
+        """In orchestrator, FirecrawlScrapeTool is in SCRAPING_TOOLS, not RESEARCH_TOOLS."""
+        import importlib
+        import sys
+        # Force orchestrator module
+        orch_path = os.path.join(os.path.dirname(__file__), '..', 'orchestrator')
+        saved = sys.path[:]
+        sys.path.insert(0, orch_path)
+        if 'tools' in sys.modules:
+            del sys.modules['tools']
+        try:
+            from tools import RESEARCH_TOOLS, SCRAPING_TOOLS, FirecrawlScrapeTool
+            research_types = [type(t) for t in RESEARCH_TOOLS]
+            scraping_types = [type(t) for t in SCRAPING_TOOLS]
+            assert FirecrawlScrapeTool not in research_types, "orchestrator RESEARCH_TOOLS should not include FirecrawlScrapeTool"
+            assert FirecrawlScrapeTool in scraping_types, "orchestrator SCRAPING_TOOLS must include FirecrawlScrapeTool"
+        finally:
+            sys.path = saved
+            if 'tools' in sys.modules:
+                del sys.modules['tools']
 
     def test_scraping_tools_bundle_has_all_three(self):
         from tools import SCRAPING_TOOLS, FirecrawlScrapeTool, FirecrawlCrawlTool, FirecrawlSearchTool

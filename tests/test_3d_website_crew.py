@@ -8,8 +8,8 @@ Run:
 
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'orchestrator'))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'agent-brain'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'orchestrator'))
 
 # ── Task 1: SCRAPING_TOOLS export ──────────────────────────────
 
