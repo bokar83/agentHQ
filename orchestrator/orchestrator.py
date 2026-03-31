@@ -6,7 +6,7 @@ Owner: Boubacar Diallo — Catalyst Works Consulting
 System: agentsHQ — Self-hosted multi-agent intelligence
 
 This is the main FastAPI service. It receives tasks from:
-  - WhatsApp (via WAHA → n8n → this service)
+  - Telegram (primary channel)
   - Direct HTTP POST (from Cursor, Claude Code, any tool)
   - n8n workflows (automated triggers)
 
@@ -23,11 +23,9 @@ See CLAUDE.md for development guidelines.
 """
 
 import os
-import json
 import logging
 import time
 import uuid
-import threading
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
@@ -75,7 +73,8 @@ class TaskResponse(BaseModel):
     task_type: str = "unknown"
     files_created: list = []
     execution_time: float = 0.0
-    agent_log: list = []
+    title: str = ""
+    deliverable: str = ""
 
 class TeamTaskRequest(BaseModel):
     subtasks: list           # [{"crew_type": str, "task": str, "label": str}]
@@ -393,6 +392,12 @@ def run_orchestrator(task_request: str, from_number: str = "unknown", session_ke
     except Exception:
         pass
 
+    # Extract deliverable — everything after "DELIVERABLE:" marker
+    lower = result_str.lower()
+    idx = lower.find("deliverable:")
+    deliverable = result_str[idx + len("deliverable:"):].strip() if idx != -1 else result_str.strip()
+    title = task_request[:80].strip()
+
     end_time = datetime.now()
     execution_time = (end_time - start_time).total_seconds()
     
@@ -435,11 +440,11 @@ def run_orchestrator(task_request: str, from_number: str = "unknown", session_ke
     return {
         "success": True,
         "result": summary,
-        "full_output": result_str,
         "task_type": task_type,
         "files_created": files_created,
         "execution_time": execution_time,
-        "classification": classification
+        "title": title,
+        "deliverable": deliverable,
     }
 
 
@@ -612,7 +617,7 @@ async def run_task(request: TaskRequest):
     Main endpoint. Receives a task and runs it through the agent crew.
     
     Called by:
-    - n8n WhatsApp workflow
+#     - n8n Telegram/Web workflow
     - Direct HTTP from any tool (Cursor, Claude Code, etc.)
     
     Returns a TaskResponse with result summary and metadata.
@@ -677,7 +682,9 @@ async def run_task(request: TaskRequest):
             result=result["result"],
             task_type=result.get("task_type", "unknown"),
             files_created=result.get("files_created", []),
-            execution_time=result.get("execution_time", 0.0)
+            execution_time=result.get("execution_time", 0.0),
+            title=result.get("title", ""),
+            deliverable=result.get("deliverable", ""),
         )
 
     except Exception as e:
