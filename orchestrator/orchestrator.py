@@ -23,11 +23,16 @@ See CLAUDE.md for development guidelines.
 """
 
 import os
+import threading
+import uuid
 import logging
 import time
-import uuid
-import threading
+import os
 from datetime import datetime
+from typing import List, Dict, Any, Optional
+
+# OpenSpace Evolution Hook
+from skills.openspace_skill.openspace_tool import openspace_tool
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -346,7 +351,8 @@ def run_orchestrator(task_request: str, from_number: str = "unknown", session_ke
     start_time = datetime.now()
 
     # Step 1: Load recent conversation history for this session
-    enriched_task = task_request
+    today = start_time.strftime("%B %d, %Y")
+    enriched_task = f"[Today's date: {today}. All research, recommendations, and references should reflect the current state as of {today}.]\n\n{task_request}"
     try:
         from memory import get_conversation_history
         history = get_conversation_history(session_key, limit=6)
@@ -633,6 +639,47 @@ def _run_background_job(
             logger.critical(f"Background job {job_id}: result delivery AND error notification both failed. User received nothing.")
     finally:
         _stop_ping.set()  # cancel ping loop regardless of success/failure
+        
+        # ── Trigger Evolution (Self-Learning) ────────────────
+        # We run this in a separate thread to avoid blocking the main background task completion
+        # and to keep it completely "background" as requested.
+        try:
+            if result.get("success"):
+                threading.Thread(
+                    target=_trigger_evolution,
+                    args=(task, result.get("full_output", "")),
+                    daemon=True
+                ).start()
+        except Exception as e:
+            logger.warning(f"Evolution trigger failed: {e}")
+
+def _trigger_evolution(task_instruction: str, result_output: str) -> None:
+    """
+    Helper to run OpenSpace evolution in the background.
+    Uses the tool wrapper to either evolve a skill or suggest a new one.
+    """
+    import asyncio
+    try:
+        # Check if evolution is explicitly disabled via env
+        if os.environ.get("DISABLE_EVOLUTION") == "true":
+            return
+
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+        # Only evolve if the task was significant (token efficiency)
+        if len(task_instruction) > 20 or len(result_output) > 100:
+            logger.info("Triggering OpenSpace evolution...")
+            loop.run_until_complete(openspace_tool.execute_async(
+                command="evolve", 
+                task_instruction=f"Task: {task_instruction}\n\nResult:\n{result_output}"
+            ))
+            logger.info("OpenSpace evolution check complete.")
+            
+    except Exception as e:
+        logger.error(f"Background evolution failed: {e}")
+    finally:
+        loop.close()
 
 
 # ══════════════════════════════════════════════════════════════
