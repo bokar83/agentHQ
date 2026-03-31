@@ -1,4 +1,4 @@
-version: '3.8'
+# version: '3.8' (obsolete)
 # ============================================================
 # agentsHQ STACK v2.0
 # Catalyst Works Consulting — Boubacar Diallo
@@ -6,7 +6,7 @@ version: '3.8'
 # Containers managed here:
 #   - postgres     (structured memory database)
 #   - qdrant       (semantic vector memory)
-#   - waha         (WhatsApp bridge)
+#   - # waha         (WhatsApp bridge)
 #   - orchestrator (CrewAI agent brain — FastAPI on port 8000)
 #
 # NOT managed here (already running via Hostinger):
@@ -52,27 +52,27 @@ services:
     networks:
       - orc-net
 
-  # ── WHATSAPP BRIDGE ───────────────────────────────────────
-  # Dashboard: http://72.60.209.109:3000 (localhost only)
-  # Points webhook to existing Hostinger n8n
-  waha:
-    image: devlikeapro/waha:latest
-    container_name: orc-waha
-    ports:
-      - "3000:3000"
-    environment:
-      - WHATSAPP_API_KEY=agentshq123
-      - WHATSAPP_DEFAULT_ENGINE=NOWEB
-      - WHATSAPP_HOOK_EVENTS=message
-      - WHATSAPP_HOOK_URL=https://n8n.srv1040886.hstgr.cloud/webhook/whatsapp-incoming
-      - WAHA_PRINT_QR=true
-      - WAHA_DASHBOARD_ENABLED=true
-      - WAHA_DASHBOARD_USERNAME=admin
-      - WAHA_DASHBOARD_PASSWORD=admin123
-    volumes:
-      - ./waha_sessions:/app/.sessions
-    networks:
-      - orc-net
+#  # ── WHATSAPP BRIDGE ───────────────────────────────────────
+#  # Dashboard: http://72.60.209.109:3000 (localhost only)
+#  # Points webhook to existing Hostinger n8n
+#  waha:
+#    image: devlikeapro/waha:latest
+#    container_name: orc-waha
+#    ports:
+#      - "3000:3000"
+#    environment:
+#      - WHATSAPP_API_KEY=agentshq123
+#      - WHATSAPP_DEFAULT_ENGINE=NOWEB
+#      - WHATSAPP_HOOK_EVENTS=message
+#      - WHATSAPP_HOOK_URL=https://n8n.srv1040886.hstgr.cloud/webhook/whatsapp-incoming
+#      - WAHA_PRINT_QR=true
+#      - WAHA_DASHBOARD_ENABLED=true
+#      - WAHA_DASHBOARD_USERNAME=admin
+#      - WAHA_DASHBOARD_PASSWORD=admin123
+#    volumes:
+#      - ./waha_sessions:/app/.sessions
+#    networks:
+#      - orc-net
 
   # ── AGENT BRAIN ───────────────────────────────────────────
   # CrewAI orchestrator — receives tasks, assembles crews, returns deliverables
@@ -102,7 +102,7 @@ services:
       - GITHUB_USERNAME=${GITHUB_USERNAME}
       - GITHUB_REPO=${GITHUB_REPO}
       - REPORT_EMAIL=${REPORT_EMAIL}
-      - APOLLO_API_KEY=${APOLLO_API_KEY}
+#      - APOLLO_API_KEY=${APOLLO_API_KEY} (removed as requested)
     volumes:
       - ./agent_outputs:/app/outputs
       - ./logs:/app/logs
