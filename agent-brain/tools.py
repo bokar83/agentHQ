@@ -23,7 +23,10 @@ import os
 import json
 import logging
 import httpx
-from firecrawl import V1FirecrawlApp
+try:
+    from firecrawl import V1FirecrawlApp
+except ImportError:
+    V1FirecrawlApp = None
 from datetime import datetime
 from typing import Any, Optional
 from crewai_tools import (
