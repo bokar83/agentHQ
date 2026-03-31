@@ -7,7 +7,7 @@ os.environ.setdefault("GITHUB_TOKEN", "ghp_test")
 os.environ.setdefault("GITHUB_USERNAME", "bokar83")
 os.environ.setdefault("GITHUB_REPO", "agentHQ")
 os.environ.setdefault("GOOGLE_DRIVE_FOLDER_ID", "1wb2ZdYkLdSy-oWQ3bWZWgRXOIgX59t2N")
-os.environ.setdefault("GOOGLE_SERVICE_ACCOUNT_JSON", "/tmp/fake-sa.json")
+os.environ.setdefault("GOOGLE_OAUTH_CREDENTIALS_JSON", "/tmp/fake-oauth.json")
 
 import sys
 sys.path.insert(0, "orchestrator")
