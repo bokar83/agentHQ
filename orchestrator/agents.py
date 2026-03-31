@@ -25,6 +25,7 @@ from tools import (
     SaveOutputTool,
     QueryMemoryTool,
     RESEARCH_TOOLS,
+    SCRAPING_TOOLS,
     WRITING_TOOLS,
     CODE_TOOLS,
     ORCHESTRATION_TOOLS,
