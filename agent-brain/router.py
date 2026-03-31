@@ -28,6 +28,11 @@ TASK_TYPES = {
         "keywords": ["website", "landing page", "web presence", "homepage", "site", "web page", "online presence"],
         "crew": "website_crew",
     },
+    "3d_website_build": {
+        "description": "Build a premium 3D animated scroll-driven website with competitive intelligence, AI-generated image/video asset prompts, and Next.js/Framer Motion implementation",
+        "keywords": ["3d website", "animated website", "scroll animation", "scroll-driven", "3d animation", "framer motion", "scrollytelling", "apple-style website", "premium animated site", "exploded view website"],
+        "crew": "3d_website_crew",
+    },
     "app_build": {
         "description": "Build a web application, tool, calculator, dashboard, form, or interactive system",
         "keywords": ["app", "application", "tool", "calculator", "dashboard", "tracker", "form", "portal", "system", "platform"],
