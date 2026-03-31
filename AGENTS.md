@@ -59,6 +59,37 @@ Telegram / HTTP / n8n
 
 ---
 
+## The Sankofa Council
+
+A multi-voice strategic review layer that activates on `consulting_deliverable` tasks and any task flagged `high_stakes: true`.
+
+**Named after:** The West African Akan concept — look backward to move forward wisely.
+
+**Five Voices:**
+| Voice | Job | Default Model |
+|-------|-----|---------------|
+| The Contrarian | Find the fatal flaw | deepseek/deepseek-r1-0528 |
+| The First Principles Thinker | Strip assumptions, reframe from zero | anthropic/claude-sonnet-4.6 |
+| The Expansionist | Hunt for upside being missed | x-ai/grok-4 |
+| The Outsider | Zero context, fresh eyes | google/gemini-2.5-flash |
+| The Executor | What happens Monday morning? | mistralai/mistral-large-2512 |
+| **Chairman** | Synthesize convergence + divergence | anthropic/claude-opus-4.6 |
+
+**Models are capability-selected, not hard-coded.** Update `COUNCIL_MODEL_REGISTRY` in `agents.py` to swap models. Voice definitions in `council.py` never need to change.
+
+**Pipeline:** Independent opinions (parallel) → anonymous peer review → convergence scoring → Chairman synthesis. Max 3 rounds. Convergence threshold: 90%.
+
+**Outputs:**
+- `outputs/council/TIMESTAMP.json` — full run log
+- `outputs/council/TIMESTAMP.html` — shareable client report
+- `council_runs` PostgreSQL table — one row per run
+
+**Trigger from CLI:** "council this [question]" — see `skills/council/council.md`
+**Trigger from Telegram:** Any `consulting_deliverable` task automatically uses the Council.
+**Force trigger:** Include "council this", "high stakes", or "sankofa" in any request.
+
+---
+
 ## Task Type Registry
 
 The Router classifies every incoming request into one of these types. New types are added here as the system grows.
