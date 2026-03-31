@@ -68,3 +68,9 @@ tmp/
 
 # ── Compiled binaries / local tools ─────────────────────────
 tools/
+
+# ── detect-secrets baseline ───────────────────────────────────
+.secrets.baseline
+
+# ── Hookify local rules (project-specific, never commit) ──────
+.claude/*.local.md
