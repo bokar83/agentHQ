@@ -100,14 +100,12 @@ def save_to_drive(title: str, task_type: str, content: str) -> str:
             "name":    filename,
             "parents": [DRIVE_FOLDER_ID],
         }
-        media = (
-            MediaInMemoryUpload(
-                content.encode("utf-8"),
-                mimetype="text/markdown",
-                resumable=False,
-            )
-            if MediaInMemoryUpload is not None
-            else content.encode("utf-8")
+        if MediaInMemoryUpload is None:
+            raise ImportError("google-api-python-client not installed — cannot upload to Drive")
+        media = MediaInMemoryUpload(
+            content.encode("utf-8"),
+            mimetype="text/markdown",
+            resumable=False,
         )
         result = service.files().create(
             body=metadata,
