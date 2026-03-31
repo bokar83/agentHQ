@@ -36,7 +36,10 @@ from agents import (
     build_qa_agent,
     build_orchestrator_agent,
     build_agent_creator_agent,
-
+    build_website_intelligence_agent,
+    build_asset_prompter_agent,
+    build_3d_web_builder_agent,
+    build_seo_auditor_agent,
 )
 
 logger = logging.getLogger(__name__)
@@ -697,6 +700,269 @@ def build_unknown_crew(user_request: str) -> Crew:
         verbose=True,
         memory=False,
 
+    )
+
+
+def build_3d_website_crew(user_request: str) -> Crew:
+    """
+    Crew for: 3d_website_build
+    Builds premium scroll-driven 3D animated websites.
+    Pipeline: plan → intelligence → competitive report → asset prompts → 3D build → SEO audit → QA
+    """
+    planner = build_planner_agent()
+    intelligence = build_website_intelligence_agent()
+    asset_prompter = build_asset_prompter_agent()
+    web_builder_3d = build_3d_web_builder_agent()
+    seo_auditor = build_seo_auditor_agent()
+    qa = build_qa_agent()
+
+    task_plan = Task(
+        description=f"""
+        Analyze this 3D website build request and create a detailed execution plan:
+
+        REQUEST: {user_request}
+
+        Your plan must include:
+        1. Business type, niche, and target audience
+        2. Client website URL to scrape (if provided) or business type for research
+        3. Key product or service that needs the 3D scroll animation treatment
+        4. Design direction: background color (default #050505), accent color, overall vibe
+        5. Research questions for the Intelligence Researcher
+        6. Asset direction: what should the scroll animation show?
+           (product assembly/deconstruction, before-after transformation, or exploded components)
+        7. Site sections needed beyond the 3D hero
+        """,
+        expected_output="Structured execution plan covering all 7 points",
+        agent=planner
+    )
+
+    task_intelligence = Task(
+        description=f"""
+        Run full competitive intelligence research for this project:
+
+        REQUEST: {user_request}
+
+        PHASE 1 — Client brand extraction (if URL provided):
+        - Scrape client's existing site with firecrawl_scrape
+        - Extract: logo URL, brand colors (hex), fonts, tone, key messaging, site structure
+
+        PHASE 2 — Competitive research:
+        - Use firecrawl_search to find top 5 competitors in this niche
+        - Score each on: search visibility, visual design, content depth, social proof, CTA strategy
+        - Deep-scrape the top 3 with firecrawl_crawl
+        - Extract: colors, fonts, headline formulas, CTA copy, site architecture
+
+        PHASE 3 — Synthesis:
+        - Identify 3-5 patterns the top competitors share
+        - Identify gaps the client can exploit
+        - Recommend: color palette, typography, animation direction, page structure
+
+        Save research brief as: research/01-intelligence-brief.md
+        """,
+        expected_output="Competitive intelligence brief saved to research/01-intelligence-brief.md",
+        agent=intelligence,
+        context=[task_plan]
+    )
+
+    task_competitive_report = Task(
+        description=f"""
+        Build a polished, print-ready HTML competitive analysis report.
+
+        REQUEST: {user_request}
+
+        Using the intelligence brief, create a single-file HTML report containing:
+        1. Cover: report title, business name, date
+        2. Executive summary (3-4 sentences)
+        3. Top 5 competitor profiles with key strengths, design score, color swatches
+        4. Side-by-side comparison table
+        5. SEO keyword landscape and gaps
+        6. Winning patterns (what all top sites do)
+        7. Recommended design direction for this client
+
+        DESIGN SPECS:
+        - Background: #f6f4f0, accent: #c45d3e
+        - Instrument Serif headings + DM Sans body (Google Fonts)
+        - Cards with 4px left border in accent color
+        - @media print rules for PDF export
+        - No JavaScript — pure HTML + CSS
+        - Mobile-responsive at 640px breakpoint
+
+        Save as: competitive-analysis.html
+        """,
+        expected_output="competitive-analysis.html saved in project directory",
+        agent=intelligence,
+        context=[task_intelligence]
+    )
+
+    task_asset_prompts = Task(
+        description=f"""
+        Generate 3 coordinated AI image/video prompts for the scroll-stop animation.
+
+        REQUEST: {user_request}
+
+        Based on the plan and intelligence brief, determine animation type:
+        - Products with internals: assembled hero + exploded view + assembly video
+        - Services/transformations: before state + after state + transformation video
+
+        PROMPT 1 — START FRAME (hero/assembled/before):
+        Product perfectly centered, slight natural tilt. Pure solid background matching
+        the site's background color (default #050505). Soft studio lighting, glossy,
+        dimensional, premium. 16:9. Clean edges for masking. Apple/luxury DTC aesthetic.
+
+        PROMPT 2 — END FRAME (exploded/after):
+        Cinematic exploded technical view OR dramatic after-state. Components floating
+        in mid-air, perfectly aligned along a clear axis. Same background, same lighting
+        direction as Prompt 1. Hyper-realistic Apple industrial design. 16:9.
+        No text, no labels, no UI.
+
+        PROMPT 3 — VIDEO TRANSITION (Google Flow style):
+        Smooth cinematic transition from Prompt 1 to Prompt 2. Begin with product in
+        mid-rotation pose. Components/transformation builds progressively. Energy effect
+        midway (light pulse, air displacement). All elements ultra-sharp. 5-6 seconds.
+        16:9. Works in Kling, Higgsfield, Runway, Pika.
+
+        Also include user instructions:
+        - Recommended image generator settings (16:9, 2K, 4 generations)
+        - Recommended video model settings (1080p, 5-6 seconds, no audio)
+        - Where to save output: public/sequence/ (for frames) or as hero video
+
+        Save as: asset-prompts.html (tabbed page with copy buttons) and asset-prompts.md
+        """,
+        expected_output="asset-prompts.html and asset-prompts.md saved in project directory",
+        agent=asset_prompter,
+        context=[task_plan, task_intelligence]
+    )
+
+    task_3d_build = Task(
+        description=f"""
+        Build the complete Next.js 14 scroll-driven 3D animated website.
+
+        REQUEST: {user_request}
+
+        TECH STACK (mandatory):
+        - Next.js 14 with App Router
+        - Tailwind CSS
+        - Framer Motion (useScroll, useSpring, useTransform)
+        - HTML5 Canvas for image sequence
+        - TypeScript throughout
+
+        SCROLL ANIMATION:
+        - Wrapper div: height 400vh
+        - Canvas: sticky, top-0, h-screen, w-full
+        - Load frames from /public/sequence/ named frame_0.webp → frame_N.webp
+        - useScroll progress 0→1, useSpring (stiffness:100, damping:30)
+        - Frame index: Math.floor(scrollProgress * FRAME_COUNT)
+        - drawImage() scaled to cover viewport with devicePixelRatio support
+        - Preload all frames, show progress bar before revealing experience
+
+        BACKGROUND: must match image sequence exactly (default #050505)
+
+        SCROLLYTELLING BEATS (4 text overlays with real content from brief):
+        - Beat A (0-20%): Hero phrase, centered, huge (text-7xl+)
+        - Beat B (25-45%): Feature 1, left-aligned
+        - Beat C (50-70%): Feature 2, right-aligned
+        - Beat D (75-95%): CTA, centered
+        - All use useTransform: opacity [0,1,1,0] with 10% fade in/out
+        - Subtle vertical: enter y:20→0, exit y:0→-20
+
+        TYPOGRAPHY: Inter or SF Pro, tracking-tight, headings text-white/90, body text-white/60
+
+        SITE SECTIONS below scroll animation:
+        - Services/features grid
+        - About section
+        - Testimonials
+        - Contact/CTA
+        - Footer
+
+        PLACEHOLDER: If no video provided, create placeholder canvas with comment
+        <!-- DROP FRAMES INTO /public/sequence/ --> and instructions in README
+
+        OUTPUT FILES (save to site/ directory):
+        - site/app/page.tsx
+        - site/components/ScrollCanvas.tsx
+        - site/app/globals.css (Tailwind base + dark custom scrollbar)
+        - site/package.json (Next.js 14, Tailwind, Framer Motion)
+        - site/README.md (npm install && npm run dev, where to drop frames, Vercel deploy)
+        """,
+        expected_output="Complete Next.js project files saved to site/ directory",
+        agent=web_builder_3d,
+        context=[task_plan, task_intelligence, task_asset_prompts]
+    )
+
+    task_seo = Task(
+        description=f"""
+        Run SEO and accessibility audit on the Next.js website built above.
+
+        REQUEST: {user_request}
+
+        Audit site/app/page.tsx and site/components/ScrollCanvas.tsx for:
+
+        SEO:
+        - <title> and <meta name="description"> in app/layout.tsx
+        - Open Graph tags (og:title, og:description, og:type, og:image)
+        - Single H1, logical heading hierarchy
+        - Alt text on all images
+        - JSON-LD schema markup for the business type
+        - Canonical link tag
+
+        Accessibility:
+        - prefers-reduced-motion wrapping ALL Framer Motion animations
+        - Skip navigation link
+        - Keyboard accessible interactive elements
+        - Focus indicators visible
+
+        Performance:
+        - Use Next.js Image component for images where possible
+        - Font display swap on Google Fonts
+
+        Fix all issues directly in the relevant files.
+
+        OUTPUT FORMAT:
+        FIXES APPLIED: [numbered list]
+        FILES MODIFIED: [list]
+        """,
+        expected_output="Numbered list of SEO/accessibility fixes with files modified",
+        agent=seo_auditor,
+        context=[task_3d_build]
+    )
+
+    task_qa = Task(
+        description=f"""
+        Final quality check on the complete 3D website project.
+
+        ORIGINAL REQUEST: {user_request}
+
+        Verify all deliverables are present and complete:
+        - competitive-analysis.html exists and is well-formed HTML
+        - asset-prompts.html exists with all 3 prompts
+        - site/app/page.tsx exists with real content (not Lorem ipsum)
+        - site/components/ScrollCanvas.tsx exists
+        - site/app/globals.css exists
+        - site/package.json has Next.js 14, Tailwind, Framer Motion
+        - site/README.md explains setup and deployment
+        - SEO/accessibility fixes were applied
+
+        OUTPUT FORMAT (mandatory):
+        WHAT WAS BUILT: [summary]
+        QUALITY CHECK: PASSED or QUALITY CHECK: REVISED — [what was fixed]
+        DELIVERABLES:
+        - competitive-analysis.html ✓
+        - asset-prompts.html ✓
+        - site/app/page.tsx ✓
+        - site/components/ScrollCanvas.tsx ✓
+        - site/README.md ✓
+        """,
+        expected_output="QA report confirming all deliverables present",
+        agent=qa,
+        context=[task_seo]
+    )
+
+    return Crew(
+        agents=[planner, intelligence, asset_prompter, web_builder_3d, seo_auditor, qa],
+        tasks=[task_plan, task_intelligence, task_competitive_report, task_asset_prompts, task_3d_build, task_seo, task_qa],
+        process=Process.sequential,
+        verbose=False,
+        memory=False,
     )
 
 
