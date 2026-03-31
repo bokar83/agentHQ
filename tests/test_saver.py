@@ -25,7 +25,7 @@ def test_save_to_github_returns_url():
         url = save_to_github("Test Report", "research_report", "# Hello\nThis is content.")
         assert "github.com" in url
         mock_repo.create_file.assert_called_once()
-        call_path = mock_repo.create_file.call_args[0][0]
+        call_path = mock_repo.create_file.call_args.args[0]
         assert call_path.startswith("outputs/research_report/")
         assert call_path.endswith(".md")
 
@@ -40,7 +40,7 @@ def test_save_to_github_slugifies_title():
         mock_github_cls.return_value.get_user.return_value.get_repo.return_value = mock_repo
         from saver import save_to_github
         save_to_github("My Report: Special/Chars!", "research_report", "content")
-        call_path = mock_repo.create_file.call_args[0][0]
+        call_path = mock_repo.create_file.call_args.args[0]
         assert " " not in call_path
         assert "/" not in call_path.split("outputs/research_report/")[1]
 
@@ -61,9 +61,9 @@ def test_save_to_drive_returns_url():
         "id": "abc123",
         "webViewLink": "https://drive.google.com/file/d/abc123/view"
     }
-    mock_media = MagicMock()
+    # Patch both the service builder and MediaInMemoryUpload at the saver module level
     with patch("saver._get_drive_service", return_value=mock_service), \
-         patch.dict("sys.modules", {"googleapiclient.http": MagicMock(MediaInMemoryUpload=MagicMock(return_value=mock_media))}):
+         patch("saver.MediaInMemoryUpload", return_value=MagicMock()):
         from saver import save_to_drive
         url = save_to_drive("My Report", "research_report", "# Content")
         assert "drive.google.com" in url
