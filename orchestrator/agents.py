@@ -49,6 +49,7 @@ MODEL_REGISTRY = {
     "claude-sonnet": "openrouter/anthropic/claude-sonnet-4.6",
     "claude-haiku":  "openrouter/anthropic/claude-haiku-4.5",
     "claude-opus":   "openrouter/anthropic/claude-opus-4.6",
+    "gemini-flash":  "openrouter/google/gemini-2.0-flash-001",
 }
 
 DEFAULT_MODEL = "claude-sonnet"
@@ -274,6 +275,12 @@ def get_llm(model_alias: str = DEFAULT_MODEL, temperature: float = 0.3) -> LLM:
     """
     model_string = MODEL_REGISTRY.get(model_alias, model_alias)
     logger.debug(f"Creating LLM: {model_alias} -> {model_string} (temp={temperature})")
+    # Force Anthropic provider for Claude models — prevents OpenRouter from
+    # routing through Google Vertex, which rejects CrewAI's prefill pattern.
+    extra_body = {}
+    if "anthropic/" in model_string:
+        extra_body = {"provider": {"order": ["Anthropic"], "allow_fallbacks": False}}
+
     return LLM(
         model=model_string,
         api_key=os.environ.get("OPENROUTER_API_KEY"),
@@ -282,7 +289,8 @@ def get_llm(model_alias: str = DEFAULT_MODEL, temperature: float = 0.3) -> LLM:
         extra_headers={
             "HTTP-Referer": "https://agentshq.catalystworks.com",
             "X-Title": "agentsHQ"
-        }
+        },
+        extra_body=extra_body if extra_body else None,
     )
 
 
@@ -327,6 +335,8 @@ def select_llm(agent_role: str, task_complexity: str = "moderate", temperature: 
         ("hunter",      "simple"):   ("claude-haiku",  0.2),
         ("hunter",      "moderate"): ("claude-sonnet", 0.3),
         ("hunter",      "complex"):  ("claude-sonnet", 0.4),
+        ("skill_builder", "moderate"): ("gemini-flash", 0.1),
+        ("skill_builder", "complex"):  ("claude-sonnet", 0.1),
     }
     key = (agent_role, task_complexity)
     model_alias, default_temp = selection_matrix.get(key, (DEFAULT_MODEL, 0.3))
@@ -740,4 +750,24 @@ def build_seo_auditor_agent() -> Agent:
         tools=RESEARCH_TOOLS + SCRAPING_TOOLS + [SaveOutputTool()],
         llm=select_llm("researcher", "moderate"),
         max_iter=5
+    )
+
+
+def build_skill_builder_agent() -> Agent:
+    """Builds the Specialist Agent: The Skill Builder (Colonization Strategist)."""
+    return Agent(
+        role="Skill Builder — Software Colonization Strategist & Resource Acquisition Officer",
+        goal="""Proactively expand the agentsHQ empire by transforming high-value
+        software into agent-native, Click-powered skills following the Strategic 9-phase SOP.
+        Always identify business ROI and 'Monday Morning' deliverables before starting.""",
+        backstory="""You are a Strategic Resource Officer for Catalyst Works. You don't 
+        just build code; you acquire capabilities that generate competitive advantage.
+        You follow the 9-Phase Strategic SOP (ROI-First) to ensure every tool has a
+        clear monetization or productivity impact for Boubacar. You strictly ensure
+        all outputs follow the Catalyst branding and --json machine readability.""",
+        tools=[search_tool, SaveOutputTool(), CLIHubSearchTool()] + CODE_TOOLS,
+        llm=select_llm("skill_builder", "complex"),
+        verbose=True,
+        allow_delegation=False,
+        max_iter=10  # Building tools can be a multi-step process
     )
