@@ -604,11 +604,23 @@ def _run_background_job(
     chat_id = from_number  # from_number IS the Telegram chat ID
 
     # ── Progress ping timer ──────────────────────────────────
+    # First ping at 60s so user knows it's working, then every 5 min.
+    # Watchdog at 10 min: if still running, send an error and bail.
     _stop_ping = threading.Event()
 
     def _ping_loop():
-        while not _stop_ping.wait(300):  # wait 5 min; returns True if event set
-            send_progress_ping(chat_id)
+        # First ping after 60s
+        if _stop_ping.wait(60):
+            return
+        send_progress_ping(chat_id)
+        # Subsequent pings every 5 min, watchdog at 10 min total (1 more ping)
+        if _stop_ping.wait(300):
+            return
+        send_progress_ping(chat_id)
+        # Watchdog: if still running after ~10 min total, something is hung
+        if not _stop_ping.wait(300):
+            send_message(chat_id, "⚠️ Task is taking longer than expected (10+ min). It may be stuck — please try again or check with the team.")
+            _stop_ping.set()
 
     ping_thread = threading.Thread(target=_ping_loop, daemon=True)
     ping_thread.start()
@@ -745,7 +757,11 @@ async def run_task(request: TaskRequest, background_tasks: BackgroundTasks):
             send_message(request.from_number, "Nothing more to show — that was the full output.")
         return AsyncTaskResponse(job_id=job_id, status="completed", message="Chunk delivered.")
 
-    # Classify to get task_type for the ack message
+    # Send ack immediately — before any LLM classification call
+    from notifier import send_ack, send_message
+    send_ack(request.from_number, "unknown")
+
+    # Classify task type (runs after ack is already sent)
     _msg = request.task.strip().lower()
     _is_obvious_chat = (
         len(_msg) < 60 and not any(w in _msg for w in [
@@ -764,25 +780,23 @@ async def run_task(request: TaskRequest, background_tasks: BackgroundTasks):
         classification = classify_task(request.task)
         task_type = classification.get("task_type", "unknown")
 
-    # Send ack to Telegram immediately
-    from notifier import send_ack
-    send_ack(request.from_number, task_type)
-
     # For chat, run in executor (non-blocking) and deliver directly
     if task_type == "chat":
         import asyncio
-        from notifier import send_message
         loop = asyncio.get_event_loop()
         result = await loop.run_in_executor(None, lambda: run_chat(message=request.task, session_key=request.session_key))
         send_message(request.from_number, result["result"])
         return AsyncTaskResponse(job_id=job_id, status="completed", message="Chat response delivered.")
+
+    # Each crew job gets its own session key to prevent concurrent task collision
+    crew_session_key = f"{request.session_key}:{job_id[:8]}"
 
     # Queue crew job in background
     background_tasks.add_task(
         _run_background_job,
         task=request.task,
         from_number=request.from_number,
-        session_key=request.session_key,
+        session_key=crew_session_key,
         job_id=job_id,
     )
 
