@@ -630,7 +630,7 @@ def _run_background_job(
             from notifier import send_message
             send_message(chat_id, f"Sorry — something went wrong with your task. Error: {str(e)[:200]}")
         except Exception:
-            pass
+            logger.critical(f"Background job {job_id}: result delivery AND error notification both failed. User received nothing.")
     finally:
         _stop_ping.set()  # cancel ping loop regardless of success/failure
 
@@ -718,10 +718,12 @@ async def run_task(request: TaskRequest, background_tasks: BackgroundTasks):
     from notifier import send_ack
     send_ack(request.from_number, task_type)
 
-    # For chat, run inline (fast ~2s) and deliver directly
+    # For chat, run in executor (non-blocking) and deliver directly
     if task_type == "chat":
+        import asyncio
         from notifier import send_message
-        result = run_chat(message=request.task, session_key=request.session_key)
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(None, lambda: run_chat(message=request.task, session_key=request.session_key))
         send_message(request.from_number, result["result"])
         return AsyncTaskResponse(job_id=job_id, status="completed", message="Chat response delivered.")
 
