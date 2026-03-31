@@ -41,6 +41,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 
+# Catalyst Daily Ignition Scheduler
+try:
+    from scheduler import start_scheduler
+except ImportError:
+    start_scheduler = None
+
 # Configure logging
 LOG_DIR = os.environ.get("AGENTS_LOG_DIR", "/app/logs")
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -67,6 +73,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+async def startup_event():
+    """Run at service startup."""
+    if start_scheduler:
+        start_scheduler()
+        logger.info("Catalyst Daily Ignition initiated.")
 
 # ── Request/Response models ────────────────────────────────────
 class TaskRequest(BaseModel):
@@ -700,6 +713,70 @@ def _trigger_evolution(task_instruction: str, result_output: str) -> None:
 # ══════════════════════════════════════════════════════════════
 # API ENDPOINTS
 # ══════════════════════════════════════════════════════════════
+
+@app.post("/telegram")
+async def telegram_webhook(request: Request, background_tasks: BackgroundTasks):
+    """
+    Direct Telegram webhook endpoint — bypasses n8n entirely.
+    Telegram POSTs updates here; we extract the message and call the same
+    pipeline as /run.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        return {"ok": True}
+
+    message = body.get("message") or body.get("edited_message")
+    if not message:
+        return {"ok": True}
+
+    text = message.get("text", "").strip()
+    chat_id = str(message.get("chat", {}).get("id", ""))
+
+    if not text or not chat_id:
+        return {"ok": True}
+
+    # Reuse the exact same pipeline as /run
+    job_id = str(uuid.uuid4())
+    from notifier import send_ack, send_message
+
+    send_ack(chat_id, "unknown")
+
+    _msg = text.lower()
+    _is_obvious_chat = (
+        len(_msg) < 60 and not any(w in _msg for w in [
+            "write", "create", "build", "research", "analyze", "make",
+            "draft", "generate", "code", "script", "website", "report",
+            "proposal", "post", "email", "article"
+        ])
+    ) or _msg.startswith(("what is my", "what's my", "how much", "do you", "can you tell",
+                           "hey", "hi ", "hello", "thanks", "thank you", "what did",
+                           "do you remember", "remind me", "what have we", "what was"))
+
+    if _is_obvious_chat:
+        task_type = "chat"
+    else:
+        from router import classify_task
+        classification = classify_task(text)
+        task_type = classification.get("task_type", "unknown")
+
+    if task_type == "chat":
+        import asyncio
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(None, lambda: run_chat(message=text, session_key=chat_id))
+        send_message(chat_id, result["result"])
+    else:
+        crew_session_key = f"{chat_id}:{job_id[:8]}"
+        background_tasks.add_task(
+            _run_background_job,
+            task=text,
+            from_number=chat_id,
+            session_key=crew_session_key,
+            job_id=job_id,
+        )
+
+    return {"ok": True}
+
 
 @app.get("/", response_model=StatusResponse)
 def status():
