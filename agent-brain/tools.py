@@ -251,13 +251,16 @@ class FirecrawlScrapeTool(BaseTool):
 
     def _run(self, input_data: str) -> str:
         try:
+            api_key = os.environ.get("FIRECRAWL_API_KEY")
+            if not api_key:
+                return "Error: FIRECRAWL_API_KEY is not set. Add it to your .env file."
             data = json.loads(input_data) if isinstance(input_data, str) else input_data
             url = data.get("url")
             if not url:
                 return "Error: 'url' is required."
             formats = data.get("formats", ["markdown"])
 
-            client = V1FirecrawlApp(api_key=os.environ.get("FIRECRAWL_API_KEY"))
+            client = V1FirecrawlApp(api_key=api_key)
             response = client.scrape_url(url, formats=formats)
 
             if not response.success:
@@ -292,6 +295,9 @@ class FirecrawlCrawlTool(BaseTool):
 
     def _run(self, input_data: str) -> str:
         try:
+            api_key = os.environ.get("FIRECRAWL_API_KEY")
+            if not api_key:
+                return "Error: FIRECRAWL_API_KEY is not set. Add it to your .env file."
             data = json.loads(input_data) if isinstance(input_data, str) else input_data
             url = data.get("url")
             if not url:
@@ -299,11 +305,11 @@ class FirecrawlCrawlTool(BaseTool):
             limit = data.get("limit", 10)
             max_depth = data.get("max_depth", 2)
 
-            client = V1FirecrawlApp(api_key=os.environ.get("FIRECRAWL_API_KEY"))
+            client = V1FirecrawlApp(api_key=api_key)
             response = client.crawl_url(url, limit=limit, max_depth=max_depth)
 
             if not response.success or not response.data:
-                return f"Error crawling {url}: no pages returned."
+                return f"Error crawling {url}: {getattr(response, 'error', None) or 'no pages returned'}"
 
             sections = []
             for doc in response.data:
@@ -338,13 +344,16 @@ class FirecrawlSearchTool(BaseTool):
 
     def _run(self, input_data: str) -> str:
         try:
+            api_key = os.environ.get("FIRECRAWL_API_KEY")
+            if not api_key:
+                return "Error: FIRECRAWL_API_KEY is not set. Add it to your .env file."
             data = json.loads(input_data) if isinstance(input_data, str) else input_data
             query = data.get("query")
             if not query:
                 return "Error: 'query' is required."
             limit = data.get("limit", 5)
 
-            client = V1FirecrawlApp(api_key=os.environ.get("FIRECRAWL_API_KEY"))
+            client = V1FirecrawlApp(api_key=api_key)
             response = client.search(query, limit=limit)
 
             if not response.success or not response.data:
@@ -422,4 +431,4 @@ WRITING_TOOLS = [file_writer, SaveOutputTool()]
 CODE_TOOLS = [code_interpreter, file_writer, file_reader, SaveOutputTool()]
 ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool()]
 SCRAPING_TOOLS = [FirecrawlScrapeTool(), FirecrawlCrawlTool(), FirecrawlSearchTool()]
-ALL_TOOLS = RESEARCH_TOOLS + WRITING_TOOLS + CODE_TOOLS + ORCHESTRATION_TOOLS + SCRAPING_TOOLS
+ALL_TOOLS = list({t.name: t for t in RESEARCH_TOOLS + WRITING_TOOLS + CODE_TOOLS + ORCHESTRATION_TOOLS + SCRAPING_TOOLS}.values())
