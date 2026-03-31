@@ -65,3 +65,13 @@ def test_strip_style_markers_normalizes_em_dashes():
     result = strip_style_markers("This \u2014 that")
     assert "\u2014" not in result
     assert "-" in result
+
+
+def test_router_extracts_high_stakes_flag():
+    from router import extract_metadata
+
+    meta = extract_metadata("council this — should I raise my prices?")
+    assert meta.get("high_stakes") is True
+
+    meta2 = extract_metadata("write me a linkedin post about AI")
+    assert meta2.get("high_stakes") is False
