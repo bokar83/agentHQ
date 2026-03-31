@@ -56,6 +56,211 @@ OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
 
 # ══════════════════════════════════════════════════════════════
+# COUNCIL MODEL REGISTRY
+# Used exclusively by The Sankofa Council for capability-based
+# model selection. Models rotate here as the LLM landscape evolves.
+# Each model carries capability tags so select_by_capability()
+# can pick the best fit without hard-coding model names in voices.
+#
+# To add a new model: add an entry here. Council voice definitions
+# in council.py never need to change.
+#
+# Capability tags:
+#   deep_reasoning      — sustained analytical depth, multi-step logic
+#   creative_divergence — non-obvious angles, lateral thinking
+#   fast                — low latency, high throughput
+#   cost_efficient      — low cost per token
+#   long_context        — handles 200K+ tokens reliably
+#   instruction_following — precise adherence to structured output formats
+#   fresh_perspective   — different training distribution from Anthropic
+# ══════════════════════════════════════════════════════════════
+
+COST_TIER_ORDER = ["very_low", "low", "low-medium", "medium", "medium-high", "high"]
+
+COUNCIL_MODEL_REGISTRY = {
+    # ── Anthropic ─────────────────────────────────────────────
+    "anthropic/claude-opus-4.6": {
+        "capabilities": ["deep_reasoning", "long_context", "instruction_following"],
+        "cost_tier": "high",
+        "input_per_mtok": 5.00,
+        "output_per_mtok": 25.00,
+        "notes": "Best for Chairman synthesis. 1M context. Voice fidelity.",
+    },
+    "anthropic/claude-sonnet-4.6": {
+        "capabilities": ["deep_reasoning", "instruction_following", "long_context"],
+        "cost_tier": "medium",
+        "input_per_mtok": 3.00,
+        "output_per_mtok": 15.00,
+        "notes": "Frontier Sonnet. Strong reasoning. Default First Principles voice.",
+    },
+    "anthropic/claude-haiku-4.5": {
+        "capabilities": ["fast", "cost_efficient", "instruction_following"],
+        "cost_tier": "low",
+        "input_per_mtok": 1.00,
+        "output_per_mtok": 5.00,
+        "notes": "Fast, cheap. Good Outsider voice — simulates naive reader.",
+    },
+    # ── Google ────────────────────────────────────────────────
+    "google/gemini-3.1-pro-preview": {
+        "capabilities": ["deep_reasoning", "long_context", "fresh_perspective"],
+        "cost_tier": "medium-high",
+        "input_per_mtok": 2.00,
+        "output_per_mtok": 12.00,
+        "notes": "Google frontier. Genuinely different training distribution.",
+    },
+    "google/gemini-2.5-pro": {
+        "capabilities": ["deep_reasoning", "long_context", "fresh_perspective"],
+        "cost_tier": "medium",
+        "input_per_mtok": 1.25,
+        "output_per_mtok": 10.00,
+        "notes": "Strong reasoning at lower cost than Gemini 3.1.",
+    },
+    "google/gemini-2.5-flash": {
+        "capabilities": ["fast", "cost_efficient", "fresh_perspective"],
+        "cost_tier": "low",
+        "input_per_mtok": 0.30,
+        "output_per_mtok": 2.50,
+        "notes": "Fast, cheap, different provider. Default Outsider voice.",
+    },
+    # ── OpenAI ────────────────────────────────────────────────
+    "openai/gpt-5.1": {
+        "capabilities": ["deep_reasoning", "long_context", "fresh_perspective",
+                         "instruction_following"],
+        "cost_tier": "medium",
+        "input_per_mtok": 1.25,
+        "output_per_mtok": 10.00,
+        "notes": "OpenAI frontier. Different training. Strong Expansionist.",
+    },
+    "openai/gpt-4.1": {
+        "capabilities": ["deep_reasoning", "instruction_following", "long_context"],
+        "cost_tier": "medium",
+        "input_per_mtok": 2.00,
+        "output_per_mtok": 8.00,
+        "notes": "GPT-4.1 with 1M context. Reliable instruction following.",
+    },
+    "openai/o4-mini": {
+        "capabilities": ["deep_reasoning", "cost_efficient"],
+        "cost_tier": "low-medium",
+        "input_per_mtok": 1.10,
+        "output_per_mtok": 4.40,
+        "notes": "OpenAI reasoning model. Strong depth at reasonable cost.",
+    },
+    # ── DeepSeek ──────────────────────────────────────────────
+    "deepseek/deepseek-r1-0528": {
+        "capabilities": ["deep_reasoning", "cost_efficient", "fresh_perspective"],
+        "cost_tier": "very_low",
+        "input_per_mtok": 0.45,
+        "output_per_mtok": 2.15,
+        "notes": "R1 reasoning model. Exceptional value. Default Contrarian voice.",
+    },
+    "deepseek/deepseek-v3.2": {
+        "capabilities": ["cost_efficient", "instruction_following", "fresh_perspective"],
+        "cost_tier": "very_low",
+        "input_per_mtok": 0.26,
+        "output_per_mtok": 0.38,
+        "notes": "Extremely cheap. Different architecture. Backup Outsider/Executor.",
+    },
+    # ── xAI ───────────────────────────────────────────────────
+    "x-ai/grok-4": {
+        "capabilities": ["deep_reasoning", "fresh_perspective", "creative_divergence"],
+        "cost_tier": "medium",
+        "input_per_mtok": 3.00,
+        "output_per_mtok": 15.00,
+        "notes": "Known for unconventional takes. Default Expansionist voice.",
+    },
+    # ── Mistral ───────────────────────────────────────────────
+    "mistralai/mistral-large-2512": {
+        "capabilities": ["instruction_following", "cost_efficient", "fresh_perspective"],
+        "cost_tier": "low",
+        "input_per_mtok": 0.50,
+        "output_per_mtok": 1.50,
+        "notes": "European training distribution. Default Executor voice.",
+    },
+    # ── Qwen ──────────────────────────────────────────────────
+    "qwen/qwen3-235b-a22b-2507": {
+        "capabilities": ["deep_reasoning", "cost_efficient", "fresh_perspective"],
+        "cost_tier": "very_low",
+        "input_per_mtok": 0.071,
+        "output_per_mtok": 0.10,
+        "notes": "235B MoE. Exceptional capability-to-cost. Backup for any voice.",
+    },
+}
+
+
+def select_by_capability(
+    capability: str,
+    max_cost_tier: str = "medium",
+    exclude_providers: list = None,
+    temperature: float = 0.4,
+) -> str:
+    """
+    Select the best model for a capability requirement.
+
+    Picks the lowest-cost model within the cost ceiling that has the required capability.
+    If no model meets both constraints, relaxes cost tier upward until a match is found.
+    Always returns a valid model_id — never raises.
+
+    Args:
+        capability: One of the capability tags (e.g. "deep_reasoning")
+        max_cost_tier: Maximum allowed tier from COST_TIER_ORDER
+        exclude_providers: Provider prefixes to skip (e.g. ["anthropic"])
+        temperature: For reference only — actual LLM built by caller
+
+    Returns:
+        model_id string from COUNCIL_MODEL_REGISTRY
+    """
+    exclude_providers = exclude_providers or []
+    max_tier_idx = (
+        COST_TIER_ORDER.index(max_cost_tier)
+        if max_cost_tier in COST_TIER_ORDER
+        else len(COST_TIER_ORDER) - 1
+    )
+
+    candidates = []
+    for model_id, meta in COUNCIL_MODEL_REGISTRY.items():
+        provider = model_id.split("/")[0]
+        if provider in exclude_providers:
+            continue
+        if capability not in meta["capabilities"]:
+            continue
+        tier_idx = (
+            COST_TIER_ORDER.index(meta["cost_tier"])
+            if meta["cost_tier"] in COST_TIER_ORDER
+            else len(COST_TIER_ORDER)
+        )
+        if tier_idx <= max_tier_idx:
+            candidates.append((tier_idx, meta["input_per_mtok"], model_id))
+
+    if not candidates:
+        # Relax cost constraint — find any model with this capability
+        for model_id, meta in COUNCIL_MODEL_REGISTRY.items():
+            provider = model_id.split("/")[0]
+            if provider in exclude_providers:
+                continue
+            if capability in meta["capabilities"]:
+                tier_idx = (
+                    COST_TIER_ORDER.index(meta["cost_tier"])
+                    if meta["cost_tier"] in COST_TIER_ORDER
+                    else len(COST_TIER_ORDER)
+                )
+                candidates.append((tier_idx, meta["input_per_mtok"], model_id))
+
+    if not candidates:
+        # Ultimate fallback — return cheapest model regardless of capability
+        fallback = min(COUNCIL_MODEL_REGISTRY.items(), key=lambda x: x[1]["input_per_mtok"])
+        logger.warning(
+            f"No model found for capability='{capability}'. Falling back to {fallback[0]}"
+        )
+        return fallback[0]
+
+    # Sort: prefer lowest cost tier, then lowest price within tier
+    candidates.sort(key=lambda x: (x[0], x[1]))
+    selected = candidates[0][2]
+    logger.info(f"select_by_capability({capability}, max={max_cost_tier}) → {selected}")
+    return selected
+
+
+# ══════════════════════════════════════════════════════════════
 # LLM FACTORY
 # Uses CrewAI's native LLM class.
 # All calls route through OpenRouter via openai-compatible API.
