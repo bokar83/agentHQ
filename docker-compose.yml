@@ -102,11 +102,16 @@ services:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - GITHUB_USERNAME=${GITHUB_USERNAME}
       - GITHUB_REPO=${GITHUB_REPO}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      - GOOGLE_DRIVE_FOLDER_ID=${GOOGLE_DRIVE_FOLDER_ID}
+      - GOOGLE_SERVICE_ACCOUNT_JSON=${GOOGLE_SERVICE_ACCOUNT_JSON}
       - REPORT_EMAIL=${REPORT_EMAIL}
 #      - APOLLO_API_KEY=${APOLLO_API_KEY} (removed as requested)
     volumes:
       - ./agent_outputs:/app/outputs
       - ./logs:/app/logs
+      - ./secrets:/app/secrets:ro
     depends_on:
       postgres:
         condition: service_healthy
