@@ -26,6 +26,7 @@ import os
 import logging
 import time
 import uuid
+import threading
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
@@ -577,6 +578,63 @@ def _save_overflow_if_needed(session_key: str, full_output: str, task_type: str)
             logger.warning(f"Overflow save failed (non-fatal): {e}")
 
 
+def _run_background_job(
+    task: str,
+    from_number: str,
+    session_key: str,
+    job_id: str,
+) -> None:
+    """
+    Background worker: runs the crew, sends progress pings, saves output,
+    and delivers the final result to Telegram.
+    Called via FastAPI BackgroundTasks — runs in a thread pool.
+    """
+    from notifier import send_progress_ping, send_result, send_message
+    from saver import save_to_github, save_to_drive
+
+    chat_id = from_number  # from_number IS the Telegram chat ID
+
+    # ── Progress ping timer ──────────────────────────────────
+    _stop_ping = threading.Event()
+
+    def _ping_loop():
+        while not _stop_ping.wait(300):  # wait 5 min; returns True if event set
+            send_progress_ping(chat_id)
+
+    ping_thread = threading.Thread(target=_ping_loop, daemon=True)
+    ping_thread.start()
+
+    try:
+        # ── Run the crew ─────────────────────────────────────
+        result = run_orchestrator(
+            task_request=task,
+            from_number=from_number,
+            session_key=session_key,
+        )
+
+        summary     = result.get("result", "")
+        task_type   = result.get("task_type", "unknown")
+        title       = result.get("title", task[:80])
+        deliverable = result.get("deliverable", summary)
+
+        # ── Save ─────────────────────────────────────────────
+        github_url = save_to_github(title, task_type, deliverable)
+        drive_url  = save_to_drive(title, task_type, deliverable)
+
+        # ── Deliver ──────────────────────────────────────────
+        send_result(chat_id, summary, drive_url, github_url)
+
+    except Exception as e:
+        logger.error(f"Background job {job_id} failed: {e}", exc_info=True)
+        try:
+            from notifier import send_message
+            send_message(chat_id, f"Sorry — something went wrong with your task. Error: {str(e)[:200]}")
+        except Exception:
+            pass
+    finally:
+        _stop_ping.set()  # cancel ping loop regardless of success/failure
+
+
 # ══════════════════════════════════════════════════════════════
 # API ENDPOINTS
 # ══════════════════════════════════════════════════════════════
@@ -611,21 +669,88 @@ def health():
     }
 
 
-@app.post("/run", response_model=TaskResponse)
-async def run_task(request: TaskRequest):
+@app.post("/run", response_model=AsyncTaskResponse, status_code=202)
+async def run_task(request: TaskRequest, background_tasks: BackgroundTasks):
     """
-    Main endpoint. Receives a task and runs it through the agent crew.
-    
-    Called by:
-#     - n8n Telegram/Web workflow
-    - Direct HTTP from any tool (Cursor, Claude Code, etc.)
-    
-    Returns a TaskResponse with result summary and metadata.
+    Main endpoint — async, fire-and-forget.
+
+    Returns 202 immediately after sending a Telegram ack.
+    The crew runs in the background; result is pushed to Telegram when done.
+
+    For synchronous callers (Cursor, Claude Code), use POST /run-sync instead.
     """
     logger.info(f"Request from {request.from_number}: {request.task[:100]}...")
 
+    job_id = str(uuid.uuid4())
+
+    # Handle 'more' command synchronously — it's instant
+    if request.task.strip().lower() in ("more", "more please", "continue", "show more"):
+        from memory import get_next_chunk
+        from notifier import send_message
+        chunk_result = get_next_chunk(request.session_key)
+        if chunk_result["found"]:
+            suffix = "\n\n[reply 'more' for the rest]" if chunk_result["has_more"] else "\n\n[end of output]"
+            send_message(request.from_number, chunk_result["chunk"] + suffix)
+        else:
+            send_message(request.from_number, "Nothing more to show — that was the full output.")
+        return AsyncTaskResponse(job_id=job_id, status="completed", message="Chunk delivered.")
+
+    # Classify to get task_type for the ack message
+    _msg = request.task.strip().lower()
+    _is_obvious_chat = (
+        len(_msg) < 60 and not any(w in _msg for w in [
+            "write", "create", "build", "research", "analyze", "make",
+            "draft", "generate", "code", "script", "website", "report",
+            "proposal", "post", "email", "article"
+        ])
+    ) or _msg.startswith(("what is my", "what's my", "how much", "do you", "can you tell",
+                           "hey", "hi ", "hello", "thanks", "thank you", "what did",
+                           "do you remember", "remind me", "what have we", "what was"))
+
+    if _is_obvious_chat:
+        task_type = "chat"
+    else:
+        from router import classify_task
+        classification = classify_task(request.task)
+        task_type = classification.get("task_type", "unknown")
+
+    # Send ack to Telegram immediately
+    from notifier import send_ack
+    send_ack(request.from_number, task_type)
+
+    # For chat, run inline (fast ~2s) and deliver directly
+    if task_type == "chat":
+        from notifier import send_message
+        result = run_chat(message=request.task, session_key=request.session_key)
+        send_message(request.from_number, result["result"])
+        return AsyncTaskResponse(job_id=job_id, status="completed", message="Chat response delivered.")
+
+    # Queue crew job in background
+    background_tasks.add_task(
+        _run_background_job,
+        task=request.task,
+        from_number=request.from_number,
+        session_key=request.session_key,
+        job_id=job_id,
+    )
+
+    return AsyncTaskResponse(
+        job_id=job_id,
+        status="pending",
+        message="Job queued. Result will be delivered to Telegram.",
+    )
+
+
+@app.post("/run-sync", response_model=TaskResponse)
+async def run_task_sync(request: TaskRequest):
+    """
+    Synchronous endpoint — blocks until result is ready, returns TaskResponse.
+    Use this for programmatic callers (Cursor, Claude Code, scripts).
+    Does NOT send Telegram messages.
+    """
+    logger.info(f"[sync] Request from {request.from_number}: {request.task[:100]}...")
+
     try:
-        # "more" command — retrieve next chunk of a truncated output
         if request.task.strip().lower() in ("more", "more please", "continue", "show more"):
             from memory import get_next_chunk
             chunk_result = get_next_chunk(request.session_key)
@@ -634,16 +759,8 @@ async def run_task(request: TaskRequest):
                 reply = chunk_result["chunk"] + suffix
             else:
                 reply = "Nothing more to show — that was the full output."
-            return TaskResponse(
-                success=True,
-                result=reply,
-                task_type="more",
-                files_created=[],
-                execution_time=0.0
-            )
+            return TaskResponse(success=True, result=reply, task_type="more", files_created=[], execution_time=0.0)
 
-        # Fast pre-check: catch obvious chat patterns without burning an API call
-        # Questions, greetings, status checks, and short messages go straight to chat
         _msg = request.task.strip().lower()
         _is_obvious_chat = (
             len(_msg) < 60 and not any(w in _msg for w in [
@@ -656,25 +773,12 @@ async def run_task(request: TaskRequest):
                                "do you remember", "remind me", "what have we", "what was"))
 
         if _is_obvious_chat:
-            task_type = "chat"
-            logger.info(f"Fast-path: routing '{_msg[:50]}' to chat (pre-classifier)")
-        else:
-            # Full LLM classification for everything else
-            from router import classify_task
-            classification = classify_task(request.task)
-            task_type = classification.get("task_type", "unknown")
-
-        if task_type == "chat":
-            logger.info(f"Routing to chat mode for session '{request.session_key}'")
-            result = run_chat(
-                message=request.task,
-                session_key=request.session_key
-            )
+            result = run_chat(message=request.task, session_key=request.session_key)
         else:
             result = run_orchestrator(
                 task_request=request.task,
                 from_number=request.from_number,
-                session_key=request.session_key
+                session_key=request.session_key,
             )
 
         return TaskResponse(
@@ -688,11 +792,8 @@ async def run_task(request: TaskRequest):
         )
 
     except Exception as e:
-        logger.error(f"Request failed: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Agent execution failed: {str(e)}"
-        )
+        logger.error(f"[sync] Request failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Agent execution failed: {str(e)}")
 
 
 @app.post("/run-team", response_model=TaskResponse)
