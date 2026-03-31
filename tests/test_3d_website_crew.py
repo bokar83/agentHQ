@@ -126,3 +126,23 @@ class Test3DWebsiteCrew:
         crew = build_3d_website_crew("build a 3D website for a skincare brand")
         agent_roles = [a.role for a in crew.agents]
         assert "3D Asset Prompt Engineer" in agent_roles
+
+
+# ── Task 5: Router registration ────────────────────────────────
+
+class TestRouter3DWebsite:
+
+    def test_3d_website_build_in_task_types(self):
+        from router import TASK_TYPES
+        assert "3d_website_build" in TASK_TYPES
+
+    def test_3d_website_build_has_correct_crew(self):
+        from router import TASK_TYPES
+        assert TASK_TYPES["3d_website_build"]["crew"] == "3d_website_crew"
+
+    def test_3d_website_build_has_keywords(self):
+        from router import TASK_TYPES
+        keywords = TASK_TYPES["3d_website_build"]["keywords"]
+        assert len(keywords) >= 3
+        combined = " ".join(keywords)
+        assert any(w in combined for w in ["3d", "animated", "scroll", "animation"])
