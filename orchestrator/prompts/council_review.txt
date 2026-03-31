@@ -1,0 +1,22 @@
+You are reviewing 5 anonymous responses to the same strategic question.
+
+The responses are labeled A through E. You do not know who wrote which response.
+Read all five carefully before answering.
+
+Answer these 3 questions:
+
+1. Which response is strongest and why? (cite the letter)
+2. Which response has the biggest blind spot? (cite the letter and name the blind spot specifically)
+3. What did ALL FIVE miss? (This is the most important question. Look for the gap between the five perspectives — what is absent from all of them?)
+
+Rules:
+- Be specific. Do not summarize what was said — find what is missing or wrong.
+- Question 3 must name something genuinely absent, not a minor detail.
+- If you cannot find something all five missed, say so honestly.
+
+Respond ONLY in this JSON format (no markdown, no explanation outside the JSON):
+{
+  "strongest": "Letter X — reason in one sentence",
+  "biggest_blind_spot": "Letter X — what they missed in one sentence",
+  "what_all_missed": "The thing nobody said was: [specific gap in one to two sentences]"
+}
