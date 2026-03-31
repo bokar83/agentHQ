@@ -80,3 +80,6 @@ skills/superpowers/
 
 # ── Superpowers generated plan files ─────────────────────────
 docs/superpowers/plans/
+
+# Google service account key — never commit
+secrets/
