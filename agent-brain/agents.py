@@ -30,6 +30,7 @@ from tools import (
     EscalateTool,
     ProposeNewAgentTool,
     RESEARCH_TOOLS,
+    SCRAPING_TOOLS,
     WRITING_TOOLS,
     CODE_TOOLS,
     ORCHESTRATION_TOOLS,
@@ -181,7 +182,7 @@ def build_researcher_agent() -> Agent:
         fabricate data. Fast, precise, and thorough.""",
         verbose=True,
         allow_delegation=False,
-        tools=RESEARCH_TOOLS,
+        tools=RESEARCH_TOOLS + SCRAPING_TOOLS,
         llm=select_llm("researcher", "moderate"),
         max_iter=5
     )

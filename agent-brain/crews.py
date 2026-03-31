@@ -162,6 +162,45 @@ def build_website_crew(user_request: str) -> Crew:
         context=[task_plan, task_research, task_copy]
     )
 
+    task_seo = Task(
+        description=f"""
+        Run a thorough SEO and accessibility audit on the website HTML just built.
+
+        REQUEST CONTEXT: {user_request}
+
+        Check every item and fix any issues directly in the HTML:
+
+        SEO:
+        - Single H1 per page, logical H2/H3 hierarchy
+        - Unique <title> tag (60 chars max) and <meta name="description"> (160 chars max)
+        - Alt text on all <img> tags
+        - Open Graph tags: og:title, og:description, og:type
+        - Schema markup: LocalBusiness or relevant type
+        - Canonical <link rel="canonical"> tag
+
+        Accessibility:
+        - Color contrast ratios pass WCAG AA (4.5:1 for text)
+        - All interactive elements keyboard accessible
+        - Skip navigation link at top of page
+        - Form labels associated with inputs via for/id
+        - Focus indicators visible on interactive elements
+        - prefers-reduced-motion media query wraps CSS animations
+
+        Performance:
+        - Images have explicit width/height attributes
+        - No render-blocking scripts without async/defer
+        - Google Fonts loaded with display=swap
+
+        OUTPUT FORMAT:
+        FIXES APPLIED: [numbered list of every change made]
+        DELIVERABLE:
+        [The complete updated HTML file]
+        """,
+        expected_output="List of SEO/accessibility fixes followed by complete updated HTML",
+        agent=web_builder,
+        context=[task_build]
+    )
+
     task_qa = Task(
         description=f"""
         Review the website built above against the original request.
@@ -185,12 +224,12 @@ def build_website_crew(user_request: str) -> Crew:
         """,
         expected_output="QUALITY CHECK: PASSED or REVISED, followed by the complete HTML file",
         agent=qa,
-        context=[task_build]
+        context=[task_seo]
     )
 
     return Crew(
         agents=[planner, researcher, copywriter, web_builder, qa],
-        tasks=[task_plan, task_research, task_copy, task_build, task_qa],
+        tasks=[task_plan, task_research, task_copy, task_build, task_seo, task_qa],
         process=Process.sequential,
         verbose=True,
         memory=False,
