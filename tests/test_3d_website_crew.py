@@ -93,3 +93,36 @@ class TestNew3DAgents:
         from agents import build_seo_auditor_agent
         agent = build_seo_auditor_agent()
         assert agent.role is not None
+
+
+# ── Task 4: 3D website crew structure ─────────────────────────
+
+class Test3DWebsiteCrew:
+
+    def test_3d_crew_exists(self):
+        from crews import build_3d_website_crew
+        crew = build_3d_website_crew("build a 3D website for a luxury watch brand")
+        assert crew is not None
+
+    def test_3d_crew_has_7_tasks(self):
+        from crews import build_3d_website_crew
+        crew = build_3d_website_crew("build a 3D website for a coffee brand")
+        assert len(crew.tasks) == 7
+
+    def test_3d_crew_is_sequential(self):
+        from crews import build_3d_website_crew
+        from crewai import Process
+        crew = build_3d_website_crew("build a 3D website for a sneaker brand")
+        assert crew.process == Process.sequential
+
+    def test_3d_crew_has_intelligence_agent(self):
+        from crews import build_3d_website_crew
+        crew = build_3d_website_crew("build a 3D website for a tech product")
+        agent_roles = [a.role for a in crew.agents]
+        assert "Website Intelligence Researcher" in agent_roles
+
+    def test_3d_crew_has_asset_prompter(self):
+        from crews import build_3d_website_crew
+        crew = build_3d_website_crew("build a 3D website for a skincare brand")
+        agent_roles = [a.role for a in crew.agents]
+        assert "3D Asset Prompt Engineer" in agent_roles
