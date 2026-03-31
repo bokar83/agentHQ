@@ -15,10 +15,10 @@ sys.path.insert(0, "orchestrator")
 
 def test_save_to_github_returns_url():
     mock_repo = MagicMock()
-    mock_repo.create_file.return_value = (
-        MagicMock(),
-        MagicMock(html_url="https://github.com/bokar83/agentHQ/blob/main/outputs/research/test.md")
-    )
+    mock_repo.create_file.return_value = {
+        "content": MagicMock(),
+        "commit": MagicMock(html_url="https://github.com/bokar83/agentHQ/blob/main/outputs/research/test.md"),
+    }
     with patch("saver.Github") as mock_github_cls:
         mock_github_cls.return_value.get_user.return_value.get_repo.return_value = mock_repo
         from saver import save_to_github
@@ -32,10 +32,10 @@ def test_save_to_github_returns_url():
 
 def test_save_to_github_slugifies_title():
     mock_repo = MagicMock()
-    mock_repo.create_file.return_value = (
-        MagicMock(),
-        MagicMock(html_url="https://github.com/bokar83/agentHQ/blob/main/outputs/research/test.md")
-    )
+    mock_repo.create_file.return_value = {
+        "content": MagicMock(),
+        "commit": MagicMock(html_url="https://github.com/bokar83/agentHQ/blob/main/outputs/research/test.md"),
+    }
     with patch("saver.Github") as mock_github_cls:
         mock_github_cls.return_value.get_user.return_value.get_repo.return_value = mock_repo
         from saver import save_to_github

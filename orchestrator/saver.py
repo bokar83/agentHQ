@@ -69,13 +69,13 @@ def save_to_github(title: str, task_type: str, content: str) -> str:
         slug = _slugify(title)
         ts   = int(time.time())
         path = f"outputs/{task_type}/{slug}-{ts}.md"
-        _, commit = repo.create_file(
+        result = repo.create_file(
             path,
             f"agent output: {title[:60]}",
             content,
             branch="main",
         )
-        url = commit.html_url
+        url = result["commit"].html_url
         logger.info(f"GitHub save: {url}")
         return url
     except Exception as e:
