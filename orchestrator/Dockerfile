@@ -21,12 +21,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy all orchestrator source files
 COPY orchestrator/*.py .
 
+# Copy voice prompts for the Sankofa Council
+COPY orchestrator/prompts/ prompts/
+
 # Copy skills and tests
 COPY skills/ skills/
 COPY tests/ tests/
 
 # Create required directories
-RUN mkdir -p /app/outputs /app/logs /app/outputs/proposals
+RUN mkdir -p /app/outputs /app/logs /app/outputs/proposals /app/outputs/council
 
 # Expose the FastAPI port
 EXPOSE 8000
