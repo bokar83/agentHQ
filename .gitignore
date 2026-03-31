@@ -74,3 +74,9 @@ tools/
 
 # ── Hookify local rules (project-specific, never commit) ──────
 .claude/*.local.md
+
+# ── Superpowers plugin skills (managed by Claude Code plugin, not this repo) ──
+skills/superpowers/
+
+# ── Superpowers generated plan files ─────────────────────────
+docs/superpowers/plans/
