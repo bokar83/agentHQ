@@ -100,6 +100,30 @@ TASK_TYPES = {
 }
 
 
+# ── Metadata extraction ────────────────────────────────────────
+
+HIGH_STAKES_TRIGGERS = [
+    "council this",
+    "high stakes",
+    "high-stakes",
+    "critical decision",
+    "sankofa",
+    "council review",
+]
+
+
+def extract_metadata(user_request: str) -> dict:
+    """
+    Extract routing metadata from the raw request string.
+    Currently extracts: high_stakes (bool)
+    Returns a dict merged into task routing decisions.
+    """
+    lower = user_request.lower()
+    return {
+        "high_stakes": any(trigger in lower for trigger in HIGH_STAKES_TRIGGERS),
+    }
+
+
 def get_router_llm() -> LLM:
     return LLM(
         model="openrouter/anthropic/claude-haiku-4.5",
