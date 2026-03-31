@@ -42,3 +42,26 @@ def test_select_returns_fallback_on_impossible_constraint():
     # "creative_divergence" with "very_low" cost might have no match — should fallback gracefully
     model_id = select_by_capability("creative_divergence", max_cost_tier="very_low")
     assert model_id in COUNCIL_MODEL_REGISTRY  # fallback must still be valid
+
+
+def test_strip_style_markers_removes_bold():
+    import sys, os
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'orchestrator'))
+    from council import strip_style_markers
+    result = strip_style_markers("**Important point** here")
+    assert "**" not in result
+    assert "Important point" in result
+
+
+def test_strip_style_markers_removes_headers():
+    from council import strip_style_markers
+    result = strip_style_markers("## Section Title\nContent here")
+    assert "##" not in result
+    assert "Section Title" in result
+
+
+def test_strip_style_markers_normalizes_em_dashes():
+    from council import strip_style_markers
+    result = strip_style_markers("This \u2014 that")
+    assert "\u2014" not in result
+    assert "-" in result
