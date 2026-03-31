@@ -1295,6 +1295,7 @@ CREW_REGISTRY = {
     "voice_polisher_crew":    build_voice_polisher_crew,
     "hunter_crew":            build_hunter_crew,
     "prompt_engineer_crew":   build_prompt_engineer_crew,
+    "3d_website_crew":        build_3d_website_crew,
     "unknown_crew":           build_unknown_crew,
 }
 

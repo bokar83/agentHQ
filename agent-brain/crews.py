@@ -979,6 +979,7 @@ CREW_REGISTRY = {
     "code_crew":          build_code_crew,
     "writing_crew":       build_writing_crew,
     "agent_creator_crew": build_agent_creator_crew,
+    "3d_website_crew":    build_3d_website_crew,
     "unknown_crew":       build_unknown_crew,
 }
 
