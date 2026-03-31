@@ -403,7 +403,7 @@ def build_asset_prompter_agent() -> Agent:
         verbose=False,
         allow_delegation=False,
         tools=WRITING_TOOLS + [SaveOutputTool()],
-        llm=select_llm("copywriter", "complex"),
+        llm=select_llm("writer", "complex"),
         max_iter=4
     )
 
