@@ -116,6 +116,31 @@ def send_result(chat_id: str, summary: str, drive_url: str = None, github_url: s
     send_message(chat_id, "\n".join(parts))
 
 
+def send_hunter_report(leads_output: str, scoreboard: str = "") -> bool:
+    """
+    Email the daily hunter results to Boubacar.
+    Called automatically after every hunter_crew run.
+    """
+    from datetime import date
+    today = date.today().strftime("%B %d, %Y")
+    subject = f"Daily Lead Report — {today}"
+
+    body = f"""CATALYST WORKS CONSULTING
+Daily Prospecting Report — {today}
+{'=' * 50}
+
+{leads_output.strip()}
+
+{'=' * 50}
+{scoreboard.strip() if scoreboard else ''}
+
+---
+Sent automatically by Growth Hunter | agentsHQ
+Reply to this email or message @agentsHQ4Bou_bot on Telegram to act on any lead.
+"""
+    return send_email(subject, body)
+
+
 def send_email(subject: str, body: str, to_addresses: list = None) -> bool:
     """
     Send an email report. 

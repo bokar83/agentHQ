@@ -745,6 +745,15 @@ def _run_background_job(
         # ── Deliver ──────────────────────────────────────────
         send_result(chat_id, summary, drive_url, github_url)
 
+        # ── Email hunter results ──────────────────────────────
+        if task_type == "hunter_task":
+            try:
+                from notifier import send_hunter_report
+                send_hunter_report(leads_output=deliverable, scoreboard=summary)
+                logger.info("Hunter report emailed to Boubacar.")
+            except Exception as e:
+                logger.warning(f"Hunter email failed (non-fatal): {e}")
+
     except Exception as e:
         logger.error(f"Background job {job_id} failed: {e}", exc_info=True)
         try:
