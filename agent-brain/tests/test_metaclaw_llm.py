@@ -62,3 +62,45 @@ def test_get_llm_metaclaw_fallback_on_exception(monkeypatch):
             mock_select.return_value = MagicMock()
             get_llm_metaclaw("consultant", "complex")
             mock_select.assert_called_once_with("consultant", "complex", 0.3)
+
+
+def test_consulting_agent_uses_metaclaw(monkeypatch):
+    """build_consulting_agent must use get_llm_metaclaw when USE_METACLAW=true."""
+    monkeypatch.setenv("USE_METACLAW", "true")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+
+    with patch("agents.LLM") as mock_llm:
+        from crewai.llms.base_llm import BaseLLM
+        mock_llm.return_value = MagicMock(spec=BaseLLM)
+        from agents import build_consulting_agent
+        build_consulting_agent()
+        call_kwargs = mock_llm.call_args[1]
+        assert "orc-metaclaw" in call_kwargs["base_url"]
+
+
+def test_researcher_agent_uses_metaclaw(monkeypatch):
+    """build_researcher_agent must use get_llm_metaclaw when USE_METACLAW=true."""
+    monkeypatch.setenv("USE_METACLAW", "true")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+
+    with patch("agents.LLM") as mock_llm:
+        from crewai.llms.base_llm import BaseLLM
+        mock_llm.return_value = MagicMock(spec=BaseLLM)
+        from agents import build_researcher_agent
+        build_researcher_agent()
+        call_kwargs = mock_llm.call_args[1]
+        assert "orc-metaclaw" in call_kwargs["base_url"]
+
+
+def test_social_agent_uses_metaclaw(monkeypatch):
+    """build_social_media_agent must use get_llm_metaclaw when USE_METACLAW=true."""
+    monkeypatch.setenv("USE_METACLAW", "true")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+
+    with patch("agents.LLM") as mock_llm:
+        from crewai.llms.base_llm import BaseLLM
+        mock_llm.return_value = MagicMock(spec=BaseLLM)
+        from agents import build_social_media_agent
+        build_social_media_agent()
+        call_kwargs = mock_llm.call_args[1]
+        assert "orc-metaclaw" in call_kwargs["base_url"]
