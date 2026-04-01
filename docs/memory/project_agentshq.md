@@ -102,6 +102,25 @@ Stubs exist in tools.py for:
 All MCP servers are ACTIVE in Claude's environment — high-value next integration.
 Suggested wiring: consulting_agent → Notion, planner_agent → Google Calendar, researcher_agent → Gmail.
 
+## Fixed in Day 7 (2026-04-01)
+
+- ✅ Growth Hunter Engine fully built and deployed
+  - 5-step discovery: Serper LinkedIn dork → Serper local business → Firecrawl → Hunter.io → Apollo fallback
+  - Supabase CRM: leads + lead_interactions tables live; psycopg2 via Transaction Pooler (port 6543)
+  - orchestrator/db.py — centralized DB connection utility (Supabase + VPS Postgres)
+  - skills/serper_skill/hunter_tool.py — discover_leads() + reveal_email_for_lead()
+  - skills/local_crm/crm_tool.py — rewritten: Supabase, phone field, update_lead_email(), get_lead_by_name()
+  - CRMRevealEmailTool added to HUNTER_TOOLS; scoreboard_tool added to HUNTER_TOOLS
+  - Hunter crew: 20 leads/run, memory=False, scoreboard task at end
+  - Email report: send_hunter_report() in notifier.py — fires after every hunter_task run
+  - Email recipients: bokar83@gmail.com + boubacarbusiness@gmail.com
+  - SMTP via Gmail App Password — SMTP_USER + SMTP_PASS in .env + docker-compose.yml
+  - Trigger: "find leads" or "prospect" to @agentsHQ4Bou_bot
+- ✅ asyncio.to_thread() — crew.kickoff() no longer blocks uvicorn event loop
+- ✅ All WhatsApp/WAHA references removed — Telegram only
+- ✅ infrasctructure/ stale folder deleted — .env at repo root only
+- ✅ gws_client.py deleted (Windows-only dead code, not importable in Docker)
+
 ## Known Bugs (as of Day 5 — 2026-03-28)
 
 - PostgreSQL missing session_id column in conversation_archive table
