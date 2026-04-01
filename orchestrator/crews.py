@@ -24,7 +24,7 @@ See CLAUDE.md for full checklist.
 import os
 import logging
 import concurrent.futures
-from crewai import Task, Crew, Process
+from crewai import Agent, Task, Crew, Process
 from council import SankofaCouncil, should_invoke_council, CouncilTier
 from agents import (
     build_planner_agent,
