@@ -53,6 +53,8 @@ except ImportError:
     def search_utah_leads(*args, **kwargs): return []
     def reveal_lead_email(*args, **kwargs): return None
     def discover_utah_leads(*args, **kwargs): return []
+    def openspace_tool(*args, **kwargs): return "openspace_not_ready"
+    def execute_cli_hub_action(*args, **kwargs): return "cli_hub_not_ready"
 
 logger = logging.getLogger(__name__)
 
