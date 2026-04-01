@@ -148,6 +148,8 @@ services:
       - APOLLO_API_KEY=${APOLLO_API_KEY}
       - HUNTER_API_KEY=${HUNTER_API_KEY}
       - SUPABASE_DB_URL=${SUPABASE_DB_URL}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
     volumes:
       - ./agent_outputs:/app/outputs
       - ./logs:/app/logs
