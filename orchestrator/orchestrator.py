@@ -255,12 +255,17 @@ MEMORY:
 You have memory of past conversations. Refer to it naturally when relevant.
 No need to announce "based on our history" — just use it the way a friend would.
 
+FILE RETRIEVAL:
+You have a retrieve_output_file tool. Use it immediately when Boubacar asks to see,
+read, get, or retrieve a file the agents created. Do NOT say "let me grab that" and
+stop — call the tool and include the full content + Drive link in your reply.
+
 TASKS:
 When Boubacar asks you to DO something (write posts, build a website, research a topic),
 remind him that's a crew job — send it as a regular message and the agents will handle it.
 Keep that redirect short. One line max."""
 
-    # Tool definition — LLM calls this when it needs live system info
+    # Tool definitions
     tools = [
         {
             "type": "function",
@@ -272,14 +277,87 @@ Keep that redirect short. One line max."""
                     "recent output files, infrastructure details, or any question about the "
                     "system's current configuration and capabilities."
                 ),
+                "parameters": {"type": "object", "properties": {}, "required": []}
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "retrieve_output_file",
+                "description": (
+                    "Read and return the full content of a saved output file, plus its Google Drive link. "
+                    "Call this when the user asks to see, read, retrieve, or get the content of a file "
+                    "that was previously created by the agents. Also call this when the user asks for "
+                    "the Drive link or GitHub link for a specific output file."
+                ),
                 "parameters": {
                     "type": "object",
-                    "properties": {},
-                    "required": []
+                    "properties": {
+                        "filename_hint": {
+                            "type": "string",
+                            "description": "Partial filename or keywords to match. E.g. 'disruptive ai startups' or '5-most-disruptive'."
+                        }
+                    },
+                    "required": ["filename_hint"]
                 }
             }
         }
     ]
+
+    def _retrieve_output_file(filename_hint: str) -> str:
+        """Find a matching output file and return its content + Drive link."""
+        output_dir = os.environ.get("AGENTS_OUTPUT_DIR", "/app/outputs")
+        all_files = []
+        try:
+            for root, dirs, files in os.walk(output_dir):
+                for f in files:
+                    all_files.append(os.path.join(root, f))
+        except Exception as e:
+            return f"Could not scan output directory: {e}"
+
+        if not all_files:
+            return "No output files found in the outputs directory."
+
+        # Score files by hint keyword match
+        hint_lower = filename_hint.lower()
+        hint_words = hint_lower.replace("-", " ").replace("_", " ").split()
+        scored = []
+        for fp in all_files:
+            name = os.path.basename(fp).lower().replace("-", " ").replace("_", " ")
+            score = sum(1 for w in hint_words if w in name)
+            scored.append((score, os.path.getmtime(fp), fp))
+
+        scored.sort(key=lambda x: (x[0], x[1]), reverse=True)
+        best_score, _, best_path = scored[0]
+
+        if best_score == 0:
+            # Fall back to most recent file
+            all_files.sort(key=os.path.getmtime, reverse=True)
+            best_path = all_files[0]
+
+        try:
+            with open(best_path, "r", encoding="utf-8") as f:
+                content = f.read()
+        except Exception as e:
+            return f"Found file {os.path.basename(best_path)} but could not read it: {e}"
+
+        # Try to get Drive link by uploading
+        drive_url = None
+        try:
+            from saver import save_to_drive
+            title = os.path.basename(best_path).replace("-", " ").replace("_", " ")
+            drive_url = save_to_drive(title, "research_report", content)
+        except Exception:
+            pass
+
+        result_parts = [f"File: {os.path.basename(best_path)}", ""]
+        if drive_url:
+            result_parts.append(f"Drive link: {drive_url}")
+            result_parts.append("")
+        result_parts.append(content[:3000])
+        if len(content) > 3000:
+            result_parts.append("\n[... content truncated — reply 'more' for the rest]")
+        return "\n".join(result_parts)
 
     # Assemble messages: system + history + current message
     messages = [{"role": "system", "content": system_prompt}]
@@ -307,23 +385,32 @@ Keep that redirect short. One line max."""
 
         msg = response.choices[0].message
 
-        # If the LLM called query_system, execute it and send result back
+        # Handle tool calls
         if msg.tool_calls:
-            system_data = _query_system()
-            messages.append(msg)  # assistant message with tool_calls
-            messages.append({
-                "role": "tool",
-                "tool_call_id": msg.tool_calls[0].id,
-                "content": system_data
-            })
-            # Second call with tool result injected
+            messages.append(msg)
+            for tool_call in msg.tool_calls:
+                fn_name = tool_call.function.name
+                if fn_name == "query_system":
+                    tool_result = _query_system()
+                    logger.info("Chat used query_system tool")
+                elif fn_name == "retrieve_output_file":
+                    import json as _json
+                    args = _json.loads(tool_call.function.arguments or "{}")
+                    tool_result = _retrieve_output_file(args.get("filename_hint", ""))
+                    logger.info(f"Chat used retrieve_output_file: {args.get('filename_hint')}")
+                else:
+                    tool_result = "Unknown tool."
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": tool_result
+                })
             followup = client.chat.completions.create(
                 model="anthropic/claude-haiku-4.5",
                 messages=messages,
                 temperature=0.85,
             )
             reply = followup.choices[0].message.content.strip()
-            logger.info("Chat used query_system tool")
         else:
             reply = msg.content.strip()
 
