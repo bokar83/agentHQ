@@ -625,71 +625,59 @@ def build_consulting_crew(user_request: str, metadata: dict = None) -> Crew:
     )
 
     if council_tier == CouncilTier.FULL:
-        # Council path: SankofaCouncil runs after research, before QA
-        council_agent = build_consulting_agent()
-
-        task_council = Task(
-            description=f"""
-            The research brief above has been completed.
-            Now invoke the Sankofa Council to produce a multi-perspective
-            strategic analysis of the original request.
-
-            ORIGINAL REQUEST: {user_request}
-
-            Run the full Sankofa Council pipeline:
-            1. Pass the research context + original request to SankofaCouncil.run()
-            2. Return the chairman_synthesis as the deliverable content
-            3. Append the convergence_note at the bottom under "Council Note:"
-
-            Use this exact Python call in your reasoning:
-            ```python
-            from council import SankofaCouncil
-            council = SankofaCouncil()
-            result = council.run(
-                query="{user_request}",
-                context=<the research brief from the previous task>,
-                task_type="consulting_deliverable"
+        # Run SankofaCouncil directly via litellm BEFORE crew assembly.
+        # A CrewAI agent cannot execute Python — asking it to "run the council"
+        # causes max-iterations → handle_max_iterations_exceeded → Anthropic
+        # prefill error. Council runs independently; result injected into QA task.
+        council_ran = False
+        chairman_synthesis = ""
+        convergence_note = ""
+        try:
+            _council = SankofaCouncil()
+            _result = _council.run(
+                query=user_request,
+                context="",
+                task_type="consulting_deliverable",
             )
-            # Deliver: result["chairman_synthesis"] + result["convergence_note"]
-            ```
+            chairman_synthesis = _result.get("chairman_synthesis", "")
+            convergence_note = _result.get("convergence_note", "")
+            council_ran = bool(chairman_synthesis)
+        except Exception as e:
+            logger.warning(f"SankofaCouncil failed, falling back to single-consultant: {e}")
 
-            The deliverable IS the chairman_synthesis. Do not add additional commentary.
-            End with:
-            ---
-            Council Note: <result["convergence_note"]>
-            """,
-            expected_output=(
-                "Complete consulting deliverable from Sankofa Council Chairman synthesis, "
-                "followed by Council Note on the line after '---'"
-            ),
-            agent=council_agent,
-            context=[task_plan, task_research]
-        )
+        if council_ran:
+            task_qa = Task(
+                description=f"""
+                The Sankofa Council has already run and produced the strategic analysis below.
+                Your job is QA only — review for completeness, fix any formatting issues,
+                ensure professional standards. Do not re-analyze or add new content.
 
-        task_qa = Task(
-            description=f"""
-            Review the consulting deliverable for quality, completeness, and
-            professional standards. Fix any issues yourself. Original: {user_request}
+                ORIGINAL REQUEST: {user_request}
 
-            OUTPUT FORMAT (mandatory every time):
-            WHAT WAS DONE: [deliverable type and purpose]
-            WHY IT WAS DONE THIS WAY: [strategic framing chosen]
-            QUALITY CHECK: PASSED or QUALITY CHECK: REVISED — [what was fixed]
-            DELIVERABLE:
-            [The complete consulting deliverable — always included, never omitted]
-            """,
-            expected_output="Structured QA report followed by complete consulting deliverable",
-            agent=qa,
-            context=[task_council]
-        )
+                COUNCIL CHAIRMAN SYNTHESIS:
+                {chairman_synthesis}
 
-        return Crew(
-            agents=[planner, researcher, council_agent, qa],
-            tasks=[task_plan, task_research, task_council, task_qa],
-            process=Process.sequential,
-            verbose=False,
-            memory=False,
-        )
+                COUNCIL NOTE:
+                {convergence_note}
+
+                OUTPUT FORMAT (mandatory every time):
+                WHAT WAS DONE: [deliverable type and purpose]
+                WHY IT WAS DONE THIS WAY: [strategic framing chosen]
+                QUALITY CHECK: PASSED or QUALITY CHECK: REVISED — [what was fixed]
+                DELIVERABLE:
+                [The complete consulting deliverable — always included, never omitted]
+                """,
+                expected_output="Structured QA report followed by complete consulting deliverable",
+                agent=qa,
+                context=[task_plan, task_research],
+            )
+            return Crew(
+                agents=[planner, researcher, qa],
+                tasks=[task_plan, task_research, task_qa],
+                process=Process.sequential,
+                verbose=False,
+                memory=False,
+            )
 
     else:
         # Fallback: original single-consultant path
