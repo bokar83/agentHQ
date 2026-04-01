@@ -38,22 +38,36 @@ from pydantic import Field
 from firecrawl_tools import FirecrawlScrapeTool, FirecrawlCrawlTool, FirecrawlSearchTool
 
 # Import Phase 2 Skills
+# Core hunter + CRM imports — must not fail silently
 try:
     from skills.local_crm.crm_tool import add_lead, log_interaction, update_lead_status, get_daily_scoreboard, update_lead_email, get_lead_by_name
-    from skills.serper_skill.hunter_tool import discover_leads, reveal_email_for_lead
-    from skills.openspace_skill.openspace_tool import openspace_tool
-    from skills.cli_hub.cli_hub_tool import execute_cli_hub_action
-except ImportError:
-    # Fallbacks for initial setup
+except ImportError as e:
+    logger_pre = __import__("logging").getLogger(__name__)
+    logger_pre.warning(f"crm_tool import failed: {e}")
     def add_lead(*args, **kwargs): return "crm_not_ready"
     def log_interaction(*args, **kwargs): return False
     def update_lead_status(*args, **kwargs): return False
     def get_daily_scoreboard(*args, **kwargs): return {}
     def update_lead_email(*args, **kwargs): return False
     def get_lead_by_name(*args, **kwargs): return {}
+
+try:
+    from skills.serper_skill.hunter_tool import discover_leads, reveal_email_for_lead
+except ImportError as e:
+    logger_pre = __import__("logging").getLogger(__name__)
+    logger_pre.warning(f"hunter_tool import failed: {e}")
     def discover_leads(*args, **kwargs): return []
     def reveal_email_for_lead(*args, **kwargs): return None
+
+# Optional skills — failures here must not affect hunter or CRM
+try:
+    from skills.openspace_skill.openspace_tool import openspace_tool
+except ImportError:
     def openspace_tool(*args, **kwargs): return "openspace_not_ready"
+
+try:
+    from skills.cli_hub.cli_hub_tool import execute_cli_hub_action
+except ImportError:
     def execute_cli_hub_action(*args, **kwargs): return "cli_hub_not_ready"
 
 logger = logging.getLogger(__name__)
