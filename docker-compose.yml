@@ -94,7 +94,7 @@ services:
     command: >
       bash -c "
         mkdir -p /root/.metaclaw/skills &&
-        for d in /app/metaclaw_seed/skills/*/; do skill_name=$$(basename \"$$d\"); [ ! -d /root/.metaclaw/skills/\"$$skill_name\" ] && cp -r \"$$d\" /root/.metaclaw/skills/\"$$skill_name\"; done &&
+        for d in /app/metaclaw_seed/skills/*/; do skill_name=$$(basename \"$$d\"); [ ! -d /root/.metaclaw/skills/\"$$skill_name\" ] && cp -r \"$$d\" /root/.metaclaw/skills/\"$$skill_name\" || true; done &&
         if [ ! -f /root/.metaclaw/config.yaml ]; then
           cp /app/metaclaw_seed/config_template.yaml /root/.metaclaw/config.yaml &&
           sed -i 's/YOUR_OPENROUTER_API_KEY_HERE/'\"$$OPENROUTER_API_KEY\"'/' /root/.metaclaw/config.yaml;
