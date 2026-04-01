@@ -28,7 +28,6 @@ type: project
 - Orchestrator: <http://72.60.209.109:8000>
 - PostgreSQL: 72.60.209.109:5432
 - Qdrant: internal only
-- WAHA (WhatsApp, parked): <http://72.60.209.109:3000>
 - n8n: <https://n8n.srv1040886.hstgr.cloud>
 - Telegram Bot: @agentsHQ4Bou_bot (Boubacar's ID: 7792432594)
 
@@ -50,7 +49,7 @@ type: project
 - orchestrator/router.py — task classification via Claude Haiku
 - orchestrator/tools.py — 5 custom tools + MCP stubs
 - orchestrator/memory.py — Qdrant + PostgreSQL memory system
-- docker-compose.yml — 4 containers (postgres, qdrant, waha, orchestrator)
+- docker-compose.yml — 4 containers (postgres, qdrant, metaclaw, orchestrator)
 - infrasctructure/.env — all secrets (note: typo in folder name "infrasctructure")
 - skills/CatalystWorksSkills/ — custom skills tracked in git (agent-teams, sheet-mint)
 - docs/memory/ — session memory files (read at start of every session)
@@ -115,7 +114,6 @@ Suggested wiring: consulting_agent → Notion, planner_agent → Google Calendar
 - ✅ OpenRouter key replaced (old key was returning 401 "User not found")
 - ✅ MODEL_REGISTRY corrected: `claude-sonnet-4.6`, `claude-haiku-4.5`, `claude-opus-4.6` (OpenRouter uses dot notation)
 - ✅ Router confidence threshold raised from 0.6 → 0.75
-- ✅ Close Webhook node deleted from WhatsApp workflow via n8n REST API
 - ✅ Telegram workflow: added `Has Files?` IF guard before `Send Files via Telegram` (prevents crash on empty files_created)
 - ✅ Security hook emoji encoding fixed (Windows cp1252 crash on push)
 - ✅ /run endpoint tested and confirmed working (20s, success:true)
@@ -124,12 +122,12 @@ Suggested wiring: consulting_agent → Notion, planner_agent → Google Calendar
 
 - API Key: stored in `/var/lib/docker/volumes/n8n_data/_data/database.sqlite` → `user_api_keys.apiKey`
 - n8n REST API: `http://localhost:5678/api/v1` — use `X-N8N-API-KEY` header
-- Workflow IDs: Telegram=`a6ciAzyqvnXIC9lw`, WhatsApp=`6AVSoNk8dldtolyacdMiv`
+- Workflow IDs: Telegram=`a6ciAzyqvnXIC9lw`
 - CLI import (`n8n import:workflow`) fails while n8n is running due to SQLite lock — always use REST API instead
 
 ## Pending Code Improvements
 
-No async job queue — long tasks block /run endpoint; implement job_id + /status/{job_id} pattern.
+✅ /run endpoint now uses asyncio.to_thread() — crew.kickoff() runs off the event loop so concurrent Telegram messages don't block.
 
 ## Deferred Agents
 

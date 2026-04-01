@@ -134,7 +134,7 @@ class EscalateTool(BaseTool):
     """
     Sends an escalation message to Boubacar when an agent is blocked,
     uncertain, or encounters an unknown task type.
-    Triggers an n8n webhook that delivers a WhatsApp message.
+    Triggers an n8n webhook that delivers a Telegram message.
     """
     name: str = "escalate_to_owner"
     description: str = (

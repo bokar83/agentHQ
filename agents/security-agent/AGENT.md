@@ -14,7 +14,7 @@ SecureWatch is the security watchdog for the agentsHQ system. It runs daily (and
 1. **Scan for secrets** — detect any API keys, passwords, or tokens that have leaked into files that should not contain them
 2. **Audit git hygiene** — ensure no sensitive files are tracked by git
 3. **VPS hardening checks** — verify that the VPS is not exposing dangerous ports or services
-4. **Report** — send a daily security digest to Boubacar via WhatsApp
+4. **Report** — send a daily security digest to Boubacar via Telegram
 
 ---
 
@@ -27,7 +27,7 @@ SecureWatch is the security watchdog for the agentsHQ system. It runs daily (and
 | .gitignore verification | Ensure critical patterns are in .gitignore |
 | Port scan (VPS) | Check exposed ports on the VPS via nmap or netstat |
 | Log anomaly check | Scan agent logs for error spikes or unauthorized access attempts |
-| Alert & report | Send findings to Boubacar via WhatsApp or email |
+| Alert & report | Send findings to Boubacar via Telegram |
 
 ---
 
@@ -51,7 +51,7 @@ SecureWatch is the security watchdog for the agentsHQ system. It runs daily (and
 - **02:00 AM (America/Denver)** — Full workspace scan
 - **02:05 AM** — Git hygiene audit
 - **02:10 AM** — VPS port & firewall check
-- **02:15 AM** — Send WhatsApp report to Boubacar
+- **02:15 AM** — Send Telegram report to Boubacar
 
 ---
 
@@ -72,7 +72,7 @@ agents/security-agent/
 ## Escalation Protocol
 
 If any CRITICAL finding is detected (live secret in a tracked file, open dangerous port), the agent:
-1. Sends an IMMEDIATE WhatsApp alert (not waiting for daily report)
+1. Sends an IMMEDIATE Telegram alert (not waiting for daily report)
 2. Attempts auto-remediation where safe (remove from git index, update .gitignore)
 3. Logs the incident with full details to `logs/security/`
 4. Waits for Boubacar to confirm before force-pushing any history rewrites

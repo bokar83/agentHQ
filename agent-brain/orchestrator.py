@@ -6,7 +6,7 @@ Owner: Boubacar Barry — Catalyst Works Consulting
 System: agentsHQ — Self-hosted multi-agent intelligence
 
 This is the main FastAPI service. It receives tasks from:
-  - WhatsApp (via WAHA → n8n → this service)
+  - Telegram (via n8n → this service)
   - Direct HTTP POST (from Cursor, Claude Code, any tool)
   - n8n workflows (automated triggers)
 
@@ -22,6 +22,7 @@ See CLAUDE.md for development guidelines.
 ===============================================================
 """
 
+import asyncio
 import os
 import json
 import logging
@@ -153,7 +154,7 @@ def run_orchestrator(task_request: str, from_number: str = "unknown") -> dict:
     except Exception as e:
         logger.warning(f"Memory save failed (non-fatal): {e}")
     
-    # Build WhatsApp-friendly summary
+    # Build Telegram-friendly summary
     summary = _build_summary(task_type, result_str, files_created, execution_time)
     
     return {
@@ -174,7 +175,7 @@ def _build_summary(
     execution_time: float
 ) -> str:
     """
-    Build a concise, WhatsApp-friendly summary of the task result.
+    Build a concise, Telegram-friendly summary of the task result.
     The full output is saved to disk — the summary goes to the user.
     """
     
@@ -251,19 +252,24 @@ def health():
 async def run_task(request: TaskRequest):
     """
     Main endpoint. Receives a task and runs it through the agent crew.
-    
+
     Called by:
-    - n8n WhatsApp workflow
+    - n8n Telegram workflow
     - Direct HTTP from any tool (Cursor, Claude Code, etc.)
-    
+
+    crew.kickoff() is CPU-bound and synchronous. Running it via
+    asyncio.to_thread() keeps the event loop free so concurrent
+    Telegram messages don't block or time out waiting for a slot.
+
     Returns a TaskResponse with result summary and metadata.
     """
     logger.info(f"Task received from {request.from_number}: {request.task[:100]}...")
-    
+
     try:
-        result = run_orchestrator(
-            task_request=request.task,
-            from_number=request.from_number
+        result = await asyncio.to_thread(
+            run_orchestrator,
+            request.task,
+            request.from_number,
         )
         
         return TaskResponse(
@@ -371,7 +377,7 @@ def search_memory(query: str, top_k: int = 3):
 
 @app.get("/history/{session_id}")
 def get_history(session_id: str, limit: int = 10):
-    """Get conversation history for a WhatsApp session."""
+    """Get conversation history for a Telegram session."""
     try:
         from memory import get_conversation_history
         history = get_conversation_history(session_id, limit=limit)

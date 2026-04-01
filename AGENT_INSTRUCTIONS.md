@@ -7,7 +7,7 @@
 ## What This Codebase Is
 
 agentsHQ is a self-hosted multi-agent orchestration system for Boubacar Barry / Catalyst Works Consulting.
-It runs on a private VPS (Ubuntu 24.04, Docker). It receives tasks via WhatsApp or HTTP, routes them to
+It runs on a private VPS (Ubuntu 24.04, Docker). It receives tasks via Telegram or HTTP, routes them to
 specialist AI agents built with CrewAI, and returns real deliverables.
 
 **This is not a demo. Every change ships to production.**
@@ -33,7 +33,7 @@ Write tool-agnostic code that any capable AI assistant can read, understand, and
 
 1. **Never hardcode task logic** — all routing goes through `router.py`. No task-specific instructions in `orchestrator.py`.
 2. **Never hardcode credentials** — all secrets come from environment variables. Never put API keys in code.
-3. **Never break the FastAPI contract** — the `/run` endpoint signature must remain stable. n8n and WhatsApp depend on it.
+3. **Never break the FastAPI contract** — the `/run` endpoint signature must remain stable. n8n depends on it.
 4. **Always update AGENTS.md** — when adding a new agent or task type, register it in `AGENTS.md`.
 5. **Always create a SKILL.md** — when adding a new skill/tool, create the soul file in `skills/[skill-name]/SKILL.md`.
 6. **Always create an AGENT.md** — when adding a new agent, create the soul file in `agents/[agent-name]/AGENT.md`.
