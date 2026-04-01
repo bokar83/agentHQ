@@ -843,7 +843,8 @@ async def telegram_webhook(request: Request, background_tasks: BackgroundTasks):
         len(_msg) < 60 and not any(w in _msg for w in [
             "write", "create", "build", "research", "analyze", "make",
             "draft", "generate", "code", "script", "website", "report",
-            "proposal", "post", "email", "article"
+            "proposal", "post", "email", "article",
+            "find", "hunt", "leads", "prospect", "run the", "hunter"
         ])
     ) or _msg.startswith(("what is my", "what's my", "how much", "do you", "can you tell",
                            "hey", "hi ", "hello", "thanks", "thank you", "what did",
@@ -940,7 +941,8 @@ async def run_task(request: TaskRequest, background_tasks: BackgroundTasks):
         len(_msg) < 60 and not any(w in _msg for w in [
             "write", "create", "build", "research", "analyze", "make",
             "draft", "generate", "code", "script", "website", "report",
-            "proposal", "post", "email", "article"
+            "proposal", "post", "email", "article",
+            "find", "hunt", "leads", "prospect", "run the", "hunter"
         ])
     ) or _msg.startswith(("what is my", "what's my", "how much", "do you", "can you tell",
                            "hey", "hi ", "hello", "thanks", "thank you", "what did",
