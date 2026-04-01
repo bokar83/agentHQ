@@ -10,11 +10,25 @@ import os
 import random
 import logging
 import requests
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 logger = logging.getLogger("agentsHQ.notifier")
 
+# Telegram config
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_API_BASE = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
+
+# SMTP config (Placeholder - user needs to set these in .env)
+SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+SMTP_USER = os.environ.get("SMTP_USER", "")
+SMTP_PASS = os.environ.get("SMTP_PASS", "")
+REPORT_EMAILS = [
+    os.environ.get("REPORT_EMAIL", "bokar83@gmail.com"),
+    "boubacarbusiness@gmail.com"
+]
 
 TASK_TYPE_LABELS = {
     "research_report":        "Research Agent is on the case 🔍",
@@ -89,11 +103,45 @@ def send_progress_ping(chat_id: str) -> None:
     send_message(chat_id, SIMPSONS_QUOTES[idx])
 
 
-def send_result(chat_id: str, summary: str, drive_url: str, github_url: str) -> None:
-    """Send the final result with Drive and GitHub links."""
+def send_result(chat_id: str, summary: str, drive_url: str = None, github_url: str = None) -> None:
+    """Send the final result to Telegram. Always includes Drive link if available."""
     parts = [summary]
-    if drive_url:
-        parts.append(f"\n📁 Drive: {drive_url}")
-    if github_url:
-        parts.append(f"📂 GitHub: {github_url}")
+    if drive_url or github_url:
+        parts.append("")
+        parts.append("--- Saved to ---")
+        if drive_url:
+            parts.append(f"Drive: {drive_url}")
+        if github_url:
+            parts.append(f"GitHub: {github_url}")
     send_message(chat_id, "\n".join(parts))
+
+
+def send_email(subject: str, body: str, to_addresses: list = None) -> bool:
+    """
+    Send an email report. 
+    Requires SMTP_USER and SMTP_PASS in .env.
+    """
+    if not SMTP_USER or not SMTP_PASS:
+        logger.warning("SMTP credentials not set — skipping send_email")
+        # In a real scenario, we might want to log the body to a file as fallback
+        return False
+
+    targets = to_addresses or REPORT_EMAILS
+    
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = SMTP_USER
+        msg['To'] = ", ".join(targets)
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'plain'))
+
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASS)
+            server.send_message(msg)
+        
+        logger.info(f"Email report sent successfully to {len(targets)} addresses.")
+        return True
+    except Exception as e:
+        logger.error(f"Email delivery failed: {e}")
+        return False
