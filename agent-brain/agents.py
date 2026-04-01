@@ -129,6 +129,43 @@ def select_llm(agent_role: str, task_complexity: str = "moderate", temperature: 
 
 
 # ══════════════════════════════════════════════════════════════
+# METACLAW FACTORY
+# Routes consulting, researcher, social_media agents through
+# the MetaClaw proxy for skill injection and sample collection.
+# Falls back to direct OpenRouter if proxy is down or disabled.
+# Toggle: USE_METACLAW=false in .env to bypass instantly.
+# ══════════════════════════════════════════════════════════════
+
+_METACLAW_TEMPS = {"consultant": 0.3, "researcher": 0.2, "social": 0.8}
+
+
+def get_llm_metaclaw(agent_role: str, task_complexity: str = "moderate", temperature: float = None) -> LLM:
+    """
+    MetaClaw-proxied LLM for consulting, researcher, social_media agents.
+    Falls back to direct OpenRouter if USE_METACLAW=false or proxy unreachable.
+    """
+    if os.environ.get("USE_METACLAW", "true").lower() != "true":
+        return select_llm(agent_role, task_complexity, temperature)
+
+    final_temp = temperature if temperature is not None else _METACLAW_TEMPS.get(agent_role, 0.3)
+
+    try:
+        return LLM(
+            model=MODEL_REGISTRY.get("claude-sonnet"),
+            api_key="metaclaw-internal",
+            base_url="http://orc-metaclaw:30000/v1",
+            temperature=final_temp,
+            extra_headers={
+                "HTTP-Referer": "https://agentshq.catalystworks.com",
+                "X-Title": "agentsHQ"
+            }
+        )
+    except Exception:
+        logger.warning("MetaClaw proxy unreachable — falling back to direct OpenRouter")
+        return select_llm(agent_role, task_complexity, temperature)
+
+
+# ══════════════════════════════════════════════════════════════
 # AGENT DEFINITIONS
 # ══════════════════════════════════════════════════════════════
 
