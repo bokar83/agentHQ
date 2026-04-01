@@ -220,7 +220,7 @@ def build_researcher_agent() -> Agent:
         verbose=True,
         allow_delegation=False,
         tools=RESEARCH_TOOLS + SCRAPING_TOOLS,
-        llm=select_llm("researcher", "moderate"),
+        llm=get_llm_metaclaw("researcher", "moderate"),
         max_iter=5
     )
 
@@ -334,7 +334,7 @@ def build_consulting_agent() -> Agent:
         verbose=True,
         allow_delegation=False,
         tools=RESEARCH_TOOLS + WRITING_TOOLS,
-        llm=select_llm("consultant", "complex"),
+        llm=get_llm_metaclaw("consultant", "complex"),
         max_iter=5
     )
 
@@ -366,7 +366,7 @@ def build_social_media_agent() -> Agent:
         verbose=True,
         allow_delegation=False,
         tools=RESEARCH_TOOLS + WRITING_TOOLS,
-        llm=select_llm("social", "moderate"),
+        llm=get_llm_metaclaw("social", "moderate"),
         max_iter=4
     )
 
