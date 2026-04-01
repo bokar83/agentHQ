@@ -1157,7 +1157,7 @@ def search_memory(query: str, top_k: int = 3):
 
 @app.get("/history/{session_id}")
 def get_history(session_id: str, limit: int = 10):
-    """Get conversation history for a WhatsApp session."""
+    """Get conversation history for a Telegram session."""
     try:
         from memory import get_conversation_history
         history = get_conversation_history(session_id, limit=limit)

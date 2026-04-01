@@ -10,7 +10,7 @@ from .crm_tool import get_daily_scoreboard
 def format_daily_scoreboard() -> str:
     """
     Returns a formatted string representing the daily progress.
-    Used for WhatsApp broadcasts/replies.
+    Used for Telegram broadcasts/replies.
     """
     stats = get_daily_scoreboard()
     if not stats:

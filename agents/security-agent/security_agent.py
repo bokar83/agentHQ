@@ -3,7 +3,7 @@ security_agent.py — SecureWatch Daily Security Agent
 Catalyst Works — agentsHQ
 
 Runs daily to scan for secrets, audit git hygiene, check VPS health,
-and send a WhatsApp report to Boubacar.
+and send a Telegram report to Boubacar.
 """
 
 import os
@@ -31,7 +31,7 @@ LOG_DIR.mkdir(parents=True, exist_ok=True)
 # Directories to skip during scanning
 SCAN_SKIP_DIRS = {
     ".git", "__pycache__", "node_modules", ".venv", "venv",
-    "qdrant_data", "postgres_data", "waha_sessions",
+    "qdrant_data", "postgres_data",
 }
 
 # Files to skip
@@ -117,8 +117,8 @@ def run_daily_scan() -> dict:
     return report
 
 
-def format_whatsapp_message(report: dict) -> str:
-    """Format the security report for WhatsApp delivery."""
+def format_telegram_message(report: dict) -> str:
+    """Format the security report for Telegram delivery."""
     status = report["status"]
     icon = "✅" if status == "CLEAN" else ("🚨" if status == "CRITICAL" else "⚠️")
     total_issues = (
@@ -139,7 +139,7 @@ def format_whatsapp_message(report: dict) -> str:
     if report["findings"]:
         lines.append("")
         lines.append("*🔴 Issues requiring attention:*")
-        for finding in report["findings"][:5]:  # Limit to 5 for WhatsApp readability
+        for finding in report["findings"][:5]:  # Limit to 5 for readability
             msg = finding.get("message") or f"{finding.get('type')} in {finding.get('file')}"
             lines.append(f"  • {msg}")
         if len(report["findings"]) > 5:

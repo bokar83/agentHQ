@@ -171,7 +171,7 @@ def query_memory(query: str, top_k: int = 3) -> list:
 
 def get_conversation_history(session_id: str, limit: int = 10) -> list:
     """
-    Retrieve recent conversation history for a WhatsApp session.
+    Retrieve recent conversation history for a Telegram session.
     Used by n8n to maintain context across messages.
     """
     try:
