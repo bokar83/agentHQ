@@ -90,7 +90,7 @@ services:
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
     command: >
       bash -c "
-        pip install --quiet aiming-metaclaw &&
+        pip install --quiet aiming-metaclaw openai &&
         mkdir -p /root/.metaclaw/skills &&
         cp -n /app/metaclaw_seed/skills/*.md /root/.metaclaw/skills/ 2>/dev/null || true &&
         if [ ! -f /root/.metaclaw/config.yaml ]; then
