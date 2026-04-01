@@ -79,7 +79,10 @@ services:
   # Proxy endpoint: http://orc-metaclaw:30000/v1 (internal only)
   # Kill switch: set USE_METACLAW=false in .env to bypass
   metaclaw:
-    image: python:3.11-slim
+    build:
+      context: ./metaclaw
+      dockerfile: Dockerfile
+    image: agentshq-metaclaw:latest
     container_name: orc-metaclaw
     restart: unless-stopped
     working_dir: /app
@@ -90,9 +93,8 @@ services:
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
     command: >
       bash -c "
-        pip install --quiet aiming-metaclaw openai &&
         mkdir -p /root/.metaclaw/skills &&
-        for d in /app/metaclaw_seed/skills/*/; do skill_name=$(basename \"$$d\"); [ ! -d /root/.metaclaw/skills/\"$$skill_name\" ] && cp -r \"$$d\" /root/.metaclaw/skills/\"$$skill_name\"; done &&
+        for d in /app/metaclaw_seed/skills/*/; do skill_name=$$(basename \"$$d\"); [ ! -d /root/.metaclaw/skills/\"$$skill_name\" ] && cp -r \"$$d\" /root/.metaclaw/skills/\"$$skill_name\"; done &&
         if [ ! -f /root/.metaclaw/config.yaml ]; then
           cp /app/metaclaw_seed/config_template.yaml /root/.metaclaw/config.yaml &&
           sed -i 's/YOUR_OPENROUTER_API_KEY_HERE/'\"$$OPENROUTER_API_KEY\"'/' /root/.metaclaw/config.yaml;
