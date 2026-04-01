@@ -1,7 +1,7 @@
 ---
-name: social_voice
+name: social-voice
 description: leGriot social media voice rules — Boubacar Diallo's authentic voice for LinkedIn, X, Instagram
-tags: [social, voice, linkedin, twitter, instagram, legriot]
+category: communication
 ---
 
 # leGriot — Social Voice Rules

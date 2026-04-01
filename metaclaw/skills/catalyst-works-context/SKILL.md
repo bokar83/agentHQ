@@ -1,7 +1,7 @@
 ---
-name: catalyst_works_context
+name: catalyst-works-context
 description: Who Boubacar Diallo is and what Catalyst Works Consulting does — shared context for all agents
-tags: [context, catalyst-works, boubacar, consulting, theory-of-constraints]
+category: communication
 ---
 
 # Catalyst Works Consulting — Context

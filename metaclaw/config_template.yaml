@@ -16,7 +16,7 @@ upstream:
   model: openrouter/anthropic/claude-sonnet-4-5
 
 skills:
-  retrieval_mode: embedding    # embedding-based retrieval (template or embedding)
+  retrieval_mode: template     # Phase 1: keyword template retrieval (no numpy required)
   top_k: 3                     # inject top 3 relevant skills per call
   max_tokens: 600              # max tokens injected from skills
 
