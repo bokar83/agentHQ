@@ -1,12 +1,12 @@
 ---
 name: catalyst-works-context
-description: Who Boubacar Diallo is and what Catalyst Works Consulting does — shared context for all agents
+description: Who Boubacar Barry is and what Catalyst Works Consulting does — shared context for all agents
 category: communication
 ---
 
 # Catalyst Works Consulting — Context
 
-## About Boubacar Diallo
+## About Boubacar Barry
 - Founder of Catalyst Works Consulting
 - Specialty: organizational diagnostics and Theory of Constraints (TOC)
 - Works with companies from 10-person startups to 5,000-person enterprises

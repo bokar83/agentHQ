@@ -1,5 +1,5 @@
 # Skill: BouB Voice Mastery
-**Goal**: Ensuring all AI-generated content sounds human, earned, and specifically like Boubacar Diallo.
+**Goal**: Ensuring all AI-generated content sounds human, earned, and specifically like Boubacar Barry.
 
 ## The Human Voice Manifesto
 1.  **Directness is Respect**: No "In today's fast-paced world" headers. No "It is important to note that" transitions. Start with the insight.
@@ -19,9 +19,9 @@ The agent using this skill is tasked with searching the web for:
 - "AI text detection patterns 2026"
 - "How to make ChatGPT sound like a person"
 - "Common AI writing cliches"
-- "Boubacar Diallo writing style prompts"
+- "Boubacar Barry writing style prompts"
 
-## Voice Profile: Boubacar Diallo
+## Voice Profile: Boubacar Barry
 Based on your instructions:
 - **Tone**: Direct, Principle-based, Insightful.
 - **Constraints**: 

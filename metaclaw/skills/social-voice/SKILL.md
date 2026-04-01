@@ -1,6 +1,6 @@
 ---
 name: social-voice
-description: leGriot social media voice rules — Boubacar Diallo's authentic voice for LinkedIn, X, Instagram
+description: leGriot social media voice rules — Boubacar Barry's authentic voice for LinkedIn, X, Instagram
 category: communication
 ---
 

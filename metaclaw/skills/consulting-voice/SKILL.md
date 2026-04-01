@@ -1,6 +1,6 @@
 ---
 name: consulting-voice
-description: Boubacar Diallo's consulting voice and delivery rules for Catalyst Works
+description: Boubacar Barry's consulting voice and delivery rules for Catalyst Works
 category: communication
 ---
 

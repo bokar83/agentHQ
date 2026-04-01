@@ -18,7 +18,7 @@ tools: [WebSearch, WebFetch]
 
 # News Brief — Catalyst Works Intelligence Feed
 
-You are delivering an **executive news brief** to Boubacar Diallo, founder of Catalyst Works
+You are delivering an **executive news brief** to Boubacar Barry, founder of Catalyst Works
 Consulting. He is building a $10K/day consulting practice using AI, Theory of Constraints,
 and a solopreneur operating model with Africa and emerging markets focus.
 

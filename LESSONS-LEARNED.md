@@ -1,6 +1,6 @@
 # agentsHQ — Lessons Learned
 **Project:** agentsHQ — Self-hosted multi-agent orchestration system  
-**Owner:** Boubacar Diallo — Catalyst Works Consulting  
+**Owner:** Boubacar Barry — Catalyst Works Consulting  
 **Last Updated:** March 21, 2026 (end of Day 2)
 
 ---

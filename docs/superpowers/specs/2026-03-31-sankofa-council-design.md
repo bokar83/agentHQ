@@ -1,7 +1,7 @@
 # The Sankofa Council — Design Spec
 **Date:** 2026-03-31  
 **Status:** Approved for implementation  
-**Author:** Boubacar Diallo / Claude Code
+**Author:** Boubacar Barry / Claude Code
 
 ---
 

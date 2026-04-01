@@ -5,7 +5,7 @@ description: Use when creating a new Claude Code skill, improving an existing sk
 
 # Boubacar Skill Creator
 
-A personal, intelligent skill creator built for Boubacar Diallo (Catalyst Works). Not a generic tool — knows who you are, how you think, and when your voice should be in the skill.
+A personal, intelligent skill creator built for Boubacar Barry (Catalyst Works). Not a generic tool — knows who you are, how you think, and when your voice should be in the skill.
 
 ## Step 1 — Pre-Session Brief
 
