@@ -42,6 +42,8 @@ try:
     from skills.local_crm.crm_tool import add_lead, log_interaction, update_lead_status, get_daily_scoreboard
     from skills.apollo_skill.apollo_tool import search_utah_leads, reveal_lead_email
     from skills.serper_skill.prospecting_tool import discover_utah_leads
+    from skills.openspace_skill.openspace_tool import openspace_tool
+    from skills.cli_hub.cli_hub_tool import execute_cli_hub_action
 except ImportError:
     # Fallbacks for initial setup
     def add_lead(*args, **kwargs): return "crm_not_ready"
@@ -109,7 +111,11 @@ class SaveOutputTool(BaseTool):
             
         except Exception as e:
             logger.error(f"SaveOutputTool failed: {e}")
-            return f"Error saving file: {str(e)}"
+            return f"Error querying Qdrant: {e}"
+
+# OpenSpace Evolution Tool
+# Registered here so agents can explicitly fix skills if needed.
+openspace_evolver = openspace_tool
 
 
 class QueryMemoryTool(BaseTool):
@@ -270,6 +276,37 @@ class ProposeNewAgentTool(BaseTool):
             return f"Proposal failed: {str(e)}"
 
 
+class CLIHubSearchTool(BaseTool):
+    """
+    Searches the HKUDS CLI-Anything Hub for pre-built agent-native CLIs.
+    """
+    name: str = "search_cli_hub"
+    description: str = (
+        "Search the CLI-Anything community hub for stateful CLI wrappers. "
+        "Use this before building a new tool from scratch. "
+        "Input: JSON with 'action' (list/search/install) and 'query' or 'name'."
+    )
+
+    def _run(self, input_data: str) -> str:
+        try:
+            import asyncio
+            if isinstance(input_data, str):
+                data = json.loads(input_data)
+            else:
+                data = input_data
+            
+            action = data.get("action", "search")
+            query = data.get("query", data.get("name", ""))
+            
+            # Since it's an async executor, we wrap it
+            loop = asyncio.get_event_loop()
+            result = loop.run_until_complete(execute_cli_hub_action(action, query=query, name=query))
+            return json.dumps(result, indent=2)
+        except Exception as e:
+            logger.error(f"CLIHubSearchTool failed: {e}")
+            return f"Error searching Hub: {e}"
+
+
 # ══════════════════════════════════════════════════════════════
 # FIRECRAWL TOOLS
 # Imported from firecrawl_tools.py (shared module).
@@ -397,8 +434,8 @@ scoreboard_tool = DailyScoreboardTool()
 RESEARCH_TOOLS = [search_tool, file_reader, QueryMemoryTool()]
 SCRAPING_TOOLS = [FirecrawlScrapeTool(), FirecrawlCrawlTool(), FirecrawlSearchTool()]
 WRITING_TOOLS = [file_writer, SaveOutputTool(), voice_polisher_tool]
-CODE_TOOLS = [code_interpreter, file_writer, file_reader, SaveOutputTool()]
-ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool]
+CODE_TOOLS = [code_interpreter, file_writer, file_reader, SaveOutputTool(), CLIHubSearchTool()]
+ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool()]
 HUNTER_TOOLS = [prospecting_tool, crm_add_tool, crm_log_tool, voice_polisher_tool, QueryMemoryTool()]
 
 ALL_TOOLS = RESEARCH_TOOLS + SCRAPING_TOOLS + WRITING_TOOLS + CODE_TOOLS + ORCHESTRATION_TOOLS + HUNTER_TOOLS
