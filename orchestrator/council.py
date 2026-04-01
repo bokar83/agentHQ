@@ -87,6 +87,12 @@ def _call_model(model_id: str, system_prompt: str, user_content: str) -> str:
     """
     try:
         from litellm import completion
+        # Force direct Anthropic routing for Claude models.
+        # Without this, OpenRouter may route through Google Vertex which rejects
+        # the system+user message pattern with a 400 prefill error.
+        extra_body = {}
+        if "anthropic/" in model_id:
+            extra_body = {"provider": {"order": ["Anthropic"], "allow_fallbacks": False}}
         response = completion(
             model=f"openrouter/{model_id}",
             messages=[
@@ -99,6 +105,7 @@ def _call_model(model_id: str, system_prompt: str, user_content: str) -> str:
                 "HTTP-Referer": "https://agentshq.catalystworks.com",
                 "X-Title": "agentsHQ Sankofa Council",
             },
+            extra_body=extra_body or None,
         )
         return response.choices[0].message.content or ""
     except Exception as e:
