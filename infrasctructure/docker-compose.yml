@@ -1,7 +1,7 @@
 version: '3.8'
 # ============================================================
 # agentsHQ STACK v2.0
-# Catalyst Works Consulting — Boubacar Diallo
+# Catalyst Works Consulting — Boubacar Barry
 #
 # Containers managed here:
 #   - postgres     (structured memory database)

@@ -1247,7 +1247,7 @@ def build_voice_polisher_crew(text_to_polish: str) -> Crew:
     
     task_polish = Task(
         description=f"""
-        Humanize the following text to match Boubacar Diallo's voice:
+        Humanize the following text to match Boubacar Barry's voice:
         
         TEXT: {text_to_polish}
         

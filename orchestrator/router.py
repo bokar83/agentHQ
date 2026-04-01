@@ -74,7 +74,7 @@ TASK_TYPES = {
         "crew": "agent_creator_crew",
     },
     "voice_polishing": {
-        "description": "Humanize text, remove AI markers, and match Boubacar Diallo's specific voice and style",
+        "description": "Humanize text, remove AI markers, and match Boubacar Barry's specific voice and style",
         "keywords": ["humanize", "polish voice", "fix ai slop", "make it human", "sound like me", "voice match", "remove em-dashes", "clean text"],
         "crew": "voice_polisher_crew",
     },

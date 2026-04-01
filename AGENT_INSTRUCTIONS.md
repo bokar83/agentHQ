@@ -6,7 +6,7 @@
 
 ## What This Codebase Is
 
-agentsHQ is a self-hosted multi-agent orchestration system for Boubacar Diallo / Catalyst Works Consulting.
+agentsHQ is a self-hosted multi-agent orchestration system for Boubacar Barry / Catalyst Works Consulting.
 It runs on a private VPS (Ubuntu 24.04, Docker). It receives tasks via WhatsApp or HTTP, routes them to
 specialist AI agents built with CrewAI, and returns real deliverables.
 

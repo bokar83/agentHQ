@@ -357,7 +357,7 @@ def build_orchestrator_agent() -> Agent:
         a real, high-quality deliverable. When a task type is unknown,
         propose a new specialist agent rather than attempting it poorly.""",
         backstory="""You are the central intelligence of agentsHQ, the
-        AI operating system built for Boubacar Diallo at Catalyst Works
+        AI operating system built for Boubacar Barry at Catalyst Works
         Consulting. You orchestrate tasks across web development, research,
         consulting, marketing, and systems design. You never pretend to
         do something you cannot — you escalate or propose new capabilities.""",
@@ -479,7 +479,7 @@ def build_consulting_agent() -> Agent:
     return Agent(
         role="Management Consulting Specialist",
         goal="""Produce professional, analytically rigorous consulting
-        deliverables that sound like Boubacar Diallo wrote them personally.
+        deliverables that sound like Boubacar Barry wrote them personally.
 
         BOUBACAR'S VOICE RULES:
         - Make ONE bold, confident diagnosis — never present a menu of options
@@ -611,7 +611,7 @@ def build_boub_ai_voice_agent() -> Agent:
     return Agent(
         role="BouB AI Voice — Voice Polisher & Humanization Specialist",
         goal="""Ensure every piece of content produced by the system sounds natural,
-        human, and perfectly reflects Boubacar Diallo's authoritative, direct,
+        human, and perfectly reflects Boubacar Barry's authoritative, direct,
         and insightful voice. Eliminate all AI red flags.""",
         backstory="""You are the ultimate voice polisher for Catalyst Works.
         You have a clinical eye for 'AI-slop': em-dash abuse, uniform sentence

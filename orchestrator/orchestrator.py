@@ -2,7 +2,7 @@
 ===============================================================
 agentsHQ ORCHESTRATOR v2.0
 ===============================================================
-Owner: Boubacar Diallo — Catalyst Works Consulting
+Owner: Boubacar Barry — Catalyst Works Consulting
 System: agentsHQ — Self-hosted multi-agent intelligence
 
 This is the main FastAPI service. It receives tasks from:

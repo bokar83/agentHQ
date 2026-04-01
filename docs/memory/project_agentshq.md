@@ -1,6 +1,6 @@
 ---
 name: agentsHQ project context
-description: Core architecture, status, and goals of the agentsHQ multi-agent system owned by Boubacar Diallo
+description: Core architecture, status, and goals of the agentsHQ multi-agent system owned by Boubacar Barry
 type: project
 ---
 
@@ -8,7 +8,7 @@ type: project
 
 ## System Identity
 
-- **Owner:** Boubacar Diallo (Catalyst Works Consulting)
+- **Owner:** Boubacar Barry (Catalyst Works Consulting)
 - **VPS:** 72.60.209.109 (Hostinger)
 - **GitHub:** <https://github.com/bokar83/agentHQ> (source of truth)
 - **Local:** D:\Ai_Sandbox\agentsHQ

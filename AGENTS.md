@@ -1,6 +1,6 @@
 # agentsHQ — Agent System Identity & Operating Rules
 
-**Owner:** Boubacar Diallo  
+**Owner:** Boubacar Barry  
 **System:** Catalyst Works Consulting — AI-Augmented Practice  
 **Version:** 2.0  
 **Last Updated:** 2026-03-20

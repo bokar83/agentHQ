@@ -1,5 +1,5 @@
 ---
-name: Boubacar Diallo user profile
+name: Boubacar Barry user profile
 description: Who Boubacar is, his goals, preferences, and working style
 type: user
 ---
