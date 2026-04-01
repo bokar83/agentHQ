@@ -90,9 +90,9 @@ services:
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
     command: >
       bash -c "
-        pip install --quiet aiming-metaclaw openai torch --extra-index-url https://download.pytorch.org/whl/cpu &&
+        pip install --quiet aiming-metaclaw openai &&
         mkdir -p /root/.metaclaw/skills &&
-        cp -n /app/metaclaw_seed/skills/*.md /root/.metaclaw/skills/ 2>/dev/null || true &&
+        for d in /app/metaclaw_seed/skills/*/; do skill_name=$(basename \"$$d\"); [ ! -d /root/.metaclaw/skills/\"$$skill_name\" ] && cp -r \"$$d\" /root/.metaclaw/skills/\"$$skill_name\"; done &&
         if [ ! -f /root/.metaclaw/config.yaml ]; then
           cp /app/metaclaw_seed/config_template.yaml /root/.metaclaw/config.yaml &&
           sed -i 's/YOUR_OPENROUTER_API_KEY_HERE/'\"$$OPENROUTER_API_KEY\"'/' /root/.metaclaw/config.yaml;

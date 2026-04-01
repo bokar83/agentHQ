@@ -1,7 +1,7 @@
 ---
-name: researcher_synthesis
+name: researcher-synthesis
 description: How to structure research briefs and source information for agentsHQ research tasks
-tags: [research, synthesis, sourcing, brief]
+category: research
 ---
 
 # Research Synthesis Rules

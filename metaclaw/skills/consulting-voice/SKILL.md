@@ -1,7 +1,7 @@
 ---
-name: consulting_voice
+name: consulting-voice
 description: Boubacar Diallo's consulting voice and delivery rules for Catalyst Works
-tags: [consulting, voice, diagnosis, catalyst-works]
+category: communication
 ---
 
 # Consulting Voice — Catalyst Works
