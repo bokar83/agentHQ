@@ -20,9 +20,10 @@ Every agent in this system operates under a shared identity: we are **Catalyst W
 1. **Agentic, not automatic** — Agents reason, decide, and act. They do not follow rigid scripts.
 2. **Output-first** — Every task ends with a real deliverable. No summaries of summaries.
 3. **Self-expanding** — When no agent fits a task, the system proposes a new one. When no skill fits, it builds one.
-4. **Memory-aware** — Agents use Qdrant vector memory to learn from past tasks and improve over time.
-5. **Honest about limits** — Agents escalate when uncertain rather than hallucinate.
-6. **Secure by default** — No agent exposes credentials, internal paths, or system architecture externally.
+4. **Self-evolving** — The system uses **OpenSpace** to analyze task performance and automatically fix broken skills or optimize prompts in the background.
+5. **Memory-aware** — Agents use Qdrant vector memory to learn from past tasks and improve over time.
+6. **Honest about limits** — Agents escalate when uncertain rather than hallucinate.
+7. **Secure by default** — No agent exposes credentials, internal paths, or system architecture externally.
 
 ---
 
@@ -48,6 +49,7 @@ Telegram / HTTP / n8n
  │  • Code Agent                    │
  │  • QA Agent                      │
  │  • BouB AI Voice (Humanization)  │
+ │  • Skill Builder (CLI-Anything)  │
  │  • Agent Creator (Future)        │
  └──────────────────────────────────┘
         ↓
@@ -66,8 +68,9 @@ A multi-voice strategic review layer that activates on `consulting_deliverable` 
 **Named after:** The West African Akan concept — look backward to move forward wisely.
 
 **Five Voices:**
+
 | Voice | Job | Default Model |
-|-------|-----|---------------|
+| :--- | :--- | :--- |
 | The Contrarian | Find the fatal flaw | deepseek/deepseek-r1-0528 |
 | The First Principles Thinker | Strip assumptions, reframe from zero | anthropic/claude-sonnet-4.6 |
 | The Expansionist | Hunt for upside being missed | x-ai/grok-4 |
@@ -78,6 +81,7 @@ A multi-voice strategic review layer that activates on `consulting_deliverable` 
 **Models are capability-selected, not hard-coded.** Update `COUNCIL_MODEL_REGISTRY` in `agents.py` to swap models. Voice definitions in `council.py` never need to change.
 
 **Pipeline:** Independent opinions (parallel) → anonymous peer review → convergence scoring → Chairman synthesis. Max 3 rounds. Convergence threshold: 90%.
+
 
 **Outputs:**
 - `outputs/council/TIMESTAMP.json` — full run log
@@ -95,7 +99,7 @@ A multi-voice strategic review layer that activates on `consulting_deliverable` 
 The Router classifies every incoming request into one of these types. New types are added here as the system grows.
 
 | Task Type | Trigger Keywords | Primary Crew |
-|---|---|---|
+| :--- | :--- | :--- |
 | `website_build` | website, landing page, web presence | planner, researcher, copywriter, web_builder, qa, boub_ai_voice |
 | `app_build` | app, tool, calculator, dashboard, form, tracker | planner, researcher, app_builder, qa, boub_ai_voice |
 | `research_report` | research, analyze, find, summarize, compare | planner, researcher, copywriter, qa, boub_ai_voice |
@@ -105,6 +109,7 @@ The Router classifies every incoming request into one of these types. New types 
 | `general_writing` | write, draft, letter, email, document | planner, copywriter, qa, boub_ai_voice |
 | `voice_polishing` | humanize, polish, voice match | boub_ai_voice |
 | `hunter_task` | find leads, get prospects, utah leads, growth engine | hunter, boub_ai_voice |
+| `skill_build` | colonize, build tool, wrap software, cli-anything | planner, skill_builder, qa |
 | `unknown` | anything else | router escalates to Boubacar via Telegram with proposed new agent |
 
 ---
@@ -147,6 +152,7 @@ agentsHQ/
 ## Adding New Agents
 
 When the Router encounters an unknown task type:
+
 1. It generates a proposed agent definition (role, goal, backstory, tools needed)
 2. It sends the proposal to Boubacar via Telegram for approval
 3. On approval, it creates the agent file in `agents/[agent-name]/`
@@ -160,16 +166,25 @@ This is how the system teaches itself.
 ## Adding New Skills
 
 Skills are reusable capabilities that agents can invoke. When an agent needs a capability it doesn't have:
+
 1. It identifies the gap and proposes a skill
 2. The skill is created in `skills/[skill-name]/SKILL.md` + `skill.py`
 3. It is registered in `tools.py`
 4. All agents gain access on next restart
+
+**Automatic Evolution (OpenSpace):**
+The system also evolves existing skills automatically. After each background job, the OpenSpace engine:
+
+- Analyzes the execution trace for errors or inefficiencies.
+- Generates updated skill code or prompt templates.
+- Applies improvements asynchronously without user intervention.
 
 ---
 
 ## Memory System
 
 All tasks are stored in two places:
+
 - **Qdrant** (vector DB) — semantic memory for similarity search across past tasks
 - **PostgreSQL** — structured archive of every execution (input, output, agent, timing, status)
 
@@ -180,6 +195,7 @@ Agents query memory at the start of each task to surface relevant past work.
 ## Escalation Protocol
 
 If any agent is uncertain, blocked, or encounters an unknown task type:
+
 - Do NOT hallucinate a response
 - Send an escalation message to Boubacar via the Telegram reply channel
 - Include: what was asked, what was tried, what decision is needed

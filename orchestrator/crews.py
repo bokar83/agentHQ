@@ -45,6 +45,7 @@ from agents import (
     build_asset_prompter_agent,
     build_3d_web_builder_agent,
     build_seo_auditor_agent,
+    build_skill_builder_agent,
 )
 
 logger = logging.getLogger(__name__)
@@ -1201,29 +1202,33 @@ def build_hierarchical_crew(user_request: str, specialist_agents: list) -> Crew:
 def build_hunter_crew(user_request: str) -> Crew:
     """
     Mode 3: Hunter Crew for proactive lead gen.
-    Finds leads, adds to CRM, and drafts discovery messages.
+    Finds 20 high-intent leads, adds to CRM, and drafts discovery messages.
     """
     hunter = build_hunter_agent()
 
     hunting_task = Task(
         description=(
-            f"GOAL: Find 5 high-quality Utah service SMB leads.\n"
-            f"NICHE: Legal, Accounting, Agencies, or Home Services.\n"
-            f"ACTION: Use Apollo to find them, then ADD each to the CRM.\n"
+            f"GOAL: Find 20 high-quality Utah service SMB leads.\n"
+            f"TARGETS:\n"
+            f"  1. Professional Services: Law Firms & Accounting Practices.\n"
+            f"  2. Overwhelmed Agencies: Creative/Marketing Agencies.\n"
+            f"  3. Scaling Trades: HVAC, Plumbing, Electrical ($5M–$15M).\n"
+            f"ACTION: Use Apollo/Serper to find them, then ADD each to the CRM.\n"
             f"INPUT: {user_request}"
         ),
         agent=hunter,
-        expected_output="Confirmation of 5 leads added to CRM with IDs."
+        expected_output="Confirmation of leads added to CRM with structured data."
     )
 
     outreach_task = Task(
         description=(
-            "For the 5 leads just added, draft a 'Discovery' message for each.\n"
+            "For the leads just added, draft a 'Discovery' message for each.\n"
             "Keep it human, brief, and focused on operational friction.\n"
-            "No fluff. No 'I hope this find you well'. Just direct value."
+            "NO LINKEDIN: Focus on direct business value and strategic consultation.\n"
+            "No fluff. Just direct value, diagnosis-first."
         ),
         agent=hunter,
-        expected_output="5 drafted messages, one for each lead."
+        expected_output="20 drafted messages ready for delivery."
     )
 
     return Crew(
@@ -1362,6 +1367,78 @@ def build_prompt_engineer_crew(user_request: str) -> Crew:
     )
 
 
+def build_skill_builder_crew(user_request: str) -> Crew:
+    """
+    Crew for: skill_build
+    Colonizes new software by building agent-native CLIs.
+    """
+    planner = build_planner_agent()
+    skill_builder = build_skill_builder_agent()
+    qa = build_qa_agent()
+
+    task_plan = Task(
+        description=f"""
+        Analyze the software colonization request:
+        REQUEST: {user_request}
+
+        Create a phase-1 colonization plan:
+        1. Identify the target software and its primary use cases.
+        2. Check CLI-Hub if a harness already exists.
+        3. Outline the 7-phase SOP from CLI-Anything/HARNESS.md.
+        4. Identify the core commands that need to be wrapped.
+        """,
+        expected_output="A structured colonization plan Following the 7-phase SOP.",
+        agent=planner
+    )
+
+    task_colonize = Task(
+        description=f"""
+        Execute the colonization of the software:
+        REQUEST: {user_request}
+
+        1. Search CLI-Hub for existing harnesses. If found, install and verify.
+        2. If not found, follow phases 2-6 of the HARNESS.md SOP:
+           - Phase 2: Design Backend (Draft backend/jq.backend.py)
+           - Phase 3: Technical Planning (Map commands)
+           - Phase 4: Implementation (Build the Click CLI)
+           - Phase 5: Testing (Verify --json output)
+           - Phase 6: Skills Registration (Create SKILL.md)
+        3. Save all outputs using save_output.
+        """,
+        expected_output="A working, tested agent-native CLI and its corresponding SKILL.md.",
+        agent=skill_builder,
+        context=[task_plan]
+    )
+
+    task_qa = Task(
+        description=f"""
+        Review the newly created skill:
+        1. Does it follow the CLI-Anything style?
+        2. Is the SKILL.md documentation clear for other agents?
+        3. Does it support --json output?
+        4. are all dependencies documented?
+
+        Fix any issues found. Original request: {user_request}
+
+        OUTPUT FORMAT:
+        WHAT WAS DONE: [software colonized]
+        QUALITY CHECK: PASSED or REVISED
+        DELIVERABLE: [Path to the new skill/CLI and SKILL.md content]
+        """,
+        expected_output="Structured QA report and final skill documentation.",
+        agent=qa,
+        context=[task_colonize]
+    )
+
+    return Crew(
+        agents=[planner, skill_builder, qa],
+        tasks=[task_plan, task_colonize, task_qa],
+        process=Process.sequential,
+        verbose=False,
+        memory=False,
+    )
+
+
 CREW_REGISTRY = {
     "website_crew":        build_website_crew,
     "app_crew":            build_app_crew,
@@ -1376,6 +1453,7 @@ CREW_REGISTRY = {
     "prompt_engineer_crew":   build_prompt_engineer_crew,
     "3d_website_crew":        build_3d_website_crew,
     "unknown_crew":           build_unknown_crew,
+    "skill_builder_crew":     build_skill_builder_crew,
 }
 
 
