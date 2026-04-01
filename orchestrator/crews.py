@@ -1199,38 +1199,56 @@ def build_hierarchical_crew(user_request: str, specialist_agents: list) -> Crew:
 
 def build_hunter_crew(user_request: str) -> Crew:
     """
-    Mode 3: Hunter Crew for proactive lead gen.
-    Finds leads, adds to CRM, and drafts discovery messages.
+    Hunter Crew — daily lead prospecting engine.
+
+    Pipeline:
+      1. discover_leads  → Serper LinkedIn dork + local business + Firecrawl + Hunter.io + Apollo fallback
+      2. save_to_crm     → add_lead() for each result
+      3. scoreboard      → report today's stats
+
+    Triggered by: "find leads", "prospect", "hunter", "daily run"
     """
     hunter = build_hunter_agent()
 
-    hunting_task = Task(
+    discovery_task = Task(
         description=(
-            f"GOAL: Find 5 high-quality Utah service SMB leads.\n"
-            f"NICHE: Legal, Accounting, Agencies, or Home Services.\n"
-            f"ACTION: Use Apollo to find them, then ADD each to the CRM.\n"
-            f"INPUT: {user_request}"
+            f"GOAL: Find 20 high-quality Utah SMB leads.\n"
+            f"INDUSTRIES: Legal, Accounting, Marketing Agency, HVAC, Plumbing, Roofing.\n"
+            f"LOCATIONS: Salt Lake City, Provo, Orem, Lehi, Murray, Sandy.\n"
+            f"TITLES: Owner, Founder, CEO, President, Managing Partner.\n"
+            f"ACTION: Call discover_leads with the user's query override if provided. "
+            f"For every lead returned, call add_lead to save it to the CRM. "
+            f"Collect phone, email, LinkedIn URL, company, and title for each lead.\n"
+            f"USER REQUEST: {user_request}\n\n"
+            f"IMPORTANT: Do NOT auto-reveal Apollo emails. "
+            f"Hunter.io enrichment runs automatically inside discover_leads — that is fine. "
+            f"Only use reveal_email if Boubacar explicitly names a specific person."
         ),
         agent=hunter,
-        expected_output="Confirmation of 5 leads added to CRM with IDs."
+        expected_output=(
+            "A numbered list of all leads found and saved to CRM. "
+            "Each entry: Name | Company | Title | Phone | Email | LinkedIn URL | Source."
+        )
     )
 
-    outreach_task = Task(
+    scoreboard_task = Task(
         description=(
-            "For the 5 leads just added, draft a 'Discovery' message for each.\n"
-            "Keep it human, brief, and focused on operational friction.\n"
-            "No fluff. No 'I hope this find you well'. Just direct value."
+            "Run get_daily_scoreboard and report today's stats to Boubacar.\n"
+            "Format the output clearly with emojis for readability."
         ),
         agent=hunter,
-        expected_output="5 drafted messages, one for each lead."
+        expected_output=(
+            "Daily scoreboard with: leads found, messages sent, replies, "
+            "calls booked, leads with email, total leads in CRM."
+        )
     )
 
     return Crew(
         agents=[hunter],
-        tasks=[hunting_task, outreach_task],
+        tasks=[discovery_task, scoreboard_task],
         process=Process.sequential,
         verbose=False,
-        memory=True
+        memory=False,
     )
 
 

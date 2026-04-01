@@ -39,9 +39,8 @@ from firecrawl_tools import FirecrawlScrapeTool, FirecrawlCrawlTool, FirecrawlSe
 
 # Import Phase 2 Skills
 try:
-    from skills.local_crm.crm_tool import add_lead, log_interaction, update_lead_status, get_daily_scoreboard
-    from skills.apollo_skill.apollo_tool import search_utah_leads, reveal_lead_email
-    from skills.serper_skill.prospecting_tool import discover_utah_leads
+    from skills.local_crm.crm_tool import add_lead, log_interaction, update_lead_status, get_daily_scoreboard, update_lead_email, get_lead_by_name
+    from skills.serper_skill.hunter_tool import discover_leads, reveal_email_for_lead
     from skills.openspace_skill.openspace_tool import openspace_tool
     from skills.cli_hub.cli_hub_tool import execute_cli_hub_action
 except ImportError:
@@ -50,9 +49,10 @@ except ImportError:
     def log_interaction(*args, **kwargs): return False
     def update_lead_status(*args, **kwargs): return False
     def get_daily_scoreboard(*args, **kwargs): return {}
-    def search_utah_leads(*args, **kwargs): return []
-    def reveal_lead_email(*args, **kwargs): return None
-    def discover_utah_leads(*args, **kwargs): return []
+    def update_lead_email(*args, **kwargs): return False
+    def get_lead_by_name(*args, **kwargs): return {}
+    def discover_leads(*args, **kwargs): return []
+    def reveal_email_for_lead(*args, **kwargs): return None
     def openspace_tool(*args, **kwargs): return "openspace_not_ready"
     def execute_cli_hub_action(*args, **kwargs): return "cli_hub_not_ready"
 
@@ -318,16 +318,52 @@ class CLIHubSearchTool(BaseTool):
 
 
 class UtahProspectingTool(BaseTool):
-    """Searches for Utah-based leads using Serper/Google Search."""
-    name: str = "discover_utah_leads"
+    """
+    Unified lead discovery: Serper LinkedIn dork → Serper local business →
+    Firecrawl website scrape → Hunter.io email → Apollo fallback.
+    """
+    name: str = "discover_leads"
     description: str = (
-        "Search for professional service SMBs in Utah (SLC/Utah County). "
-        "Inputs: query (optional text search). "
-        "Returns: List of leads with name and linkedin_url."
+        "Discover Utah SMB leads (owners, founders, CEOs) across Legal, "
+        "Accounting, Marketing Agency, HVAC, Plumbing, and Roofing industries. "
+        "Optional input: a query string to override the default ICP "
+        "(e.g. 'HVAC Park City'). Returns up to 20 leads with name, company, "
+        "title, phone, email, linkedin_url, and source."
     )
     def _run(self, query: str = "") -> str:
-        results = discover_utah_leads(query)
+        results = discover_leads(query)
         return json.dumps(results, indent=2)
+
+
+class CRMRevealEmailTool(BaseTool):
+    """On-demand email reveal for a named lead via Hunter.io then Apollo."""
+    name: str = "reveal_email"
+    description: str = (
+        "Reveal the email address for a specific named lead. "
+        "Tries Hunter.io first (free), then Apollo (1 credit). "
+        "Input: JSON with 'name' (required), 'company' (optional), "
+        "'linkedin_url' (optional). "
+        "After finding the email, update the CRM with add_lead or log_interaction."
+    )
+    def _run(self, input_data: str) -> str:
+        try:
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            name = data.get("name", "")
+            company = data.get("company", "")
+            linkedin_url = data.get("linkedin_url", "")
+            if not name:
+                return "Error: 'name' is required."
+            email = reveal_email_for_lead(name, company, linkedin_url)
+            if email:
+                # Update CRM if we can look up the lead
+                lead = get_lead_by_name(name, company)
+                if lead.get("id"):
+                    update_lead_email(lead["id"], email)
+                    log_interaction(lead["id"], "email_revealed", f"Email revealed: {email}")
+                return f"Email found for {name}: {email}"
+            return f"No email found for {name}."
+        except Exception as e:
+            return f"Error: {e}"
 
 
 class CRMAddLeadTool(BaseTool):
@@ -431,6 +467,7 @@ voice_polisher_tool = VoicePolisherTool()
 prospecting_tool = UtahProspectingTool()
 crm_add_tool = CRMAddLeadTool()
 crm_log_tool = CRMLogInteractionTool()
+crm_reveal_tool = CRMRevealEmailTool()
 scoreboard_tool = DailyScoreboardTool()
 
 RESEARCH_TOOLS = [search_tool, file_reader, QueryMemoryTool()]
@@ -438,6 +475,6 @@ SCRAPING_TOOLS = [FirecrawlScrapeTool(), FirecrawlCrawlTool(), FirecrawlSearchTo
 WRITING_TOOLS = [file_writer, SaveOutputTool(), voice_polisher_tool]
 CODE_TOOLS = [code_interpreter, file_writer, file_reader, SaveOutputTool(), CLIHubSearchTool()]
 ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool()]
-HUNTER_TOOLS = [prospecting_tool, crm_add_tool, crm_log_tool, voice_polisher_tool, QueryMemoryTool()]
+HUNTER_TOOLS = [prospecting_tool, crm_add_tool, crm_log_tool, crm_reveal_tool, scoreboard_tool, QueryMemoryTool()]
 
 ALL_TOOLS = RESEARCH_TOOLS + SCRAPING_TOOLS + WRITING_TOOLS + CODE_TOOLS + ORCHESTRATION_TOOLS + HUNTER_TOOLS
