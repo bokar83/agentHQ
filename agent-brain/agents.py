@@ -152,7 +152,7 @@ def get_llm_metaclaw(agent_role: str, task_complexity: str = "moderate", tempera
     try:
         return LLM(
             model=MODEL_REGISTRY.get("claude-sonnet"),
-            api_key="metaclaw-internal",
+            api_key=os.environ.get("METACLAW_API_KEY", "metaclaw-internal"),
             base_url="http://orc-metaclaw:30000/v1",
             temperature=final_temp,
             extra_headers={
@@ -160,9 +160,9 @@ def get_llm_metaclaw(agent_role: str, task_complexity: str = "moderate", tempera
                 "X-Title": "agentsHQ"
             }
         )
-    except Exception:
+    except (ConnectionError, TimeoutError, OSError):
         logger.warning("MetaClaw proxy unreachable — falling back to direct OpenRouter")
-        return select_llm(agent_role, task_complexity, temperature)
+        return select_llm(agent_role, task_complexity, final_temp)
 
 
 # ══════════════════════════════════════════════════════════════
