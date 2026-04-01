@@ -74,6 +74,40 @@ services:
 #    networks:
 #      - orc-net
 
+  # ── METACLAW PROXY ────────────────────────────────────────
+  # Meta-learning proxy: skill injection, memory, RL (phased)
+  # Proxy endpoint: http://orc-metaclaw:30000/v1 (internal only)
+  # Kill switch: set USE_METACLAW=false in .env to bypass
+  metaclaw:
+    image: python:3.11-slim
+    container_name: orc-metaclaw
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - metaclaw_config:/root/.metaclaw
+      - ./metaclaw:/app/metaclaw_seed:ro
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    command: >
+      bash -c "
+        pip install --quiet aiming-metaclaw &&
+        mkdir -p /root/.metaclaw/skills &&
+        cp -n /app/metaclaw_seed/skills/*.md /root/.metaclaw/skills/ 2>/dev/null || true &&
+        if [ ! -f /root/.metaclaw/config.yaml ]; then
+          cp /app/metaclaw_seed/config_template.yaml /root/.metaclaw/config.yaml &&
+          sed -i 's/YOUR_OPENROUTER_API_KEY_HERE/'\"$$OPENROUTER_API_KEY\"'/' /root/.metaclaw/config.yaml;
+        fi &&
+        metaclaw start --mode skills_only
+      "
+    networks:
+      - orc-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:30000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+
   # ── AGENT BRAIN ───────────────────────────────────────────
   # CrewAI orchestrator — receives tasks, assembles crews, returns deliverables
   # Health: curl http://localhost:8000/health
@@ -118,6 +152,8 @@ services:
         condition: service_healthy
       qdrant:
         condition: service_started
+      metaclaw:
+        condition: service_started
     networks:
       - orc-net
     healthcheck:
@@ -130,3 +166,6 @@ services:
 networks:
   orc-net:
     driver: bridge
+
+volumes:
+  metaclaw_config:
