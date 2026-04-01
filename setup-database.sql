@@ -4,7 +4,7 @@
 -- Creates all tables needed by all workflows
 -- ============================================================
 
--- Thread memory: persistent conversation per WhatsApp contact
+-- Thread memory: persistent conversation per Telegram contact
 CREATE TABLE IF NOT EXISTS n8n_chat_histories (
   id          SERIAL PRIMARY KEY,
   session_id  TEXT NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS n8n_chat_histories (
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Every WhatsApp message in and out — permanent archive
+-- Every Telegram message in and out — permanent archive
 CREATE TABLE IF NOT EXISTS conversation_archive (
   id              SERIAL PRIMARY KEY,
   timestamp       TIMESTAMPTZ NOT NULL DEFAULT NOW(),

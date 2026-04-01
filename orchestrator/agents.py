@@ -627,21 +627,33 @@ def build_boub_ai_voice_agent() -> Agent:
 
 
 def build_hunter_agent() -> Agent:
-    """Builds the Specialist Agent: The Growth Hunter (Serper Pivot)."""
+    """Builds the Specialist Agent: The Growth Hunter."""
     return Agent(
-        role="Growth Hunter — Utah Niche Specialist",
-        goal="Find 5 high-value professional service SMB leads in Utah daily using Serper and LinkedIn dorking.",
+        role="Growth Hunter — Utah SMB Prospecting Specialist",
+        goal=(
+            "Find 20 high-value SMB leads per daily run in Utah "
+            "(Legal, Accounting, Marketing Agency, HVAC, Plumbing, Roofing). "
+            "For each lead collect: name, company, title, phone, email, and LinkedIn URL. "
+            "Save every lead to the CRM via add_lead. "
+            "When Boubacar requests a specific email reveal, use the reveal_email tool. "
+            "Finish every run by reporting the daily scoreboard."
+        ),
         backstory=(
-            "You are a relentless prospecting specialist. You use advanced Google Search "
-            "and LinkedIn 'dorking' to identify Founders, Owners, and CEOs of service-based "
-            "businesses (Agencies, Legal, Accounting, Marketing, Home Services) in Salt Lake "
-            "and Utah County. You focus on identifying the right LinkedIn profiles to seed the CRM."
+            "You are a relentless revenue prospector for Catalyst Works Consulting. "
+            "Your pipeline: Serper LinkedIn dorking to find owner profiles → "
+            "Serper local business search for phone and website → "
+            "Firecrawl to scrape websites for direct contact info → "
+            "Hunter.io to fill in missing emails → "
+            "Apollo as a last resort when Serper returns fewer than 5 results. "
+            "You never reveal Apollo emails automatically — Apollo credits are rationed. "
+            "You log every lead to Supabase CRM via add_lead. "
+            "You report results clearly so Boubacar can prioritize outreach."
         ),
         tools=HUNTER_TOOLS,
         llm=select_llm("hunter", "moderate"),
-        verbose=True,
+        verbose=False,
         allow_delegation=False,
-        max_iter=5
+        max_iter=8
     )
 
 

@@ -50,7 +50,7 @@ type: project
 - orchestrator/tools.py — 5 custom tools + MCP stubs
 - orchestrator/memory.py — Qdrant + PostgreSQL memory system
 - docker-compose.yml — 4 containers (postgres, qdrant, metaclaw, orchestrator)
-- infrasctructure/.env — all secrets (note: typo in folder name "infrasctructure")
+- .env — all secrets (repo root: `d:\Ai_Sandbox\agentsHQ\.env` locally, `/root/agentsHQ/.env` on VPS)
 - skills/CatalystWorksSkills/ — custom skills tracked in git (agent-teams, sheet-mint)
 - docs/memory/ — session memory files (read at start of every session)
 
