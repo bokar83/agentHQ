@@ -25,6 +25,7 @@ import os
 import logging
 import concurrent.futures
 from crewai import Task, Crew, Process
+from council import SankofaCouncil, should_invoke_council, CouncilTier
 from agents import (
     build_planner_agent,
     build_researcher_agent,
@@ -580,14 +581,21 @@ def build_research_crew(user_request: str) -> Crew:
     )
 
 
-def build_consulting_crew(user_request: str) -> Crew:
+def build_consulting_crew(user_request: str, metadata: dict = None) -> Crew:
     """
     Crew for: consulting_deliverable
     Creates professional consulting artifacts.
+
+    When CouncilTier.FULL is active (default for this task type):
+      planner → researcher → [SankofaCouncil] → qa
+    Fallback on council error:
+      planner → researcher → consultant → qa (original path)
     """
+    metadata = metadata or {}
+    council_tier = should_invoke_council("consulting_deliverable", metadata)
+
     planner = build_planner_agent()
     researcher = build_researcher_agent()
-    consultant = build_consulting_agent()
     qa = build_qa_agent()
 
     task_plan = Task(
@@ -616,45 +624,116 @@ def build_consulting_crew(user_request: str) -> Crew:
         context=[task_plan]
     )
 
-    task_consult = Task(
-        description=f"""
-        Create the consulting deliverable for:
-        REQUEST: {user_request}
+    if council_tier == CouncilTier.FULL:
+        # Council path: SankofaCouncil runs after research, before QA
+        council_agent = build_consulting_agent()
 
-        Apply Theory of Constraints thinking where relevant.
-        Be analytically rigorous. Be direct. Avoid filler.
-        Every recommendation must be specific and implementable.
-        Save using save_output.
-        """,
-        expected_output="Complete consulting deliverable saved to outputs",
-        agent=consultant,
-        context=[task_plan, task_research]
-    )
+        task_council = Task(
+            description=f"""
+            The research brief above has been completed.
+            Now invoke the Sankofa Council to produce a multi-perspective
+            strategic analysis of the original request.
 
-    task_qa = Task(
-        description=f"""
-        Review the consulting deliverable for quality, completeness, and
-        professional standards. Fix any issues yourself. Original: {user_request}
+            ORIGINAL REQUEST: {user_request}
 
-        OUTPUT FORMAT (mandatory every time):
-        WHAT WAS DONE: [deliverable type and purpose]
-        WHY IT WAS DONE THIS WAY: [strategic framing chosen]
-        QUALITY CHECK: PASSED or QUALITY CHECK: REVISED — [what was fixed]
-        DELIVERABLE:
-        [The complete consulting deliverable — always included, never omitted]
-        """,
-        expected_output="Structured QA report followed by complete consulting deliverable",
-        agent=qa,
-        context=[task_consult]
-    )
+            Run the full Sankofa Council pipeline:
+            1. Pass the research context + original request to SankofaCouncil.run()
+            2. Return the chairman_synthesis as the deliverable content
+            3. Append the convergence_note at the bottom under "Council Note:"
 
-    return Crew(
-        agents=[planner, researcher, consultant, qa],
-        tasks=[task_plan, task_research, task_consult, task_qa],
-        process=Process.sequential,
-        verbose=False,
-        memory=False,
-    )
+            Use this exact Python call in your reasoning:
+            ```python
+            from council import SankofaCouncil
+            council = SankofaCouncil()
+            result = council.run(
+                query="{user_request}",
+                context=<the research brief from the previous task>,
+                task_type="consulting_deliverable"
+            )
+            # Deliver: result["chairman_synthesis"] + result["convergence_note"]
+            ```
+
+            The deliverable IS the chairman_synthesis. Do not add additional commentary.
+            End with:
+            ---
+            Council Note: <result["convergence_note"]>
+            """,
+            expected_output=(
+                "Complete consulting deliverable from Sankofa Council Chairman synthesis, "
+                "followed by Council Note on the line after '---'"
+            ),
+            agent=council_agent,
+            context=[task_plan, task_research]
+        )
+
+        task_qa = Task(
+            description=f"""
+            Review the consulting deliverable for quality, completeness, and
+            professional standards. Fix any issues yourself. Original: {user_request}
+
+            OUTPUT FORMAT (mandatory every time):
+            WHAT WAS DONE: [deliverable type and purpose]
+            WHY IT WAS DONE THIS WAY: [strategic framing chosen]
+            QUALITY CHECK: PASSED or QUALITY CHECK: REVISED — [what was fixed]
+            DELIVERABLE:
+            [The complete consulting deliverable — always included, never omitted]
+            """,
+            expected_output="Structured QA report followed by complete consulting deliverable",
+            agent=qa,
+            context=[task_council]
+        )
+
+        return Crew(
+            agents=[planner, researcher, council_agent, qa],
+            tasks=[task_plan, task_research, task_council, task_qa],
+            process=Process.sequential,
+            verbose=False,
+            memory=False,
+        )
+
+    else:
+        # Fallback: original single-consultant path
+        consultant = build_consulting_agent()
+
+        task_consult = Task(
+            description=f"""
+            Create the consulting deliverable for:
+            REQUEST: {user_request}
+
+            Apply Theory of Constraints thinking where relevant.
+            Be analytically rigorous. Be direct. Avoid filler.
+            Every recommendation must be specific and implementable.
+            Save using save_output.
+            """,
+            expected_output="Complete consulting deliverable saved to outputs",
+            agent=consultant,
+            context=[task_plan, task_research]
+        )
+
+        task_qa = Task(
+            description=f"""
+            Review the consulting deliverable for quality, completeness, and
+            professional standards. Fix any issues yourself. Original: {user_request}
+
+            OUTPUT FORMAT (mandatory every time):
+            WHAT WAS DONE: [deliverable type and purpose]
+            WHY IT WAS DONE THIS WAY: [strategic framing chosen]
+            QUALITY CHECK: PASSED or QUALITY CHECK: REVISED — [what was fixed]
+            DELIVERABLE:
+            [The complete consulting deliverable — always included, never omitted]
+            """,
+            expected_output="Structured QA report followed by complete consulting deliverable",
+            agent=qa,
+            context=[task_consult]
+        )
+
+        return Crew(
+            agents=[planner, researcher, consultant, qa],
+            tasks=[task_plan, task_research, task_consult, task_qa],
+            process=Process.sequential,
+            verbose=False,
+            memory=False,
+        )
 
 
 def build_social_crew(user_request: str) -> Crew:

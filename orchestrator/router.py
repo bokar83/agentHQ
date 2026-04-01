@@ -97,11 +97,6 @@ TASK_TYPES = {
                      "trending", "latest in", "news brief", "tell me the news", "what should i know"],
         "crew": "news_brief_crew",
     },
-    "skill_build": {
-        "description": "Colonize new software by building agent-native CLIs (harnesses) using the CLI-Anything SOP",
-        "keywords": ["colonize", "build tool for", "create harness", "wrap software", "cli-anything", "add skill for", "skill builder", "automate software"],
-        "crew": "skill_builder_crew",
-    },
 }
 
 
