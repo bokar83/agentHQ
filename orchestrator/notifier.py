@@ -421,6 +421,169 @@ def _parse_hunter_report_to_html(leads_output: str, _scoreboard: str, today: str
     return html
 
 
+def _format_health_check_html(status: str, report_text: str, date: str) -> str:
+    """
+    Render the weekly health check report as a branded HTML email.
+    Uses the same Catalyst Works colour tokens as the Hunter report.
+
+    status     — "GREEN", "YELLOW", or "RED"
+    report_text — full Markdown report body
+    date        — display date string e.g. "2026-04-07"
+    """
+    import html as html_lib
+    import re
+
+    # ── colour tokens (match Hunter report exactly) ───────────────────────────
+    BRAND_DARK   = "#0A0A0A"
+    BRAND_ACCENT = "#2563EB"
+    BRAND_GREEN  = "#16A34A"
+    BRAND_RED    = "#DC2626"
+    BRAND_AMBER  = "#D97706"
+    HEADER_BG    = "#0F172A"
+    CARD_BG      = "#F8FAFC"
+    BORDER       = "#E2E8F0"
+    TEXT_MUTED   = "#64748B"
+
+    STATUS_COLOR = {
+        "GREEN":  BRAND_GREEN,
+        "YELLOW": BRAND_AMBER,
+        "RED":    BRAND_RED,
+    }.get(status.upper(), TEXT_MUTED)
+
+    STATUS_EMOJI = {"GREEN": "✅", "YELLOW": "⚠️", "RED": "🔴"}.get(status.upper(), "ℹ️")
+
+    # ── convert Markdown to simple HTML ──────────────────────────────────────
+    def md_to_html(text: str) -> str:
+        """Minimal Markdown → HTML: headings, bold, bullets, horizontal rules."""
+        lines = text.split("\n")
+        out = []
+        in_list = False
+        for line in lines:
+            # Escape HTML special chars first
+            safe = html_lib.escape(line)
+            # Headings
+            if safe.startswith("### "):
+                if in_list: out.append("</ul>"); in_list = False
+                out.append(f'<h3 style="font-size:14px;font-weight:700;color:{BRAND_ACCENT};margin:16px 0 6px 0;">{safe[4:]}</h3>')
+            elif safe.startswith("## "):
+                if in_list: out.append("</ul>"); in_list = False
+                out.append(f'<h2 style="font-size:16px;font-weight:700;color:{BRAND_DARK};margin:20px 0 8px 0;padding-bottom:6px;border-bottom:2px solid {BRAND_ACCENT};">{safe[3:]}</h2>')
+            elif safe.startswith("# "):
+                if in_list: out.append("</ul>"); in_list = False
+                out.append(f'<h1 style="font-size:20px;font-weight:800;color:{BRAND_DARK};margin:0 0 16px 0;">{safe[2:]}</h1>')
+            # Horizontal rule
+            elif safe.strip() in ("---", "***", "___"):
+                if in_list: out.append("</ul>"); in_list = False
+                out.append(f'<hr style="border:none;border-top:1px solid {BORDER};margin:20px 0;">')
+            # Bullet list items
+            elif re.match(r"^[-*] ", safe) or re.match(r"^\d+\. ", safe) or re.match(r"^  [-*] ", safe):
+                if not in_list: out.append(f'<ul style="margin:0 0 12px 0;padding-left:20px;">'); in_list = True
+                item = re.sub(r"^[-*\d.]+\s+", "", safe).strip()
+                # Bold inside bullets
+                item = re.sub(r"\*\*(.+?)\*\*", r'<strong>\1</strong>', item)
+                item = re.sub(r"`(.+?)`", r'<code style="background:#F1F5F9;padding:1px 4px;border-radius:3px;font-size:12px;">\1</code>', item)
+                out.append(f'<li style="margin-bottom:6px;font-size:14px;color:{BRAND_DARK};line-height:1.5;">{item}</li>')
+            # Blank line closes list
+            elif safe.strip() == "":
+                if in_list: out.append("</ul>"); in_list = False
+                out.append('<br>')
+            # Normal paragraph
+            else:
+                if in_list: out.append("</ul>"); in_list = False
+                p = re.sub(r"\*\*(.+?)\*\*", r'<strong>\1</strong>', safe)
+                p = re.sub(r"`(.+?)`", r'<code style="background:#F1F5F9;padding:1px 4px;border-radius:3px;font-size:12px;">\1</code>', p)
+                out.append(f'<p style="margin:0 0 10px 0;font-size:14px;color:{BRAND_DARK};line-height:1.6;">{p}</p>')
+        if in_list:
+            out.append("</ul>")
+        return "\n".join(out)
+
+    report_html = md_to_html(report_text)
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>agentsHQ Weekly Health Check — {html_lib.escape(date)}</title>
+</head>
+<body style="margin:0;padding:0;background:#F1F5F9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table role="presentation" style="width:100%;background:#F1F5F9;padding:32px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" style="width:100%;max-width:680px;">
+
+          <!-- HEADER -->
+          <tr>
+            <td style="background:{HEADER_BG};border-radius:12px 12px 0 0;padding:32px 36px;">
+              <p style="margin:0 0 4px 0;font-size:11px;font-weight:700;letter-spacing:.15em;
+                         text-transform:uppercase;color:#94A3B8;">CATALYST WORKS CONSULTING</p>
+              <h1 style="margin:0;font-size:26px;font-weight:800;color:#fff;line-height:1.2;">
+                🛡️ agentsHQ Weekly Health Check
+              </h1>
+              <p style="margin:6px 0 0;font-size:14px;color:#94A3B8;">
+                Automated code quality report &mdash; {html_lib.escape(date)}
+              </p>
+            </td>
+          </tr>
+
+          <!-- STATUS BANNER -->
+          <tr>
+            <td style="background:{STATUS_COLOR};padding:16px 36px;">
+              <p style="margin:0;font-size:18px;font-weight:800;color:#fff;letter-spacing:.02em;">
+                {STATUS_EMOJI} Status: {html_lib.escape(status.upper())}
+              </p>
+            </td>
+          </tr>
+
+          <!-- BODY -->
+          <tr>
+            <td style="background:#fff;padding:32px 36px;border:1px solid {BORDER};border-top:none;">
+              {report_html}
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="background:{CARD_BG};border:1px solid {BORDER};border-top:none;
+                       border-radius:0 0 12px 12px;padding:20px 36px;">
+              <p style="margin:0;font-size:12px;color:{TEXT_MUTED};text-align:center;">
+                📌 Generated automatically by <strong>agentsHQ Weekly Health Check</strong> | Catalyst Works Consulting | {html_lib.escape(date)}
+              </p>
+              <p style="margin:6px 0 0;font-size:12px;color:{TEXT_MUTED};text-align:center;">
+                Report also committed to
+                <a href="https://github.com/bokar83/agentHQ/tree/main/outputs/health_checks"
+                   style="color:{BRAND_ACCENT};">GitHub → outputs/health_checks/</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""
+
+
+def send_health_check_report(status: str, report_text: str, date: str) -> bool:
+    """
+    Email the weekly health check report to all three Catalyst Works addresses.
+    Called by the /internal/health-report webhook after each scheduled run.
+
+    status      — "GREEN", "YELLOW", or "RED"
+    report_text — full Markdown report from the remote agent
+    date        — date string e.g. "2026-04-07"
+    """
+    subject = f"agentsHQ Weekly Health Check — {status.upper()} — {date}"
+    html_body = _format_health_check_html(status, report_text, date)
+    to_addresses = [
+        "bokar83@gmail.com",
+        "boubacarbusiness@gmail.com",
+        "catalystworks.ai@gmail.com",
+    ]
+    return send_email(subject, html_body, to_addresses=to_addresses, html=True)
+
+
 def send_hunter_report(leads_output: str, scoreboard: str = "") -> bool:
     """
     Email the daily hunter results to Boubacar.
