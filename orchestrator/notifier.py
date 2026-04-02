@@ -100,22 +100,34 @@ def send_message(chat_id: str, text: str) -> None:
 def log_for_remoat(message: str, category: str = "NOTIFICATION"):
     """
     Standardized log format for Remoat to capture and forward to Telegram.
-    category: NOTIFICATION | APPROVAL | PROGRESS | ERROR
+    category: NOTIFICATION | APPROVAL | PROGRESS | ERROR | ANALYSIS
     """
-    # Print to stdout for terminal capture
+    # 1. Print to stdout for terminal capture (The primary Remoat bridge)
     print(f"\n[REMOAT:{category}] {message}")
     sys.stdout.flush()
     
-    # Optional: Direct mirror to Remoat bot if configured
+    # 2. Direct Mirror (If tokens are initialized)
     if REMOAT_API_BASE and REMOAT_CHAT_ID:
         try:
+            # Handle long messages by truncating/splitting
+            clean_text = f"[{category}] {message}"
+            if len(clean_text) > 4096:
+                clean_text = clean_text[:4090] + "..."
+                
             requests.post(
                 f"{REMOAT_API_BASE}/sendMessage",
-                json={"chat_id": str(REMOAT_CHAT_ID), "text": f"[{category}] {message}"},
+                json={"chat_id": str(REMOAT_CHAT_ID), "text": clean_text},
                 timeout=5
             )
         except Exception:
-            pass # Non-blocking
+            pass # Non-blocking for local dev
+
+def push_commentary(text: str, category: str = "ANALYSIS"):
+    """
+    Force-pushes a coordinator insight directly to the user's phone.
+    Use this to bypass Remoat's 'Thought' buffering for complex tasks.
+    """
+    log_for_remoat(text, category=category)
 
 
 def send_ack(chat_id: str, task_type: str) -> None:
