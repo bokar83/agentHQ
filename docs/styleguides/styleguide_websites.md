@@ -58,8 +58,9 @@ Primary palette for all web contexts: **Coastal Clarity**
 
 **Primary (headings, UI labels, navigation):** Inter
 - Source: `https://fonts.google.com/specimen/Inter`
-- Load weights: 400, 500, 600, 700
+- Load weights: 400, 500, 600, 700, 800
 - CSS: `font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;`
+- Google Fonts import: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');`
 
 **Secondary (body text, long-form copy):** Source Serif 4
 - Source: `https://fonts.google.com/specimen/Source+Serif+4`
@@ -72,21 +73,28 @@ Primary palette for all web contexts: **Coastal Clarity**
 
 ### Type Scale (Desktop)
 
-| Token | Size | Weight | Line Height | Font | Usage |
-|---|---|---|---|---|---|
-| `--text-display` | 56–64px | 700 | 1.1 | Inter | Hero main headline |
-| `--text-h1` | 40–48px | 700 | 1.2 | Inter | Page titles |
-| `--text-h2` | 30–36px | 700 | 1.25 | Inter | Section headers |
-| `--text-h3` | 22–26px | 600 | 1.3 | Inter | Subsection headers |
-| `--text-h4` | 18px | 600 | 1.4 | Inter | Card titles, feature names |
-| `--text-body-lg` | 18px | 400 | 1.65 | Source Serif 4 | Long-form body, about page |
-| `--text-body` | 16px | 400 | 1.6 | Inter | Standard body, card content |
-| `--text-body-sm` | 14px | 400 | 1.5 | Inter | Secondary copy, captions |
-| `--text-label` | 12px | 600 | 1.4 | Inter | Tags, badges, navigation items |
-| `--text-caption` | 11px | 400 | 1.4 | Inter | Fine print, timestamps |
+| Token | Size | Weight | Line Height | Letter Spacing | Font | Usage |
+| --- | --- | --- | --- | --- | --- | --- |
+| `--text-display` | 56–64px | 800 | 1.1 | -1.5px | Inter | Hero main headline |
+| `--text-h1` | 40–48px | 800 | 1.2 | -1.5px | Inter | Page titles |
+| `--text-h2` | 30–36px | 700 | 1.25 | -0.5px | Inter | Section headers |
+| `--text-h3` | 22–26px | 600 | 1.3 | -0.5px | Inter | Subsection headers |
+| `--text-h4` | 18px | 600 | 1.4 | 0 | Inter | Card titles, feature names |
+| `--text-body-lg` | 18px | 400 | 1.65 | 0 | Source Serif 4 | Long-form body, about page |
+| `--text-body` | 16px | 400 | 1.6 | 0 | Inter | Standard body, card content |
+| `--text-body-sm` | 14px | 400 | 1.5 | 0 | Inter | Secondary copy, captions |
+| `--text-label` | 12px | 500 | 1.4 | +1.2px (uppercase) | Inter | Eyebrow tags, section labels — ALWAYS uppercase |
+| `--text-caption` | 11px | 400 | 1.4 | 0 | Inter | Fine print, timestamps |
+
+**Letter-spacing rules (critical for premium feel):**
+
+- Display + H1: `letter-spacing: -0.03em` (−1.5px at 48px) — tight tracking signals confidence
+- H2 + H3: `letter-spacing: -0.015em` — slightly tighter than default
+- Labels/eyebrows: `letter-spacing: 0.1em` — wide-spaced uppercase only
+- Body text: always `letter-spacing: 0` — never touch body tracking
 
 ### Mobile Type Scale
-Scale down display and h1 proportionally: display → 36–40px, h1 → 28–32px. H2 and below remain the same.
+Scale down display and h1 proportionally: display → 36–40px, h1 → 28–32px. H2 and below remain the same. Letter-spacing values stay the same — do NOT adjust for mobile.
 
 ---
 
@@ -163,7 +171,7 @@ Use on: hero sections, dark feature bands
 
 ### Cards
 
-**Service card:**
+**Service card (light section):**
 ```
 Background: #FFFFFF
 Border: 1px solid #DDE2EA
@@ -171,12 +179,38 @@ Border-radius: 8px
 Padding: 32px
 Box-shadow: 0 2px 8px rgba(7,26,46,0.06)
 Hover: box-shadow 0 8px 24px rgba(7,26,46,0.12), translateY(-2px)
+Transition: all 200ms ease-out
 ```
 Header: Inter 600, 20px, `#1E222A`
 Body: Inter 400, 15px, `#5A6272`
 Accent detail: 3px left border in `#00B7C2`
 
-**Testimonial / quote card:**
+**Feature card (dark section — preferred for landing pages):**
+```
+Background: rgba(0,183,194,0.06)
+Border: 1px solid rgba(0,183,194,0.15)
+Border-radius: 8px
+Padding: 28px 24px
+Icon circle: 36x36px, background rgba(0,183,194,0.15), icon #00B7C2
+Hover: border-color rgba(0,183,194,0.35), background rgba(0,183,194,0.1)
+Transition: all 200ms ease-out
+```
+Header: Inter 700, 16px, `#FFFFFF`, letter-spacing 0
+Body: Inter 400, 14px, `rgba(255,255,255,0.55)`
+
+**Testimonial / quote card (dark section):**
+```
+Background: #071A2E
+Border: 1px solid rgba(180,124,87,0.3)
+Border-radius: 8px
+Padding: 28px 24px
+Avatar circle: 40x40px, background #B47C57, initials white Inter 600
+```
+Quote text: Inter 400 italic, 15px, `rgba(255,255,255,0.8)`, line-height 1.65
+Name: Inter 600, 14px, `#00B7C2`
+Role: Inter 400, 13px, `#B47C57`
+
+**Testimonial / quote card (light section):**
 ```
 Background: #F3F6F9
 Border-left: 4px solid #B47C57
@@ -227,9 +261,10 @@ Layout: 2-column grid (text left 55%, visual right 45%) on desktop
 ```
 
 **Hero text hierarchy:**
-1. Eyebrow tag: Inter 600, 12px, `#00B7C2`, tracked +3%, uppercase — "ORGANIZATIONAL CONSULTING"
-2. Headline: Inter 700, 56px, `#FFFFFF` — the diagnosis or the promise
-3. Subhead: Source Serif 4 400, 20px, `rgba(255,255,255,0.75)` — one sentence of proof or context
+
+1. Eyebrow tag: Inter 500, 12px, `#00B7C2`, `letter-spacing: 0.1em`, uppercase — "AI STRATEGY CONSULTING"
+2. Headline: Inter 800, 56px, `#FFFFFF`, `letter-spacing: -0.03em` — the diagnosis or the promise
+3. Subhead: Inter 400, 20px, `rgba(255,255,255,0.7)`, `letter-spacing: 0` — one sentence of proof or context
 4. CTA group: Primary accent button + ghost secondary button, side by side (stacked on mobile)
 
 **Hero visual options:**
@@ -251,7 +286,54 @@ Button: accent primary (on dark bg) or ghost white (on primary bg)
 
 ---
 
-## 6. Mobile-First Breakpoints
+## 6. Animation & Interaction Standards
+
+Source: UI/UX Pro Max — validated for executive consulting landing pages
+
+### Timing
+
+| Token | Value | Use for |
+| --- | --- | --- |
+| `--transition-fast` | 150ms ease-out | Hover color/border changes, button states |
+| `--transition-base` | 200ms ease-out | Card lifts, opacity fades, nav highlights |
+| `--transition-enter` | 300ms ease-out | Elements entering the viewport (scroll fade-in) |
+| `--transition-exit` | 200ms ease-in | Elements leaving (modals closing) |
+
+**Rules:**
+
+- Enter animations: `ease-out` — fast start, soft landing (feels responsive)
+- Exit animations: `ease-in` — soft start, fast end (feels dismissive, not laggy)
+- Exit duration ≈ 60–70% of enter duration
+- Never animate `width`, `height`, `top`, `left` — use `transform` and `opacity` only
+- Always include `@media (prefers-reduced-motion: reduce)` — disable all transitions
+
+### Scroll Fade-In (Intersection Observer)
+
+All below-fold sections animate in on scroll:
+
+```css
+.fade-in {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 300ms ease-out, transform 300ms ease-out;
+}
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+```
+
+Stagger cards/items by 60ms per item. Max stagger delay: 300ms total.
+
+### Hover States
+
+- Cards: `translateY(-2px)` + border-color brightens — never shift layout bounds
+- Buttons: background darkens 10–15% — no size change
+- Links: color shifts to `#FFFFFF` or `#00B7C2` depending on background — no underline in nav
+
+---
+
+## 7. Mobile-First Breakpoints
 
 | Name | Breakpoint | Target |
 |---|---|---|

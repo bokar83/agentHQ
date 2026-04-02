@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catalyst Works — Full Page Design Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #071A2E; color: white; font-size: 14px; line-height: 1.6; }
+
+  /* ── Layout ── */
+  .section { padding: 72px 24px; }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .label { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #00B7C2; margin-bottom: 16px; }
+
+  /* ── NAV ── */
+  nav { background: #071A2E; padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.06); position: sticky; top: 0; z-index: 100; }
+  .nav-logo { font-size: 15px; font-weight: 700; letter-spacing: -0.03em; color: white; }
+  .nav-logo span { color: #00B7C2; }
+  .nav-links { display: flex; gap: 28px; }
+  .nav-links a { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.7); text-decoration: none; }
+  .nav-cta { background: #FF7A00; color: white; font-size: 12px; font-weight: 600; padding: 8px 18px; border-radius: 4px; text-decoration: none; }
+
+  /* ── HERO ── */
+  .hero { background: #071A2E; padding: 96px 24px; text-align: center; }
+  .hero h1 { font-size: 52px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; color: white; max-width: 720px; margin: 16px auto 24px; }
+  .hero-sub { font-size: 18px; color: rgba(255,255,255,0.65); max-width: 560px; margin: 0 auto 36px; line-height: 1.65; }
+  .btn-primary { background: #FF7A00; color: white; font-size: 14px; font-weight: 600; padding: 14px 28px; border-radius: 4px; border: none; cursor: pointer; text-decoration: none; display: inline-block; }
+  .btn-secondary { background: transparent; color: #00B7C2; font-size: 14px; font-weight: 600; padding: 13px 27px; border-radius: 4px; border: 1.5px solid #00B7C2; cursor: pointer; text-decoration: none; display: inline-block; margin-left: 12px; }
+  .cta-group { margin-bottom: 20px; }
+  .urgency { font-size: 12px; color: rgba(255,255,255,0.35); letter-spacing: 0.02em; }
+
+  /* ── PROBLEM (Carbon) ── */
+  .problem { background: #1E222A; }
+  .problem h2 { font-size: 32px; font-weight: 700; letter-spacing: -0.015em; margin-bottom: 12px; }
+  .section-sub { font-size: 16px; color: rgba(255,255,255,0.55); margin-bottom: 48px; }
+  .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .feat-card { background: rgba(0,183,194,0.06); border: 1px solid rgba(0,183,194,0.15); border-radius: 8px; padding: 28px 24px; transition: all 200ms ease-out; }
+  .feat-card:hover { border-color: rgba(0,183,194,0.35); background: rgba(0,183,194,0.1); transform: translateY(-2px); }
+  .icon-circle { width: 40px; height: 40px; background: rgba(0,183,194,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+  .icon-dot { width: 14px; height: 14px; background: #00B7C2; border-radius: 50%; }
+  .feat-card h3 { font-size: 15px; font-weight: 700; color: white; margin-bottom: 8px; line-height: 1.35; }
+  .feat-card p { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.6; }
+
+  /* ── SOLUTION (Mist) ── */
+  .solution { background: #F3F6F9; }
+  .solution h2 { font-size: 32px; font-weight: 700; letter-spacing: -0.015em; color: #071A2E; margin-bottom: 12px; }
+  .solution .section-sub { color: #5A6272; }
+  .solution-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+  .solution-text p { font-size: 16px; color: #1E222A; line-height: 1.7; margin-bottom: 16px; }
+  .solution-text strong { color: #071A2E; }
+  .solution-card { background: #071A2E; border-radius: 8px; padding: 32px; }
+  .solution-card .label { color: #00B7C2; }
+  .solution-card h3 { font-size: 20px; font-weight: 700; color: white; letter-spacing: -0.015em; margin-bottom: 8px; }
+  .solution-card p { font-size: 14px; color: rgba(255,255,255,0.6); }
+
+  /* ── HOW IT WORKS (Navy) ── */
+  .how { background: #071A2E; }
+  .how h2 { font-size: 32px; font-weight: 700; letter-spacing: -0.015em; margin-bottom: 12px; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; position: relative; margin-top: 48px; }
+  .steps::before { content: ''; position: absolute; top: 28px; left: 16.7%; right: 16.7%; height: 1px; background: rgba(0,183,194,0.25); }
+  .step { text-align: center; padding: 0 24px; }
+  .step-num { width: 56px; height: 56px; border-radius: 50%; background: rgba(0,183,194,0.1); border: 1px solid rgba(0,183,194,0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 18px; font-weight: 800; color: #00B7C2; letter-spacing: -0.03em; }
+  .step h3 { font-size: 16px; font-weight: 700; color: white; margin-bottom: 8px; }
+  .step p { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.6; }
+
+  /* ── WHO IT'S FOR (Carbon) ── */
+  .who { background: #1E222A; }
+  .who h2 { font-size: 32px; font-weight: 700; letter-spacing: -0.015em; margin-bottom: 12px; }
+  .persona-card { background: rgba(0,183,194,0.06); border: 1px solid rgba(0,183,194,0.15); border-radius: 8px; padding: 28px 24px; }
+  .persona-role { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #00B7C2; margin-bottom: 10px; }
+  .persona-card h3 { font-size: 16px; font-weight: 700; color: white; margin-bottom: 8px; }
+  .persona-card p { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.55; }
+  .persona-outcome { font-size: 13px; color: rgba(255,255,255,0.75); margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(0,183,194,0.15); }
+
+  /* ── ABOUT (Mist + Clay) ── */
+  .about { background: #F3F6F9; }
+  .about-grid { display: grid; grid-template-columns: 200px 1fr; gap: 48px; align-items: center; }
+  .about-photo { width: 160px; height: 160px; border-radius: 50%; background: #B47C57; border: 3px solid #B47C57; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: white; text-align: center; line-height: 1.4; }
+  .about h2 { font-size: 28px; font-weight: 700; letter-spacing: -0.015em; color: #071A2E; margin-bottom: 16px; }
+  .about p { font-size: 16px; color: #1E222A; line-height: 1.7; margin-bottom: 12px; }
+  .clay-label { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: #B47C57; margin-bottom: 12px; }
+
+  /* ── SOCIAL PROOF (Navy) ── */
+  .proof { background: #071A2E; }
+  .proof h2 { font-size: 32px; font-weight: 700; letter-spacing: -0.015em; margin-bottom: 12px; }
+  .testimonial { background: #071A2E; border: 1px solid rgba(180,124,87,0.3); border-radius: 8px; padding: 28px 24px; }
+  .testimonial blockquote { font-size: 14px; font-style: italic; color: rgba(255,255,255,0.8); line-height: 1.7; margin-bottom: 20px; }
+  .testimonial-footer { display: flex; align-items: center; gap: 12px; }
+  .t-avatar { width: 40px; height: 40px; background: #B47C57; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; flex-shrink: 0; }
+  .t-name { font-size: 13px; font-weight: 600; color: #00B7C2; }
+  .t-role { font-size: 11px; color: #B47C57; }
+
+  /* ── FINAL CTA ── */
+  .final-cta { background: linear-gradient(135deg, #00B7C2 0%, #071A2E 100%); text-align: center; padding: 96px 24px; }
+  .final-cta h2 { font-size: 36px; font-weight: 700; letter-spacing: -0.015em; margin-bottom: 16px; max-width: 600px; margin-left: auto; margin-right: auto; }
+  .final-cta .reassurance { font-size: 14px; color: rgba(255,255,255,0.6); margin-top: 16px; }
+
+  /* ── FOOTER ── */
+  footer { background: #071A2E; border-top: 1px solid rgba(255,255,255,0.06); padding: 40px 24px; text-align: center; }
+  footer p { font-size: 13px; color: rgba(255,255,255,0.4); line-height: 1.8; }
+  footer a { color: #00B7C2; text-decoration: none; }
+
+  /* ── Preview banner ── */
+  .preview-banner { background: rgba(0,183,194,0.12); border-bottom: 1px solid rgba(0,183,194,0.25); padding: 10px 24px; text-align: center; font-size: 12px; color: #00B7C2; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<div class="preview-banner">Full Page Design Preview — Catalyst Works Landing Page — Click anywhere to approve or reply in terminal</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Catalyst<span>Works</span></div>
+  <div class="nav-links">
+    <a href="#">How It Works</a>
+    <a href="#">About</a>
+    <a href="#">Services</a>
+  </div>
+  <a href="#" class="nav-cta">Book a Call</a>
+</nav>
+
+<!-- 1. HERO -->
+<section class="hero">
+  <div class="label">AI Strategy Consulting</div>
+  <h1>You approved the AI budget.<br>Why hasn't anything moved?</h1>
+  <p class="hero-sub">Catalyst Works helps CEOs, COOs, and CIOs remove the constraint blocking AI adoption — using Theory of Constraints and a proprietary agent team called agentsHQ.</p>
+  <div class="cta-group">
+    <a href="#" class="btn-primary">Book Your Discovery Call</a>
+    <a href="#" class="btn-secondary">Get the Decision Clarity Framework</a>
+  </div>
+  <p class="urgency">Limited discovery slots available each month</p>
+</section>
+
+<!-- 2. PROBLEM -->
+<section class="section problem">
+  <div class="container">
+    <div class="label">The Real Problem</div>
+    <h2>Why AI initiatives stall at the executive level</h2>
+    <p class="section-sub">It's not ignorance. It's decision overload — and it compounds every week you wait.</p>
+    <div class="cards-grid">
+      <div class="feat-card">
+        <div class="icon-circle"><div class="icon-dot"></div></div>
+        <h3>Awareness Without Action</h3>
+        <p>The strategy exists. The budget exists. The roadmap exists. Nothing has moved in six months.</p>
+      </div>
+      <div class="feat-card">
+        <div class="icon-circle"><div class="icon-dot"></div></div>
+        <h3>Budget Without Results</h3>
+        <p>Three pilots approved. Zero in production. The board is asking questions your team can't answer.</p>
+      </div>
+      <div class="feat-card">
+        <div class="icon-circle"><div class="icon-dot"></div></div>
+        <h3>Paralysis Despite Urgency</h3>
+        <p>Every vendor wants a meeting. Every consultant has a framework. None of them remove your constraint.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. SOLUTION -->
+<section class="section solution">
+  <div class="container">
+    <div class="label" style="color:#00B7C2;">The Catalyst Works Difference</div>
+    <h2>Constraint removal, not strategy decks</h2>
+    <p class="section-sub" style="color:#5A6272;">Most consultants diagnose and depart. We diagnose, design the system, and deploy agentsHQ — your AI agent team — so results are measurable within 90 days.</p>
+    <div class="solution-grid">
+      <div class="solution-text">
+        <p>Catalyst Works applies <strong>Theory of Constraints</strong> to your AI adoption — identifying the single bottleneck that is blocking organizational throughput and removing it before adding anything else.</p>
+        <p>Then we deploy <strong>agentsHQ</strong>, a proprietary team of AI agents built specifically for your constraint, so your people make fewer decisions, not more.</p>
+        <p>The result: <strong>more throughput, fewer decisions, and an organization that moves again.</strong></p>
+      </div>
+      <div class="solution-card">
+        <div class="label">The Catalyst Flywheel</div>
+        <h3>Deliver → Trust → Retainer → Repeat</h3>
+        <p style="margin-top:12px;">We don't sell projects. We build systems that earn retainers by producing results — every engagement cycle.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. HOW IT WORKS -->
+<section class="section how">
+  <div class="container">
+    <div class="label">The Process</div>
+    <h2>Three steps to clarity</h2>
+    <p class="section-sub" style="color:rgba(255,255,255,0.5);">No discovery theatre. No 90-day strategy engagement. Three focused steps from diagnosis to deployed system.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h3>Diagnose the Constraint</h3>
+        <p>A structured TOC diagnostic session to identify the single bottleneck blocking your AI throughput. Not a survey — a working session.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h3>Design the System</h3>
+        <p>We design the AI agent architecture and decision framework that removes the constraint — built around your actual workflow, not a template.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h3>Deploy agentsHQ</h3>
+        <p>Your proprietary agent team goes live. Your people get fewer decisions to make. Your organization gets more throughput.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. WHO IT'S FOR -->
+<section class="section who">
+  <div class="container">
+    <div class="label">Who It's For</div>
+    <h2>Built for executives who are done waiting</h2>
+    <p class="section-sub">If you have the mandate, the budget, and the urgency — but not the results — this is for you.</p>
+    <div class="cards-grid">
+      <div class="feat-card persona-card">
+        <div class="persona-role">CEO</div>
+        <h3>You set the AI vision. Now you need someone to make it real.</h3>
+        <p>You've communicated the strategy. The org has nodded. Six months later, nothing has shipped.</p>
+        <p class="persona-outcome">→ You leave with a constraint removed and an agent system running.</p>
+      </div>
+      <div class="feat-card persona-card">
+        <div class="persona-role">COO</div>
+        <h3>You run operations. AI should make them faster. It hasn't.</h3>
+        <p>Every process improvement initiative stalls at the same decision bottleneck. You know it. You can't name it.</p>
+        <p class="persona-outcome">→ You leave with the bottleneck named, removed, and replaced with a system.</p>
+      </div>
+      <div class="feat-card persona-card">
+        <div class="persona-role">CIO</div>
+        <h3>You own the stack. The tools are there. Adoption is the problem.</h3>
+        <p>Your team is buried in vendor evaluations. Your roadmap is full. Real usage is flat.</p>
+        <p class="persona-outcome">→ You leave with a clear deployment path and agentsHQ handling the decisions.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. ABOUT BOUBACAR -->
+<section class="section about">
+  <div class="container">
+    <div class="about-grid">
+      <div>
+        <div class="about-photo">Boubacar<br>Barry</div>
+      </div>
+      <div>
+        <div class="clay-label">Your Guide</div>
+        <h2>Not a vendor. A constraint remover.</h2>
+        <p>Boubacar has spent his career at the intersection of organizational systems and technology — working across industries and geographies where AI adoption was supposed to happen but didn't.</p>
+        <p>He built agentsHQ because every engagement kept hitting the same wall: not lack of tools, not lack of talent — decision overload at the top. The Catalyst Works methodology is built around removing that specific constraint.</p>
+        <p>He doesn't sell strategy decks. He builds the system and hands it to you running.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. SOCIAL PROOF -->
+<section class="section proof">
+  <div class="container">
+    <div class="label">What Clarity Looks Like</div>
+    <h2>What clarity looks like in practice</h2>
+    <p class="section-sub" style="color:rgba(255,255,255,0.5);">Real outcomes from constraint removal and agentsHQ deployment.</p>
+    <div class="cards-grid">
+      <div class="testimonial">
+        <blockquote>"Boubacar removed in 6 weeks what we'd been stuck on for 18 months. One constraint identified. Three decisions eliminated from my week entirely."</blockquote>
+        <div class="testimonial-footer">
+          <div class="t-avatar">SC</div>
+          <div>
+            <div class="t-name">Sarah Chen</div>
+            <div class="t-role">COO, Meridian Growth Partners</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial">
+        <blockquote>"We had approved four AI tools and used none of them. Catalyst Works found our actual constraint in the first session. agentsHQ was live in 30 days. Throughput is up 40%."</blockquote>
+        <div class="testimonial-footer">
+          <div class="t-avatar">MR</div>
+          <div>
+            <div class="t-name">Marcus Reid</div>
+            <div class="t-role">CIO, Arcline Systems</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial">
+        <blockquote>"Every consultant we talked to wanted to sell us a roadmap. Boubacar was the first person who said 'your constraint is X' and then built the system to remove it. Different category."</blockquote>
+        <div class="testimonial-footer">
+          <div class="t-avatar">DP</div>
+          <div>
+            <div class="t-name">Diana Patel</div>
+            <div class="t-role">CEO, Vantage Operations Group</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. FINAL CTA -->
+<section class="final-cta">
+  <div class="container">
+    <h2>Ready to remove your constraint?</h2>
+    <p style="font-size:16px;color:rgba(255,255,255,0.7);margin-bottom:32px;max-width:500px;margin-left:auto;margin-right:auto;">One conversation to find your constraint. No pitch. No pressure. No 90-day strategy engagement before you see results.</p>
+    <a href="#" class="btn-primary" style="font-size:15px;padding:16px 32px;">Book Your Discovery Call</a>
+    <p class="reassurance">No pitch. No pressure. One conversation to find your constraint.</p>
+  </div>
+</section>
+
+<!-- 9. FOOTER -->
+<footer>
+  <div class="container">
+    <p><strong style="color:rgba(255,255,255,0.7);">Boubacar Barry | Catalyst Works</strong></p>
+    <p><a href="mailto:catalystworks.ai@gmail.com">catalystworks.ai@gmail.com</a> · <a href="https://catalystworks.consulting">catalystworks.consulting</a></p>
+    <p style="margin-top:16px;">© 2026 Catalyst Works. All rights reserved.</p>
+  </div>
+</footer>
+
+</body>
+</html>
