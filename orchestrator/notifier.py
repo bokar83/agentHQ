@@ -11,6 +11,8 @@ import random
 import logging
 import requests
 import smtplib
+import sys
+import time
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -29,6 +31,11 @@ REPORT_EMAILS = [
     os.environ.get("REPORT_EMAIL", "bokar83@gmail.com"),
     "boubacarbusiness@gmail.com"
 ]
+
+# Remoat Config (Local IDE Bridge)
+REMOAT_BOT_TOKEN = os.environ.get("REMOAT_TELEGRAM_BOT_TOKEN", "")
+REMOAT_CHAT_ID = os.environ.get("REMOAT_TELEGRAM_CHAT_ID", "")
+REMOAT_API_BASE = f"https://api.telegram.org/bot{REMOAT_BOT_TOKEN}" if REMOAT_BOT_TOKEN else ""
 
 TASK_TYPE_LABELS = {
     "research_report":        "Research Agent is on the case 🔍",
@@ -71,6 +78,9 @@ _last_quote_index: int = -1
 
 def send_message(chat_id: str, text: str) -> None:
     """Send a plain text message to a Telegram chat. Truncates at 4096 chars."""
+    # Mirror all outgoing orchestrator messages to Remoat for remote tracking
+    log_for_remoat(text)
+    
     if not TELEGRAM_BOT_TOKEN:
         logger.warning("TELEGRAM_BOT_TOKEN not set — skipping send_message")
         return
@@ -86,6 +96,26 @@ def send_message(chat_id: str, text: str) -> None:
             logger.warning(f"Telegram sendMessage returned {resp.status_code}: {resp.text[:200]}")
     except Exception as e:
         logger.error(f"Telegram sendMessage failed: {e}")
+
+def log_for_remoat(message: str, category: str = "NOTIFICATION"):
+    """
+    Standardized log format for Remoat to capture and forward to Telegram.
+    category: NOTIFICATION | APPROVAL | PROGRESS | ERROR
+    """
+    # Print to stdout for terminal capture
+    print(f"\n[REMOAT:{category}] {message}")
+    sys.stdout.flush()
+    
+    # Optional: Direct mirror to Remoat bot if configured
+    if REMOAT_API_BASE and REMOAT_CHAT_ID:
+        try:
+            requests.post(
+                f"{REMOAT_API_BASE}/sendMessage",
+                json={"chat_id": str(REMOAT_CHAT_ID), "text": f"[{category}] {message}"},
+                timeout=5
+            )
+        except Exception:
+            pass # Non-blocking
 
 
 def send_ack(chat_id: str, task_type: str) -> None:
