@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Outfit Stylist — AI Fashion Assistant</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a24;
+      --surface2: #22222e;
+      --border: #2e2e3e;
+      --accent: #a78bfa;
+      --accent2: #f472b6;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --success: #34d399;
+      --danger: #f87171;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    header p { color: var(--muted); font-size: 0.875rem; margin-top: 0.25rem; }
+
+    .emoji { font-size: 2rem; }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 0.75rem 1.25rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      position: relative;
+      top: 1px;
+    }
+
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; }
+    .card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--accent); }
+
+    /* Upload zone */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 2.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: var(--accent);
+      background: rgba(167, 139, 250, 0.05);
+    }
+
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .upload-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .upload-zone p { color: var(--muted); font-size: 0.875rem; }
+    .upload-zone strong { color: var(--text); }
+
+    /* Preview */
+    .preview-img {
+      max-width: 200px;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 8px;
+      display: none;
+      margin: 1rem auto 0;
+    }
+
+    /* Form elements */
+    input[type="text"], textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.9rem;
+      padding: 0.65rem 0.875rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus, textarea:focus { border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 80px; font-family: inherit; }
+
+    label { display: block; color: var(--muted); font-size: 0.8rem; margin-bottom: 0.4rem; }
+
+    .form-group { margin-bottom: 1rem; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 600;
+      padding: 0.65rem 1.25rem;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      color: white;
+    }
+
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover { border-color: var(--accent); }
+
+    .btn-danger { background: rgba(248,113,113,0.15); color: var(--danger); border: 1px solid rgba(248,113,113,0.3); }
+    .btn-danger:hover { background: rgba(248,113,113,0.25); }
+
+    .btn-sm { padding: 0.4rem 0.75rem; font-size: 0.8rem; }
+
+    /* Wardrobe grid */
+    .wardrobe-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+
+    .wardrobe-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .wardrobe-item:hover { transform: translateY(-2px); border-color: var(--accent); }
+
+    .wardrobe-item img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+
+    .wardrobe-item-info {
+      padding: 0.75rem;
+    }
+
+    .wardrobe-item-type {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: capitalize;
+    }
+
+    .wardrobe-item-desc {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+      line-height: 1.4;
+    }
+
+    .wardrobe-item-actions {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.5rem;
+    }
+
+    .tag {
+      background: rgba(167,139,250,0.12);
+      color: var(--accent);
+      border-radius: 4px;
+      font-size: 0.7rem;
+      padding: 0.15rem 0.45rem;
+    }
+
+    /* Result box */
+    .result-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      white-space: pre-wrap;
+      line-height: 1.7;
+      font-size: 0.9rem;
+    }
+
+    .result-box h1, .result-box h2, .result-box h3 {
+      color: var(--accent);
+      margin: 1rem 0 0.5rem;
+    }
+
+    /* Status / spinner */
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.875rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+    }
+
+    .status.info { background: rgba(167,139,250,0.1); color: var(--accent); border: 1px solid rgba(167,139,250,0.2); }
+    .status.success { background: rgba(52,211,153,0.1); color: var(--success); border: 1px solid rgba(52,211,153,0.2); }
+    .status.error { background: rgba(248,113,113,0.1); color: var(--danger); border: 1px solid rgba(248,113,113,0.2); }
+
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(167,139,250,0.3);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--muted);
+    }
+
+    .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+
+    @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* Markdown-ish rendering */
+    .rendered h1 { font-size: 1.2rem; color: var(--accent); margin: 1.25rem 0 0.5rem; }
+    .rendered h2 { font-size: 1.05rem; color: var(--accent2); margin: 1rem 0 0.4rem; }
+    .rendered h3 { font-size: 0.95rem; color: var(--accent); margin: 0.75rem 0 0.35rem; }
+    .rendered strong { color: var(--text); font-weight: 600; }
+    .rendered p { margin-bottom: 0.6rem; }
+    .rendered ul, .rendered ol { margin: 0.4rem 0 0.4rem 1.5rem; }
+    .rendered li { margin-bottom: 0.3rem; }
+    .rendered hr { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="emoji">👗</div>
+  <div>
+    <h1>Outfit Stylist</h1>
+    <p>AI-powered fashion assistant — upload your clothes, get styled</p>
+  </div>
+</header>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="wardrobe">👚 My Wardrobe</button>
+    <button class="tab-btn" data-tab="add-item">➕ Add Clothing</button>
+    <button class="tab-btn" data-tab="suggest">✨ Get Outfit Ideas</button>
+    <button class="tab-btn" data-tab="analyze">📸 Analyze an Outfit</button>
+  </div>
+
+  <!-- Wardrobe Tab -->
+  <div class="tab-panel active" id="tab-wardrobe">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+      <h2 style="font-size:1.1rem; font-weight:600;">Your Clothing Collection</h2>
+      <button class="btn btn-secondary btn-sm" onclick="loadWardrobe()">🔄 Refresh</button>
+    </div>
+    <div id="wardrobe-container">
+      <div class="empty-state">
+        <div class="icon">👔</div>
+        <p>Your wardrobe is empty.<br>Add some clothing items to get started!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Item Tab -->
+  <div class="tab-panel" id="tab-add-item">
+    <div class="two-col">
+      <div class="card">
+        <h2>Upload a Clothing Item</h2>
+        <p style="color:var(--muted); font-size:0.875rem; margin-bottom:1rem;">
+          Photo a shirt, pants, shoes, jacket — any single piece. Claude will analyze and tag it automatically.
+        </p>
+
+        <div class="upload-zone" id="item-upload-zone">
+          <input type="file" id="item-file" accept="image/*" onchange="previewItem(this)" />
+          <div class="upload-icon">📷</div>
+          <p><strong>Click or drag</strong> to upload a clothing photo</p>
+          <p>JPEG, PNG, WebP supported</p>
+          <img class="preview-img" id="item-preview" />
+        </div>
+
+        <div class="form-group" style="margin-top:1rem;">
+          <label>Notes (optional)</label>
+          <input type="text" id="item-notes" placeholder="e.g. bought in Paris, favorite summer top" />
+        </div>
+
+        <button class="btn btn-primary" onclick="uploadItem()" id="upload-btn">
+          🔍 Analyze &amp; Add to Wardrobe
+        </button>
+      </div>
+
+      <div>
+        <div id="item-status"></div>
+        <div id="item-result"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Suggest Tab -->
+  <div class="tab-panel" id="tab-suggest">
+    <div class="card">
+      <h2>✨ Get Outfit Suggestions</h2>
+      <p style="color:var(--muted); font-size:0.875rem; margin-bottom:1rem;">
+        Claude will mix and match your wardrobe items to build complete outfits.
+      </p>
+
+      <div class="form-group">
+        <label>What's the occasion or vibe? (optional)</label>
+        <textarea id="outfit-context" placeholder="e.g. casual Friday at the office, date night, beach vacation, job interview..."></textarea>
+      </div>
+
+      <button class="btn btn-primary" onclick="getSuggestions()" id="suggest-btn">
+        ✨ Generate Outfit Ideas
+      </button>
+    </div>
+
+    <div id="suggest-status"></div>
+    <div id="suggest-result"></div>
+  </div>
+
+  <!-- Analyze Tab -->
+  <div class="tab-panel" id="tab-analyze">
+    <div class="two-col">
+      <div class="card">
+        <h2>📸 Analyze a Full Outfit</h2>
+        <p style="color:var(--muted); font-size:0.875rem; margin-bottom:1rem;">
+          Upload a photo of you wearing an outfit (or a styled flat lay) for detailed styling feedback.
+        </p>
+
+        <div class="upload-zone" id="outfit-upload-zone">
+          <input type="file" id="outfit-file" accept="image/*" onchange="previewOutfit(this)" />
+          <div class="upload-icon">🕵️</div>
+          <p><strong>Click or drag</strong> to upload your outfit photo</p>
+          <img class="preview-img" id="outfit-preview" />
+        </div>
+
+        <button class="btn btn-primary" onclick="analyzeOutfit()" style="margin-top:1rem;" id="analyze-btn">
+          🎯 Get Style Feedback
+        </button>
+      </div>
+
+      <div>
+        <div id="analyze-status"></div>
+        <div id="analyze-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Tabs ───────────────────────────────────────────────────────
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn, .tab-panel').forEach(el => el.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      if (btn.dataset.tab === 'wardrobe') loadWardrobe();
+    });
+  });
+
+  // Drag-over styling
+  document.querySelectorAll('.upload-zone').forEach(zone => {
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag-over'); });
+  });
+
+  // ── Helpers ────────────────────────────────────────────────────
+  function setStatus(el, type, msg, spinner = false) {
+    el.innerHTML = `<div class="status ${type}">${spinner ? '<div class="spinner"></div>' : ''} ${msg}</div>`;
+  }
+
+  function renderMarkdown(text) {
+    return text
+      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+      .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+      .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/^- (.+)$/gm, '<li>$1</li>')
+      .replace(/(<li>.*<\/li>)/gs, m => `<ul>${m}</ul>`)
+      .replace(/^---$/gm, '<hr>')
+      .split('\n').map(l => l.startsWith('<') ? l : `<p>${l}</p>`).join('');
+  }
+
+  function previewItem(input) {
+    const preview = document.getElementById('item-preview');
+    if (input.files[0]) {
+      preview.src = URL.createObjectURL(input.files[0]);
+      preview.style.display = 'block';
+    }
+  }
+
+  function previewOutfit(input) {
+    const preview = document.getElementById('outfit-preview');
+    if (input.files[0]) {
+      preview.src = URL.createObjectURL(input.files[0]);
+      preview.style.display = 'block';
+    }
+  }
+
+  // ── Upload Item ────────────────────────────────────────────────
+  async function uploadItem() {
+    const file = document.getElementById('item-file').files[0];
+    const notes = document.getElementById('item-notes').value;
+    const statusEl = document.getElementById('item-status');
+    const resultEl = document.getElementById('item-result');
+    const btn = document.getElementById('upload-btn');
+
+    if (!file) { setStatus(statusEl, 'error', 'Please select an image first.'); return; }
+
+    btn.disabled = true;
+    resultEl.innerHTML = '';
+    setStatus(statusEl, 'info', 'Uploading and analyzing with Claude…', true);
+
+    const form = new FormData();
+    form.append('file', file);
+    form.append('notes', notes);
+
+    try {
+      const res = await fetch('/upload-item', { method: 'POST', body: form });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.detail || 'Upload failed');
+
+      setStatus(statusEl, 'success', '✓ Item added to your wardrobe!');
+      const a = data.item.analysis;
+      resultEl.innerHTML = `
+        <div class="card">
+          <h3>Analysis Result</h3>
+          <p><strong>Type:</strong> ${a.type || '—'}</p>
+          <p><strong>Color:</strong> ${a.color || '—'}</p>
+          <p><strong>Style:</strong> ${a.style || '—'}</p>
+          <p><strong>Season:</strong> ${a.season || '—'}</p>
+          <p style="margin-top:.5rem; color:var(--muted); font-size:.875rem;">${a.description || ''}</p>
+          <div class="tags">
+            ${(a.tags || []).map(t => `<span class="tag">${t}</span>`).join('')}
+          </div>
+        </div>`;
+
+      document.getElementById('item-file').value = '';
+      document.getElementById('item-notes').value = '';
+      document.getElementById('item-preview').style.display = 'none';
+    } catch (e) {
+      setStatus(statusEl, 'error', '✗ Error: ' + e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ── Wardrobe ───────────────────────────────────────────────────
+  async function loadWardrobe() {
+    const container = document.getElementById('wardrobe-container');
+    container.innerHTML = '<div class="status info"><div class="spinner"></div> Loading wardrobe…</div>';
+
+    try {
+      const res = await fetch('/wardrobe');
+      const items = await res.json();
+
+      if (!items.length) {
+        container.innerHTML = `<div class="empty-state"><div class="icon">👔</div><p>Your wardrobe is empty.<br>Add some clothing items to get started!</p></div>`;
+        return;
+      }
+
+      container.innerHTML = `<div class="wardrobe-grid">${items.map(item => {
+        const a = item.analysis;
+        return `<div class="wardrobe-item" id="item-${item.id}">
+          <img src="/wardrobe/${item.id}/image" alt="${a.type || 'clothing'}" loading="lazy" />
+          <div class="wardrobe-item-info">
+            <div class="wardrobe-item-type">${a.type || 'Item'} · ${a.color || ''}</div>
+            <div class="wardrobe-item-desc">${a.description || ''}</div>
+            <div class="tags">${(a.tags || []).slice(0,3).map(t => `<span class="tag">${t}</span>`).join('')}</div>
+          </div>
+          <div class="wardrobe-item-actions">
+            <button class="btn btn-danger btn-sm" onclick="deleteItem('${item.id}')">🗑️ Remove</button>
+          </div>
+        </div>`;
+      }).join('')}</div>`;
+    } catch (e) {
+      container.innerHTML = `<div class="status error">Failed to load wardrobe: ${e.message}</div>`;
+    }
+  }
+
+  async function deleteItem(id) {
+    if (!confirm('Remove this item from your wardrobe?')) return;
+    try {
+      await fetch(`/wardrobe/${id}`, { method: 'DELETE' });
+      document.getElementById('item-' + id)?.remove();
+    } catch (e) {
+      alert('Failed to delete item: ' + e.message);
+    }
+  }
+
+  // ── Suggest Outfits ────────────────────────────────────────────
+  async function getSuggestions() {
+    const context = document.getElementById('outfit-context').value;
+    const statusEl = document.getElementById('suggest-status');
+    const resultEl = document.getElementById('suggest-result');
+    const btn = document.getElementById('suggest-btn');
+
+    btn.disabled = true;
+    resultEl.innerHTML = '';
+    setStatus(statusEl, 'info', 'Claude is styling your wardrobe…', true);
+
+    try {
+      const res = await fetch('/suggest-outfits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ context }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.detail || 'Failed');
+
+      setStatus(statusEl, 'success', '✓ Outfit ideas ready!');
+      resultEl.innerHTML = `<div class="card"><div class="rendered">${renderMarkdown(data.suggestions)}</div></div>`;
+    } catch (e) {
+      setStatus(statusEl, 'error', '✗ Error: ' + e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ── Analyze Outfit ─────────────────────────────────────────────
+  async function analyzeOutfit() {
+    const file = document.getElementById('outfit-file').files[0];
+    const statusEl = document.getElementById('analyze-status');
+    const resultEl = document.getElementById('analyze-result');
+    const btn = document.getElementById('analyze-btn');
+
+    if (!file) { setStatus(statusEl, 'error', 'Please select an outfit photo first.'); return; }
+
+    btn.disabled = true;
+    resultEl.innerHTML = '';
+    setStatus(statusEl, 'info', 'Claude is analyzing your outfit…', true);
+
+    const form = new FormData();
+    form.append('file', file);
+
+    try {
+      const res = await fetch('/analyze-outfit', { method: 'POST', body: form });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.detail || 'Analysis failed');
+
+      setStatus(statusEl, 'success', '✓ Style feedback ready!');
+      resultEl.innerHTML = `<div class="card"><div class="rendered">${renderMarkdown(data.feedback)}</div></div>`;
+    } catch (e) {
+      setStatus(statusEl, 'error', '✗ Error: ' + e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ── Init ───────────────────────────────────────────────────────
+  loadWardrobe();
+</script>
+</body>
+</html>
