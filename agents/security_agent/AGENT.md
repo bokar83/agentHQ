@@ -58,7 +58,7 @@ SecureWatch is the security watchdog for the agentsHQ system. It runs daily (and
 ## File Structure
 
 ```
-agents/security-agent/
+agents/security_agent/
 ├── AGENT.md              ← This file (soul of the agent)
 ├── security_agent.py     ← Main agent/scan logic
 └── scripts/

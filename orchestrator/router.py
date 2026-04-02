@@ -222,15 +222,3 @@ def get_crew_type(task_type: str) -> Optional[str]:
     return None
 
 
-def register_new_task_type(task_type_key: str, description: str, keywords: list, crew: str) -> bool:
-    """Dynamically register a new task type at runtime."""
-    if task_type_key in TASK_TYPES:
-        logger.warning(f"Task type '{task_type_key}' already exists")
-        return False
-    TASK_TYPES[task_type_key] = {
-        "description": description,
-        "keywords": keywords,
-        "crew": crew,
-    }
-    logger.info(f"Registered new task type: '{task_type_key}'")
-    return True

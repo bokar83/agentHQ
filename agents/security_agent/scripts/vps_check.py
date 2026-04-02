@@ -1,6 +1,6 @@
 """
 vps_check.py — VPS health and port scanner
-Part of SecureWatch (agentsHQ security-agent)
+Part of SecureWatch (agentsHQ security_agent)
 
 Runs lightweight checks against the VPS to detect exposed dangerous
 ports or services that should not be publicly accessible.

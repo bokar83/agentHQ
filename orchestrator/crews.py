@@ -1165,38 +1165,6 @@ def build_team_synthesis_crew(original_request: str, teammate_results: list) -> 
     )
 
 
-def build_hierarchical_crew(user_request: str, specialist_agents: list) -> Crew:
-    """
-    Mode 2: Hierarchical crew where a manager LLM (Claude Opus) coordinates
-    agents dynamically. Use when agents need to inform each other or debate findings.
-
-    specialist_agents: list of pre-built Agent objects
-    """
-    from agents import select_llm
-
-    tasks = [
-        Task(
-            description=(
-                f"Work on this request as directed by the team lead: {user_request}\n"
-                f"Your role: {agent.role}\n"
-                f"Apply your expertise and report findings clearly."
-            ),
-            agent=agent,
-            expected_output=f"Specialist output from {agent.role}."
-        )
-        for agent in specialist_agents
-    ]
-
-    return Crew(
-        agents=specialist_agents,
-        tasks=tasks,
-        process=Process.hierarchical,
-        manager_llm=select_llm("orchestrator", "complex"),
-        verbose=False,
-        memory=False,
-    )
-
-
 def build_hunter_crew(user_request: str) -> Crew:
     """
     Hunter Crew — daily lead prospecting engine.
@@ -1379,6 +1347,62 @@ def build_prompt_engineer_crew(user_request: str) -> Crew:
     )
 
 
+def build_news_brief_crew(user_request: str) -> Crew:
+    """
+    Crew for: news_brief
+    Curates and analyses daily news with impact analysis for Catalyst Works.
+    Single-agent: research + synthesis in one pass.
+    """
+    from agents import build_news_brief_agent
+    agent = build_news_brief_agent()
+
+    topic_clause = f"\n\nFocus areas requested by user: {user_request}" if user_request.strip() else ""
+
+    task_brief = Task(
+        description=f"""
+        Produce today's Daily Intelligence Brief for Boubacar Barry / Catalyst Works Consulting.
+
+        MANDATORY COVERAGE — scan and summarise the top stories in each category:
+
+        1. **AI & Automation** — model releases, major product launches, policy moves, funding
+        2. **Business & Economics** — macro trends, consulting/services sector, freelance economy
+        3. **Solopreneur / Boutique Firm News** — tools, platforms, pricing changes, opportunities
+        4. **Africa Tech** — startups, funding, policy, mobile money, edtech, healthtech
+        5. **Catalyst Works Watchlist** — anything touching: AI consulting, sales automation,
+           CRM tools, lead gen, LinkedIn strategy, content marketing for consultants
+        {topic_clause}
+
+        FOR EACH STORY (aim for 3-5 stories per category, pick the most impactful):
+        - **Headline** (your own clear, direct headline — not clickbait)
+        - **What happened** (2-3 sentences, facts only)
+        - **Why it matters to Boubacar** (1-2 sentences — connect to Catalyst Works, agentsHQ, or his clients)
+        - **Action item** (if any — "monitor", "reach out", "test this", "nothing now")
+
+        CLOSE WITH:
+        - **3 Big Themes of the Day** (cross-cutting patterns across all categories)
+        - **One Opportunity** (the single most actionable thing from today's news for Catalyst Works)
+
+        Use Firecrawl and Serper to find today's actual news — do not fabricate stories.
+        Date: today.
+        """,
+        expected_output=(
+            "A structured Daily Intelligence Brief with sections for each news category, "
+            "3-5 stories per section (headline / what happened / why it matters / action item), "
+            "followed by 3 Big Themes and One Opportunity. "
+            "Scannable, no filler, direct language."
+        ),
+        agent=agent
+    )
+
+    return Crew(
+        agents=[agent],
+        tasks=[task_brief],
+        process=Process.sequential,
+        verbose=False,
+        memory=False,
+    )
+
+
 CREW_REGISTRY = {
     "website_crew":        build_website_crew,
     "app_crew":            build_app_crew,
@@ -1392,6 +1416,7 @@ CREW_REGISTRY = {
     "hunter_crew":            build_hunter_crew,
     "prompt_engineer_crew":   build_prompt_engineer_crew,
     "3d_website_crew":        build_3d_website_crew,
+    "news_brief_crew":        build_news_brief_crew,
     "unknown_crew":           build_unknown_crew,
 }
 

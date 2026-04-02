@@ -59,12 +59,6 @@ except ImportError as e:
     def discover_leads(*args, **kwargs): return []
     def reveal_email_for_lead(*args, **kwargs): return None
 
-# Optional skills — failures here must not affect hunter or CRM
-try:
-    from skills.openspace_skill.openspace_tool import openspace_tool
-except ImportError:
-    def openspace_tool(*args, **kwargs): return "openspace_not_ready"
-
 try:
     from skills.cli_hub.cli_hub_tool import execute_cli_hub_action
 except ImportError:
@@ -128,11 +122,6 @@ class SaveOutputTool(BaseTool):
         except Exception as e:
             logger.error(f"SaveOutputTool failed: {e}")
             return f"Error querying Qdrant: {e}"
-
-# OpenSpace Evolution Tool
-# Registered here so agents can explicitly fix skills if needed.
-openspace_evolver = openspace_tool
-
 
 class QueryMemoryTool(BaseTool):
     """
@@ -313,10 +302,14 @@ class CLIHubSearchTool(BaseTool):
             
             action = data.get("action", "search")
             query = data.get("query", data.get("name", ""))
-            
-            # Since it's an async executor, we wrap it
-            loop = asyncio.get_event_loop()
-            result = loop.run_until_complete(execute_cli_hub_action(action, query=query, name=query))
+
+            # Run the async function safely from a sync context.
+            # If an event loop is already running (FastAPI background task),
+            # run_until_complete() would deadlock — use a fresh thread instead.
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                future = pool.submit(asyncio.run, execute_cli_hub_action(action, query=query, name=query))
+                result = future.result(timeout=30)
             return json.dumps(result, indent=2)
         except Exception as e:
             logger.error(f"CLIHubSearchTool failed: {e}")
@@ -450,30 +443,6 @@ def get_mcp_tools(server_url: str) -> list:
         return []
 
 
-# MCP servers — configured in .env, loaded on demand
-# Add new MCP connections here as you integrate more services
-
-def get_notion_tools() -> list:
-    """Notion MCP tools for reading/writing Notion pages."""
-    url = os.environ.get("NOTION_MCP_URL", "https://mcp.notion.com/mcp")
-    return get_mcp_tools(url)
-
-def get_google_calendar_tools() -> list:
-    """Google Calendar MCP tools."""
-    url = os.environ.get("GCAL_MCP_URL", "https://gcal.mcp.claude.com/mcp")
-    return get_mcp_tools(url)
-
-def get_gmail_tools() -> list:
-    """Gmail MCP tools."""
-    url = os.environ.get("GMAIL_MCP_URL", "https://gmail.mcp.claude.com/mcp")
-    return get_mcp_tools(url)
-
-def get_airtable_tools() -> list:
-    """Airtable MCP tools."""
-    url = os.environ.get("AIRTABLE_MCP_URL", "https://mcp.airtable.com/mcp")
-    return get_mcp_tools(url)
-
-
 # ── Tool sets by category ─────────────────────────────────────
 # These are convenience bundles used in agents.py
 
@@ -490,5 +459,3 @@ WRITING_TOOLS = [file_writer, SaveOutputTool(), voice_polisher_tool]
 CODE_TOOLS = [code_interpreter, file_writer, file_reader, SaveOutputTool(), CLIHubSearchTool()]
 ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool()]
 HUNTER_TOOLS = [prospecting_tool, crm_add_tool, crm_log_tool, crm_reveal_tool, scoreboard_tool, QueryMemoryTool()]
-
-ALL_TOOLS = RESEARCH_TOOLS + SCRAPING_TOOLS + WRITING_TOOLS + CODE_TOOLS + ORCHESTRATION_TOOLS + HUNTER_TOOLS
