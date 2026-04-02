@@ -1,6 +1,6 @@
 """
 scan_secrets.py — Workspace secret scanner
-Part of SecureWatch (agentsHQ security-agent)
+Part of SecureWatch (agentsHQ security_agent)
 
 Scans all text files in the workspace for known secret patterns.
 """

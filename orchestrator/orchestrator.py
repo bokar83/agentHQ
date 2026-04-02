@@ -812,6 +812,31 @@ def _trigger_evolution(task_instruction: str, result_output: str) -> None:
         loop.close()
 
 
+_TASK_KEYWORDS = [
+    "write", "create", "build", "research", "analyze", "make",
+    "draft", "generate", "code", "script", "website", "report",
+    "proposal", "post", "email", "article",
+    "find", "hunt", "leads", "prospect", "run the", "hunter",
+    "news", "brief", "headlines",
+]
+_CHAT_PREFIXES = (
+    "what is my", "what's my", "how much", "do you", "can you tell",
+    "hey", "hi ", "hello", "thanks", "thank you", "what did",
+    "do you remember", "remind me", "what have we", "what was",
+)
+
+def _classify_obvious_chat(msg: str) -> bool:
+    """
+    Fast pre-check before calling the LLM classifier.
+    Returns True if the message is almost certainly casual chat,
+    so we can skip classification and go straight to run_chat().
+    """
+    m = msg.strip().lower()
+    return (
+        len(m) < 60 and not any(w in m for w in _TASK_KEYWORDS)
+    ) or m.startswith(_CHAT_PREFIXES)
+
+
 # ══════════════════════════════════════════════════════════════
 # API ENDPOINTS
 # ══════════════════════════════════════════════════════════════
@@ -826,8 +851,18 @@ async def process_telegram_update(update: dict):
 
     text = message.get("text", "").strip()
     chat_id = str(message.get("chat", {}).get("id", ""))
+    sender_id = str(message.get("from", {}).get("id", ""))
 
     if not text or not chat_id:
+        return
+
+    # ── Sender authentication ────────────────────────────────────
+    _allowed_raw = os.environ.get("ALLOWED_USER_IDS", "")
+    _allowed_ids = {uid.strip() for uid in _allowed_raw.split(",") if uid.strip()}
+    if _allowed_ids and sender_id not in _allowed_ids:
+        from notifier import send_message as _send
+        _send(chat_id, "Sorry, you are not authorised to use this bot.")
+        logger.warning(f"Unauthorised Telegram access attempt from sender_id={sender_id}")
         return
 
     job_id = str(uuid.uuid4())
@@ -837,19 +872,7 @@ async def process_telegram_update(update: dict):
     send_ack(chat_id, "unknown")
 
     # 2. Decide if Chat or Task
-    _msg = text.lower()
-    _is_obvious_chat = (
-        len(_msg) < 60 and not any(w in _msg for w in [
-            "write", "create", "build", "research", "analyze", "make",
-            "draft", "generate", "code", "script", "website", "report",
-            "proposal", "post", "email", "article",
-            "find", "hunt", "leads", "prospect", "run the", "hunter"
-        ])
-    ) or _msg.startswith(("what is my", "what's my", "how much", "do you", "can you tell",
-                           "hey", "hi ", "hello", "thanks", "thank you", "what did",
-                           "do you remember", "remind me", "what have we", "what was"))
-
-    if _is_obvious_chat:
+    if _classify_obvious_chat(text):
         task_type = "chat"
     else:
         from router import classify_task
@@ -989,19 +1012,7 @@ async def run_task(request: TaskRequest, background_tasks: BackgroundTasks):
     send_ack(request.from_number, "unknown")
 
     # Classify task type (runs after ack is already sent)
-    _msg = request.task.strip().lower()
-    _is_obvious_chat = (
-        len(_msg) < 60 and not any(w in _msg for w in [
-            "write", "create", "build", "research", "analyze", "make",
-            "draft", "generate", "code", "script", "website", "report",
-            "proposal", "post", "email", "article",
-            "find", "hunt", "leads", "prospect", "run the", "hunter"
-        ])
-    ) or _msg.startswith(("what is my", "what's my", "how much", "do you", "can you tell",
-                           "hey", "hi ", "hello", "thanks", "thank you", "what did",
-                           "do you remember", "remind me", "what have we", "what was"))
-
-    if _is_obvious_chat:
+    if _classify_obvious_chat(request.task):
         task_type = "chat"
     else:
         from router import classify_task
@@ -1055,18 +1066,7 @@ async def run_task_sync(request: TaskRequest):
                 reply = "Nothing more to show — that was the full output."
             return TaskResponse(success=True, result=reply, task_type="more", files_created=[], execution_time=0.0)
 
-        _msg = request.task.strip().lower()
-        _is_obvious_chat = (
-            len(_msg) < 60 and not any(w in _msg for w in [
-                "write", "create", "build", "research", "analyze", "make",
-                "draft", "generate", "code", "script", "website", "report",
-                "proposal", "post", "email", "article"
-            ])
-        ) or _msg.startswith(("what is my", "what's my", "how much", "do you", "can you tell",
-                               "hey", "hi ", "hello", "thanks", "thank you", "what did",
-                               "do you remember", "remind me", "what have we", "what was"))
-
-        if _is_obvious_chat:
+        if _classify_obvious_chat(request.task):
             result = run_chat(message=request.task, session_key=request.session_key)
         else:
             result = run_orchestrator(

@@ -22,8 +22,8 @@ jobs:
           
       - name: Run Git Hygiene Audit
         run: |
-          python agents/security-agent/scripts/audit_git.py .
+          python agents/security_agent/scripts/audit_git.py .
           
       - name: Run Deep Secret Scan
         run: |
-          python agents/security-agent/scripts/scan_secrets.py .
+          python agents/security_agent/scripts/scan_secrets.py .

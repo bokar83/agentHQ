@@ -1,6 +1,6 @@
 """
 audit_git.py — Git hygiene auditor
-Part of SecureWatch (agentsHQ security-agent)
+Part of SecureWatch (agentsHQ security_agent)
 
 Checks git-tracked files against a blocklist of sensitive file patterns
 and verifies .gitignore has all critical entries.
