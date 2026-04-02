@@ -857,21 +857,22 @@ async def process_telegram_update(update: dict):
         task_type = classification.get("task_type", "unknown")
 
     # 3. Execute
+    loop = asyncio.get_event_loop()
     if task_type == "chat":
-        # Chat runs inline (but in threadpool)
-        from concurrent.futures import ThreadPoolExecutor
-        executor = ThreadPoolExecutor(max_workers=1)
-        loop = asyncio.get_event_loop()
+        # Chat runs in threadpool — non-blocking
         result = await loop.run_in_executor(None, lambda: run_chat(message=text, session_key=chat_id))
         send_message(chat_id, result["result"])
     else:
-        # Complex tasks run as background jobs
+        # Complex tasks run in threadpool — non-blocking, avoids freezing the polling loop
         crew_session_key = f"{chat_id}:{job_id[:8]}"
-        await _run_background_job(
-            task=text,
-            from_number=chat_id,
-            session_key=crew_session_key,
-            job_id=job_id,
+        loop.run_in_executor(
+            None,
+            lambda: _run_background_job(
+                task=text,
+                from_number=chat_id,
+                session_key=crew_session_key,
+                job_id=job_id,
+            )
         )
 
 async def telegram_polling_loop():
