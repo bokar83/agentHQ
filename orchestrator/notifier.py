@@ -160,6 +160,267 @@ def send_result(chat_id: str, summary: str, drive_url: str = None, github_url: s
     send_message(chat_id, "\n".join(parts))
 
 
+def _parse_hunter_report_to_html(leads_output: str, _scoreboard: str, today: str) -> str:
+    """
+    Convert the Growth Hunter markdown report into a clean HTML email.
+    Parses the structured sections from leads_output and renders them as styled HTML.
+    """
+    import re
+
+    # ── colour tokens ──────────────────────────────────────────────────────────
+    BRAND_DARK   = "#0A0A0A"
+    BRAND_ACCENT = "#2563EB"   # blue — Catalyst Works primary
+    BRAND_GREEN  = "#16A34A"
+    BRAND_RED    = "#DC2626"
+    BRAND_AMBER  = "#D97706"
+    HEADER_BG    = "#0F172A"   # near-black navy
+    CARD_BG      = "#F8FAFC"
+    BORDER       = "#E2E8F0"
+    TEXT_MUTED   = "#64748B"
+
+    # ── section extraction helpers ─────────────────────────────────────────────
+    def extract_section(text: str, header: str) -> str:
+        """Pull everything between two ### headings."""
+        pattern = rf"###[^\n]*{re.escape(header)}[^\n]*\n(.*?)(?=\n###|\Z)"
+        m = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
+        return m.group(1).strip() if m else ""
+
+    def parse_md_table(block: str) -> list[dict]:
+        """Return list-of-dicts from a markdown table block."""
+        lines = [l.strip() for l in block.splitlines() if l.strip()]
+        table_lines = [l for l in lines if l.startswith("|")]
+        if len(table_lines) < 3:
+            return []
+        headers = [h.strip() for h in table_lines[0].strip("|").split("|")]
+        rows = []
+        for row in table_lines[2:]:          # skip separator line
+            cells = [c.strip() for c in row.strip("|").split("|")]
+            rows.append(dict(zip(headers, cells)))
+        return rows
+
+    def clean(text: str) -> str:
+        """Strip markdown bold/italic/code markers and trailing commas."""
+        text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
+        text = re.sub(r"\*(.+?)\*",     r"\1", text)
+        text = re.sub(r"`(.+?)`",       r"\1", text)
+        return text.strip().strip(",")
+
+    def status_badge(val: str) -> str:
+        val = clean(val)
+        color = BRAND_GREEN if "✅" in val or "Goal Hit" in val or "Saved" in val else \
+                BRAND_AMBER if "⏳" in val or "Pending" in val else \
+                BRAND_RED   if "⚡" in val or "Needs" in val else TEXT_MUTED
+        return (f'<span style="background:{color};color:#fff;padding:2px 8px;'
+                f'border-radius:4px;font-size:12px;font-weight:600;">{val}</span>')
+
+    # ── parse sections ─────────────────────────────────────────────────────────
+    pipeline_rows  = parse_md_table(extract_section(leads_output, "PIPELINE METRICS"))
+    industry_rows  = parse_md_table(extract_section(leads_output, "LEADS BY INDUSTRY"))
+    priority_rows  = parse_md_table(extract_section(leads_output, "TOP PRIORITY LEADS"))
+
+    action_block   = extract_section(leads_output, "ACTION ITEMS")
+    action_items   = re.findall(r"\*\*(\d+\.[^*]+)\*\*,?\s*(.+?)(?=\n>|\Z)", action_block, re.DOTALL)
+    action_items   = [(clean(title), re.sub(r"\s+", " ", clean(body_text)))
+                      for title, body_text in action_items]
+
+    health_block   = extract_section(leads_output, "SCOREBOARD HEALTH CHECK")
+
+    # ── helper: render a generic table ────────────────────────────────────────
+    def table_html(rows: list[dict], special_col: str = None) -> str:
+        if not rows:
+            return "<p style='color:#94A3B8;font-size:13px;'>No data available.</p>"
+        headers = list(rows[0].keys())
+        th_cells = "".join(
+            f'<th style="text-align:left;padding:10px 14px;font-size:12px;'
+            f'font-weight:700;text-transform:uppercase;letter-spacing:.05em;'
+            f'color:{TEXT_MUTED};border-bottom:2px solid {BORDER};">{h}</th>'
+            for h in headers
+        )
+        body_rows = ""
+        for i, row in enumerate(rows):
+            bg = "#fff" if i % 2 == 0 else CARD_BG
+            cells = ""
+            for h, v in row.items():
+                v = clean(v)
+                if h == special_col:
+                    content = status_badge(v)
+                elif "TOTAL" in v.upper() or h == "#":
+                    content = f'<strong>{v}</strong>'
+                else:
+                    content = v
+                cells += (f'<td style="padding:10px 14px;font-size:14px;'
+                           f'color:{BRAND_DARK};border-bottom:1px solid {BORDER};">'
+                           f'{content}</td>')
+            body_rows += f'<tr style="background:{bg};">{cells}</tr>'
+        return (f'<table style="width:100%;border-collapse:collapse;border-radius:8px;'
+                f'overflow:hidden;border:1px solid {BORDER};">'
+                f'<thead><tr>{th_cells}</tr></thead>'
+                f'<tbody>{body_rows}</tbody></table>')
+
+    # ── section card wrapper ───────────────────────────────────────────────────
+    def section(icon: str, title: str, content: str) -> str:
+        return (
+            f'<div style="margin-bottom:28px;">'
+            f'  <h2 style="font-size:16px;font-weight:700;color:{BRAND_DARK};'
+            f'      margin:0 0 14px 0;padding-bottom:8px;'
+            f'      border-bottom:2px solid {BRAND_ACCENT};">'
+            f'    {icon} {title}'
+            f'  </h2>'
+            f'  {content}'
+            f'</div>'
+        )
+
+    # ── action items HTML ──────────────────────────────────────────────────────
+    if action_items:
+        action_html = '<ol style="margin:0;padding-left:20px;">'
+        for title, body_text in action_items:
+            action_html += (
+                f'<li style="margin-bottom:10px;font-size:14px;color:{BRAND_DARK};">'
+                f'<strong style="color:{BRAND_ACCENT};">{title}</strong> — {body_text}'
+                f'</li>'
+            )
+        action_html += '</ol>'
+    else:
+        action_html = f'<p style="color:{TEXT_MUTED};font-size:13px;">No action items parsed.</p>'
+
+    # ── health check bars ──────────────────────────────────────────────────────
+    health_lines = [l.strip() for l in health_block.splitlines() if l.strip() and l.strip() not in ("```",)]
+    health_html  = ""
+    for line in health_lines:
+        # detect colour: green circle → green, red circle → red, money bag → amber
+        if "🟢" in line:
+            bar_color = BRAND_GREEN
+        elif "🔴" in line:
+            bar_color = BRAND_RED
+        elif "💰" in line:
+            bar_color = BRAND_AMBER
+        else:
+            bar_color = TEXT_MUTED
+
+        # extract percentage if present
+        pct_match = re.search(r"(\d+)%", line)
+        pct = int(pct_match.group(1)) if pct_match else 0
+
+        # clean label: remove block chars, keep meaningful text
+        label = re.sub(r"[█░]+", "", line).strip()
+        label = re.sub(r"\s{2,}", " ", label)
+
+        health_html += (
+            f'<div style="margin-bottom:10px;">'
+            f'  <div style="font-size:13px;color:{BRAND_DARK};margin-bottom:4px;">{label}</div>'
+            f'  <div style="background:{BORDER};border-radius:4px;height:8px;width:100%;">'
+            f'    <div style="background:{bar_color};height:8px;border-radius:4px;'
+            f'         width:{pct}%;transition:width .3s;"></div>'
+            f'  </div>'
+            f'</div>'
+        )
+
+    # ── priority medals map ────────────────────────────────────────────────────
+    medal_colors = {"🥇": "#F59E0B", "🥈": "#94A3B8", "🥉": "#B45309", "🏅": BRAND_ACCENT}
+
+    def priority_table_html() -> str:
+        if not priority_rows:
+            return "<p style='color:#94A3B8;'>No priority leads found.</p>"
+        rows_html = ""
+        for i, row in enumerate(priority_rows):
+            bg = "#fff" if i % 2 == 0 else CARD_BG
+            name_raw = clean(row.get("Name", ""))
+            medal    = next((m for m in medal_colors if m in name_raw), "")
+            name     = name_raw.replace(medal, "").strip()
+            color    = medal_colors.get(medal, BRAND_ACCENT)
+            rows_html += (
+                f'<tr style="background:{bg};">'
+                f'  <td style="padding:10px 14px;width:36px;font-size:18px;">{medal}</td>'
+                f'  <td style="padding:10px 14px;font-size:14px;font-weight:600;color:{color};">{name}</td>'
+                f'  <td style="padding:10px 14px;font-size:14px;color:{BRAND_DARK};">{clean(row.get("Company",""))}</td>'
+                f'  <td style="padding:10px 14px;font-size:13px;color:{TEXT_MUTED};">{clean(row.get("Industry",""))}</td>'
+                f'  <td style="padding:10px 14px;font-size:13px;color:{BRAND_DARK};">{clean(row.get("Why Priority",""))}</td>'
+                f'</tr>'
+            )
+        return (
+            f'<table style="width:100%;border-collapse:collapse;border-radius:8px;'
+            f'overflow:hidden;border:1px solid {BORDER};">'
+            f'<thead><tr>'
+            f'<th style="padding:10px 14px;font-size:12px;font-weight:700;text-transform:uppercase;'
+            f'color:{TEXT_MUTED};border-bottom:2px solid {BORDER};text-align:left;width:36px;"></th>'
+            f'<th style="padding:10px 14px;font-size:12px;font-weight:700;text-transform:uppercase;'
+            f'color:{TEXT_MUTED};border-bottom:2px solid {BORDER};text-align:left;">Name</th>'
+            f'<th style="padding:10px 14px;font-size:12px;font-weight:700;text-transform:uppercase;'
+            f'color:{TEXT_MUTED};border-bottom:2px solid {BORDER};text-align:left;">Company</th>'
+            f'<th style="padding:10px 14px;font-size:12px;font-weight:700;text-transform:uppercase;'
+            f'color:{TEXT_MUTED};border-bottom:2px solid {BORDER};text-align:left;">Industry</th>'
+            f'<th style="padding:10px 14px;font-size:12px;font-weight:700;text-transform:uppercase;'
+            f'color:{TEXT_MUTED};border-bottom:2px solid {BORDER};text-align:left;">Why Priority</th>'
+            f'</tr></thead>'
+            f'<tbody>{rows_html}</tbody>'
+            f'</table>'
+        )
+
+    # ── assemble full HTML ─────────────────────────────────────────────────────
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Daily Lead Report — {today}</title>
+</head>
+<body style="margin:0;padding:0;background:#F1F5F9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table role="presentation" style="width:100%;background:#F1F5F9;padding:32px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" style="width:100%;max-width:680px;">
+
+          <!-- HEADER -->
+          <tr>
+            <td style="background:{HEADER_BG};border-radius:12px 12px 0 0;padding:32px 36px;">
+              <p style="margin:0 0 4px 0;font-size:11px;font-weight:700;letter-spacing:.15em;
+                         text-transform:uppercase;color:#94A3B8;">CATALYST WORKS CONSULTING</p>
+              <h1 style="margin:0;font-size:26px;font-weight:800;color:#fff;line-height:1.2;">
+                📊 Growth Hunter
+              </h1>
+              <p style="margin:6px 0 0;font-size:14px;color:#94A3B8;">
+                Daily Prospecting Report &mdash; {today}
+              </p>
+            </td>
+          </tr>
+
+          <!-- BODY -->
+          <tr>
+            <td style="background:#fff;padding:32px 36px;border:1px solid {BORDER};border-top:none;">
+
+              {section("🎯", "Pipeline Metrics", table_html(pipeline_rows, special_col="Status"))}
+              {section("🏭", "Leads by Industry", table_html(industry_rows))}
+              {section("🔥", "Top Priority Leads for Outreach Today", priority_table_html())}
+              {section("⚡", "Action Items", action_html)}
+              {section("💡", "Scoreboard Health Check", health_html)}
+
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="background:{CARD_BG};border:1px solid {BORDER};border-top:none;
+                       border-radius:0 0 12px 12px;padding:20px 36px;">
+              <p style="margin:0;font-size:12px;color:{TEXT_MUTED};text-align:center;">
+                📌 Report generated by <strong>Growth Hunter</strong> | Catalyst Works Consulting | {today}
+              </p>
+              <p style="margin:6px 0 0;font-size:12px;color:{TEXT_MUTED};text-align:center;">
+                Sent automatically by agentsHQ &mdash; Reply here or message
+                <a href="https://t.me/agentsHQ4Bou_bot" style="color:{BRAND_ACCENT};">@agentsHQ4Bou_bot</a>
+                on Telegram to act on any lead.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""
+    return html
+
+
 def send_hunter_report(leads_output: str, scoreboard: str = "") -> bool:
     """
     Email the daily hunter results to Boubacar.
@@ -169,46 +430,41 @@ def send_hunter_report(leads_output: str, scoreboard: str = "") -> bool:
     today = date.today().strftime("%B %d, %Y")
     subject = f"Daily Lead Report — {today}"
 
-    body = f"""CATALYST WORKS CONSULTING
-Daily Prospecting Report — {today}
-{'=' * 50}
-
-{leads_output.strip()}
-
-{'=' * 50}
-{scoreboard.strip() if scoreboard else ''}
-
----
-Sent automatically by Growth Hunter | agentsHQ
-Reply to this email or message @agentsHQ4Bou_bot on Telegram to act on any lead.
-"""
-    return send_email(subject, body)
+    html_body = _parse_hunter_report_to_html(leads_output, scoreboard, today)
+    return send_email(subject, html_body, html=True)
 
 
-def send_email(subject: str, body: str, to_addresses: list = None) -> bool:
+def send_email(subject: str, body: str, to_addresses: list = None, html: bool = False) -> bool:
     """
-    Send an email report. 
+    Send an email report.
     Requires SMTP_USER and SMTP_PASS in .env.
+    Pass html=True to send as HTML; defaults to plain text.
     """
     if not SMTP_USER or not SMTP_PASS:
         logger.warning("SMTP credentials not set — skipping send_email")
-        # In a real scenario, we might want to log the body to a file as fallback
         return False
 
     targets = to_addresses or REPORT_EMAILS
-    
+
     try:
-        msg = MIMEMultipart()
+        msg = MIMEMultipart("alternative")
         msg['From'] = SMTP_USER
         msg['To'] = ", ".join(targets)
         msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'plain'))
+
+        if html:
+            # Attach plain-text fallback first, then HTML (RFC 2046 — last wins)
+            plain = "Daily Lead Report from Growth Hunter. Please view in an HTML-capable email client."
+            msg.attach(MIMEText(plain, 'plain'))
+            msg.attach(MIMEText(body, 'html'))
+        else:
+            msg.attach(MIMEText(body, 'plain'))
 
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
             server.starttls()
             server.login(SMTP_USER, SMTP_PASS)
             server.send_message(msg)
-        
+
         logger.info(f"Email report sent successfully to {len(targets)} addresses.")
         return True
     except Exception as e:
