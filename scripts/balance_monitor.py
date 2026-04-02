@@ -14,7 +14,7 @@ Cron schedule (set in /etc/cron.d/balance-monitor):
 
 Required env vars (read from /root/agentsHQ/.env):
   OPENROUTER_API_KEY
-  TELEGRAM_BOT_TOKEN
+  ORCHESTRATOR_TELEGRAM_BOT_TOKEN
   TELEGRAM_CHAT_ID
 """
 
@@ -45,7 +45,7 @@ def load_env(path: Path):
 load_env(ENV_FILE)
 
 OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
-BOT_TOKEN      = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+BOT_TOKEN      = os.environ.get("ORCHESTRATOR_TELEGRAM_BOT_TOKEN", os.environ.get("TELEGRAM_BOT_TOKEN", ""))
 CHAT_ID        = os.environ.get("TELEGRAM_CHAT_ID", "")
 
 # ── Helpers ───────────────────────────────────────────────────
@@ -71,7 +71,7 @@ def get_balance() -> float:
 def send_telegram(message: str):
     """Send a message via Telegram Bot API."""
     if not BOT_TOKEN or not CHAT_ID:
-        print("ERROR: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set in .env", file=sys.stderr)
+        print("ERROR: ORCHESTRATOR_TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set in .env", file=sys.stderr)
         return
     payload = json.dumps({
         "chat_id": CHAT_ID,

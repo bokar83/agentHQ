@@ -3,8 +3,10 @@ notifier.py — All Telegram Bot API calls for agentsHQ.
 No other file sends Telegram messages.
 
 Env vars required:
-  TELEGRAM_BOT_TOKEN  — bot token from BotFather
-  TELEGRAM_CHAT_ID    — your personal chat ID with the bot
+  ORCHESTRATOR_TELEGRAM_BOT_TOKEN  — bot token for Agents HQ (Primary)
+  TELEGRAM_CHAT_ID                 — user's chat ID for Agents HQ
+  REMOAT_TELEGRAM_BOT_TOKEN       — bot token for Remoat (Mirror)
+  REMOAT_TELEGRAM_CHAT_ID         — user's chat ID for Remoat
 """
 import os
 import random
@@ -18,9 +20,9 @@ from email.mime.multipart import MIMEMultipart
 
 logger = logging.getLogger("agentsHQ.notifier")
 
-# Telegram config (VPS Orchestrator bot)
+# Telegram config (Agents HQ Bot)
 ORCHESTRATOR_BOT_TOKEN = os.environ.get("ORCHESTRATOR_TELEGRAM_BOT_TOKEN", os.environ.get("TELEGRAM_BOT_TOKEN", ""))
-TELEGRAM_API_BASE = f"https://api.telegram.org/bot{ORCHESTRATOR_BOT_TOKEN}"
+TELEGRAM_API_BASE = f"https://api.telegram.org/bot{ORCHESTRATOR_BOT_TOKEN}" if ORCHESTRATOR_BOT_TOKEN else ""
 
 # SMTP config (Placeholder - user needs to set these in .env)
 SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
@@ -32,7 +34,7 @@ REPORT_EMAILS = [
     "boubacarbusiness@gmail.com"
 ]
 
-# Remoat Config (Local IDE Bridge)
+# Remoat Config (Remote IDE Bridge)
 REMOAT_BOT_TOKEN = os.environ.get("REMOAT_TELEGRAM_BOT_TOKEN", "")
 REMOAT_CHAT_ID = os.environ.get("REMOAT_TELEGRAM_CHAT_ID", "")
 REMOAT_API_BASE = f"https://api.telegram.org/bot{REMOAT_BOT_TOKEN}" if REMOAT_BOT_TOKEN else ""
@@ -81,8 +83,8 @@ def send_message(chat_id: str, text: str) -> None:
     # Mirror all outgoing orchestrator messages to Remoat for remote tracking
     log_for_remoat(text)
     
-    if not ORCHESTRATOR_BOT_TOKEN:
-        logger.warning("ORCHESTRATOR_TELEGRAM_BOT_TOKEN not set — skipping send_message")
+    if not ORCHESTRATOR_BOT_TOKEN or not chat_id:
+        print("ERROR: ORCHESTRATOR_TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set in .env", file=sys.stderr)
         return
     if len(text) > 4096:
         text = text[:4090] + "\n[...]"

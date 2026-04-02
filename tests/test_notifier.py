@@ -3,7 +3,7 @@ import os
 import pytest
 from unittest.mock import patch, MagicMock
 
-os.environ.setdefault("TELEGRAM_BOT_TOKEN", "123:test")
+os.environ.setdefault("ORCHESTRATOR_TELEGRAM_BOT_TOKEN", "123:test")
 os.environ.setdefault("TELEGRAM_CHAT_ID", "7792432594")
 
 import sys
