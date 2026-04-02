@@ -981,6 +981,34 @@ def health():
     }
 
 
+class HealthReportRequest(BaseModel):
+    status: str      # "GREEN", "YELLOW", or "RED"
+    report: str      # full Markdown report text
+    date: str        # e.g. "2026-04-07"
+
+
+@app.post("/internal/health-report")
+async def receive_health_report(request: HealthReportRequest, req: Request):
+    """
+    Internal webhook called by the agentsHQ Weekly Health Check remote agent.
+    Accepts the report, renders it as HTML, and emails it to all three addresses.
+    Protected by X-Internal-Token header — token set via HEALTH_REPORT_TOKEN env var.
+    """
+    expected_token = os.environ.get("HEALTH_REPORT_TOKEN", "")
+    provided_token = req.headers.get("X-Internal-Token", "")
+    if not expected_token or provided_token != expected_token:
+        raise HTTPException(status_code=401, detail="Unauthorised")
+
+    try:
+        from notifier import send_health_check_report
+        email_sent = send_health_check_report(request.status, request.report, request.date)
+        logger.info(f"Health check report received: status={request.status}, date={request.date}, email_sent={email_sent}")
+        return {"ok": True, "email_sent": email_sent}
+    except Exception as e:
+        logger.error(f"Health report delivery failed: {e}")
+        return {"ok": True, "email_sent": False}
+
+
 @app.post("/run", response_model=AsyncTaskResponse, status_code=202)
 async def run_task(request: TaskRequest, background_tasks: BackgroundTasks):
     """
