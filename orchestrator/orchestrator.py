@@ -23,25 +23,24 @@ See CLAUDE.md for development guidelines.
 """
 
 import os
+import asyncio
 import threading
 import uuid
 import logging
 import time
-import os
 from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import Optional
+
+import httpx
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 # OpenSpace Evolution Hook
 try:
     from skills.openspace_skill.openspace_tool import openspace_tool
 except ImportError:
     openspace_tool = None  # type: ignore[assignment]
-import asyncio
-import httpx
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import Optional
 
 # Catalyst Daily Ignition Scheduler
 try:
@@ -731,6 +730,7 @@ def _run_background_job(
     ping_thread = threading.Thread(target=_ping_loop, daemon=True)
     ping_thread.start()
 
+    result = {}  # ensure result is always defined before try/finally
     try:
         # ── Run the crew ─────────────────────────────────────
         result = run_orchestrator(
@@ -798,10 +798,10 @@ def _trigger_evolution(task_instruction: str, result_output: str) -> None:
         asyncio.set_event_loop(loop)
         
         # Only evolve if the task was significant (token efficiency)
-        if len(task_instruction) > 20 or len(result_output) > 100:
+        if openspace_tool is not None and (len(task_instruction) > 20 or len(result_output) > 100):
             logger.info("Triggering OpenSpace evolution...")
             loop.run_until_complete(openspace_tool.execute_async(
-                command="evolve", 
+                command="evolve",
                 task_instruction=f"Task: {task_instruction}\n\nResult:\n{result_output}"
             ))
             logger.info("OpenSpace evolution check complete.")
@@ -857,7 +857,7 @@ async def process_telegram_update(update: dict):
         task_type = classification.get("task_type", "unknown")
 
     # 3. Execute
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     if task_type == "chat":
         # Chat runs in threadpool — non-blocking
         result = await loop.run_in_executor(None, lambda: run_chat(message=text, session_key=chat_id))
@@ -1011,7 +1011,7 @@ async def run_task(request: TaskRequest, background_tasks: BackgroundTasks):
     # For chat, run in executor (non-blocking) and deliver directly
     if task_type == "chat":
         import asyncio
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(None, lambda: run_chat(message=request.task, session_key=request.session_key))
         send_message(request.from_number, result["result"])
         return AsyncTaskResponse(job_id=job_id, status="completed", message="Chat response delivered.")

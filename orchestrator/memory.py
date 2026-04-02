@@ -108,7 +108,7 @@ def save_to_memory(
     try:
         import psycopg2
         conn = psycopg2.connect(
-            host=os.environ.get("POSTGRES_HOST", "agentshq-postgres-1"),
+            host=os.environ.get("POSTGRES_HOST", "orc-postgres"),
             database=os.environ.get("POSTGRES_DB", "postgres"),
             user=os.environ.get("POSTGRES_USER", "postgres"),
             password=os.environ.get("POSTGRES_PASSWORD", ""),
@@ -172,7 +172,7 @@ def get_conversation_history(session_id: str, limit: int = 10) -> list:
     try:
         import psycopg2
         conn = psycopg2.connect(
-            host=os.environ.get("POSTGRES_HOST", "agentshq-postgres-1"),
+            host=os.environ.get("POSTGRES_HOST", "orc-postgres"),
             database=os.environ.get("POSTGRES_DB", "postgres"),
             user=os.environ.get("POSTGRES_USER", "postgres"),
             password=os.environ.get("POSTGRES_PASSWORD", ""),
@@ -206,7 +206,7 @@ def save_conversation_turn(session_id: str, role: str, content: str) -> bool:
     try:
         import psycopg2
         conn = psycopg2.connect(
-            host=os.environ.get("POSTGRES_HOST", "agentshq-postgres-1"),
+            host=os.environ.get("POSTGRES_HOST", "orc-postgres"),
             database=os.environ.get("POSTGRES_DB", "postgres"),
             user=os.environ.get("POSTGRES_USER", "postgres"),
             password=os.environ.get("POSTGRES_PASSWORD", ""),
@@ -235,7 +235,7 @@ def _pg_conn():
     """Return a psycopg2 connection using env vars."""
     import psycopg2
     return psycopg2.connect(
-        host=os.environ.get("POSTGRES_HOST", "agentshq-postgres-1"),
+        host=os.environ.get("POSTGRES_HOST", "orc-postgres"),
         database=os.environ.get("POSTGRES_DB", "postgres"),
         user=os.environ.get("POSTGRES_USER", "postgres"),
         password=os.environ.get("POSTGRES_PASSWORD", ""),
