@@ -33,7 +33,7 @@ REPORT_EMAILS = [
 ]
 
 # Remoat Config (Local IDE Bridge)
-REMOAT_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+REMOAT_BOT_TOKEN = os.environ.get("REMOAT_TELEGRAM_BOT_TOKEN", "")
 REMOAT_CHAT_ID = os.environ.get("REMOAT_TELEGRAM_CHAT_ID", "")
 REMOAT_API_BASE = f"https://api.telegram.org/bot{REMOAT_BOT_TOKEN}" if REMOAT_BOT_TOKEN else ""
 
