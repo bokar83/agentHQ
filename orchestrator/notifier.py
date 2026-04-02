@@ -18,9 +18,9 @@ from email.mime.multipart import MIMEMultipart
 
 logger = logging.getLogger("agentsHQ.notifier")
 
-# Telegram config
-TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
-TELEGRAM_API_BASE = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
+# Telegram config (VPS Orchestrator bot)
+ORCHESTRATOR_BOT_TOKEN = os.environ.get("ORCHESTRATOR_TELEGRAM_BOT_TOKEN", os.environ.get("TELEGRAM_BOT_TOKEN", ""))
+TELEGRAM_API_BASE = f"https://api.telegram.org/bot{ORCHESTRATOR_BOT_TOKEN}"
 
 # SMTP config (Placeholder - user needs to set these in .env)
 SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
@@ -33,7 +33,7 @@ REPORT_EMAILS = [
 ]
 
 # Remoat Config (Local IDE Bridge)
-REMOAT_BOT_TOKEN = os.environ.get("REMOAT_TELEGRAM_BOT_TOKEN", "")
+REMOAT_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 REMOAT_CHAT_ID = os.environ.get("REMOAT_TELEGRAM_CHAT_ID", "")
 REMOAT_API_BASE = f"https://api.telegram.org/bot{REMOAT_BOT_TOKEN}" if REMOAT_BOT_TOKEN else ""
 
@@ -81,8 +81,8 @@ def send_message(chat_id: str, text: str) -> None:
     # Mirror all outgoing orchestrator messages to Remoat for remote tracking
     log_for_remoat(text)
     
-    if not TELEGRAM_BOT_TOKEN:
-        logger.warning("TELEGRAM_BOT_TOKEN not set — skipping send_message")
+    if not ORCHESTRATOR_BOT_TOKEN:
+        logger.warning("ORCHESTRATOR_TELEGRAM_BOT_TOKEN not set — skipping send_message")
         return
     if len(text) > 4096:
         text = text[:4090] + "\n[...]"
