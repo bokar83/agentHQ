@@ -36,6 +36,8 @@ try:
     from skills.openspace_skill.openspace_tool import openspace_tool
 except ImportError:
     openspace_tool = None  # type: ignore[assignment]
+import asyncio
+import httpx
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -80,6 +82,10 @@ async def startup_event():
     if start_scheduler:
         start_scheduler()
         logger.info("Catalyst Daily Ignition initiated.")
+    
+    # Start Telegram Polling in background
+    asyncio.create_task(telegram_polling_loop())
+    logger.info("Telegram Polling Loop scheduled.")
 
 # ── Request/Response models ────────────────────────────────────
 class TaskRequest(BaseModel):
@@ -810,34 +816,27 @@ def _trigger_evolution(task_instruction: str, result_output: str) -> None:
 # API ENDPOINTS
 # ══════════════════════════════════════════════════════════════
 
-@app.post("/telegram")
-async def telegram_webhook(request: Request, background_tasks: BackgroundTasks):
+async def process_telegram_update(update: dict):
     """
-    Direct Telegram webhook endpoint — bypasses n8n entirely.
-    Telegram POSTs updates here; we extract the message and call the same
-    pipeline as /run.
+    Unified processor for Telegram updates (webhook or polling).
     """
-    try:
-        body = await request.json()
-    except Exception:
-        return {"ok": True}
-
-    message = body.get("message") or body.get("edited_message")
+    message = update.get("message") or update.get("edited_message")
     if not message:
-        return {"ok": True}
+        return
 
     text = message.get("text", "").strip()
     chat_id = str(message.get("chat", {}).get("id", ""))
 
     if not text or not chat_id:
-        return {"ok": True}
+        return
 
-    # Reuse the exact same pipeline as /run
     job_id = str(uuid.uuid4())
     from notifier import send_ack, send_message
 
+    # 1. Send Ack
     send_ack(chat_id, "unknown")
 
+    # 2. Decide if Chat or Task
     _msg = text.lower()
     _is_obvious_chat = (
         len(_msg) < 60 and not any(w in _msg for w in [
@@ -857,21 +856,74 @@ async def telegram_webhook(request: Request, background_tasks: BackgroundTasks):
         classification = classify_task(text)
         task_type = classification.get("task_type", "unknown")
 
+    # 3. Execute
     if task_type == "chat":
-        import asyncio
+        # Chat runs inline (but in threadpool)
+        from concurrent.futures import ThreadPoolExecutor
+        executor = ThreadPoolExecutor(max_workers=1)
         loop = asyncio.get_event_loop()
         result = await loop.run_in_executor(None, lambda: run_chat(message=text, session_key=chat_id))
         send_message(chat_id, result["result"])
     else:
+        # Complex tasks run as background jobs
         crew_session_key = f"{chat_id}:{job_id[:8]}"
-        background_tasks.add_task(
-            _run_background_job,
+        await _run_background_job(
             task=text,
             from_number=chat_id,
             session_key=crew_session_key,
             job_id=job_id,
         )
 
+async def telegram_polling_loop():
+    """
+    The ultimate fallback: poll for updates instead of waiting for webhooks.
+    Bypasses port exposure, SSL, and DNS issues.
+    """
+    token = os.environ.get("ORCHESTRATOR_TELEGRAM_BOT_TOKEN")
+    if not token:
+        logger.error("TELEGRAM_POLLING: No token found. Polling disabled.")
+        return
+
+    logger.info("TELEGRAM_POLLING: Starting loop...")
+    url = f"https://api.telegram.org/bot{token}/getUpdates"
+    offset = 0
+
+    # Ensure webhook is cleared so polling works
+    try:
+        async with httpx.AsyncClient() as client:
+            await client.get(f"https://api.telegram.org/bot{token}/deleteWebhook")
+    except Exception:
+        pass
+
+    while True:
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                resp = await client.get(url, params={"offset": offset, "timeout": 20})
+                if resp.status_code == 200:
+                    data = resp.json()
+                    for update in data.get("result", []):
+                        offset = update["update_id"] + 1
+                        # Process update without blocking the loop
+                        asyncio.create_task(process_telegram_update(update))
+                elif resp.status_code == 401:
+                    logger.error("TELEGRAM_POLLING: Invalid Token. Stopping.")
+                    break
+                else:
+                    await asyncio.sleep(5)
+        except Exception as e:
+            logger.error(f"TELEGRAM_POLLING: Error: {e}")
+            await asyncio.sleep(10)
+
+@app.post("/telegram")
+async def telegram_webhook(request: Request, background_tasks: BackgroundTasks):
+    """
+    Keep webhook endpoint as a backup, though polling is now primary.
+    """
+    try:
+        body = await request.json()
+        background_tasks.add_task(process_telegram_update, body)
+    except Exception:
+        pass
     return {"ok": True}
 
 
