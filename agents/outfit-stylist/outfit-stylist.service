@@ -1,0 +1,14 @@
+[Unit]
+Description=Outfit Stylist AI Fashion App
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/agentsHQ/agents/outfit-stylist
+EnvironmentFile=/root/agentsHQ/.env
+ExecStart=/usr/bin/python3 /root/agentsHQ/agents/outfit-stylist/app.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
