@@ -153,6 +153,7 @@ services:
       - SUPABASE_DB_URL=${SUPABASE_DB_URL}
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
+      - HEALTH_REPORT_TOKEN=${HEALTH_REPORT_TOKEN}
     volumes:
       - ./agent_outputs:/app/outputs
       - ./logs:/app/logs
