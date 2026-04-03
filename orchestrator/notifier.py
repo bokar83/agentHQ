@@ -31,7 +31,8 @@ SMTP_USER = os.environ.get("SMTP_USER", "")
 SMTP_PASS = os.environ.get("SMTP_PASS", "")
 REPORT_EMAILS = [
     os.environ.get("REPORT_EMAIL", "bokar83@gmail.com"),
-    "boubacarbusiness@gmail.com"
+    "boubacarbusiness@gmail.com",
+    "catalystworks.ai@gmail.com"
 ]
 
 # Remoat Config (Remote IDE Bridge)
