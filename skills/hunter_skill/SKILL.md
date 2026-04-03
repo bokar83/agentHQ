@@ -18,4 +18,4 @@
 ## Deployment Target
 
 - Runs daily on VPS at 06:00 AM MT.
-- Delivers reports to `bokar83@gmail.com` and `boubacarbusiness@gmail.com`.
+- Delivers reports to `bokar83@gmail.com`, `boubacarbusiness@gmail.com`, and `catalystworks.ai@gmail.com`.
