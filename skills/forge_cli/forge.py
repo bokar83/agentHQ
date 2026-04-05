@@ -12,9 +12,11 @@ Usage:
     forge content posted <page_id>
     forge kpi refresh
     forge status
-    forge p0 "Task name"
+    forge p0 "Task name"         -- P0 = single most important task of the day
     forge p0 "Task name" --date YYYY-MM-DD
+    forge p0 "Task name" --day-type B-Day
     forge p0 list
+    forge p0 complete
     forge streak
     forge checkin --nn 1,2,3
     forge phase get
@@ -90,21 +92,23 @@ def build_parser() -> argparse.ArgumentParser:
     # -- kpi --
     kpi_p = subparsers.add_parser("kpi", help="KPI operations")
     kpi_sub = kpi_p.add_subparsers(dest="kpi_command")
-    kpi_sub.add_parser("refresh", help="Refresh KPI callout blocks")
+    kpi_sub.add_parser("refresh", help="Refresh all Notion dashboard callout blocks")
 
     # -- status --
     subparsers.add_parser("status", help="Print system status summary")
 
     # -- p0 --
-    p0_p = subparsers.add_parser("p0", help="Set or view the P0 task for a day")
-    p0_p.add_argument("p0_arg", nargs="?", default=None, help="Task name or 'list'")
+    # P0 = the single most important task of the day. One task. Non-negotiable.
+    p0_p = subparsers.add_parser("p0", help="Set or view the P0 (single most important task of the day)")
+    p0_p.add_argument("p0_arg", nargs="?", default=None, help="Task name, 'list', or 'complete'")
     p0_p.add_argument("--date", dest="p0_date", default="", help="Date (YYYY-MM-DD), defaults to today")
+    p0_p.add_argument("--day-type", dest="day_type", default="A-Day", choices=["A-Day", "B-Day"], help="A-Day=revenue focus, B-Day=admin/recovery")
 
     # -- streak --
     subparsers.add_parser("streak", help="Show and update execution streak")
 
     # -- checkin --
-    checkin_p = subparsers.add_parser("checkin", help="Daily check-in with non-negotiables")
+    checkin_p = subparsers.add_parser("checkin", help="Daily check-in with non-negotiables (NNs)")
     checkin_p.add_argument("--nn", required=True, help="Comma-separated NN numbers, e.g. 1,2,3")
 
     # -- phase --
@@ -177,7 +181,7 @@ def run_command(args):
         _run_status(db)
 
     elif args.command == "p0":
-        _run_p0(db, args)
+        _run_p0(db, args, sc=SystemConfig(client=db.client))
 
     elif args.command == "streak":
         _run_streak(db)
@@ -200,7 +204,7 @@ def _run_kpi_refresh(db: ForgeDB):
     for r in results:
         print(r)
 
-    # Extended: streak + motivation + week grid
+    # Extended: streak + motivation + phase + week grid
     sc = SystemConfig(client=db.client)
     cfg = sc.get()
     streak = cfg["streak"]
@@ -209,7 +213,8 @@ def _run_kpi_refresh(db: ForgeDB):
     client = db.client
 
     # Update streak callout
-    streak_text = f"Execution Streak: {streak} days | {phase_label}"
+    day_word = "day" if streak == 1 else "days"
+    streak_text = f"Execution Streak: {streak} {day_word} | {phase_label}"
     client.update_block(forge_cfg["streak_callout_id"], {
         "callout": {
             "rich_text": [{"type": "text", "text": {"content": streak_text}}],
@@ -240,6 +245,27 @@ def _run_kpi_refresh(db: ForgeDB):
             "color": "blue_background",
         }
     })
+
+    # Phase block
+    phase = cfg["phase"]
+    phase_start = cfg["phase_start"]
+    days_in_phase = (date.today() - date.fromisoformat(phase_start)).days
+    criteria = SystemConfig.UNLOCK_CRITERIA.get(phase, [])
+    unlock_parts = []
+    for label, key, _ in criteria:
+        mark = "x" if cfg.get(key, False) else " "
+        short = label.split(": ", 1)[1] if ": " in label else label
+        unlock_parts.append(f"[{mark}] {short}")
+    unlock_str = "  ".join(unlock_parts) if unlock_parts else "No criteria"
+    phase_text = f"{cfg['phase_label']} | Day {days_in_phase} | Unlock: {unlock_str}"
+    if "phase_callout_id" in forge_cfg and forge_cfg["phase_callout_id"]:
+        client.update_block(forge_cfg["phase_callout_id"], {
+            "callout": {
+                "rich_text": [{"type": "text", "text": {"content": phase_text}}],
+                "icon": {"type": "emoji", "emoji": "\u2699\ufe0f"},
+                "color": "gray_background",
+            }
+        })
 
     # This Week grid rebuild
     DAY_NAMES = ["monday", "tuesday", "wednesday", "thursday", "friday"]
@@ -280,12 +306,13 @@ def _run_kpi_refresh(db: ForgeDB):
             task_name = "".join([t["plain_text"] for t in (props.get("Task", {}).get("title") or [])])
             task_name = task_name[:40] if len(task_name) > 40 else task_name
             status = (props.get("Status", {}).get("select") or {}).get("name", "Not Started")
+            day_type_val = (props.get("Day Type", {}).get("select") or {}).get("name", "A-Day")
             nns = props.get("Non-Negotiables", {}).get("multi_select") or []
             nn_done = len(nns)
-            text = f"{day_label} / A-Day\n{task_name}\n{status}\nNN: {nn_done}/{nn_total}"
+            text = f"{day_label} / {day_type_val}\n{task_name}\n{status}\nNN: {nn_done}/{nn_total}"
             color = STATUS_COLOR.get(status, "default")
         else:
-            text = f"{day_label} / A-Day\nNo P0 set\n--\nNN: 0/{nn_total}"
+            text = f"{day_label}\nNo P0 set\n--\nNN: 0/{nn_total}"
             color = "gray_background"
         client.update_block(block_id, {
             "callout": {
@@ -297,7 +324,7 @@ def _run_kpi_refresh(db: ForgeDB):
 
     # Log
     db.log_action("KPI refresh complete", agent="ForgeOS", status="Success")
-    print("Streak + motivation + week grid updated.")
+    print("Streak + motivation + phase + week grid updated.")
 
 
 # ---- Status ----
@@ -318,19 +345,28 @@ def _run_status(db: ForgeDB):
 
 
 # ---- P0 ----
+# P0 = the single most important task of the day. One task. Non-negotiable.
+# If nothing else gets done today, the P0 gets done.
 
-def _run_p0(db: ForgeDB, args):
+def _run_p0(db: ForgeDB, args, sc: SystemConfig = None):
     if args.p0_arg == "list":
         _p0_list(db)
         return
 
+    if args.p0_arg == "complete":
+        _p0_complete(db, sc)
+        return
+
     if not args.p0_arg:
-        print("Usage: forge p0 \"Task name\" [--date YYYY-MM-DD]")
+        print("P0 = the single most important task of the day (one task, non-negotiable).")
+        print("Usage: forge p0 \"Task name\" [--date YYYY-MM-DD] [--day-type A-Day|B-Day]")
         print("       forge p0 list")
+        print("       forge p0 complete")
         return
 
     task_name = args.p0_arg
     target_date = args.p0_date if args.p0_date else date.today().isoformat()
+    day_type = args.day_type
 
     existing = db.get_p0_for_date(target_date)
     if existing:
@@ -342,10 +378,46 @@ def _run_p0(db: ForgeDB, args):
             return
         db.uncheck_p0(existing["id"])
 
-    sc = SystemConfig(client=db.client)
+    if sc is None:
+        sc = SystemConfig(client=db.client)
     phase = sc.get()["phase"]
-    db.create_p0(task_name, target_date, phase=phase)
-    print(f"P0 set for {target_date}: {task_name}")
+    db.create_p0(task_name, target_date, phase=phase, day_type=day_type)
+    print(f"P0 set for {target_date}: {task_name} [{day_type}]")
+
+
+def _p0_complete(db: ForgeDB, sc: SystemConfig = None):
+    """Mark today's P0 as Done and update streak."""
+    today_str = date.today().isoformat()
+    today_p0 = db.get_p0_for_date(today_str)
+    if not today_p0:
+        print("No P0 found for today. Run: forge p0 \"Task name\"")
+        return
+
+    title = "".join([t["plain_text"] for t in (today_p0["properties"].get("Task", {}).get("title") or [])])
+    status = (today_p0["properties"].get("Status", {}).get("select") or {}).get("name", "")
+    if status == "Done":
+        print(f"P0 already Done: {title}")
+        return
+
+    db.mark_task_done(today_p0["id"])
+
+    if sc is None:
+        sc = SystemConfig(client=db.client)
+    cfg = sc.get()
+    count, qualifying_ids = db.calculate_streak()
+    for pid in qualifying_ids:
+        db.set_streak_anchor(pid, True)
+    new_longest = max(count, cfg["longest_streak"])
+    streak_updates = {"streak": count, "longest_streak": new_longest}
+    # Auto-trigger 30-day streak unlock
+    if count >= 30 and not cfg["p0_1_streak"]:
+        streak_updates["p0_1_streak"] = True
+        print("UNLOCK: 30-day streak criteria met.")
+    sc.update(**streak_updates)
+
+    day_word = "day" if count == 1 else "days"
+    print(f"P0 Done: {title}")
+    print(f"Streak: {count} {day_word}. Run: forge kpi refresh")
 
 
 def _p0_list(db: ForgeDB):
@@ -397,15 +469,15 @@ def _run_streak(db: ForgeDB):
     updates = {"streak": count, "longest_streak": new_longest}
     if count == 0:
         updates["streak_start"] = date.today().isoformat()
-    # Do not reset streak_start when count > 0; it was set correctly when the streak began
     sc.update(**updates)
 
-    print(f"Current streak: {count} days")
+    day_word = "day" if count == 1 else "days"
+    print(f"Current streak: {count} {day_word}")
     print(f"Longest streak: {new_longest} days")
     if count > 0:
         print("Keep it going: complete today's P0 and run forge checkin")
     else:
-        print("Streak is at zero. Set today's P0 with: forge p0 [task]")
+        print("Streak is at zero. Set today's P0 with: forge p0 \"Task name\"")
         print("Complete it, then run: forge checkin --nn 1,2,3")
 
 
@@ -441,13 +513,28 @@ def _run_checkin(db: ForgeDB, args):
         "Non-Negotiables": {"multi_select": [{"name": label} for label in selected_labels]},
     })
 
+    nn_total = NN_COUNT_BY_PHASE.get(phase, 5)
+    all_nns_done = len(selected_labels) == nn_total
+
+    # Auto-mark P0 Done when all NNs are complete
+    p0_marked_done = False
+    current_status = (today_p0["properties"].get("Status", {}).get("select") or {}).get("name", "")
+    if all_nns_done and current_status != "Done":
+        db.mark_task_done(today_p0["id"])
+        p0_marked_done = True
+
     # Run streak calculation and update SystemConfig
     count, qualifying_ids = db.calculate_streak()
     for pid in qualifying_ids:
         db.set_streak_anchor(pid, True)
     prev_longest = cfg["longest_streak"]
     new_longest = max(count, prev_longest)
-    sc.update(streak=count, longest_streak=new_longest)
+    streak_updates = {"streak": count, "longest_streak": new_longest}
+    # Auto-trigger 30-day streak unlock
+    if count >= 30 and not cfg.get("p0_1_streak", False):
+        streak_updates["p0_1_streak"] = True
+        print("UNLOCK: 30-day streak criteria met.")
+    sc.update(**streak_updates)
 
     # Check A-Day revenue warning
     day_type = (today_p0["properties"].get("Day Type", {}).get("select") or {}).get("name", "")
@@ -458,7 +545,7 @@ def _run_checkin(db: ForgeDB, args):
             for t in todays_tasks
         )
         if not has_revenue_action:
-            print("Warning: Today is an A-Day but no task has Revenue Action checked.")
+            print("Warning: Today is an A-Day but no revenue action task is checked.")
 
     # Tomorrow P0
     tomorrow_str = (date.today() + timedelta(days=1)).isoformat()
@@ -467,9 +554,14 @@ def _run_checkin(db: ForgeDB, args):
     if tomorrow_p0:
         tomorrow_name = "".join([t["plain_text"] for t in (tomorrow_p0["properties"].get("Task", {}).get("title") or [])])
 
-    nn_total = NN_COUNT_BY_PHASE.get(phase, 5)
-    print(f"Checked in. NNs complete: {len(selected_labels)}/{nn_total}. Streak: {count} days.")
+    day_word = "day" if count == 1 else "days"
+    print(f"Checked in. NNs complete: {len(selected_labels)}/{nn_total}. Streak: {count} {day_word}.")
+    if p0_marked_done:
+        print("P0 marked Done automatically.")
+    elif not all_nns_done:
+        print(f"P0 not yet Done -- complete remaining NNs, then run: forge p0 complete")
     print(f"Tomorrow's P0: {tomorrow_name}")
+    print("Run: forge kpi refresh to update your dashboard.")
 
 
 # ---- Phase ----
@@ -497,14 +589,12 @@ def _phase_get(db: ForgeDB):
     print(f"Active since: {phase_start} ({days_in_phase} days)")
     print(f"Current streak: {cfg['streak']} days")
 
-    # Next phase
     next_phase = phase + 1
     if next_phase in SystemConfig.PHASE_LABELS:
         print(f"Next phase: {SystemConfig.PHASE_LABELS[next_phase]}")
     else:
         print("Next phase: None (max phase reached)")
 
-    # Unlock criteria
     criteria = SystemConfig.UNLOCK_CRITERIA.get(phase, [])
     if criteria:
         print("Unlock criteria:")
@@ -529,7 +619,6 @@ def _phase_set(db: ForgeDB, target_phase: int):
         print(f"Cannot jump from Phase {current} to Phase {target_phase}. Next valid phase is {current + 1}.")
         return
 
-    # Check unlock criteria
     criteria = SystemConfig.UNLOCK_CRITERIA.get(current, [])
     all_met = all(cfg.get(key, False) for _, key, _ in criteria)
 
@@ -543,7 +632,7 @@ def _phase_set(db: ForgeDB, target_phase: int):
     label = SystemConfig.PHASE_LABELS[target_phase]
     sc.update(phase=target_phase, phase_label=label, phase_start=date.today().isoformat())
     print(f"Phase {target_phase} activated: {label}")
-    print("The dashboard has been updated.")
+    print("Run: forge kpi refresh to update your dashboard.")
 
 
 def _phase_check(db: ForgeDB):
@@ -581,10 +670,8 @@ def _run_weekly(db: ForgeDB):
     monday = today - timedelta(days=today.weekday())
     friday = monday + timedelta(days=4)
 
-    # Get week tasks
     week_tasks = db.get_week_tasks()
 
-    # P0 completion (Mon-Fri)
     p0_done = 0
     p0_total = 0
     revenue_actions = 0
@@ -604,7 +691,6 @@ def _run_weekly(db: ForgeDB):
         if outcome and any(o.get("plain_text", "").strip() for o in outcome):
             outcomes_filled += 1
 
-    # Content stats
     posted_pages = db.client.query_database(
         config.CONTENT_DB,
         filter_obj={
@@ -622,20 +708,18 @@ def _run_weekly(db: ForgeDB):
     ) if config.CONTENT_DB else []
     queued = len(queued_pages)
 
-    # System config
     sc = SystemConfig(client=db.client)
     cfg = sc.get()
     days_in_phase = (today - date.fromisoformat(cfg["phase_start"])).days
 
     print(f"\n=== Weekly Review: Week of {monday.isoformat()} ===")
-    print(f"P0 completion: {p0_done}/{p0_total if p0_total else 5} days")
+    print(f"P0 (single most important task) completion: {p0_done}/{p0_total if p0_total else 5} days")
     print(f"Current streak: {cfg['streak']} days")
     print(f"Revenue actions this week: {revenue_actions}")
     print(f"Content posted: {posted} | Queued: {queued}")
     print(f"Phase: {cfg['phase_label']} | Days in phase: {days_in_phase}")
     print("===")
 
-    # Create weekly review page in Notion
     forge_cfg = load_forge_config()
     template_id = forge_cfg.get("weekly_review_template_id", "")
 
@@ -648,7 +732,6 @@ def _run_weekly(db: ForgeDB):
         f"Phase: {cfg['phase_label']} | Days in phase: {days_in_phase}"
     )
 
-    # Create as child of the template's parent (The Forge 2.0 page)
     try:
         template_page = db.client.get_page(template_id)
         parent_id = template_page.get("parent", {}).get("page_id", "")
@@ -662,62 +745,14 @@ def _run_weekly(db: ForgeDB):
                     "title": [{"text": {"content": review_title}}],
                 },
                 "children": [
-                    {
-                        "object": "block",
-                        "type": "heading_2",
-                        "heading_2": {
-                            "rich_text": [{"type": "text", "text": {"content": "Stats"}}],
-                        },
-                    },
-                    {
-                        "object": "block",
-                        "type": "paragraph",
-                        "paragraph": {
-                            "rich_text": [{"type": "text", "text": {"content": stats_text}}],
-                        },
-                    },
-                    {
-                        "object": "block",
-                        "type": "heading_2",
-                        "heading_2": {
-                            "rich_text": [{"type": "text", "text": {"content": "Wins"}}],
-                        },
-                    },
-                    {
-                        "object": "block",
-                        "type": "paragraph",
-                        "paragraph": {
-                            "rich_text": [{"type": "text", "text": {"content": ""}}],
-                        },
-                    },
-                    {
-                        "object": "block",
-                        "type": "heading_2",
-                        "heading_2": {
-                            "rich_text": [{"type": "text", "text": {"content": "Lessons"}}],
-                        },
-                    },
-                    {
-                        "object": "block",
-                        "type": "paragraph",
-                        "paragraph": {
-                            "rich_text": [{"type": "text", "text": {"content": ""}}],
-                        },
-                    },
-                    {
-                        "object": "block",
-                        "type": "heading_2",
-                        "heading_2": {
-                            "rich_text": [{"type": "text", "text": {"content": "Next Week Focus"}}],
-                        },
-                    },
-                    {
-                        "object": "block",
-                        "type": "paragraph",
-                        "paragraph": {
-                            "rich_text": [{"type": "text", "text": {"content": ""}}],
-                        },
-                    },
+                    {"object": "block", "type": "heading_2", "heading_2": {"rich_text": [{"type": "text", "text": {"content": "Stats"}}]}},
+                    {"object": "block", "type": "paragraph", "paragraph": {"rich_text": [{"type": "text", "text": {"content": stats_text}}]}},
+                    {"object": "block", "type": "heading_2", "heading_2": {"rich_text": [{"type": "text", "text": {"content": "Wins"}}]}},
+                    {"object": "block", "type": "paragraph", "paragraph": {"rich_text": [{"type": "text", "text": {"content": ""}}]}},
+                    {"object": "block", "type": "heading_2", "heading_2": {"rich_text": [{"type": "text", "text": {"content": "Lessons"}}]}},
+                    {"object": "block", "type": "paragraph", "paragraph": {"rich_text": [{"type": "text", "text": {"content": ""}}]}},
+                    {"object": "block", "type": "heading_2", "heading_2": {"rich_text": [{"type": "text", "text": {"content": "Next Week Focus"}}]}},
+                    {"object": "block", "type": "paragraph", "paragraph": {"rich_text": [{"type": "text", "text": {"content": ""}}]}},
                 ],
             })
             page_url = result.get("url", result.get("id", ""))
