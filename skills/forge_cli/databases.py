@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from typing import List, Optional
 from skills.forge_cli.notion_client import NotionClient
 from skills.forge_cli import config
@@ -95,3 +95,114 @@ class ForgeDB:
         if drive_link:
             props["Drive Link"] = {"url": drive_link}
         return self.client.update_page(page_id, properties=props)
+
+    # ---- P0 / Streak / Week methods ----
+
+    def get_p0_for_date(self, date_str: str) -> Optional[dict]:
+        """Return the P0=True task for a given date, or None."""
+        pages = self.client.query_database(
+            config.TASKS_DB,
+            filter_obj={
+                "and": [
+                    {"property": "P0", "checkbox": {"equals": True}},
+                    {"property": "Due Date", "date": {"equals": date_str}},
+                ]
+            },
+        )
+        return pages[0] if pages else None
+
+    def create_p0(self, task_name: str, date_str: str, phase: int = 0) -> dict:
+        """Create a P0 task for the given date."""
+        props = {
+            "Task": {"title": [{"text": {"content": task_name}}]},
+            "P0": {"checkbox": True},
+            "Status": {"select": {"name": "Not Started"}},
+            "Category": {"select": {"name": "Revenue"}},
+            "Day Type": {"select": {"name": "A-Day"}},
+            "Phase": {"number": phase},
+            "Due Date": {"date": {"start": date_str}},
+        }
+        return self.client.create_page(database_id=config.TASKS_DB, properties=props)
+
+    def uncheck_p0(self, page_id: str) -> dict:
+        """Set P0=False on a task."""
+        return self.client.update_page(page_id, properties={"P0": {"checkbox": False}})
+
+    def set_streak_anchor(self, page_id: str, value: bool = True) -> dict:
+        """Set Streak Anchor checkbox on a task."""
+        return self.client.update_page(page_id, properties={"Streak Anchor": {"checkbox": value}})
+
+    def get_todays_tasks(self) -> list:
+        """Return all tasks for today."""
+        today = date.today().isoformat()
+        return self.client.query_database(
+            config.TASKS_DB,
+            filter_obj={"property": "Due Date", "date": {"equals": today}},
+        )
+
+    def get_week_tasks(self) -> list:
+        """Return all tasks for current Mon-Sun week."""
+        today = date.today()
+        monday = today - timedelta(days=today.weekday())
+        sunday = monday + timedelta(days=6)
+        return self.client.query_database(
+            config.TASKS_DB,
+            filter_obj={
+                "and": [
+                    {"property": "Due Date", "date": {"on_or_after": monday.isoformat()}},
+                    {"property": "Due Date", "date": {"on_or_before": sunday.isoformat()}},
+                ]
+            },
+            sorts=[{"property": "Due Date", "direction": "ascending"}],
+        )
+
+    def calculate_streak(self) -> tuple:
+        """
+        Calculate current streak from P0 records.
+        Returns (streak_count, list_of_qualifying_page_ids).
+        Counts consecutive days going back from yesterday where P0=Done.
+        Today counts only if Status=Done.
+        """
+        pages = self.client.query_database(
+            config.TASKS_DB,
+            filter_obj={"property": "P0", "checkbox": {"equals": True}},
+            sorts=[{"property": "Due Date", "direction": "descending"}],
+        )
+        if not pages:
+            return 0, []
+
+        # Build a dict of date -> (status, page_id)
+        by_date = {}
+        for p in pages:
+            due = (p["properties"].get("Due Date", {}).get("date") or {}).get("start")
+            status = (p["properties"].get("Status", {}).get("select") or {}).get("name", "")
+            if due:
+                by_date[due] = (status, p["id"])
+
+        today = date.today()
+        streak = 0
+        qualifying = []
+
+        # Check today first (only counts if Done)
+        today_str = today.isoformat()
+        if today_str in by_date and by_date[today_str][0] == "Done":
+            streak += 1
+            qualifying.append(by_date[today_str][1])
+            start_check = today - timedelta(days=1)
+        else:
+            start_check = today - timedelta(days=1)
+
+        # Walk backward from yesterday
+        check_date = start_check
+        while True:
+            check_str = check_date.isoformat()
+            if check_str not in by_date:
+                break
+            status, pid = by_date[check_str]
+            if status != "Done":
+                break
+            streak += 1
+            qualifying.append(pid)
+            check_date -= timedelta(days=1)
+
+        return streak, qualifying
