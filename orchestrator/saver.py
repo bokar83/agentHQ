@@ -30,6 +30,26 @@ try:
 except ImportError:
     MediaInMemoryUpload = None  # type: ignore[assignment,misc]
 
+DRIVE_FOLDER_MAP = {
+    "research_report": "deliverables/research",
+    "consulting_deliverable": "deliverables/consulting",
+    "website_build": "deliverables/websites",
+    "3d_website_build": "deliverables/websites",
+    "social_content": "deliverables/social",
+    "code_task": "deliverables/code",
+    "hunter_task": "leads",
+    "general_writing": "deliverables",
+    "voice_polishing": "deliverables",
+    "prompt_engineering": "deliverables",
+    "news_brief": "deliverables/research",
+}
+
+
+def get_drive_subfolder(task_type: str) -> str:
+    """Return the Drive subfolder path for a given task type."""
+    return DRIVE_FOLDER_MAP.get(task_type, "deliverables")
+
+
 GITHUB_TOKEN      = os.environ.get("GITHUB_TOKEN", "")
 GITHUB_USERNAME   = os.environ.get("GITHUB_USERNAME", "bokar83")
 GITHUB_REPO       = os.environ.get("GITHUB_REPO", "agentHQ")
@@ -91,37 +111,46 @@ def save_to_github(title: str, task_type: str, content: str) -> str:
 
 
 def save_to_drive(title: str, task_type: str, content: str) -> str:
-    """
-    Upload a markdown file to Google Drive outputs folder.
-    Returns the webViewLink, or empty string on failure.
-    """
+    """Upload a markdown file to Google Drive in the correct subfolder."""
     if not DRIVE_FOLDER_ID or not OAUTH_CREDS_PATH:
-        logger.warning("Drive config incomplete — skipping Drive save")
+        logger.warning("Drive config incomplete -- skipping Drive save")
         return ""
     try:
-        service  = _get_drive_service()
-        slug     = _slugify(title)
-        ts       = int(time.time())
+        service = _get_drive_service()
+        slug = _slugify(title)
+        ts = int(time.time())
         filename = f"{slug}-{ts}.md"
-        metadata = {
-            "name":    filename,
-            "parents": [DRIVE_FOLDER_ID],
-        }
+
+        # Find or create subfolder
+        subfolder = get_drive_subfolder(task_type)
+        parent_id = DRIVE_FOLDER_ID
+        for folder_name in subfolder.split("/"):
+            parent_id = _find_or_create_folder(service, folder_name, parent_id)
+
+        metadata = {"name": filename, "parents": [parent_id]}
         if MediaInMemoryUpload is None:
-            raise ImportError("google-api-python-client not installed — cannot upload to Drive")
-        media = MediaInMemoryUpload(
-            content.encode("utf-8"),
-            mimetype="text/markdown",
-            resumable=False,
-        )
-        result = service.files().create(
-            body=metadata,
-            media_body=media,
-            fields="id,webViewLink",
-        ).execute()
+            raise ImportError("google-api-python-client not installed")
+        media = MediaInMemoryUpload(content.encode("utf-8"), mimetype="text/markdown", resumable=False)
+        result = service.files().create(body=metadata, media_body=media, fields="id,webViewLink").execute()
         url = result.get("webViewLink", "")
         logger.info(f"Drive save: {url}")
         return url
     except Exception as e:
         logger.error(f"Drive save failed: {e}")
         return ""
+
+
+def _find_or_create_folder(service, folder_name: str, parent_id: str) -> str:
+    """Find a subfolder by name under parent, or create it."""
+    query = f"'{parent_id}' in parents and name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and trashed=false"
+    results = service.files().list(q=query, fields="files(id)").execute()
+    files = results.get("files", [])
+    if files:
+        return files[0]["id"]
+    metadata = {
+        "name": folder_name,
+        "mimeType": "application/vnd.google-apps.folder",
+        "parents": [parent_id],
+    }
+    folder = service.files().create(body=metadata, fields="id").execute()
+    return folder["id"]

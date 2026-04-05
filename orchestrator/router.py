@@ -61,7 +61,7 @@ TASK_TYPES = {
     "notion_overhaul": {
         "description": "Perform a premium visual and structural redesign of a Notion page or workspace hub",
         "keywords": ["notion", "redesign", "workspace", "dashboard", "page layout", "notion hub", "organize notion"],
-        "crew": "notion_overhaul_crew",
+        "crew": "notion_overhaul",
     },
     "code_task": {
         "description": "Write, debug, refactor, or explain code in any language",
