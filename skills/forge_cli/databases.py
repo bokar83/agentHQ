@@ -1,7 +1,8 @@
-from datetime import datetime, date, timedelta
+from datetime import date, timedelta
 from typing import List, Optional
 from skills.forge_cli.notion_client import NotionClient
 from skills.forge_cli import config
+from skills.forge_cli.system_config import SystemConfig
 
 
 class ForgeDB:
@@ -69,7 +70,14 @@ class ForgeDB:
             props["Buyer"] = {"rich_text": [{"text": {"content": buyer}}]}
         if notes:
             props["Notes"] = {"rich_text": [{"text": {"content": notes}}]}
-        return self.client.create_page(database_id=config.REVENUE_DB, properties=props)
+        result = self.client.create_page(database_id=config.REVENUE_DB, properties=props)
+        # Auto-trigger first-revenue unlock criteria
+        sc = SystemConfig(client=self.client)
+        cfg = sc.get()
+        if not cfg["p0_1_revenue"]:
+            sc.update(p0_1_revenue=True)
+            print("UNLOCK: First Revenue criteria met.")
+        return result
 
     def add_content_idea(self, title: str, platforms: List[str] = None, topics: List[str] = None, content_type: str = "Post", content: str = "", agent: str = "Boubacar") -> dict:
         props = {
@@ -111,14 +119,14 @@ class ForgeDB:
         )
         return pages[0] if pages else None
 
-    def create_p0(self, task_name: str, date_str: str, phase: int = 0) -> dict:
-        """Create a P0 task for the given date."""
+    def create_p0(self, task_name: str, date_str: str, phase: int = 0, day_type: str = "A-Day") -> dict:
+        """Create a P0 (single most important task of the day) for the given date."""
         props = {
             "Task": {"title": [{"text": {"content": task_name}}]},
             "P0": {"checkbox": True},
             "Status": {"select": {"name": "Not Started"}},
             "Category": {"select": {"name": "Revenue"}},
-            "Day Type": {"select": {"name": "A-Day"}},
+            "Day Type": {"select": {"name": day_type}},
             "Phase": {"number": phase},
             "Due Date": {"date": {"start": date_str}},
         }
@@ -171,7 +179,6 @@ class ForgeDB:
         if not pages:
             return 0, []
 
-        # Build a dict of date -> (status, page_id)
         by_date = {}
         for p in pages:
             due = (p["properties"].get("Due Date", {}).get("date") or {}).get("start")
@@ -185,7 +192,6 @@ class ForgeDB:
         streak = 0
         qualifying = []
 
-        # Check today first (only counts if Done)
         today_str = today.isoformat()
         if today_str in by_date and by_date[today_str][0] == "Done":
             streak += 1
@@ -194,7 +200,6 @@ class ForgeDB:
         else:
             start_check = today - timedelta(days=1)
 
-        # Walk backward from yesterday
         check_date = start_check
         while True:
             check_str = check_date.isoformat()
