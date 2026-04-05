@@ -177,7 +177,9 @@ class ForgeDB:
             due = (p["properties"].get("Due Date", {}).get("date") or {}).get("start")
             status = (p["properties"].get("Status", {}).get("select") or {}).get("name", "")
             if due:
-                by_date[due] = (status, p["id"])
+                existing_status, _ = by_date.get(due, ("", ""))
+                if existing_status != "Done":
+                    by_date[due] = (status, p["id"])
 
         today = date.today()
         streak = 0
