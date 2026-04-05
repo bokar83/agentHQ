@@ -34,6 +34,8 @@ Build a quick table:
 
 **If all three match and no dirty working trees → done. Report "All in sync at `<hash>`."**
 
+**Dirty working tree = modified tracked files or staged-but-uncommitted files. Untracked files (shown as `??`) are ignored.**
+
 ## Step 3 — Auto-resolve (no user input needed)
 
 These situations are safe to handle automatically:
@@ -44,14 +46,19 @@ These situations are safe to handle automatically:
 | VPS is behind GitHub, working tree clean | `ssh … git pull origin main` |
 | Local is ahead of GitHub, working tree clean | `git push origin main` |
 | VPS is ahead of GitHub, working tree clean — and VPS remote has auth | `ssh … git push origin main` |
+| Local has staged files not yet committed | Commit them with a descriptive message, then push |
+| Local has modified tracked files not yet staged | Stage and commit them, then push |
+| Submodule has staged/modified tracked files | Commit inside the submodule first, then update parent pointer, then push both |
 
 **VPS push requires a working token.** The token lives in the VPS remote URL. If push fails with auth error, skip to Step 4.
+
+**Goal: working tree must be zero (no M, no A, no staged changes) on both local and VPS after nsync completes.**
 
 ## Step 4 — Stop and ask when there's ambiguity
 
 Pause and present options when:
 
-- A location has **uncommitted modified files** (don't auto-commit without asking)
+- A location has **modified tracked files** whose content you're unsure should be committed (e.g. large generated files, secrets)
 - There are **merge conflicts**
 - The **VPS token is expired** (push auth failure)
 - Local and VPS have **diverged from each other** (not just from GitHub)
@@ -60,14 +67,20 @@ Present the situation clearly, show which files are affected, and offer 2-3 opti
 
 ## Step 5 — Final verification
 
-After any sync actions, re-run `git rev-parse HEAD` on all three and confirm they match. Report result.
+After any sync actions, re-run all three checks in parallel and confirm:
+1. All three locations are on the same commit hash
+2. Local `git status --short` shows only `??` untracked lines (no `M`, no `A`)
+3. VPS `git status --short` is clean
+
+Report the final table. If working trees are still dirty, go back to Step 3.
 
 ## Known facts about this repo
 
 - VPS path: `/root/agentsHQ`
 - VPS remote URL format: `https://<token>@github.com/bokar83/agentHQ.git`
 - Local uses GitHub CLI for auth (no token needed in URL)
-- Local may have untracked files that are not in git — these are ignored unless they conflict with a pull
+- Local may have untracked files (`??`) that are not in git — these are ignored and do NOT block sync
+- `output/` is a git submodule — if it shows as modified, check inside it with `git -C output status --short` and commit staged/tracked changes inside the submodule before updating the parent pointer
 
 ## Speed rules
 

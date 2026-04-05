@@ -83,3 +83,5 @@ docs/superpowers/plans/
 
 # Google service account key — never commit
 secrets/
+
+.vercel

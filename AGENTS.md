@@ -56,7 +56,7 @@ Telegram / HTTP / n8n
    Output saved → /outputs/
    Memory saved → Qdrant
    Archive saved → PostgreSQL
-   (Phase 5) → GitHub + Drive + Notion
+   (Phase 5) → GitHub + Drive + Notion + Vercel
 ```
 
 ---
@@ -101,7 +101,10 @@ The Router classifies every incoming request into one of these types. New types 
 | Task Type | Trigger Keywords | Primary Crew |
 | :--- | :--- | :--- |
 | `website_build` | website, landing page, web presence | planner, researcher, copywriter, web_builder, qa, boub_ai_voice |
-| `app_build` | app, tool, calculator, dashboard, form, tracker | planner, researcher, app_builder, qa, boub_ai_voice |
+| `app_build` | app, tool, calculator, dashboard, form, tracker | planner, researcher, app_builder, qa, boub_ai_voice, vercel |
+| `vercel_task` | vercel, deploy, build status, logs, projects | planner, code_agent, qa |
+| `github_task` | github, repo, repository, issue, pull request, pr | planner, code_agent, qa |
+| `notion_task` | notion, database, log, page, dashboard, wiki | planner, copywriter, qa |
 | `research_report` | research, analyze, find, summarize, compare | planner, researcher, copywriter, qa, boub_ai_voice |
 | `consulting_deliverable` | proposal, brief, diagnostic, framework, strategy | planner, researcher, copywriter, qa, boub_ai_voice |
 | `social_content` | post, tweet, LinkedIn, Instagram, caption, social | planner, copywriter, qa, boub_ai_voice |
