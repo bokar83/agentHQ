@@ -100,23 +100,120 @@ file_reader = FileReadTool()
 code_interpreter = CodeInterpreterTool()
 
 
-# ── Notion Styling Tools ─────────────────────────────────────
-def set_notion_style_tool(page_id: str, cover: str = None, icon: str = None):
+# ── Notion Styling & Branding Tools ──────────────────────────
+class SetNotionStyleTool(BaseTool):
     """Sets the cover and icon for a Notion page."""
-    stylist = NotionStylist()
-    return stylist.set_premium_style(page_id, cover, icon)
+    name: str = "set_notion_style"
+    description: str = (
+        "Set the premium cover image and icon for a Notion page. "
+        "Inputs: 'page_id' (string), 'cover' (string URL), 'icon' (emoji or URL)."
+    )
+    def _run(self, page_id: str, cover: str = None, icon: str = None) -> str:
+        stylist = NotionStylist()
+        return stylist.set_premium_style(page_id, cover, icon)
 
-def add_notion_nav_tool(page_id: str, items_json: str):
-    """Adds a multi-column navigation grid to a Notion page. items_json is a list of dicts."""
-    import json
-    stylist = NotionStylist()
-    items = json.loads(items_json)
-    return stylist.create_navigation_grid(page_id, items)
+class AddNotionNavTool(BaseTool):
+    """Adds a multi-column navigation grid to a Notion page."""
+    name: str = "add_notion_nav_grid"
+    description: str = (
+        "Add a multi-column navigation grid to a Notion page. "
+        "Inputs: 'page_id' (string), 'items_json' (JSON list of dicts with 'title' and 'url')."
+    )
+    def _run(self, page_id: str, items_json: str) -> str:
+        import json
+        stylist = NotionStylist()
+        try:
+            items = json.loads(items_json) if isinstance(items_json, str) else items_json
+            return stylist.create_navigation_grid(page_id, items)
+        except Exception as e:
+            return f"Error: {e}"
 
-NOTION_STYLING_TOOLS = [
-    set_notion_style_tool,
-    add_notion_nav_tool
-]
+set_notion_style_tool = SetNotionStyleTool()
+add_notion_nav_tool = AddNotionNavTool()
+
+NOTION_STYLING_TOOLS = [set_notion_style_tool, add_notion_nav_tool]
+
+
+# ── Forge CLI Tools ────────────────────────────────────────
+class ForgeLogTool(BaseTool):
+    """Logs an agent action to The Forge 2.0 Activity Log."""
+    name: str = "forge_log"
+    description: str = (
+        "Log an agent action to The Forge 2.0 dashboard. "
+        "Input: JSON with 'message', optional 'agent' and 'status'."
+    )
+    def _run(self, input_data: str) -> str:
+        try:
+            from skills.forge_cli.databases import ForgeDB
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            db = ForgeDB()
+            result = db.log_action(
+                data.get("message", "Agent action"),
+                agent=data.get("agent", "System"),
+                status=data.get("status", "Success"),
+            )
+            return f"Logged to Forge: {result.get('url', result.get('id'))}"
+        except Exception as e:
+            return f"Forge log failed: {e}"
+
+
+class ForgePipelineTool(BaseTool):
+    """Adds a lead to The Forge 2.0 Consulting Pipeline."""
+    name: str = "forge_pipeline_add"
+    description: str = (
+        "Add a lead to the consulting pipeline. "
+        "Input: JSON with 'company', optional 'contact', 'email', 'value', 'status', 'source'."
+    )
+    def _run(self, input_data: str) -> str:
+        try:
+            from skills.forge_cli.databases import ForgeDB
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            db = ForgeDB()
+            result = db.add_pipeline_lead(
+                data["company"],
+                contact=data.get("contact", ""),
+                email=data.get("email", ""),
+                value=data.get("value", 0),
+                status=data.get("status", "Discovery"),
+                source=data.get("source", "Hunter Agent"),
+            )
+            return f"Lead added: {result.get('url', result.get('id'))}"
+        except Exception as e:
+            return f"Pipeline add failed: {e}"
+
+
+class ForgeContentTool(BaseTool):
+    """Adds a content draft to The Forge 2.0 Content Board."""
+    name: str = "forge_content_draft"
+    description: str = (
+        "Add a content draft to the Content Board. "
+        "Input: JSON with 'title', 'content', optional 'platforms' (list), 'topics' (list), 'type'."
+    )
+    def _run(self, input_data: str) -> str:
+        try:
+            from skills.forge_cli.databases import ForgeDB
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            db = ForgeDB()
+            result = db.add_content_idea(
+                data["title"],
+                platforms=data.get("platforms", ["LinkedIn"]),
+                topics=data.get("topics", []),
+                content_type=data.get("type", "Post"),
+                content=data.get("content", ""),
+                agent=data.get("agent", "Social Crew"),
+            )
+            if data.get("content"):
+                db.update_content_status(result["id"], status="Draft")
+            return f"Content added: {result.get('url', result.get('id'))}"
+        except Exception as e:
+            return f"Content add failed: {e}"
+
+
+forge_log_tool = ForgeLogTool()
+forge_pipeline_tool = ForgePipelineTool()
+forge_content_tool = ForgeContentTool()
+
+FORGE_TOOLS = [forge_log_tool, forge_pipeline_tool, forge_content_tool]
 
 
 # ══════════════════════════════════════════════════════════════
@@ -485,13 +582,14 @@ def get_mcp_tools(server_url: str, headers: Optional[dict] = None) -> list:
 # Load Vercel tools via official MCP server
 VERCEL_TOKEN = os.environ.get("VERCEL_TOKEN")
 VERCEL_TOOLS = []
-if VERCEL_TOKEN:
-    # Standard Vercel MCP server at https://mcp.vercel.com
-    # Requires Authorization: Bearer <token>
-    VERCEL_TOOLS = get_mcp_tools(
-        "https://mcp.vercel.com/sse", 
-        headers={"Authorization": f"Bearer {VERCEL_TOKEN}"}
-    )
+# Temporarily disabled to avoid 'mcp' package prompts during Notion overhaul
+# if VERCEL_TOKEN:
+#     # Standard Vercel MCP server at https://mcp.vercel.com
+#     # Requires Authorization: Bearer <token>
+#     VERCEL_TOOLS = get_mcp_tools(
+#         "https://mcp.vercel.com/sse", 
+#         headers={"Authorization": f"Bearer {VERCEL_TOKEN}"}
+#     )
 
 
 # ── GitHub Tools ─────────────────────────────────────────────
@@ -577,5 +675,5 @@ RESEARCH_TOOLS = [search_tool, file_reader, QueryMemoryTool()]
 SCRAPING_TOOLS = [FirecrawlScrapeTool(), FirecrawlCrawlTool(), FirecrawlSearchTool()]
 WRITING_TOOLS = [file_writer, SaveOutputTool(), voice_polisher_tool]
 CODE_TOOLS = [code_interpreter, file_writer, file_reader, SaveOutputTool(), CLIHubSearchTool()]
-ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool(), GitHubRepoTool(), GitHubIssueTool(), GitHubFileTool(), NotionSearchTool(), NotionPageTool()] + VERCEL_TOOLS
-HUNTER_TOOLS = [prospecting_tool, crm_add_tool, crm_log_tool, crm_reveal_tool, scoreboard_tool, QueryMemoryTool(), NotionPageTool()]
+ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool(), GitHubRepoTool(), GitHubIssueTool(), GitHubFileTool(), NotionSearchTool(), NotionPageTool()] + VERCEL_TOOLS + NOTION_STYLING_TOOLS + FORGE_TOOLS
+HUNTER_TOOLS = [prospecting_tool, crm_add_tool, crm_log_tool, crm_reveal_tool, scoreboard_tool, QueryMemoryTool(), NotionPageTool(), forge_pipeline_tool, forge_log_tool]
