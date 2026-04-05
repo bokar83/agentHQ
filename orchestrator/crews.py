@@ -801,6 +801,153 @@ def build_social_crew(user_request: str) -> Crew:
     )
 
 
+def build_linkedin_x_crew(user_request: str) -> Crew:
+    """
+    Crew for: linkedin_x_campaign
+    Produces full 7-post LinkedIn + X sequence plus long-form article.
+    Fires when user asks for LinkedIn and X posts on a topic.
+    """
+    griot = build_social_media_agent()
+    qa = build_qa_agent()
+
+    LEGRIOT_SYSTEM_PROMPT = """You are leGriot, Boubacar Barry's social media content agent.
+
+Boubacar is the founder of Catalyst Works, a solo AI strategy
+consulting practice targeting SMB leadership teams (CEOs, COOs,
+operations leaders). His methodology is constraint-led: he
+identifies the single bottleneck limiting organizational throughput
+before recommending any AI intervention. His differentiator is
+intellectual honesty -- he will tell clients when AI is not
+the answer.
+
+Voice Profile:
+- Direct. No hedging. No throat-clearing.
+- Specific and grounded. Sounds like a practitioner, not a pundit.
+- Earned confidence. He knows this from real work, not theory.
+- Occasionally provocative. The best content disagrees with something.
+- Warm but precise. Never robotic, never salesy, never corporate.
+- Never uses: "I'm excited to share", "In today's fast-paced world",
+  "game-changer", "leverage", "synergy", "disruptive"
+- Never uses em dashes anywhere.
+- NEVER fabricate stories or invent client examples.
+- If no real story was provided, use "Imagine if..." or "Picture this..."
+  to signal it is hypothetical.
+
+Post Mix (fixed sequence -- do not reorder):
+Post 1 -- Challenger: creates tension, names the problem directly
+Post 2 -- Insight: behavioral science, research, or mechanism explanation
+Post 3 -- Contrarian: disagrees with a common assumption or practice
+Post 4 -- Personal: specific real experience that earns the point
+Post 5 -- Insight (Data): 2 to 3 sharp statistics that reframe the situation
+Post 6 -- Insight: deepens the mechanism or names the human cost
+Post 7 -- Challenger: closes with a direct call to action or decision prompt
+
+Hook Quality Test (apply to every hook before finalizing):
+- Does it create immediate curiosity or provocation?
+- Does it make a specific, surprising claim?
+- Would someone stop scrolling for this?
+If no to any of these, rewrite the hook.
+
+Format Rules:
+
+LinkedIn Long-Form Article (tied to Post 1):
+- 400 to 600 words
+- Opens with same hook as Post 1, then goes deeper
+- Structure: Hook -> Problem -> Mechanism -> Evidence -> Personal anchor -> Implication -> CTA
+- CTA must be specific: a question, a reflection prompt, or an invitation to connect
+- No hashtags
+- No em dashes
+
+LinkedIn Posts (Posts 1 through 7):
+- 150 to 300 words each
+- Short punchy lines. One idea per line where possible.
+- End with a question, call to reflection, or soft CTA
+- No hashtags unless specifically requested
+- No em dashes
+
+X Posts (one per LinkedIn post):
+- Default to standalone posts of 280 characters maximum
+- Use numbered thread (1/ 2/ 3/) ONLY when idea cannot be compressed
+- Hook must work in the first line alone
+- No em dashes
+
+Output Structure (deliver in this exact order and format):
+
+---
+## LinkedIn Article -- Post 1 Expanded
+[article]
+---
+### Post 1 -- Challenger
+
+**LinkedIn:**
+[post]
+
+**X:**
+[post or thread]
+---
+### Post 2 -- Insight
+
+**LinkedIn:**
+[post]
+
+**X:**
+[post or thread]
+---
+[continue through Post 7 in the same format]"""
+
+    task_write = Task(
+        description=f"""
+{LEGRIOT_SYSTEM_PROMPT}
+
+## Topic
+{user_request}
+
+Write the full campaign now. Follow the output structure exactly.
+Save the completed output using save_output.
+        """,
+        expected_output=(
+            "LinkedIn long-form article followed by all 7 LinkedIn posts "
+            "and 7 matching X posts in the required format"
+        ),
+        agent=griot,
+    )
+
+    task_qa = Task(
+        description=f"""
+Review this LinkedIn/X campaign for Boubacar Barry.
+
+Check each item:
+1. Hook quality: does every post open with curiosity, provocation, or a specific surprising claim?
+2. Voice: direct, practitioner-grounded, no buzzwords, no em dashes?
+3. Post types: are all 7 types present in the correct order (Challenger, Insight, Contrarian, Personal, Data, Insight, Challenger)?
+4. Word counts: LinkedIn article 400-600 words, LinkedIn posts 150-300 words, X posts 280 chars max?
+5. No fabricated stories presented as real?
+
+If any item fails, rewrite the affected post inline. Do not just flag -- fix it.
+
+Original topic: {user_request}
+
+OUTPUT FORMAT (mandatory):
+WHAT WAS DONE: [what campaign was created and for which topic]
+WHY IT WAS DONE THIS WAY: [voice and structural decisions]
+QUALITY CHECK: PASSED or QUALITY CHECK: REVISED -- [what was fixed]
+DELIVERABLE:
+[Complete campaign in full -- article then all 7 post pairs -- never omit, never truncate]
+        """,
+        expected_output="QA report followed by complete campaign with article and all 7 post pairs",
+        agent=qa,
+        context=[task_write],
+    )
+
+    return Crew(
+        agents=[griot, qa],
+        tasks=[task_write, task_qa],
+        process=Process.sequential,
+        verbose=False,
+        memory=False,
+    )
+
+
 def build_code_crew(user_request: str) -> Crew:
     """
     Crew for: code_task
@@ -1469,6 +1616,7 @@ CREW_REGISTRY = {
     "research_crew":       build_research_crew,
     "consulting_crew":     build_consulting_crew,
     "social_crew":         build_social_crew,
+    "linkedin_x_crew":     build_linkedin_x_crew,
     "code_crew":           build_code_crew,
     "notion_overhaul":     build_notion_overhaul_crew,
     "writing_crew":        build_writing_crew,
