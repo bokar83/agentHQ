@@ -108,6 +108,7 @@ The Router classifies every incoming request into one of these types. New types 
 | `research_report` | research, analyze, find, summarize, compare | planner, researcher, copywriter, qa, boub_ai_voice |
 | `consulting_deliverable` | proposal, brief, diagnostic, framework, strategy | planner, researcher, copywriter, qa, boub_ai_voice |
 | `social_content` | post, tweet, LinkedIn, Instagram, caption, social | planner, copywriter, qa, boub_ai_voice |
+| `linkedin_x_campaign` | linkedin and x, 7 posts, post campaign, linkedin x posts, content series | griot, qa |
 | `code_task` | code, script, function, debug, build, automate | planner, code_agent, qa, boub_ai_voice |
 | `general_writing` | write, draft, letter, email, document | planner, copywriter, qa, boub_ai_voice |
 | `voice_polishing` | humanize, polish, voice match | boub_ai_voice |
