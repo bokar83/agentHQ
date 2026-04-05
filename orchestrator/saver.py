@@ -36,6 +36,7 @@ DRIVE_FOLDER_MAP = {
     "website_build": "deliverables/websites",
     "3d_website_build": "deliverables/websites",
     "social_content": "deliverables/social",
+    "linkedin_x_campaign": "deliverables/social",
     "code_task": "deliverables/code",
     "hunter_task": "leads",
     "general_writing": "deliverables",

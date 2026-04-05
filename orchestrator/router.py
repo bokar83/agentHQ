@@ -58,6 +58,15 @@ TASK_TYPES = {
         "keywords": ["post", "tweet", "linkedin", "instagram", "twitter", "caption", "social", "thread", "content calendar", "social media", "tiktok", "facebook"],
         "crew": "social_crew",
     },
+    "linkedin_x_campaign": {
+        "description": "Create a full LinkedIn + X content campaign: long-form article, 7 LinkedIn posts, and 7 matching X posts in the fixed Challenger/Insight/Contrarian/Personal/Data/Insight/Challenger sequence",
+        "keywords": [
+            "linkedin and x", "linkedin x posts", "7 posts", "post campaign",
+            "content series", "full campaign", "linkedin x campaign",
+            "post sequence", "7 linkedin", "linkedin series"
+        ],
+        "crew": "linkedin_x_crew",
+    },
     "notion_overhaul": {
         "description": "Perform a premium visual and structural redesign of a Notion page or workspace hub",
         "keywords": ["notion", "redesign", "workspace", "dashboard", "page layout", "notion hub", "organize notion"],

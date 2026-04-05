@@ -21,3 +21,6 @@ def test_code_task_routes_correctly():
 
 def test_website_build_routes_correctly():
     assert get_drive_subfolder("website_build") == "deliverables/websites"
+
+def test_linkedin_x_campaign_routes_correctly():
+    assert get_drive_subfolder("linkedin_x_campaign") == "deliverables/social"
