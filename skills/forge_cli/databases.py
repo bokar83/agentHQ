@@ -102,7 +102,24 @@ class ForgeDB:
             props["Posted Date"] = {"date": {"start": posted_date}}
         if drive_link:
             props["Drive Link"] = {"url": drive_link}
-        return self.client.update_page(page_id, properties=props)
+        result = self.client.update_page(page_id, properties=props)
+        # Auto-create a posting task when content is queued with a scheduled date
+        if status == "Queued" and scheduled_date:
+            page = self.client.get_page(page_id)
+            title_parts = (page.get("properties", {}).get("Title", {}).get("title") or [])
+            content_title = "".join(t.get("plain_text", "") for t in title_parts) or "Untitled"
+            task_result = self.add_task(
+                task=f"Post: {content_title[:80]}",
+                priority="P2",
+                due=scheduled_date,
+                owner="Boubacar",
+            )
+            # Mark Revenue Action on the posting task
+            self.client.update_page(task_result["id"], properties={
+                "Revenue Action": {"checkbox": True},
+                "Category": {"select": {"name": "Revenue"}},
+            })
+        return result
 
     # ---- P0 / Streak / Week methods ----
 
