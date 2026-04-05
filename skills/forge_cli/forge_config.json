@@ -1,0 +1,15 @@
+{
+  "streak_callout_id": "339bcf1a-3029-81e8-aa47-c2f1f63a4575",
+  "motivation_callout_id": "339bcf1a-3029-81c4-9176-db44a9becd0d",
+  "week_grid_ids": {
+    "monday": "339bcf1a-3029-8122-b68e-fa3196c97b44",
+    "tuesday": "339bcf1a-3029-81ea-9f48-d93d4ba8eb2e",
+    "wednesday": "339bcf1a-3029-8129-9234-d8cfdacb869b",
+    "thursday": "339bcf1a-3029-8142-b6b8-d571e5aaad1e",
+    "friday": "339bcf1a-3029-8160-8643-fd273a93bc3f"
+  },
+  "system_config_db_id": "339bcf1a-3029-817c-8875-ce0cbd13bc71",
+  "tasks_db_id": "249bcf1a302980739c26c61cad212477",
+  "weekly_review_template_id": "339bcf1a-3029-81a2-9794-ec78fb5839ba",
+  "monthly_review_template_id": "339bcf1a-3029-819a-a298-f33eb858dd0a"
+}

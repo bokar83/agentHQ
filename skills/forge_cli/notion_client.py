@@ -26,7 +26,7 @@ class NotionClient:
     def _request(self, method: str, endpoint: str, **kwargs) -> Dict[str, Any]:
         self._throttle()
         url = f"{self.BASE_URL}/{endpoint}"
-        with httpx.Client() as client:
+        with httpx.Client(timeout=30.0) as client:
             response = getattr(client, method)(url, headers=self.headers, **kwargs)
             if response.status_code == 429:
                 retry_after = int(response.headers.get("Retry-After", 1))
