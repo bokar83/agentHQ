@@ -125,7 +125,7 @@ Suggested wiring: consulting_agent → Notion, planner_agent → Google Calendar
 
 - PostgreSQL missing session_id column in conversation_archive table
 - Qdrant client version compatibility (search attribute error, fails silently)
-- Always Save Sub node in n8n is outdated — needs upgrade in n8n UI (delete old Execute Workflow node, add new one)
+- ~~Always Save Sub~~ — workflow removed; no longer used
 - No async job queue — long tasks block /run endpoint; implement job_id + /status/{job_id} pattern
 
 ## Fixed in Day 5 (2026-03-28)
@@ -159,7 +159,7 @@ Suggested wiring: consulting_agent → Notion, planner_agent → Google Calendar
 ## Day 6 Priority List
 
 1. Test Telegram bot end-to-end: send a real message to @agentsHQ4Bou_bot and confirm reply arrives
-2. Upgrade Always Save Sub node in n8n UI (delete old Execute Workflow node, add fresh one pointing to `CW | SUB - Always Save`)
+2. ~~Upgrade Always Save Sub~~ — removed, no longer used
 3. Test all 6 remaining task types via Telegram: research_report, code_task, general_writing, app_build, agent_creation, consulting_deliverable
 4. Async job queue: implement job_id + /status/{job_id} to prevent timeout on long tasks
 5. PostgreSQL schema fix: add session_id column to conversation_archive
@@ -170,7 +170,7 @@ Suggested wiring: consulting_agent → Notion, planner_agent → Google Calendar
 2. Fix Send Files via Telegram n8n node (Chat ID + Document URL expression)
 3. Delete Close Webhook node in n8n
 4. Fix Archive to DB node (retest, port open)
-5. Upgrade Always Save Sub node (delete old, add new Execute Workflow node)
+5. ~~Upgrade Always Save Sub~~ — removed, no longer used
 6. Test remaining 5 task types via Telegram
 7. Technical debt: async job queue, spend monitoring, PostgreSQL schema fix
 
