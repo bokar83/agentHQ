@@ -58,6 +58,11 @@ TASK_TYPES = {
         "keywords": ["post", "tweet", "linkedin", "instagram", "twitter", "caption", "social", "thread", "content calendar", "social media", "tiktok", "facebook"],
         "crew": "social_crew",
     },
+    "notion_overhaul": {
+        "description": "Perform a premium visual and structural redesign of a Notion page or workspace hub",
+        "keywords": ["notion", "redesign", "workspace", "dashboard", "page layout", "notion hub", "organize notion"],
+        "crew": "notion_overhaul_crew",
+    },
     "code_task": {
         "description": "Write, debug, refactor, or explain code in any language",
         "keywords": ["code", "script", "function", "debug", "fix", "python", "javascript", "automate", "program", "build script", "api", "endpoint"],
