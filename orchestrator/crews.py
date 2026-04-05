@@ -45,6 +45,7 @@ from agents import (
     build_asset_prompter_agent,
     build_3d_web_builder_agent,
     build_seo_auditor_agent,
+    build_notion_visual_architect_agent, # Added
     get_llm,
 )
 
@@ -1403,6 +1404,65 @@ def build_news_brief_crew(user_request: str) -> Crew:
     )
 
 
+def build_notion_overhaul_crew(user_request: str) -> Crew:
+    """
+    Crew for: notion_overhaul
+    Transforms Notion pages into premium branded dashboards.
+    """
+    planner = build_planner_agent()
+    copywriter = build_copywriter_agent()
+    designer = build_notion_visual_architect_agent()
+    qa = build_qa_agent()
+
+    task_plan = Task(
+        description=f"""
+        Analyze the Notion overhaul request and create a visual and structural plan:
+        REQUEST: {user_request}
+
+        Plan must include:
+        1. Hierarchy of pages and databases
+        2. Visual theme (Covers, Icons, Colors - Teal/Orange)
+        3. Columnar layout structures for the landing page
+        4. Copy requirements for 'leGriot' voice consistency
+        """,
+        expected_output="A structured aesthetic and structural plan for the Notion hub",
+        agent=planner
+    )
+
+    task_design = Task(
+        description=f"""
+        Execute the visual redesign using the Notion Styling Tools:
+        1. Apply branded covers and icons to the main hub and core databases.
+        2. Structure the landing page using multi-column layouts (add_notion_nav_tool).
+        3. Use Callout blocks for high-impact mission statements (add_callout).
+        
+        Ensure everything matches the Catalyst Works style guide.
+        """,
+        expected_output="Notion hub visually transformed with branded assets and premium layouts",
+        agent=designer,
+        context=[task_plan]
+    )
+
+    task_content = Task(
+        description=f"""
+        Inject high-impact 'leGriot' copy into the newly structured layouts.
+        Focus on 'Outcome-First Intelligence' and 'Theoretical Constraints'.
+        Ensure formatting (bolding, lists) matches the premium feel.
+        """,
+        expected_output="Premium business copy live in the Notion hub",
+        agent=copywriter,
+        context=[task_plan, task_design]
+    )
+
+    return Crew(
+        agents=[planner, designer, copywriter, qa],
+        tasks=[task_plan, task_design, task_content],
+        process=Process.sequential,
+        verbose=False,
+        embedder=EMBEDDER_CONFIG
+    )
+
+
 CREW_REGISTRY = {
     "website_crew":        build_website_crew,
     "app_crew":            build_app_crew,
@@ -1410,6 +1470,7 @@ CREW_REGISTRY = {
     "consulting_crew":     build_consulting_crew,
     "social_crew":         build_social_crew,
     "code_crew":           build_code_crew,
+    "notion_overhaul":     build_notion_overhaul_crew,
     "writing_crew":        build_writing_crew,
     "agent_creator_crew":  build_agent_creator_crew,
     "voice_polisher_crew":    build_voice_polisher_crew,

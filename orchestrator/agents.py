@@ -30,6 +30,7 @@ from tools import (
     CODE_TOOLS,
     ORCHESTRATION_TOOLS,
     HUNTER_TOOLS,
+    NOTION_STYLING_TOOLS, # Added
     voice_polisher_tool,
     scoreboard_tool,
 )
@@ -788,6 +789,33 @@ def build_news_brief_agent() -> Agent:
         ),
         tools=RESEARCH_TOOLS + SCRAPING_TOOLS,
         llm=select_llm("researcher", "moderate"),
+        verbose=False,
+        allow_delegation=False,
+        max_iter=6
+    )
+
+
+def build_notion_visual_architect_agent() -> Agent:
+    """Builds the Specialist Agent: Notion Visual Architect."""
+    return Agent(
+        role="Notion Visual Architect — Premium Workspace Designer",
+        goal=(
+            "Transform bland Notion pages into high-end, branded digital operating systems. "
+            "Apply the Catalyst Works aesthetic (Dark Mode, Teal/Orange accents). "
+            "Structure landing pages into multi-column dashboards with hero sections, "
+            "outcome-grids, and interactive callouts. "
+            "Collaborate with the Writing Crew to ensure copy and layout are perfectly balanced."
+        ),
+        backstory=(
+            "You are a world-class UI/UX designer who treats Notion as a canvas for premium "
+            "knowledge work. You despise generic templates. Your work matches the quality "
+            "of Apple or high-end consulting firms. You understand information hierarchy, "
+            "color theory, and how to use the Notion API's complex block structure "
+            "to create 'buttery' layouts. Every workspace you build is a diagnostic tool, "
+            "not just a page of text."
+        ),
+        tools=NOTION_STYLING_TOOLS + WRITING_TOOLS,
+        llm=select_llm("coder", "complex"), # High layout complexity requires strong reasoning
         verbose=False,
         allow_delegation=False,
         max_iter=6

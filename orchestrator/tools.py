@@ -73,6 +73,9 @@ except ImportError:
     def create_file(*args, **kwargs): return "github_not_ready"
 
 try:
+    from skills.notion_cli.notion_cli import NotionCLI
+    from skills.notion_stylist.notion_stylist import NotionStylist
+    from skills.HunterAgent.utils.supabase_client import SupabaseClient
     from skills.notion_skill.notion_tool import search_databases, create_page, append_block
 except ImportError:
     def search_databases(*args, **kwargs): return []
@@ -95,6 +98,25 @@ file_reader = FileReadTool()
 
 # Code execution (sandboxed)
 code_interpreter = CodeInterpreterTool()
+
+
+# ── Notion Styling Tools ─────────────────────────────────────
+def set_notion_style_tool(page_id: str, cover: str = None, icon: str = None):
+    """Sets the cover and icon for a Notion page."""
+    stylist = NotionStylist()
+    return stylist.set_premium_style(page_id, cover, icon)
+
+def add_notion_nav_tool(page_id: str, items_json: str):
+    """Adds a multi-column navigation grid to a Notion page. items_json is a list of dicts."""
+    import json
+    stylist = NotionStylist()
+    items = json.loads(items_json)
+    return stylist.create_navigation_grid(page_id, items)
+
+NOTION_STYLING_TOOLS = [
+    set_notion_style_tool,
+    add_notion_nav_tool
+]
 
 
 # ══════════════════════════════════════════════════════════════
