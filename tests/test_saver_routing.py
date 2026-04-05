@@ -24,3 +24,9 @@ def test_website_build_routes_correctly():
 
 def test_linkedin_x_campaign_routes_correctly():
     assert get_drive_subfolder("linkedin_x_campaign") == "deliverables/social"
+
+def test_linkedin_x_campaign_in_crew_registry():
+    import os, sys
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'orchestrator'))
+    from orchestrator.crews import CREW_REGISTRY
+    assert "linkedin_x_crew" in CREW_REGISTRY
