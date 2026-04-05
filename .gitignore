@@ -81,6 +81,9 @@ skills/superpowers/
 # ── Superpowers generated plan files ─────────────────────────
 docs/superpowers/plans/
 
+# ── Superpowers brainstorm sessions (ephemeral) ──────────────
+.superpowers/
+
 # Google service account key — never commit
 secrets/
 
