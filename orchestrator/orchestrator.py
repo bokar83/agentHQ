@@ -649,6 +649,7 @@ def _build_summary(
         "research_report":         "Research complete",
         "consulting_deliverable":  "Consulting deliverable ready",
         "social_content":          "Social content created",
+        "linkedin_x_campaign":     "LinkedIn/X campaign ready",
         "code_task":               "Code task complete",
         "general_writing":         "Document ready",
         "agent_creation":          "Agent proposal submitted",
