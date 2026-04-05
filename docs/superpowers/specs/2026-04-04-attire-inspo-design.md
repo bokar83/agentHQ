@@ -2,7 +2,7 @@
 **Date:** 2026-04-04
 **App name:** Aminöa's AI — Attire Inspo
 **Repo/folder:** `attire-inspo`
-**Local build path:** `D:\Ai_Sandbox\agentsHQ\output\apps\attire-inspo`
+**Local build path:** `D:\Ai_Sandbox\agentsHQ\output\apps\attire-inspo-app`
 **Deploy target:** Vercel (PWA — installable on iOS/Android home screen)
 **Backend:** FastAPI at `http://72.60.209.109:8080` (existing, unchanged)
 
