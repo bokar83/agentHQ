@@ -64,6 +64,21 @@ try:
 except ImportError:
     def execute_cli_hub_action(*args, **kwargs): return "cli_hub_not_ready"
 
+# GitHub & Notion Skill Imports
+try:
+    from skills.github_skill.github_tool import create_repo, create_issue, create_file
+except ImportError:
+    def create_repo(*args, **kwargs): return "github_not_ready"
+    def create_issue(*args, **kwargs): return "github_not_ready"
+    def create_file(*args, **kwargs): return "github_not_ready"
+
+try:
+    from skills.notion_skill.notion_tool import search_databases, create_page, append_block
+except ImportError:
+    def search_databases(*args, **kwargs): return []
+    def create_page(*args, **kwargs): return "notion_not_ready"
+    def append_block(*args, **kwargs): return False
+
 logger = logging.getLogger(__name__)
 
 
@@ -427,20 +442,103 @@ class DailyScoreboardTool(BaseTool):
 # See: https://docs.crewai.com/en/concepts/mcp-server-adapter
 # ══════════════════════════════════════════════════════════════
 
-def get_mcp_tools(server_url: str) -> list:
+def get_mcp_tools(server_url: str, headers: Optional[dict] = None) -> list:
     """
     Connect to an MCP server and return its tools as CrewAI tools.
     Usage: tools = get_mcp_tools("http://mcp-server-url/sse")
     """
     try:
         from crewai_tools import MCPServerAdapter
-        adapter = MCPServerAdapter({"url": server_url})
+        # Pass headers if provided (e.g. for Vercel Bearer token)
+        adapter = MCPServerAdapter({"url": server_url, "headers": headers or {}})
         tools = adapter.tools
         logger.info(f"Loaded {len(tools)} tools from MCP server: {server_url}")
         return tools
     except Exception as e:
         logger.warning(f"MCP server unavailable ({server_url}): {e}")
         return []
+
+
+# ── Vercel Integration ────────────────────────────────────────
+# Load Vercel tools via official MCP server
+VERCEL_TOKEN = os.environ.get("VERCEL_TOKEN")
+VERCEL_TOOLS = []
+if VERCEL_TOKEN:
+    # Standard Vercel MCP server at https://mcp.vercel.com
+    # Requires Authorization: Bearer <token>
+    VERCEL_TOOLS = get_mcp_tools(
+        "https://mcp.vercel.com/sse", 
+        headers={"Authorization": f"Bearer {VERCEL_TOKEN}"}
+    )
+
+
+# ── GitHub Tools ─────────────────────────────────────────────
+
+class GitHubRepoTool(BaseTool):
+    """Creates a new GitHub repository."""
+    name: str = "create_github_repo"
+    description: str = "Create a new private or public GitHub repository. Input: JSON with 'name' and optional 'description'."
+    def _run(self, input_data: str) -> str:
+        try:
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            result = create_repo(data["name"], data.get("description", ""))
+            return f"GitHub Repo Created: {result['url']}"
+        except Exception as e:
+            return f"Error: {e}"
+
+class GitHubIssueTool(BaseTool):
+    """Creates a new GitHub issue."""
+    name: str = "create_github_issue"
+    description: str = "Create a new issue in a GitHub repository. Input: JSON with 'repo_name', 'title', and 'body'."
+    def _run(self, input_data: str) -> str:
+        try:
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            result = create_issue(data["repo_name"], data["title"], data.get("body", ""))
+            return f"GitHub Issue Created: {result['url']}"
+        except Exception as e:
+            return f"Error: {e}"
+
+class GitHubFileTool(BaseTool):
+    """Creates or updates a file in a GitHub repository."""
+    name: str = "upsert_github_file"
+    description: str = "Create or update a file in a GitHub repository. Input: JSON with 'repo_name', 'path', 'content', and 'message'."
+    def _run(self, input_data: str) -> str:
+        try:
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            result = create_file(data["repo_name"], data["path"], data["content"], data.get("message", "Update via agent"))
+            return result
+        except Exception as e:
+            return f"Error: {e}"
+
+# ── Notion Tools ─────────────────────────────────────────────
+
+class NotionSearchTool(BaseTool):
+    """Searches for Notion databases."""
+    name: str = "search_notion_databases"
+    description: str = "Search for available Notion databases to find target IDs. Input: optional query string."
+    def _run(self, query: str = "") -> str:
+        try:
+            results = search_databases(query)
+            if not results: return "No databases found."
+            output = "Available Notion Databases:\n"
+            for r in results:
+                title = r.get("title", [{}])[0].get("plain_text", "Untitled")
+                output += f"- {title} (ID: {r['id']})\n"
+            return output
+        except Exception as e:
+            return f"Error: {e}"
+
+class NotionPageTool(BaseTool):
+    """Creates a new Notion page in a database."""
+    name: str = "create_notion_page"
+    description: str = "Create a new page in a Notion database. Input: JSON with 'database_id', 'title', and 'content'."
+    def _run(self, input_data: str) -> str:
+        try:
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            url = create_page(data["database_id"], data["title"], data.get("content", ""))
+            return f"Notion Page Created: {url}"
+        except Exception as e:
+            return f"Error: {e}"
 
 
 # ── Tool sets by category ─────────────────────────────────────
@@ -457,5 +555,5 @@ RESEARCH_TOOLS = [search_tool, file_reader, QueryMemoryTool()]
 SCRAPING_TOOLS = [FirecrawlScrapeTool(), FirecrawlCrawlTool(), FirecrawlSearchTool()]
 WRITING_TOOLS = [file_writer, SaveOutputTool(), voice_polisher_tool]
 CODE_TOOLS = [code_interpreter, file_writer, file_reader, SaveOutputTool(), CLIHubSearchTool()]
-ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool()]
-HUNTER_TOOLS = [prospecting_tool, crm_add_tool, crm_log_tool, crm_reveal_tool, scoreboard_tool, QueryMemoryTool()]
+ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool(), GitHubRepoTool(), GitHubIssueTool(), GitHubFileTool(), NotionSearchTool(), NotionPageTool()] + VERCEL_TOOLS
+HUNTER_TOOLS = [prospecting_tool, crm_add_tool, crm_log_tool, crm_reveal_tool, scoreboard_tool, QueryMemoryTool(), NotionPageTool()]
