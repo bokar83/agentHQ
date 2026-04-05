@@ -12,11 +12,9 @@ Usage:
     forge content posted <page_id>
     forge kpi refresh
     forge status
-    forge p0 "Task name"         -- P0 = single most important task of the day
+    forge p0 "Task name"
     forge p0 "Task name" --date YYYY-MM-DD
-    forge p0 "Task name" --day-type B-Day
     forge p0 list
-    forge p0 complete
     forge streak
     forge checkin --nn 1,2,3
     forge phase get
@@ -25,6 +23,7 @@ Usage:
     forge weekly
 """
 import argparse
+import hashlib
 import sys
 from datetime import date, timedelta
 
@@ -92,14 +91,13 @@ def build_parser() -> argparse.ArgumentParser:
     # -- kpi --
     kpi_p = subparsers.add_parser("kpi", help="KPI operations")
     kpi_sub = kpi_p.add_subparsers(dest="kpi_command")
-    kpi_sub.add_parser("refresh", help="Refresh all Notion dashboard callout blocks")
+    kpi_sub.add_parser("refresh", help="Refresh KPI callout blocks")
 
     # -- status --
     subparsers.add_parser("status", help="Print system status summary")
 
     # -- p0 --
-    # P0 = the single most important task of the day. One task. Non-negotiable.
-    p0_p = subparsers.add_parser("p0", help="Set or view the P0 (single most important task of the day)")
+    p0_p = subparsers.add_parser("p0", help="Set or view the P0 (single most important task of the day) for a day")
     p0_p.add_argument("p0_arg", nargs="?", default=None, help="Task name, 'list', or 'complete'")
     p0_p.add_argument("--date", dest="p0_date", default="", help="Date (YYYY-MM-DD), defaults to today")
     p0_p.add_argument("--day-type", dest="day_type", default="A-Day", choices=["A-Day", "B-Day"], help="A-Day=revenue focus, B-Day=admin/recovery")
@@ -108,7 +106,7 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("streak", help="Show and update execution streak")
 
     # -- checkin --
-    checkin_p = subparsers.add_parser("checkin", help="Daily check-in with non-negotiables (NNs)")
+    checkin_p = subparsers.add_parser("checkin", help="Daily check-in with non-negotiables")
     checkin_p.add_argument("--nn", required=True, help="Comma-separated NN numbers, e.g. 1,2,3")
 
     # -- phase --
@@ -204,13 +202,58 @@ def _run_kpi_refresh(db: ForgeDB):
     for r in results:
         print(r)
 
-    # Extended: streak + motivation + phase + week grid
+    # Extended: quotes + streak + motivation + phase + week grid
     sc = SystemConfig(client=db.client)
     cfg = sc.get()
     streak = cfg["streak"]
     phase_label = cfg["phase_label"]
     forge_cfg = load_forge_config()
     client = db.client
+
+    # Rotating quote -- deterministic by date, changes daily
+    QUOTES = [
+        ("The secret of getting ahead is getting started.", "Mark Twain"),
+        ("You don't rise to the level of your goals. You fall to the level of your systems.", "James Clear"),
+        ("Revenue is the applause of a market that values what you do.", "Unknown"),
+        ("Do the work. The work is the shortcut.", "Seth Godin"),
+        ("Every action you take is a vote for the person you want to become.", "James Clear"),
+        ("Chase the vision, not the money. The money will end up following you.", "Tony Hsieh"),
+        ("If you are not embarrassed by the first version of your product, you've launched too late.", "Reid Hoffman"),
+        ("The best time to plant a tree was 20 years ago. The second best time is now.", "Chinese Proverb"),
+        ("Discipline equals freedom.", "Jocko Willink"),
+        ("Work like there is someone working 24 hours a day to take it all away from you.", "Mark Cuban"),
+        ("It's not about ideas. It's about making ideas happen.", "Scott Belsky"),
+        ("You are what you repeatedly do. Excellence is not an act but a habit.", "Aristotle"),
+        ("The way to get started is to quit talking and begin doing.", "Walt Disney"),
+        ("Small daily improvements compound into remarkable results.", "Unknown"),
+        ("Stop selling. Start helping.", "Zig Ziglar"),
+        ("Your network is your net worth.", "Porter Gale"),
+        ("The goal is not to be perfect by the end. The goal is to be better today.", "Simon Sinek"),
+        ("Revenue solves all known startup problems.", "Unknown"),
+        ("Done is better than perfect.", "Sheryl Sandberg"),
+        ("Show me your calendar and I'll show you your priorities.", "Unknown"),
+        ("Focus is a matter of deciding what things you're not going to do.", "John Carmack"),
+        ("A year from now you'll wish you had started today.", "Karen Lamb"),
+        ("The most dangerous risk of all: playing it too safe.", "Unknown"),
+        ("Build something 100 people love, not something 1 million people kind of like.", "Paul Graham"),
+        ("If you want to go fast, go alone. If you want to go far, go together.", "African Proverb"),
+        ("Discipline is choosing between what you want now and what you want most.", "Augusta F. Kantra"),
+        ("The entrepreneur always searches for change, responds to it, and exploits it.", "Peter Drucker"),
+        ("Your most important task today: one revenue conversation.", "Unknown"),
+        ("Winners are not people who never fail, but people who never quit.", "Edwin Louis Cole"),
+        ("A year from now you'll wish you had started today.", "Karen Lamb"),
+    ]
+    day_index = int(hashlib.md5(date.today().isoformat().encode()).hexdigest(), 16) % len(QUOTES)
+    q_text, q_author = QUOTES[day_index]
+    quote_text = f'"{q_text}" -- {q_author}'
+    if "quotes_callout_id" in forge_cfg and forge_cfg["quotes_callout_id"]:
+        client.update_block(forge_cfg["quotes_callout_id"], {
+            "callout": {
+                "rich_text": [{"type": "text", "text": {"content": quote_text}}],
+                "icon": {"type": "emoji", "emoji": "\U0001f4ac"},
+                "color": "yellow_background",
+            }
+        })
 
     # Update streak callout
     day_word = "day" if streak == 1 else "days"
@@ -245,27 +288,6 @@ def _run_kpi_refresh(db: ForgeDB):
             "color": "blue_background",
         }
     })
-
-    # Phase block
-    phase = cfg["phase"]
-    phase_start = cfg["phase_start"]
-    days_in_phase = (date.today() - date.fromisoformat(phase_start)).days
-    criteria = SystemConfig.UNLOCK_CRITERIA.get(phase, [])
-    unlock_parts = []
-    for label, key, _ in criteria:
-        mark = "x" if cfg.get(key, False) else " "
-        short = label.split(": ", 1)[1] if ": " in label else label
-        unlock_parts.append(f"[{mark}] {short}")
-    unlock_str = "  ".join(unlock_parts) if unlock_parts else "No criteria"
-    phase_text = f"{cfg['phase_label']} | Day {days_in_phase} | Unlock: {unlock_str}"
-    if "phase_callout_id" in forge_cfg and forge_cfg["phase_callout_id"]:
-        client.update_block(forge_cfg["phase_callout_id"], {
-            "callout": {
-                "rich_text": [{"type": "text", "text": {"content": phase_text}}],
-                "icon": {"type": "emoji", "emoji": "\u2699\ufe0f"},
-                "color": "gray_background",
-            }
-        })
 
     # This Week grid rebuild
     DAY_NAMES = ["monday", "tuesday", "wednesday", "thursday", "friday"]
@@ -306,13 +328,12 @@ def _run_kpi_refresh(db: ForgeDB):
             task_name = "".join([t["plain_text"] for t in (props.get("Task", {}).get("title") or [])])
             task_name = task_name[:40] if len(task_name) > 40 else task_name
             status = (props.get("Status", {}).get("select") or {}).get("name", "Not Started")
-            day_type_val = (props.get("Day Type", {}).get("select") or {}).get("name", "A-Day")
             nns = props.get("Non-Negotiables", {}).get("multi_select") or []
             nn_done = len(nns)
-            text = f"{day_label} / {day_type_val}\n{task_name}\n{status}\nNN: {nn_done}/{nn_total}"
+            text = f"{day_label} / A-Day\n{task_name}\n{status}\nNN: {nn_done}/{nn_total}"
             color = STATUS_COLOR.get(status, "default")
         else:
-            text = f"{day_label}\nNo P0 set\n--\nNN: 0/{nn_total}"
+            text = f"{day_label} / A-Day\nNo P0 set\n--\nNN: 0/{nn_total}"
             color = "gray_background"
         client.update_block(block_id, {
             "callout": {
@@ -322,9 +343,30 @@ def _run_kpi_refresh(db: ForgeDB):
             }
         })
 
+    # Phase block
+    phase = cfg["phase"]
+    phase_start = cfg["phase_start"]
+    days_in_phase = (date.today() - date.fromisoformat(phase_start)).days
+    criteria = SystemConfig.UNLOCK_CRITERIA.get(phase, [])
+    unlock_parts = []
+    for label, key, _ in criteria:
+        mark = "x" if cfg.get(key, False) else " "
+        short = label.split(": ", 1)[1] if ": " in label else label
+        unlock_parts.append(f"[{mark}] {short}")
+    unlock_str = "  ".join(unlock_parts) if unlock_parts else "No criteria"
+    phase_text = f"{cfg['phase_label']} | Day {days_in_phase} | Unlock: {unlock_str}"
+    if "phase_callout_id" in forge_cfg and forge_cfg["phase_callout_id"]:
+        client.update_block(forge_cfg["phase_callout_id"], {
+            "callout": {
+                "rich_text": [{"type": "text", "text": {"content": phase_text}}],
+                "icon": {"type": "emoji", "emoji": "\u2699\ufe0f"},
+                "color": "gray_background",
+            }
+        })
+
     # Log
     db.log_action("KPI refresh complete", agent="ForgeOS", status="Success")
-    print("Streak + motivation + phase + week grid updated.")
+    print("Quote + streak + motivation + phase + week grid updated.")
 
 
 # ---- Status ----
@@ -469,15 +511,15 @@ def _run_streak(db: ForgeDB):
     updates = {"streak": count, "longest_streak": new_longest}
     if count == 0:
         updates["streak_start"] = date.today().isoformat()
+    # Do not reset streak_start when count > 0; it was set correctly when the streak began
     sc.update(**updates)
 
-    day_word = "day" if count == 1 else "days"
-    print(f"Current streak: {count} {day_word}")
+    print(f"Current streak: {count} days")
     print(f"Longest streak: {new_longest} days")
     if count > 0:
         print("Keep it going: complete today's P0 and run forge checkin")
     else:
-        print("Streak is at zero. Set today's P0 with: forge p0 \"Task name\"")
+        print("Streak is at zero. Set today's P0 with: forge p0 [task]")
         print("Complete it, then run: forge checkin --nn 1,2,3")
 
 
@@ -530,7 +572,7 @@ def _run_checkin(db: ForgeDB, args):
     prev_longest = cfg["longest_streak"]
     new_longest = max(count, prev_longest)
     streak_updates = {"streak": count, "longest_streak": new_longest}
-    # Auto-trigger 30-day streak unlock
+    # Auto-trigger unlock criteria
     if count >= 30 and not cfg.get("p0_1_streak", False):
         streak_updates["p0_1_streak"] = True
         print("UNLOCK: 30-day streak criteria met.")
@@ -589,12 +631,14 @@ def _phase_get(db: ForgeDB):
     print(f"Active since: {phase_start} ({days_in_phase} days)")
     print(f"Current streak: {cfg['streak']} days")
 
+    # Next phase
     next_phase = phase + 1
     if next_phase in SystemConfig.PHASE_LABELS:
         print(f"Next phase: {SystemConfig.PHASE_LABELS[next_phase]}")
     else:
         print("Next phase: None (max phase reached)")
 
+    # Unlock criteria
     criteria = SystemConfig.UNLOCK_CRITERIA.get(phase, [])
     if criteria:
         print("Unlock criteria:")
@@ -619,6 +663,7 @@ def _phase_set(db: ForgeDB, target_phase: int):
         print(f"Cannot jump from Phase {current} to Phase {target_phase}. Next valid phase is {current + 1}.")
         return
 
+    # Check unlock criteria
     criteria = SystemConfig.UNLOCK_CRITERIA.get(current, [])
     all_met = all(cfg.get(key, False) for _, key, _ in criteria)
 
@@ -632,7 +677,7 @@ def _phase_set(db: ForgeDB, target_phase: int):
     label = SystemConfig.PHASE_LABELS[target_phase]
     sc.update(phase=target_phase, phase_label=label, phase_start=date.today().isoformat())
     print(f"Phase {target_phase} activated: {label}")
-    print("Run: forge kpi refresh to update your dashboard.")
+    print("The dashboard has been updated.")
 
 
 def _phase_check(db: ForgeDB):
@@ -670,8 +715,10 @@ def _run_weekly(db: ForgeDB):
     monday = today - timedelta(days=today.weekday())
     friday = monday + timedelta(days=4)
 
+    # Get week tasks
     week_tasks = db.get_week_tasks()
 
+    # P0 completion (Mon-Fri)
     p0_done = 0
     p0_total = 0
     revenue_actions = 0
@@ -691,6 +738,7 @@ def _run_weekly(db: ForgeDB):
         if outcome and any(o.get("plain_text", "").strip() for o in outcome):
             outcomes_filled += 1
 
+    # Content stats
     posted_pages = db.client.query_database(
         config.CONTENT_DB,
         filter_obj={
@@ -708,18 +756,20 @@ def _run_weekly(db: ForgeDB):
     ) if config.CONTENT_DB else []
     queued = len(queued_pages)
 
+    # System config
     sc = SystemConfig(client=db.client)
     cfg = sc.get()
     days_in_phase = (today - date.fromisoformat(cfg["phase_start"])).days
 
     print(f"\n=== Weekly Review: Week of {monday.isoformat()} ===")
-    print(f"P0 (single most important task) completion: {p0_done}/{p0_total if p0_total else 5} days")
+    print(f"P0 completion: {p0_done}/{p0_total if p0_total else 5} days")
     print(f"Current streak: {cfg['streak']} days")
     print(f"Revenue actions this week: {revenue_actions}")
     print(f"Content posted: {posted} | Queued: {queued}")
     print(f"Phase: {cfg['phase_label']} | Days in phase: {days_in_phase}")
     print("===")
 
+    # Create weekly review page in Notion
     forge_cfg = load_forge_config()
     template_id = forge_cfg.get("weekly_review_template_id", "")
 
@@ -732,6 +782,7 @@ def _run_weekly(db: ForgeDB):
         f"Phase: {cfg['phase_label']} | Days in phase: {days_in_phase}"
     )
 
+    # Create as child of the template's parent (The Forge 2.0 page)
     try:
         template_page = db.client.get_page(template_id)
         parent_id = template_page.get("parent", {}).get("page_id", "")
@@ -745,14 +796,62 @@ def _run_weekly(db: ForgeDB):
                     "title": [{"text": {"content": review_title}}],
                 },
                 "children": [
-                    {"object": "block", "type": "heading_2", "heading_2": {"rich_text": [{"type": "text", "text": {"content": "Stats"}}]}},
-                    {"object": "block", "type": "paragraph", "paragraph": {"rich_text": [{"type": "text", "text": {"content": stats_text}}]}},
-                    {"object": "block", "type": "heading_2", "heading_2": {"rich_text": [{"type": "text", "text": {"content": "Wins"}}]}},
-                    {"object": "block", "type": "paragraph", "paragraph": {"rich_text": [{"type": "text", "text": {"content": ""}}]}},
-                    {"object": "block", "type": "heading_2", "heading_2": {"rich_text": [{"type": "text", "text": {"content": "Lessons"}}]}},
-                    {"object": "block", "type": "paragraph", "paragraph": {"rich_text": [{"type": "text", "text": {"content": ""}}]}},
-                    {"object": "block", "type": "heading_2", "heading_2": {"rich_text": [{"type": "text", "text": {"content": "Next Week Focus"}}]}},
-                    {"object": "block", "type": "paragraph", "paragraph": {"rich_text": [{"type": "text", "text": {"content": ""}}]}},
+                    {
+                        "object": "block",
+                        "type": "heading_2",
+                        "heading_2": {
+                            "rich_text": [{"type": "text", "text": {"content": "Stats"}}],
+                        },
+                    },
+                    {
+                        "object": "block",
+                        "type": "paragraph",
+                        "paragraph": {
+                            "rich_text": [{"type": "text", "text": {"content": stats_text}}],
+                        },
+                    },
+                    {
+                        "object": "block",
+                        "type": "heading_2",
+                        "heading_2": {
+                            "rich_text": [{"type": "text", "text": {"content": "Wins"}}],
+                        },
+                    },
+                    {
+                        "object": "block",
+                        "type": "paragraph",
+                        "paragraph": {
+                            "rich_text": [{"type": "text", "text": {"content": ""}}],
+                        },
+                    },
+                    {
+                        "object": "block",
+                        "type": "heading_2",
+                        "heading_2": {
+                            "rich_text": [{"type": "text", "text": {"content": "Lessons"}}],
+                        },
+                    },
+                    {
+                        "object": "block",
+                        "type": "paragraph",
+                        "paragraph": {
+                            "rich_text": [{"type": "text", "text": {"content": ""}}],
+                        },
+                    },
+                    {
+                        "object": "block",
+                        "type": "heading_2",
+                        "heading_2": {
+                            "rich_text": [{"type": "text", "text": {"content": "Next Week Focus"}}],
+                        },
+                    },
+                    {
+                        "object": "block",
+                        "type": "paragraph",
+                        "paragraph": {
+                            "rich_text": [{"type": "text", "text": {"content": ""}}],
+                        },
+                    },
                 ],
             })
             page_url = result.get("url", result.get("id", ""))
