@@ -268,6 +268,7 @@ def _run_kpi_refresh(db: ForgeDB):
         "Killed": "red_background",
     }
 
+    nn_total = 3 if cfg["phase"] == 0 else 5
     for i, (day_key, day_label) in enumerate(zip(DAY_NAMES, DAY_LABELS)):
         target_date = (monday + timedelta(days=i)).isoformat()
         block_id = forge_cfg["week_grid_ids"][day_key]
@@ -279,11 +280,10 @@ def _run_kpi_refresh(db: ForgeDB):
             status = (props.get("Status", {}).get("select") or {}).get("name", "Not Started")
             nns = props.get("Non-Negotiables", {}).get("multi_select") or []
             nn_done = len(nns)
-            nn_total = 3  # Phase 0
             text = f"{day_label} / A-Day\n{task_name}\n{status}\nNN: {nn_done}/{nn_total}"
             color = STATUS_COLOR.get(status, "default")
         else:
-            text = f"{day_label} / A-Day\nNo P0 set\n--\nNN: 0/3"
+            text = f"{day_label} / A-Day\nNo P0 set\n--\nNN: 0/{nn_total}"
             color = "gray_background"
         client.update_block(block_id, {
             "callout": {
@@ -378,6 +378,15 @@ def _run_streak(db: ForgeDB):
     prev_streak = cfg["streak"]
     prev_longest = cfg["longest_streak"]
 
+    # Clear old streak anchors not in qualifying_ids
+    old_anchors = db.client.query_database(
+        config.TASKS_DB,
+        filter_obj={"property": "Streak Anchor", "checkbox": {"equals": True}},
+    )
+    for page in old_anchors:
+        if page["id"] not in qualifying_ids:
+            db.set_streak_anchor(page["id"], False)
+
     # Mark qualifying tasks as streak anchors
     for pid in qualifying_ids:
         db.set_streak_anchor(pid, True)
@@ -385,7 +394,7 @@ def _run_streak(db: ForgeDB):
     # Update SystemConfig
     new_longest = max(count, prev_longest)
     updates = {"streak": count, "longest_streak": new_longest}
-    if count < prev_streak:
+    if count == 0 or count < prev_streak:
         updates["streak_start"] = date.today().isoformat()
     sc.update(**updates)
 
@@ -413,7 +422,7 @@ def _run_checkin(db: ForgeDB, args):
         blocked = [n for n in nn_list if n in (4, 5)]
         if blocked:
             print("NN4 and NN5 activate at Phase 1. Nice try though.")
-            nn_list = [n for n in nn_list if n not in (4, 5)]
+            sys.exit(1)
 
     # Find today's P0
     today_str = date.today().isoformat()
@@ -569,7 +578,6 @@ def _run_weekly(db: ForgeDB):
     today = date.today()
     monday = today - timedelta(days=today.weekday())
     friday = monday + timedelta(days=4)
-    sunday = monday + timedelta(days=6)
 
     # Get week tasks
     week_tasks = db.get_week_tasks()
@@ -595,18 +603,22 @@ def _run_weekly(db: ForgeDB):
             outcomes_filled += 1
 
     # Content stats
-    content_pages = db.client.query_database(
+    posted_pages = db.client.query_database(
         config.CONTENT_DB,
         filter_obj={
             "and": [
-                {"property": "Scheduled Date", "date": {"on_or_after": monday.isoformat()}},
-                {"property": "Scheduled Date", "date": {"on_or_before": sunday.isoformat()}},
+                {"property": "Posted Date", "date": {"on_or_after": monday.isoformat()}},
+                {"property": "Posted Date", "date": {"on_or_before": friday.isoformat()}},
             ]
         },
     ) if config.CONTENT_DB else []
+    posted = len(posted_pages)
 
-    posted = sum(1 for c in content_pages if (c["properties"].get("Status", {}).get("select") or {}).get("name") == "Posted")
-    queued = sum(1 for c in content_pages if (c["properties"].get("Status", {}).get("select") or {}).get("name") == "Queued")
+    queued_pages = db.client.query_database(
+        config.CONTENT_DB,
+        filter_obj={"property": "Status", "select": {"equals": "Queued"}},
+    ) if config.CONTENT_DB else []
+    queued = len(queued_pages)
 
     # System config
     sc = SystemConfig(client=db.client)

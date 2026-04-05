@@ -86,4 +86,10 @@ class SystemConfig:
             props["Longest Streak"] = {"number": kwargs["longest_streak"]}
         if "p0_1_streak" in kwargs:
             props["P0>1: 30-Day Streak"] = {"checkbox": kwargs["p0_1_streak"]}
+        if "p0_1_revenue" in kwargs:
+            props["P0>1: First Revenue"] = {"checkbox": kwargs["p0_1_revenue"]}
+        if "p1_2_retainer" in kwargs:
+            props["P1>2: First Retainer"] = {"checkbox": kwargs["p1_2_retainer"]}
+        if "p1_2_agent" in kwargs:
+            props["P1>2: Agent Task Live"] = {"checkbox": kwargs["p1_2_agent"]}
         return self.client.update_page(row["id"], properties=props)
