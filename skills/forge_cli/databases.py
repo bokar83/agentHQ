@@ -179,6 +179,7 @@ class ForgeDB:
         if not pages:
             return 0, []
 
+        # Build a dict of date -> (status, page_id)
         by_date = {}
         for p in pages:
             due = (p["properties"].get("Due Date", {}).get("date") or {}).get("start")
@@ -192,6 +193,7 @@ class ForgeDB:
         streak = 0
         qualifying = []
 
+        # Check today first (only counts if Done)
         today_str = today.isoformat()
         if today_str in by_date and by_date[today_str][0] == "Done":
             streak += 1
@@ -200,6 +202,7 @@ class ForgeDB:
         else:
             start_check = today - timedelta(days=1)
 
+        # Walk backward from yesterday
         check_date = start_check
         while True:
             check_str = check_date.isoformat()
