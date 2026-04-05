@@ -121,6 +121,8 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+NN_COUNT_BY_PHASE = {0: 3, 1: 5, 2: 5, 3: 5}
+
 NN_LABELS = {
     1: "NN1: Move",
     2: "NN2: Revenue Action",
@@ -245,7 +247,7 @@ def _run_kpi_refresh(db: ForgeDB):
     today = date.today()
     monday = today - timedelta(days=today.weekday())
 
-    week_p0_pages = db.client.query_database(
+    week_p0_pages = client.query_database(
         config.TASKS_DB,
         filter_obj={
             "and": [
@@ -268,7 +270,7 @@ def _run_kpi_refresh(db: ForgeDB):
         "Killed": "red_background",
     }
 
-    nn_total = 3 if cfg["phase"] == 0 else 5
+    nn_total = NN_COUNT_BY_PHASE.get(cfg["phase"], 5)
     for i, (day_key, day_label) in enumerate(zip(DAY_NAMES, DAY_LABELS)):
         target_date = (monday + timedelta(days=i)).isoformat()
         block_id = forge_cfg["week_grid_ids"][day_key]
@@ -375,7 +377,6 @@ def _run_streak(db: ForgeDB):
     count, qualifying_ids = db.calculate_streak()
     sc = SystemConfig(client=db.client)
     cfg = sc.get()
-    prev_streak = cfg["streak"]
     prev_longest = cfg["longest_streak"]
 
     # Clear old streak anchors not in qualifying_ids
@@ -394,8 +395,9 @@ def _run_streak(db: ForgeDB):
     # Update SystemConfig
     new_longest = max(count, prev_longest)
     updates = {"streak": count, "longest_streak": new_longest}
-    if count == 0 or count < prev_streak:
+    if count == 0:
         updates["streak_start"] = date.today().isoformat()
+    # Do not reset streak_start when count > 0; it was set correctly when the streak began
     sc.update(**updates)
 
     print(f"Current streak: {count} days")
@@ -465,7 +467,7 @@ def _run_checkin(db: ForgeDB, args):
     if tomorrow_p0:
         tomorrow_name = "".join([t["plain_text"] for t in (tomorrow_p0["properties"].get("Task", {}).get("title") or [])])
 
-    nn_total = 3 if phase == 0 else 5
+    nn_total = NN_COUNT_BY_PHASE.get(phase, 5)
     print(f"Checked in. NNs complete: {len(selected_labels)}/{nn_total}. Streak: {count} days.")
     print(f"Tomorrow's P0: {tomorrow_name}")
 

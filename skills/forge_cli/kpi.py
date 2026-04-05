@@ -53,11 +53,18 @@ class KPIRefresher:
         return len(pages)
 
     def compute_tasks_done_this_week(self) -> int:
+        from datetime import timedelta
+        today = date.today()
+        monday = today - timedelta(days=today.weekday())
+        sunday = monday + timedelta(days=6)
         pages = self.client.query_database(
             config.TASKS_DB,
             filter_obj={
-                "property": "Status",
-                "select": {"equals": "Done"},
+                "and": [
+                    {"property": "Status", "select": {"equals": "Done"}},
+                    {"property": "Due Date", "date": {"on_or_after": monday.isoformat()}},
+                    {"property": "Due Date", "date": {"on_or_before": sunday.isoformat()}},
+                ]
             },
         )
         return len(pages)
