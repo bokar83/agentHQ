@@ -735,11 +735,12 @@ class CRMRevealEmailTool(BaseTool):
 
 
 class CRMAddLeadTool(BaseTool):
-    """Adds a newly discovered lead to the local CRM."""
+    """Adds a newly discovered lead to Supabase and syncs to Notion."""
     name: str = "add_lead"
     description: str = (
-        "Add a discovered lead to the local PostgreSQL CRM. "
-        "Input: JSON dict with name, company, title, location, linkedin_url, industry."
+        "Add a discovered lead to the Supabase CRM and auto-sync to Notion CRM Leads. "
+        "Input: JSON dict with name, company, title, location, linkedin_url, industry, source. "
+        "Also logs a discovery interaction in lead_interactions automatically."
     )
     def _run(self, input_data: str) -> str:
         try:
