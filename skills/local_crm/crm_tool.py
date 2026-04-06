@@ -15,15 +15,20 @@ logger = logging.getLogger(__name__)
 
 
 def _get_conn():
-    """Return a Supabase CRM connection via the centralized db utility."""
+    """
+    Return a CRM connection -- Supabase primary, local Postgres fallback.
+    Logs a warning if falling back so we know a sync will be needed.
+    """
     import sys
     import os
-    # Ensure orchestrator/ is on path when running inside container
     app_dir = "/app"
     if app_dir not in sys.path:
         sys.path.insert(0, app_dir)
-    from db import get_crm_connection
-    return get_crm_connection()
+    from db import get_crm_connection_with_fallback
+    conn, is_fallback = get_crm_connection_with_fallback()
+    if is_fallback:
+        logger.warning("CRM: writing to local Postgres fallback -- Supabase unreachable.")
+    return conn
 
 
 def add_lead(lead_data: dict) -> int:

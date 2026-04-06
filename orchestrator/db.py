@@ -1,8 +1,12 @@
 """
 db.py — Database connection utilities for agentsHQ
 ===================================================
-Provides connections to Supabase (CRM) and local Postgres (task queue).
-All agents and tools import from here.
+Supabase is the primary CRM database.
+Local Postgres is the fallback -- used only when Supabase is unreachable.
+A background sync job moves any local fallback data to Supabase when it recovers.
+
+Rule: Local Postgres leads table should always be empty.
+      If it has rows, Supabase was unreachable and a sync is needed.
 """
 
 import os
@@ -15,6 +19,7 @@ def get_crm_connection():
     """
     Return a psycopg2 connection to the Supabase CRM database.
     Uses SUPABASE_DB_URL from environment.
+    Raises RuntimeError if unavailable -- caller should fall back to get_local_connection().
     """
     import psycopg2
     import psycopg2.extras
@@ -23,14 +28,14 @@ def get_crm_connection():
     if not url:
         raise RuntimeError("SUPABASE_DB_URL environment variable is not set.")
 
-    conn = psycopg2.connect(url, cursor_factory=psycopg2.extras.RealDictCursor)
+    conn = psycopg2.connect(url, connect_timeout=5, cursor_factory=psycopg2.extras.RealDictCursor)
     return conn
 
 
 def get_local_connection():
     """
-    Return a psycopg2 connection to the local Postgres database (task queue, chat history, etc).
-    Uses individual POSTGRES_* env vars.
+    Return a psycopg2 connection to the local Postgres database.
+    Used as fallback when Supabase is unreachable, and for task queue / chat history.
     """
     import psycopg2
     import psycopg2.extras
@@ -44,3 +49,81 @@ def get_local_connection():
         cursor_factory=psycopg2.extras.RealDictCursor,
     )
     return conn
+
+
+def get_crm_connection_with_fallback() -> tuple:
+    """
+    Try Supabase first. If unavailable, fall back to local Postgres.
+    Returns (conn, is_fallback) tuple.
+    Callers should log a warning if is_fallback is True.
+    """
+    try:
+        conn = get_crm_connection()
+        return conn, False
+    except Exception as e:
+        logger.warning(f"Supabase unavailable ({e}), falling back to local Postgres.")
+        conn = get_local_connection()
+        return conn, True
+
+
+def sync_fallback_to_supabase() -> int:
+    """
+    Move any leads written to local Postgres fallback back to Supabase.
+    Called on orchestrator startup and periodically by the scheduler.
+    Returns number of rows synced.
+    """
+    import psycopg2.extras
+
+    try:
+        local_conn = get_local_connection()
+        local_cur = local_conn.cursor()
+
+        # Check for any leads in local fallback
+        local_cur.execute("SELECT * FROM leads ORDER BY created_at ASC")
+        rows = local_cur.fetchall()
+
+        if not rows:
+            local_cur.close()
+            local_conn.close()
+            return 0
+
+        logger.info(f"Sync: found {len(rows)} fallback lead(s) to sync to Supabase.")
+
+        supabase_conn = get_crm_connection()
+        supabase_cur = supabase_conn.cursor()
+
+        synced = 0
+        for row in rows:
+            try:
+                supabase_cur.execute("""
+                    INSERT INTO leads
+                        (name, company, title, location, phone, linkedin_url, email,
+                         industry, source, status, last_contacted_at, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT DO NOTHING
+                """, (
+                    row['name'], row['company'], row['title'], row['location'],
+                    row['phone'], row['linkedin_url'], row['email'],
+                    row['industry'], row['source'], row['status'],
+                    row.get('last_contacted_at'), row['created_at'], row['updated_at'],
+                ))
+                synced += 1
+            except Exception as e:
+                logger.error(f"Sync: failed to insert lead {row.get('name')}: {e}")
+
+        supabase_conn.commit()
+        supabase_cur.close()
+        supabase_conn.close()
+
+        # Clear local fallback rows that were synced
+        local_cur.execute("DELETE FROM leads WHERE id = ANY(%s)", ([r['id'] for r in rows],))
+        local_conn.commit()
+        local_cur.close()
+        local_conn.close()
+
+        logger.info(f"Sync: {synced} lead(s) moved from local Postgres to Supabase.")
+        return synced
+
+    except Exception as e:
+        logger.error(f"sync_fallback_to_supabase failed: {e}")
+        return 0
