@@ -134,6 +134,10 @@ class JobStatusResponse(BaseModel):
 # Track service start time
 _start_time = time.time()
 
+# Git lock — all local git operations must acquire this before running.
+# Prevents concurrent agents from corrupting the working tree.
+_git_lock = threading.Lock()
+
 
 # ══════════════════════════════════════════════════════════════
 # CORE ORCHESTRATION LOGIC
