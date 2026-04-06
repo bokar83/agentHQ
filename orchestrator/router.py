@@ -111,6 +111,17 @@ TASK_TYPES = {
                      "trending", "latest in", "news brief", "tell me the news", "what should i know"],
         "crew": "news_brief_crew",
     },
+    "gws_task": {
+        "description": "Interact with Google Workspace: list or create or delete calendar events, check schedule, draft Gmail emails, or search Gmail inbox",
+        "keywords": [
+            "calendar", "add event", "create event", "schedule meeting", "book meeting",
+            "delete event", "remove event", "what's on my calendar", "check my calendar",
+            "list events", "upcoming events", "schedule", "my schedule",
+            "draft email", "write email", "gmail", "compose email", "send email",
+            "search email", "find email", "inbox", "check email",
+        ],
+        "crew": "gws_crew",
+    },
 }
 
 
