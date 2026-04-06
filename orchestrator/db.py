@@ -18,17 +18,31 @@ logger = logging.getLogger(__name__)
 def get_crm_connection():
     """
     Return a psycopg2 connection to the Supabase CRM database.
-    Uses SUPABASE_DB_URL from environment.
-    Raises RuntimeError if unavailable -- caller should fall back to get_local_connection().
+    Builds connection from SUPABASE_HOST, SUPABASE_USER, SUPABASE_PASSWORD, SUPABASE_DB
+    to avoid shell escaping issues with special characters in the password.
     """
     import psycopg2
     import psycopg2.extras
 
-    url = os.environ.get("SUPABASE_DB_URL")
-    if not url:
-        raise RuntimeError("SUPABASE_DB_URL environment variable is not set.")
+    host = os.environ.get("SUPABASE_HOST")
+    user = os.environ.get("SUPABASE_USER")
+    password = os.environ.get("SUPABASE_PASSWORD")
+    dbname = os.environ.get("SUPABASE_DB", "postgres")
+    port = int(os.environ.get("SUPABASE_PORT", 6543))
 
-    conn = psycopg2.connect(url, connect_timeout=5, cursor_factory=psycopg2.extras.RealDictCursor)
+    if not all([host, user, password]):
+        raise RuntimeError("Supabase connection vars not set (SUPABASE_HOST, SUPABASE_USER, SUPABASE_PASSWORD).")
+
+    conn = psycopg2.connect(
+        host=host,
+        port=port,
+        dbname=dbname,
+        user=user,
+        password=password,
+        connect_timeout=5,
+        cursor_factory=psycopg2.extras.RealDictCursor,
+        sslmode="require",
+    )
     return conn
 
 
