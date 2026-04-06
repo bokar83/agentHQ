@@ -653,6 +653,7 @@ def _build_summary(
         "code_task":               "Code task complete",
         "general_writing":         "Document ready",
         "agent_creation":          "Agent proposal submitted",
+        "gws_task":                "Google Workspace task complete",
         "unknown":                 "Task complete",
     }
 

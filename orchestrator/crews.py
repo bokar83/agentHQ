@@ -1610,6 +1610,47 @@ def build_notion_overhaul_crew(user_request: str) -> Crew:
     )
 
 
+def build_gws_crew(user_request: str) -> Crew:
+    """
+    Crew for: gws_task
+    Single-agent crew for Google Calendar and Gmail interactions.
+    """
+    from agents import build_gws_agent
+    agent = build_gws_agent()
+
+    task = Task(
+        description=f"""
+        Execute the following Google Workspace request on behalf of Boubacar Barry:
+
+        REQUEST: {user_request}
+
+        Use the available tools (calendar_list_events, calendar_create_event,
+        calendar_delete_event, gmail_create_draft, gmail_search) as needed.
+
+        Rules:
+        - For calendar events: use ISO 8601 datetime strings (e.g. 2026-04-07T09:00:00)
+        - Timezone: America/New_York unless the user specifies otherwise
+        - For Gmail drafts: write in Boubacar's voice — direct, no filler
+        - Always report exactly what was done (event ID, draft ID, search results count)
+        - If an action fails, report the error clearly — never fabricate success
+        """,
+        expected_output=(
+            "A clear confirmation of what was done: event created/listed/deleted with details, "
+            "or Gmail draft created with subject/recipient, "
+            "or search results returned with count and summaries."
+        ),
+        agent=agent
+    )
+
+    return Crew(
+        agents=[agent],
+        tasks=[task],
+        process=Process.sequential,
+        verbose=False,
+        memory=False,
+    )
+
+
 CREW_REGISTRY = {
     "website_crew":        build_website_crew,
     "app_crew":            build_app_crew,
@@ -1626,6 +1667,7 @@ CREW_REGISTRY = {
     "prompt_engineer_crew":   build_prompt_engineer_crew,
     "3d_website_crew":        build_3d_website_crew,
     "news_brief_crew":        build_news_brief_crew,
+    "gws_crew":               build_gws_crew,
     "unknown_crew":           build_unknown_crew,
 }
 
