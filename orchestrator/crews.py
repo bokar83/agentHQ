@@ -1671,16 +1671,16 @@ def build_crm_outreach_crew(user_request: str) -> Crew:
     # Task 1: get uncontacted leads and reveal any missing emails
     enrich_task = Task(
         description=(
-            "GOAL: Prepare the full list of uncontacted leads for outreach.\n\n"
+            "GOAL: Prepare a batch of uncontacted leads for outreach.\n\n"
             "STEPS:\n"
-            "1. Call get_uncontacted_leads to retrieve all leads with status='new' "
-            "and no last_contacted_at date.\n"
-            "2. For each lead that has no email address, call reveal_email to try "
-            "Hunter.io then Apollo.\n"
-            "3. Update the CRM with any emails found using log_interaction "
-            "(type: email_revealed).\n"
-            "4. Return the final list of leads who now have an email address and "
-            "are ready for outreach. Include: id, name, company, title, industry, email.\n\n"
+            "1. Call get_uncontacted_leads to retrieve leads with status='new' "
+            "and no last_contacted_at date. Process the FIRST 10 leads only -- "
+            "this keeps the run fast and reliable.\n"
+            "2. For each of those 10 leads that has no email address, call reveal_email "
+            "to try Hunter.io then Apollo. Stop trying after 2 attempts per lead.\n"
+            "3. Log any newly found emails with log_interaction (type: email_revealed).\n"
+            "4. Return ONLY the leads from those 10 who have an email address. "
+            "Include: id, name, company, title, industry, email.\n\n"
             f"USER REQUEST: {user_request}"
         ),
         agent=hunter,

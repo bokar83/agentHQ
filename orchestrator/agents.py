@@ -654,7 +654,7 @@ def build_hunter_agent() -> Agent:
         llm=select_llm("hunter", "moderate"),
         verbose=False,
         allow_delegation=False,
-        max_iter=8
+        max_iter=15
     )
 
 
@@ -832,7 +832,7 @@ def build_gws_agent() -> Agent:
         llm=select_llm("researcher", "moderate"),
         verbose=False,
         allow_delegation=False,
-        max_iter=5
+        max_iter=20
     )
 
 
