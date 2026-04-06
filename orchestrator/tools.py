@@ -217,6 +217,214 @@ FORGE_TOOLS = [forge_log_tool, forge_pipeline_tool, forge_content_tool]
 
 
 # ══════════════════════════════════════════════════════════════
+# GOOGLE WORKSPACE TOOLS (Calendar + Gmail)
+# Uses OAuth credentials stored at /app/secrets/gws-oauth-credentials.json
+# ══════════════════════════════════════════════════════════════
+
+def _gws_request(method: str, url: str, **kwargs) -> dict:
+    """Make an authenticated Google API request using the stored OAuth token."""
+    import json as _json
+    creds_path = os.environ.get("GOOGLE_OAUTH_CREDENTIALS_JSON", "/app/secrets/gws-oauth-credentials.json")
+    try:
+        with open(creds_path) as f:
+            creds = _json.load(f)
+    except Exception as e:
+        raise RuntimeError(f"Cannot load GWS credentials from {creds_path}: {e}")
+
+    # Refresh access token using refresh_token
+    token_resp = httpx.post(
+        "https://oauth2.googleapis.com/token",
+        data={
+            "client_id": creds["client_id"],
+            "client_secret": creds["client_secret"],
+            "refresh_token": creds["refresh_token"],
+            "grant_type": "refresh_token",
+        },
+        timeout=15,
+    )
+    token_resp.raise_for_status()
+    access_token = token_resp.json()["access_token"]
+
+    headers = kwargs.pop("headers", {})
+    headers["Authorization"] = f"Bearer {access_token}"
+    resp = getattr(httpx, method)(url, headers=headers, timeout=30, **kwargs)
+    resp.raise_for_status()
+    return resp.json() if resp.content else {}
+
+
+class GWSCalendarListTool(BaseTool):
+    name: str = "calendar_list_events"
+    description: str = (
+        "List events from Google Calendar for a given date range. "
+        "Input: JSON with 'date' (YYYY-MM-DD) for a single day, or 'start' and 'end' (YYYY-MM-DD). "
+        "Optional: 'calendar_id' (default: primary)."
+    )
+    def _run(self, input_data: str) -> str:
+        try:
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            cal_id = data.get("calendar_id", "primary")
+            if "date" in data:
+                from datetime import date, timedelta
+                d = data["date"]
+                time_min = f"{d}T00:00:00-06:00"
+                time_max = f"{d}T23:59:59-06:00"
+            else:
+                time_min = f"{data['start']}T00:00:00-06:00"
+                time_max = f"{data['end']}T23:59:59-06:00"
+            result = _gws_request(
+                "get",
+                f"https://www.googleapis.com/calendar/v3/calendars/{cal_id}/events",
+                params={"timeMin": time_min, "timeMax": time_max, "singleEvents": "true", "orderBy": "startTime"},
+            )
+            events = result.get("items", [])
+            if not events:
+                return "No events found."
+            lines = []
+            for e in events:
+                start = e.get("start", {}).get("dateTime", e.get("start", {}).get("date", ""))
+                lines.append(f"- {e.get('summary','Untitled')} @ {start}")
+            return "\n".join(lines)
+        except Exception as e:
+            return f"calendar_list_events failed: {e}"
+
+
+class GWSCalendarCreateTool(BaseTool):
+    name: str = "calendar_create_event"
+    description: str = (
+        "Create an event in Google Calendar. "
+        "Input: JSON with 'summary', 'start' (ISO datetime), 'end' (ISO datetime). "
+        "Optional: 'description', 'color_id' (1-11), 'calendar_id' (default: primary)."
+    )
+    def _run(self, input_data: str) -> str:
+        try:
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            cal_id = data.get("calendar_id", "primary")
+            body = {
+                "summary": data["summary"],
+                "start": {"dateTime": data["start"], "timeZone": "America/Denver"},
+                "end": {"dateTime": data["end"], "timeZone": "America/Denver"},
+            }
+            if "description" in data:
+                body["description"] = data["description"]
+            if "color_id" in data:
+                body["colorId"] = str(data["color_id"])
+            result = _gws_request(
+                "post",
+                f"https://www.googleapis.com/calendar/v3/calendars/{cal_id}/events",
+                json=body,
+            )
+            return f"Event created: {result.get('summary')} (id: {result.get('id')})"
+        except Exception as e:
+            return f"calendar_create_event failed: {e}"
+
+
+class GWSCalendarDeleteTool(BaseTool):
+    name: str = "calendar_delete_event"
+    description: str = (
+        "Delete an event from Google Calendar by event ID. "
+        "Input: JSON with 'event_id'. Optional: 'calendar_id' (default: primary)."
+    )
+    def _run(self, input_data: str) -> str:
+        try:
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            cal_id = data.get("calendar_id", "primary")
+            httpx.delete(
+                f"https://www.googleapis.com/calendar/v3/calendars/{cal_id}/events/{data['event_id']}",
+                headers={"Authorization": f"Bearer {_get_gws_token()}"},
+                timeout=15,
+            )
+            return f"Event {data['event_id']} deleted."
+        except Exception as e:
+            return f"calendar_delete_event failed: {e}"
+
+
+def _get_gws_token() -> str:
+    """Helper to get a fresh access token."""
+    creds_path = os.environ.get("GOOGLE_OAUTH_CREDENTIALS_JSON", "/app/secrets/gws-oauth-credentials.json")
+    with open(creds_path) as f:
+        creds = json.load(f)
+    token_resp = httpx.post(
+        "https://oauth2.googleapis.com/token",
+        data={
+            "client_id": creds["client_id"],
+            "client_secret": creds["client_secret"],
+            "refresh_token": creds["refresh_token"],
+            "grant_type": "refresh_token",
+        },
+        timeout=15,
+    )
+    token_resp.raise_for_status()
+    return token_resp.json()["access_token"]
+
+
+class GWSGmailCreateDraftTool(BaseTool):
+    name: str = "gmail_create_draft"
+    description: str = (
+        "Create a Gmail draft on behalf of Boubacar. "
+        "Input: JSON with 'to' (email), 'subject', 'body' (plain text). "
+        "Optional: 'cc'."
+    )
+    def _run(self, input_data: str) -> str:
+        try:
+            import base64
+            from email.mime.text import MIMEText
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            msg = MIMEText(data["body"])
+            msg["to"] = data["to"]
+            msg["subject"] = data["subject"]
+            if "cc" in data:
+                msg["cc"] = data["cc"]
+            raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
+            result = _gws_request(
+                "post",
+                "https://gmail.googleapis.com/gmail/v1/users/me/drafts",
+                json={"message": {"raw": raw}},
+            )
+            draft_id = result.get("id", "")
+            return f"Draft created (id: {draft_id}): '{data['subject']}' to {data['to']}"
+        except Exception as e:
+            return f"gmail_create_draft failed: {e}"
+
+
+class GWSGmailSearchTool(BaseTool):
+    name: str = "gmail_search"
+    description: str = (
+        "Search Gmail messages. "
+        "Input: JSON with 'query' (Gmail search syntax, e.g. 'from:someone subject:hello'). "
+        "Optional: 'max_results' (default 5)."
+    )
+    def _run(self, input_data: str) -> str:
+        try:
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            result = _gws_request(
+                "get",
+                "https://gmail.googleapis.com/gmail/v1/users/me/messages",
+                params={"q": data["query"], "maxResults": data.get("max_results", 5)},
+            )
+            messages = result.get("messages", [])
+            if not messages:
+                return "No messages found."
+            return f"Found {len(messages)} message(s). IDs: {', '.join(m['id'] for m in messages)}"
+        except Exception as e:
+            return f"gmail_search failed: {e}"
+
+
+gws_calendar_list_tool = GWSCalendarListTool()
+gws_calendar_create_tool = GWSCalendarCreateTool()
+gws_calendar_delete_tool = GWSCalendarDeleteTool()
+gws_gmail_draft_tool = GWSGmailCreateDraftTool()
+gws_gmail_search_tool = GWSGmailSearchTool()
+
+GWS_TOOLS = [
+    gws_calendar_list_tool,
+    gws_calendar_create_tool,
+    gws_calendar_delete_tool,
+    gws_gmail_draft_tool,
+    gws_gmail_search_tool,
+]
+
+
+# ══════════════════════════════════════════════════════════════
 # CUSTOM TOOLS
 # ══════════════════════════════════════════════════════════════
 
@@ -675,5 +883,5 @@ RESEARCH_TOOLS = [search_tool, file_reader, QueryMemoryTool()]
 SCRAPING_TOOLS = [FirecrawlScrapeTool(), FirecrawlCrawlTool(), FirecrawlSearchTool()]
 WRITING_TOOLS = [file_writer, SaveOutputTool(), voice_polisher_tool]
 CODE_TOOLS = [code_interpreter, file_writer, file_reader, SaveOutputTool(), CLIHubSearchTool()]
-ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool(), GitHubRepoTool(), GitHubIssueTool(), GitHubFileTool(), NotionSearchTool(), NotionPageTool()] + VERCEL_TOOLS + NOTION_STYLING_TOOLS + FORGE_TOOLS
+ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool(), GitHubRepoTool(), GitHubIssueTool(), GitHubFileTool(), NotionSearchTool(), NotionPageTool()] + VERCEL_TOOLS + NOTION_STYLING_TOOLS + FORGE_TOOLS + GWS_TOOLS
 HUNTER_TOOLS = [prospecting_tool, crm_add_tool, crm_log_tool, crm_reveal_tool, scoreboard_tool, QueryMemoryTool(), NotionPageTool(), forge_pipeline_tool, forge_log_tool]
