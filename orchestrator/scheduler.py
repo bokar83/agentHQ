@@ -100,13 +100,55 @@ def _scheduler_loop():
         # Sleep for 30 seconds to avoid missing the minute or double-triggering
         time.sleep(30)
 
+def _run_supabase_sync():
+    """
+    Sync any leads written to local Postgres fallback back to Supabase.
+    Runs on startup and every 30 minutes.
+    """
+    try:
+        import sys
+        if "/app" not in sys.path:
+            sys.path.insert(0, "/app")
+        from db import sync_fallback_to_supabase
+        synced = sync_fallback_to_supabase()
+        if synced > 0:
+            logger.info(f"Sync: moved {synced} fallback lead(s) to Supabase.")
+    except Exception as e:
+        logger.error(f"Supabase sync failed: {e}")
+
+
 def start_scheduler():
     """
     Launch the scheduler in a daemon thread.
+    Also runs Supabase sync on startup and every 30 minutes.
     """
+    # Run sync immediately on startup
+    _run_supabase_sync()
+
+    def loop_with_sync():
+        sync_counter = 0
+        while True:
+            _scheduler_loop_tick()
+            sync_counter += 1
+            # Every 60 ticks of 30s = 30 minutes
+            if sync_counter >= 60:
+                _run_supabase_sync()
+                sync_counter = 0
+
     thread = threading.Thread(target=_scheduler_loop, daemon=True)
     thread.start()
+
+    sync_thread = threading.Thread(target=_periodic_sync, daemon=True)
+    sync_thread.start()
+
     logger.info("Background scheduler initialized.")
+
+
+def _periodic_sync():
+    """Run Supabase fallback sync every 30 minutes."""
+    while True:
+        time.sleep(1800)  # 30 minutes
+        _run_supabase_sync()
 
 if __name__ == "__main__":
     # Test trigger
