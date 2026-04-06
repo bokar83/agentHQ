@@ -39,15 +39,16 @@ SECTOR_BRACKET = {
 }
 
 # ── Email templates ─────────────────────────────────────────────
-SUBJECT = "Quick question for {first_name}"
+# Template A: known industry (bracket filled in)
+SUBJECT_A = "Where is your margin actually going?"
 
 TEMPLATE_A = """Hi {first_name},
 
 I'll keep this simple.
 
-Most {bracket} businesses aren't losing margin to bad strategy. They're losing it to one bottleneck that hasn't been named yet -- a handoff, an approval loop, a pricing gap quietly taxing everything downstream.
+Most {bracket} businesses aren't losing margin to bad strategy. They're losing it to one bottleneck that hasn't been named yet: a handoff, an approval loop, a pricing gap quietly taxing everything downstream.
 
-I'm Boubacar Barry, founder of Catalyst Works. I run a constraint diagnostic -- usually 90 minutes -- that finds exactly where margin is leaking and what to fix first. You leave with a specific answer and a 90-day action plan, not a slide deck.
+I'm Boubacar Barry, founder of Catalyst Works. I run a constraint diagnostic, usually 90 minutes, that finds exactly where margin is leaking and what to fix first. You leave with a specific answer and a 90-day action plan, not a slide deck.
 
 No pitch. Just a direct conversation.
 
@@ -56,13 +57,16 @@ Worth 20 minutes?
 Boubacar
 catalystworks.consulting"""
 
+# Template B: unknown industry (no bracket)
+SUBJECT_B = "Do you know where your margin actually is going?"
+
 TEMPLATE_B = """Hi {first_name},
 
 I'll keep this simple.
 
-Most 20 to 80 person businesses aren't losing margin to bad strategy. They're losing it to one bottleneck that hasn't been named yet -- a handoff, an approval loop, a pricing gap quietly taxing everything downstream.
+Most 20 to 80 person businesses aren't losing margin to bad strategy. They're losing it to one bottleneck that hasn't been named yet: a handoff, an approval loop, a pricing gap quietly taxing everything downstream.
 
-I'm Boubacar Barry, founder of Catalyst Works. I run a constraint diagnostic -- usually 90 minutes -- that finds exactly where margin is leaking and what to fix first. You leave with a specific answer and a 90-day action plan, not a slide deck.
+I'm Boubacar Barry, founder of Catalyst Works. I run a constraint diagnostic, usually 90 minutes, that finds exactly where margin is leaking and what to fix first. You leave with a specific answer and a 90-day action plan, not a slide deck.
 
 No pitch. Just a direct conversation.
 
@@ -224,13 +228,13 @@ def run_outreach(contact_all: bool = False) -> dict:
         first_name = name.split()[0] if name else "there"
         bracket = SECTOR_BRACKET.get(industry)
 
-        # Choose template
+        # Choose template based on whether we have a known industry bracket
         if bracket:
+            subject = SUBJECT_A
             body = TEMPLATE_A.format(first_name=first_name, bracket=bracket)
         else:
+            subject = SUBJECT_B
             body = TEMPLATE_B.format(first_name=first_name)
-
-        subject = SUBJECT.format(first_name=first_name)
 
         draft_id = _create_draft(email, subject, body)
         if draft_id:
