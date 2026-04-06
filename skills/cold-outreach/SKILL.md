@@ -10,23 +10,21 @@
 - **Reply-first model:** Optimize for the micro-commitment (a reply), not the booking. Calendly goes in the follow-up, never the cold email.
 - **Sector vs size bracket:** Use the sector version whenever LinkedIn gives you 60 seconds of context. Use the size version when moving fast or business type is ambiguous.
 - **Research payoff:** Personalizing the bracket (sector vs generic) can 2x-3x reply rates. The bracket is not decoration.
-- **Emoji in subject:** The ninja emoji is intentional and on-brand. Confirm rendering in your email client before bulk send.
-
 ---
 
 ## Subject Line
 
-```
-Where is your margin actually going? 🥷🏾
+```text
+Where is your margin actually going?
 ```
 
 ---
 
 ## Template A — Sector-Specific
 
-*Use when: you know the prospect's industry from LinkedIn or a quick search.*
+Use when: you know the prospect's industry from LinkedIn or a quick search.
 
-```
+```text
 Hi [First Name],
 
 I'll keep this simple.
