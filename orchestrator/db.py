@@ -24,14 +24,17 @@ def get_crm_connection():
     import psycopg2
     import psycopg2.extras
 
+    import base64
     host = os.environ.get("SUPABASE_HOST")
     user = os.environ.get("SUPABASE_USER")
-    password = os.environ.get("SUPABASE_PASSWORD")
+    # Password stored as base64 to survive Docker/shell variable interpolation of special chars
+    password_b64 = os.environ.get("SUPABASE_PASSWORD_B64")
+    password = base64.b64decode(password_b64).decode("utf-8") if password_b64 else None
     dbname = os.environ.get("SUPABASE_DB", "postgres")
     port = int(os.environ.get("SUPABASE_PORT", 6543))
 
     if not all([host, user, password]):
-        raise RuntimeError("Supabase connection vars not set (SUPABASE_HOST, SUPABASE_USER, SUPABASE_PASSWORD).")
+        raise RuntimeError("Supabase connection vars not set (SUPABASE_HOST, SUPABASE_USER, SUPABASE_PASSWORD_B64).")
 
     conn = psycopg2.connect(
         host=host,
