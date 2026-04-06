@@ -1674,12 +1674,12 @@ def build_crm_outreach_crew(user_request: str) -> Crew:
             "GOAL: Prepare a batch of uncontacted leads for outreach.\n\n"
             "STEPS:\n"
             "1. Call get_uncontacted_leads to retrieve leads with status='new' "
-            "and no last_contacted_at date. Process the FIRST 10 leads only -- "
-            "this keeps the run fast and reliable.\n"
+            "and no last_contacted_at date. Look at the FIRST 10 leads only.\n"
             "2. For each of those 10 leads that has no email address, call reveal_email "
             "to try Hunter.io then Apollo. Stop trying after 2 attempts per lead.\n"
             "3. Log any newly found emails with log_interaction (type: email_revealed).\n"
-            "4. Return ONLY the leads from those 10 who have an email address. "
+            "4. Return ONLY the leads from those 10 who have an email address -- "
+            "maximum 5 leads. If more than 5 have emails, return the first 5 only. "
             "Include: id, name, company, title, industry, email.\n\n"
             f"USER REQUEST: {user_request}"
         ),
@@ -1694,19 +1694,23 @@ def build_crm_outreach_crew(user_request: str) -> Crew:
     # Task 2: draft outreach emails for every ready lead
     draft_task = Task(
         description=(
-            "GOAL: Create a cold outreach Gmail draft for every lead passed from the previous task.\n\n"
+            "GOAL: Create cold outreach Gmail drafts for the leads passed from the previous task.\n\n"
             "RULES:\n"
+            "- LIMIT: Create a maximum of 5 drafts per run. Stop after 5.\n"
+            "- CONFIRMED EMAILS ONLY: Only draft for leads where an email address was "
+            "explicitly provided by the previous task. NEVER guess, infer, or construct "
+            "an email address. If a lead has no confirmed email, skip them entirely.\n"
             "- Account: use catalystworks.ai@gmail.com for ALL outreach drafts.\n"
-            "- Template: read the cold outreach skill (Notion Gmail Templates database) "
-            "and pick the template that matches the lead's industry. If no exact match, "
-            "use the general Catalyst Works template.\n"
-            "- Personalization: replace [First Name] with the lead's first name, "
-            "[Company] with their company name, and any [sector bracket] with their industry.\n"
-            "- One draft per lead. Subject line: 'Quick question for [First Name]'.\n"
+            "- Template: use the industry bracket mapping below:\n"
+            "  Legal -> 'legal services' | Accounting -> 'accounting' | "
+            "  Marketing Agency -> 'agency' | HVAC/Plumbing/Roofing -> 'trades' | Other -> size template\n"
+            "- Body: use Template A from the cold outreach skill, fill in [First Name], "
+            "[Company], and the correct sector bracket. Never leave a placeholder unfilled.\n"
+            "- Subject line: 'Quick question for [First Name]'\n"
             "- After creating each draft, call log_interaction with "
             "lead_id, type='outreach_draft', content=the subject line.\n"
             "- NEVER send. Only create drafts.\n\n"
-            "Report total drafts created and any leads skipped (no email)."
+            "Report total drafts created and any leads skipped (no confirmed email)."
         ),
         agent=gws,
         expected_output=(
