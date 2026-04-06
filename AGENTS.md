@@ -114,6 +114,7 @@ The Router classifies every incoming request into one of these types. New types 
 | `voice_polishing` | humanize, polish, voice match | boub_ai_voice |
 | `hunter_task` | find leads, get prospects, utah leads, growth engine | hunter, boub_ai_voice |
 | `skill_build` | colonize, build tool, wrap software, cli-anything | planner, skill_builder, qa |
+| `gws_task` | calendar, add event, check schedule, gmail, draft email, search email | gws_agent |
 | `unknown` | anything else | router escalates to Boubacar via Telegram with proposed new agent |
 
 ---

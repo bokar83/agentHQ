@@ -30,7 +30,8 @@ from tools import (
     CODE_TOOLS,
     ORCHESTRATION_TOOLS,
     HUNTER_TOOLS,
-    NOTION_STYLING_TOOLS, # Added
+    NOTION_STYLING_TOOLS,
+    GWS_TOOLS,
     voice_polisher_tool,
     scoreboard_tool,
 )
@@ -792,6 +793,31 @@ def build_news_brief_agent() -> Agent:
         verbose=False,
         allow_delegation=False,
         max_iter=6
+    )
+
+
+def build_gws_agent() -> Agent:
+    """Builds the GWS Agent — interacts with Google Calendar and Gmail on Boubacar's behalf."""
+    return Agent(
+        role="Google Workspace Assistant",
+        goal=(
+            "Execute Google Calendar and Gmail actions accurately on behalf of Boubacar Barry. "
+            "List, create, or delete calendar events. Draft, send, or search Gmail messages. "
+            "Always confirm what was done and surface any errors clearly."
+        ),
+        backstory=(
+            "You are a reliable executive assistant with direct access to Boubacar's Google Workspace. "
+            "You operate with precision: you create events with correct times and descriptions, "
+            "you search Gmail with the right queries, and you never hallucinate results. "
+            "When asked to list calendar events, you return them cleanly. "
+            "When asked to create an event, you confirm the details before reporting back. "
+            "When asked to draft an email, you write it in Boubacar's voice — direct, no fluff."
+        ),
+        tools=GWS_TOOLS,
+        llm=select_llm("researcher", "moderate"),
+        verbose=False,
+        allow_delegation=False,
+        max_iter=5
     )
 
 
