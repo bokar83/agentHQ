@@ -218,20 +218,33 @@ FORGE_TOOLS = [forge_log_tool, forge_pipeline_tool, forge_content_tool]
 
 # ══════════════════════════════════════════════════════════════
 # GOOGLE WORKSPACE TOOLS (Calendar + Gmail)
-# Uses OAuth credentials stored at /app/secrets/gws-oauth-credentials.json
+# Supports multiple accounts via separate credentials files:
+#   bokar83@gmail.com       → GOOGLE_OAUTH_CREDENTIALS_JSON (default)
+#   catalystworks.ai@gmail.com → GOOGLE_OAUTH_CREDENTIALS_JSON_CW
 # ══════════════════════════════════════════════════════════════
 
-def _gws_request(method: str, url: str, **kwargs) -> dict:
+_GWS_CREDS_MAP = {
+    "bokar83@gmail.com": os.environ.get("GOOGLE_OAUTH_CREDENTIALS_JSON", "/app/secrets/gws-oauth-credentials.json"),
+    "catalystworks.ai@gmail.com": os.environ.get("GOOGLE_OAUTH_CREDENTIALS_JSON_CW", "/app/secrets/gws-oauth-credentials-cw.json"),
+}
+_GWS_DEFAULT_ACCOUNT = "bokar83@gmail.com"
+
+
+def _gws_creds_path(account: str | None = None) -> str:
+    """Return the credentials file path for the given account (default: bokar83)."""
+    return _GWS_CREDS_MAP.get(account or _GWS_DEFAULT_ACCOUNT, _GWS_CREDS_MAP[_GWS_DEFAULT_ACCOUNT])
+
+
+def _gws_request(method: str, url: str, account: str | None = None, **kwargs) -> dict:
     """Make an authenticated Google API request using the stored OAuth token."""
     import json as _json
-    creds_path = os.environ.get("GOOGLE_OAUTH_CREDENTIALS_JSON", "/app/secrets/gws-oauth-credentials.json")
+    creds_path = _gws_creds_path(account)
     try:
         with open(creds_path) as f:
             creds = _json.load(f)
     except Exception as e:
         raise RuntimeError(f"Cannot load GWS credentials from {creds_path}: {e}")
 
-    # Refresh access token using refresh_token
     token_resp = httpx.post(
         "https://oauth2.googleapis.com/token",
         data={
@@ -330,7 +343,7 @@ class GWSCalendarDeleteTool(BaseTool):
             cal_id = data.get("calendar_id", "primary")
             httpx.delete(
                 f"https://www.googleapis.com/calendar/v3/calendars/{cal_id}/events/{data['event_id']}",
-                headers={"Authorization": f"Bearer {_get_gws_token()}"},
+                headers={"Authorization": f"Bearer {_get_gws_token(data.get('account'))}"},
                 timeout=15,
             )
             return f"Event {data['event_id']} deleted."
@@ -338,9 +351,9 @@ class GWSCalendarDeleteTool(BaseTool):
             return f"calendar_delete_event failed: {e}"
 
 
-def _get_gws_token() -> str:
-    """Helper to get a fresh access token."""
-    creds_path = os.environ.get("GOOGLE_OAUTH_CREDENTIALS_JSON", "/app/secrets/gws-oauth-credentials.json")
+def _get_gws_token(account: str | None = None) -> str:
+    """Helper to get a fresh access token for the given account (default: bokar83)."""
+    creds_path = _gws_creds_path(account)
     with open(creds_path) as f:
         creds = json.load(f)
     token_resp = httpx.post(
@@ -360,15 +373,17 @@ def _get_gws_token() -> str:
 class GWSGmailCreateDraftTool(BaseTool):
     name: str = "gmail_create_draft"
     description: str = (
-        "Create a Gmail draft on behalf of Boubacar. "
+        "Create a Gmail draft. "
         "Input: JSON with 'to' (email), 'subject', 'body' (plain text). "
-        "Optional: 'cc'."
+        "Optional: 'cc', 'account' (email address to send from — defaults to bokar83@gmail.com; "
+        "use 'catalystworks.ai@gmail.com' for Catalyst Works outreach)."
     )
     def _run(self, input_data: str) -> str:
         try:
             import base64
             from email.mime.text import MIMEText
             data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            account = data.get("account")
             msg = MIMEText(data["body"])
             msg["to"] = data["to"]
             msg["subject"] = data["subject"]
@@ -378,10 +393,12 @@ class GWSGmailCreateDraftTool(BaseTool):
             result = _gws_request(
                 "post",
                 "https://gmail.googleapis.com/gmail/v1/users/me/drafts",
+                account=account,
                 json={"message": {"raw": raw}},
             )
             draft_id = result.get("id", "")
-            return f"Draft created (id: {draft_id}): '{data['subject']}' to {data['to']}"
+            from_label = account or _GWS_DEFAULT_ACCOUNT
+            return f"Draft created (id: {draft_id}): '{data['subject']}' to {data['to']} from {from_label}"
         except Exception as e:
             return f"gmail_create_draft failed: {e}"
 
@@ -391,14 +408,16 @@ class GWSGmailSearchTool(BaseTool):
     description: str = (
         "Search Gmail messages. "
         "Input: JSON with 'query' (Gmail search syntax, e.g. 'from:someone subject:hello'). "
-        "Optional: 'max_results' (default 5)."
+        "Optional: 'max_results' (default 5), 'account' (email address to search — defaults to bokar83@gmail.com)."
     )
     def _run(self, input_data: str) -> str:
         try:
             data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            account = data.get("account")
             result = _gws_request(
                 "get",
                 "https://gmail.googleapis.com/gmail/v1/users/me/messages",
+                account=account,
                 params={"q": data["query"], "maxResults": data.get("max_results", 5)},
             )
             messages = result.get("messages", [])

@@ -633,12 +633,11 @@ def build_hunter_agent() -> Agent:
     return Agent(
         role="Growth Hunter — Utah SMB Prospecting Specialist",
         goal=(
-            "Find 20 high-value SMB leads per daily run in Utah "
-            "(Legal, Accounting, Marketing Agency, HVAC, Plumbing, Roofing). "
+            "Find 20 high-value SMB leads per daily run in Utah. "
             "For each lead collect: name, company, title, phone, email, and LinkedIn URL. "
-            "Save every lead to the CRM via add_lead. "
-            "When Boubacar requests a specific email reveal, use the reveal_email tool. "
-            "Finish every run by reporting the daily scoreboard."
+            "Proactively reveal and verify emails for all leads found during discovery "
+            "to ensure a complete, actionable pipeline. "
+            "Save every lead to the CRM via add_lead and finish every run by reporting the daily scoreboard."
         ),
         backstory=(
             "You are a relentless revenue prospector for Catalyst Works Consulting. "
@@ -646,10 +645,10 @@ def build_hunter_agent() -> Agent:
             "Serper local business search for phone and website → "
             "Firecrawl to scrape websites for direct contact info → "
             "Hunter.io to fill in missing emails → "
-            "Apollo as a last resort when Serper returns fewer than 5 results. "
-            "You never reveal Apollo emails automatically — Apollo credits are rationed. "
-            "You log every lead to Supabase CRM via add_lead. "
-            "You report results clearly so Boubacar can prioritize outreach."
+            "Apollo as the primary enrichment engine for high-confidence contact data. "
+            "You automatically reveal emails for every lead found — no more pending placeholders. "
+            "You log every lead to Supabase CRM via add_lead and report results clearly "
+            "to ensure immediate outreach can begin."
         ),
         tools=HUNTER_TOOLS,
         llm=select_llm("hunter", "moderate"),
@@ -657,6 +656,7 @@ def build_hunter_agent() -> Agent:
         allow_delegation=False,
         max_iter=8
     )
+
 
 
 def build_prompt_engineer_agent() -> Agent:
@@ -811,7 +811,15 @@ def build_gws_agent() -> Agent:
             "you search Gmail with the right queries, and you never hallucinate results. "
             "When asked to list calendar events, you return them cleanly. "
             "When asked to create an event, you confirm the details before reporting back. "
-            "When asked to draft an email, you write it in Boubacar's voice — direct, no fluff."
+            "When asked to draft an email, you write it in Boubacar's voice — direct, no fluff.\n\n"
+            "ACCOUNT SELECTION RULES:\n"
+            "You have access to two Gmail accounts. Always pick the right one:\n"
+            "- bokar83@gmail.com: default. Personal tasks, internal comms, anything not Catalyst Works.\n"
+            "- catalystworks.ai@gmail.com: Catalyst Works business outreach only. Use when the task "
+            "involves client outreach, cold email, proposals, or when a Notion email template has "
+            "'From Email' set to catalystworks.ai@gmail.com.\n"
+            "Pass the chosen address as the 'account' field in your tool input. "
+            "Never mix accounts. If unsure, default to bokar83@gmail.com."
         ),
         tools=GWS_TOOLS,
         llm=select_llm("researcher", "moderate"),
