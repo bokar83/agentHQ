@@ -48,7 +48,7 @@ def add_lead(lead_data: dict) -> int:
             lead_data.get('linkedin_url'),
             lead_data.get('email'),
             lead_data.get('industry'),
-            lead_data.get('source', 'serper'),
+            lead_data.get('source', 'Hunter'),
         ))
         lead_id = cur.fetchone()['id']
         conn.commit()
