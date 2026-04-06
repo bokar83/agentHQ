@@ -40,7 +40,7 @@ from firecrawl_tools import FirecrawlScrapeTool, FirecrawlCrawlTool, FirecrawlSe
 # Import Phase 2 Skills
 # Core hunter + CRM imports — must not fail silently
 try:
-    from skills.local_crm.crm_tool import add_lead, log_interaction, update_lead_status, get_daily_scoreboard, update_lead_email, get_lead_by_name
+    from skills.local_crm.crm_tool import add_lead, log_interaction, update_lead_status, get_daily_scoreboard, update_lead_email, get_lead_by_name, get_uncontacted_leads
 except ImportError as e:
     logger_pre = __import__("logging").getLogger(__name__)
     logger_pre.warning(f"crm_tool import failed: {e}")
@@ -767,6 +767,20 @@ class CRMLogInteractionTool(BaseTool):
             return f"Error: {e}"
 
 
+class CRMGetUncontactedTool(BaseTool):
+    """Returns all CRM leads who have never been contacted."""
+    name: str = "get_uncontacted_leads"
+    description: str = (
+        "Get all leads in the Supabase CRM who have never been contacted "
+        "(status = 'new' and last_contacted_at is null). "
+        "Returns a JSON list with id, name, company, title, email, phone, linkedin_url, industry. "
+        "Use this at the start of any outreach run to know who needs to be reached."
+    )
+    def _run(self, _=None) -> str:
+        leads = get_uncontacted_leads()
+        return json.dumps(leads, indent=2, default=str)
+
+
 class DailyScoreboardTool(BaseTool):
     """Reports daily sales velocity (leGriot's dashboard)."""
     name: str = "get_daily_scoreboard"
@@ -897,6 +911,7 @@ prospecting_tool = UtahProspectingTool()
 crm_add_tool = CRMAddLeadTool()
 crm_log_tool = CRMLogInteractionTool()
 crm_reveal_tool = CRMRevealEmailTool()
+crm_uncontacted_tool = CRMGetUncontactedTool()
 scoreboard_tool = DailyScoreboardTool()
 
 RESEARCH_TOOLS = [search_tool, file_reader, QueryMemoryTool()]
@@ -905,3 +920,4 @@ WRITING_TOOLS = [file_writer, SaveOutputTool(), voice_polisher_tool]
 CODE_TOOLS = [code_interpreter, file_writer, file_reader, SaveOutputTool(), CLIHubSearchTool()]
 ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool(), GitHubRepoTool(), GitHubIssueTool(), GitHubFileTool(), NotionSearchTool(), NotionPageTool()] + VERCEL_TOOLS + NOTION_STYLING_TOOLS + FORGE_TOOLS + GWS_TOOLS
 HUNTER_TOOLS = [prospecting_tool, crm_add_tool, crm_log_tool, crm_reveal_tool, scoreboard_tool, QueryMemoryTool(), NotionPageTool(), forge_pipeline_tool, forge_log_tool]
+OUTREACH_TOOLS = [crm_uncontacted_tool, crm_reveal_tool, crm_log_tool, scoreboard_tool]

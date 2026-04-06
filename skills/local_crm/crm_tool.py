@@ -255,6 +255,32 @@ def get_lead_by_name(name: str, company: str = "") -> dict:
         return {}
 
 
+def get_uncontacted_leads(limit: int = 50) -> list:
+    """
+    Return leads who have never been contacted.
+    Criteria: status = 'new' AND last_contacted_at IS NULL.
+    Returns list of lead dicts ordered by created_at ASC (oldest first).
+    """
+    try:
+        conn = _get_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT id, name, company, title, location, email, phone,
+                   linkedin_url, industry, source, status, created_at
+            FROM leads
+            WHERE status = 'new' AND last_contacted_at IS NULL
+            ORDER BY created_at ASC
+            LIMIT %s
+        """, (limit,))
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        return [dict(r) for r in rows]
+    except Exception as e:
+        logger.error(f"CRM get_uncontacted_leads failed: {e}")
+        return []
+
+
 def get_daily_scoreboard() -> dict:
     """
     Get today's sales velocity stats.

@@ -1651,6 +1651,81 @@ def build_gws_crew(user_request: str) -> Crew:
     )
 
 
+def build_crm_outreach_crew(user_request: str) -> Crew:
+    """
+    Crew for: crm_outreach
+    Two-agent sequential crew:
+      1. Hunter agent -- reveals missing emails for uncontacted leads
+      2. GWS agent -- reads cold outreach templates, creates Gmail drafts, logs interactions
+
+    Triggered by: "outreach", "cold email", "contact leads", "email prospects"
+    """
+    from agents import build_hunter_agent, build_gws_agent
+    from tools import OUTREACH_TOOLS, GWS_TOOLS, crm_log_tool
+
+    hunter = build_hunter_agent()
+    gws = build_gws_agent()
+    # Give GWS agent CRM log tool so it can log outreach_draft interactions
+    gws.tools = GWS_TOOLS + [crm_log_tool]
+
+    # Task 1: get uncontacted leads and reveal any missing emails
+    enrich_task = Task(
+        description=(
+            "GOAL: Prepare the full list of uncontacted leads for outreach.\n\n"
+            "STEPS:\n"
+            "1. Call get_uncontacted_leads to retrieve all leads with status='new' "
+            "and no last_contacted_at date.\n"
+            "2. For each lead that has no email address, call reveal_email to try "
+            "Hunter.io then Apollo.\n"
+            "3. Update the CRM with any emails found using log_interaction "
+            "(type: email_revealed).\n"
+            "4. Return the final list of leads who now have an email address and "
+            "are ready for outreach. Include: id, name, company, title, industry, email.\n\n"
+            f"USER REQUEST: {user_request}"
+        ),
+        agent=hunter,
+        expected_output=(
+            "A JSON list of leads ready for outreach. Each entry: "
+            "id, name, company, title, industry, email. "
+            "Also report how many had emails already vs how many were newly revealed."
+        )
+    )
+
+    # Task 2: draft outreach emails for every ready lead
+    draft_task = Task(
+        description=(
+            "GOAL: Create a cold outreach Gmail draft for every lead passed from the previous task.\n\n"
+            "RULES:\n"
+            "- Account: use catalystworks.ai@gmail.com for ALL outreach drafts.\n"
+            "- Template: read the cold outreach skill (Notion Gmail Templates database) "
+            "and pick the template that matches the lead's industry. If no exact match, "
+            "use the general Catalyst Works template.\n"
+            "- Personalization: replace [First Name] with the lead's first name, "
+            "[Company] with their company name, and any [sector bracket] with their industry.\n"
+            "- One draft per lead. Subject line: 'Quick question for [First Name]'.\n"
+            "- After creating each draft, call log_interaction with "
+            "lead_id, type='outreach_draft', content=the subject line.\n"
+            "- NEVER send. Only create drafts.\n\n"
+            "Report total drafts created and any leads skipped (no email)."
+        ),
+        agent=gws,
+        expected_output=(
+            "Confirmation of drafts created: count, list of names and subject lines. "
+            "Count of leads skipped due to missing email. "
+            "Confirmation that all outreach attempts were logged in the CRM."
+        ),
+        context=[enrich_task]
+    )
+
+    return Crew(
+        agents=[hunter, gws],
+        tasks=[enrich_task, draft_task],
+        process=Process.sequential,
+        verbose=False,
+        memory=False,
+    )
+
+
 CREW_REGISTRY = {
     "website_crew":        build_website_crew,
     "app_crew":            build_app_crew,
@@ -1668,6 +1743,7 @@ CREW_REGISTRY = {
     "3d_website_crew":        build_3d_website_crew,
     "news_brief_crew":        build_news_brief_crew,
     "gws_crew":               build_gws_crew,
+    "crm_outreach_crew":      build_crm_outreach_crew,
     "unknown_crew":           build_unknown_crew,
 }
 

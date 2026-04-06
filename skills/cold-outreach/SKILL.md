@@ -47,11 +47,20 @@ Boubacar
 catalystworks.consulting
 ```
 
-**Sector bracket options:**
-- `professional services`
-- `logistics`
-- `ops-heavy`
-- Or insert the prospect's specific niche (e.g., `mid-size accounting`, `regional construction`)
+**Sector bracket — industry mapping (use exact values from Supabase `industry` column):**
+
+| Supabase `industry` | Use in bracket |
+|---|---|
+| Legal | `legal services` |
+| Accounting | `accounting` |
+| Marketing Agency | `agency` |
+| HVAC | `trades` |
+| Plumbing | `trades` |
+| Roofing | `trades` |
+| Other | fall back to Template B (size-based) |
+
+Example: Industry = "HVAC" → bracket becomes `trades`
+Example: Industry = "Accounting" → bracket becomes `accounting`
 
 ---
 
