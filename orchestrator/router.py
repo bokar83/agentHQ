@@ -93,8 +93,8 @@ TASK_TYPES = {
         "crew": "voice_polisher_crew",
     },
     "hunter_task": {
-        "description": "Proactive growth engine: find Utah service SMB leads, add to CRM, and draft discovery messages",
-        "keywords": ["find leads", "get prospects", "utah leads", "smb prospects", "growth engine", "hunting", "outreach", "daily leads", "fill pipeline"],
+        "description": "Proactive growth engine: FIND and DISCOVER new Utah service SMB leads, add them to CRM. Use when the goal is finding NEW leads, not emailing existing ones.",
+        "keywords": ["find leads", "get prospects", "utah leads", "smb prospects", "growth engine", "hunting", "daily leads", "fill pipeline", "prospect for leads", "discover leads"],
         "crew": "hunter_crew",
     },
     "prompt_engineering": {
@@ -121,6 +121,16 @@ TASK_TYPES = {
             "search email", "find email", "inbox", "check email",
         ],
         "crew": "gws_crew",
+    },
+    "crm_outreach": {
+        "description": "Send cold outreach emails to CRM leads who have not yet been contacted — reveals missing emails then creates Gmail drafts from templates",
+        "keywords": [
+            "outreach", "cold email", "contact leads", "email leads", "draft outreach",
+            "send outreach", "email prospects", "reach out", "contact prospects",
+            "uncontacted leads", "never contacted", "cold outreach", "email campaign",
+            "draft emails", "outreach campaign", "contact everyone",
+        ],
+        "crew": "crm_outreach_crew",
     },
 }
 
@@ -162,11 +172,52 @@ def get_router_llm() -> LLM:
     )
 
 
+def _keyword_shortcut(user_request: str) -> Optional[str]:
+    """
+    Fast keyword pre-check before hitting the LLM.
+    Returns a task_type string if a high-confidence keyword match is found, else None.
+    Checked in priority order — more specific rules first.
+    """
+    lower = user_request.lower()
+
+    # crm_outreach — must match before hunter_task (both share "outreach")
+    crm_outreach_triggers = [
+        "cold outreach", "cold email", "contact leads", "email leads",
+        "uncontacted leads", "never contacted", "draft outreach",
+        "outreach emails", "email prospects", "reach out to leads",
+        "contact everybody", "contact everyone", "email everybody", "email everyone",
+        "outreach to leads", "outreach to prospects", "send outreach",
+    ]
+    if any(t in lower for t in crm_outreach_triggers):
+        return "crm_outreach"
+
+    # hunter_task — finding NEW leads
+    hunter_triggers = [
+        "find leads", "get leads", "find prospects", "get prospects",
+        "utah leads", "daily leads", "fill pipeline", "prospect for",
+        "discover leads", "lead harvest",
+    ]
+    if any(t in lower for t in hunter_triggers):
+        return "hunter_task"
+
+    return None
+
+
 def classify_task(user_request: str) -> dict:
     """
     Classify an incoming request into a task type.
     Returns a dict with task_type, confidence, reasoning, is_unknown.
     """
+    # Fast path: keyword shortcut before LLM call
+    shortcut = _keyword_shortcut(user_request)
+    if shortcut:
+        logger.info(f"Keyword shortcut: '{user_request[:50]}' → '{shortcut}'")
+        return {
+            "task_type": shortcut,
+            "confidence": 0.95,
+            "reasoning": "Matched via keyword shortcut.",
+            "is_unknown": False,
+        }
     task_registry_str = "\n".join([
         f"- {k}: {v['description']}"
         for k, v in TASK_TYPES.items()
@@ -184,6 +235,11 @@ ROUTING RULES:
 - Use a specialist type (research_report, social_content, etc.) only when the request
   clearly asks for a specific deliverable to be produced.
 - When in doubt between "chat" and another type, prefer "chat".
+- CRITICAL DISTINCTION — hunter_task vs crm_outreach:
+  * hunter_task = FIND new leads (discovery, prospecting, searching for people)
+  * crm_outreach = EMAIL existing CRM leads (contact, draft emails, outreach to people already in database)
+  * If the request mentions "uncontacted", "already in CRM", "draft emails", "cold email", "reach out to leads", "contact leads" → use crm_outreach
+  * If the request mentions "find", "discover", "prospect", "search for" → use hunter_task
 
 INCOMING REQUEST:
 "{user_request}"
