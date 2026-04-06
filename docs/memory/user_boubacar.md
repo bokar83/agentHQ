@@ -21,7 +21,7 @@ type: user
 - Comfortable with Docker, SSH, VPS management
 - Uses n8n for workflow automation
 - Building on CrewAI + OpenRouter + custom orchestration
-- Has Supabase, Airtable, Canva, Notion, Google Calendar MCP integrations available via Claude
+- Has Supabase, Canva, Notion, Google Calendar MCP integrations available via Claude
 
 ## Consulting Practice Voice ("leGriot")
 - Social media agent writes in Boubacar's authentic voice

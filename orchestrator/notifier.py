@@ -329,11 +329,14 @@ def _parse_hunter_report_to_html(leads_output: str, _scoreboard: str, today: str
             medal    = next((m for m in medal_colors if m in name_raw), "")
             name     = name_raw.replace(medal, "").strip()
             color    = medal_colors.get(medal, BRAND_ACCENT)
+            email    = clean(row.get("Email", "Not revealed"))
+            
             rows_html += (
                 f'<tr style="background:{bg};">'
                 f'  <td style="padding:10px 14px;width:36px;font-size:18px;">{medal}</td>'
                 f'  <td style="padding:10px 14px;font-size:14px;font-weight:600;color:{color};">{name}</td>'
                 f'  <td style="padding:10px 14px;font-size:14px;color:{BRAND_DARK};">{clean(row.get("Company",""))}</td>'
+                f'  <td style="padding:10px 14px;font-size:13px;color:{BRAND_ACCENT};font-family:monospace;">{email}</td>'
                 f'  <td style="padding:10px 14px;font-size:13px;color:{TEXT_MUTED};">{clean(row.get("Industry",""))}</td>'
                 f'  <td style="padding:10px 14px;font-size:13px;color:{BRAND_DARK};">{clean(row.get("Why Priority",""))}</td>'
                 f'</tr>'
@@ -348,6 +351,8 @@ def _parse_hunter_report_to_html(leads_output: str, _scoreboard: str, today: str
             f'color:{TEXT_MUTED};border-bottom:2px solid {BORDER};text-align:left;">Name</th>'
             f'<th style="padding:10px 14px;font-size:12px;font-weight:700;text-transform:uppercase;'
             f'color:{TEXT_MUTED};border-bottom:2px solid {BORDER};text-align:left;">Company</th>'
+            f'<th style="padding:10px 14px;font-size:12px;font-weight:700;text-transform:uppercase;'
+            f'color:{TEXT_MUTED};border-bottom:2px solid {BORDER};text-align:left;">Email</th>'
             f'<th style="padding:10px 14px;font-size:12px;font-weight:700;text-transform:uppercase;'
             f'color:{TEXT_MUTED};border-bottom:2px solid {BORDER};text-align:left;">Industry</th>'
             f'<th style="padding:10px 14px;font-size:12px;font-weight:700;text-transform:uppercase;'

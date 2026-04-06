@@ -97,7 +97,6 @@ Stubs exist in tools.py for:
 - get_notion_tools()
 - get_google_calendar_tools()
 - get_gmail_tools()
-- get_airtable_tools()
 
 All MCP servers are ACTIVE in Claude's environment — high-value next integration.
 Suggested wiring: consulting_agent → Notion, planner_agent → Google Calendar, researcher_agent → Gmail.
