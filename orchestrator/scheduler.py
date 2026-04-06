@@ -53,24 +53,23 @@ def _run_daily_harvest():
     Trigger the orchestrator to run the hunter task.
     """
     from orchestrator import run_orchestrator
-    from notifier import send_email, log_for_remoat
+    from notifier import send_hunter_report, log_for_remoat
 
     log_for_remoat("🚀 Starting Daily Ignition (Lead Harvest)...", "PROGRESS")
     logger.info("CRON: Starting Daily Lead Harvest...")
-    
+
     task_request = "Find 20 high-intent Utah service SMB leads (Law, Accounting, Agencies, Trades) for Catalyst Works."
-    
+
     try:
         # 1. Run the crew
         result = run_orchestrator(task_request, session_key="daily_cron")
-        
+
         # 2. Extract report and send email
         if result.get("success"):
             report = result.get("deliverable", "No report generated.")
-            subject = f"🚀 Catalyst Daily Leads — {datetime.now().strftime('%Y-%m-%d')}"
-            
-            # Send Email
-            send_email(subject, report)
+
+            # Send HTML-formatted email via send_hunter_report (handles HTML rendering)
+            send_hunter_report(report)
             log_for_remoat("✅ Daily Ignition complete. Report delivered.", "NOTIFICATION")
             logger.info("CRON: Daily Lead Harvest complete and delivered.")
         else:
