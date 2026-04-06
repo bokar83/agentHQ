@@ -491,6 +491,44 @@ def run_orchestrator(task_request: str, from_number: str = "unknown", session_ke
 
     logger.info(f"Task classified as '{task_type}' (confidence: {classification.get('confidence', 0)})")
 
+    # Step 3: Direct dispatch for crm_outreach (no crew -- pure Supabase + Gmail API)
+    if task_type == "crm_outreach":
+        try:
+            from skills.outreach.outreach_tool import run_outreach
+            contact_all = "contact all" in task_request.lower() or "all leads" in task_request.lower()
+            outreach_result = run_outreach(contact_all=contact_all)
+            drafted = outreach_result.get("drafted", 0)
+            skipped = outreach_result.get("skipped", 0)
+            results = outreach_result.get("results", [])
+            error = outreach_result.get("error")
+
+            if error:
+                deliverable = f"Outreach failed: {error}"
+            elif drafted == 0:
+                deliverable = (
+                    "No drafts created. Either no leads have confirmed emails yet, "
+                    "or all eligible leads have already been contacted. "
+                    "Run 'find leads' to add new ones."
+                )
+            else:
+                lines = [f"Cold outreach drafts created in catalystworks.ai@gmail.com ({drafted} drafts):\n"]
+                for r in results:
+                    if r.get("status") == "drafted":
+                        lines.append(f"- {r['name']} | {r['company']} | {r['email']} | {r['subject']}")
+                if skipped:
+                    lines.append(f"\n{skipped} lead(s) failed (Gmail API error -- check logs).")
+                deliverable = "\n".join(lines)
+
+            return {
+                "success": True,
+                "task_type": task_type,
+                "deliverable": deliverable,
+                "execution_time": (datetime.now() - start_time).total_seconds(),
+            }
+        except Exception as e:
+            logger.error(f"crm_outreach direct dispatch failed: {e}")
+            return {"success": False, "task_type": task_type, "deliverable": f"Outreach error: {e}", "execution_time": 0}
+
     # Step 3: Assemble crew
     from crews import assemble_crew
 
@@ -500,8 +538,8 @@ def run_orchestrator(task_request: str, from_number: str = "unknown", session_ke
         crew_type = get_crew_type(task_type) or "unknown_crew"
 
     crew = assemble_crew(crew_type, enriched_task)
-    
-    # Step 3: Execute
+
+    # Step 4: Execute
     logger.info(f"Kicking off crew: {crew_type}")
     result = crew.kickoff()
     result_str = result.raw if hasattr(result, 'raw') else str(result)
