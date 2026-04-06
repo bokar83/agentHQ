@@ -394,6 +394,19 @@ def discover_leads(query: str = "", count: int = DEFAULT_LEAD_COUNT) -> List[dic
                 if email:
                     lead["email"] = email
 
+    # Step 4b: Apollo email enrichment (Always-on per user request)
+    if APOLLO_API_KEY:
+        logger.info("Hunter: Step 4b — Apollo email enrichment fallback")
+        for lead in leads:
+            if not lead.get("email") and lead.get("linkedin_url"):
+                email = reveal_email_for_lead(
+                    name=lead.get("name", ""),
+                    linkedin_url=lead.get("linkedin_url", "")
+                )
+                if email:
+                    lead["email"] = email
+
+
     # Step 5: Apollo fallback if not enough leads
     if len(leads) < 5:
         logger.info(f"Hunter: Step 5 — Apollo fallback (only {len(leads)} leads so far)")

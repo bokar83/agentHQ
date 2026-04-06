@@ -1328,7 +1328,7 @@ def build_hunter_crew(user_request: str) -> Crew:
 
     discovery_task = Task(
         description=(
-            f"GOAL: Find 20 high-quality Utah SMB leads.\n"
+            f"GOAL: Find high-quality Utah SMB leads and FULLY ENRICH them.\n"
             f"INDUSTRIES: Legal, Accounting, Marketing Agency, HVAC, Plumbing, Roofing.\n"
             f"LOCATIONS: Salt Lake City, Provo, Orem, Lehi, Murray, Sandy.\n"
             f"TITLES: Owner, Founder, CEO, President, Managing Partner.\n"
@@ -1336,9 +1336,9 @@ def build_hunter_crew(user_request: str) -> Crew:
             f"For every lead returned, call add_lead to save it to the CRM. "
             f"Collect phone, email, LinkedIn URL, company, and title for each lead.\n"
             f"USER REQUEST: {user_request}\n\n"
-            f"IMPORTANT: Do NOT auto-reveal Apollo emails. "
-            f"Hunter.io enrichment runs automatically inside discover_leads — that is fine. "
-            f"Only use reveal_email if Boubacar explicitly names a specific person."
+            f"IMPORTANT: Ensure ALL leads are enriched with emails. Use reveal_email_for_lead "
+            f"automatically if discover_leads does not return an email, ensuring 100% "
+            f"coverage for the daily harvest."
         ),
         agent=hunter,
         expected_output=(

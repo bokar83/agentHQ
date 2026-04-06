@@ -11,15 +11,16 @@ import json
 from datetime import datetime
 from typing import List, Dict
 
-# Import existing tools if available, else placeholders
+# Import premium Hunter discovery engine
 try:
-    from skills.serper_skill.prospecting_tool import discover_utah_leads
+    from skills.serper_skill.hunter_tool import discover_leads
     from skills.local_crm.crm_tool import add_lead, get_daily_scoreboard
 except ImportError:
     # Log that we are using mock tools for testing if imports fail
-    def discover_utah_leads(query: str = ""): return []
+    def discover_leads(query: str, count: int = 5): return []
     def add_lead(data: dict): return 0
     def get_daily_scoreboard(): return {}
+
 
 logger = logging.getLogger(__name__)
 
@@ -38,12 +39,12 @@ def harvest_daily_leads() -> Dict:
     
     all_found_leads = []
     
-    # We want 20 total, so 5 per niche
+    # We want 20 total, so ~5 per niche
     for niche in niches:
         logger.info(f"Harvesting leads for niche: {niche}")
-        leads = discover_utah_leads(niche)
-        # In a real scenario, discover_utah_leads would be updated to return more or called multiple times
+        leads = discover_leads(niche, count=5)
         all_found_leads.extend(leads)
+
 
     added_count = 0
     report_lines = [f"# Catalyst Daily Lead Report — {datetime.now().strftime('%Y-%m-%d')}\n"]
