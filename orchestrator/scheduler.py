@@ -19,13 +19,23 @@ TARGET_HOUR = 6
 TARGET_MINUTE = 0
 TIMEZONE = os.environ.get("GENERIC_TIMEZONE", "America/Denver")
 
+def _run_kpi_refresh():
+    """Run forge kpi refresh to update all Notion KPI callout blocks."""
+    try:
+        from skills.forge_cli.forge import kpi_refresh
+        kpi_refresh()
+        logger.info("CRON: KPI refresh complete.")
+    except Exception as e:
+        logger.error(f"CRON: KPI refresh failed: {e}")
+
+
 def _run_daily_harvest():
     """
     Trigger the orchestrator to run the hunter task.
     """
     from orchestrator import run_orchestrator
     from notifier import send_email, log_for_remoat
-    
+
     log_for_remoat("🚀 Starting Daily Ignition (Lead Harvest)...", "PROGRESS")
     logger.info("CRON: Starting Daily Lead Harvest...")
     
@@ -65,6 +75,7 @@ def _scheduler_loop():
         # Check if it's the target time and we haven't run today
         if now.hour == TARGET_HOUR and now.minute == TARGET_MINUTE:
             if last_run_date != now.date():
+                _run_kpi_refresh()
                 _run_daily_harvest()
                 last_run_date = now.date()
         

@@ -864,6 +864,12 @@ def _run_weekly(db: ForgeDB):
     print("Open The Forge 2.0 to complete your written review.")
 
 
+def kpi_refresh():
+    """Public entry point for the scheduler -- runs full KPI refresh."""
+    db = ForgeDB()
+    _run_kpi_refresh(db)
+
+
 def main():
     parser = build_parser()
     args = parser.parse_args()
