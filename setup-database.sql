@@ -62,6 +62,33 @@ CREATE TABLE IF NOT EXISTS security_events (
   created_at       TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- CRM leads fallback (Supabase is primary; this catches writes when Supabase is unreachable)
+CREATE TABLE IF NOT EXISTS leads (
+  id                SERIAL PRIMARY KEY,
+  name              VARCHAR(255),
+  company           VARCHAR(255),
+  title             VARCHAR(255),
+  location          VARCHAR(255),
+  phone             VARCHAR(50),
+  linkedin_url      TEXT,
+  email             VARCHAR(255),
+  industry          VARCHAR(100),
+  source            VARCHAR(100),
+  status            VARCHAR(50) DEFAULT 'new',
+  last_contacted_at TIMESTAMP,
+  notes             TEXT,
+  created_at        TIMESTAMPTZ DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS lead_interactions (
+  id               SERIAL PRIMARY KEY,
+  lead_id          INTEGER REFERENCES leads(id) ON DELETE CASCADE,
+  interaction_type VARCHAR(50),
+  content          TEXT,
+  created_at       TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_chat_session    ON n8n_chat_histories(session_id);
 CREATE INDEX IF NOT EXISTS idx_chat_session_ts ON n8n_chat_histories(session_id, id ASC);

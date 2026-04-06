@@ -6,12 +6,90 @@ All data stored in Supabase (leads, lead_interactions).
 Agents use these functions to move prospects through the pipeline.
 
 Pipeline statuses: new → messaged → replied → booked → paid
+
+On every add_lead() call:
+  1. Lead saved to Supabase leads table
+  2. Discovery interaction logged to lead_interactions
+  3. Notion CRM Leads database synced automatically (REST API)
 """
 
+import os
 import logging
 from datetime import datetime
 
+import httpx
+
 logger = logging.getLogger(__name__)
+
+# Notion CRM Leads database (agentsHQ > CRM Leads)
+_NOTION_DB_ID = "619a842a-0e04-4cb3-8d17-19ec67c130f0"
+_NOTION_API = "https://api.notion.com/v1"
+_NOTION_VERSION = "2022-06-28"
+
+
+def _notion_headers() -> dict:
+    token = os.environ.get("NOTION_SECRET", "")
+    return {
+        "Authorization": f"Bearer {token}",
+        "Notion-Version": _NOTION_VERSION,
+        "Content-Type": "application/json",
+    }
+
+
+def _sync_lead_to_notion(lead_data: dict, lead_id: int) -> bool:
+    """
+    Create a page in the Notion CRM Leads database for a new lead.
+    Fires after Supabase insert. Fails silently so CRM write is never blocked.
+    """
+    try:
+        industry_options = {
+            "Legal", "Accounting", "Marketing Agency", "HVAC", "Plumbing", "Roofing"
+        }
+        industry = lead_data.get("industry", "Other")
+        if industry not in industry_options:
+            industry = "Other"
+
+        source_options = {"Hunter", "Apollo", "Manual"}
+        source = lead_data.get("source", "Hunter")
+        if source not in source_options:
+            source = "Manual"
+
+        props = {
+            "Name": {"title": [{"text": {"content": lead_data.get("name", "")}}]},
+            "Company": {"rich_text": [{"text": {"content": lead_data.get("company", "")}}]},
+            "Title": {"rich_text": [{"text": {"content": lead_data.get("title", "")}}]},
+            "Location": {"rich_text": [{"text": {"content": lead_data.get("location", "")}}]},
+            "Industry": {"select": {"name": industry}},
+            "Source": {"select": {"name": source}},
+            "Status": {"select": {"name": "new"}},
+            "Lead Date": {"date": {"start": datetime.utcnow().strftime("%Y-%m-%d")}},
+        }
+        if lead_data.get("email"):
+            props["Email"] = {"email": lead_data["email"]}
+        if lead_data.get("phone"):
+            props["Phone"] = {"phone_number": lead_data["phone"]}
+        if lead_data.get("linkedin_url"):
+            props["LinkedIn"] = {"url": lead_data["linkedin_url"]}
+
+        payload = {
+            "parent": {"database_id": _NOTION_DB_ID},
+            "properties": props,
+        }
+        resp = httpx.post(
+            f"{_NOTION_API}/pages",
+            headers=_notion_headers(),
+            json=payload,
+            timeout=10,
+        )
+        if resp.status_code in (200, 201):
+            logger.info(f"Notion sync: lead '{lead_data.get('name')}' added (Supabase ID {lead_id}).")
+            return True
+        else:
+            logger.warning(f"Notion sync failed ({resp.status_code}): {resp.text[:200]}")
+            return False
+    except Exception as e:
+        logger.warning(f"Notion sync error (non-blocking): {e}")
+        return False
 
 
 def _get_conn():
@@ -60,7 +138,8 @@ def add_lead(lead_data: dict) -> int:
         cur.close()
         conn.close()
 
-        log_interaction(lead_id, 'discovery', f"Lead found via {lead_data.get('source', 'serper')}")
+        log_interaction(lead_id, 'discovery', f"Lead found via {lead_data.get('source', 'Hunter')}")
+        _sync_lead_to_notion(lead_data, lead_id)
         return lead_id
 
     except Exception as e:
@@ -81,9 +160,15 @@ def log_interaction(lead_id: int, itype: str, content: str) -> bool:
             VALUES (%s, %s, %s)
         """, (lead_id, itype, content))
 
-        if itype == 'outreach':
+        # outreach and outreach_draft both count as a contact touch
+        if itype in ('outreach', 'outreach_draft'):
             cur.execute(
-                "UPDATE leads SET status = 'messaged', updated_at = %s WHERE id = %s",
+                "UPDATE leads SET status = 'messaged', last_contacted_at = %s, updated_at = %s WHERE id = %s",
+                (datetime.utcnow(), datetime.utcnow(), lead_id)
+            )
+        elif itype in ('reply', 'note', 'email_revealed'):
+            cur.execute(
+                "UPDATE leads SET updated_at = %s WHERE id = %s",
                 (datetime.utcnow(), lead_id)
             )
 
