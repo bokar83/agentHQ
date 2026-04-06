@@ -64,7 +64,19 @@ def _run_daily_harvest():
         # 1. Run the crew
         result = run_orchestrator(task_request, session_key="daily_cron")
 
-        # 2. Extract report and send email
+        # 2. Post-harvest email enrichment — runs before report is sent
+        # Finds all leads still missing email and tries Hunter.io + Apollo
+        try:
+            from skills.email_enrichment.enrichment_tool import enrich_missing_emails
+            enrich_result = enrich_missing_emails(limit=50)
+            logger.info(
+                f"CRON: Email enrichment — {enrich_result['found']} emails found "
+                f"out of {enrich_result['processed']} leads checked."
+            )
+        except Exception as enrich_err:
+            logger.warning(f"CRON: Email enrichment failed (non-blocking): {enrich_err}")
+
+        # 3. Extract report and send email
         if result.get("success"):
             report = result.get("deliverable", "No report generated.")
 
@@ -74,7 +86,7 @@ def _run_daily_harvest():
             logger.info("CRON: Daily Lead Harvest complete and delivered.")
         else:
             logger.error("CRON: Daily Lead Harvest failed to produce a result.")
-            
+
     except Exception as e:
         logger.error(f"CRON: Critical failure in daily harvest: {e}")
 
