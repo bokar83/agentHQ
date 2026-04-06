@@ -19,6 +19,22 @@ TARGET_HOUR = 6
 TARGET_MINUTE = 0
 TIMEZONE = os.environ.get("GENERIC_TIMEZONE", "America/Denver")
 
+def _send_telegram_alert(message: str):
+    """Send a Telegram message to the owner as a dead-man's switch alert."""
+    try:
+        import httpx
+        token = os.environ.get("ORCHESTRATOR_TELEGRAM_BOT_TOKEN")
+        chat_id = os.environ.get("TELEGRAM_CHAT_ID") or os.environ.get("OWNER_TELEGRAM_CHAT_ID")
+        if token and chat_id:
+            httpx.post(
+                f"https://api.telegram.org/bot{token}/sendMessage",
+                json={"chat_id": chat_id, "text": message},
+                timeout=10,
+            )
+    except Exception as e:
+        logger.error(f"CRON: Failed to send Telegram alert: {e}")
+
+
 def _run_kpi_refresh():
     """Run forge kpi refresh to update all Notion KPI callout blocks."""
     try:
@@ -27,6 +43,9 @@ def _run_kpi_refresh():
         logger.info("CRON: KPI refresh complete.")
     except Exception as e:
         logger.error(f"CRON: KPI refresh failed: {e}")
+        _send_telegram_alert(
+            f"agentsHQ ALERT: 6am KPI refresh failed. The Forge dashboard may be stale.\nError: {e}"
+        )
 
 
 def _run_daily_harvest():
