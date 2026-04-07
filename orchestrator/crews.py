@@ -1347,6 +1347,20 @@ def build_hunter_crew(user_request: str) -> Crew:
         )
     )
 
+    enrichment_task = Task(
+        description=(
+            "Run enrich_leads to find emails and LinkedIn URLs for every lead just discovered.\n"
+            "This MUST run after discovery and before the scoreboard report.\n"
+            "Call enrich_leads with no arguments (uses default limit of 50).\n"
+            "Wait for it to complete and note how many emails were found."
+        ),
+        agent=hunter,
+        expected_output=(
+            "Enrichment summary: number of emails found, LinkedIn found, "
+            "leads with no website, and leads still missing email."
+        )
+    )
+
     scoreboard_task = Task(
         description=(
             "Run get_daily_scoreboard and compile the final Growth Hunter report.\n"
@@ -1382,7 +1396,7 @@ def build_hunter_crew(user_request: str) -> Crew:
 
     return Crew(
         agents=[hunter],
-        tasks=[discovery_task, scoreboard_task],
+        tasks=[discovery_task, enrichment_task, scoreboard_task],
         process=Process.sequential,
         verbose=False,
         memory=False,
