@@ -231,7 +231,7 @@ def _save_linkedin(conn, lead_id: int, linkedin_url: str):
 
 # ── Main entry point ─────────────────────────────────────────────
 
-def enrich_missing_emails(limit: int = 50) -> dict:
+def enrich_missing_emails(limit: int = 999) -> dict:
     """
     Deep enrichment pass for leads missing email or LinkedIn.
     Uses Serper + Firecrawl. Writes notes back in all cases.
@@ -285,7 +285,7 @@ def enrich_missing_emails(limit: int = 50) -> dict:
         website = _find_company_website(company)
 
         if not website:
-            note = f"Enrichment {today}: no website found. Prospect for web services."
+            note = f"[{today}] Enriched — no website found. Flagged as web prospect."
             _write_note(conn, lead_id, note)
             no_website_count += 1
             web_prospects.append({"name": name, "company": company, "industry": lead.get("industry")})
@@ -298,7 +298,9 @@ def enrich_missing_emails(limit: int = 50) -> dict:
                     _save_email(conn, lead_id, found_email)
                     emails_found += 1
                     has_email = True
-                _write_note(conn, lead_id, f"Enrichment {today}: {scrape_note}")
+                    _write_note(conn, lead_id, f"[{today}] Enriched — email found: {found_email}")
+                else:
+                    _write_note(conn, lead_id, f"[{today}] Enriched — no email found after scraping.")
 
         # ── Step 3: Find LinkedIn ────────────────────────────────
         if not has_linkedin:
@@ -306,9 +308,9 @@ def enrich_missing_emails(limit: int = 50) -> dict:
             if found_linkedin:
                 _save_linkedin(conn, lead_id, found_linkedin)
                 linkedin_found += 1
-                _write_note(conn, lead_id, f"Enrichment {today}: LinkedIn found via Serper -- {found_linkedin}")
+                _write_note(conn, lead_id, f"[{today}] Enriched — LinkedIn: {found_linkedin}")
             else:
-                _write_note(conn, lead_id, f"Enrichment {today}: LinkedIn not found via Serper search.")
+                _write_note(conn, lead_id, f"[{today}] Enriched — LinkedIn not found.")
 
         results.append({
             "id": lead_id,
