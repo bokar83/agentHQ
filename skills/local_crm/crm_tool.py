@@ -111,13 +111,37 @@ def _get_conn():
 
 def add_lead(lead_data: dict) -> int:
     """
-    Add a new lead to the CRM.
+    Add a new lead to the CRM. Deduplicates by linkedin_url (if present)
+    or by (lower(name), lower(company)). Returns existing ID if duplicate found.
     lead_data: {name, company, title, location, phone, linkedin_url, email, industry, source}
-    Returns ID of new lead, or 0 on failure.
+    Returns ID of new or existing lead, or 0 on failure.
     """
     try:
         conn = _get_conn()
         cur = conn.cursor()
+
+        # Check for existing lead before inserting
+        linkedin_url = lead_data.get('linkedin_url', '').strip() if lead_data.get('linkedin_url') else ''
+        name = lead_data.get('name', '').strip()
+        company = lead_data.get('company', '').strip()
+
+        if linkedin_url:
+            cur.execute(
+                "SELECT id FROM leads WHERE linkedin_url = %s LIMIT 1",
+                (linkedin_url,)
+            )
+        else:
+            cur.execute(
+                "SELECT id FROM leads WHERE lower(name) = lower(%s) AND lower(company) = lower(%s) LIMIT 1",
+                (name, company)
+            )
+        existing = cur.fetchone()
+        if existing:
+            logger.info(f"CRM add_lead: duplicate skipped for {name} / {company} (id={existing['id']})")
+            cur.close()
+            conn.close()
+            return existing['id']
+
         cur.execute("""
             INSERT INTO leads (name, company, title, location, phone, linkedin_url, email, industry, source, status)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'new')
