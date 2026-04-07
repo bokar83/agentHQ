@@ -23,3 +23,5 @@
 **Task 9 [2026-04-07]:** Added deleteWebhook retry loop (3 attempts) in telegram_polling_loop(). Undo: restore the single try/except pass block.
 
 **Task 10 [2026-04-07]:** Added verify_api_key dependency to /run, /run-team, /run-async. No-op until ORCHESTRATOR_API_KEY is set in .env on VPS. Undo: remove Depends(verify_api_key) from the 3 routes and delete the verify_api_key function.
+
+**Task 11 [2026-04-07]:** Added create_job/update_job calls in _run_background_job for Telegram tasks. Undo: remove the three try/except blocks added around the ping timer, send_result, and except handler.
