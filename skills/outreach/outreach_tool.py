@@ -24,7 +24,6 @@ import json
 import logging
 from datetime import datetime, timezone
 from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -196,24 +195,31 @@ def _get_access_token() -> str:
 
 
 def _create_draft(to_email: str, subject: str, body: str) -> Optional[str]:
-    """Create a Gmail draft via API with HTML signature. Returns draft ID or None on failure."""
+    """Create a Gmail draft via API as pure HTML with signature. Returns draft ID or None on failure."""
     import httpx
     try:
         token = _get_access_token()
 
-        # Build multipart/alternative: plain text + HTML with signature
-        msg = MIMEMultipart("alternative")
+        # Convert plain text body to HTML paragraphs, then append signature
+        paragraphs = body.strip().split("\n\n")
+        html_body = "".join(
+            f"<p style='margin: 0 0 16px 0;'>{p.replace(chr(10), '<br>')}</p>"
+            for p in paragraphs
+        )
+        html = (
+            "<html><body>"
+            "<div style='font-family: Arial, Helvetica, sans-serif; font-size: 14px; "
+            "color: #1a1a1a; line-height: 1.7; max-width: 600px;'>"
+            f"{html_body}"
+            "</div>"
+            f"{SIGNATURE_HTML}"
+            "</body></html>"
+        )
+
+        msg = MIMEText(html, "html")
         msg["to"] = to_email
         msg["from"] = OUTREACH_ACCOUNT
         msg["subject"] = subject
-
-        # Plain text part (fallback)
-        msg.attach(MIMEText(body, "plain"))
-
-        # HTML part: body as preformatted text + signature
-        html_body = body.replace("\n", "<br>")
-        html = f"<div style='font-family: Arial, Helvetica, sans-serif; font-size: 14px; color: #1a1a1a; line-height: 1.6;'>{html_body}</div>{SIGNATURE_HTML}"
-        msg.attach(MIMEText(html, "html"))
 
         raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
         resp = httpx.post(
