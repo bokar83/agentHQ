@@ -137,6 +137,35 @@ TASK_TYPES = {
         "keywords": ["enrich leads", "find emails", "find phones", "missing emails", "run enrichment"],
         "crew": "enrich_leads_crew",
     },
+    "notion_capture": {
+        "description": (
+            "Capture an idea, brain dump, thought, or note into the agentsHQ Ideas Notion database. "
+            "Also handles REVIEWING the ideas list when the user asks to see what's in there. "
+            "Use this for: add to ideas, save this idea, note this down, brain dump, capture this thought, "
+            "put in my backlog, review my ideas, what ideas do I have. "
+            "Do NOT use for redesigning Notion pages — that is notion_overhaul."
+        ),
+        "keywords": [
+            "add to my ideas", "add to ideas", "save this idea", "capture this",
+            "note this down", "brain dump", "put in my backlog", "to-dos",
+            "ideas list", "review my ideas", "what ideas", "pull up my ideas",
+            "remember this for later", "add this idea", "put that in",
+        ],
+        "crew": "notion_capture_crew",
+    },
+    "memory_capture": {
+        "description": (
+            "Save a specific fact, preference, or piece of information to long-term memory. "
+            "Use when the user says 'remember this', 'add to memory', 'save this to memory', "
+            "'store this', or shares data they want kept (brand colors, preferences, settings). "
+            "This is handled in chat mode with the save_memory tool — no crew needed."
+        ),
+        "keywords": [
+            "remember this", "add to memory", "save this to memory", "store this",
+            "note this", "keep this in mind", "save to memory",
+        ],
+        "crew": None,
+    },
     "mark_outreach_sent": {
         "description": "Mark drafted outreach leads as messaged after manually sending their Gmail drafts",
         "keywords": [
@@ -161,16 +190,31 @@ HIGH_STAKES_TRIGGERS = [
     "council review",
 ]
 
+EMAIL_FOLLOWUP_TRIGGERS = [
+    "send me an email",
+    "email me about this",
+    "email me a summary",
+    "email me the results",
+    "send an email",
+    "and email me",
+    "also email me",
+    "email this to me",
+    "send this to my email",
+    "send to bokar83",
+    "send to catalystworks",
+]
+
 
 def extract_metadata(user_request: str) -> dict:
     """
     Extract routing metadata from the raw request string.
-    Currently extracts: high_stakes (bool)
+    Currently extracts: high_stakes (bool), has_email_followup (bool)
     Returns a dict merged into task routing decisions.
     """
     lower = user_request.lower()
     return {
         "high_stakes": any(trigger in lower for trigger in HIGH_STAKES_TRIGGERS),
+        "has_email_followup": any(trigger in lower for trigger in EMAIL_FOLLOWUP_TRIGGERS),
     }
 
 
@@ -194,6 +238,39 @@ def _keyword_shortcut(user_request: str) -> Optional[str]:
     Checked in priority order — more specific rules first.
     """
     lower = user_request.lower()
+
+    # notion_capture — add idea, review ideas, brain dump (must run before chat prefix check)
+    notion_capture_triggers = [
+        "add to my ideas", "add to ideas", "save this idea", "capture this idea",
+        "note this down", "brain dump", "put in my backlog", "ideas list",
+        "review my ideas", "what ideas do i have", "pull up my ideas",
+        "add this to my", "put that in there", "put this in notion",
+        "add to my to-do", "add to my todos", "add to my to-dos",
+        "remember this for later",
+    ]
+    if any(t in lower for t in notion_capture_triggers):
+        return "notion_capture"
+
+    # memory_capture — save facts/preferences (distinct from ideas)
+    memory_capture_triggers = [
+        "save this to memory", "add to memory", "remember this:", "store this in memory",
+        "keep this in mind", "add to your memory", "save to memory",
+        "here are my", "here is my", "these are my",
+    ]
+    if any(t in lower for t in memory_capture_triggers):
+        return "memory_capture"
+
+    # gws_task — calendar and gmail phrases short enough to fool obvious-chat filter
+    gws_shortcut_triggers = [
+        "what's on my calendar", "whats on my calendar", "what is on my calendar",
+        "check my calendar", "show my calendar", "list my events",
+        "add event", "add to calendar", "create event", "schedule meeting",
+        "delete event", "remove event", "cancel event",
+        "draft email", "send email", "email me", "send me an email",
+        "check my email", "search my email", "search gmail", "check gmail",
+    ]
+    if any(t in lower for t in gws_shortcut_triggers):
+        return "gws_task"
 
     # enrich_leads — dedicated enrichment run (must match before hunter_task)
     enrich_triggers = [
@@ -269,6 +346,14 @@ ROUTING RULES:
 - Use a specialist type (research_report, social_content, etc.) only when the request
   clearly asks for a specific deliverable to be produced.
 - When in doubt between "chat" and another type, prefer "chat".
+- CRITICAL DISTINCTION — notion_overhaul vs notion_capture:
+  * notion_overhaul = REDESIGN or RESTRUCTURE an existing Notion page/workspace (visual, layout, style)
+  * notion_capture = ADD, SAVE, LOG, or REVIEW ideas/notes/thoughts in the Ideas database
+  * "Add to my ideas list", "save this idea", "capture this thought" → notion_capture
+  * "Redesign my Notion", "overhaul my workspace", "update the layout" → notion_overhaul
+- CRITICAL DISTINCTION — memory_capture vs notion_capture:
+  * memory_capture = save a FACT or PREFERENCE (brand colors, settings, preferences)
+  * notion_capture = save an IDEA, CONCEPT, or PROJECT THOUGHT to the Ideas database
 - CRITICAL DISTINCTION — hunter_task vs crm_outreach:
   * hunter_task = FIND new leads (discovery, prospecting, searching for people)
   * crm_outreach = EMAIL existing CRM leads (contact, draft emails, outreach to people already in database)
