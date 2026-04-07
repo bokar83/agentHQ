@@ -131,7 +131,120 @@ class AddNotionNavTool(BaseTool):
 set_notion_style_tool = SetNotionStyleTool()
 add_notion_nav_tool = AddNotionNavTool()
 
-NOTION_STYLING_TOOLS = [set_notion_style_tool, add_notion_nav_tool]
+class ArchitectNotionPageTool(BaseTool):
+    """Converts Markdown text to Notion blocks and appends them to a page."""
+    name: str = "architect_notion_page"
+    description: str = (
+        "Architect a full Notion page from Markdown text. "
+        "Inputs: 'page_id' (string), 'markdown_text' (string), "
+        "optional 'set_style' (bool), 'cover_key' (string), 'icon_emoji' (string)."
+    )
+    def _run(self, page_id: str, markdown_text: str, set_style: bool = False, cover_key: str = "dark_geometry", icon_emoji: str = "🏗️") -> str:
+        stylist = NotionStylist()
+        try:
+            result = stylist.architect_page(page_id, markdown_text, set_style=set_style, cover_key=cover_key, icon_emoji=icon_emoji)
+            return f"Architected page {page_id} successfully. Added {result.get('appended')} blocks."
+        except Exception as e:
+            return f"Error architecting page: {e}"
+
+class ApplyNotionTemplateTool(BaseTool):
+    """Applies a branded template to a Notion page."""
+    name: str = "apply_notion_template"
+    description: str = (
+        "Apply a branded template to a Notion page. Clears existing content. "
+        "Inputs: 'page_id' (string), 'template_name' (string). "
+        "Available templates: project_command_center, client_portal, knowledge_hub."
+    )
+    def _run(self, page_id: str, template_name: str) -> str:
+        stylist = NotionStylist()
+        try:
+            result = stylist.apply_template(page_id, template_name)
+            return f"Successfully applied template '{result.get('template')}' to page {page_id}."
+        except Exception as e:
+            return f"Error applying template: {e}"
+
+class AddNotionCalloutTool(BaseTool):
+    """Adds a callout block to a Notion page."""
+    name: str = "add_notion_callout"
+    description: str = "Adds a callout block. Inputs: 'page_id', 'text', optional 'emoji' and 'color'."
+    def _run(self, page_id: str, text: str, emoji: str = "🔥", color: str = "default") -> str:
+        stylist = NotionStylist()
+        return str(stylist.add_callout(page_id, text, emoji, color))
+
+class AddNotionHeadingTool(BaseTool):
+    """Adds a heading to a Notion page."""
+    name: str = "add_notion_heading"
+    description: str = "Adds a heading. Inputs: 'page_id', 'text', optional 'level' (1-3) and 'color'."
+    def _run(self, page_id: str, text: str, level: int = 2, color: str = "default") -> str:
+        stylist = NotionStylist()
+        return str(stylist.add_heading(page_id, text, level, color))
+
+class AddNotionDividerTool(BaseTool):
+    """Adds a divider to a Notion page."""
+    name: str = "add_notion_divider"
+    description: str = "Adds a full-width divider. Inputs: 'page_id'."
+    def _run(self, page_id: str) -> str:
+        stylist = NotionStylist()
+        return str(stylist.add_divider(page_id))
+
+class AddNotionToggleTool(BaseTool):
+    """Adds a toggle block to a Notion page."""
+    name: str = "add_notion_toggle"
+    description: str = "Adds a toggle block. Inputs: 'page_id', 'text'."
+    def _run(self, page_id: str, text: str) -> str:
+        stylist = NotionStylist()
+        return str(stylist.add_toggle(page_id, text))
+
+class CreateNotionColumnLayoutTool(BaseTool):
+    """Creates a multi-column layout."""
+    name: str = "create_notion_column_layout"
+    description: str = "Creates columns. Inputs: 'page_id', 'columns_content' (JSON string — list of lists of Notion block dicts)."
+    def _run(self, page_id: str, columns_content: str) -> str:
+        import json
+        stylist = NotionStylist()
+        try:
+            content = json.loads(columns_content) if isinstance(columns_content, str) else columns_content
+            stylist.create_column_layout(page_id, content)
+            return f"Column layout with {len(content)} columns added to page {page_id}."
+        except Exception as e:
+            return f"Error: {e}"
+
+class ClearNotionPageTool(BaseTool):
+    """Clears all content from a Notion page."""
+    name: str = "clear_notion_page"
+    description: str = (
+        "Delete all child blocks from a Notion page. "
+        "Inputs: 'page_id' (string), 'preserve_databases' (bool, default True)."
+    )
+    def _run(self, page_id: str, preserve_databases: bool = True) -> str:
+        stylist = NotionStylist()
+        try:
+            stylist.clear_page_content(page_id, preserve_databases=preserve_databases)
+            return f"Page {page_id} cleared (preserve_databases={preserve_databases})."
+        except Exception as e:
+            return f"Error: {e}"
+
+architect_notion_page_tool = ArchitectNotionPageTool()
+apply_notion_template_tool = ApplyNotionTemplateTool()
+add_notion_callout_tool = AddNotionCalloutTool()
+add_notion_heading_tool = AddNotionHeadingTool()
+add_notion_divider_tool = AddNotionDividerTool()
+add_notion_toggle_tool = AddNotionToggleTool()
+create_notion_column_layout_tool = CreateNotionColumnLayoutTool()
+clear_notion_page_tool = ClearNotionPageTool()
+
+NOTION_STYLING_TOOLS = [
+    set_notion_style_tool,
+    add_notion_nav_tool,
+    architect_notion_page_tool,
+    apply_notion_template_tool,
+    add_notion_callout_tool,
+    add_notion_heading_tool,
+    add_notion_divider_tool,
+    add_notion_toggle_tool,
+    create_notion_column_layout_tool,
+    clear_notion_page_tool,
+]
 
 
 # ── Forge CLI Tools ────────────────────────────────────────
