@@ -466,9 +466,9 @@ Keep that redirect short. One line max."""
                 messages=messages,
                 temperature=0.85,
             )
-            reply = followup.choices[0].message.content.strip()
+            reply = (followup.choices[0].message.content or "").strip()
         else:
-            reply = msg.content.strip()
+            reply = (msg.content or "").strip()
 
     except Exception as e:
         logger.error(f"Chat LLM call failed: {e}")
