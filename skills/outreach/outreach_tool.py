@@ -6,7 +6,7 @@ Reads ONLY from the Supabase leads table. No agent, no guessing.
 Rules:
   - Source: Supabase leads table only (via db.py)
   - Eligibility: email IS NOT NULL, status = 'new', last_contacted_at IS NULL
-  - Default batch: 5 leads per run
+  - Default batch: 10 leads per run
   - "contact all": up to 50 leads per run
   - Gmail: catalystworks.ai@gmail.com via OAuth refresh token (same as GWS tools)
   - Template: cold outreach skill, Template A (sector bracket by industry)
@@ -262,12 +262,12 @@ def run_outreach(contact_all: bool = False) -> dict:
     Create Gmail drafts for uncontacted leads with confirmed emails.
 
     Args:
-        contact_all: if True, process up to 50 leads; default is 5
+        contact_all: if True, process up to 50 leads; default is 10
 
     Returns:
         dict with drafted, skipped, results list
     """
-    limit = 50 if contact_all else 5
+    limit = 50 if contact_all else 10
     logger.info(f"Outreach: fetching up to {limit} uncontacted leads from Supabase...")
 
     try:
