@@ -788,6 +788,7 @@ def _run_background_job(
     from_number: str,
     session_key: str,
     job_id: str,
+    classification: dict = None,
 ) -> None:
     """
     Background worker: runs the crew, sends progress pings, saves output,
@@ -841,6 +842,27 @@ def _run_background_job(
 
         # ── Deliver ──────────────────────────────────────────
         send_result(chat_id, summary, drive_url, github_url)
+
+        # ── Compound request: email follow-up ────────────────────
+        # If the original message asked to "also send me an email about this",
+        # spin a minimal GWS crew to draft the summary email after the main task.
+        _has_email_followup = (classification or {}).get("has_email_followup", False)
+        if _has_email_followup and task_type not in ("chat", "gws_task", "crm_outreach"):
+            try:
+                from crews import build_gws_crew
+                email_task_text = (
+                    f"Create a Gmail draft to bokar83@gmail.com and catalystworks.ai@gmail.com "
+                    f"with subject 'agentsHQ Result: {title[:60]}'. "
+                    f"Body: Format the following result as clean HTML with a header, "
+                    f"bullet points for key findings, and a closing note. "
+                    f"Result to format:\n\n{summary[:3000]}"
+                )
+                email_crew = build_gws_crew(email_task_text)
+                email_crew.kickoff()
+                send_message(chat_id, "Email draft created in your Gmail — go check it.")
+                logger.info(f"Compound email follow-up draft created for job {job_id}")
+            except Exception as e:
+                logger.warning(f"Compound email follow-up failed (non-fatal): {e}")
 
         # ── Email hunter results ──────────────────────────────
         if task_type == "hunter_task":
@@ -1008,6 +1030,7 @@ async def process_telegram_update(update: dict):
                 from_number=chat_id,
                 session_key=crew_session_key,
                 job_id=job_id,
+                classification=classification,
             )
         )
 
@@ -1188,6 +1211,7 @@ async def run_task(request: TaskRequest, background_tasks: BackgroundTasks):
         from_number=request.from_number,
         session_key=crew_session_key,
         job_id=job_id,
+        classification=classification,
     )
 
     return AsyncTaskResponse(

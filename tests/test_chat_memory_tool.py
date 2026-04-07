@@ -40,3 +40,19 @@ def test_shortcut_classify_returns_none_for_chat():
     importlib.reload(orchestrator)
     result = orchestrator._shortcut_classify("hey how are you")
     assert result is None
+
+
+def test_has_email_followup_metadata_extraction():
+    import sys
+    sys.path.insert(0, "d:/Ai_Sandbox/agentsHQ/orchestrator")
+    from router import extract_metadata
+    meta = extract_metadata("Research AI trends and send me an email about it")
+    assert meta["has_email_followup"] is True
+
+
+def test_no_email_followup_for_plain_task():
+    import sys
+    sys.path.insert(0, "d:/Ai_Sandbox/agentsHQ/orchestrator")
+    from router import extract_metadata
+    meta = extract_metadata("Research AI trends")
+    assert meta["has_email_followup"] is False
