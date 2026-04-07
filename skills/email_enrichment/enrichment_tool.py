@@ -524,17 +524,25 @@ def enrich_missing_emails(limit: int = 999) -> dict:
         # ── Step 3: Prospeo fallback ─────────────────────────────
         # Rules:
         #   - Has email: skip Prospeo entirely (ready for outreach already)
-        #   - No email, not priority: email lookup only (1 credit)
-        #   - No email, IS priority: phone lookup only (10 credits) as last resort
+        #   - No email: try email lookup (1 credit)
+        #   - No email + IS priority + Prospeo returned no email: try phone (10 credits)
         is_priority = bool(lead.get("priority"))
         if not has_email:
-            want_phone_lookup = is_priority and not has_phone
+            # First pass: email only (1 credit)
             prospeo = _prospeo_enrich(
                 name=name,
                 company=company,
                 linkedin_url=linkedin_url or None,
-                want_phone=want_phone_lookup,
+                want_phone=False,
             )
+            # If priority and still no email found, escalate to phone (10 credits)
+            if not prospeo.get("email") and is_priority and not has_phone:
+                prospeo = _prospeo_enrich(
+                    name=name,
+                    company=company,
+                    linkedin_url=linkedin_url or None,
+                    want_phone=True,
+                )
             if prospeo.get("email") and not has_email:
                 _save_email(conn, lead_id, prospeo["email"])
                 emails_found += 1
