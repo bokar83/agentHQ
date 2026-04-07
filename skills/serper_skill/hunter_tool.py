@@ -421,43 +421,57 @@ def discover_leads(query: str = "", count: int = DEFAULT_LEAD_COUNT) -> List[dic
     return leads[:count]
 
 
+def _serper_find_company_domain(company: str) -> Optional[str]:
+    """Use Serper to find a company's website domain from its name."""
+    if not SERPER_API_KEY or not company:
+        return None
+    try:
+        with httpx.Client(timeout=10) as client:
+            r = client.post(
+                SERPER_URL,
+                headers={"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"},
+                json={"q": f"{company} official website", "num": 3},
+            )
+            r.raise_for_status()
+        results = r.json().get("organic", [])
+        for result in results:
+            link = result.get("link", "")
+            domain = _extract_domain(link)
+            # Skip generic directories
+            if domain and not any(skip in domain for skip in [
+                "linkedin", "facebook", "yelp", "yellowpages", "bbb.org",
+                "indeed", "glassdoor", "crunchbase", "bloomberg", "wikipedia"
+            ]):
+                return domain
+    except Exception as e:
+        logger.warning(f"Serper domain lookup failed for {company}: {e}")
+    return None
+
+
 def reveal_email_for_lead(name: str, company: str = "", linkedin_url: str = "") -> Optional[str]:
     """
     On-demand email reveal for a specific named lead.
-    Called when Boubacar says 'reveal email for [name]'.
-    Tries Hunter.io first (free), Apollo as fallback (costs 1 credit).
+    Pipeline: Hunter.io on company domain → Hunter.io on LinkedIn domain → skip Apollo (403 on free plan).
     """
-    # Try Hunter.io first — free
+    name_parts = name.split()
+    first = name_parts[0] if name_parts else ""
+    last = name_parts[-1] if len(name_parts) > 1 else ""
+
+    # Step 1 — if we have a non-LinkedIn URL, try Hunter.io directly
     if linkedin_url:
         domain = _extract_domain(linkedin_url)
         if domain and "linkedin.com" not in domain:
-            name_parts = name.split()
-            first = name_parts[0] if name_parts else ""
-            last = name_parts[-1] if len(name_parts) > 1 else ""
             email = _hunter_find_email(domain, first, last)
             if email:
                 return email
 
-    # Apollo fallback — costs 1 credit
-    if APOLLO_API_KEY and linkedin_url:
-        try:
-            headers = {
-                "Content-Type": "application/json",
-                "X-Api-Key": APOLLO_API_KEY,
-                "Cache-Control": "no-cache",
-            }
-            with httpx.Client(timeout=10) as client:
-                r = client.post(
-                    f"{APOLLO_API_URL}/people/match",
-                    json={"linkedin_url": linkedin_url},
-                    headers=headers
-                )
-                r.raise_for_status()
-            email = r.json().get("person", {}).get("email")
+    # Step 2 — look up the company's website via Serper, then try Hunter.io
+    if company:
+        company_domain = _serper_find_company_domain(company)
+        if company_domain:
+            email = _hunter_find_email(company_domain, first, last)
             if email:
-                logger.info(f"Apollo revealed email for {name}: {email}")
+                logger.info(f"Hunter.io found email for {name} via company domain {company_domain}: {email}")
                 return email
-        except Exception as e:
-            logger.warning(f"Apollo email reveal failed for {name}: {e}")
 
     return None
