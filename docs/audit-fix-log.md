@@ -19,3 +19,7 @@
 **Task 8 [2026-04-07]:** Removed dead elif _id_map branch in db.py:248-256. Undo: restore the elif block (was dead code).
 
 **Task 3 [2026-04-07]:** Stubbed NotionStylist/NotionCLI/SupabaseClient in tools.py except block; added None guards to all Notion tool _run() methods. Undo: remove the stubs and guards.
+
+**Task 9 [2026-04-07]:** Added deleteWebhook retry loop (3 attempts) in telegram_polling_loop(). Undo: restore the single try/except pass block.
+
+**Task 10 [2026-04-07]:** Added verify_api_key dependency to /run, /run-team, /run-async. No-op until ORCHESTRATOR_API_KEY is set in .env on VPS. Undo: remove Depends(verify_api_key) from the 3 routes and delete the verify_api_key function.

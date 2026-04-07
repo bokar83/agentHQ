@@ -33,7 +33,7 @@ from datetime import datetime
 from typing import Optional
 
 import httpx
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -75,6 +75,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+def verify_api_key(x_api_key: str = Header(default=None)):
+    """Reject requests without the correct API key header. No-op if ORCHESTRATOR_API_KEY is not configured."""
+    expected = os.environ.get("ORCHESTRATOR_API_KEY", "")
+    if not expected:
+        return  # No key configured — allow all (dev/backwards compat)
+    if x_api_key != expected:
+        raise HTTPException(status_code=401, detail="Invalid or missing X-Api-Key header")
 
 @app.on_event("startup")
 async def startup_event():
@@ -1154,7 +1162,7 @@ async def receive_health_report(request: HealthReportRequest, req: Request):
         return {"ok": True, "email_sent": False}
 
 
-@app.post("/run", response_model=AsyncTaskResponse, status_code=202)
+@app.post("/run", response_model=AsyncTaskResponse, status_code=202, dependencies=[Depends(verify_api_key)])
 async def run_task(request: TaskRequest, background_tasks: BackgroundTasks):
     """
     Main endpoint — async, fire-and-forget.
@@ -1274,7 +1282,7 @@ async def run_task_sync(request: TaskRequest):
         raise HTTPException(status_code=500, detail=f"Agent execution failed: {str(e)}")
 
 
-@app.post("/run-team", response_model=TaskResponse)
+@app.post("/run-team", response_model=TaskResponse, dependencies=[Depends(verify_api_key)])
 async def run_team(request: TeamTaskRequest):
     """
     Run multiple crews in parallel (agent teams pattern).
@@ -1414,7 +1422,7 @@ def get_history(session_id: str, limit: int = 10):
         return {"session_id": session_id, "history": [], "error": str(e)}
 
 
-@app.post("/run-async", response_model=AsyncTaskResponse)
+@app.post("/run-async", response_model=AsyncTaskResponse, dependencies=[Depends(verify_api_key)])
 async def run_task_async(request: TaskRequest, background_tasks: BackgroundTasks):
     """
     Async task endpoint — returns job_id immediately, runs crew in background.
