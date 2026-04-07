@@ -60,6 +60,8 @@ TASK_TYPE_LABELS = {
     "prompt_engineering":     "Prompt Engineer is rewriting your prompt",
     "news_brief":             "News Agent is scanning the headlines",
     "gws_task":               "Google Workspace Agent is on it",
+    "notion_capture":         "Ideas Agent is capturing your thought in Notion",
+    "memory_capture":         "Got it — saving to memory",
     "agent_team":             "The full team is on it",
     "chat":                   "...",
     "unknown":                "Agents are on it",
@@ -85,6 +87,7 @@ TASK_TYPE_CREWS = {
     "prompt_engineering":     "Prompt Engineer",
     "news_brief":             "News Agent + Researcher",
     "gws_task":               "Google Workspace Agent",
+    "notion_capture":         "Ideas Curator (Notion write/read)",
     "agent_team":             "Full multi-agent team",
     "unknown":                "Orchestrator (improvising)",
 }
