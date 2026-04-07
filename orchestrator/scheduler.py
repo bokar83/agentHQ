@@ -71,7 +71,7 @@ def _update_notion_quote_block(block_id: str, quote: dict) -> bool:
         if not token:
             logger.error("QUOTE: No Notion token found (tried NOTION_API_KEY, NOTION_TOKEN, NOTION_SECRET).")
             return False
-        text = f"\"{quote['text']}\" -- {quote['author']} \u00b7 Quote rotates daily"
+        text = f"\"{quote['text']}\" -- {quote['author']}"
         payload = {
             "callout": {
                 "rich_text": [{"type": "text", "text": {"content": text}}]
@@ -327,16 +327,6 @@ def start_scheduler():
     """
     # Run sync immediately on startup
     _run_supabase_sync()
-
-    def loop_with_sync():
-        sync_counter = 0
-        while True:
-            _scheduler_loop_tick()
-            sync_counter += 1
-            # Every 60 ticks of 30s = 30 minutes
-            if sync_counter >= 60:
-                _run_supabase_sync()
-                sync_counter = 0
 
     thread = threading.Thread(target=_scheduler_loop, daemon=True)
     thread.start()
