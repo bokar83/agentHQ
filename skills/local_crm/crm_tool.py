@@ -281,6 +281,55 @@ def get_uncontacted_leads(limit: int = 50) -> list:
         return []
 
 
+def mark_outreach_sent() -> dict:
+    """
+    Mark leads as messaged after you manually send their Gmail drafts.
+
+    Finds leads that:
+      - have an outreach_draft interaction logged today or yesterday
+      - still have status = 'new' (not yet marked)
+      - last_contacted_at IS NULL
+
+    Sets status = 'messaged' and last_contacted_at = now for each.
+    Returns: { "marked": int, "leads": [{"id", "name", "email"}] }
+    """
+    try:
+        conn = _get_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT DISTINCT l.id, l.name, l.email
+            FROM leads l
+            JOIN lead_interactions li ON li.lead_id = l.id
+            WHERE li.interaction_type = 'outreach_draft'
+              AND li.created_at >= NOW() - INTERVAL '48 hours'
+              AND l.status = 'new'
+              AND l.last_contacted_at IS NULL
+            ORDER BY l.id
+        """)
+        rows = [dict(r) for r in cur.fetchall()]
+        if not rows:
+            cur.close()
+            conn.close()
+            return {"marked": 0, "leads": []}
+
+        now = datetime.utcnow()
+        ids = [r["id"] for r in rows]
+        cur.execute("""
+            UPDATE leads
+            SET status = 'messaged',
+                last_contacted_at = %s,
+                updated_at = %s
+            WHERE id = ANY(%s)
+        """, (now, now, ids))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return {"marked": len(rows), "leads": rows}
+    except Exception as e:
+        logger.error(f"CRM mark_outreach_sent failed: {e}")
+        return {"marked": 0, "leads": [], "error": str(e)}
+
+
 def get_daily_scoreboard() -> dict:
     """
     Get today's sales velocity stats.
