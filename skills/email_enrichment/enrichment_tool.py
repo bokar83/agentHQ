@@ -462,11 +462,11 @@ def enrich_missing_emails(limit: int = 999) -> dict:
         conn = _get_crm_conn()
         cur = conn.cursor()
         cur.execute("""
-            SELECT id, name, company, email, phone, linkedin_url, industry
+            SELECT id, name, company, email, phone, linkedin_url, industry, priority
             FROM leads
             WHERE (email IS NULL OR email = '')
-               OR (phone IS NULL OR phone = '')
                OR (linkedin_url IS NULL OR linkedin_url = '')
+               OR (phone IS NULL AND email IS NOT NULL)
             ORDER BY created_at ASC
             LIMIT %s
         """, (limit,))
@@ -522,13 +522,17 @@ def enrich_missing_emails(limit: int = 999) -> dict:
                 _write_note(conn, lead_id, f"[{today}] Enriched — no email found after scraping.")
 
         # ── Step 3: Prospeo fallback (email + mobile) ───────────
-        # Call if still missing email OR missing phone
-        if not has_email or not has_phone:
+        # Always call for email (1 credit) if missing.
+        # Only call for phone (10 credits) if lead already has a confirmed email
+        # OR is marked priority -- avoids burning 10 credits on unverified leads.
+        is_priority = bool(lead.get("priority"))
+        want_phone_lookup = not has_phone and (has_email or is_priority)
+        if not has_email or want_phone_lookup:
             prospeo = _prospeo_enrich(
                 name=name,
                 company=company,
                 linkedin_url=linkedin_url or None,
-                want_phone=not has_phone,
+                want_phone=want_phone_lookup,
             )
             if prospeo.get("email") and not has_email:
                 _save_email(conn, lead_id, prospeo["email"])
