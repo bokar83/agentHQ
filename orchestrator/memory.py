@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 # Qdrant connection
 QDRANT_URL = os.environ.get("QDRANT_URL", "http://agentshq-qdrant-1:6333")
 QDRANT_COLLECTION = "agentshq_memory"
+QDRANT_LEARNINGS_COLLECTION = "agentshq_learnings"
 
 
 def get_qdrant_client():
@@ -398,3 +399,124 @@ def get_job(job_id: str) -> dict:
     except Exception as e:
         logger.warning(f"get_job failed: {e}")
         return {}
+
+
+# ── Learnings Extraction ───────────────────────────────────────
+
+import hashlib
+
+
+def _ensure_learnings_collection(client) -> None:
+    """Create agentshq_learnings Qdrant collection if it doesn't exist."""
+    try:
+        client.get_collection(QDRANT_LEARNINGS_COLLECTION)
+    except Exception:
+        from qdrant_client.models import VectorParams, Distance
+        client.create_collection(
+            collection_name=QDRANT_LEARNINGS_COLLECTION,
+            vectors_config=VectorParams(size=1536, distance=Distance.COSINE)
+        )
+
+
+def _call_extraction_llm(prompt: str) -> str:
+    """Call Claude Haiku via OpenRouter to extract a structured lesson."""
+    import openai
+    client = openai.OpenAI(
+        api_key=os.environ.get("OPENROUTER_API_KEY"),
+        base_url="https://openrouter.ai/api/v1"
+    )
+    response = client.chat.completions.create(
+        model="anthropic/claude-haiku-4.5",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=300,
+        temperature=0.2,
+    )
+    return response.choices[0].message.content.strip()
+
+
+def extract_and_save_learnings(
+    task_request: str,
+    task_type: str,
+    result_summary: str,
+    learning_type: str = "pattern",
+    from_number: str = "unknown",
+) -> bool:
+    """
+    Post-task hook: extract a structured lesson from a praised output.
+    Saves to Qdrant agentshq_learnings + Postgres agent_learnings.
+    Runs in a daemon thread — never call inline.
+
+    learning_type: "pattern" | "preference" | "lesson"
+    Returns False if MEMORY_LEARNING_ENABLED is not "true".
+    """
+    if os.environ.get("MEMORY_LEARNING_ENABLED", "false").lower() != "true":
+        return False
+
+    try:
+        prompt = (
+            f"A task of type '{task_type}' was completed and the user approved the output.\n\n"
+            f"Task request: {task_request[:400]}\n\n"
+            f"Output summary: {result_summary[:600]}\n\n"
+            f"Extract ONE concise lesson (1-2 sentences) about what approach or structure worked well "
+            f"for this task type. Focus on: structure, tone, format, or methodology that made this output good. "
+            f"Return only the lesson text, nothing else."
+        )
+        lesson_text = _call_extraction_llm(prompt)
+
+        # Deterministic point ID — prevents duplicate lessons on retries
+        point_id_raw = hashlib.sha256(f"{task_type}:{lesson_text}".encode()).hexdigest()[:32]
+        import uuid as _uuid
+        point_id = str(_uuid.UUID(point_id_raw))
+
+        embedding = get_embedding(lesson_text)
+        if not embedding:
+            logger.warning("extract_and_save_learnings: embedding failed, skipping Qdrant save")
+            return False
+
+        client = get_qdrant_client()
+        if not client:
+            return False
+
+        _ensure_learnings_collection(client)
+
+        from qdrant_client.models import PointStruct
+        point = PointStruct(
+            id=point_id,
+            vector=embedding,
+            payload={
+                "task_type": task_type,
+                "lesson_type": "positive",
+                "extracted_pattern": lesson_text,
+                "timestamp": datetime.utcnow().isoformat(),
+                "source": "auto_extraction",
+                "lesson_status": "auto",
+                "from_number": from_number,
+            }
+        )
+        client.upsert(collection_name=QDRANT_LEARNINGS_COLLECTION, points=[point])
+        logger.info(f"Positive lesson saved to Qdrant for task_type={task_type}")
+
+        # Save to Postgres agent_learnings
+        try:
+            conn = _pg_conn()
+            cur = conn.cursor()
+            cur.execute("""
+                INSERT INTO agent_learnings
+                  (task_type, learning_type, content, confidence, lesson_status, qdrant_point_id, created_at)
+                VALUES (%s, %s, %s, %s, 'auto', %s, %s)
+            """, (
+                task_type, learning_type, lesson_text, 0.8,
+                point_id, datetime.utcnow().isoformat()
+            ))
+            conn.commit()
+            cur.close()
+            conn.close()
+            logger.info(f"Positive lesson saved to Postgres for task_type={task_type}")
+        except Exception as e:
+            logger.warning(f"extract_and_save_learnings: Postgres save failed (non-fatal): {e}")
+
+        return True
+
+    except Exception as e:
+        logger.warning(f"extract_and_save_learnings failed (non-fatal): {e}")
+        return False
