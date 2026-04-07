@@ -254,7 +254,7 @@ def _run_daily_harvest():
                 )
                 report += enrich_summary
 
-            send_hunter_report(report)
+            send_hunter_report(report, enrich_result=enrich_result)
             log_for_remoat("Daily Ignition complete. Report delivered.", "NOTIFICATION")
             logger.info("CRON: Daily Lead Harvest complete and delivered.")
         else:

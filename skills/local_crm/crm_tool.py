@@ -269,7 +269,7 @@ def get_uncontacted_leads(limit: int = 50) -> list:
                    linkedin_url, industry, source, status, created_at
             FROM leads
             WHERE status = 'new' AND last_contacted_at IS NULL
-            ORDER BY created_at ASC
+            ORDER BY priority ASC NULLS LAST, created_at ASC
             LIMIT %s
         """, (limit,))
         rows = cur.fetchall()
