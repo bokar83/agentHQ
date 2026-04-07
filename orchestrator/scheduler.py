@@ -11,7 +11,7 @@ import json
 import time
 import threading
 import logging
-from datetime import datetime, time as dtime
+from datetime import datetime
 import pytz
 
 logger = logging.getLogger("agentsHQ.scheduler")
@@ -307,7 +307,7 @@ def _run_supabase_sync():
 def _run_notion_sync():
     """
     Sync all Supabase leads into the Notion CRM Leads database.
-    Runs at 6am and every 30 minutes so Notion stays current.
+    Triggered by Supabase LISTEN/NOTIFY on lead changes, with 10am/1pm MT fallback.
     """
     try:
         import sys
@@ -344,15 +344,66 @@ def start_scheduler():
     sync_thread = threading.Thread(target=_periodic_sync, daemon=True)
     sync_thread.start()
 
+    listen_thread = threading.Thread(target=_listen_for_supabase_changes, daemon=True)
+    listen_thread.start()
+
     logger.info("Background scheduler initialized.")
 
 
 def _periodic_sync():
-    """Run Supabase fallback sync + Notion CRM sync every 30 minutes."""
+    """
+    Run Supabase fallback sync every 30 minutes (local Postgres → Supabase).
+    Run Notion CRM sync at 10am and 1pm MT as scheduled fallback.
+    Primary Notion sync is triggered by Supabase LISTEN notifications.
+    """
+    tz = pytz.timezone(TIMEZONE)
+    notion_sync_hours = {10, 13}  # 10am and 1pm MT
+    last_notion_sync_date = {}  # hour -> date last synced
+
     while True:
-        time.sleep(1800)  # 30 minutes
+        time.sleep(60)  # check every minute
         _run_supabase_sync()
-        _run_notion_sync()
+
+        now = datetime.now(tz)
+        if now.hour in notion_sync_hours:
+            last = last_notion_sync_date.get(now.hour)
+            if last != now.date():
+                logger.info(f"NOTION SYNC: Scheduled sync at {now.hour:02d}:00 MT")
+                _run_notion_sync()
+                last_notion_sync_date[now.hour] = now.date()
+
+
+def _listen_for_supabase_changes():
+    """
+    Listen on the Supabase 'leads_changed' channel via Postgres LISTEN/NOTIFY.
+    Triggers a Notion sync whenever a lead is inserted or updated.
+    Reconnects automatically on failure.
+    """
+    import select as _select
+    import sys
+    if "/app" not in sys.path:
+        sys.path.insert(0, "/app")
+
+    logger.info("LISTEN: Starting Supabase leads change listener.")
+    while True:
+        try:
+            from db import get_crm_connection
+            conn = get_crm_connection()
+            conn.set_isolation_level(0)  # autocommit required for LISTEN
+            cur = conn.cursor()
+            cur.execute("LISTEN leads_changed;")
+            logger.info("LISTEN: Subscribed to leads_changed channel.")
+
+            while True:
+                if _select.select([conn], [], [], 60)[0]:
+                    conn.poll()
+                    while conn.notifies:
+                        notify = conn.notifies.pop(0)
+                        logger.info(f"LISTEN: leads_changed notification received: {notify.payload}")
+                        _run_notion_sync()
+        except Exception as e:
+            logger.error(f"LISTEN: Supabase listener error: {e}. Reconnecting in 30s.")
+            time.sleep(30)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
