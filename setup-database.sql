@@ -97,6 +97,65 @@ CREATE INDEX IF NOT EXISTS idx_conv_ts         ON conversation_archive(timestamp
 CREATE INDEX IF NOT EXISTS idx_tasks_status    ON task_queue(status);
 CREATE INDEX IF NOT EXISTS idx_security_date   ON security_events(report_date DESC);
 
+-- Memory Architecture Tables (added 2026-04-07) ─────────────
+
+-- Agent conversation history — per-session chat turns
+CREATE TABLE IF NOT EXISTS agent_conversation_history (
+  id          SERIAL PRIMARY KEY,
+  session_id  TEXT NOT NULL,
+  role        TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
+  content     TEXT NOT NULL,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_conv_history_session
+  ON agent_conversation_history(session_id, created_at DESC);
+
+-- Job queue — async task tracking
+CREATE TABLE IF NOT EXISTS job_queue (
+  job_id         TEXT PRIMARY KEY,
+  session_key    TEXT,
+  from_number    TEXT,
+  task           TEXT,
+  status         TEXT DEFAULT 'pending',
+  task_type      TEXT,
+  result         TEXT,
+  files_created  JSONB DEFAULT '[]',
+  execution_time FLOAT,
+  error          TEXT,
+  created_at     TIMESTAMPTZ DEFAULT NOW(),
+  updated_at     TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_job_queue_status ON job_queue(status);
+
+-- Overflow chunks — "more" feature for long outputs
+CREATE TABLE IF NOT EXISTS pending_overflow (
+  session_id      TEXT PRIMARY KEY,
+  full_output     TEXT,
+  delivered_chars INTEGER DEFAULT 0,
+  task_type       TEXT,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Agent learnings — structured learning archive
+CREATE TABLE IF NOT EXISTS agent_learnings (
+  id               SERIAL PRIMARY KEY,
+  task_type        TEXT NOT NULL,
+  learning_type    TEXT NOT NULL CHECK (learning_type IN ('pattern', 'preference', 'lesson', 'negative')),
+  content          TEXT NOT NULL,
+  entities         JSONB DEFAULT '[]',
+  confidence       FLOAT DEFAULT 0.8,
+  use_count        INTEGER DEFAULT 0,
+  last_used_at     TIMESTAMPTZ,
+  lesson_status    TEXT DEFAULT 'auto' CHECK (lesson_status IN ('auto', 'reviewed', 'purged')),
+  sanitized_export BOOLEAN DEFAULT FALSE,
+  qdrant_point_id  TEXT,
+  created_at       TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_learnings_type
+  ON agent_learnings(task_type, learning_type);
+CREATE INDEX IF NOT EXISTS idx_learnings_status
+  ON agent_learnings(lesson_status);
+
 -- Confirm
 SELECT 'Tables created: ' || string_agg(table_name, ', ' ORDER BY table_name)
 FROM information_schema.tables
