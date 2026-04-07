@@ -87,6 +87,13 @@ except ImportError:
     def create_page(*args, **kwargs): return "notion_not_ready"
     def append_block(*args, **kwargs): return False
 
+try:
+    from skills.mermaid_diagrammer.skill import mermaid_tool
+except ImportError as e:
+    logger_pre = __import__("logging").getLogger(__name__)
+    logger_pre.warning(f"mermaid_diagrammer import failed: {e}")
+    mermaid_tool = None
+
 logger = logging.getLogger(__name__)
 
 
