@@ -58,3 +58,88 @@ def append_block(block_id, content):
     r = httpx.patch(f"https://api.notion.com/v1/blocks/{block_id}/children", headers=headers, json=payload, timeout=10)
     r.raise_for_status()
     return r.status_code == 200
+
+
+def create_database(parent_page_id: str, title: str) -> dict:
+    """Create a new Notion database under the given parent page."""
+    headers = get_notion_headers()
+    payload = {
+        "parent": {"type": "page_id", "page_id": parent_page_id},
+        "title": [{"type": "text", "text": {"content": title}}],
+        "properties": {
+            "Name": {"title": {}},
+            "Content": {"rich_text": {}},
+            "Source": {
+                "select": {
+                    "options": [
+                        {"name": "Telegram", "color": "blue"},
+                        {"name": "Manual", "color": "gray"},
+                    ]
+                }
+            },
+            "Status": {
+                "select": {
+                    "options": [
+                        {"name": "New", "color": "green"},
+                        {"name": "Reviewed", "color": "yellow"},
+                        {"name": "Archived", "color": "gray"},
+                    ]
+                }
+            },
+            "Category": {
+                "select": {
+                    "options": [
+                        {"name": "Tool", "color": "purple"},
+                        {"name": "Agent", "color": "blue"},
+                        {"name": "Feature", "color": "orange"},
+                        {"name": "Business", "color": "red"},
+                        {"name": "Personal", "color": "pink"},
+                    ]
+                }
+            },
+            "Created": {"date": {}},
+        },
+    }
+    r = httpx.post("https://api.notion.com/v1/databases", headers=headers, json=payload, timeout=10)
+    r.raise_for_status()
+    return r.json()
+
+
+def query_database(database_id: str, filter: dict = None, sorts: list = None) -> list:
+    """Query records from a Notion database. Returns list of page objects."""
+    headers = get_notion_headers()
+    payload = {}
+    if filter:
+        payload["filter"] = filter
+    if sorts:
+        payload["sorts"] = sorts
+    else:
+        payload["sorts"] = [{"property": "Created", "direction": "descending"}]
+    r = httpx.post(
+        f"https://api.notion.com/v1/databases/{database_id}/query",
+        headers=headers,
+        json=payload,
+        timeout=10,
+    )
+    r.raise_for_status()
+    return r.json().get("results", [])
+
+
+def create_idea_page(database_id: str, title: str, content: str, category: str = "Feature") -> str:
+    """Create a new idea page in the Ideas database. Returns the Notion URL."""
+    from datetime import date
+    headers = get_notion_headers()
+    payload = {
+        "parent": {"database_id": database_id},
+        "properties": {
+            "Name": {"title": [{"text": {"content": title}}]},
+            "Content": {"rich_text": [{"text": {"content": content[:2000]}}]},
+            "Source": {"select": {"name": "Telegram"}},
+            "Status": {"select": {"name": "New"}},
+            "Category": {"select": {"name": category}},
+            "Created": {"date": {"start": date.today().isoformat()}},
+        },
+    }
+    r = httpx.post("https://api.notion.com/v1/pages", headers=headers, json=payload, timeout=10)
+    r.raise_for_status()
+    return r.json().get("url", "")
