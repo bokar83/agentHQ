@@ -37,6 +37,24 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Depends, H
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+# Task types that benefit from pre-task memory recall.
+# Simple/single-pass tasks (gws, hunter, social) are excluded — no benefit, adds latency.
+MEMORY_GATED_TASK_TYPES = {
+    "research_report",
+    "consulting_deliverable",
+    "website_build",
+    "web_builder",
+    "3d_web_builder",
+    "notion_architect",
+    "copywriting",
+    "cold_outreach",
+    "email_draft",
+}
+
+# In-memory tracker: chat_id -> last completed job metadata
+# Used by praise/critique detector to pair feedback with prior output.
+_last_completed_job: dict = {}
+
 # OpenSpace Evolution Hook
 try:
     from skills.openspace_skill.openspace_tool import openspace_tool
@@ -546,6 +564,47 @@ def run_orchestrator(task_request: str, from_number: str = "unknown", session_ke
 
     logger.info(f"Task classified as '{task_type}' (confidence: {classification.get('confidence', 0)})")
 
+    # Step 0b: Pre-task memory recall (injected now that we know task_type)
+    if (
+        os.environ.get("MEMORY_LEARNING_ENABLED", "false").lower() == "true"
+        and task_type in MEMORY_GATED_TASK_TYPES
+    ):
+        try:
+            from memory import query_memory
+            memory_lines = []
+
+            past_work = query_memory(task_request, top_k=3)
+            if past_work:
+                memory_lines.append("--- RELEVANT PAST WORK ---")
+                for pw in past_work:
+                    memory_lines.append(
+                        f"- [{pw.get('task_type','?')}] {pw.get('summary','')[:200]} (date: {pw.get('date','?')})"
+                    )
+
+            past_lessons = query_memory(task_request, top_k=5, collection="agentshq_learnings")
+            positive = [l for l in past_lessons if l.get("lesson_type") == "positive"]
+            negative = [l for l in past_lessons if l.get("lesson_type") == "negative"]
+            if positive:
+                memory_lines.append("--- WHAT WORKED WELL FOR THIS TASK TYPE ---")
+                for l in positive:
+                    memory_lines.append(f"- {l.get('extracted_pattern','')[:200]}")
+            if negative:
+                memory_lines.append("--- WHAT TO AVOID FOR THIS TASK TYPE ---")
+                for l in negative:
+                    memory_lines.append(f"- {l.get('extracted_pattern','')[:200]}")
+
+            if memory_lines:
+                memory_block = "\n".join(memory_lines) + "\n--- END MEMORY ---\n\n"
+                # Cap total enriched_task at 6000 chars to prevent context window overflow
+                combined = memory_block + enriched_task
+                if len(combined) > 6000:
+                    allowed = max(0, 6000 - len(enriched_task))
+                    memory_block = memory_block[:allowed]
+                enriched_task = memory_block + enriched_task
+                logger.info(f"Memory recall: {len(past_work)} past tasks + {len(past_lessons)} lessons injected for {task_type}")
+        except Exception as e:
+            logger.warning(f"Memory recall failed (non-fatal): {e}")
+
     # Step 3: Direct dispatch for crm_outreach (no crew -- pure Supabase + Gmail API)
     if task_type == "crm_outreach":
         try:
@@ -862,6 +921,15 @@ def _run_background_job(
         except Exception as e:
             logger.warning(f"Job {job_id}: could not update job status to completed: {e}")
 
+        # ── Record last completed job for feedback detection ──────────────────
+        _last_completed_job[chat_id] = {
+            "job_id": job_id,
+            "task_type": task_type,
+            "task_request": task,
+            "result_summary": summary[:1000],
+            "delivered_at": datetime.utcnow(),
+        }
+
         # ── Compound request: email follow-up ────────────────────
         # If the original message asked to "also send me an email about this",
         # spin a minimal GWS crew to draft the summary email after the main task.
@@ -918,6 +986,24 @@ def _run_background_job(
                 ).start()
         except Exception as e:
             logger.warning(f"Evolution trigger failed: {e}")
+
+        # ── Trigger Learning Extraction ──────────────────────────────────
+        # Fires only on success + MEMORY_LEARNING_ENABLED=true + gated task types
+        # Runs in daemon thread — does not block result delivery
+        try:
+            if (
+                result.get("success")
+                and os.environ.get("MEMORY_LEARNING_ENABLED", "false").lower() == "true"
+                and result.get("task_type", "") in MEMORY_GATED_TASK_TYPES
+            ):
+                from memory import extract_and_save_learnings
+                threading.Thread(
+                    target=extract_and_save_learnings,
+                    args=(task, result.get("task_type", "unknown"), result.get("result", "")[:1000]),
+                    daemon=True
+                ).start()
+        except Exception as e:
+            logger.warning(f"Learning extraction trigger failed (non-fatal): {e}")
 
 def _trigger_evolution(task_instruction: str, result_output: str) -> None:
     """

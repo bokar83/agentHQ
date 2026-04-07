@@ -110,3 +110,16 @@ def test_extract_negative_lesson_saves_with_negative_type():
             point = upsert_call[1]["points"][0]
             assert point.payload["lesson_type"] == "negative"
             assert point.payload["source"] == "user_critique"
+
+
+def test_memory_gated_task_types_constant_exists():
+    """MEMORY_GATED_TASK_TYPES contains expected task types and excludes simple ones."""
+    import sys, os
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'orchestrator'))
+    from orchestrator import MEMORY_GATED_TASK_TYPES
+    assert "research_report" in MEMORY_GATED_TASK_TYPES
+    assert "consulting_deliverable" in MEMORY_GATED_TASK_TYPES
+    assert "copywriting" in MEMORY_GATED_TASK_TYPES
+    assert "gws_task" not in MEMORY_GATED_TASK_TYPES
+    assert "hunter_task" not in MEMORY_GATED_TASK_TYPES
+    assert "chat" not in MEMORY_GATED_TASK_TYPES
