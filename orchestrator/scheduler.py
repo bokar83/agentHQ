@@ -59,9 +59,11 @@ def _update_notion_quote_block(block_id: str, quote: dict) -> bool:
     """PATCH a single Notion callout block with today's quote text."""
     try:
         import httpx
-        token = os.environ.get("NOTION_API_KEY") or os.environ.get("NOTION_TOKEN")
+        token = (os.environ.get("NOTION_API_KEY")
+                 or os.environ.get("NOTION_TOKEN")
+                 or os.environ.get("NOTION_SECRET"))
         if not token:
-            logger.error("QUOTE: NOTION_API_KEY not set.")
+            logger.error("QUOTE: No Notion token found (tried NOTION_API_KEY, NOTION_TOKEN, NOTION_SECRET).")
             return False
         text = f"\"{quote['text']}\" -- {quote['author']} \u00b7 Quote rotates daily"
         payload = {
@@ -143,9 +145,11 @@ def _get_or_discover_block_ids(token: str) -> dict:
 
 def _run_quote_rotation():
     """Update daily quote on agentsHQ + The Forge 2.0, then send to Telegram."""
-    token = os.environ.get("NOTION_API_KEY") or os.environ.get("NOTION_TOKEN")
+    token = (os.environ.get("NOTION_API_KEY")
+             or os.environ.get("NOTION_TOKEN")
+             or os.environ.get("NOTION_SECRET"))
     if not token:
-        logger.error("QUOTE: NOTION_API_KEY not set -- skipping quote rotation.")
+        logger.error("QUOTE: No Notion token found -- skipping quote rotation.")
         return
 
     quote = _get_today_quote()
