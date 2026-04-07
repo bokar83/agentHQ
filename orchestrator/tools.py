@@ -86,6 +86,9 @@ except ImportError:
     def search_databases(*args, **kwargs): return []
     def create_page(*args, **kwargs): return "notion_not_ready"
     def append_block(*args, **kwargs): return False
+    NotionStylist = None
+    NotionCLI = None
+    SupabaseClient = None
 
 try:
     from skills.mermaid_diagrammer.skill import mermaid_tool
@@ -121,6 +124,8 @@ class SetNotionStyleTool(BaseTool):
         "Inputs: 'page_id' (string), 'cover' (string URL), 'icon' (emoji or URL)."
     )
     def _run(self, page_id: str, cover: str = None, icon: str = None) -> str:
+        if NotionStylist is None:
+            return "NotionStylist not available — skill not installed"
         stylist = NotionStylist()
         return stylist.set_premium_style(page_id, cover, icon)
 
@@ -132,6 +137,8 @@ class AddNotionNavTool(BaseTool):
         "Inputs: 'page_id' (string), 'items_json' (JSON list of dicts with 'title' and 'url')."
     )
     def _run(self, page_id: str, items_json: str) -> str:
+        if NotionStylist is None:
+            return "NotionStylist not available — skill not installed"
         import json
         stylist = NotionStylist()
         try:
@@ -152,6 +159,8 @@ class ArchitectNotionPageTool(BaseTool):
         "optional 'set_style' (bool), 'cover_key' (string), 'icon_emoji' (string)."
     )
     def _run(self, page_id: str, markdown_text: str, set_style: bool = False, cover_key: str = "dark_geometry", icon_emoji: str = "🏗️") -> str:
+        if NotionStylist is None:
+            return "NotionStylist not available — skill not installed"
         stylist = NotionStylist()
         try:
             result = stylist.architect_page(page_id, markdown_text, set_style=set_style, cover_key=cover_key, icon_emoji=icon_emoji)
@@ -168,6 +177,8 @@ class ApplyNotionTemplateTool(BaseTool):
         "Available templates: project_command_center, client_portal, knowledge_hub."
     )
     def _run(self, page_id: str, template_name: str) -> str:
+        if NotionStylist is None:
+            return "NotionStylist not available — skill not installed"
         stylist = NotionStylist()
         try:
             result = stylist.apply_template(page_id, template_name)
@@ -180,6 +191,8 @@ class AddNotionCalloutTool(BaseTool):
     name: str = "add_notion_callout"
     description: str = "Adds a callout block. Inputs: 'page_id', 'text', optional 'emoji' and 'color'."
     def _run(self, page_id: str, text: str, emoji: str = "🔥", color: str = "default") -> str:
+        if NotionStylist is None:
+            return "NotionStylist not available — skill not installed"
         stylist = NotionStylist()
         return str(stylist.add_callout(page_id, text, emoji, color))
 
@@ -188,6 +201,8 @@ class AddNotionHeadingTool(BaseTool):
     name: str = "add_notion_heading"
     description: str = "Adds a heading. Inputs: 'page_id', 'text', optional 'level' (1-3) and 'color'."
     def _run(self, page_id: str, text: str, level: int = 2, color: str = "default") -> str:
+        if NotionStylist is None:
+            return "NotionStylist not available — skill not installed"
         stylist = NotionStylist()
         return str(stylist.add_heading(page_id, text, level, color))
 
@@ -196,6 +211,8 @@ class AddNotionDividerTool(BaseTool):
     name: str = "add_notion_divider"
     description: str = "Adds a full-width divider. Inputs: 'page_id'."
     def _run(self, page_id: str) -> str:
+        if NotionStylist is None:
+            return "NotionStylist not available — skill not installed"
         stylist = NotionStylist()
         return str(stylist.add_divider(page_id))
 
@@ -204,6 +221,8 @@ class AddNotionToggleTool(BaseTool):
     name: str = "add_notion_toggle"
     description: str = "Adds a toggle block. Inputs: 'page_id', 'text'."
     def _run(self, page_id: str, text: str) -> str:
+        if NotionStylist is None:
+            return "NotionStylist not available — skill not installed"
         stylist = NotionStylist()
         return str(stylist.add_toggle(page_id, text))
 
@@ -212,6 +231,8 @@ class CreateNotionColumnLayoutTool(BaseTool):
     name: str = "create_notion_column_layout"
     description: str = "Creates columns. Inputs: 'page_id', 'columns_content' (JSON string — list of lists of Notion block dicts)."
     def _run(self, page_id: str, columns_content: str) -> str:
+        if NotionStylist is None:
+            return "NotionStylist not available — skill not installed"
         import json
         stylist = NotionStylist()
         try:
@@ -229,6 +250,8 @@ class ClearNotionPageTool(BaseTool):
         "Inputs: 'page_id' (string), 'preserve_databases' (bool, default True)."
     )
     def _run(self, page_id: str, preserve_databases: bool = True) -> str:
+        if NotionStylist is None:
+            return "NotionStylist not available — skill not installed"
         stylist = NotionStylist()
         try:
             stylist.clear_page_content(page_id, preserve_databases=preserve_databases)
