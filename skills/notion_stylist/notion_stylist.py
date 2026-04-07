@@ -1,7 +1,9 @@
+import json as _json
 import os
+import re
 import httpx
 from dotenv import load_dotenv
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional
 
 load_dotenv()
 
@@ -21,6 +23,293 @@ COVER_IMAGES = {
     "dark_network": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1600&q=80",
     "dark_geometry": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1600&q=80",
     "dark_forge": "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=1600&q=80",
+}
+
+# ── Premium Layout Templates ───────────────────────────────────────────────────
+# Each template defines:
+#   cover: cover image key from COVER_IMAGES
+#   icon: emoji for the page icon (unicode escapes avoid linter stripping)
+#   description: human-readable summary
+#   blocks: list of Notion block dicts appended after clearing the page
+
+LAYOUT_TEMPLATES: Dict[str, Dict[str, Any]] = {
+
+    "project_command_center": {
+        "cover": "dark_geometry",
+        "icon": "\U0001f680",
+        "description": "3-column status board with quick links and a mission callout. Ideal for active projects.",
+        "blocks": [
+            {
+                "object": "block", "type": "callout",
+                "callout": {
+                    "rich_text": [{"type": "text", "text": {"content": "Mission: Deliver on time, on brief, on brand."}}],
+                    "icon": {"type": "emoji", "emoji": "\U0001f3af"},
+                    "color": "green_background",
+                },
+            },
+            {"object": "block", "type": "divider", "divider": {}},
+            {
+                "object": "block", "type": "heading_2",
+                "heading_2": {
+                    "rich_text": [{"type": "text", "text": {"content": "Status Board"}}],
+                    "color": "default",
+                },
+            },
+            {
+                "object": "block", "type": "column_list",
+                "column_list": {
+                    "children": [
+                        {
+                            "object": "block", "type": "column",
+                            "column": {"children": [
+                                {
+                                    "object": "block", "type": "callout",
+                                    "callout": {
+                                        "rich_text": [{"type": "text", "text": {"content": "In Progress\nList active tasks here."}}],
+                                        "icon": {"type": "emoji", "emoji": "\u26a1"},
+                                        "color": "orange_background",
+                                    },
+                                }
+                            ]},
+                        },
+                        {
+                            "object": "block", "type": "column",
+                            "column": {"children": [
+                                {
+                                    "object": "block", "type": "callout",
+                                    "callout": {
+                                        "rich_text": [{"type": "text", "text": {"content": "Blocked\nItems needing decisions."}}],
+                                        "icon": {"type": "emoji", "emoji": "\U0001f6a7"},
+                                        "color": "red_background",
+                                    },
+                                }
+                            ]},
+                        },
+                        {
+                            "object": "block", "type": "column",
+                            "column": {"children": [
+                                {
+                                    "object": "block", "type": "callout",
+                                    "callout": {
+                                        "rich_text": [{"type": "text", "text": {"content": "Done\nCompleted this sprint."}}],
+                                        "icon": {"type": "emoji", "emoji": "\u2705"},
+                                        "color": "green_background",
+                                    },
+                                }
+                            ]},
+                        },
+                    ]
+                },
+            },
+            {"object": "block", "type": "divider", "divider": {}},
+            {
+                "object": "block", "type": "heading_2",
+                "heading_2": {
+                    "rich_text": [{"type": "text", "text": {"content": "Quick Links"}}],
+                    "color": "default",
+                },
+            },
+            {
+                "object": "block", "type": "column_list",
+                "column_list": {
+                    "children": [
+                        {
+                            "object": "block", "type": "column",
+                            "column": {"children": [
+                                {
+                                    "object": "block", "type": "callout",
+                                    "callout": {
+                                        "rich_text": [{"type": "text", "text": {"content": "Brief & Scope"}}],
+                                        "icon": {"type": "emoji", "emoji": "\U0001f4cb"},
+                                        "color": "blue_background",
+                                    },
+                                }
+                            ]},
+                        },
+                        {
+                            "object": "block", "type": "column",
+                            "column": {"children": [
+                                {
+                                    "object": "block", "type": "callout",
+                                    "callout": {
+                                        "rich_text": [{"type": "text", "text": {"content": "Assets & Files"}}],
+                                        "icon": {"type": "emoji", "emoji": "\U0001f4c1"},
+                                        "color": "blue_background",
+                                    },
+                                }
+                            ]},
+                        },
+                        {
+                            "object": "block", "type": "column",
+                            "column": {"children": [
+                                {
+                                    "object": "block", "type": "callout",
+                                    "callout": {
+                                        "rich_text": [{"type": "text", "text": {"content": "Meeting Notes"}}],
+                                        "icon": {"type": "emoji", "emoji": "\U0001f5d2\ufe0f"},
+                                        "color": "blue_background",
+                                    },
+                                }
+                            ]},
+                        },
+                    ]
+                },
+            },
+        ],
+    },
+
+    "client_portal": {
+        "cover": "dark_network",
+        "icon": "\U0001f91d",
+        "description": "High-impact hero section with deliverables and feedback columns. Ideal for client-facing workspaces.",
+        "blocks": [
+            {
+                "object": "block", "type": "callout",
+                "callout": {
+                    "rich_text": [{"type": "text", "text": {"content": "Welcome. This is your dedicated workspace. Everything you need is here."}}],
+                    "icon": {"type": "emoji", "emoji": "\U0001f31f"},
+                    "color": "blue_background",
+                },
+            },
+            {"object": "block", "type": "divider", "divider": {}},
+            {
+                "object": "block", "type": "heading_2",
+                "heading_2": {
+                    "rich_text": [{"type": "text", "text": {"content": "Your Workspace"}}],
+                    "color": "default",
+                },
+            },
+            {
+                "object": "block", "type": "column_list",
+                "column_list": {
+                    "children": [
+                        {
+                            "object": "block", "type": "column",
+                            "column": {"children": [
+                                {
+                                    "object": "block", "type": "heading_3",
+                                    "heading_3": {
+                                        "rich_text": [{"type": "text", "text": {"content": "Deliverables"}}],
+                                        "color": "green",
+                                    },
+                                },
+                                {
+                                    "object": "block", "type": "callout",
+                                    "callout": {
+                                        "rich_text": [{"type": "text", "text": {"content": "Phase 1: Discovery\nStatus: In Review"}}],
+                                        "icon": {"type": "emoji", "emoji": "\U0001f4e6"},
+                                        "color": "green_background",
+                                    },
+                                },
+                                {
+                                    "object": "block", "type": "callout",
+                                    "callout": {
+                                        "rich_text": [{"type": "text", "text": {"content": "Phase 2: Strategy\nStatus: Upcoming"}}],
+                                        "icon": {"type": "emoji", "emoji": "\U0001f4e6"},
+                                        "color": "gray_background",
+                                    },
+                                },
+                            ]},
+                        },
+                        {
+                            "object": "block", "type": "column",
+                            "column": {"children": [
+                                {
+                                    "object": "block", "type": "heading_3",
+                                    "heading_3": {
+                                        "rich_text": [{"type": "text", "text": {"content": "Feedback & Approvals"}}],
+                                        "color": "orange",
+                                    },
+                                },
+                                {
+                                    "object": "block", "type": "callout",
+                                    "callout": {
+                                        "rich_text": [{"type": "text", "text": {"content": "Leave comments below each deliverable or tag @Boubacar directly."}}],
+                                        "icon": {"type": "emoji", "emoji": "\U0001f4ac"},
+                                        "color": "orange_background",
+                                    },
+                                },
+                            ]},
+                        },
+                    ]
+                },
+            },
+            {"object": "block", "type": "divider", "divider": {}},
+            {
+                "object": "block", "type": "heading_2",
+                "heading_2": {
+                    "rich_text": [{"type": "text", "text": {"content": "Key Dates"}}],
+                    "color": "default",
+                },
+            },
+            {
+                "object": "block", "type": "callout",
+                "callout": {
+                    "rich_text": [{"type": "text", "text": {"content": "Add project milestones and deadlines here."}}],
+                    "icon": {"type": "emoji", "emoji": "\U0001f4c5"},
+                    "color": "default",
+                },
+            },
+        ],
+    },
+
+    "knowledge_hub": {
+        "cover": "dark_forge",
+        "icon": "\U0001f9e0",
+        "description": "Toggle-based nested architecture for deep research and knowledge management.",
+        "blocks": [
+            {
+                "object": "block", "type": "callout",
+                "callout": {
+                    "rich_text": [{"type": "text", "text": {"content": "Knowledge compounds. Every insight captured here is a competitive advantage."}}],
+                    "icon": {"type": "emoji", "emoji": "\U0001f4a1"},
+                    "color": "blue_background",
+                },
+            },
+            {"object": "block", "type": "divider", "divider": {}},
+            {
+                "object": "block", "type": "heading_2",
+                "heading_2": {
+                    "rich_text": [{"type": "text", "text": {"content": "Research Library"}}],
+                    "is_toggleable": True,
+                    "color": "default",
+                },
+            },
+            {
+                "object": "block", "type": "heading_2",
+                "heading_2": {
+                    "rich_text": [{"type": "text", "text": {"content": "Frameworks & Models"}}],
+                    "is_toggleable": True,
+                    "color": "default",
+                },
+            },
+            {
+                "object": "block", "type": "heading_2",
+                "heading_2": {
+                    "rich_text": [{"type": "text", "text": {"content": "Source Material"}}],
+                    "is_toggleable": True,
+                    "color": "default",
+                },
+            },
+            {
+                "object": "block", "type": "heading_2",
+                "heading_2": {
+                    "rich_text": [{"type": "text", "text": {"content": "Open Questions"}}],
+                    "is_toggleable": True,
+                    "color": "default",
+                },
+            },
+            {"object": "block", "type": "divider", "divider": {}},
+            {
+                "object": "block", "type": "callout",
+                "callout": {
+                    "rich_text": [{"type": "text", "text": {"content": "Archive\nMove completed research here to keep active sections lean."}}],
+                    "icon": {"type": "emoji", "emoji": "\U0001f5c4\ufe0f"},
+                    "color": "gray_background",
+                },
+            },
+        ],
+    },
 }
 
 
@@ -78,7 +367,8 @@ class NotionStylist:
                 break
             cursor = result.get("next_cursor")
 
-    def set_premium_style(self, page_id: str, cover_url: Optional[str] = None, icon_emoji: Optional[str] = None, icon_url: Optional[str] = None):
+    def set_premium_style(self, page_id: str, cover_url: Optional[str] = None,
+                          icon_emoji: Optional[str] = None, icon_url: Optional[str] = None):
         """Apply cover and icon to a page or database."""
         payload = {}
         if cover_url:
@@ -95,7 +385,7 @@ class NotionStylist:
             print(f"Page style failed ({e}), trying as database...")
             return self._patch(f"databases/{page_id}", payload)
 
-    def add_callout(self, page_id: str, text: str, emoji: str = "🔥", color: str = "default"):
+    def add_callout(self, page_id: str, text: str, emoji: str = "\U0001f525", color: str = "default"):
         """Add a callout block. Color accepts brand names or Notion API values."""
         resolved_color = BRAND_COLORS.get(color, color)
         payload = {
@@ -160,11 +450,11 @@ class NotionStylist:
         all_blocks = []
         all_ratios = []
         for i in range(0, len(items), max_cols):
-            chunk = items[i : i + max_cols]
+            chunk = items[i: i + max_cols]
             n = len(chunk)
             ratios = self._compute_ratios(n)
             columns = []
-            for j, item in enumerate(chunk):
+            for item in chunk:
                 rich_text_content = {"content": item["title"]}
                 if "url" in item:
                     rich_text_content["link"] = {"url": item["url"]}
@@ -183,7 +473,7 @@ class NotionStylist:
                                         ],
                                         "icon": {
                                             "type": "emoji",
-                                            "emoji": item.get("emoji", "📌"),
+                                            "emoji": item.get("emoji", "\U0001f4cc"),
                                         },
                                         "color": BRAND_COLORS.get(
                                             item.get("color", "dark"),
@@ -228,6 +518,129 @@ class NotionStylist:
         }
         return self._patch(f"blocks/{page_id}/children", payload)
 
+    # ── Template Application ──────────────────────────────────────────────────
+
+    def apply_template(self, page_id: str, template_name: str,
+                       preserve_databases: bool = True) -> Dict[str, Any]:
+        """Clear page and apply a named LAYOUT_TEMPLATE.
+
+        Returns dict with keys 'template', 'style_result', 'blocks_result'.
+        """
+        template = LAYOUT_TEMPLATES.get(template_name)
+        if template is None:
+            available = ", ".join(LAYOUT_TEMPLATES.keys())
+            raise ValueError(f"Unknown template '{template_name}'. Available: {available}")
+
+        self.clear_page_content(page_id, preserve_databases=preserve_databases)
+
+        cover_url = COVER_IMAGES.get(template.get("cover", ""), None)
+        icon_emoji = template.get("icon")
+        style_result = self.set_premium_style(page_id, cover_url=cover_url, icon_emoji=icon_emoji)
+
+        blocks = template.get("blocks", [])
+        blocks_result = None
+        if blocks:
+            blocks_result = self._patch(f"blocks/{page_id}/children", {"children": blocks})
+
+        return {"template": template_name, "style_result": style_result, "blocks_result": blocks_result}
+
+    # ── Markdown-to-Block Conversion ─────────────────────────────────────────
+
+    @staticmethod
+    def markdown_to_blocks(md_text: str) -> List[Dict[str, Any]]:
+        """Convert lightweight Markdown to a list of Notion block dicts (no API call).
+
+        Supported syntax (max 2 nesting levels):
+          # H1   ## H2   ### H3
+          **bold** inline text
+          - bullet list items
+          > blockquote rendered as callout
+          Blank lines and plain text become paragraphs.
+        """
+        blocks: List[Dict[str, Any]] = []
+
+        def rich_text(raw: str) -> List[Dict[str, Any]]:
+            parts = re.split(r"(\*\*[^*]+\*\*)", raw)
+            segments = []
+            for part in parts:
+                if part.startswith("**") and part.endswith("**"):
+                    segments.append({
+                        "type": "text",
+                        "text": {"content": part[2:-2]},
+                        "annotations": {"bold": True},
+                    })
+                elif part:
+                    segments.append({"type": "text", "text": {"content": part}})
+            return segments
+
+        for line in md_text.splitlines():
+            stripped = line.strip()
+            if not stripped:
+                continue
+            if stripped.startswith("### "):
+                blocks.append({
+                    "object": "block", "type": "heading_3",
+                    "heading_3": {"rich_text": rich_text(stripped[4:]), "color": "default"},
+                })
+            elif stripped.startswith("## "):
+                blocks.append({
+                    "object": "block", "type": "heading_2",
+                    "heading_2": {"rich_text": rich_text(stripped[3:]), "color": "default"},
+                })
+            elif stripped.startswith("# "):
+                blocks.append({
+                    "object": "block", "type": "heading_1",
+                    "heading_1": {"rich_text": rich_text(stripped[2:]), "color": "default"},
+                })
+            elif stripped.startswith("- "):
+                blocks.append({
+                    "object": "block", "type": "bulleted_list_item",
+                    "bulleted_list_item": {"rich_text": rich_text(stripped[2:]), "color": "default"},
+                })
+            elif stripped.startswith("> "):
+                blocks.append({
+                    "object": "block", "type": "callout",
+                    "callout": {
+                        "rich_text": rich_text(stripped[2:]),
+                        "icon": {"type": "emoji", "emoji": "\U0001f4a1"},
+                        "color": "blue_background",
+                    },
+                })
+            else:
+                blocks.append({
+                    "object": "block", "type": "paragraph",
+                    "paragraph": {"rich_text": rich_text(stripped), "color": "default"},
+                })
+
+        return blocks
+
+    def architect_page(self, page_id: str, md_text: str, set_style: bool = False,
+                       cover_key: str = "dark_geometry",
+                       icon_emoji: str = "\U0001f3d7\ufe0f") -> Dict[str, Any]:
+        """Convert markdown to blocks and append them to a page.
+
+        Args:
+            page_id: Notion page ID.
+            md_text: Markdown content to convert and append.
+            set_style: If True, also apply cover and icon.
+            cover_key: Key from COVER_IMAGES.
+            icon_emoji: Page icon emoji.
+
+        Returns:
+            API response dict with added 'appended' count key.
+        """
+        blocks = self.markdown_to_blocks(md_text)
+        if not blocks:
+            return {"appended": 0}
+
+        if set_style:
+            cover_url = COVER_IMAGES.get(cover_key)
+            self.set_premium_style(page_id, cover_url=cover_url, icon_emoji=icon_emoji)
+
+        result = self._patch(f"blocks/{page_id}/children", {"children": blocks})
+        result["appended"] = len(blocks)
+        return result
+
     @staticmethod
     def _compute_ratios(n: int) -> List[float]:
         """Compute balanced width ratios for n columns that sum to 1.0."""
@@ -242,7 +655,6 @@ class NotionStylist:
 
 if __name__ == "__main__":
     import sys
-    import json
 
     stylist = NotionStylist()
     if len(sys.argv) > 1:
@@ -251,12 +663,26 @@ if __name__ == "__main__":
             page_id = sys.argv[2]
             cover = sys.argv[3] if len(sys.argv) > 3 else None
             icon = sys.argv[4] if len(sys.argv) > 4 else None
-            print(json.dumps(stylist.set_premium_style(page_id, cover, icon)))
+            print(_json.dumps(stylist.set_premium_style(page_id, cover, icon)))
         elif cmd == "add-nav" and len(sys.argv) >= 3:
             page_id = sys.argv[2]
-            items = json.loads(sys.argv[3])
-            print(json.dumps(stylist.create_navigation_grid(page_id, items)))
+            items = _json.loads(sys.argv[3])
+            print(_json.dumps(stylist.create_navigation_grid(page_id, items)))
         elif cmd == "clear" and len(sys.argv) >= 3:
             page_id = sys.argv[2]
             stylist.clear_page_content(page_id)
             print("Page cleared.")
+        elif cmd == "apply-template" and len(sys.argv) >= 4:
+            page_id = sys.argv[2]
+            template_name = sys.argv[3]
+            result = stylist.apply_template(page_id, template_name)
+            print(_json.dumps({"status": "ok", "template": result["template"]}))
+        elif cmd == "architect" and len(sys.argv) >= 4:
+            page_id = sys.argv[2]
+            md_text = sys.argv[3]
+            set_style = "--style" in sys.argv
+            result = stylist.architect_page(page_id, md_text, set_style=set_style)
+            print(_json.dumps({"status": "ok", "appended": result.get("appended", 0)}))
+        elif cmd == "list-templates":
+            for name, tpl in LAYOUT_TEMPLATES.items():
+                print(f"{name}: {tpl.get('description', '')}")
