@@ -1,14 +1,14 @@
 {
-  "streak_callout_id": "33bbcf1a-3029-81fe-8715-d4d7c3ed8426",
-  "motivation_callout_id": "33bbcf1a-3029-8103-ba64-d63cf29006e3",
-  "phase_callout_id": "33bbcf1a-3029-81e9-9766-e1c1e47ea068",
   "quotes_callout_id": "774fca87-237d-4633-b896-8c634637f178",
+  "streak_callout_id": "4c9c82dc-003e-463d-a67c-b6e61a7961c7",
+  "motivation_callout_id": "d36f2944-cfd0-425f-953f-36daa06d51b8",
+  "phase_callout_id": "7db9f962-94ea-4c1b-ba85-38ca53186986",
   "week_grid_ids": {
-    "monday": "33bbcf1a-3029-8164-9362-ee214ac5c0f4",
-    "tuesday": "33bbcf1a-3029-8141-ad93-d6bc1b483441",
-    "wednesday": "33bbcf1a-3029-8182-b2c7-c5f07a92c962",
-    "thursday": "33bbcf1a-3029-8199-92ca-f020678dbcc6",
-    "friday": "33bbcf1a-3029-8191-b049-f8a706f33795"
+    "monday": "9bbfcb39-1970-4efb-8d88-a4269ba72d15",
+    "tuesday": "c0b7cfe4-49ce-438b-b4d1-87c46fc36dde",
+    "wednesday": "92836b18-70ed-460f-a6f3-ecd0df2ad16a",
+    "thursday": "8574f0f3-04e7-4f50-8343-87e6e59fc7d6",
+    "friday": "37d160f3-8f58-4907-9997-b9f3f6fa5efc"
   },
   "system_config_db_id": "339bcf1a-3029-817c-8875-ce0cbd13bc71",
   "weekly_review_template_id": "339bcf1a-3029-81a2-9794-ec78fb5839ba",
