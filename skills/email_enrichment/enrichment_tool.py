@@ -521,13 +521,14 @@ def enrich_missing_emails(limit: int = 999) -> dict:
             else:
                 _write_note(conn, lead_id, f"[{today}] Enriched — no email found after scraping.")
 
-        # ── Step 3: Prospeo fallback (email + mobile) ───────────
-        # Always call for email (1 credit) if missing.
-        # Only call for phone (10 credits) if lead already has a confirmed email
-        # OR is marked priority -- avoids burning 10 credits on unverified leads.
+        # ── Step 3: Prospeo fallback ─────────────────────────────
+        # Rules:
+        #   - Has email: skip Prospeo entirely (ready for outreach already)
+        #   - No email, not priority: email lookup only (1 credit)
+        #   - No email, IS priority: phone lookup only (10 credits) as last resort
         is_priority = bool(lead.get("priority"))
-        want_phone_lookup = not has_phone and (has_email or is_priority)
-        if not has_email or want_phone_lookup:
+        if not has_email:
+            want_phone_lookup = is_priority and not has_phone
             prospeo = _prospeo_enrich(
                 name=name,
                 company=company,
