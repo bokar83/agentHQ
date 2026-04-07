@@ -910,18 +910,18 @@ async def process_telegram_update(update: dict):
         return
 
     job_id = str(uuid.uuid4())
-    from notifier import send_ack, send_message
+    from notifier import send_briefing, send_message
 
-    # 1. Send Ack
-    send_ack(chat_id, "unknown")
-
-    # 2. Decide if Chat or Task
+    # 1. Classify first so the briefing is accurate
     if _classify_obvious_chat(text):
         task_type = "chat"
     else:
         from router import classify_task
         classification = classify_task(text)
         task_type = classification.get("task_type", "unknown")
+
+    # 2. Send briefing (no-op for chat; includes crew + one-line plan for tasks)
+    send_briefing(chat_id, task_type, text)
 
     # 3. Execute
     loop = asyncio.get_running_loop()
@@ -1079,17 +1079,16 @@ async def run_task(request: TaskRequest, background_tasks: BackgroundTasks):
             send_message(request.from_number, "Nothing more to show — that was the full output.")
         return AsyncTaskResponse(job_id=job_id, status="completed", message="Chunk delivered.")
 
-    # Send ack immediately — before any LLM classification call
-    from notifier import send_ack, send_message
-    send_ack(request.from_number, "unknown")
-
-    # Classify task type (runs after ack is already sent)
+    # Classify first so the briefing is accurate
+    from notifier import send_briefing, send_message
     if _classify_obvious_chat(request.task):
         task_type = "chat"
     else:
         from router import classify_task
         classification = classify_task(request.task)
         task_type = classification.get("task_type", "unknown")
+
+    send_briefing(request.from_number, task_type, request.task)
 
     # For chat, run in executor (non-blocking) and deliver directly
     if task_type == "chat":
