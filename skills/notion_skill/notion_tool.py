@@ -1,7 +1,7 @@
 import os
-import json
 import logging
 import httpx
+from datetime import date
 
 logger = logging.getLogger(__name__)
 
@@ -105,16 +105,14 @@ def create_database(parent_page_id: str, title: str) -> dict:
     return r.json()
 
 
-def query_database(database_id: str, filter: dict = None, sorts: list = None) -> list:
+def query_database(database_id: str, filter_body: dict = None, sorts: list = None) -> list:
     """Query records from a Notion database. Returns list of page objects."""
     headers = get_notion_headers()
     payload = {}
-    if filter:
-        payload["filter"] = filter
+    if filter_body:
+        payload["filter"] = filter_body
     if sorts:
         payload["sorts"] = sorts
-    else:
-        payload["sorts"] = [{"property": "Created", "direction": "descending"}]
     r = httpx.post(
         f"https://api.notion.com/v1/databases/{database_id}/query",
         headers=headers,
@@ -127,7 +125,6 @@ def query_database(database_id: str, filter: dict = None, sorts: list = None) ->
 
 def create_idea_page(database_id: str, title: str, content: str, category: str = "Feature") -> str:
     """Create a new idea page in the Ideas database. Returns the Notion URL."""
-    from datetime import date
     headers = get_notion_headers()
     payload = {
         "parent": {"database_id": database_id},
