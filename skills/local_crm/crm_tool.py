@@ -49,10 +49,18 @@ def _sync_lead_to_notion(lead_data: dict, lead_id: int) -> bool:
         if industry not in industry_options:
             industry = "Other"
 
-        source_options = {"Hunter", "Apollo", "Manual"}
+        source_options = {"Hunter", "Apollo", "Manual", "LinkedIn", "Serper",
+                          "CatalystWorks.Consulting", "BoubacarBarry.com"}
         source = lead_data.get("source", "Hunter")
         if source not in source_options:
             source = "Manual"
+
+        status_map = {
+            "new": "new", "messaged": "contacted", "contacted": "contacted",
+            "replied": "replied", "meeting": "meeting", "booked": "meeting",
+            "closed": "closed", "paid": "closed", "disqualified": "disqualified",
+        }
+        status = status_map.get(lead_data.get("status", "new"), "new")
 
         props = {
             "Name": {"title": [{"text": {"content": lead_data.get("name", "")}}]},
@@ -61,7 +69,7 @@ def _sync_lead_to_notion(lead_data: dict, lead_id: int) -> bool:
             "Location": {"rich_text": [{"text": {"content": lead_data.get("location", "")}}]},
             "Industry": {"select": {"name": industry}},
             "Source": {"select": {"name": source}},
-            "Status": {"select": {"name": "new"}},
+            "Status": {"select": {"name": status}},
             "Lead Date": {"date": {"start": datetime.utcnow().strftime("%Y-%m-%d")}},
         }
         if lead_data.get("email"):
@@ -70,6 +78,8 @@ def _sync_lead_to_notion(lead_data: dict, lead_id: int) -> bool:
             props["Phone"] = {"phone_number": lead_data["phone"]}
         if lead_data.get("linkedin_url"):
             props["LinkedIn"] = {"url": lead_data["linkedin_url"]}
+        if lead_data.get("notes"):
+            props["Notes"] = {"rich_text": [{"text": {"content": str(lead_data["notes"])[:2000]}}]}
 
         payload = {
             "parent": {"database_id": _NOTION_DB_ID},

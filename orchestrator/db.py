@@ -110,7 +110,26 @@ def sync_supabase_to_notion() -> int:
 
     def _notion_status(s: str) -> str:
         """Map Supabase status values to Notion select options."""
-        return s if s in ("new", "contacted", "replied", "meeting", "closed", "disqualified") else "new"
+        mapping = {
+            "new": "new",
+            "messaged": "contacted",
+            "contacted": "contacted",
+            "replied": "replied",
+            "meeting": "meeting",
+            "booked": "meeting",
+            "closed": "closed",
+            "paid": "closed",
+            "disqualified": "disqualified",
+        }
+        return mapping.get(s, "new") if s else "new"
+
+    def _notion_priority(p) -> str:
+        """Map Supabase priority (int) to Notion select option."""
+        mapping = {1: "🥇 P1", 2: "🥈 P2", 3: "🥉 P3", 4: "P4", 5: "P5"}
+        try:
+            return mapping.get(int(p), "P4")
+        except (TypeError, ValueError):
+            return "P4"
 
     def _notion_industry(i: str) -> str:
         valid = ("Legal", "Accounting", "Marketing Agency", "HVAC", "Plumbing", "Roofing", "Other")
@@ -211,11 +230,24 @@ def sync_supabase_to_notion() -> int:
             props["Lead Date"] = {"date": {"start": str(lead["created_at"])[:10]}}
         if lead.get("last_contacted_at"):
             props["Last Contacted"] = {"date": {"start": str(lead["last_contacted_at"])[:10]}}
+        if lead.get("notes"):
+            props["Notes"] = {"rich_text": [{"text": {"content": str(lead["notes"])[:2000]}}]}
+        if lead.get("priority") is not None:
+            props["Priority"] = {"select": {"name": _notion_priority(lead["priority"])}}
 
         try:
             if email and email in existing:
-                # Update existing page
+                # Update existing page matched by email
                 page_id = existing[email]
+                resp = httpx.patch(
+                    f"https://api.notion.com/v1/pages/{page_id}",
+                    headers=notion_headers,
+                    json={"properties": props},
+                    timeout=15,
+                )
+            elif lead.get("id") and str(lead["id"]) in existing.get("_id_map", {}):
+                # Update existing page matched by Supabase ID (no-email leads)
+                page_id = existing["_id_map"][str(lead["id"])]
                 resp = httpx.patch(
                     f"https://api.notion.com/v1/pages/{page_id}",
                     headers=notion_headers,
