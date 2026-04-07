@@ -7,3 +7,9 @@
 - Undo: change 'infrastructure' back to 'infrasctructure' in all three locations
 
 **Task 2 [2026-04-07]:** Fixed SaveOutputTool error message in tools.py:610. Undo: change 'Error saving output' back to 'Error querying Qdrant'.
+
+**Task 4 [2026-04-07]:** Fixed scan_secrets.py:84 — 'and' changed to 'or' so .env.local etc. are properly skipped. Undo: change 'or' back to 'and'.
+
+**Task 6 [2026-04-07]:** Replaced os.getcwd() fallback with Path(__file__)-relative path in skill.py:35. Undo: restore os.path.join(os.getcwd(), 'outputs', 'diagrams').
+
+**Task 7 [2026-04-07]:** Changed os.path.getctime to os.path.getmtime in send_diagram_email.py:50. Undo: change back to getctime.
