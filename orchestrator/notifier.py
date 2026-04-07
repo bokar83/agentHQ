@@ -161,7 +161,7 @@ def send_result(chat_id: str, summary: str, drive_url: str = None, github_url: s
     send_message(chat_id, "\n".join(parts))
 
 
-def _parse_hunter_report_to_html(leads_output: str, _scoreboard: str, today: str) -> str:
+def _parse_hunter_report_to_html(leads_output: str, _scoreboard: str, today: str, enrich_result: dict = None) -> str:
     """
     Convert the Growth Hunter markdown report into a clean HTML email.
     Parses the structured sections from leads_output and renders them as styled HTML.
@@ -218,6 +218,23 @@ def _parse_hunter_report_to_html(leads_output: str, _scoreboard: str, today: str
     pipeline_rows  = parse_md_table(extract_section(leads_output, "PIPELINE METRICS"))
     industry_rows  = parse_md_table(extract_section(leads_output, "LEADS BY INDUSTRY"))
     priority_rows  = parse_md_table(extract_section(leads_output, "TOP PRIORITY LEADS"))
+
+    # ── patch pipeline table: replace "Leads With Email" row with enrichment truth ──
+    enrich = enrich_result or {}
+    if enrich and pipeline_rows:
+        emails_found = enrich.get("emails_found", 0)
+        processed    = enrich.get("processed", 0)
+        for row in pipeline_rows:
+            metric_key = next((k for k in row if "email" in k.lower()), None)
+            if metric_key and "email" in clean(row.get(metric_key, "")).lower() or \
+               any("email" in clean(v).lower() for v in row.values()):
+                # Find the value and status columns
+                keys = list(row.keys())
+                if len(keys) >= 2:
+                    row[keys[1]] = f"{emails_found} / {processed}"
+                if len(keys) >= 3:
+                    row[keys[2]] = "✅ Enrichment ran" if emails_found > 0 else "⚠️ No emails found after enrichment"
+                break
 
     action_block   = extract_section(leads_output, "ACTION ITEMS")
     action_items   = re.findall(r"\*\*(\d+\.[^*]+)\*\*,?\s*(.+?)(?=\n>|\Z)", action_block, re.DOTALL)
@@ -284,10 +301,39 @@ def _parse_hunter_report_to_html(leads_output: str, _scoreboard: str, today: str
     else:
         action_html = f'<p style="color:{TEXT_MUTED};font-size:13px;">No action items parsed.</p>'
 
+    # ── override Email Coverage using enrichment data if available ───────────────
+    enrich = enrich_result or {}
+    emails_found  = enrich.get("emails_found", 0)
+    total_leads   = enrich.get("processed", 0)
+
     # ── health check bars ──────────────────────────────────────────────────────
     health_lines = [l.strip() for l in health_block.splitlines() if l.strip() and l.strip() not in ("```",)]
     health_html  = ""
     for line in health_lines:
+        # Rewrite Email Coverage line using real enrichment numbers
+        if enrich and re.search(r"email coverage", line, re.IGNORECASE):
+            if total_leads > 0:
+                pct = int(emails_found / total_leads * 100)
+            else:
+                pct = 0
+            bar_color = BRAND_GREEN if emails_found > 0 else BRAND_RED
+            circle    = "🟢" if emails_found > 0 else "🔴"
+            label = (
+                f"{circle} Email Coverage {pct}%, "
+                f"{emails_found}/{total_leads} leads have emails after enrichment pass"
+                + ("" if emails_found > 0 else "; Hunter.io + Apollo returned no matches, enrichment skill ran")
+            )
+            health_html += (
+                f'<div style="margin-bottom:10px;">'
+                f'  <div style="font-size:13px;color:{BRAND_DARK};margin-bottom:4px;">{label}</div>'
+                f'  <div style="background:{BORDER};border-radius:4px;height:8px;width:100%;">'
+                f'    <div style="background:{bar_color};height:8px;border-radius:4px;'
+                f'         width:{pct}%;transition:width .3s;"></div>'
+                f'  </div>'
+                f'</div>'
+            )
+            continue
+
         # detect colour: green circle → green, red circle → red, money bag → amber
         if "🟢" in line:
             bar_color = BRAND_GREEN
@@ -590,16 +636,17 @@ def send_health_check_report(status: str, report_text: str, date: str) -> bool:
     return send_email(subject, html_body, to_addresses=to_addresses, html=True)
 
 
-def send_hunter_report(leads_output: str, scoreboard: str = "") -> bool:
+def send_hunter_report(leads_output: str, scoreboard: str = "", enrich_result: dict = None) -> bool:
     """
     Email the daily hunter results to Boubacar.
     Called automatically after every hunter_crew run.
+    enrich_result: optional dict from enrich_missing_emails() with emails_found, processed, etc.
     """
     from datetime import date
     today = date.today().strftime("%B %d, %Y")
     subject = f"Daily Lead Report — {today}"
 
-    html_body = _parse_hunter_report_to_html(leads_output, scoreboard, today)
+    html_body = _parse_hunter_report_to_html(leads_output, scoreboard, today, enrich_result=enrich_result or {})
     return send_email(subject, html_body, html=True)
 
 
