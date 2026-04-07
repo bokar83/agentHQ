@@ -88,3 +88,6 @@ docs/superpowers/plans/
 secrets/
 
 .vercel
+node_modules
+output
+search_output.txt
