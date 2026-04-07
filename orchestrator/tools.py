@@ -607,7 +607,7 @@ class SaveOutputTool(BaseTool):
             
         except Exception as e:
             logger.error(f"SaveOutputTool failed: {e}")
-            return f"Error querying Qdrant: {e}"
+            return f"Error saving output: {e}"
 
 class QueryMemoryTool(BaseTool):
     """
