@@ -310,7 +310,34 @@ Keep that redirect short. One line max."""
                     "required": ["filename_hint"]
                 }
             }
-        }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "save_memory",
+                "description": (
+                    "Persist a fact, preference, or note to long-term memory. "
+                    "Call this when the user says 'remember this', 'add to memory', "
+                    "'save this', 'store this', 'note this down', or shares information "
+                    "they want kept (brand colors, preferences, facts, etc.). "
+                    "Do NOT call for ideas — use the crew for that."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "fact": {
+                            "type": "string",
+                            "description": "The fact or preference to save, written as a complete sentence."
+                        },
+                        "category": {
+                            "type": "string",
+                            "description": "Category label e.g. 'brand', 'preference', 'contact', 'system'."
+                        }
+                    },
+                    "required": ["fact"]
+                }
+            }
+        },
     ]
 
     def _retrieve_output_file(filename_hint: str) -> str:
@@ -407,6 +434,27 @@ Keep that redirect short. One line max."""
                     args = _json.loads(tool_call.function.arguments or "{}")
                     tool_result = _retrieve_output_file(args.get("filename_hint", ""))
                     logger.info(f"Chat used retrieve_output_file: {args.get('filename_hint')}")
+                elif fn_name == "save_memory":
+                    import json as _json
+                    args = _json.loads(tool_call.function.arguments or "{}")
+                    fact = args.get("fact", "")
+                    category = args.get("category", "general")
+                    try:
+                        from memory import save_conversation_turn, save_to_memory
+                        tag = f"[MEMORY:{category.upper()}] {fact}"
+                        save_conversation_turn(session_key, "assistant", tag)
+                        save_to_memory(
+                            task_request=tag,
+                            task_type="memory_capture",
+                            result_summary=fact,
+                            files_created=[],
+                            execution_time=0,
+                            from_number=session_key,
+                        )
+                        tool_result = f"Saved to memory: {fact}"
+                    except Exception as mem_e:
+                        tool_result = f"Memory save failed: {mem_e}"
+                    logger.info(f"Chat used save_memory: {fact[:80]}")
                 else:
                     tool_result = "Unknown tool."
                 messages.append({
