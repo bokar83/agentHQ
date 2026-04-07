@@ -47,7 +47,7 @@ OUTREACH_ACCOUNT = "catalystworks.ai@gmail.com"
 
 # ── Email signature (Option 3: The Constraint Remover) ───────────
 SIGNATURE_HTML = """
-<br><br>
+<br>
 <table cellpadding="0" cellspacing="0" border="0" style="font-family: Arial, Helvetica, sans-serif; max-width: 520px;">
   <tr>
     <td style="padding-bottom: 12px;">
