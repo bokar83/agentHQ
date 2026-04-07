@@ -1349,13 +1349,34 @@ def build_hunter_crew(user_request: str) -> Crew:
 
     scoreboard_task = Task(
         description=(
-            "Run get_daily_scoreboard and report today's stats to Boubacar.\n"
-            "Format the output clearly with emojis for readability."
+            "Run get_daily_scoreboard and compile the final Growth Hunter report.\n"
+            "You MUST output the report using EXACTLY these section headers and formats:\n\n"
+            "### PIPELINE METRICS\n"
+            "A markdown table with columns: Metric | Value | Status\n"
+            "Rows: Total Leads Today, Leads With Email, Leads With LinkedIn, Total in CRM\n\n"
+            "### LEADS BY INDUSTRY\n"
+            "A markdown table with columns: Industry | Count | Avg Score\n\n"
+            "### TOP PRIORITY LEADS\n"
+            "A markdown table with columns: Name | Company | Email | Industry | Why Priority\n"
+            "Include medal emojis (🥇 🥈 🥉) in the Name column for top 3.\n\n"
+            "### ACTION ITEMS\n"
+            "3-5 action items. Each item must use this format:\n"
+            "**1. Title**, description of the action\n\n"
+            "### SCOREBOARD HEALTH CHECK\n"
+            "Progress bar lines using block characters. Each line must include a percentage.\n"
+            "Use 🟢 for on-track, 🔴 for behind, 💰 for revenue items.\n"
+            "Example: 🟢 Email Coverage ███████░░░ 70% — 14/20 leads have emails\n\n"
+            "DO NOT deviate from these section names or table structures. "
+            "The email report renderer depends on exact header matching."
         ),
         agent=hunter,
         expected_output=(
-            "Daily scoreboard with: leads found, messages sent, replies, "
-            "calls booked, leads with email, total leads in CRM."
+            "A structured Growth Hunter report with exactly these five sections in order: "
+            "### PIPELINE METRICS (table), ### LEADS BY INDUSTRY (table), "
+            "### TOP PRIORITY LEADS (table with medal emojis), "
+            "### ACTION ITEMS (numbered bold items), "
+            "### SCOREBOARD HEALTH CHECK (progress bar lines with percentages). "
+            "All section headers must match exactly as shown."
         )
     )
 
