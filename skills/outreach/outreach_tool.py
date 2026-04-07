@@ -41,10 +41,7 @@ I'm Boubacar Barry, founder of Catalyst Works. I work with the people running th
 
 I'd love a quick 20-minute conversation to hear what's going on in your business and see if there's something worth exploring together. No pitch, no prep required on your end.
 
-Worth a conversation?
-
-Boubacar
-catalystworks.consulting"""
+Worth a conversation?"""
 
 OUTREACH_ACCOUNT = "catalystworks.ai@gmail.com"
 
