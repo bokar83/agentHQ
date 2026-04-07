@@ -1,28 +1,36 @@
 """
-enrichment_tool.py — Post-Harvest Email Enrichment
-====================================================
-Runs automatically after the daily lead harvest, before the report
-email is sent. Finds all CRM leads missing an email address and
-attempts to reveal them via Hunter.io then Apollo.
+enrichment_tool.py — Deep Lead Enrichment Pipeline
+===================================================
+Runs after daily harvest, before the report email is sent.
+For every lead missing an email or LinkedIn URL, attempts to find them
+using Serper (search) and Firecrawl (scrape). Writes notes back to
+Supabase in all cases -- found, not found, no website, ambiguous.
 
 Pipeline per lead:
-  1. Hunter.io email-finder (uses name + domain from LinkedIn URL)
-  2. Apollo people/match (uses linkedin_url directly, costs 1 credit)
+  1. Serper: "[Name]" "[Company]" contact email  -> find company website
+  2. Firecrawl: scrape /contact, /about, homepage -> extract email
+  3. Serper: "[Name]" "[Company]" site:linkedin.com/in -> find LinkedIn
+  4. If no website found at all: flag as web prospect in notes
 
-Results are saved back to Supabase leads table and logged in
-lead_interactions. The daily report then shows full email coverage.
+Notes are written to:
+  - leads.notes column (persistent summary)
+  - lead_interactions (audit trail, type: enrichment_attempt)
 
-Called by: scheduler._run_daily_harvest() (after discover, before send)
+Called by: scheduler._run_daily_harvest() after discover, before send
 Also callable standalone: enrich_missing_emails()
 """
 
 import logging
 import sys
 import os
-from datetime import datetime
+import re
+from datetime import datetime, timezone
 from typing import Optional
 
 logger = logging.getLogger(__name__)
+
+EMAIL_REGEX = re.compile(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}")
+
 
 def _get_crm_conn():
     if "/app" not in sys.path:
@@ -34,150 +42,298 @@ def _get_crm_conn():
     return conn
 
 
-def _reveal_via_hunter(name: str, linkedin_url: str = "", company: str = "") -> Optional[str]:
-    """Hunter.io email-finder by domain + name. Free tier."""
+# ── Serper helpers ───────────────────────────────────────────────
+
+def _serper_search(query: str) -> list:
+    """Run a Serper Google search. Returns list of result dicts."""
     import httpx
-    api_key = os.environ.get("HUNTER_API_KEY")
+    api_key = os.environ.get("SERPER_API_KEY")
     if not api_key:
-        return None
-
-    # Extract domain from LinkedIn URL (won't work) or company website
-    # For LinkedIn-only leads we skip Hunter and go straight to Apollo
-    if not linkedin_url or "linkedin.com" in linkedin_url:
-        return None
-
+        logger.warning("Enrichment: SERPER_API_KEY not set.")
+        return []
     try:
-        from urllib.parse import urlparse
-        domain = urlparse(linkedin_url if linkedin_url.startswith("http") else f"https://{linkedin_url}").netloc.replace("www.", "")
-        if not domain or "linkedin.com" in domain:
-            return None
-
-        name_parts = name.strip().split()
-        params = {
-            "domain": domain,
-            "api_key": api_key,
-            "first_name": name_parts[0] if name_parts else "",
-            "last_name": name_parts[-1] if len(name_parts) > 1 else "",
-        }
-        with httpx.Client(timeout=10) as client:
-            r = client.get("https://api.hunter.io/v2/email-finder", params=params)
-            r.raise_for_status()
-        email = r.json().get("data", {}).get("email")
-        if email:
-            logger.info(f"Enrichment: Hunter found {email} for {name}")
-        return email
-    except Exception as e:
-        logger.warning(f"Enrichment: Hunter failed for {name}: {e}")
-        return None
-
-
-def _reveal_via_apollo(name: str, linkedin_url: str = "") -> Optional[str]:
-    """
-    Apollo people/match by linkedin_url.
-    NOTE: Requires Apollo paid plan (people/match endpoint).
-    Returns None gracefully if 403 -- does not crash enrichment run.
-    """
-    import httpx
-    api_key = os.environ.get("APOLLO_API_KEY")
-    if not api_key or not linkedin_url:
-        return None
-    try:
-        headers = {
-            "Content-Type": "application/json",
-            "X-Api-Key": api_key,
-            "Cache-Control": "no-cache",
-        }
         with httpx.Client(timeout=15) as client:
             r = client.post(
-                "https://api.apollo.io/v1/people/match",
-                json={"linkedin_url": linkedin_url},
-                headers=headers,
+                "https://google.serper.dev/search",
+                headers={"X-API-KEY": api_key, "Content-Type": "application/json"},
+                json={"q": query, "num": 5},
             )
-            if r.status_code == 403:
-                # Paid endpoint -- skip silently
-                return None
             r.raise_for_status()
-        email = r.json().get("person", {}).get("email")
-        if email:
-            logger.info(f"Enrichment: Apollo found {email} for {name}")
-        return email
+        return r.json().get("organic", [])
     except Exception as e:
-        logger.warning(f"Enrichment: Apollo failed for {name}: {e}")
+        logger.warning(f"Enrichment: Serper search failed for '{query}': {e}")
+        return []
+
+
+def _find_company_website(company: str) -> Optional[str]:
+    """Search for the company's website. Returns domain or None."""
+    results = _serper_search(f'"{company}" contact')
+    for r in results:
+        link = r.get("link", "")
+        # Skip social, directories, review sites
+        skip = ["linkedin.com", "facebook.com", "yelp.com", "bbb.org",
+                "yellowpages.com", "google.com", "instagram.com", "twitter.com"]
+        if any(s in link for s in skip):
+            continue
+        if link.startswith("http"):
+            return link
+    return None
+
+
+def _find_linkedin(name: str, company: str) -> Optional[str]:
+    """Search for the person's LinkedIn profile URL."""
+    results = _serper_search(f'"{name}" "{company}" site:linkedin.com/in')
+    for r in results:
+        link = r.get("link", "")
+        if "linkedin.com/in/" in link:
+            return link
+    return None
+
+
+# ── Firecrawl helpers ────────────────────────────────────────────
+
+def _firecrawl_scrape(url: str) -> Optional[str]:
+    """Scrape a URL with Firecrawl. Returns markdown text or None."""
+    import httpx
+    api_key = os.environ.get("FIRECRAWL_API_KEY")
+    if not api_key:
+        return None
+    try:
+        with httpx.Client(timeout=20) as client:
+            r = client.post(
+                "https://api.firecrawl.dev/v1/scrape",
+                headers={"Authorization": f"Bearer {api_key}"},
+                json={"url": url, "formats": ["markdown"]},
+            )
+            r.raise_for_status()
+        return r.json().get("data", {}).get("markdown", "")
+    except Exception as e:
+        logger.warning(f"Enrichment: Firecrawl scrape failed for {url}: {e}")
         return None
 
+
+def _extract_emails_from_text(text: str, exclude_domains: list = None) -> list:
+    """Extract all emails from text, filtering out common noise."""
+    exclude_domains = exclude_domains or [
+        "example.com", "domain.com", "email.com", "your@", "info@info",
+        "sentry.io", "wix.com", "squarespace.com", "wordpress.com"
+    ]
+    found = EMAIL_REGEX.findall(text or "")
+    cleaned = []
+    for e in found:
+        e = e.lower().strip(".")
+        if any(d in e for d in exclude_domains):
+            continue
+        if e not in cleaned:
+            cleaned.append(e)
+    return cleaned
+
+
+def _scrape_for_email(website_url: str) -> tuple:
+    """
+    Try to find an email by scraping the website.
+    Returns (email_or_None, note_string, has_contact_form_only)
+    """
+    from urllib.parse import urlparse, urljoin
+
+    parsed = urlparse(website_url if website_url.startswith("http") else f"https://{website_url}")
+    base = f"{parsed.scheme}://{parsed.netloc}"
+    domain = parsed.netloc.replace("www.", "")
+
+    # Pages to try in order
+    pages_to_try = [
+        website_url,
+        urljoin(base, "/contact"),
+        urljoin(base, "/contact-us"),
+        urljoin(base, "/about"),
+        urljoin(base, "/about-us"),
+    ]
+
+    all_emails = []
+    contact_form_only = False
+
+    for page_url in pages_to_try:
+        text = _firecrawl_scrape(page_url)
+        if not text:
+            continue
+        emails = _extract_emails_from_text(text, exclude_domains=[domain])
+        if emails:
+            all_emails.extend(e for e in emails if e not in all_emails)
+        # Detect contact-form-only pages
+        if "contact form" in text.lower() or "fill out" in text.lower() or "submit" in text.lower():
+            contact_form_only = True
+        if all_emails:
+            break  # Found something -- stop scraping
+
+    if len(all_emails) == 1:
+        return all_emails[0], f"Email found via Firecrawl on {domain}", False
+    elif len(all_emails) > 1:
+        return None, f"Multiple emails found -- review needed: {', '.join(all_emails[:3])}", False
+    elif contact_form_only:
+        return None, f"Contact form only on {domain} -- no email visible", False
+    else:
+        return None, f"No email found after scraping {domain}", False
+
+
+# ── Database write helpers ───────────────────────────────────────
+
+def _write_note(conn, lead_id: int, note: str):
+    """Append note to leads.notes and insert lead_interactions row."""
+    try:
+        cur = conn.cursor()
+        # Append to notes (don't overwrite existing notes)
+        cur.execute("""
+            UPDATE leads
+            SET notes = CASE
+                WHEN notes IS NULL OR notes = '' THEN %s
+                ELSE notes || E'\n' || %s
+            END,
+            updated_at = %s
+            WHERE id = %s
+        """, (note, note, datetime.now(timezone.utc), lead_id))
+        cur.execute("""
+            INSERT INTO lead_interactions (lead_id, interaction_type, content)
+            VALUES (%s, 'enrichment_attempt', %s)
+        """, (lead_id, note))
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        logger.error(f"Enrichment: failed to write note for lead {lead_id}: {e}")
+
+
+def _save_email(conn, lead_id: int, email: str):
+    """Save found email to leads table."""
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            "UPDATE leads SET email = %s, updated_at = %s WHERE id = %s",
+            (email, datetime.now(timezone.utc), lead_id)
+        )
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        logger.error(f"Enrichment: failed to save email for lead {lead_id}: {e}")
+
+
+def _save_linkedin(conn, lead_id: int, linkedin_url: str):
+    """Save found LinkedIn URL to leads table."""
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            "UPDATE leads SET linkedin_url = %s, updated_at = %s WHERE id = %s",
+            (linkedin_url, datetime.now(timezone.utc), lead_id)
+        )
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        logger.error(f"Enrichment: failed to save LinkedIn for lead {lead_id}: {e}")
+
+
+# ── Main entry point ─────────────────────────────────────────────
 
 def enrich_missing_emails(limit: int = 50) -> dict:
     """
-    Find all CRM leads without an email, try Hunter.io then Apollo,
-    save any found emails back to Supabase, log each reveal.
-
-    Args:
-        limit: max leads to process per run (default 50)
+    Deep enrichment pass for leads missing email or LinkedIn.
+    Uses Serper + Firecrawl. Writes notes back in all cases.
+    Flags leads with no website as web prospects.
 
     Returns:
-        dict with keys: processed, found, skipped, results (list of dicts)
+        dict with: processed, emails_found, linkedin_found,
+                   no_website, still_missing, web_prospects (list), results (list)
     """
-    logger.info("Enrichment: starting email enrichment pass...")
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    logger.info("Enrichment: starting deep enrichment pass...")
 
     try:
         conn = _get_crm_conn()
         cur = conn.cursor()
-
-        # Get leads with no email
         cur.execute("""
-            SELECT id, name, company, linkedin_url, industry
+            SELECT id, name, company, email, linkedin_url, industry
             FROM leads
-            WHERE email IS NULL OR email = ''
+            WHERE (email IS NULL OR email = '')
+               OR (linkedin_url IS NULL OR linkedin_url = '')
             ORDER BY created_at ASC
             LIMIT %s
         """, (limit,))
         leads = [dict(r) for r in cur.fetchall()]
         cur.close()
-        conn.close()
-
     except Exception as e:
         logger.error(f"Enrichment: failed to query leads: {e}")
-        return {"processed": 0, "found": 0, "skipped": 0, "results": []}
+        return {"processed": 0, "emails_found": 0, "linkedin_found": 0,
+                "no_website": 0, "still_missing": 0, "web_prospects": [], "results": []}
 
     processed = 0
-    found = 0
+    emails_found = 0
+    linkedin_found = 0
+    no_website_count = 0
+    web_prospects = []
     results = []
 
     for lead in leads:
         lead_id = lead["id"]
         name = lead.get("name", "")
-        linkedin_url = lead.get("linkedin_url", "")
         company = lead.get("company", "")
+        has_email = bool(lead.get("email"))
+        has_linkedin = bool(lead.get("linkedin_url"))
         processed += 1
+        found_email = None
+        found_linkedin = None
 
-        # Try Hunter first, then Apollo
-        email = _reveal_via_hunter(name, linkedin_url, company)
-        if not email:
-            email = _reveal_via_apollo(name, linkedin_url)
+        logger.info(f"Enrichment: processing {name} ({company})...")
 
-        if email:
-            found += 1
-            try:
-                conn = _get_crm_conn()
-                cur = conn.cursor()
-                cur.execute(
-                    "UPDATE leads SET email = %s, updated_at = %s WHERE id = %s",
-                    (email, datetime.utcnow(), lead_id)
-                )
-                cur.execute(
-                    "INSERT INTO lead_interactions (lead_id, interaction_type, content) VALUES (%s, %s, %s)",
-                    (lead_id, "email_revealed", f"Email enriched post-harvest: {email}")
-                )
-                conn.commit()
-                cur.close()
-                conn.close()
-            except Exception as e:
-                logger.error(f"Enrichment: failed to save email for lead {lead_id}: {e}")
+        # ── Step 1: Find company website ────────────────────────
+        website = _find_company_website(company)
 
-            results.append({"id": lead_id, "name": name, "company": company, "email": email})
+        if not website:
+            note = f"Enrichment {today}: no website found. Prospect for web services."
+            _write_note(conn, lead_id, note)
+            no_website_count += 1
+            web_prospects.append({"name": name, "company": company, "industry": lead.get("industry")})
+            logger.info(f"Enrichment: {company} -- no website found, flagged as web prospect")
         else:
-            results.append({"id": lead_id, "name": name, "company": company, "email": None})
+            # ── Step 2: Scrape for email ─────────────────────────
+            if not has_email:
+                found_email, scrape_note, _ = _scrape_for_email(website)
+                if found_email:
+                    _save_email(conn, lead_id, found_email)
+                    emails_found += 1
+                    has_email = True
+                _write_note(conn, lead_id, f"Enrichment {today}: {scrape_note}")
 
-    skipped = processed - found
-    logger.info(f"Enrichment: {processed} leads processed, {found} emails found, {skipped} still missing.")
-    return {"processed": processed, "found": found, "skipped": skipped, "results": results}
+        # ── Step 3: Find LinkedIn ────────────────────────────────
+        if not has_linkedin:
+            found_linkedin = _find_linkedin(name, company)
+            if found_linkedin:
+                _save_linkedin(conn, lead_id, found_linkedin)
+                linkedin_found += 1
+                _write_note(conn, lead_id, f"Enrichment {today}: LinkedIn found via Serper -- {found_linkedin}")
+            else:
+                _write_note(conn, lead_id, f"Enrichment {today}: LinkedIn not found via Serper search.")
+
+        results.append({
+            "id": lead_id,
+            "name": name,
+            "company": company,
+            "email_found": found_email,
+            "linkedin_found": found_linkedin,
+            "has_website": bool(website),
+        })
+
+    conn.close()
+    still_missing = processed - emails_found - no_website_count
+
+    logger.info(
+        f"Enrichment: {processed} leads processed -- "
+        f"{emails_found} emails found, {linkedin_found} LinkedIn found, "
+        f"{no_website_count} no website (web prospects), {still_missing} still missing email."
+    )
+
+    return {
+        "processed": processed,
+        "emails_found": emails_found,
+        "linkedin_found": linkedin_found,
+        "no_website": no_website_count,
+        "still_missing": still_missing,
+        "web_prospects": web_prospects,
+        "results": results,
+    }

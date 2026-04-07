@@ -64,14 +64,15 @@ def _run_daily_harvest():
         # 1. Run the crew
         result = run_orchestrator(task_request, session_key="daily_cron")
 
-        # 2. Post-harvest email enrichment — runs before report is sent
-        # Finds all leads still missing email and tries Hunter.io + Apollo
+        # 2. Post-harvest deep enrichment — Serper + Firecrawl, runs before report
+        enrich_result = {}
         try:
             from skills.email_enrichment.enrichment_tool import enrich_missing_emails
             enrich_result = enrich_missing_emails(limit=50)
             logger.info(
-                f"CRON: Email enrichment — {enrich_result['found']} emails found "
-                f"out of {enrich_result['processed']} leads checked."
+                f"CRON: Enrichment — {enrich_result.get('emails_found', 0)} emails, "
+                f"{enrich_result.get('linkedin_found', 0)} LinkedIn, "
+                f"{enrich_result.get('no_website', 0)} no website (web prospects)."
             )
         except Exception as enrich_err:
             logger.warning(f"CRON: Email enrichment failed (non-blocking): {enrich_err}")
@@ -80,9 +81,26 @@ def _run_daily_harvest():
         if result.get("success"):
             report = result.get("deliverable", "No report generated.")
 
-            # Send HTML-formatted email via send_hunter_report (handles HTML rendering)
+            # Append enrichment summary to report
+            if enrich_result:
+                web_prospects = enrich_result.get("web_prospects", [])
+                wp_list = "\n".join(
+                    f"  - {p['name']} ({p['company']}, {p.get('industry', 'Unknown')})"
+                    for p in web_prospects
+                ) or "  None"
+                enrich_summary = (
+                    f"\n\n---\n## Enrichment Summary\n"
+                    f"- Leads processed: {enrich_result.get('processed', 0)}\n"
+                    f"- Emails found: {enrich_result.get('emails_found', 0)}\n"
+                    f"- LinkedIn found: {enrich_result.get('linkedin_found', 0)}\n"
+                    f"- Still missing email: {enrich_result.get('still_missing', 0)}\n"
+                    f"- No website (web prospects): {enrich_result.get('no_website', 0)}\n"
+                    f"\n**Web Prospects (no website found):**\n{wp_list}"
+                )
+                report += enrich_summary
+
             send_hunter_report(report)
-            log_for_remoat("✅ Daily Ignition complete. Report delivered.", "NOTIFICATION")
+            log_for_remoat("Daily Ignition complete. Report delivered.", "NOTIFICATION")
             logger.info("CRON: Daily Lead Harvest complete and delivered.")
         else:
             logger.error("CRON: Daily Lead Harvest failed to produce a result.")
