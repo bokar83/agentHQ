@@ -44,13 +44,13 @@ class MermaidDiagramTool(BaseTool):
                 f.write(mermaid_code)
 
             # Detect mmdc executable path
-            mmdc_path = os.path.join(os.getcwd(), "node_modules", ".bin", "mmdc")
+            mmdc_path = os.path.join(os.getcwd(), "node_modules", ".bin", "mmdc.cmd" if os.name == "nt" else "mmdc")
             if not os.path.exists(mmdc_path):
-                mmdc_path = "mmdc" # Assume global if local missing
+                mmdc_path = "mmdc.cmd" if os.name == "nt" else "mmdc"
                 
             try:
                 cmd = [mmdc_path, "-i", temp_path, "-o", output_file, "-b", "transparent"]
-                subprocess.run(cmd, check=True, capture_output=True, text=True)
+                subprocess.run(cmd, check=True, capture_output=True, text=True, shell=(os.name == "nt"))
                 
                 os.remove(temp_path)
                 return f"Diagram generated successfully: {output_file}"
