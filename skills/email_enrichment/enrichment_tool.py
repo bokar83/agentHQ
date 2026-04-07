@@ -24,17 +24,6 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# Industry bracket map -- matches cold outreach SKILL.md
-INDUSTRY_BRACKET = {
-    "Legal": "legal services",
-    "Accounting": "accounting",
-    "Marketing Agency": "agency",
-    "HVAC": "trades",
-    "Plumbing": "trades",
-    "Roofing": "trades",
-}
-
-
 def _get_crm_conn():
     if "/app" not in sys.path:
         sys.path.insert(0, "/app")
