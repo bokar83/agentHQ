@@ -17,3 +17,5 @@
 **Task 5 [2026-04-07]:** Added (... or '') guard on msg.content/.strip() at orchestrator.py:469,471. Undo: remove the 'or ""' wrappers.
 
 **Task 8 [2026-04-07]:** Removed dead elif _id_map branch in db.py:248-256. Undo: restore the elif block (was dead code).
+
+**Task 3 [2026-04-07]:** Stubbed NotionStylist/NotionCLI/SupabaseClient in tools.py except block; added None guards to all Notion tool _run() methods. Undo: remove the stubs and guards.
