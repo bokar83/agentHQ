@@ -28,49 +28,20 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# ── Industry -> sector bracket mapping ──────────────────────────
-SECTOR_BRACKET = {
-    "Legal":            "legal services",
-    "Accounting":       "accounting",
-    "Marketing Agency": "agency",
-    "HVAC":             "trades",
-    "Plumbing":         "trades",
-    "Roofing":          "trades",
-}
+# ── Email template ──────────────────────────────────────────────
+SUBJECT = "Where is your margin actually going?"
 
-# ── Email templates ─────────────────────────────────────────────
-# Template A: known industry (bracket filled in)
-SUBJECT_A = "Where is your margin actually going?"
-
-TEMPLATE_A = """Hi {first_name},
+TEMPLATE = """Hi {first_name},
 
 I'll keep this simple.
 
-Most {bracket} businesses aren't losing margin to bad strategy. They're losing it to one bottleneck that hasn't been named yet: a handoff, an approval loop, a pricing gap quietly taxing everything downstream.
+Most businesses aren't losing margin to bad strategy. They're losing it to one bottleneck that often goes unnamed: a handoff, an approval loop, a pricing gap quietly taxing everything downstream.
 
-I'm Boubacar Barry, founder of Catalyst Works. I run a constraint diagnostic, usually 90 minutes, that finds exactly where margin is leaking and what to fix first. You leave with a specific answer and a 90-day action plan, not a slide deck.
+I'm Boubacar Barry, founder of Catalyst Works. I work with the people running the business day to day to find that bottleneck and build a clear path to removing it. Over 15 years working with leadership teams across three continents, the constraint is almost always findable, and almost always fixable faster than people expect.
 
-No pitch. Just a direct conversation.
+I'd love a quick 20-minute conversation to hear what's going on in your business and see if there's something worth exploring together. No pitch, no prep required on your end.
 
-Worth 20 minutes?
-
-Boubacar
-catalystworks.consulting"""
-
-# Template B: unknown industry (no bracket)
-SUBJECT_B = "Do you know where your margin actually is going?"
-
-TEMPLATE_B = """Hi {first_name},
-
-I'll keep this simple.
-
-Most 20 to 80 person businesses aren't losing margin to bad strategy. They're losing it to one bottleneck that hasn't been named yet: a handoff, an approval loop, a pricing gap quietly taxing everything downstream.
-
-I'm Boubacar Barry, founder of Catalyst Works. I run a constraint diagnostic, usually 90 minutes, that finds exactly where margin is leaking and what to fix first. You leave with a specific answer and a 90-day action plan, not a slide deck.
-
-No pitch. Just a direct conversation.
-
-Worth 20 minutes?
+Worth a conversation?
 
 Boubacar
 catalystworks.consulting"""
@@ -226,26 +197,18 @@ def run_outreach(contact_all: bool = False) -> dict:
         company = lead.get("company", "").strip()
         industry = lead.get("industry", "Other")
         first_name = name.split()[0] if name else "there"
-        bracket = SECTOR_BRACKET.get(industry)
 
-        # Choose template based on whether we have a known industry bracket
-        if bracket:
-            subject = SUBJECT_A
-            body = TEMPLATE_A.format(first_name=first_name, bracket=bracket)
-        else:
-            subject = SUBJECT_B
-            body = TEMPLATE_B.format(first_name=first_name)
-
-        draft_id = _create_draft(email, subject, body)
+        body = TEMPLATE.format(first_name=first_name)
+        draft_id = _create_draft(email, SUBJECT, body)
         if draft_id:
-            _log_and_update(lead["id"], subject)
+            _log_and_update(lead["id"], SUBJECT)
             drafted += 1
             results.append({
                 "name": name,
                 "company": company,
                 "email": email,
                 "industry": industry,
-                "subject": subject,
+                "subject": SUBJECT,
                 "draft_id": draft_id,
                 "status": "drafted",
             })
