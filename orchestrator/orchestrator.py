@@ -23,6 +23,7 @@ See CLAUDE.md for development guidelines.
 """
 
 import os
+import json
 import asyncio
 import threading
 import uuid
@@ -430,13 +431,11 @@ Keep that redirect short. One line max."""
                     tool_result = _query_system()
                     logger.info("Chat used query_system tool")
                 elif fn_name == "retrieve_output_file":
-                    import json as _json
-                    args = _json.loads(tool_call.function.arguments or "{}")
+                    args = json.loads(tool_call.function.arguments or "{}")
                     tool_result = _retrieve_output_file(args.get("filename_hint", ""))
                     logger.info(f"Chat used retrieve_output_file: {args.get('filename_hint')}")
                 elif fn_name == "save_memory":
-                    import json as _json
-                    args = _json.loads(tool_call.function.arguments or "{}")
+                    args = json.loads(tool_call.function.arguments or "{}")
                     fact = args.get("fact", "")
                     category = args.get("category", "general")
                     try:
@@ -451,10 +450,10 @@ Keep that redirect short. One line max."""
                             execution_time=0,
                             from_number=session_key,
                         )
+                        logger.info(f"Chat used save_memory: {fact[:80]}")
                         tool_result = f"Saved to memory: {fact}"
                     except Exception as mem_e:
                         tool_result = f"Memory save failed: {mem_e}"
-                    logger.info(f"Chat used save_memory: {fact[:80]}")
                 else:
                     tool_result = "Unknown tool."
                 messages.append({
