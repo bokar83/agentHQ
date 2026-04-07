@@ -6,6 +6,8 @@ every morning at 6:00 AM MT.
 """
 
 import os
+import sys
+import json
 import time
 import threading
 import logging
@@ -33,6 +35,150 @@ def _send_telegram_alert(message: str):
             )
     except Exception as e:
         logger.error(f"CRON: Failed to send Telegram alert: {e}")
+
+
+def _get_today_quote() -> dict:
+    """Load quote bank and return today's quote by day-of-year rotation."""
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    bank_path = os.path.join(base_dir, "docs", "quote_bank.json")
+    fallback = {"text": "Do the work. Especially when you don't feel like it.", "author": "Steven Pressfield"}
+    try:
+        with open(bank_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        quotes = data.get("quotes", [])
+        if not quotes:
+            return fallback
+        day_of_year = datetime.now().timetuple().tm_yday
+        return quotes[day_of_year % len(quotes)]
+    except Exception as e:
+        logger.error(f"QUOTE: Failed to load quote bank: {e}")
+        return fallback
+
+
+def _update_notion_quote_block(block_id: str, quote: dict) -> bool:
+    """PATCH a single Notion callout block with today's quote text."""
+    try:
+        import httpx
+        token = os.environ.get("NOTION_API_KEY") or os.environ.get("NOTION_TOKEN")
+        if not token:
+            logger.error("QUOTE: NOTION_API_KEY not set.")
+            return False
+        text = f"\"{quote['text']}\" -- {quote['author']} \u00b7 Quote rotates daily"
+        payload = {
+            "callout": {
+                "rich_text": [{"type": "text", "text": {"content": text}}]
+            }
+        }
+        resp = httpx.patch(
+            f"https://api.notion.com/v1/blocks/{block_id}",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Notion-Version": "2022-06-28",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+            timeout=15,
+        )
+        if resp.status_code == 200:
+            return True
+        logger.error(f"QUOTE: Notion block {block_id} update failed: {resp.status_code} {resp.text[:200]}")
+        return False
+    except Exception as e:
+        logger.error(f"QUOTE: Exception updating Notion block {block_id}: {e}")
+        return False
+
+
+def _discover_quote_block_id(page_id: str, token: str) -> str | None:
+    """Find the first gray_bg callout block on a page -- that's the quote block."""
+    try:
+        import httpx
+        resp = httpx.get(
+            f"https://api.notion.com/v1/blocks/{page_id}/children?page_size=20",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Notion-Version": "2022-06-28",
+            },
+            timeout=15,
+        )
+        if resp.status_code != 200:
+            return None
+        for block in resp.json().get("results", []):
+            if block.get("type") == "callout":
+                color = block.get("callout", {}).get("color", "")
+                if color == "gray_background":
+                    return block["id"]
+        return None
+    except Exception as e:
+        logger.error(f"QUOTE: Block discovery failed for page {page_id}: {e}")
+        return None
+
+
+def _get_or_discover_block_ids(token: str) -> dict:
+    """Load cached block IDs, or discover and save them."""
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    cache_path = os.path.join(base_dir, "docs", "quote_block_ids.json")
+
+    if os.path.exists(cache_path):
+        try:
+            with open(cache_path, "r") as f:
+                ids = json.load(f)
+            if ids.get("agentsHQ_quote_block_id") and ids.get("forge_quote_block_id"):
+                return ids
+        except Exception:
+            pass
+
+    logger.info("QUOTE: Discovering quote block IDs...")
+    ids = {
+        "agentsHQ_quote_block_id": _discover_quote_block_id("327bcf1a-3029-80b7-9b1e-d77f94c9c61c", token),
+        "forge_quote_block_id": _discover_quote_block_id("249bcf1a-3029-807f-86e8-fb97e2671154", token),
+    }
+    try:
+        with open(cache_path, "w") as f:
+            json.dump(ids, f, indent=2)
+        logger.info(f"QUOTE: Block IDs saved to {cache_path}")
+    except Exception as e:
+        logger.warning(f"QUOTE: Could not save block ID cache: {e}")
+    return ids
+
+
+def _run_quote_rotation():
+    """Update daily quote on agentsHQ + The Forge 2.0, then send to Telegram."""
+    token = os.environ.get("NOTION_API_KEY") or os.environ.get("NOTION_TOKEN")
+    if not token:
+        logger.error("QUOTE: NOTION_API_KEY not set -- skipping quote rotation.")
+        return
+
+    quote = _get_today_quote()
+    logger.info(f"QUOTE: Today's quote: \"{quote['text']}\" -- {quote['author']}")
+
+    block_ids = _get_or_discover_block_ids(token)
+
+    agentshq_id = block_ids.get("agentsHQ_quote_block_id")
+    forge_id = block_ids.get("forge_quote_block_id")
+
+    results = []
+    if agentshq_id:
+        ok = _update_notion_quote_block(agentshq_id, quote)
+        results.append(f"agentsHQ: {'ok' if ok else 'FAILED'}")
+    else:
+        results.append("agentsHQ: block ID not found")
+
+    if forge_id:
+        ok = _update_notion_quote_block(forge_id, quote)
+        results.append(f"The Forge: {'ok' if ok else 'FAILED'}")
+    else:
+        results.append("The Forge: block ID not found")
+
+    status = " | ".join(results)
+    logger.info(f"QUOTE: Rotation complete. {status}")
+
+    telegram_msg = (
+        f"💬 *Quote of the Day*\n\n"
+        f"_{quote['text']}_\n\n"
+        f"-- {quote['author']}\n\n"
+        f"Have a sharp one. agentsHQ"
+    )
+    _send_telegram_alert(telegram_msg)
 
 
 def _run_kpi_refresh():
@@ -123,6 +269,7 @@ def _scheduler_loop():
         # Check if it's the target time and we haven't run today
         if now.hour == TARGET_HOUR and now.minute == TARGET_MINUTE:
             if last_run_date != now.date():
+                _run_quote_rotation()
                 _run_kpi_refresh()
                 _run_daily_harvest()
                 last_run_date = now.date()
@@ -181,6 +328,8 @@ def _periodic_sync():
         _run_supabase_sync()
 
 if __name__ == "__main__":
-    # Test trigger
     logging.basicConfig(level=logging.INFO)
-    _run_daily_harvest()
+    if "--test-quotes" in sys.argv:
+        _run_quote_rotation()
+    else:
+        _run_daily_harvest()
