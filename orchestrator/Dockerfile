@@ -24,9 +24,10 @@ COPY orchestrator/*.py .
 # Copy voice prompts for the Sankofa Council
 COPY orchestrator/prompts/ prompts/
 
-# Copy skills and tests
+# Copy skills, tests, and docs (quote bank etc.)
 COPY skills/ skills/
 COPY tests/ tests/
+COPY docs/ docs/
 
 # Create required directories
 RUN mkdir -p /app/outputs /app/logs /app/outputs/proposals /app/outputs/council
