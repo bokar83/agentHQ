@@ -66,18 +66,37 @@ def _serper_search(query: str) -> list:
         return []
 
 
+_DIRECTORY_DOMAINS = [
+    "linkedin.com", "facebook.com", "yelp.com", "bbb.org",
+    "yellowpages.com", "google.com", "instagram.com", "twitter.com",
+    "rocketreach.co", "zoominfo.com", "apollo.io", "crunchbase.com",
+    "bloomberg.com", "bizbuysell.com", "manta.com", "chamberofcommerce.com",
+    "angieslist.com", "houzz.com", "thumbtack.com", "bark.com",
+    "clutch.co", "upcity.com", "expertise.com", "goodfirms.io",
+    "indeed.com", "glassdoor.com", "mapquest.com", "whitepages.com",
+]
+
+
 def _find_company_website(company: str) -> Optional[str]:
-    """Search for the company's website. Returns domain or None."""
-    results = _serper_search(f'"{company}" contact')
-    for r in results:
-        link = r.get("link", "")
-        # Skip social, directories, review sites
-        skip = ["linkedin.com", "facebook.com", "yelp.com", "bbb.org",
-                "yellowpages.com", "google.com", "instagram.com", "twitter.com"]
-        if any(s in link for s in skip):
-            continue
-        if link.startswith("http"):
-            return link
+    """
+    Search for the company's own website domain via Serper.
+    Returns the base homepage URL (not a sub-page) or None.
+    Aggressively filters out directories, aggregators, and data brokers.
+    """
+    from urllib.parse import urlparse
+
+    for query in [f'"{company}" official site', f'"{company}" contact email']:
+        results = _serper_search(query)
+        for r in results:
+            link = r.get("link", "")
+            if not link.startswith("http"):
+                continue
+            if any(d in link for d in _DIRECTORY_DOMAINS):
+                continue
+            # Strip to base homepage so we control which pages we scrape
+            parsed = urlparse(link)
+            base = f"{parsed.scheme}://{parsed.netloc}"
+            return base
     return None
 
 
@@ -106,34 +125,53 @@ _SCRAPE_HEADERS = {
 }
 
 
+def _html_to_text(html: str) -> str:
+    """Strip HTML tags and normalize whitespace to plain text."""
+    html = re.sub(r"<(script|style)[^>]*>.*?</(script|style)>", " ", html, flags=re.DOTALL | re.IGNORECASE)
+    html = re.sub(r"<(br|p|div|li|tr|h[1-6])[^>]*>", "\n", html, flags=re.IGNORECASE)
+    html = re.sub(r"<[^>]+>", " ", html)
+    html = html.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">") \
+               .replace("&#64;", "@").replace("&#46;", ".").replace("&nbsp;", " ")
+    html = re.sub(r"[ \t]+", " ", html)
+    html = re.sub(r"\n{3,}", "\n\n", html)
+    return html.strip()
+
+
 def _httpx_scrape(url: str) -> Optional[str]:
-    """
-    Fetch a URL directly with httpx and extract visible text.
-    Handles: static HTML, basic redirects, common encodings.
-    Returns plain text (tags stripped) or None on failure.
-    """
+    """Tier 1: fetch with httpx (static sites, fast, zero cost)."""
     try:
         with httpx.Client(timeout=15, follow_redirects=True, headers=_SCRAPE_HEADERS) as client:
             r = client.get(url)
             if r.status_code >= 400:
                 return None
-            html = r.text
-
-        # Strip scripts and styles first
-        html = re.sub(r"<(script|style)[^>]*>.*?</(script|style)>", " ", html, flags=re.DOTALL | re.IGNORECASE)
-        # Replace common block tags with newlines to preserve structure
-        html = re.sub(r"<(br|p|div|li|tr|h[1-6])[^>]*>", "\n", html, flags=re.IGNORECASE)
-        # Strip remaining tags
-        html = re.sub(r"<[^>]+>", " ", html)
-        # Decode HTML entities
-        html = html.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">") \
-                   .replace("&#64;", "@").replace("&#46;", ".").replace("&nbsp;", " ")
-        # Collapse whitespace
-        html = re.sub(r"[ \t]+", " ", html)
-        html = re.sub(r"\n{3,}", "\n\n", html)
-        return html.strip()
+            return _html_to_text(r.text)
     except Exception as e:
         logger.debug(f"Enrichment: httpx scrape failed for {url}: {e}")
+        return None
+
+
+def _curl_cffi_scrape(url: str) -> Optional[str]:
+    """
+    Tier 2: fetch with curl_cffi, impersonating Chrome browser fingerprint.
+    Bypasses Cloudflare and basic bot-detection that blocks httpx.
+    Zero cost, no browser process.
+    """
+    try:
+        from curl_cffi import requests as curl_requests
+        r = curl_requests.get(
+            url,
+            impersonate="chrome",
+            timeout=15,
+            allow_redirects=True,
+        )
+        if r.status_code >= 400:
+            return None
+        return _html_to_text(r.text)
+    except ImportError:
+        logger.debug("Enrichment: curl_cffi not installed, skipping tier 2.")
+        return None
+    except Exception as e:
+        logger.debug(f"Enrichment: curl_cffi scrape failed for {url}: {e}")
         return None
 
 
@@ -172,18 +210,29 @@ def _firecrawl_scrape(url: str) -> Optional[str]:
 
 def _scrape_page(url: str) -> Optional[str]:
     """
-    Unified scraper: httpx first (free), Firecrawl fallback if httpx
-    returns no useful content (JS-heavy sites).
+    Three-tier scraper (all free):
+      Tier 1 — httpx: fast, works on static sites (WordPress, Squarespace, Wix)
+      Tier 2 — curl_cffi: Chrome fingerprint spoofing, bypasses Cloudflare/bot detection
+      Tier 3 — Firecrawl: JS rendering, only if key present and credits available
+    Each tier is tried only if the previous returned thin/no content.
     """
+    # Tier 1: httpx
     text = _httpx_scrape(url)
-    # If httpx got content and it looks like real page text (>200 chars), use it
-    if text and len(text) > 200:
+    if text and len(text) > 300:
         return text
-    # Fallback to Firecrawl for JS-rendered pages
+
+    # Tier 2: curl_cffi (browser fingerprint spoofing)
+    curl_text = _curl_cffi_scrape(url)
+    if curl_text and len(curl_text) > 300:
+        return curl_text
+
+    # Tier 3: Firecrawl (JS rendering, optional)
     fc_text = _firecrawl_scrape(url)
     if fc_text:
         return fc_text
-    return text  # return whatever httpx got, even if thin
+
+    # Return best effort from what we got
+    return curl_text or text
 
 
 def _extract_emails_from_text(text: str, exclude_domains: list = None) -> list:
