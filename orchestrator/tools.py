@@ -1055,7 +1055,7 @@ class EnrichLeadsTool(BaseTool):
     """Run deep email + LinkedIn enrichment on all leads missing an email."""
     name: str = "enrich_leads"
     description: str = (
-        "Run deep enrichment on all leads currently missing an email address. "
+        "Run deep enrichment on all leads currently missing an email address or phone number. "
         "Uses Serper to find company websites and Firecrawl to scrape for emails. "
         "Also finds missing LinkedIn URLs. Call this after discovering and saving leads. "
         "Input: optional JSON with 'limit' (default 50). "
