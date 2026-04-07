@@ -41,16 +41,52 @@ REMOAT_CHAT_ID = os.environ.get("REMOAT_TELEGRAM_CHAT_ID", "")
 REMOAT_API_BASE = f"https://api.telegram.org/bot{REMOAT_BOT_TOKEN}" if REMOAT_BOT_TOKEN else ""
 
 TASK_TYPE_LABELS = {
-    "research_report":        "Research Agent is on the case 🔍",
-    "consulting_deliverable": "Consulting Agent is building your deliverable 📋",
-    "website_build":          "Web Builder Agent is coding your site 🌐",
-    "app_build":              "App Builder Agent is on it 🛠️",
-    "code_task":              "Code Agent is writing your solution 💻",
-    "general_writing":        "Writing Agent is crafting your document ✍️",
-    "social_content":         "Social Agent is creating your content 📱",
-    "agent_team":             "The full team is on it 🚀",
+    "research_report":        "Research Agent is on the case",
+    "consulting_deliverable": "Consulting Agent is building your deliverable",
+    "website_build":          "Web Builder Agent is coding your site",
+    "3d_website_build":       "3D Web Builder Agent is on it",
+    "app_build":              "App Builder Agent is on it",
+    "code_task":              "Code Agent is writing your solution",
+    "general_writing":        "Writing Agent is crafting your document",
+    "social_content":         "Social Agent is creating your content",
+    "linkedin_x_campaign":    "Social Agent is building your LinkedIn/X campaign",
+    "notion_overhaul":        "Notion Agent is redesigning your workspace",
+    "agent_creation":         "Agent Creator is drafting the spec",
+    "voice_polishing":        "Voice Polisher is humanising your text",
+    "hunter_task":            "Growth Hunter is prospecting for leads",
+    "crm_outreach":           "Outreach Agent is drafting your cold emails",
+    "enrich_leads":           "Enrichment Agent is filling in missing data",
+    "mark_outreach_sent":     "CRM Agent is updating your lead statuses",
+    "prompt_engineering":     "Prompt Engineer is rewriting your prompt",
+    "news_brief":             "News Agent is scanning the headlines",
+    "gws_task":               "Google Workspace Agent is on it",
+    "agent_team":             "The full team is on it",
     "chat":                   "...",
-    "unknown":                "Agents are on it ⚙️",
+    "unknown":                "Agents are on it",
+}
+
+TASK_TYPE_CREWS = {
+    "research_report":        "Researcher + Copywriter",
+    "consulting_deliverable": "Consulting Agent + Planner",
+    "website_build":          "Web Builder + QA Agent",
+    "3d_website_build":       "3D Web Builder + QA Agent",
+    "app_build":              "App Builder + QA Agent",
+    "code_task":              "Code Agent + QA Agent",
+    "general_writing":        "Writer + QA Agent",
+    "social_content":         "Social Media Agent",
+    "linkedin_x_campaign":    "Social Media Agent (LinkedIn + X)",
+    "notion_overhaul":        "Notion Agent + Planner",
+    "agent_creation":         "Agent Creator + Planner",
+    "voice_polishing":        "Voice Polisher",
+    "hunter_task":            "Growth Hunter + Researcher",
+    "crm_outreach":           "Outreach Agent (direct Supabase + Gmail)",
+    "enrich_leads":           "Enrichment Agent (Prospeo + web scrape)",
+    "mark_outreach_sent":     "CRM Agent (direct Supabase)",
+    "prompt_engineering":     "Prompt Engineer",
+    "news_brief":             "News Agent + Researcher",
+    "gws_task":               "Google Workspace Agent",
+    "agent_team":             "Full multi-agent team",
+    "unknown":                "Orchestrator (improvising)",
 }
 
 SIMPSONS_QUOTES = [
@@ -133,10 +169,64 @@ def push_commentary(text: str, category: str = "ANALYSIS"):
     log_for_remoat(text, category=category)
 
 
-def send_ack(chat_id: str, task_type: str) -> None:
-    """Send immediate acknowledgement — fires within ~1s of receiving the task."""
-    label = TASK_TYPE_LABELS.get(task_type, TASK_TYPE_LABELS["unknown"])
-    send_message(chat_id, f"On it — {label}")
+def _generate_task_interpretation(task_text: str, task_type: str) -> str:
+    """
+    Use Haiku to generate a one-line plain-English description of what the
+    agents are about to do. Falls back to a generic label on any failure.
+    """
+    try:
+        import openai as _openai
+        client = _openai.OpenAI(
+            api_key=os.environ.get("OPENROUTER_API_KEY"),
+            base_url="https://openrouter.ai/api/v1",
+            default_headers={
+                "HTTP-Referer": "https://agentshq.catalystworks.com",
+                "X-Title": "agentsHQ Briefing"
+            }
+        )
+        prompt = (
+            f"You are summarising what an AI agent system is about to do for a user.\n"
+            f"Task type: {task_type}\n"
+            f"User request: {task_text}\n\n"
+            f"Write ONE sentence (max 20 words) describing the specific action the agents "
+            f"will take. Be concrete — mention the subject matter. No preamble, no quotes."
+        )
+        resp = client.chat.completions.create(
+            model="anthropic/claude-haiku-4.5",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3,
+            max_tokens=60,
+        )
+        return resp.choices[0].message.content.strip()
+    except Exception as e:
+        logger.warning(f"Briefing interpretation failed (non-fatal): {e}")
+        return TASK_TYPE_LABELS.get(task_type, TASK_TYPE_LABELS["unknown"])
+
+
+def send_briefing(chat_id: str, task_type: str, task_text: str) -> None:
+    """
+    Send a rich acknowledgement after classification.
+    Fires within a few seconds of receiving the task and tells the user:
+    - What was understood (task type)
+    - Which crew is running
+    - One-line plain-English interpretation of the specific task
+    """
+    if task_type == "chat":
+        return  # no briefing for chat — response is fast enough
+
+    crew = TASK_TYPE_CREWS.get(task_type, "Agents")
+    interpretation = _generate_task_interpretation(task_text, task_type)
+
+    lines = [
+        f"On it.",
+        f"",
+        f"Task: {task_type.replace('_', ' ').title()}",
+        f"Crew: {crew}",
+        f"Plan: {interpretation}",
+        f"",
+        f"Will ping you when done.",
+    ]
+    send_message(chat_id, "\n".join(lines))
 
 
 def send_progress_ping(chat_id: str) -> None:
