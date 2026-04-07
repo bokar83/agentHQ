@@ -289,7 +289,7 @@ class TestFirecrawlRealAPI:
     @pytest.fixture(autouse=True)
     def require_api_key(self):
         from dotenv import load_dotenv
-        load_dotenv(os.path.join(os.path.dirname(__file__), '..', 'infrasctructure', '.env'))
+        load_dotenv(os.path.join(os.path.dirname(__file__), '..', 'infrastructure', '.env'))
         if not os.environ.get('FIRECRAWL_API_KEY'):
             pytest.skip("FIRECRAWL_API_KEY not set")
 

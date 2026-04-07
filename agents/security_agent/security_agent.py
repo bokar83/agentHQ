@@ -150,7 +150,7 @@ def format_telegram_message(report: dict) -> str:
 
 if __name__ == "__main__":
     # Load environment
-    env_file = PROJECT_ROOT / "infrasctructure" / ".env"
+    env_file = PROJECT_ROOT / "infrastructure" / ".env"
     if env_file.exists():
         from dotenv import load_dotenv
         load_dotenv(env_file)

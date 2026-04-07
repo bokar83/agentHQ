@@ -18,7 +18,7 @@ base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(base_dir)
 
 # Load environment variables
-env_path = os.path.join(base_dir, "infrasctructure", ".env")
+env_path = os.path.join(base_dir, "infrastructure", ".env")
 load_dotenv(env_path)
 
 from skills.local_crm.crm_tool import add_lead, get_daily_scoreboard
