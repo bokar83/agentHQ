@@ -83,6 +83,159 @@ def get_crm_connection_with_fallback() -> tuple:
         return conn, True
 
 
+def sync_supabase_to_notion() -> int:
+    """
+    Read all leads from Supabase and upsert them into the Notion CRM Leads database.
+    Matches on email (unique identifier). Creates new pages for new leads, updates
+    existing pages for changed leads.
+    Returns number of leads synced.
+    """
+    import httpx
+
+    NOTION_DB_ID = "da58452f-c5d6-43b9-82f7-ecc935f881d3"  # CRM Leads collection
+    notion_token = (
+        os.environ.get("NOTION_API_KEY")
+        or os.environ.get("NOTION_TOKEN")
+        or os.environ.get("NOTION_SECRET")
+    )
+    if not notion_token:
+        logger.error("NOTION SYNC: No Notion token found -- skipping.")
+        return 0
+
+    notion_headers = {
+        "Authorization": f"Bearer {notion_token}",
+        "Notion-Version": "2022-06-28",
+        "Content-Type": "application/json",
+    }
+
+    def _notion_status(s: str) -> str:
+        """Map Supabase status values to Notion select options."""
+        return s if s in ("new", "contacted", "replied", "meeting", "closed", "disqualified") else "new"
+
+    def _notion_industry(i: str) -> str:
+        valid = ("Legal", "Accounting", "Marketing Agency", "HVAC", "Plumbing", "Roofing", "Other")
+        if not i:
+            return "Other"
+        for v in valid:
+            if v.lower() in i.lower():
+                return v
+        return "Other"
+
+    def _notion_source(s: str) -> str:
+        if not s:
+            return "Manual"
+        s_lower = s.lower()
+        if "hunter" in s_lower:
+            return "Hunter"
+        if "apollo" in s_lower:
+            return "Apollo"
+        return "Manual"
+
+    # Build email -> page_id map from existing Notion CRM pages
+    existing = {}
+    try:
+        cursor = None
+        while True:
+            body = {"page_size": 100}
+            if cursor:
+                body["start_cursor"] = cursor
+            resp = httpx.post(
+                f"https://api.notion.com/v1/databases/{NOTION_DB_ID}/query",
+                headers=notion_headers,
+                json=body,
+                timeout=20,
+            )
+            if resp.status_code != 200:
+                logger.error(f"NOTION SYNC: Failed to query CRM Leads DB: {resp.status_code} {resp.text[:200]}")
+                return 0
+            data = resp.json()
+            for page in data.get("results", []):
+                email_prop = page.get("properties", {}).get("Email", {})
+                email = email_prop.get("email") or ""
+                if email:
+                    existing[email.lower()] = page["id"]
+            if not data.get("has_more"):
+                break
+            cursor = data.get("next_cursor")
+    except Exception as e:
+        logger.error(f"NOTION SYNC: Error fetching existing Notion pages: {e}")
+        return 0
+
+    # Fetch all leads from Supabase
+    try:
+        conn = get_crm_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM leads ORDER BY created_at DESC")
+        leads = cur.fetchall()
+        cur.close()
+        conn.close()
+    except Exception as e:
+        logger.error(f"NOTION SYNC: Failed to fetch leads from Supabase: {e}")
+        return 0
+
+    synced = 0
+    for lead in leads:
+        email = (lead.get("email") or "").lower()
+        name = lead.get("name") or "Unknown"
+
+        props = {
+            "Name": {"title": [{"text": {"content": name}}]},
+        }
+        if lead.get("company"):
+            props["Company"] = {"rich_text": [{"text": {"content": lead["company"]}}]}
+        if lead.get("title"):
+            props["Title"] = {"rich_text": [{"text": {"content": lead["title"]}}]}
+        if lead.get("location"):
+            props["Location"] = {"rich_text": [{"text": {"content": lead["location"]}}]}
+        if email:
+            props["Email"] = {"email": email}
+        if lead.get("phone"):
+            props["Phone"] = {"phone_number": lead["phone"]}
+        if lead.get("linkedin_url"):
+            props["LinkedIn"] = {"url": lead["linkedin_url"]}
+        if lead.get("industry"):
+            props["Industry"] = {"select": {"name": _notion_industry(lead["industry"])}}
+        if lead.get("source"):
+            props["Source"] = {"select": {"name": _notion_source(lead["source"])}}
+        if lead.get("status"):
+            props["Status"] = {"select": {"name": _notion_status(lead["status"])}}
+        if lead.get("created_at"):
+            props["Lead Date"] = {"date": {"start": str(lead["created_at"])[:10]}}
+        if lead.get("last_contacted_at"):
+            props["Last Contacted"] = {"date": {"start": str(lead["last_contacted_at"])[:10]}}
+
+        try:
+            if email and email in existing:
+                # Update existing page
+                page_id = existing[email]
+                resp = httpx.patch(
+                    f"https://api.notion.com/v1/pages/{page_id}",
+                    headers=notion_headers,
+                    json={"properties": props},
+                    timeout=15,
+                )
+            else:
+                # Create new page
+                resp = httpx.post(
+                    "https://api.notion.com/v1/pages",
+                    headers=notion_headers,
+                    json={
+                        "parent": {"database_id": NOTION_DB_ID},
+                        "properties": props,
+                    },
+                    timeout=15,
+                )
+            if resp.status_code in (200, 201):
+                synced += 1
+            else:
+                logger.error(f"NOTION SYNC: Failed for {name}: {resp.status_code} {resp.text[:200]}")
+        except Exception as e:
+            logger.error(f"NOTION SYNC: Exception for lead {name}: {e}")
+
+    logger.info(f"NOTION SYNC: {synced}/{len(leads)} leads synced to Notion CRM.")
+    return synced
+
+
 def sync_fallback_to_supabase() -> int:
     """
     Move any leads written to local Postgres fallback back to Supabase.

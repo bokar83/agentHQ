@@ -280,6 +280,7 @@ def _scheduler_loop():
             if last_run_date != now.date():
                 _run_quote_rotation()
                 _run_kpi_refresh()
+                _run_notion_sync()
                 _run_daily_harvest()
                 last_run_date = now.date()
         
@@ -301,6 +302,22 @@ def _run_supabase_sync():
             logger.info(f"Sync: moved {synced} fallback lead(s) to Supabase.")
     except Exception as e:
         logger.error(f"Supabase sync failed: {e}")
+
+
+def _run_notion_sync():
+    """
+    Sync all Supabase leads into the Notion CRM Leads database.
+    Runs at 6am and every 30 minutes so Notion stays current.
+    """
+    try:
+        import sys
+        if "/app" not in sys.path:
+            sys.path.insert(0, "/app")
+        from db import sync_supabase_to_notion
+        synced = sync_supabase_to_notion()
+        logger.info(f"NOTION SYNC: {synced} lead(s) synced to Notion CRM.")
+    except Exception as e:
+        logger.error(f"NOTION SYNC: Failed: {e}")
 
 
 def start_scheduler():
@@ -331,10 +348,11 @@ def start_scheduler():
 
 
 def _periodic_sync():
-    """Run Supabase fallback sync every 30 minutes."""
+    """Run Supabase fallback sync + Notion CRM sync every 30 minutes."""
     while True:
         time.sleep(1800)  # 30 minutes
         _run_supabase_sync()
+        _run_notion_sync()
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
