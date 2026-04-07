@@ -81,7 +81,7 @@ def scan_workspace_for_secrets(
             continue
 
         # Skip explicitly excluded files (e.g., local .env — OK to have secrets)
-        if file_path.name in skip_files and file_path.name.startswith(".env"):
+        if file_path.name in skip_files or file_path.name.startswith(".env"):
             continue
 
         # Skip binary files
