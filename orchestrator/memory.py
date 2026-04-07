@@ -520,3 +520,85 @@ def extract_and_save_learnings(
     except Exception as e:
         logger.warning(f"extract_and_save_learnings failed (non-fatal): {e}")
         return False
+
+
+def extract_negative_lesson(
+    feedback: str,
+    task_type: str,
+    original_output: str,
+    from_number: str = "unknown",
+) -> bool:
+    """
+    Extract a negative lesson from user critique.
+    Saves to Qdrant agentshq_learnings with lesson_type='negative'.
+    Runs in a daemon thread — never call inline.
+    Returns False if MEMORY_LEARNING_ENABLED is not "true".
+    """
+    if os.environ.get("MEMORY_LEARNING_ENABLED", "false").lower() != "true":
+        return False
+
+    try:
+        prompt = (
+            f"A task of type '{task_type}' received this critique from the user:\n\n"
+            f"Critique: {feedback[:400]}\n\n"
+            f"Original output (first 400 chars): {original_output[:400]}\n\n"
+            f"Extract ONE concise lesson (1-2 sentences) about what to AVOID next time "
+            f"for this task type. Be specific about what was wrong. "
+            f"Return only the lesson text, nothing else."
+        )
+        lesson_text = _call_extraction_llm(prompt)
+
+        point_id_raw = hashlib.sha256(f"{task_type}:neg:{lesson_text}".encode()).hexdigest()[:32]
+        import uuid as _uuid
+        point_id = str(_uuid.UUID(point_id_raw))
+
+        embedding = get_embedding(lesson_text)
+        if not embedding:
+            return False
+
+        client = get_qdrant_client()
+        if not client:
+            return False
+
+        _ensure_learnings_collection(client)
+
+        from qdrant_client.models import PointStruct
+        point = PointStruct(
+            id=point_id,
+            vector=embedding,
+            payload={
+                "task_type": task_type,
+                "lesson_type": "negative",
+                "extracted_pattern": lesson_text,
+                "original_feedback": feedback[:300],
+                "timestamp": datetime.utcnow().isoformat(),
+                "source": "user_critique",
+                "lesson_status": "auto",
+                "from_number": from_number,
+            }
+        )
+        client.upsert(collection_name=QDRANT_LEARNINGS_COLLECTION, points=[point])
+        logger.info(f"Negative lesson saved to Qdrant for task_type={task_type}")
+
+        try:
+            conn = _pg_conn()
+            cur = conn.cursor()
+            cur.execute("""
+                INSERT INTO agent_learnings
+                  (task_type, learning_type, content, confidence, lesson_status, qdrant_point_id, created_at)
+                VALUES (%s, 'negative', %s, %s, 'auto', %s, %s)
+            """, (
+                task_type, lesson_text, 0.9,
+                point_id, datetime.utcnow().isoformat()
+            ))
+            conn.commit()
+            cur.close()
+            conn.close()
+        except Exception as e:
+            logger.warning(f"extract_negative_lesson: Postgres save failed (non-fatal): {e}")
+
+        return True
+
+    except Exception as e:
+        logger.warning(f"extract_negative_lesson failed (non-fatal): {e}")
+        return False

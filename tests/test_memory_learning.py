@@ -81,3 +81,32 @@ def test_extract_and_save_learnings_returns_false_when_disabled():
             result_summary="test output",
         )
         assert result is False
+
+
+def test_extract_negative_lesson_saves_with_negative_type():
+    """extract_negative_lesson saves a lesson with lesson_type=negative."""
+    import os
+    mock_client = MagicMock()
+    mock_client.get_collection.return_value = True
+
+    mock_conn = MagicMock()
+    mock_cur = MagicMock()
+    mock_conn.cursor.return_value = mock_cur
+
+    with patch.dict(os.environ, {"MEMORY_LEARNING_ENABLED": "true"}), \
+         patch("memory.get_qdrant_client", return_value=mock_client), \
+         patch("memory.get_embedding", return_value=[0.1] * 1536), \
+         patch("memory._pg_conn", return_value=mock_conn):
+        import memory as mem_module
+        with patch.object(mem_module, "_call_extraction_llm", return_value="Avoid using complex tables; use bullet lists instead."):
+            from memory import extract_negative_lesson
+            result = extract_negative_lesson(
+                feedback="The table wasn't done well, too hard to read",
+                task_type="research_report",
+                original_output="Here is the research with a complex table...",
+            )
+            assert result is True
+            upsert_call = mock_client.upsert.call_args
+            point = upsert_call[1]["points"][0]
+            assert point.payload["lesson_type"] == "negative"
+            assert point.payload["source"] == "user_critique"
