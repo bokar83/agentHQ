@@ -1686,6 +1686,70 @@ def build_gws_crew(user_request: str) -> Crew:
     )
 
 
+def build_notion_capture_crew(user_request: str) -> Crew:
+    """
+    Crew for: notion_capture
+    Single-agent crew that saves an idea to or retrieves ideas from the agentsHQ Ideas database.
+    Write mode: triggered by "add to my ideas", "save this", "brain dump", etc.
+    Review mode: triggered by "review my ideas", "what ideas do I have", etc.
+    """
+    from agents import build_notion_capture_agent
+    agent = build_notion_capture_agent()
+
+    lower = user_request.lower()
+    review_triggers = [
+        "review my ideas", "what ideas", "show my ideas", "pull up my ideas",
+        "list my ideas", "what's in my ideas", "whats in my ideas",
+        "read my ideas", "see my ideas",
+    ]
+    is_review = any(t in lower for t in review_triggers)
+
+    if is_review:
+        task_description = (
+            f"The user wants to review their saved ideas.\n\n"
+            f"REQUEST: {user_request}\n\n"
+            f"Steps:\n"
+            f"1. Call query_notion_ideas with an empty input to get all recent ideas.\n"
+            f"2. Format the results clearly: group by Status (New first), show title, category, and a one-line summary.\n"
+            f"3. If there are more than 10 ideas, summarize the oldest ones and show the 10 most recent in full.\n"
+            f"4. Flag any ideas with Status='New' that look particularly actionable."
+        )
+        expected_output = (
+            "A clean formatted list of all ideas from the Notion database, "
+            "grouped by status, with titles, categories, and summaries. "
+            "Actionable 'New' ideas are highlighted."
+        )
+    else:
+        task_description = (
+            f"The user wants to save a new idea or note.\n\n"
+            f"REQUEST: {user_request}\n\n"
+            f"Steps:\n"
+            f"1. Extract a short, clear title (5-10 words max) from the request.\n"
+            f"2. Use the full request text as the content — do not summarize or truncate.\n"
+            f"3. Pick the most fitting category: Tool, Agent, Feature, Business, or Personal.\n"
+            f"4. Call create_notion_idea with the title, content, and category.\n"
+            f"5. Confirm to the user: what was saved, the title, and that it's in Notion."
+        )
+        expected_output = (
+            "Confirmation that the idea was saved: title, category, and Notion URL. "
+            "One sentence confirmation to the user."
+        )
+
+    task = Task(
+        description=task_description,
+        expected_output=expected_output,
+        agent=agent,
+    )
+
+    return Crew(
+        agents=[agent],
+        tasks=[task],
+        process=Process.sequential,
+        verbose=False,
+        memory=False,
+    )
+
+
 def build_crm_outreach_crew(user_request: str) -> Crew:
     """
     Crew for: crm_outreach
@@ -1853,6 +1917,7 @@ CREW_REGISTRY = {
     "3d_website_crew":        build_3d_website_crew,
     "news_brief_crew":        build_news_brief_crew,
     "gws_crew":               build_gws_crew,
+    "notion_capture_crew":    build_notion_capture_crew,
     "crm_outreach_crew":      build_crm_outreach_crew,
     "mark_outreach_sent_crew": build_mark_outreach_sent_crew,
     "enrich_leads_crew":       build_enrich_leads_crew,
