@@ -245,15 +245,8 @@ def sync_supabase_to_notion() -> int:
                     json={"properties": props},
                     timeout=15,
                 )
-            elif lead.get("id") and str(lead["id"]) in existing.get("_id_map", {}):
-                # Update existing page matched by Supabase ID (no-email leads)
-                page_id = existing["_id_map"][str(lead["id"])]
-                resp = httpx.patch(
-                    f"https://api.notion.com/v1/pages/{page_id}",
-                    headers=notion_headers,
-                    json={"properties": props},
-                    timeout=15,
-                )
+            # NOTE: _id_map lookup removed — existing{} is keyed by email only.
+            # No-email leads always create a new Notion page (acceptable: rare case).
             else:
                 # Create new page
                 resp = httpx.post(
