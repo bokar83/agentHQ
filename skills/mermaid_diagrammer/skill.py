@@ -38,6 +38,29 @@ class MermaidDiagramTool(BaseTool):
             filename = f"diagram_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{ext}"
             output_file = os.path.join(output_dir, filename)
 
+            # Catalyst Works Dark Mode Theme Styling (Hex codes from brand references)
+            catalyst_theme = '''%%{
+  init: {
+    "theme": "base",
+    "themeVariables": {
+      "primaryColor": "#1E293B",
+      "primaryTextColor": "#F8FAFC",
+      "primaryBorderColor": "#00B7C2",
+      "lineColor": "#00B7C2",
+      "secondaryColor": "#0F172A",
+      "tertiaryColor": "#334155",
+      "clusterBkg": "#0F172A",
+      "clusterBorder": "#334155",
+      "fontSize": "16px",
+      "fontFamily": "Inter, Outfit, sans-serif"
+    }
+  }
+}%%
+'''
+            # Ensure it doesn't already have an init block to avoid conflicts
+            if "%%{init" not in mermaid_code:
+                mermaid_code = catalyst_theme + mermaid_code
+
             # Write temp MMD file
             fd, temp_path = tempfile.mkstemp(suffix=".mmd")
             with os.fdopen(fd, "w", encoding="utf-8") as f:
