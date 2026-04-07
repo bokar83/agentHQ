@@ -1763,6 +1763,44 @@ def build_crm_outreach_crew(user_request: str) -> Crew:
     )
 
 
+def build_enrich_leads_crew(_user_request: str) -> Crew:
+    """
+    Single-agent crew that runs the full enrichment pipeline.
+    Calls enrich_leads tool directly -- no discovery, no LLM guessing.
+    Triggered by: "enrich leads", "find missing emails", "find phones", etc.
+    """
+    from agents import build_hunter_agent
+    from tools import enrich_leads_tool, scoreboard_tool
+
+    hunter = build_hunter_agent()
+    hunter.tools = [enrich_leads_tool, scoreboard_tool]
+
+    task = Task(
+        description=(
+            "Run the full enrichment pipeline on all leads currently missing "
+            "an email address or phone number.\n\n"
+            "STEPS:\n"
+            "1. Call enrich_leads with no arguments.\n"
+            "2. Report back: how many leads processed, how many emails found, "
+            "how many phones found, how many still missing both.\n"
+            "Do not do anything else. Do not search for new leads."
+        ),
+        agent=hunter,
+        expected_output=(
+            "A summary: X leads processed, Y emails found, Z phones found, "
+            "N still missing both email and phone."
+        )
+    )
+
+    return Crew(
+        agents=[hunter],
+        tasks=[task],
+        process=Process.sequential,
+        verbose=False,
+        memory=False,
+    )
+
+
 def build_mark_outreach_sent_crew(_user_request: str) -> Crew:
     """
     Single-agent crew that marks drafted leads as messaged.
@@ -1817,6 +1855,7 @@ CREW_REGISTRY = {
     "gws_crew":               build_gws_crew,
     "crm_outreach_crew":      build_crm_outreach_crew,
     "mark_outreach_sent_crew": build_mark_outreach_sent_crew,
+    "enrich_leads_crew":       build_enrich_leads_crew,
     "unknown_crew":           build_unknown_crew,
 }
 

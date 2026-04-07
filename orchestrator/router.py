@@ -132,6 +132,11 @@ TASK_TYPES = {
         ],
         "crew": "crm_outreach_crew",
     },
+    "enrich_leads": {
+        "description": "Run Prospeo + web scrape enrichment on all leads missing email or phone",
+        "keywords": ["enrich leads", "find emails", "find phones", "missing emails", "run enrichment"],
+        "crew": "enrich_leads_crew",
+    },
     "mark_outreach_sent": {
         "description": "Mark drafted outreach leads as messaged after manually sending their Gmail drafts",
         "keywords": [
@@ -189,6 +194,15 @@ def _keyword_shortcut(user_request: str) -> Optional[str]:
     Checked in priority order — more specific rules first.
     """
     lower = user_request.lower()
+
+    # enrich_leads — dedicated enrichment run (must match before hunter_task)
+    enrich_triggers = [
+        "enrich leads", "enrich emails", "find missing emails", "find emails",
+        "get emails", "fill in emails", "find phone numbers", "get phones",
+        "enrich contacts", "run enrichment", "missing emails", "missing phones",
+    ]
+    if any(t in lower for t in enrich_triggers):
+        return "enrich_leads"
 
     # mark_outreach_sent — must match before crm_outreach (shares "outreach" / "sent")
     mark_sent_triggers = [
