@@ -916,6 +916,16 @@ _CHAT_PREFIXES = (
     "do you remember", "remind me", "what have we", "what was",
 )
 
+def _shortcut_classify(msg: str):
+    """
+    Run keyword shortcuts BEFORE the obvious-chat pre-filter.
+    Returns a task_type string if matched, else None.
+    This prevents short messages from being swallowed by _classify_obvious_chat().
+    """
+    from router import _keyword_shortcut
+    return _keyword_shortcut(msg)
+
+
 def _classify_obvious_chat(msg: str) -> bool:
     """
     Fast pre-check before calling the LLM classifier.
@@ -960,11 +970,23 @@ async def process_telegram_update(update: dict):
     from notifier import send_briefing, send_message
 
     # 1. Classify first so the briefing is accurate
-    if _classify_obvious_chat(text):
+    # Shortcut classify runs FIRST — catches task phrases before obvious-chat filter eats them
+    _shortcut = _shortcut_classify(text)
+    if _shortcut and _shortcut != "memory_capture":
+        task_type = _shortcut
+        classification = {"task_type": _shortcut, "confidence": 0.95, "is_unknown": False, "has_email_followup": False}
+    elif _shortcut == "memory_capture":
+        # memory_capture is handled in chat via save_memory tool — treat as chat
         task_type = "chat"
+        classification = {"task_type": "chat", "confidence": 0.95, "is_unknown": False, "has_email_followup": False}
+    elif _classify_obvious_chat(text):
+        task_type = "chat"
+        classification = {"task_type": "chat", "confidence": 0.95, "is_unknown": False, "has_email_followup": False}
     else:
-        from router import classify_task
+        from router import classify_task, extract_metadata
         classification = classify_task(text)
+        metadata = extract_metadata(text)
+        classification.update(metadata)
         task_type = classification.get("task_type", "unknown")
 
     # 2. Send briefing (no-op for chat; includes crew + one-line plan for tasks)
@@ -1128,11 +1150,22 @@ async def run_task(request: TaskRequest, background_tasks: BackgroundTasks):
 
     # Classify first so the briefing is accurate
     from notifier import send_briefing, send_message
-    if _classify_obvious_chat(request.task):
+    # Shortcut classify runs FIRST — catches task phrases before obvious-chat filter eats them
+    _shortcut = _shortcut_classify(request.task)
+    if _shortcut and _shortcut != "memory_capture":
+        task_type = _shortcut
+        classification = {"task_type": _shortcut, "confidence": 0.95, "is_unknown": False, "has_email_followup": False}
+    elif _shortcut == "memory_capture":
         task_type = "chat"
+        classification = {"task_type": "chat", "confidence": 0.95, "is_unknown": False, "has_email_followup": False}
+    elif _classify_obvious_chat(request.task):
+        task_type = "chat"
+        classification = {"task_type": "chat", "confidence": 0.95, "is_unknown": False, "has_email_followup": False}
     else:
-        from router import classify_task
+        from router import classify_task, extract_metadata
         classification = classify_task(request.task)
+        metadata = extract_metadata(request.task)
+        classification.update(metadata)
         task_type = classification.get("task_type", "unknown")
 
     send_briefing(request.from_number, task_type, request.task)
