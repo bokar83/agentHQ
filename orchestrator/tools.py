@@ -30,8 +30,12 @@ from crewai_tools import (
     SerperDevTool,
     FileWriterTool,
     FileReadTool,
-    CodeInterpreterTool,
 )
+try:
+    from crewai_tools import CodeInterpreterTool
+except ImportError:
+    class CodeInterpreterTool:
+        pass
 from crewai.tools import BaseTool
 from pydantic import Field
 
