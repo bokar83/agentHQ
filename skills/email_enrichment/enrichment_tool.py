@@ -24,6 +24,7 @@ import logging
 import sys
 import os
 import re
+import httpx
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -90,11 +91,64 @@ def _find_linkedin(name: str, company: str) -> Optional[str]:
     return None
 
 
-# ── Firecrawl helpers ────────────────────────────────────────────
+# ── Scraping helpers ─────────────────────────────────────────────
+# Primary: httpx direct fetch (free, no credits)
+# Fallback: Firecrawl (only if key present and credits available)
+
+_SCRAPE_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/122.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+}
+
+
+def _httpx_scrape(url: str) -> Optional[str]:
+    """
+    Fetch a URL directly with httpx and extract visible text.
+    Handles: static HTML, basic redirects, common encodings.
+    Returns plain text (tags stripped) or None on failure.
+    """
+    try:
+        with httpx.Client(timeout=15, follow_redirects=True, headers=_SCRAPE_HEADERS) as client:
+            r = client.get(url)
+            if r.status_code >= 400:
+                return None
+            html = r.text
+
+        # Strip scripts and styles first
+        html = re.sub(r"<(script|style)[^>]*>.*?</(script|style)>", " ", html, flags=re.DOTALL | re.IGNORECASE)
+        # Replace common block tags with newlines to preserve structure
+        html = re.sub(r"<(br|p|div|li|tr|h[1-6])[^>]*>", "\n", html, flags=re.IGNORECASE)
+        # Strip remaining tags
+        html = re.sub(r"<[^>]+>", " ", html)
+        # Decode HTML entities
+        html = html.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">") \
+                   .replace("&#64;", "@").replace("&#46;", ".").replace("&nbsp;", " ")
+        # Collapse whitespace
+        html = re.sub(r"[ \t]+", " ", html)
+        html = re.sub(r"\n{3,}", "\n\n", html)
+        return html.strip()
+    except Exception as e:
+        logger.debug(f"Enrichment: httpx scrape failed for {url}: {e}")
+        return None
+
+
+_firecrawl_exhausted = False  # set to True on first 402, skips all further calls
+
 
 def _firecrawl_scrape(url: str) -> Optional[str]:
-    """Scrape a URL with Firecrawl. Returns markdown text or None."""
-    import httpx
+    """
+    Firecrawl scrape -- only called if FIRECRAWL_API_KEY is set and credits available.
+    Used as upgrade for JS-heavy sites when httpx returns no useful content.
+    Returns markdown text or None.
+    """
+    global _firecrawl_exhausted
+    if _firecrawl_exhausted:
+        return None
     api_key = os.environ.get("FIRECRAWL_API_KEY")
     if not api_key:
         return None
@@ -105,11 +159,31 @@ def _firecrawl_scrape(url: str) -> Optional[str]:
                 headers={"Authorization": f"Bearer {api_key}"},
                 json={"url": url, "formats": ["markdown"]},
             )
+            if r.status_code == 402:
+                _firecrawl_exhausted = True
+                logger.warning("Enrichment: Firecrawl credits exhausted -- switching to httpx-only mode.")
+                return None
             r.raise_for_status()
         return r.json().get("data", {}).get("markdown", "")
     except Exception as e:
-        logger.warning(f"Enrichment: Firecrawl scrape failed for {url}: {e}")
+        logger.debug(f"Enrichment: Firecrawl scrape failed for {url}: {e}")
         return None
+
+
+def _scrape_page(url: str) -> Optional[str]:
+    """
+    Unified scraper: httpx first (free), Firecrawl fallback if httpx
+    returns no useful content (JS-heavy sites).
+    """
+    text = _httpx_scrape(url)
+    # If httpx got content and it looks like real page text (>200 chars), use it
+    if text and len(text) > 200:
+        return text
+    # Fallback to Firecrawl for JS-rendered pages
+    fc_text = _firecrawl_scrape(url)
+    if fc_text:
+        return fc_text
+    return text  # return whatever httpx got, even if thin
 
 
 def _extract_emails_from_text(text: str, exclude_domains: list = None) -> list:
@@ -153,7 +227,7 @@ def _scrape_for_email(website_url: str) -> tuple:
     contact_form_only = False
 
     for page_url in pages_to_try:
-        text = _firecrawl_scrape(page_url)
+        text = _scrape_page(page_url)
         if not text:
             continue
         emails = _extract_emails_from_text(text, exclude_domains=[domain])
