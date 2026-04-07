@@ -1028,6 +1028,87 @@ class NotionPageTool(BaseTool):
             return f"Error: {e}"
 
 
+class NotionCreateIdeaTool(BaseTool):
+    """Creates a new idea record in the agentsHQ Ideas Notion database."""
+    name: str = "create_notion_idea"
+    description: str = (
+        "Save a new idea or brain dump to the agentsHQ Ideas database in Notion. "
+        "Input: JSON with 'title' (string, short name for the idea), "
+        "'content' (string, full description), "
+        "and optional 'category' (Tool|Agent|Feature|Business|Personal, default: Feature)."
+    )
+
+    def _run(self, input_data: str) -> str:
+        db_id = os.environ.get("IDEAS_DB_ID", "")
+        if not db_id:
+            return "Error: IDEAS_DB_ID env var not set. Run scripts/bootstrap_ideas_db.py first."
+        try:
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            title = data.get("title", "Untitled Idea")
+            content = data.get("content", "")
+            category = data.get("category", "Feature")
+            from skills.notion_skill.notion_tool import create_idea_page
+            url = create_idea_page(db_id, title, content, category)
+            return f"Idea saved to Notion: '{title}' — {url}"
+        except Exception as e:
+            return f"Error saving idea: {e}"
+
+
+class NotionQueryIdeasTool(BaseTool):
+    """Queries the agentsHQ Ideas Notion database and returns recent entries."""
+    name: str = "query_notion_ideas"
+    description: str = (
+        "Read ideas from the agentsHQ Ideas database. "
+        "Input: optional JSON with 'status' filter (New|Reviewed|Archived) "
+        "and 'limit' (default 20). Returns formatted list of ideas."
+    )
+
+    def _run(self, input_data: str = "{}") -> str:
+        db_id = os.environ.get("IDEAS_DB_ID", "")
+        if not db_id:
+            return "Error: IDEAS_DB_ID env var not set. Run scripts/bootstrap_ideas_db.py first."
+        try:
+            data = {}
+            if input_data:
+                try:
+                    data = json.loads(input_data) if isinstance(input_data, str) else input_data
+                except Exception:
+                    pass
+            from skills.notion_skill.notion_tool import query_database
+            filter_obj = None
+            if data.get("status"):
+                filter_obj = {
+                    "property": "Status",
+                    "select": {"equals": data["status"]},
+                }
+            results = query_database(db_id, filter_body=filter_obj)
+            if not results:
+                return "No ideas found in the database."
+            limit = int(data.get("limit", 20))
+            lines = [f"agentsHQ Ideas ({len(results[:limit])} entries):\n"]
+            for r in results[:limit]:
+                props = r.get("properties", {})
+                name = ""
+                name_prop = props.get("Name", {}).get("title", [])
+                if name_prop:
+                    name = name_prop[0].get("plain_text", "Untitled")
+                content_prop = props.get("Content", {}).get("rich_text", [])
+                content_text = content_prop[0].get("plain_text", "")[:200] if content_prop else ""
+                status = props.get("Status", {}).get("select", {})
+                status_name = status.get("name", "New") if status else "New"
+                category = props.get("Category", {}).get("select", {})
+                category_name = category.get("name", "") if category else ""
+                lines.append(f"- [{status_name}] {name} ({category_name})")
+                if content_text:
+                    lines.append(f"  {content_text}")
+            return "\n".join(lines)
+        except Exception as e:
+            return f"Error querying ideas: {e}"
+
+
+NOTION_CAPTURE_TOOLS = [NotionCreateIdeaTool(), NotionQueryIdeasTool()]
+
+
 # ── Tool sets by category ─────────────────────────────────────
 # These are convenience bundles used in agents.py
 
