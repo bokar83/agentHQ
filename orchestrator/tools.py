@@ -1027,10 +1027,47 @@ crm_reveal_tool = CRMRevealEmailTool()
 crm_uncontacted_tool = CRMGetUncontactedTool()
 scoreboard_tool = DailyScoreboardTool()
 
+
+class EnrichLeadsTool(BaseTool):
+    """Run deep email + LinkedIn enrichment on all leads missing an email."""
+    name: str = "enrich_leads"
+    description: str = (
+        "Run deep enrichment on all leads currently missing an email address. "
+        "Uses Serper to find company websites and Firecrawl to scrape for emails. "
+        "Also finds missing LinkedIn URLs. Call this after discovering and saving leads. "
+        "Input: optional JSON with 'limit' (default 50). "
+        "Returns a summary of emails found, LinkedIn found, and leads still missing."
+    )
+    def _run(self, input_data: str = "{}") -> str:
+        try:
+            import sys
+            if "/app" not in sys.path:
+                sys.path.insert(0, "/app")
+            from skills.email_enrichment.enrichment_tool import enrich_missing_emails
+            data = {}
+            if input_data:
+                try:
+                    data = json.loads(input_data) if isinstance(input_data, str) else input_data
+                except Exception:
+                    pass
+            limit = data.get("limit", 50) if isinstance(data, dict) else 50
+            result = enrich_missing_emails(limit=limit)
+            return (
+                f"Enrichment complete: {result['emails_found']} emails found, "
+                f"{result['linkedin_found']} LinkedIn found, "
+                f"{result['no_website']} no website (web prospects), "
+                f"{result['still_missing']} still missing email out of {result['processed']} processed."
+            )
+        except Exception as e:
+            return f"Enrichment error: {e}"
+
+
+enrich_leads_tool = EnrichLeadsTool()
+
 RESEARCH_TOOLS = [search_tool, file_reader, QueryMemoryTool()]
 SCRAPING_TOOLS = [FirecrawlScrapeTool(), FirecrawlCrawlTool(), FirecrawlSearchTool()]
 WRITING_TOOLS = [file_writer, SaveOutputTool(), voice_polisher_tool]
 CODE_TOOLS = [code_interpreter, file_writer, file_reader, SaveOutputTool(), CLIHubSearchTool()]
 ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool(), GitHubRepoTool(), GitHubIssueTool(), GitHubFileTool(), NotionSearchTool(), NotionPageTool()] + VERCEL_TOOLS + NOTION_STYLING_TOOLS + FORGE_TOOLS + GWS_TOOLS
-HUNTER_TOOLS = [prospecting_tool, crm_add_tool, crm_log_tool, crm_reveal_tool, scoreboard_tool, QueryMemoryTool(), NotionPageTool(), forge_pipeline_tool, forge_log_tool]
+HUNTER_TOOLS = [prospecting_tool, crm_add_tool, crm_log_tool, crm_reveal_tool, enrich_leads_tool, scoreboard_tool, QueryMemoryTool(), NotionPageTool(), forge_pipeline_tool, forge_log_tool]
 OUTREACH_TOOLS = [crm_uncontacted_tool, crm_reveal_tool, crm_log_tool, scoreboard_tool]
