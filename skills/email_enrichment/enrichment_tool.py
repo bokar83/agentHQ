@@ -2,15 +2,15 @@
 enrichment_tool.py — Deep Lead Enrichment Pipeline
 ===================================================
 Runs after daily harvest, before the report email is sent.
-For every lead missing an email or LinkedIn URL, attempts to find them
-using Serper (search) and Firecrawl (scrape). Writes notes back to
-Supabase in all cases -- found, not found, no website, ambiguous.
+For every lead missing an email, phone, or LinkedIn URL, attempts to find them
+using Serper + web scraping first (free), then Prospeo API (paid, fallback).
 
 Pipeline per lead:
   1. Serper: "[Name]" "[Company]" contact email  -> find company website
-  2. Firecrawl: scrape /contact, /about, homepage -> extract email
-  3. Serper: "[Name]" "[Company]" site:linkedin.com/in -> find LinkedIn
-  4. If no website found at all: flag as web prospect in notes
+  2. Scrape /contact, /about, homepage -> extract email (httpx > curl_cffi > Firecrawl)
+  3. Prospeo /enrich-person -> email + mobile fallback (1 credit email, 10 credits mobile)
+  4. Serper: "[Name]" "[Company]" site:linkedin.com/in -> find LinkedIn
+  5. If no website found at all: flag as web prospect in notes
 
 Notes are written to:
   - leads.notes column (persistent summary)
@@ -352,16 +352,107 @@ def _save_linkedin(conn, lead_id: int, linkedin_url: str):
         logger.error(f"Enrichment: failed to save LinkedIn for lead {lead_id}: {e}")
 
 
+def _save_phone(conn, lead_id: int, phone: str):
+    """Save found phone number to leads table."""
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            "UPDATE leads SET phone = %s, updated_at = %s WHERE id = %s",
+            (phone, datetime.now(timezone.utc), lead_id)
+        )
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        logger.error(f"Enrichment: failed to save phone for lead {lead_id}: {e}")
+
+
+def _prospeo_enrich(name: str, company: str, linkedin_url: str = None,
+                    want_phone: bool = True) -> dict:
+    """
+    Call Prospeo /enrich-person to find email and/or mobile number.
+
+    Credit cost:
+      - Email only: 1 credit
+      - Phone (with or without email): 10 credits
+      - No match: 0 credits charged
+
+    Returns dict with keys: email, phone, source ('prospeo'), error
+    """
+    api_key = os.environ.get("PROSPEO_KEY")
+    if not api_key:
+        logger.warning("Enrichment: PROSPEO_KEY not set -- skipping Prospeo.")
+        return {"email": None, "phone": None, "error": "no_key"}
+
+    # Build data payload -- prefer LinkedIn URL for highest match rate
+    data = {}
+    if linkedin_url:
+        data["linkedin_url"] = linkedin_url
+    else:
+        # Split name into first/last
+        parts = name.strip().split()
+        if len(parts) >= 2:
+            data["first_name"] = parts[0]
+            data["last_name"] = " ".join(parts[1:])
+        else:
+            data["full_name"] = name
+        if company:
+            data["company_name"] = company
+
+    if not data:
+        return {"email": None, "phone": None, "error": "insufficient_data"}
+
+    payload = {"data": data}
+    if want_phone:
+        payload["enrich_mobile"] = True
+
+    try:
+        with httpx.Client(timeout=20) as client:
+            r = client.post(
+                "https://api.prospeo.io/enrich-person",
+                headers={"X-KEY": api_key, "Content-Type": "application/json"},
+                json=payload,
+            )
+        resp = r.json()
+    except Exception as e:
+        logger.warning(f"Enrichment: Prospeo request failed for {name}: {e}")
+        return {"email": None, "phone": None, "error": str(e)}
+
+    if resp.get("error"):
+        code = resp.get("error_code", "unknown")
+        logger.info(f"Enrichment: Prospeo no match for {name} ({company}): {code}")
+        return {"email": None, "phone": None, "error": code}
+
+    person = resp.get("person", {})
+
+    # Extract email
+    found_email = None
+    email_data = person.get("email", {})
+    if email_data.get("revealed") and email_data.get("email"):
+        found_email = email_data["email"].lower().strip()
+
+    # Extract mobile
+    found_phone = None
+    mobile_data = person.get("mobile", {})
+    if mobile_data.get("revealed") and mobile_data.get("mobile"):
+        found_phone = mobile_data.get("mobile_international") or mobile_data.get("mobile")
+
+    return {"email": found_email, "phone": found_phone, "error": None}
+
+
 # ── Main entry point ─────────────────────────────────────────────
 
 def enrich_missing_emails(limit: int = 999) -> dict:
     """
-    Deep enrichment pass for leads missing email or LinkedIn.
-    Uses Serper + Firecrawl. Writes notes back in all cases.
-    Flags leads with no website as web prospects.
+    Deep enrichment pass for leads missing email, phone, or LinkedIn.
+
+    Pipeline per lead:
+      1. Serper -- find company website
+      2. Web scrape -- extract email from /contact, /about, homepage (free)
+      3. Prospeo /enrich-person -- email + mobile fallback (paid, only if still missing)
+      4. Serper -- find LinkedIn profile URL
 
     Returns:
-        dict with: processed, emails_found, linkedin_found,
+        dict with: processed, emails_found, phones_found, linkedin_found,
                    no_website, still_missing, web_prospects (list), results (list)
     """
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -371,9 +462,10 @@ def enrich_missing_emails(limit: int = 999) -> dict:
         conn = _get_crm_conn()
         cur = conn.cursor()
         cur.execute("""
-            SELECT id, name, company, email, linkedin_url, industry
+            SELECT id, name, company, email, phone, linkedin_url, industry
             FROM leads
             WHERE (email IS NULL OR email = '')
+               OR (phone IS NULL OR phone = '')
                OR (linkedin_url IS NULL OR linkedin_url = '')
             ORDER BY created_at ASC
             LIMIT %s
@@ -382,11 +474,13 @@ def enrich_missing_emails(limit: int = 999) -> dict:
         cur.close()
     except Exception as e:
         logger.error(f"Enrichment: failed to query leads: {e}")
-        return {"processed": 0, "emails_found": 0, "linkedin_found": 0,
-                "no_website": 0, "still_missing": 0, "web_prospects": [], "results": []}
+        return {"processed": 0, "emails_found": 0, "phones_found": 0,
+                "linkedin_found": 0, "no_website": 0, "still_missing": 0,
+                "web_prospects": [], "results": []}
 
     processed = 0
     emails_found = 0
+    phones_found = 0
     linkedin_found = 0
     no_website_count = 0
     web_prospects = []
@@ -396,10 +490,13 @@ def enrich_missing_emails(limit: int = 999) -> dict:
         lead_id = lead["id"]
         name = lead.get("name", "")
         company = lead.get("company", "")
+        linkedin_url = lead.get("linkedin_url", "")
         has_email = bool(lead.get("email"))
-        has_linkedin = bool(lead.get("linkedin_url"))
+        has_phone = bool(lead.get("phone"))
+        has_linkedin = bool(linkedin_url)
         processed += 1
         found_email = None
+        found_phone = None
         found_linkedin = None
 
         logger.info(f"Enrichment: processing {name} ({company})...")
@@ -407,55 +504,79 @@ def enrich_missing_emails(limit: int = 999) -> dict:
         # ── Step 1: Find company website ────────────────────────
         website = _find_company_website(company)
 
-        if not website:
+        if not website and not has_email:
             note = f"[{today}] Enriched — no website found. Flagged as web prospect."
             _write_note(conn, lead_id, note)
             no_website_count += 1
             web_prospects.append({"name": name, "company": company, "industry": lead.get("industry")})
             logger.info(f"Enrichment: {company} -- no website found, flagged as web prospect")
-        else:
-            # ── Step 2: Scrape for email ─────────────────────────
-            if not has_email:
-                found_email, scrape_note, _ = _scrape_for_email(website)
-                if found_email:
-                    _save_email(conn, lead_id, found_email)
-                    emails_found += 1
-                    has_email = True
-                    _write_note(conn, lead_id, f"[{today}] Enriched — email found: {found_email}")
-                else:
-                    _write_note(conn, lead_id, f"[{today}] Enriched — no email found after scraping.")
+        elif website and not has_email:
+            # ── Step 2: Scrape website for email ─────────────────
+            found_email, scrape_note, _ = _scrape_for_email(website)
+            if found_email:
+                _save_email(conn, lead_id, found_email)
+                emails_found += 1
+                has_email = True
+                _write_note(conn, lead_id, f"[{today}] Enriched — email found via scrape: {found_email}")
+            else:
+                _write_note(conn, lead_id, f"[{today}] Enriched — no email found after scraping.")
 
-        # ── Step 3: Find LinkedIn ────────────────────────────────
+        # ── Step 3: Prospeo fallback (email + mobile) ───────────
+        # Call if still missing email OR missing phone
+        if not has_email or not has_phone:
+            prospeo = _prospeo_enrich(
+                name=name,
+                company=company,
+                linkedin_url=linkedin_url or None,
+                want_phone=not has_phone,
+            )
+            if prospeo.get("email") and not has_email:
+                _save_email(conn, lead_id, prospeo["email"])
+                emails_found += 1
+                has_email = True
+                found_email = prospeo["email"]
+                _write_note(conn, lead_id, f"[{today}] Enriched — email found via Prospeo: {prospeo['email']}")
+            if prospeo.get("phone") and not has_phone:
+                _save_phone(conn, lead_id, prospeo["phone"])
+                phones_found += 1
+                has_phone = True
+                found_phone = prospeo["phone"]
+                _write_note(conn, lead_id, f"[{today}] Enriched — mobile found via Prospeo: {prospeo['phone']}")
+            if not prospeo.get("email") and not prospeo.get("phone") and prospeo.get("error") not in ("no_key",):
+                _write_note(conn, lead_id, f"[{today}] Enriched — Prospeo: no match ({prospeo.get('error', 'no_match')})")
+
+        # ── Step 4: Find LinkedIn ────────────────────────────────
         if not has_linkedin:
             found_linkedin = _find_linkedin(name, company)
             if found_linkedin:
                 _save_linkedin(conn, lead_id, found_linkedin)
                 linkedin_found += 1
                 _write_note(conn, lead_id, f"[{today}] Enriched — LinkedIn: {found_linkedin}")
-            else:
-                _write_note(conn, lead_id, f"[{today}] Enriched — LinkedIn not found.")
 
         results.append({
             "id": lead_id,
             "name": name,
             "company": company,
             "email_found": found_email,
+            "phone_found": found_phone,
             "linkedin_found": found_linkedin,
             "has_website": bool(website),
         })
 
     conn.close()
-    still_missing = processed - emails_found - no_website_count
+    still_missing = sum(1 for r in results if not r["email_found"] and not r["phone_found"])
 
     logger.info(
         f"Enrichment: {processed} leads processed -- "
-        f"{emails_found} emails found, {linkedin_found} LinkedIn found, "
-        f"{no_website_count} no website (web prospects), {still_missing} still missing email."
+        f"{emails_found} emails found, {phones_found} phones found, "
+        f"{linkedin_found} LinkedIn found, {no_website_count} no website, "
+        f"{still_missing} still missing both."
     )
 
     return {
         "processed": processed,
         "emails_found": emails_found,
+        "phones_found": phones_found,
         "linkedin_found": linkedin_found,
         "no_website": no_website_count,
         "still_missing": still_missing,
