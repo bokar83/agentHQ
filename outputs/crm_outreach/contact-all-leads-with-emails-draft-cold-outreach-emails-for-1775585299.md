@@ -1,0 +1,22 @@
+Cold outreach drafts created in catalystworks.ai@gmail.com (20 drafts):
+
+- David C. Heier | Heier, Ishola & Navarro, PLLC | david@heierlaw.co | Where is your margin actually going?
+- Mac McKellar | Blitz Roofing | mac@blitzroofing.com | Where is your margin actually going?
+- Dennis Brock | T-Rex Heating & Air LLC | dennis@trexheatingandair.com | Where is your margin actually going?
+- Justin Gilbert | Gilbert & Stewart CPAs | jgilbert@gilbertandstewart.com | Where is your margin actually going?
+- Russ Larsen | CCR Plumbing LLC | russ@ccrplumb.com | Where is your margin actually going?
+- Spencer Stout | Pioneer Roofing Company | spencer@pioneerroofer.com | Where is your margin actually going?
+- Travis Landry | Shreeve Landry CPAs | landry@shreevelandry.com | Where is your margin actually going?
+- Jamie Stagg | Xperience Roofing | jamie@xperienceroofing.com | Where is your margin actually going?
+- Tanner Smith | Syndicate Marketing | tsmith@syndicatemarketing.com | Where is your margin actually going?
+- Jeff Turner | JDT Legal, PLLC | jeff@jdt-legal.com | Where is your margin actually going?
+- Colby Chambers | All Around Cooling & Heating | allaroundquickservices@gmail.com | Where is your margin actually going?
+- Paul Averett | Averett & Associates PC | paul@averettcpa.com | Where is your margin actually going?
+- Bryan Phelps | Big Leap | bryan@bigleap.com | Where is your margin actually going?
+- Ryan Rees | Hartle & Rees LLC | mike@hrtaxcpa.com | Where is your margin actually going?
+- Sean Foster | PLUNJ | hancocklandon@gmail.com | Where is your margin actually going?
+- Murphy Nadauld | ReferPro | hello@referpro.co | Where is your margin actually going?
+- Chris Toronto | On Demand Handyman | kirk.yatessr@gmail.com | Where is your margin actually going?
+- Adrian Garcia | A+ Mechanical & Plumbing Design LLC | aplusmpdesign@gmail.com | Where is your margin actually going?
+- Brian Hortin | Yes! Heating, Air Conditioning, Plumbing, and Electric | brian@absoluteair.com | Where is your margin actually going?
+- Jason Blickenstaff | CPA Advisory Firm | brad@baasllccpa.com | Where is your margin actually going?
