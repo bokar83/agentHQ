@@ -808,6 +808,13 @@ def _run_background_job(
 
     chat_id = from_number  # from_number IS the Telegram chat ID
 
+    # Register job in queue so Telegram tasks are traceable
+    try:
+        from memory import create_job, update_job
+        create_job(job_id, session_key, from_number, task)
+    except Exception as e:
+        logger.warning(f"Job {job_id}: could not register in queue: {e}")
+
     # ── Progress ping timer ──────────────────────────────────
     # First ping at 60s so user knows it's working, then every 5 min.
     # Watchdog at 10 min: if still running, send an error and bail.
@@ -850,6 +857,10 @@ def _run_background_job(
 
         # ── Deliver ──────────────────────────────────────────
         send_result(chat_id, summary, drive_url, github_url)
+        try:
+            update_job(job_id, status="completed", result=summary)
+        except Exception as e:
+            logger.warning(f"Job {job_id}: could not update job status to completed: {e}")
 
         # ── Compound request: email follow-up ────────────────────
         # If the original message asked to "also send me an email about this",
@@ -888,6 +899,10 @@ def _run_background_job(
             send_message(chat_id, f"Sorry — something went wrong with your task. Error: {str(e)[:200]}")
         except Exception:
             logger.critical(f"Background job {job_id}: result delivery AND error notification both failed. User received nothing.")
+        try:
+            update_job(job_id, status="failed", result=str(e))
+        except Exception:
+            pass
     finally:
         _stop_ping.set()  # cancel ping loop regardless of success/failure
         
