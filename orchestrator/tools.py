@@ -40,7 +40,7 @@ from firecrawl_tools import FirecrawlScrapeTool, FirecrawlCrawlTool, FirecrawlSe
 # Import Phase 2 Skills
 # Core hunter + CRM imports — must not fail silently
 try:
-    from skills.local_crm.crm_tool import add_lead, log_interaction, update_lead_status, get_daily_scoreboard, update_lead_email, get_lead_by_name, get_uncontacted_leads
+    from skills.local_crm.crm_tool import add_lead, log_interaction, update_lead_status, get_daily_scoreboard, update_lead_email, get_lead_by_name, get_uncontacted_leads, mark_outreach_sent
 except ImportError as e:
     logger_pre = __import__("logging").getLogger(__name__)
     logger_pre.warning(f"crm_tool import failed: {e}")
@@ -50,6 +50,7 @@ except ImportError as e:
     def get_daily_scoreboard(*args, **kwargs): return {}
     def update_lead_email(*args, **kwargs): return False
     def get_lead_by_name(*args, **kwargs): return {}
+    def mark_outreach_sent(*args, **kwargs): return {"marked": 0, "leads": []}
 
 try:
     from skills.serper_skill.hunter_tool import discover_leads, reveal_email_for_lead
@@ -1021,11 +1022,33 @@ class NotionPageTool(BaseTool):
 
 voice_polisher_tool = VoicePolisherTool()
 prospecting_tool = UtahProspectingTool()
+class CRMMarkOutreachSentTool(BaseTool):
+    """Marks leads as messaged after you manually send their Gmail drafts."""
+    name: str = "mark_outreach_sent"
+    description: str = (
+        "Call this after manually sending outreach drafts from Gmail. "
+        "Finds every lead that had an outreach_draft interaction logged in the last 48 hours "
+        "and still has status='new' and no last_contacted_at. "
+        "Sets status='messaged' and last_contacted_at=now for each. "
+        "No input required. Returns how many leads were marked and their names."
+    )
+    def _run(self, _=None) -> str:
+        result = mark_outreach_sent()
+        if result.get("error"):
+            return f"Error: {result['error']}"
+        marked = result["marked"]
+        if marked == 0:
+            return "No leads pending confirmation. Either all already marked or no drafts were logged in the last 48 hours."
+        names = ", ".join(r["name"] for r in result["leads"])
+        return f"Marked {marked} lead(s) as messaged: {names}"
+
+
 crm_add_tool = CRMAddLeadTool()
 crm_log_tool = CRMLogInteractionTool()
 crm_reveal_tool = CRMRevealEmailTool()
 crm_uncontacted_tool = CRMGetUncontactedTool()
 scoreboard_tool = DailyScoreboardTool()
+crm_mark_sent_tool = CRMMarkOutreachSentTool()
 
 
 class EnrichLeadsTool(BaseTool):
@@ -1070,4 +1093,4 @@ WRITING_TOOLS = [file_writer, SaveOutputTool(), voice_polisher_tool]
 CODE_TOOLS = [code_interpreter, file_writer, file_reader, SaveOutputTool(), CLIHubSearchTool()]
 ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool(), GitHubRepoTool(), GitHubIssueTool(), GitHubFileTool(), NotionSearchTool(), NotionPageTool()] + VERCEL_TOOLS + NOTION_STYLING_TOOLS + FORGE_TOOLS + GWS_TOOLS
 HUNTER_TOOLS = [prospecting_tool, crm_add_tool, crm_log_tool, crm_reveal_tool, enrich_leads_tool, scoreboard_tool, QueryMemoryTool(), NotionPageTool(), forge_pipeline_tool, forge_log_tool]
-OUTREACH_TOOLS = [crm_uncontacted_tool, crm_reveal_tool, crm_log_tool, scoreboard_tool]
+OUTREACH_TOOLS = [crm_uncontacted_tool, crm_reveal_tool, crm_log_tool, scoreboard_tool, crm_mark_sent_tool]

@@ -132,6 +132,16 @@ TASK_TYPES = {
         ],
         "crew": "crm_outreach_crew",
     },
+    "mark_outreach_sent": {
+        "description": "Mark drafted outreach leads as messaged after manually sending their Gmail drafts",
+        "keywords": [
+            "mark as contacted", "mark contacted", "mark sent", "emails sent",
+            "i sent the emails", "sent the drafts", "mark leads messaged",
+            "update crm after sending", "confirm outreach sent", "outreach sent",
+            "mark outreach", "emails were sent", "just sent",
+        ],
+        "crew": "mark_outreach_sent_crew",
+    },
 }
 
 
@@ -179,6 +189,16 @@ def _keyword_shortcut(user_request: str) -> Optional[str]:
     Checked in priority order — more specific rules first.
     """
     lower = user_request.lower()
+
+    # mark_outreach_sent — must match before crm_outreach (shares "outreach" / "sent")
+    mark_sent_triggers = [
+        "mark as contacted", "mark contacted", "mark sent", "i sent the emails",
+        "sent the drafts", "mark leads messaged", "confirm outreach sent",
+        "outreach sent", "emails were sent", "emails sent", "just sent the",
+        "mark outreach sent",
+    ]
+    if any(t in lower for t in mark_sent_triggers):
+        return "mark_outreach_sent"
 
     # crm_outreach — must match before hunter_task (both share "outreach")
     crm_outreach_triggers = [

@@ -1714,7 +1714,7 @@ def build_crm_outreach_crew(user_request: str) -> Crew:
             "to try Hunter.io then Apollo. Stop trying after 2 attempts per lead.\n"
             "3. Log any newly found emails with log_interaction (type: email_revealed).\n"
             "4. Return ONLY the leads from those 10 who have an email address -- "
-            "maximum 5 leads. If more than 5 have emails, return the first 5 only. "
+            "maximum 10 leads. If more than 10 have emails, return the first 10 only. "
             "Include: id, name, company, title, industry, email.\n\n"
             f"USER REQUEST: {user_request}"
         ),
@@ -1731,7 +1731,7 @@ def build_crm_outreach_crew(user_request: str) -> Crew:
         description=(
             "GOAL: Create cold outreach Gmail drafts for the leads passed from the previous task.\n\n"
             "RULES:\n"
-            "- LIMIT: Create a maximum of 5 drafts per run. Stop after 5.\n"
+            "- LIMIT: Create a maximum of 10 drafts per run. Stop after 10.\n"
             "- CONFIRMED EMAILS ONLY: Only draft for leads where an email address was "
             "explicitly provided by the previous task. NEVER guess, infer, or construct "
             "an email address. If a lead has no confirmed email, skip them entirely.\n"
@@ -1763,6 +1763,41 @@ def build_crm_outreach_crew(user_request: str) -> Crew:
     )
 
 
+def build_mark_outreach_sent_crew(_user_request: str) -> Crew:
+    """
+    Single-agent crew that marks drafted leads as messaged.
+    Called after the user manually sends Gmail drafts.
+    Triggered by: "I sent the emails", "mark outreach sent", "emails sent", etc.
+    """
+    from agents import build_gws_agent
+    from tools import crm_mark_sent_tool
+
+    gws = build_gws_agent()
+    gws.tools = [crm_mark_sent_tool]
+
+    task = Task(
+        description=(
+            "The user has just manually sent their cold outreach emails from Gmail. "
+            "Call mark_outreach_sent to find all leads that had outreach drafts logged "
+            "in the last 48 hours and are still marked as 'new'. "
+            "Mark them as messaged and report back exactly who was updated."
+        ),
+        agent=gws,
+        expected_output=(
+            "A confirmation message listing every lead marked as messaged, "
+            "with their name and email. Include the total count."
+        )
+    )
+
+    return Crew(
+        agents=[gws],
+        tasks=[task],
+        process=Process.sequential,
+        verbose=False,
+        memory=False,
+    )
+
+
 CREW_REGISTRY = {
     "website_crew":        build_website_crew,
     "app_crew":            build_app_crew,
@@ -1781,6 +1816,7 @@ CREW_REGISTRY = {
     "news_brief_crew":        build_news_brief_crew,
     "gws_crew":               build_gws_crew,
     "crm_outreach_crew":      build_crm_outreach_crew,
+    "mark_outreach_sent_crew": build_mark_outreach_sent_crew,
     "unknown_crew":           build_unknown_crew,
 }
 
