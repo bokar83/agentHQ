@@ -16,6 +16,13 @@ import pytz
 
 logger = logging.getLogger("agentsHQ.scheduler")
 
+# Resolve docs/ directory -- works both locally and inside Docker (/app/docs/)
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_DOCS_DIR = os.path.join(_SCRIPT_DIR, "docs")
+if not os.path.isdir(_DOCS_DIR):
+    # Fallback: sibling of script dir (local dev layout: orchestrator/../docs)
+    _DOCS_DIR = os.path.join(os.path.dirname(_SCRIPT_DIR), "docs")
+
 # Configuration
 TARGET_HOUR = 6
 TARGET_MINUTE = 0
@@ -39,8 +46,7 @@ def _send_telegram_alert(message: str):
 
 def _get_today_quote() -> dict:
     """Load quote bank and return today's quote by day-of-year rotation."""
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    bank_path = os.path.join(base_dir, "docs", "quote_bank.json")
+    bank_path = os.path.join(_DOCS_DIR, "quote_bank.json")
     fallback = {"text": "Do the work. Especially when you don't feel like it.", "author": "Steven Pressfield"}
     try:
         with open(bank_path, "r", encoding="utf-8") as f:
@@ -117,8 +123,7 @@ def _discover_quote_block_id(page_id: str, token: str) -> str | None:
 
 def _get_or_discover_block_ids(token: str) -> dict:
     """Load cached block IDs, or discover and save them."""
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    cache_path = os.path.join(base_dir, "docs", "quote_block_ids.json")
+    cache_path = os.path.join(_DOCS_DIR, "quote_block_ids.json")
 
     if os.path.exists(cache_path):
         try:
