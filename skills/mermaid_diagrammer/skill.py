@@ -2,6 +2,7 @@ import os
 import subprocess
 import tempfile
 import logging
+from pathlib import Path
 from crewai.tools import BaseTool
 
 logger = logging.getLogger(__name__)
@@ -31,8 +32,8 @@ class MermaidDiagramTool(BaseTool):
 
             output_dir = "/app/outputs/diagrams"
             if not os.path.exists(output_dir):
-                # Fallback if outside docker
-                output_dir = os.path.join(os.getcwd(), "outputs", "diagrams")
+                # Fallback if outside docker — use path relative to this file, not cwd
+                output_dir = str(Path(__file__).parent.parent.parent / "outputs" / "diagrams")
                 os.makedirs(output_dir, exist_ok=True)
                 
             filename = f"diagram_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{ext}"
