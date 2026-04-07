@@ -1049,11 +1049,20 @@ async def telegram_polling_loop():
     offset = 0
 
     # Ensure webhook is cleared so polling works
-    try:
-        async with httpx.AsyncClient() as client:
-            await client.get(f"https://api.telegram.org/bot{token}/deleteWebhook")
-    except Exception:
-        pass
+    webhook_cleared = False
+    for attempt in range(3):
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.get(f"https://api.telegram.org/bot{token}/deleteWebhook")
+                if resp.status_code == 200 and resp.json().get("result"):
+                    webhook_cleared = True
+                    break
+        except Exception as e:
+            logger.warning(f"TELEGRAM_POLLING: deleteWebhook attempt {attempt+1} failed: {e}")
+        await asyncio.sleep(2)
+
+    if not webhook_cleared:
+        logger.error("TELEGRAM_POLLING: Could not clear webhook after 3 attempts. Polling may conflict with webhook delivery.")
 
     while True:
         try:
