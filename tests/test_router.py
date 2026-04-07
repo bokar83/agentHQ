@@ -30,7 +30,7 @@ def test_gws_shortcut_calendar_short():
 
 
 def test_gws_shortcut_add_event():
-    result = _keyword_shortcut("add event tomorrow 3pm team call")
+    result = _keyword_shortcut("add event to calendar tomorrow 3pm team call")
     assert result == "gws_task"
 
 

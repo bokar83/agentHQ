@@ -264,9 +264,11 @@ def _keyword_shortcut(user_request: str) -> Optional[str]:
     gws_shortcut_triggers = [
         "what's on my calendar", "whats on my calendar", "what is on my calendar",
         "check my calendar", "show my calendar", "list my events",
-        "add event", "add to calendar", "create event", "schedule meeting",
+        "add event to calendar", "add to my calendar", "create calendar event",
+        "schedule a meeting", "book a meeting",
         "delete event", "remove event", "cancel event",
-        "draft email", "send email", "email me", "send me an email",
+        "create a draft email", "draft an email", "draft email to",
+        "send me an email", "email me about", "email me the",
         "check my email", "search my email", "search gmail", "check gmail",
     ]
     if any(t in lower for t in gws_shortcut_triggers):
