@@ -136,29 +136,31 @@ def save_to_memory(
     return True
 
 
-def query_memory(query: str, top_k: int = 3) -> list:
+def query_memory(query: str, top_k: int = 3, collection: str = None) -> list:
     """
     Query Qdrant for semantically similar past tasks.
     Returns top_k most relevant past tasks.
+    Pass collection="agentshq_learnings" to query the learnings store.
     """
+    _collection = collection or QDRANT_COLLECTION
     try:
         client = get_qdrant_client()
         if not client:
             return []
-        
+
         embedding = get_embedding(query)
         if not embedding:
             return []
-        
+
         results = client.search(
-            collection_name=QDRANT_COLLECTION,
+            collection_name=_collection,
             query_vector=embedding,
             limit=top_k,
-            score_threshold=0.7  # only return genuinely similar results
+            score_threshold=0.7
         )
-        
+
         return [r.payload for r in results]
-        
+
     except Exception as e:
         logger.warning(f"Memory query failed (non-fatal): {e}")
         return []
