@@ -1070,6 +1070,47 @@ def _classify_obvious_chat(msg: str) -> bool:
 
 
 # ══════════════════════════════════════════════════════════════
+# PRAISE / CRITIQUE DETECTION HELPERS
+# ══════════════════════════════════════════════════════════════
+
+_PRAISE_SIGNALS = {
+    "good job", "great", "well done", "perfect", "excellent",
+    "love it", "nice work", "brilliant", "solid", "nailed it",
+    "that's great", "awesome", "fantastic", "good work", "nice",
+}
+
+_CRITIQUE_SIGNALS = {
+    "wrong", "bad", "not good", "don't like", "fix", "redo",
+    "wasn't", "wasn't done", "missed", "forgot", "too long",
+    "too short", "off", "incorrect", "weird", "not what",
+    "could be better", "needs work", "poorly", "weak",
+}
+
+
+def _is_praise(text: str) -> bool:
+    """Return True if the message is short explicit praise."""
+    t = text.lower().strip()
+    if not t or len(t) > 80:
+        return False
+    return any(p in t for p in _PRAISE_SIGNALS)
+
+
+def _is_feedback_on_prior_job(text: str, chat_id: str) -> bool:
+    """
+    Return True if the message looks like critique on the last completed job.
+    Requires: job delivered within 60 min AND critique signal words present.
+    """
+    if chat_id not in _last_completed_job:
+        return False
+    job = _last_completed_job[chat_id]
+    elapsed = (datetime.utcnow() - job["delivered_at"]).total_seconds()
+    if elapsed > 3600:
+        return False
+    t = text.lower()
+    return any(s in t for s in _CRITIQUE_SIGNALS)
+
+
+# ══════════════════════════════════════════════════════════════
 # API ENDPOINTS
 # ══════════════════════════════════════════════════════════════
 
@@ -1096,6 +1137,63 @@ async def process_telegram_update(update: dict):
         _send(chat_id, "Sorry, you are not authorised to use this bot.")
         logger.warning(f"Unauthorised Telegram access attempt from sender_id={sender_id}")
         return
+
+    # /lessons [task_type] — list recent lessons
+    if text.lower().startswith("/lessons"):
+        from notifier import send_message as _send_msg
+        parts = text.strip().split(maxsplit=1)
+        task_type_filter = parts[1].strip() if len(parts) > 1 else None
+        from memory import list_lessons
+        rows = list_lessons(task_type=task_type_filter, limit=10)
+        if not rows:
+            _send_msg(chat_id, "No lessons found" + (f" for '{task_type_filter}'" if task_type_filter else "") + ".")
+        else:
+            lines = ["Recent lessons" + (f" ({task_type_filter})" if task_type_filter else "") + ":"]
+            for r in rows:
+                sign = "+" if r["learning_type"] != "negative" else "-"
+                lines.append(f"[{r['id']}] {sign} [{r['task_type']}] {r['content'][:120]}")
+            _send_msg(chat_id, "\n".join(lines))
+        return
+
+    # /purge-lesson [id] — mark a lesson as purged
+    if text.lower().startswith("/purge-lesson"):
+        from notifier import send_message as _send_msg
+        parts = text.strip().split(maxsplit=1)
+        if len(parts) < 2 or not parts[1].strip().isdigit():
+            _send_msg(chat_id, "Usage: /purge-lesson [id]  — get the id from /lessons")
+            return
+        lesson_id = int(parts[1].strip())
+        from memory import purge_lesson
+        ok = purge_lesson(lesson_id)
+        _send_msg(chat_id, f"Lesson {lesson_id} purged." if ok else f"Lesson {lesson_id} not found.")
+        return
+
+    # ── Praise / Critique Detection ──────────────────────────────────────
+    if os.environ.get("MEMORY_LEARNING_ENABLED", "false").lower() == "true":
+        from notifier import send_message as _send_msg
+        if _is_praise(text) and chat_id in _last_completed_job:
+            prior = _last_completed_job[chat_id]
+            logger.info(f"Praise detected for job {prior['job_id']} (task_type={prior['task_type']})")
+            from memory import extract_and_save_learnings
+            threading.Thread(
+                target=extract_and_save_learnings,
+                args=(prior["task_request"], prior["task_type"], prior["result_summary"], "preference"),
+                daemon=True
+            ).start()
+            _send_msg(chat_id, "Got it — noted as a good pattern.")
+            return
+
+        elif _is_feedback_on_prior_job(text, chat_id):
+            prior = _last_completed_job[chat_id]
+            logger.info(f"Critique detected for job {prior['job_id']} (task_type={prior['task_type']})")
+            from memory import extract_negative_lesson
+            threading.Thread(
+                target=extract_negative_lesson,
+                args=(text, prior["task_type"], prior["result_summary"], chat_id),
+                daemon=True
+            ).start()
+            _send_msg(chat_id, "Got it — I'll avoid that next time.")
+            return
 
     job_id = str(uuid.uuid4())
     from notifier import send_briefing, send_message

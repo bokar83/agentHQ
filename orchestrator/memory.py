@@ -602,3 +602,58 @@ def extract_negative_lesson(
     except Exception as e:
         logger.warning(f"extract_negative_lesson failed (non-fatal): {e}")
         return False
+
+
+def list_lessons(task_type: str = None, limit: int = 10) -> list:
+    """
+    Return recent auto-extracted lessons from agent_learnings.
+    Excludes purged lessons. Optionally filter by task_type.
+    """
+    try:
+        conn = _pg_conn()
+        cur = conn.cursor()
+        if task_type:
+            cur.execute("""
+                SELECT id, task_type, learning_type, content, lesson_status, created_at
+                FROM agent_learnings
+                WHERE lesson_status != 'purged' AND task_type = %s
+                ORDER BY created_at DESC LIMIT %s
+            """, (task_type, limit))
+        else:
+            cur.execute("""
+                SELECT id, task_type, learning_type, content, lesson_status, created_at
+                FROM agent_learnings
+                WHERE lesson_status != 'purged'
+                ORDER BY created_at DESC LIMIT %s
+            """, (limit,))
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        return [
+            {
+                "id": r[0], "task_type": r[1], "learning_type": r[2],
+                "content": r[3], "lesson_status": r[4], "created_at": str(r[5])
+            }
+            for r in rows
+        ]
+    except Exception as e:
+        logger.warning(f"list_lessons failed: {e}")
+        return []
+
+
+def purge_lesson(lesson_id: int) -> bool:
+    """Mark a lesson as purged so it's excluded from future recall."""
+    try:
+        conn = _pg_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE agent_learnings SET lesson_status = 'purged' WHERE id = %s
+        """, (lesson_id,))
+        conn.commit()
+        updated = cur.rowcount
+        cur.close()
+        conn.close()
+        return updated > 0
+    except Exception as e:
+        logger.warning(f"purge_lesson failed: {e}")
+        return False

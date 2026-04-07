@@ -123,3 +123,64 @@ def test_memory_gated_task_types_constant_exists():
     assert "gws_task" not in MEMORY_GATED_TASK_TYPES
     assert "hunter_task" not in MEMORY_GATED_TASK_TYPES
     assert "chat" not in MEMORY_GATED_TASK_TYPES
+
+
+def test_is_praise_detects_explicit_praise():
+    """_is_praise returns True for short explicit praise messages."""
+    import sys, os
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'orchestrator'))
+    from orchestrator import _is_praise
+    assert _is_praise("good job") is True
+    assert _is_praise("Great work!") is True
+    assert _is_praise("well done") is True
+    assert _is_praise("perfect") is True
+    assert _is_praise("I want a research report on AI trends") is False
+    assert _is_praise("") is False
+
+
+def test_is_feedback_on_prior_job_within_window():
+    """_is_feedback_on_prior_job returns True when critique signals present and job is recent."""
+    import sys, os
+    from datetime import datetime, timedelta
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'orchestrator'))
+    from orchestrator import _is_feedback_on_prior_job, _last_completed_job
+
+    _last_completed_job["12345"] = {
+        "job_id": "abc",
+        "task_type": "research_report",
+        "task_request": "research AI trends",
+        "result_summary": "found 5 trends",
+        "delivered_at": datetime.utcnow() - timedelta(minutes=5),
+    }
+    assert _is_feedback_on_prior_job("the table wasn't done well", "12345") is True
+    assert _is_feedback_on_prior_job("I want a new report on fintech", "12345") is False
+
+
+def test_list_lessons_returns_rows():
+    """list_lessons() returns lesson rows from Postgres agent_learnings."""
+    with patch("memory._pg_conn") as mock_pg:
+        mock_conn = MagicMock()
+        mock_cur = MagicMock()
+        mock_cur.fetchall.return_value = [
+            (1, "research_report", "pattern", "Use 3-section structure.", "auto", "2026-04-07")
+        ]
+        mock_conn.cursor.return_value = mock_cur
+        mock_pg.return_value = mock_conn
+        from memory import list_lessons
+        rows = list_lessons(task_type="research_report")
+        assert len(rows) == 1
+        assert rows[0]["task_type"] == "research_report"
+        assert rows[0]["id"] == 1
+
+
+def test_purge_lesson_sets_status():
+    """purge_lesson() updates lesson_status to purged."""
+    with patch("memory._pg_conn") as mock_pg:
+        mock_conn = MagicMock()
+        mock_cur = MagicMock()
+        mock_cur.rowcount = 1
+        mock_conn.cursor.return_value = mock_cur
+        mock_pg.return_value = mock_conn
+        from memory import purge_lesson
+        result = purge_lesson(lesson_id=42)
+        assert result is True
