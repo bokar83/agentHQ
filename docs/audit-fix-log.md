@@ -13,3 +13,7 @@
 **Task 6 [2026-04-07]:** Replaced os.getcwd() fallback with Path(__file__)-relative path in skill.py:35. Undo: restore os.path.join(os.getcwd(), 'outputs', 'diagrams').
 
 **Task 7 [2026-04-07]:** Changed os.path.getctime to os.path.getmtime in send_diagram_email.py:50. Undo: change back to getctime.
+
+**Task 5 [2026-04-07]:** Added (... or '') guard on msg.content/.strip() at orchestrator.py:469,471. Undo: remove the 'or ""' wrappers.
+
+**Task 8 [2026-04-07]:** Removed dead elif _id_map branch in db.py:248-256. Undo: restore the elif block (was dead code).
