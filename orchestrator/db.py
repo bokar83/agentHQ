@@ -129,6 +129,14 @@ def sync_supabase_to_notion() -> int:
             return "Hunter"
         if "apollo" in s_lower:
             return "Apollo"
+        if "serper_linkedin" in s_lower or "linkedin" in s_lower:
+            return "LinkedIn"
+        if "serper" in s_lower:
+            return "Serper"
+        if "boubacarbarry" in s_lower:
+            return "boubacarbarry.com"
+        if "catalystworks" in s_lower:
+            return "catalystworks.consulting"
         return "Manual"
 
     # Build email -> page_id map from existing Notion CRM pages
