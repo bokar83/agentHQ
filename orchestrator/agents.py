@@ -31,6 +31,7 @@ from tools import (
     ORCHESTRATION_TOOLS,
     HUNTER_TOOLS,
     NOTION_STYLING_TOOLS,
+    NOTION_CAPTURE_TOOLS,
     GWS_TOOLS,
     voice_polisher_tool,
     scoreboard_tool,
@@ -831,6 +832,30 @@ def build_gws_agent() -> Agent:
         verbose=False,
         allow_delegation=False,
         max_iter=20
+    )
+
+
+def build_notion_capture_agent() -> Agent:
+    """Builds the Notion Capture Agent — writes and reads from the agentsHQ Ideas database."""
+    return Agent(
+        role="Ideas Curator",
+        goal=(
+            "Capture ideas, thoughts, and brain dumps into the agentsHQ Ideas Notion database. "
+            "Also retrieve and summarize existing ideas when Boubacar wants to review them. "
+            "Always confirm what was saved or retrieved."
+        ),
+        backstory=(
+            "You are Boubacar's personal ideas vault. Every thought, concept, and wild idea "
+            "he throws at you gets captured cleanly in Notion. You extract a crisp title from "
+            "whatever he says, preserve the full content, categorize it sensibly, and confirm. "
+            "When he wants to review his ideas, you pull them out, format them cleanly, "
+            "and highlight anything that looks ready to act on."
+        ),
+        tools=NOTION_CAPTURE_TOOLS,
+        llm=select_llm("planner", "moderate"),
+        verbose=False,
+        allow_delegation=False,
+        max_iter=5,
     )
 
 
