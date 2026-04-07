@@ -352,7 +352,13 @@ class NotionStylist:
             response.raise_for_status()
 
     def clear_page_content(self, page_id: str, preserve_databases: bool = True):
-        """Delete all child blocks from a page. Preserves child databases by default."""
+        """Delete all child blocks from a page.
+
+        Preserves child databases and child pages by default (preserve_databases=True).
+        Child pages are ALWAYS preserved regardless of preserve_databases, because
+        deleting a child_page block cascades to all its descendants silently in Notion.
+        If a child_page is encountered it is logged as a warning and skipped.
+        """
         cursor = None
         while True:
             params = {"page_size": 100}
@@ -360,7 +366,13 @@ class NotionStylist:
                 params["start_cursor"] = cursor
             result = self._get(f"blocks/{page_id}/children", params)
             for block in result.get("results", []):
-                if preserve_databases and block.get("type") == "child_database":
+                block_type = block.get("type")
+                # Always preserve child pages — deleting cascades to all descendants
+                if block_type == "child_page":
+                    title = (block.get("child_page") or {}).get("title", block["id"])
+                    print(f"[notion_stylist] WARNING: Skipping child_page '{title}' ({block['id']}) — cascade delete protection.")
+                    continue
+                if preserve_databases and block_type == "child_database":
                     continue
                 self._delete(f"blocks/{block['id']}")
             if not result.get("has_more"):
