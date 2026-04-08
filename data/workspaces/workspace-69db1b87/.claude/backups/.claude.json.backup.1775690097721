@@ -1,0 +1,66 @@
+{
+  "numStartups": 1,
+  "customApiKeyResponses": {
+    "approved": [
+      "CUqSUL9O8nw-uFVLGgAA"
+    ],
+    "rejected": []
+  },
+  "tipsHistory": {
+    "new-user-warmup": 1,
+    "plan-mode-for-complex-tasks": 1
+  },
+  "hasCompletedOnboarding": true,
+  "projects": {
+    "/home/coding-agent/workspace": {
+      "allowedTools": [
+        "WebSearch"
+      ],
+      "hasTrustDialogAccepted": true,
+      "hasTrustDialogHooksAccepted": true,
+      "mcpServers": {
+        "playwright": {
+          "type": "stdio",
+          "command": "npx",
+          "args": [
+            "-y",
+            "@playwright/mcp@0.0.70",
+            "--headless",
+            "--browser",
+            "chromium",
+            "--output-dir",
+            "/home/coding-agent/workspace/.tmp"
+          ],
+          "env": {}
+        }
+      },
+      "exampleFiles": [
+        "orchestrator.py",
+        "enrichment_tool.py",
+        "crm_tool.py",
+        "outreach_tool.py",
+        "forge.py"
+      ],
+      "exampleFilesGeneratedAt": 1775689812371,
+      "hasCompletedProjectOnboarding": true
+    }
+  },
+  "firstStartTime": "2026-04-08T23:09:56.433Z",
+  "opusProMigrationComplete": true,
+  "sonnet1m45MigrationComplete": true,
+  "migrationVersion": 11,
+  "userID": "575ef42fb925d8f770233752d964b4a4d9f8b176b077d84a7668ca7161c7902b",
+  "githubRepoPaths": {
+    "bokar83/agenthq": [
+      "/home/coding-agent/workspace"
+    ]
+  },
+  "changelogLastFetched": 1775689798021,
+  "opus1mMergeNoticeSeenCount": 1,
+  "lastReleaseNotesSeen": "2.1.92",
+  "clientDataCache": {},
+  "additionalModelOptionsCache": [],
+  "penguinModeOrgEnabled": true,
+  "officialMarketplaceAutoInstallAttempted": true,
+  "officialMarketplaceAutoInstalled": true
+}

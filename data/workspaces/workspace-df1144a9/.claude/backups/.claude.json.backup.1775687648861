@@ -1,0 +1,10 @@
+{
+  "hasCompletedOnboarding": true,
+  "projects": {
+    "/home/coding-agent/workspace": {
+      "allowedTools": ["WebSearch"],
+      "hasTrustDialogAccepted": true,
+      "hasTrustDialogHooksAccepted": true
+    }
+  }
+}
