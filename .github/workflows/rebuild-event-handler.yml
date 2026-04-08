@@ -51,8 +51,9 @@ jobs:
               # Install the new version into node_modules so local CLI stays current
               cd /project && npm install
 
-              # Commit any template changes from init
-              git -C /project add -A
+              # Commit only thepopebot template files (never runtime data)
+              git -C /project add package.json package-lock.json event-handler/ agent-job/ skills/library/ skills/active/ 2>/dev/null || true
+              git -C /project add -u
               if ! git -C /project diff --cached --quiet; then
                 git -C /project commit -m "chore: apply thepopebot init after upgrade"
                 git -C /project push origin main
