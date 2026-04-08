@@ -153,12 +153,23 @@ def query_memory(query: str, top_k: int = 3, collection: str = None) -> list:
         if not embedding:
             return []
 
-        results = client.search(
-            collection_name=_collection,
-            query_vector=embedding,
-            limit=top_k,
-            score_threshold=0.7
-        )
+        # Support both qdrant-client v1.x (search) and v1.7+ (query_points)
+        if hasattr(client, "query_points"):
+            from qdrant_client.models import ScoredPoint
+            response = client.query_points(
+                collection_name=_collection,
+                query=embedding,
+                limit=top_k,
+                score_threshold=0.7,
+            )
+            results = response.points
+        else:
+            results = client.search(
+                collection_name=_collection,
+                query_vector=embedding,
+                limit=top_k,
+                score_threshold=0.7,
+            )
 
         return [r.payload for r in results]
 
