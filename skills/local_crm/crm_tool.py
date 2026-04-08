@@ -36,6 +36,41 @@ def _notion_headers() -> dict:
     }
 
 
+def _sync_lead_status_to_notion(lead_name: str, status: str, contacted_date: str) -> bool:
+    """
+    Update an existing Notion CRM lead's Status and Last Contacted date.
+    Looks up the page by Name. Fails silently so CRM write is never blocked.
+    """
+    try:
+        r = httpx.post(
+            f"{_NOTION_API}/databases/{_NOTION_DB_ID}/query",
+            headers=_notion_headers(),
+            json={"filter": {"property": "Name", "title": {"equals": lead_name}}},
+            timeout=15,
+        )
+        if r.status_code != 200 or not r.json().get("results"):
+            logger.warning(f"Notion status sync: '{lead_name}' not found ({r.status_code})")
+            return False
+        page_id = r.json()["results"][0]["id"]
+        u = httpx.patch(
+            f"{_NOTION_API}/pages/{page_id}",
+            headers=_notion_headers(),
+            json={"properties": {
+                "Status": {"select": {"name": status}},
+                "Last Contacted": {"date": {"start": contacted_date}},
+            }},
+            timeout=15,
+        )
+        if u.status_code == 200:
+            logger.info(f"Notion status sync: '{lead_name}' -> {status}")
+            return True
+        logger.warning(f"Notion status sync failed for '{lead_name}' ({u.status_code})")
+        return False
+    except Exception as e:
+        logger.warning(f"Notion status sync error (non-blocking): {e}")
+        return False
+
+
 def _sync_lead_to_notion(lead_data: dict, lead_id: int) -> bool:
     """
     Create a page in the Notion CRM Leads database for a new lead.
@@ -320,25 +355,24 @@ def mark_outreach_sent() -> dict:
     Mark leads as messaged after you manually send their Gmail drafts.
 
     Finds leads that:
-      - have an outreach_draft interaction logged today or yesterday
-      - still have status = 'new' (not yet marked)
-      - last_contacted_at IS NULL
+      - email_drafted_at IS NOT NULL (a draft was generated)
+      - last_contacted_at IS NULL (not yet marked as sent)
+      - status = 'new'
 
     Sets status = 'messaged' and last_contacted_at = now for each.
+    Also syncs each lead to Notion (status -> contacted, Last Contacted -> today).
     Returns: { "marked": int, "leads": [{"id", "name", "email"}] }
     """
     try:
         conn = _get_conn()
         cur = conn.cursor()
         cur.execute("""
-            SELECT DISTINCT l.id, l.name, l.email
-            FROM leads l
-            JOIN lead_interactions li ON li.lead_id = l.id
-            WHERE li.interaction_type = 'outreach_draft'
-              AND li.created_at >= NOW() - INTERVAL '48 hours'
-              AND l.status = 'new'
-              AND l.last_contacted_at IS NULL
-            ORDER BY l.id
+            SELECT id, name, email
+            FROM leads
+            WHERE email_drafted_at IS NOT NULL
+              AND last_contacted_at IS NULL
+              AND status = 'new'
+            ORDER BY email_drafted_at ASC
         """)
         rows = [dict(r) for r in cur.fetchall()]
         if not rows:
@@ -358,6 +392,12 @@ def mark_outreach_sent() -> dict:
         conn.commit()
         cur.close()
         conn.close()
+
+        # Sync each lead to Notion
+        notion_date = now.strftime("%Y-%m-%d")
+        for r in rows:
+            _sync_lead_status_to_notion(r["name"], "contacted", notion_date)
+
         return {"marked": len(rows), "leads": rows}
     except Exception as e:
         logger.error(f"CRM mark_outreach_sent failed: {e}")

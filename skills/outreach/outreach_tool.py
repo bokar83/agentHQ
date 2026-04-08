@@ -153,6 +153,7 @@ def _get_eligible_leads(limit: int) -> list:
         WHERE email IS NOT NULL
           AND email != ''
           AND status = 'new'
+          AND email_drafted_at IS NULL
           AND last_contacted_at IS NULL
         ORDER BY created_at ASC
         LIMIT %s
@@ -232,8 +233,52 @@ def _create_draft(to_email: str, subject: str, body: str) -> Optional[str]:
         return None
 
 
-def _log_and_update(lead_id: int, subject: str):
-    """Log outreach_draft interaction and update lead status + last_contacted_at."""
+def _sync_notion_contacted(notion_db_id: str, lead_name: str, contacted_date: str):
+    """Update a lead's Notion page to contacted + set Last Contacted. Fails silently."""
+    try:
+        import httpx as _httpx
+        import os as _os
+        token = _os.environ.get("NOTION_SECRET", "")
+        if not token:
+            logger.warning("Outreach: NOTION_SECRET not set, skipping Notion sync.")
+            return
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Notion-Version": "2022-06-28",
+            "Content-Type": "application/json",
+        }
+        r = _httpx.post(
+            f"https://api.notion.com/v1/databases/{notion_db_id}/query",
+            headers=headers,
+            json={"filter": {"property": "Name", "title": {"equals": lead_name}}},
+            timeout=15,
+        )
+        if r.status_code != 200 or not r.json().get("results"):
+            logger.warning(f"Outreach Notion sync: '{lead_name}' not found ({r.status_code})")
+            return
+        page_id = r.json()["results"][0]["id"]
+        u = _httpx.patch(
+            f"https://api.notion.com/v1/pages/{page_id}",
+            headers=headers,
+            json={"properties": {
+                "Status": {"select": {"name": "contacted"}},
+                "Last Contacted": {"date": {"start": contacted_date}},
+            }},
+            timeout=15,
+        )
+        if u.status_code == 200:
+            logger.info(f"Outreach Notion sync: '{lead_name}' updated to contacted.")
+        else:
+            logger.warning(f"Outreach Notion sync: update failed for '{lead_name}' ({u.status_code})")
+    except Exception as e:
+        logger.warning(f"Outreach Notion sync error (non-blocking): {e}")
+
+
+_NOTION_DB_ID = "619a842a-0e04-4cb3-8d17-19ec67c130f0"
+
+
+def _log_and_update(lead_id: int, subject: str, lead_name: str = ""):
+    """Log outreach_draft interaction and stamp email_drafted_at. Status stays 'new' until sent."""
     try:
         conn = _get_conn()
         cur = conn.cursor()
@@ -241,16 +286,17 @@ def _log_and_update(lead_id: int, subject: str):
             INSERT INTO lead_interactions (lead_id, interaction_type, content)
             VALUES (%s, 'outreach_draft', %s)
         """, (lead_id, subject))
+        now = datetime.now(timezone.utc)
         cur.execute("""
             UPDATE leads
-            SET status = 'messaged',
-                last_contacted_at = %s,
+            SET email_drafted_at = %s,
                 updated_at = %s
             WHERE id = %s
-        """, (datetime.now(timezone.utc), datetime.now(timezone.utc), lead_id))
+        """, (now, now, lead_id))
         conn.commit()
         cur.close()
         conn.close()
+        logger.info(f"Outreach: draft stamped for lead {lead_id} ({lead_name}), awaiting send.")
     except Exception as e:
         logger.error(f"Outreach: CRM update failed for lead {lead_id}: {e}")
 
@@ -294,7 +340,7 @@ def run_outreach(contact_all: bool = False) -> dict:
         body = TEMPLATE.format(first_name=first_name)
         draft_id = _create_draft(email, SUBJECT, body)
         if draft_id:
-            _log_and_update(lead["id"], SUBJECT)
+            _log_and_update(lead["id"], SUBJECT, lead_name=name)
             drafted += 1
             results.append({
                 "name": name,
