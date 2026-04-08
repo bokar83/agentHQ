@@ -170,6 +170,7 @@ services:
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
       - HEALTH_REPORT_TOKEN=${HEALTH_REPORT_TOKEN}
+      - ORCHESTRATOR_API_KEY=${ORCHESTRATOR_API_KEY}
     volumes:
       - ./agent_outputs:/app/outputs
       - ./logs:/app/logs
