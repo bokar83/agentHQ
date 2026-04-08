@@ -57,4 +57,26 @@ is the next evolution. No timeline set.
 
 ---
 
+## Antigravity Permission & Environment Alignment
+
+**What it is:**
+Updating all agent instructions and system configurations to align with the new unified 
+permission model (Allow/Deny/Ask) and path constraints.
+
+**Why it matters:**
+- **Literal Absolute Paths:** Antigravity now requires absolute paths (no `~` or globs) 
+  for file operations. agentsHQ currently uses relative paths in many places.
+- **Autonomy via Allowlist:** Pre-populating the Antigravity "Allow" list with core 
+  prefixes (`command(npm)`, `command(git)`, `read_file(d:/Ai_Sandbox/agentsHQ/)`) 
+  is necessary to maintain our "Output-first" principle without constant manual prompts.
+- **Strict Mode Awareness:** Managing the tradeoffs between security (Strict Mode) 
+  and speed in our autonomous loops.
+
+**Tasks when ready:**
+1. Update `AGENT_INSTRUCTIONS.md` with "Absolute Path First" rule.
+2. Provide a "Setup Guide" artifact for user permission configuration.
+3. Review `orchestrator/tools.py` for relative path resolution bugs.
+
+---
+
 _Last updated: 2026-04-08_
