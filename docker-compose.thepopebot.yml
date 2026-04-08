@@ -1,0 +1,90 @@
+# thepopebot sidecar — isolated from main agentsHQ stack
+# Deploy:   docker-compose -f docker-compose.thepopebot.yml up -d
+# Rollback: docker-compose -f docker-compose.thepopebot.yml down
+#
+# Traefik routing handled by existing root-traefik-1 (ports 80/443).
+# This file does NOT include a Traefik service.
+# Set APP_HOSTNAME in thepopebot/.env before deploying.
+
+services:
+
+  event-handler:
+    image: stephengpope/thepopebot:event-handler-${THEPOPEBOT_VERSION}
+    container_name: thepopebot-event-handler
+    restart: unless-stopped
+    expose:
+      - "3001"
+    environment:
+      - PORT=3001
+      - APP_URL=${APP_URL}
+      - APP_HOSTNAME=${APP_HOSTNAME}
+      - AUTH_SECRET=${AUTH_SECRET}
+      - AUTH_TRUST_HOST=${AUTH_TRUST_HOST}
+      - DATABASE_PATH=${DATABASE_PATH}
+      - GH_OWNER=${GH_OWNER}
+      - GH_REPO=${GH_REPO}
+      - GH_TOKEN=${GH_TOKEN}
+      - GH_WEBHOOK_SECRET=${GH_WEBHOOK_SECRET}
+      - LLM_PROVIDER=${LLM_PROVIDER}
+      - LLM_MODEL=${LLM_MODEL}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - CODING_AGENT=${CODING_AGENT}
+      - CODING_AGENT_CLAUDE_CODE_AUTH=${CODING_AGENT_CLAUDE_CODE_AUTH}
+      - ORCHESTRATOR_API_KEY=${ORCHESTRATOR_API_KEY}
+      - THEPOPEBOT_VERSION=${THEPOPEBOT_VERSION}
+    volumes:
+      - /root/agentsHQ/thepopebot:/project:ro
+      - /root/agentsHQ/thepopebot/event-handler:/app/event-handler
+      - /root/agentsHQ/thepopebot/agent-job:/app/agent-job
+      - /root/agentsHQ/thepopebot/skills:/app/skills
+      - /root/agentsHQ/thepopebot/.env:/app/.env
+      - /root/agentsHQ/thepopebot/data:/app/data
+      - /root/agentsHQ/thepopebot/logs:/app/logs
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.thepopebot.rule=Host(`${APP_HOSTNAME}`)"
+      - "traefik.http.routers.thepopebot.tls=true"
+      - "traefik.http.routers.thepopebot.entrypoints=web,websecure"
+      - "traefik.http.routers.thepopebot.tls.certresolver=mytlschallenge"
+      - "traefik.http.services.thepopebot.loadbalancer.server.port=3001"
+    networks:
+      - orc-net
+      - thepopebot-net
+
+  litellm:
+    image: ghcr.io/berriai/litellm:main-stable
+    container_name: thepopebot-litellm
+    restart: unless-stopped
+    expose:
+      - "4000"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    networks:
+      - thepopebot-net
+
+  runner:
+    image: myoung34/github-runner:latest
+    container_name: thepopebot-runner
+    restart: unless-stopped
+    environment:
+      - RUNNER_SCOPE=repo
+      - REPO_URL=https://github.com/bokar83/agentHQ
+      - GITHUB_TOKEN=${GH_TOKEN}
+      - RUNNER_NAME=agentshq-vps-runner
+      - RUNNER_WORKDIR=/tmp/runner
+      - LABELS=self-hosted
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - runner_work:/tmp/runner
+    networks:
+      - thepopebot-net
+
+networks:
+  orc-net:
+    external: true
+  thepopebot-net:
+    driver: bridge
+
+volumes:
+  runner_work:
