@@ -74,10 +74,10 @@ services:
     environment:
       - RUNNER_SCOPE=repo
       - REPO_URL=https://github.com/bokar83/agentHQ
-      - GITHUB_TOKEN=${GH_TOKEN}
+      - ACCESS_TOKEN=${GH_TOKEN}
       - RUNNER_NAME=agentshq-vps-runner
       - RUNNER_WORKDIR=/tmp/runner
-      - LABELS=self-hosted
+      - LABELS=self-hosted,vps
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - runner_work:/tmp/runner
