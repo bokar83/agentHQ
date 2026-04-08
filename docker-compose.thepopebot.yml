@@ -49,8 +49,9 @@ services:
       - "traefik.http.routers.thepopebot.tls.certresolver=mytlschallenge"
       - "traefik.http.services.thepopebot.loadbalancer.server.port=3001"
     networks:
-      - orc-net
+      - agentshq_orc-net
       - thepopebot-net
+      - root_default
 
   litellm:
     image: ghcr.io/berriai/litellm:main-stable
@@ -81,7 +82,9 @@ services:
       - thepopebot-net
 
 networks:
-  orc-net:
+  agentshq_orc-net:
+    external: true
+  root_default:
     external: true
   thepopebot-net:
     driver: bridge
