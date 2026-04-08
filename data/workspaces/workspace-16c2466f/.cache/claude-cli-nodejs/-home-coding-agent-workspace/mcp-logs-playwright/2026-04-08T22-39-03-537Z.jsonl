@@ -1,4 +1,0 @@
-{"debug":"Starting connection with timeout of 30000ms","timestamp":"2026-04-08T22:39:32.447Z","sessionId":"67695deb-1143-4116-b370-421a6d55363b","cwd":"/home/coding-agent/workspace"}
-{"debug":"Successfully connected (transport: stdio) in 3532ms","timestamp":"2026-04-08T22:39:35.974Z","sessionId":"67695deb-1143-4116-b370-421a6d55363b","cwd":"/home/coding-agent/workspace"}
-{"debug":"Connection established with capabilities: {\"hasTools\":true,\"hasPrompts\":false,\"hasResources\":false,\"hasResourceSubscribe\":false,\"serverVersion\":{\"name\":\"Playwright\",\"version\":\"1.60.0-alpha-1774999321000\"}}","timestamp":"2026-04-08T22:39:35.974Z","sessionId":"67695deb-1143-4116-b370-421a6d55363b","cwd":"/home/coding-agent/workspace"}
-{"debug":"Channel notifications skipped: server did not declare claude/channel capability","timestamp":"2026-04-08T22:39:35.986Z","sessionId":"67695deb-1143-4116-b370-421a6d55363b","cwd":"/home/coding-agent/workspace"}

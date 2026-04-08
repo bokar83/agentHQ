@@ -91,3 +91,16 @@ secrets/
 node_modules
 output
 search_output.txt
+
+# ── thepopebot runtime data (SQLite, workspaces, sessions) ───
+# These are committed by the rebuild workflow from inside the container
+# where /project = /root/agentsHQ/thepopebot, so paths are repo-root relative
+data/db/
+data/workspaces/
+data/clusters/
+.tmp/
+thepopebot/data/db/
+thepopebot/data/workspaces/
+thepopebot/data/clusters/
+thepopebot/.tmp/
+thepopebot/logs/
