@@ -57,7 +57,7 @@ services:
       - root_default
 
   litellm:
-    image: ghcr.io/berriai/litellm:main-stable
+    image: ghcr.io/berriai/litellm@sha256:9e1536c6a9219519f024f221706b20b012ca5176988164798adc5c7fe011e5d5
     container_name: thepopebot-litellm
     restart: unless-stopped
     expose:
