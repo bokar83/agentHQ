@@ -1,0 +1,60 @@
+# agentsHQ — Future Enhancements Backlog
+
+This file tracks enhancements that are architecturally sound but not yet prioritized.
+Add here instead of letting ideas get lost. Review at the start of each planning session.
+
+---
+
+## thepopebot Integration — Phase 5: Bidirectional Conversation Sync
+
+**What it is:**
+Full bidirectional sync between thepopebot's browser chat history (SQLite) and the agentsHQ
+orchestrator's PostgreSQL session memory. Today (after Phase 1-4), browser sessions and Telegram
+sessions share a `session_key` namespace but write to separate databases.
+
+**Why it matters:**
+- Start a task from Telegram, pick it up in the browser with full context
+- Start a task in the browser, receive a Telegram follow-up that knows what happened
+- Single unified conversation thread across all access methods
+
+**Options when you're ready to build:**
+1. **One-direction bridge (easy, 1 day):** Browser sessions POST a summary to `/run` with the
+   same `session_key` as the Telegram session after completion. Orchestrator memory accumulates
+   context. No database sync required.
+2. **Shared session store (medium, 3-5 days):** thepopebot writes to PostgreSQL instead of SQLite
+   by swapping its `DATABASE_PATH` for a Postgres-compatible ORM adapter. Both Telegram and
+   browser queries read from the same store.
+3. **Sync daemon (heavy, 1 week+):** A background process reconciles SQLite and PostgreSQL on
+   an interval. Most resilient but most complex. Only justified if thepopebot's SQLite must stay
+   as-is (e.g., upstream package constraints).
+
+**Recommendation when ready:** Start with option 1 (minimal risk, immediate value), evaluate
+whether option 2 is worth it after 30 days of real usage.
+
+**Dependencies:** thepopebot Phase 1-3 must be live and stable first.
+
+---
+
+## Memory Architecture: Cross-Agent Shared Memory
+
+See: `docs/memory/MEMORY.md` → "Agent Memory Architecture" entry
+
+Must build before system scales past ~20 task types. Currently per-session only.
+
+---
+
+## WhatsApp Bridge (waha)
+
+Commented out in `docker-compose.yml`. Wire up when WhatsApp access is a real need.
+Config is already written -- just uncomment and test.
+
+---
+
+## Metaclaw: Reinforcement Learning Phase
+
+Currently running in `skills_only` mode. RL phase (adaptive skill weighting based on outcomes)
+is the next evolution. No timeline set.
+
+---
+
+_Last updated: 2026-04-08_
