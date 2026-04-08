@@ -32,6 +32,8 @@ services:
       - CODING_AGENT_CLAUDE_CODE_AUTH=${CODING_AGENT_CLAUDE_CODE_AUTH}
       - ORCHESTRATOR_API_KEY=${ORCHESTRATOR_API_KEY}
       - THEPOPEBOT_VERSION=${THEPOPEBOT_VERSION}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - CUSTOM_OPENAI_BASE_URL=${CUSTOM_OPENAI_BASE_URL}
     volumes:
       - /root/agentsHQ/thepopebot:/project:ro
       - /root/agentsHQ/thepopebot/event-handler:/app/event-handler
@@ -48,6 +50,7 @@ services:
       - "traefik.http.routers.thepopebot.entrypoints=web,websecure"
       - "traefik.http.routers.thepopebot.tls.certresolver=mytlschallenge"
       - "traefik.http.services.thepopebot.loadbalancer.server.port=3001"
+      - "traefik.docker.network=root_default"
     networks:
       - agentshq_orc-net
       - thepopebot-net
