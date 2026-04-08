@@ -184,3 +184,13 @@ def test_purge_lesson_sets_status():
         from memory import purge_lesson
         result = purge_lesson(lesson_id=42)
         assert result is True
+
+
+def test_save_learning_tool_exists_and_is_wired():
+    """SaveLearningTool exists in tools.py and is in MEMORY_TOOLS bundle."""
+    import sys, os
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'orchestrator'))
+    from tools import SaveLearningTool, MEMORY_TOOLS
+    tool = SaveLearningTool()
+    assert tool.name == "save_learning"
+    assert any(isinstance(t, SaveLearningTool) for t in MEMORY_TOOLS)
