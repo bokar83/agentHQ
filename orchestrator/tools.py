@@ -651,17 +651,54 @@ class QueryMemoryTool(BaseTool):
             results = query_memory(query, top_k=3)
             if not results:
                 return "No relevant memory found for this query."
-            
+
             output = "Relevant past work found:\n\n"
             for i, r in enumerate(results, 1):
                 output += f"{i}. {r.get('summary', 'No summary')}\n"
                 output += f"   Task type: {r.get('task_type', 'unknown')}\n"
                 output += f"   Date: {r.get('date', 'unknown')}\n\n"
             return output
-            
+
         except Exception as e:
             logger.warning(f"Memory query failed (non-fatal): {e}")
             return "Memory unavailable — proceeding without past context."
+
+
+class SaveLearningTool(BaseTool):
+    """
+    Saves a lesson or pattern to the agent learning memory.
+    Use this when you identify a reusable approach, pattern, or preference
+    that should be remembered for future runs of this task type.
+    """
+    name: str = "save_learning"
+    description: str = (
+        "Save a lesson or reusable pattern to long-term agent memory. "
+        "Use when you identify an approach that worked well and should be "
+        "remembered for future tasks of this type. "
+        "Input: JSON string with fields: task_type (str), lesson (str), "
+        "learning_type (str, one of: pattern, preference, lesson)."
+    )
+
+    def _run(self, input_str: str) -> str:
+        try:
+            import json as _json
+            data = _json.loads(input_str) if isinstance(input_str, str) else input_str
+            task_type = data.get("task_type", "unknown")
+            lesson = data.get("lesson", "")
+            learning_type = data.get("learning_type", "pattern")
+            if not lesson:
+                return "No lesson text provided — nothing saved."
+            from memory import extract_and_save_learnings
+            ok = extract_and_save_learnings(
+                task_request=lesson,
+                task_type=task_type,
+                result_summary=lesson,
+                learning_type=learning_type,
+            )
+            return "Lesson saved to memory." if ok else "Learning save skipped (MEMORY_LEARNING_ENABLED not set or extraction failed)."
+        except Exception as e:
+            logger.warning(f"SaveLearningTool failed: {e}")
+            return f"Save failed: {e}"
 
 
 class VoicePolisherTool(BaseTool):
@@ -1203,6 +1240,7 @@ class EnrichLeadsTool(BaseTool):
 enrich_leads_tool = EnrichLeadsTool()
 
 RESEARCH_TOOLS = [search_tool, file_reader, QueryMemoryTool()]
+MEMORY_TOOLS = [QueryMemoryTool(), SaveLearningTool()]
 SCRAPING_TOOLS = [FirecrawlScrapeTool(), FirecrawlCrawlTool(), FirecrawlSearchTool()]
 WRITING_TOOLS = [file_writer, SaveOutputTool(), voice_polisher_tool]
 CODE_TOOLS = [code_interpreter, file_writer, file_reader, SaveOutputTool(), CLIHubSearchTool()]
