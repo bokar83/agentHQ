@@ -1,8 +1,0 @@
-{"debug":"Starting connection with timeout of 30000ms","timestamp":"2026-04-08T22:34:09.824Z","sessionId":"d341ded4-6b3f-4be7-86ef-de2f24bde5aa","cwd":"/home/coding-agent/workspace"}
-{"debug":"Successfully connected (transport: stdio) in 2526ms","timestamp":"2026-04-08T22:34:12.344Z","sessionId":"d341ded4-6b3f-4be7-86ef-de2f24bde5aa","cwd":"/home/coding-agent/workspace"}
-{"debug":"Connection established with capabilities: {\"hasTools\":true,\"hasPrompts\":false,\"hasResources\":false,\"hasResourceSubscribe\":false,\"serverVersion\":{\"name\":\"Playwright\",\"version\":\"1.60.0-alpha-1774999321000\"}}","timestamp":"2026-04-08T22:34:12.344Z","sessionId":"d341ded4-6b3f-4be7-86ef-de2f24bde5aa","cwd":"/home/coding-agent/workspace"}
-{"debug":"Sending SIGINT to MCP server process","timestamp":"2026-04-08T22:34:12.802Z","sessionId":"d341ded4-6b3f-4be7-86ef-de2f24bde5aa","cwd":"/home/coding-agent/workspace"}
-{"debug":"SIGINT failed, sending SIGTERM to MCP server process","timestamp":"2026-04-08T22:34:12.903Z","sessionId":"d341ded4-6b3f-4be7-86ef-de2f24bde5aa","cwd":"/home/coding-agent/workspace"}
-{"debug":"STDIO connection closed after 0s (cleanly)","timestamp":"2026-04-08T22:34:12.945Z","sessionId":"d341ded4-6b3f-4be7-86ef-de2f24bde5aa","cwd":"/home/coding-agent/workspace"}
-{"debug":"Cleared connection cache for reconnection","timestamp":"2026-04-08T22:34:12.945Z","sessionId":"d341ded4-6b3f-4be7-86ef-de2f24bde5aa","cwd":"/home/coding-agent/workspace"}
-{"debug":"MCP server process exited cleanly","timestamp":"2026-04-08T22:34:12.955Z","sessionId":"d341ded4-6b3f-4be7-86ef-de2f24bde5aa","cwd":"/home/coding-agent/workspace"}
