@@ -1170,6 +1170,85 @@ class NotionQueryIdeasTool(BaseTool):
 NOTION_CAPTURE_TOOLS = [NotionCreateIdeaTool(), NotionQueryIdeasTool()]
 
 
+# Known Notion database IDs (hardcoded so agents don't need to search)
+NOTION_TASK_DB_ID = "249bcf1a302980739c26c61cad212477"
+
+
+class NotionQueryTasksTool(BaseTool):
+    """Queries the Notion task database for open, overdue, or due-today tasks."""
+    name: str = "query_notion_tasks"
+    description: str = (
+        "Query the Notion task database for open tasks. "
+        "Input: JSON with optional 'due_on_or_before' (ISO date string, e.g. '2026-04-09') "
+        "to filter tasks due on or before that date. "
+        "Returns a formatted list of tasks with title, status, and due date."
+    )
+
+    def _run(self, input_data: str = "{}") -> str:
+        try:
+            data = {}
+            if input_data:
+                try:
+                    data = json.loads(input_data) if isinstance(input_data, str) else input_data
+                except Exception:
+                    pass
+            from skills.notion_skill.notion_tool import query_database
+            due_filter = data.get("due_on_or_before", "")
+            filter_body = None
+            if due_filter:
+                filter_body = {
+                    "and": [
+                        {
+                            "property": "Due",
+                            "date": {"on_or_before": due_filter},
+                        },
+                        {
+                            "property": "Status",
+                            "status": {"does_not_equal": "Done"},
+                        },
+                    ]
+                }
+            else:
+                filter_body = {
+                    "property": "Status",
+                    "status": {"does_not_equal": "Done"},
+                }
+            results = query_database(NOTION_TASK_DB_ID, filter_body=filter_body, sorts=[
+                {"property": "Due", "direction": "ascending"}
+            ])
+            if not results:
+                return "No open tasks found matching the criteria."
+            lines = [f"Open Tasks ({len(results)} found):\n"]
+            for r in results:
+                props = r.get("properties", {})
+                # Title
+                title_prop = props.get("Task", props.get("Name", props.get("title", {})))
+                title = ""
+                if isinstance(title_prop, dict):
+                    title_list = title_prop.get("title", [])
+                    if title_list:
+                        title = title_list[0].get("plain_text", "Untitled")
+                # Status
+                status_prop = props.get("Status", {})
+                status = ""
+                if isinstance(status_prop, dict):
+                    s = status_prop.get("status", {})
+                    status = s.get("name", "") if s else ""
+                # Due date
+                due_prop = props.get("Due", {})
+                due_str = ""
+                if isinstance(due_prop, dict):
+                    d = due_prop.get("date", {})
+                    due_str = d.get("start", "") if d else ""
+                lines.append(f"- [{status}] {title or 'Untitled'}" + (f" — due {due_str}" if due_str else ""))
+            return "\n".join(lines)
+        except Exception as e:
+            return f"Error querying tasks: {e}"
+
+
+NOTION_TASK_TOOLS = [NotionQueryTasksTool()]
+
+
 # ── Tool sets by category ─────────────────────────────────────
 # These are convenience bundles used in agents.py
 

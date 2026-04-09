@@ -1750,6 +1750,56 @@ def build_notion_capture_crew(user_request: str) -> Crew:
     )
 
 
+def build_notion_tasks_crew(user_request: str) -> Crew:
+    """
+    Crew for: notion_tasks
+    Single-agent crew that queries the Notion task database for open/overdue/due-today tasks.
+    """
+    from agents import build_notion_capture_agent
+    from tools import NOTION_TASK_TOOLS
+    from datetime import date
+
+    agent = build_notion_capture_agent()
+    agent.tools = NOTION_TASK_TOOLS
+    agent.role = "Task Manager"
+    agent.goal = (
+        "Query the Notion task database and return open, overdue, or due-today tasks. "
+        "Always filter by due date when the user specifies one."
+    )
+
+    today = date.today().isoformat()
+    due_filter = today  # default: due on or before today
+
+    task_description = (
+        f"The user wants to see their Notion tasks.\n\n"
+        f"REQUEST: {user_request}\n\n"
+        f"Steps:\n"
+        f"1. Call query_notion_tasks with input: {{\"due_on_or_before\": \"{due_filter}\"}} "
+        f"to get all open tasks due on or before {due_filter}.\n"
+        f"2. Format the results clearly: show task title, status, and due date.\n"
+        f"3. Group into: OVERDUE (due before today) and DUE TODAY.\n"
+        f"4. If no tasks found, say so clearly."
+    )
+    expected_output = (
+        "A clean formatted list of open tasks from Notion grouped by OVERDUE and DUE TODAY, "
+        "with title, status, and due date for each task."
+    )
+
+    task = Task(
+        description=task_description,
+        expected_output=expected_output,
+        agent=agent,
+    )
+
+    return Crew(
+        agents=[agent],
+        tasks=[task],
+        process=Process.sequential,
+        verbose=False,
+        memory=False,
+    )
+
+
 def build_crm_outreach_crew(user_request: str) -> Crew:
     """
     Crew for: crm_outreach
@@ -1918,6 +1968,7 @@ CREW_REGISTRY = {
     "news_brief_crew":        build_news_brief_crew,
     "gws_crew":               build_gws_crew,
     "notion_capture_crew":    build_notion_capture_crew,
+    "notion_tasks_crew":      build_notion_tasks_crew,
     "crm_outreach_crew":      build_crm_outreach_crew,
     "mark_outreach_sent_crew": build_mark_outreach_sent_crew,
     "enrich_leads_crew":       build_enrich_leads_crew,

@@ -137,6 +137,20 @@ TASK_TYPES = {
         "keywords": ["enrich leads", "find emails", "find phones", "missing emails", "run enrichment"],
         "crew": "enrich_leads_crew",
     },
+    "notion_tasks": {
+        "description": (
+            "Query the Notion task database for open, overdue, or due-today tasks. "
+            "Use when the user asks about tasks, to-dos, what's due, what's overdue, "
+            "or anything about the task database in Notion. "
+            "Do NOT use for saving new tasks — that is notion_capture."
+        ),
+        "keywords": [
+            "open tasks", "past due", "due today", "overdue tasks", "task database",
+            "what tasks", "show tasks", "list tasks", "my tasks", "notion tasks",
+            "what's due", "whats due", "due this week", "pending tasks",
+        ],
+        "crew": "notion_tasks_crew",
+    },
     "notion_capture": {
         "description": (
             "Capture an idea, brain dump, thought, or note into the agentsHQ Ideas Notion database. "
@@ -238,6 +252,16 @@ def _keyword_shortcut(user_request: str) -> Optional[str]:
     Checked in priority order — more specific rules first.
     """
     lower = user_request.lower()
+
+    # notion_tasks — query the task database for open/overdue/due-today tasks
+    notion_task_triggers = [
+        "open tasks", "past due", "due today", "overdue tasks", "task database",
+        "what tasks", "show tasks", "list tasks", "my tasks", "notion tasks",
+        "what's due", "whats due", "due this week", "pending tasks",
+        "tasks in notion", "notion task",
+    ]
+    if any(t in lower for t in notion_task_triggers):
+        return "notion_tasks"
 
     # notion_capture — add idea, review ideas, brain dump (must run before chat prefix check)
     notion_capture_triggers = [
