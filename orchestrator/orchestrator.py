@@ -1796,10 +1796,11 @@ async def run_task_async(request: TaskRequest, background_tasks: BackgroundTasks
                     session_key=request.session_key
                 )
 
+            result_text = result.get("result") or result.get("deliverable") or result.get("summary") or result.get("output") or ""
             update_job(
                 job_id=job_id,
                 status="completed",
-                result=result["result"],
+                result=result_text,
                 task_type=result.get("task_type", "unknown"),
                 files_created=result.get("files_created", []),
                 execution_time=result.get("execution_time", 0.0)
@@ -1813,7 +1814,7 @@ async def run_task_async(request: TaskRequest, background_tasks: BackgroundTasks
                     _requests.post(request.callback_url, json={
                         "job_id": job_id,
                         "status": "completed",
-                        "result": result["result"],
+                        "result": result_text,
                         "task_type": result.get("task_type", "unknown"),
                         "files_created": result.get("files_created", []),
                         "execution_time": result.get("execution_time", 0.0),
