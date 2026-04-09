@@ -22,17 +22,21 @@ import sys
 import base64
 import json
 import logging
+import importlib.util
 from datetime import datetime, timezone
 from email.mime.text import MIMEText
 from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# -- Email template -- single source of truth ---------------------
+# -- Email template -- loaded by absolute path, no sys.path dependency ----
 # To change the template, edit ONLY: templates/email/cold_outreach.py
-if "/app" not in sys.path:
-    sys.path.insert(0, "/app")
-from templates.email.cold_outreach import SUBJECT, BODY as TEMPLATE
+_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'templates', 'email', 'cold_outreach.py')
+_spec = importlib.util.spec_from_file_location('cold_outreach', os.path.abspath(_TEMPLATE_PATH))
+_mod = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_mod)
+SUBJECT = _mod.SUBJECT
+TEMPLATE = _mod.BODY
 
 OUTREACH_ACCOUNT = "catalystworks.ai@gmail.com"
 
