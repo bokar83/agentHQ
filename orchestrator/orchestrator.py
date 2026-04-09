@@ -1847,6 +1847,39 @@ def get_job_status(job_id: str):
     )
 
 
+class SyncSessionRequest(BaseModel):
+    session_key: str                # Telegram chat_id or project-scoped key
+    summary: str                    # What happened in the browser session
+    source: str = "browser"         # "browser" | "telegram" | "api"
+    notify_telegram: bool = False   # If true, send a Telegram notification
+
+
+@app.post("/sync-session", dependencies=[Depends(verify_api_key)])
+async def sync_session(req: SyncSessionRequest):
+    """
+    Write a browser session summary into the orchestrator's PostgreSQL conversation
+    history under the given session_key. This is Phase 5 Option 1: one-direction bridge.
+
+    thepopebot calls this at the end of a conversation to seed the orchestrator memory
+    so Telegram pick-up works with full context.
+
+    No crew is spun up. No LLM call. Just a fast PostgreSQL write + optional Telegram ping.
+    """
+    from memory import save_conversation_turn
+    label = f"[Browser session via {req.source}]"
+    content = f"{label}\n{req.summary}"
+    save_conversation_turn(req.session_key, "assistant", content)
+    save_conversation_turn(req.session_key, "user", f"(Context synced from {req.source} — ready to continue)")
+
+    if req.notify_telegram:
+        telegram_chat_id = req.session_key.split(":")[0]
+        from notifier import send_message as _send
+        _send(telegram_chat_id, f"Browser session saved. Pick up here anytime — I remember what happened.")
+
+    logger.info(f"sync-session: wrote {len(req.summary)} chars for session_key={req.session_key} source={req.source}")
+    return {"success": True, "session_key": req.session_key, "chars_written": len(req.summary)}
+
+
 # ── Run directly for testing ───────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
