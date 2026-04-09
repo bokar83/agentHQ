@@ -25,17 +25,22 @@ Where is your margin actually going?
 ```text
 Hi [First Name],
 
-I'll keep this simple.
+Most businesses aren't losing margin to bad strategy. They're losing it to one bottleneck: a handoff, an approval loop, a pricing gap quietly taxing everything downstream.
 
-Most businesses aren't losing margin to bad strategy. They're losing it to one bottleneck that often goes unnamed: a handoff, an approval loop, a pricing gap quietly taxing everything downstream.
+The frustrating part: it's almost always findable. And almost always fixable faster than people expect.
 
-I'm Boubacar Barry, founder of Catalyst Works. I work with the people running the business day to day to find that bottleneck and build a clear path to removing it. Over 15 years working with leadership teams across three continents, the constraint is almost always findable, and almost always fixable faster than people expect.
+I'm Boubacar Barry, founder of Catalyst Works. I spent 15 years working with leadership teams across three continents watching the same pattern repeat: the thing slowing the business down is rarely what anyone is looking at.
 
-I'd love a quick 20-minute conversation to hear what's going on in your business and see if there's something worth exploring together. No pitch, no prep required on your end.
+What I do differently: I don't hand you a report. I find the constraint and build a clear, executable path to removing it. One that the people running the business can actually use without me in the room.
 
-Worth a conversation?
+One question before I ask for anything:
 
-Boubacar
+Is there a place in your operation right now where work slows down or disappears that you haven't been able to fully fix?
+
+If yes, worth a reply.
+
+Boubacar Barry
+Founder, Catalyst Works
 catalystworks.consulting
 ```
 

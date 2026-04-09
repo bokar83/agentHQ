@@ -385,7 +385,7 @@ def build_planner_agent() -> Agent:
         past work before planning.""",
         verbose=False,
         allow_delegation=False,
-        tools=[QueryMemoryTool(), search_tool],
+        tools=[QueryMemoryTool(), search_tool] + ORCHESTRATION_TOOLS,
         llm=select_llm("planner", "moderate"),
         max_iter=3
     )
@@ -455,7 +455,7 @@ def build_app_builder_agent() -> Agent:
         systems, and productivity tools. Clean, maintainable code.""",
         verbose=False,
         allow_delegation=False,
-        tools=CODE_TOOLS,
+        tools=CODE_TOOLS + ORCHESTRATION_TOOLS,
         llm=select_llm("coder", "complex"),
         max_iter=6
     )
