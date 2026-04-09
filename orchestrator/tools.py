@@ -33,9 +33,10 @@ from crewai_tools import (
 )
 try:
     from crewai_tools import CodeInterpreterTool
+    _code_interpreter_available = True
 except ImportError:
-    class CodeInterpreterTool:
-        pass
+    CodeInterpreterTool = None  # type: ignore
+    _code_interpreter_available = False
 from crewai.tools import BaseTool
 from pydantic import Field
 
@@ -111,8 +112,8 @@ search_tool = SerperDevTool()
 file_writer = FileWriterTool()
 file_reader = FileReadTool()
 
-# Code execution (sandboxed)
-code_interpreter = CodeInterpreterTool()
+# Code execution (sandboxed — only available if crewai_tools supports it)
+code_interpreter = CodeInterpreterTool() if _code_interpreter_available else None
 
 
 # ── Notion Styling & Branding Tools ──────────────────────────
@@ -1243,7 +1244,7 @@ RESEARCH_TOOLS = [search_tool, file_reader, QueryMemoryTool()]
 MEMORY_TOOLS = [QueryMemoryTool(), SaveLearningTool()]
 SCRAPING_TOOLS = [FirecrawlScrapeTool(), FirecrawlCrawlTool(), FirecrawlSearchTool()]
 WRITING_TOOLS = [file_writer, SaveOutputTool(), voice_polisher_tool]
-CODE_TOOLS = [code_interpreter, file_writer, file_reader, SaveOutputTool(), CLIHubSearchTool()]
+CODE_TOOLS = [t for t in [code_interpreter, file_writer, file_reader, SaveOutputTool(), CLIHubSearchTool()] if t is not None]
 ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool(), GitHubRepoTool(), GitHubIssueTool(), GitHubFileTool(), NotionSearchTool(), NotionPageTool()] + VERCEL_TOOLS + NOTION_STYLING_TOOLS + FORGE_TOOLS + GWS_TOOLS
 HUNTER_TOOLS = [prospecting_tool, crm_add_tool, crm_log_tool, crm_reveal_tool, enrich_leads_tool, scoreboard_tool, QueryMemoryTool(), NotionPageTool(), forge_pipeline_tool, forge_log_tool]
 OUTREACH_TOOLS = [crm_uncontacted_tool, crm_reveal_tool, crm_log_tool, scoreboard_tool, crm_mark_sent_tool]
