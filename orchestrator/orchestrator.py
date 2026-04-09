@@ -55,6 +55,10 @@ MEMORY_GATED_TASK_TYPES = {
 # Used by praise/critique detector to pair feedback with prior output.
 _last_completed_job: dict = {}
 
+# In-memory project context: chat_id -> active project name
+# Set via /switch <project-name>; used as session_key prefix for crews
+_active_project: dict = {}
+
 # OpenSpace Evolution Hook
 try:
     from skills.openspace_skill.openspace_tool import openspace_tool
@@ -1168,6 +1172,75 @@ async def process_telegram_update(update: dict):
         _send_msg(chat_id, f"Lesson {lesson_id} purged." if ok else f"Lesson {lesson_id} not found.")
         return
 
+    # /status [job_id] — look up a specific job
+    if text.lower().startswith("/status"):
+        from notifier import send_message as _send_msg
+        from memory import get_job
+        parts = text.strip().split(maxsplit=1)
+        if len(parts) < 2:
+            # Show last job if no ID given
+            if chat_id in _last_completed_job:
+                prior = _last_completed_job[chat_id]
+                _send_msg(chat_id, f"Last job: {prior['job_id'][:8]} | {prior['task_type']} | delivered {prior['delivered_at'].strftime('%H:%M')}")
+            else:
+                _send_msg(chat_id, "No recent jobs. Send /projects to see history.")
+            return
+        job_id_hint = parts[1].strip()
+        job = get_job(job_id_hint)
+        if not job:
+            _send_msg(chat_id, f"Job '{job_id_hint}' not found.")
+            return
+        status = job.get("status", "unknown")
+        task_type = job.get("task_type", "?")
+        created = job.get("created_at", "?")
+        result_preview = (job.get("result") or "")[:200]
+        msg = f"Job {job_id_hint[:8]}\nStatus: {status}\nType: {task_type}\nStarted: {created}\n\n{result_preview}"
+        _send_msg(chat_id, msg)
+        return
+
+    # /projects — show recent jobs from this chat session
+    if text.lower().startswith("/projects"):
+        from notifier import send_message as _send_msg
+        try:
+            from memory import _pg_conn
+            conn = _pg_conn()
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT job_id, task_type, status, created_at
+                FROM job_queue
+                WHERE from_number = %s
+                ORDER BY created_at DESC
+                LIMIT 10
+            """, (chat_id,))
+            rows = cur.fetchall()
+            cur.close()
+            conn.close()
+            if not rows:
+                _send_msg(chat_id, "No projects found for this session yet.")
+            else:
+                lines = ["Recent projects:"]
+                for r in rows:
+                    jid, jtype, jstatus, jcreated = r
+                    ts = str(jcreated)[:16] if jcreated else "?"
+                    lines.append(f"{ts} | {jid[:8]} | {jtype or '?'} | {jstatus}")
+                _send_msg(chat_id, "\n".join(lines))
+        except Exception as e:
+            _send_msg(chat_id, f"Could not load projects: {e}")
+        return
+
+    # /switch <project-name> — set active project context
+    if text.lower().startswith("/switch"):
+        from notifier import send_message as _send_msg
+        parts = text.strip().split(maxsplit=1)
+        if len(parts) < 2:
+            current = _active_project.get(chat_id, "default")
+            _send_msg(chat_id, f"Active project: {current}\nUsage: /switch <project-name>")
+            return
+        project_name = parts[1].strip().lower().replace(" ", "-")
+        _active_project[chat_id] = project_name
+        _send_msg(chat_id, f"Switched to project: {project_name}\nAll tasks will use this context until you switch again.")
+        return
+
     # ── Praise / Critique Detection ──────────────────────────────────────
     if os.environ.get("MEMORY_LEARNING_ENABLED", "false").lower() == "true":
         from notifier import send_message as _send_msg
@@ -1198,6 +1271,10 @@ async def process_telegram_update(update: dict):
     job_id = str(uuid.uuid4())
     from notifier import send_briefing, send_message
 
+    # Resolve session key: active project name if set, else chat_id
+    active_project = _active_project.get(chat_id)
+    session_key = f"{chat_id}:{active_project}" if active_project else chat_id
+
     # 1. Classify first so the briefing is accurate
     # Shortcut classify runs FIRST — catches task phrases before obvious-chat filter eats them
     _shortcut = _shortcut_classify(text)
@@ -1224,18 +1301,34 @@ async def process_telegram_update(update: dict):
     # 3. Execute
     loop = asyncio.get_running_loop()
     if task_type == "chat":
+        # Inject Qdrant context recall for conversational continuity
+        enriched_text = text
+        try:
+            from memory import query_memory
+            memories = query_memory(text, top_k=3)
+            if memories:
+                context_lines = ["[Relevant past context:"]
+                for m in memories:
+                    ts = m.get("date", "?")
+                    summary = m.get("summary", "")[:120]
+                    context_lines.append(f"  {ts}: {summary}")
+                context_lines.append("]")
+                enriched_text = "\n".join(context_lines) + "\n\n" + text
+        except Exception:
+            pass  # non-fatal — proceed with plain text
+
         # Chat runs in threadpool — non-blocking
-        result = await loop.run_in_executor(None, lambda: run_chat(message=text, session_key=chat_id))
+        result = await loop.run_in_executor(None, lambda: run_chat(message=enriched_text, session_key=session_key))
         send_message(chat_id, result["result"])
     else:
         # Complex tasks run in threadpool — non-blocking, avoids freezing the polling loop
-        crew_session_key = f"{chat_id}:{job_id[:8]}"
+        # Use persistent session_key (project-scoped) so conversation history accumulates
         loop.run_in_executor(
             None,
             lambda: _run_background_job(
                 task=text,
                 from_number=chat_id,
-                session_key=crew_session_key,
+                session_key=session_key,
                 job_id=job_id,
                 classification=classification,
             )
