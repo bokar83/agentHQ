@@ -24,8 +24,9 @@ COPY orchestrator/*.py .
 # Copy voice prompts for the Sankofa Council
 COPY orchestrator/prompts/ prompts/
 
-# Copy skills, tests, and docs (quote bank etc.)
+# Copy skills, templates, tests, and docs (quote bank etc.)
 COPY skills/ skills/
+COPY templates/ templates/
 COPY tests/ tests/
 COPY docs/ docs/
 
