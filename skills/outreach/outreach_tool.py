@@ -1,5 +1,5 @@
 """
-outreach_tool.py — Direct Cold Outreach from Supabase
+outreach_tool.py -- Direct Cold Outreach from Supabase
 ======================================================
 Reads ONLY from the Supabase leads table. No agent, no guessing.
 
@@ -9,9 +9,9 @@ Rules:
   - Default batch: 10 leads per run
   - "contact all": up to 50 leads per run
   - Gmail: catalystworks.ai@gmail.com via OAuth refresh token (same as GWS tools)
-  - Template: cold outreach skill, Template A (sector bracket by industry)
+  - Template: loaded from templates/email/cold_outreach.py (single source of truth)
   - Logs every draft to lead_interactions (type: outreach_draft)
-  - Updates last_contacted_at and status = 'messaged' on each lead
+  - Updates email_drafted_at on each lead
 
 Called by: orchestrator.py when task_type == 'crm_outreach'
            Also importable standalone for testing.
@@ -28,33 +28,14 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-# ── Email template ──────────────────────────────────────────────
-SUBJECT = "Where is your margin actually going?"
-
-TEMPLATE = """Hi {first_name},
-
-Most businesses aren't losing margin to bad strategy. They're losing it to one bottleneck: a handoff, an approval loop, a pricing gap quietly taxing everything downstream.
-
-The frustrating part: it's almost always findable. And almost always fixable faster than people expect.
-
-I'm Boubacar Barry, founder of Catalyst Works. I spent 15 years working with leadership teams across three continents watching the same pattern repeat: the thing slowing the business down is rarely what anyone is looking at.
-
-What I do differently: I don't hand you a report. I find the constraint and build a clear, executable path to removing it. One that the people running the business can actually use without me in the room.
-
-One question before I ask for anything:
-
-Is there a place in your operation right now where work slows down or disappears that you haven't been able to fully fix?
-
-If yes, worth a reply.
-
-Boubacar Barry
-Founder, Catalyst Works
-catalystworks.consulting"""
+# -- Email template -- single source of truth ---------------------
+# To change the template, edit ONLY: templates/email/cold_outreach.py
+from templates.email.cold_outreach import SUBJECT, BODY as TEMPLATE
 
 OUTREACH_ACCOUNT = "catalystworks.ai@gmail.com"
 
 
-# ── Database helpers ─────────────────────────────────────────────
+# -- Database helpers ---------------------------------------------
 
 def _get_conn():
     if "/app" not in sys.path:
@@ -67,13 +48,6 @@ def _get_conn():
 
 
 def _get_eligible_leads(limit: int) -> list:
-    """
-    Pull leads from Supabase who:
-      - have a confirmed email address
-      - have never been contacted (last_contacted_at IS NULL)
-      - status = 'new'
-    Ordered oldest first.
-    """
     conn = _get_conn()
     cur = conn.cursor()
     cur.execute("""
@@ -93,10 +67,9 @@ def _get_eligible_leads(limit: int) -> list:
     return rows
 
 
-# ── Gmail helpers ────────────────────────────────────────────────
+# -- Gmail helpers ------------------------------------------------
 
 def _get_access_token() -> str:
-    """Refresh OAuth token for catalystworks.ai@gmail.com."""
     import httpx
     creds_path = os.environ.get(
         "GOOGLE_OAUTH_CREDENTIALS_JSON_CW",
@@ -120,16 +93,14 @@ def _get_access_token() -> str:
 
 
 def _create_draft(to_email: str, subject: str, body: str) -> Optional[str]:
-    """Create a Gmail draft via API as plain text. Returns draft ID or None on failure."""
+    """Create a Gmail draft as plain text. Returns draft ID or None on failure."""
     import httpx
     try:
         token = _get_access_token()
-
         msg = MIMEText(body, "plain")
         msg["to"] = to_email
         msg["from"] = OUTREACH_ACCOUNT
         msg["subject"] = subject
-
         raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
         resp = httpx.post(
             "https://gmail.googleapis.com/gmail/v1/users/me/drafts",
@@ -191,7 +162,7 @@ _NOTION_DB_ID = "619a842a-0e04-4cb3-8d17-19ec67c130f0"
 
 
 def _log_and_update(lead_id: int, subject: str, lead_name: str = ""):
-    """Log outreach_draft interaction and stamp email_drafted_at. Status stays 'new' until sent."""
+    """Log outreach_draft interaction and stamp email_drafted_at."""
     try:
         conn = _get_conn()
         cur = conn.cursor()
@@ -209,12 +180,12 @@ def _log_and_update(lead_id: int, subject: str, lead_name: str = ""):
         conn.commit()
         cur.close()
         conn.close()
-        logger.info(f"Outreach: draft stamped for lead {lead_id} ({lead_name}), awaiting send.")
+        logger.info(f"Outreach: draft stamped for lead {lead_id} ({lead_name}).")
     except Exception as e:
         logger.error(f"Outreach: CRM update failed for lead {lead_id}: {e}")
 
 
-# ── Main entry point ─────────────────────────────────────────────
+# -- Main entry point ---------------------------------------------
 
 def run_outreach(contact_all: bool = False) -> dict:
     """
