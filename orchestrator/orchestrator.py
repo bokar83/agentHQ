@@ -33,7 +33,7 @@ from datetime import datetime
 from typing import Optional
 
 import httpx
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Depends, Header
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Depends, Header, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -148,6 +148,8 @@ class TaskRequest(BaseModel):
     session_key: str = "default"
     context: Optional[dict] = None  # optional extra context from caller
     callback_url: Optional[str] = None  # webhook URL to POST result when async job completes
+    file_id: Optional[str] = None   # ID from /upload — orchestrator prepends extracted text
+    source: Optional[str] = None    # "browser" | "telegram" | "api"
 
 class TaskResponse(BaseModel):
     success: bool
@@ -1778,8 +1780,21 @@ async def run_task_async(request: TaskRequest, background_tasks: BackgroundTasks
         try:
             update_job(job_id, status="running")
 
+            # Inject uploaded file content into task if file_id provided
+            task_text = request.task
+            if request.file_id:
+                upload_dir = "/app/uploads"
+                matches = [f for f in os.listdir(upload_dir) if f.startswith(request.file_id + "_")] if os.path.isdir(upload_dir) else []
+                if matches:
+                    txt_path = os.path.join(upload_dir, matches[0] + ".txt")
+                    if os.path.exists(txt_path):
+                        with open(txt_path, encoding="utf-8", errors="replace") as fh:
+                            file_content = fh.read()
+                        fname = matches[0][9:]  # strip file_id_ prefix
+                        task_text = f"[Attached file: {fname}]\n{file_content}\n\n---\n{request.task}"
+
             # Chat tasks don't belong in async — run sync and complete immediately
-            _msg = request.task.strip().lower()
+            _msg = task_text.strip().lower()
             _is_chat = (
                 len(_msg) < 60 and not any(w in _msg for w in [
                     "write", "create", "build", "research", "analyze", "make",
@@ -1788,10 +1803,10 @@ async def run_task_async(request: TaskRequest, background_tasks: BackgroundTasks
                 ])
             )
             if _is_chat:
-                result = run_chat(message=request.task, session_key=request.session_key)
+                result = run_chat(message=task_text, session_key=request.session_key)
             else:
                 result = run_orchestrator(
-                    task_request=request.task,
+                    task_request=task_text,
                     from_number=request.from_number,
                     session_key=request.session_key
                 )
@@ -1946,6 +1961,96 @@ def verify_chat_token(authorization: Optional[str] = Header(None)):
             raise HTTPException(status_code=401, detail="Invalid token.")
 
     raise HTTPException(status_code=401, detail="Invalid authorization.")
+
+
+def _extract_file_text(path: str, filename: str) -> str:
+    """Extract readable text from an uploaded file for injection into task prompt."""
+    import mimetypes
+    ext = os.path.splitext(filename)[1].lower()
+
+    try:
+        if ext == ".pdf":
+            import pdfplumber
+            pages = []
+            with pdfplumber.open(path) as pdf:
+                for p in pdf.pages[:20]:
+                    t = p.extract_text()
+                    if t:
+                        pages.append(t)
+            return "\n\n".join(pages) or "[PDF: no extractable text]"
+
+        if ext in (".docx", ".doc"):
+            import docx
+            doc = docx.Document(path)
+            return "\n".join(p.text for p in doc.paragraphs if p.text.strip()) or "[DOCX: empty]"
+
+        if ext in (".xlsx", ".xls"):
+            import openpyxl
+            wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
+            lines = []
+            for sheet in wb.worksheets[:3]:
+                lines.append(f"[Sheet: {sheet.title}]")
+                for row in list(sheet.iter_rows(values_only=True))[:100]:
+                    lines.append("\t".join(str(c) if c is not None else "" for c in row))
+            return "\n".join(lines) or "[XLSX: empty]"
+
+        if ext == ".csv":
+            import csv as _csv
+            with open(path, newline="", encoding="utf-8", errors="replace") as f:
+                rows = list(_csv.reader(f))[:100]
+            return "\n".join(",".join(r) for r in rows) or "[CSV: empty]"
+
+        if ext in (".txt", ".md", ".json", ".py", ".js", ".ts", ".html", ".css", ".yaml", ".yml", ".xml", ".sql"):
+            with open(path, encoding="utf-8", errors="replace") as f:
+                return f.read(50000) or "[File: empty]"
+
+        if ext in (".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp"):
+            from PIL import Image
+            img = Image.open(path)
+            return f"[Image: {img.format} {img.width}x{img.height}px — vision analysis required]"
+
+        return f"[File: {filename} ({ext}) — binary format, attached for agent reference]"
+
+    except Exception as e:
+        logger.warning(f"File extraction failed for {filename}: {e}")
+        return f"[File: {filename} — could not extract text: {e}]"
+
+
+@app.post("/upload", dependencies=[Depends(verify_api_key)])
+async def upload_file(file: UploadFile):
+    """
+    Accept a multipart file upload from the browser chat UI.
+    Saves to /app/uploads/, extracts text content, returns file_id.
+    The browser passes file_id in the next /run-async call and the orchestrator
+    prepends the extracted text to the task prompt.
+    """
+    import uuid
+
+    upload_dir = "/app/uploads"
+    os.makedirs(upload_dir, exist_ok=True)
+
+    file_id = str(uuid.uuid4())[:8]
+    safe_name = os.path.basename(file.filename or "upload").replace(" ", "_")
+    dest = os.path.join(upload_dir, f"{file_id}_{safe_name}")
+
+    content = await file.read()
+    if len(content) > 50 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="File too large (50 MB max).")
+
+    with open(dest, "wb") as f:
+        f.write(content)
+
+    extracted = _extract_file_text(dest, safe_name)
+    with open(dest + ".txt", "w", encoding="utf-8") as f:
+        f.write(extracted)
+
+    logger.info(f"Upload: {safe_name} ({len(content)} bytes) -> {dest}")
+    return {
+        "file_id": file_id,
+        "filename": safe_name,
+        "size_bytes": len(content),
+        "preview": extracted[:300],
+    }
 
 
 @app.post("/sync-session", dependencies=[Depends(verify_api_key)])
