@@ -75,6 +75,7 @@ services:
       - "80"
     volumes:
       - /root/agentsHQ/thepopebot/chat-ui:/usr/share/nginx/html:ro
+      - /root/agentsHQ/thepopebot/chat-ui/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.chat-ui.rule=Host(`${APP_HOSTNAME}`) && PathPrefix(`/chat`)"
