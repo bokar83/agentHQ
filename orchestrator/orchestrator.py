@@ -1085,6 +1085,8 @@ _TASK_KEYWORDS = [
     "proposal", "post", "email", "article",
     "find", "hunt", "leads", "prospect", "run the", "hunter",
     "news", "brief", "headlines",
+    "task", "tasks", "due", "overdue", "notion", "calendar",
+    "open tasks", "past due", "pending",
 ]
 _CHAT_PREFIXES = (
     "what is my", "what's my", "how much", "do you", "can you tell",
@@ -1591,7 +1593,14 @@ async def run_task_sync(request: TaskRequest):
                 reply = "Nothing more to show — that was the full output."
             return TaskResponse(success=True, result=reply, task_type="more", files_created=[], execution_time=0.0)
 
-        if _classify_obvious_chat(request.task):
+        shortcut = _shortcut_classify(request.task)
+        if shortcut:
+            result = run_orchestrator(
+                task_request=request.task,
+                from_number=request.from_number,
+                session_key=request.session_key,
+            )
+        elif _classify_obvious_chat(request.task):
             result = run_chat(message=request.task, session_key=request.session_key)
         else:
             result = run_orchestrator(
