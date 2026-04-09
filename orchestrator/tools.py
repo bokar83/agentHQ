@@ -583,12 +583,133 @@ gws_calendar_delete_tool = GWSCalendarDeleteTool()
 gws_gmail_draft_tool = GWSGmailCreateDraftTool()
 gws_gmail_search_tool = GWSGmailSearchTool()
 
+class GWSDriveSearchTool(BaseTool):
+    """Search for files in the agentsHQ Google Drive folder."""
+    name: str = "search_drive_files"
+    description: str = (
+        "Search for files in the agentsHQ Google Drive. "
+        "Input: JSON with 'query' (filename or keyword to search for) "
+        "and optional 'folder' (deliverables, leads, research, social, code, websites). "
+        "Returns a list of matching files with names and shareable links."
+    )
+
+    def _run(self, input_data: str = "{}") -> str:
+        try:
+            data = {}
+            if input_data:
+                try:
+                    data = json.loads(input_data) if isinstance(input_data, str) else input_data
+                except Exception:
+                    pass
+            query_str = data.get("query", "")
+
+            folder_id = os.environ.get("GOOGLE_DRIVE_FOLDER_ID", "")
+            oauth_path = os.environ.get("GOOGLE_OAUTH_CREDENTIALS_JSON", "")
+            if not folder_id or not oauth_path:
+                return "Drive not configured — GOOGLE_DRIVE_FOLDER_ID or GOOGLE_OAUTH_CREDENTIALS_JSON missing."
+
+            from google.oauth2.credentials import Credentials
+            from googleapiclient.discovery import build
+            import json as _json
+            with open(oauth_path) as f:
+                info = _json.load(f)
+            creds = Credentials(
+                token=None,
+                refresh_token=info["refresh_token"],
+                client_id=info["client_id"],
+                client_secret=info["client_secret"],
+                token_uri="https://oauth2.googleapis.com/token",
+            )
+            service = build("drive", "v3", credentials=creds)
+
+            q_parts = [f"'{folder_id}' in parents or parents in (select id from files where '{folder_id}' in parents)"]
+            if query_str:
+                q_parts = [f"name contains '{query_str}' and trashed=false"]
+            q = " and ".join(q_parts)
+            results = service.files().list(
+                q=q,
+                fields="files(id,name,webViewLink,mimeType,createdTime)",
+                orderBy="createdTime desc",
+                pageSize=10,
+            ).execute()
+            files = results.get("files", [])
+            if not files:
+                return f"No files found matching '{query_str}' in Drive."
+            lines = [f"Drive search results for '{query_str}':\n"]
+            for f_item in files:
+                lines.append(f"- {f_item['name']}")
+                lines.append(f"  {f_item.get('webViewLink', 'no link')}")
+            return "\n".join(lines)
+        except Exception as e:
+            return f"Drive search failed: {e}"
+
+
+class GWSDriveListRecentTool(BaseTool):
+    """List the most recent files saved to Google Drive by agentsHQ."""
+    name: str = "list_recent_drive_files"
+    description: str = (
+        "List the most recent files saved to the agentsHQ Google Drive folder. "
+        "Input: optional JSON with 'limit' (default 10) and 'folder' "
+        "(deliverables, leads, research, social, code, websites — omit for all). "
+        "Returns file names and shareable links."
+    )
+
+    def _run(self, input_data: str = "{}") -> str:
+        try:
+            data = {}
+            if input_data:
+                try:
+                    data = json.loads(input_data) if isinstance(input_data, str) else input_data
+                except Exception:
+                    pass
+            limit = int(data.get("limit", 10))
+            folder_id = os.environ.get("GOOGLE_DRIVE_FOLDER_ID", "")
+            oauth_path = os.environ.get("GOOGLE_OAUTH_CREDENTIALS_JSON", "")
+            if not folder_id or not oauth_path:
+                return "Drive not configured."
+
+            from google.oauth2.credentials import Credentials
+            from googleapiclient.discovery import build
+            import json as _json
+            with open(oauth_path) as f:
+                info = _json.load(f)
+            creds = Credentials(
+                token=None,
+                refresh_token=info["refresh_token"],
+                client_id=info["client_id"],
+                client_secret=info["client_secret"],
+                token_uri="https://oauth2.googleapis.com/token",
+            )
+            service = build("drive", "v3", credentials=creds)
+            results = service.files().list(
+                q=f"'{folder_id}' in parents and trashed=false",
+                fields="files(id,name,webViewLink,mimeType,createdTime)",
+                orderBy="createdTime desc",
+                pageSize=limit,
+            ).execute()
+            files = results.get("files", [])
+            if not files:
+                return "No files found in the agentsHQ Drive folder."
+            lines = [f"Recent Drive files ({len(files)}):\n"]
+            for f_item in files:
+                lines.append(f"- {f_item['name']}")
+                lines.append(f"  {f_item.get('webViewLink', 'no link')}")
+            return "\n".join(lines)
+        except Exception as e:
+            return f"Drive list failed: {e}"
+
+
+gws_drive_search_tool = GWSDriveSearchTool()
+gws_drive_list_tool = GWSDriveListRecentTool()
+
 GWS_TOOLS = [
     gws_calendar_list_tool,
     gws_calendar_create_tool,
     gws_calendar_delete_tool,
     gws_gmail_draft_tool,
     gws_gmail_search_tool,
+    gws_drive_search_tool,
+    gws_drive_list_tool,
 ]
 
 
