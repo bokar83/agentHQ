@@ -43,6 +43,11 @@ DRIVE_FOLDER_MAP = {
     "voice_polishing": "deliverables",
     "prompt_engineering": "deliverables",
     "news_brief": "deliverables/research",
+    "gws_task": "deliverables",
+    "notion_tasks": "deliverables",
+    "notion_capture": "deliverables",
+    "crm_outreach": "deliverables",
+    "enrich_leads": "leads",
 }
 
 

@@ -1825,11 +1825,25 @@ async def run_task_async(request: TaskRequest, background_tasks: BackgroundTasks
                 )
 
             result_text = result.get("result") or result.get("deliverable") or result.get("summary") or result.get("output") or ""
+            task_type_val = result.get("task_type", "unknown")
+            title_val = result.get("title", task_text[:80])
+            deliverable_val = result.get("deliverable", result_text)
+
+            # Save to Drive (non-blocking best-effort)
+            drive_url = ""
+            try:
+                from saver import save_to_drive
+                drive_url = save_to_drive(title_val, task_type_val, deliverable_val)
+                if drive_url:
+                    result_text = result_text + f"\n\nDrive: {drive_url}"
+            except Exception as _drive_err:
+                logger.warning(f"Drive save failed for job {job_id}: {_drive_err}")
+
             update_job(
                 job_id=job_id,
                 status="completed",
                 result=result_text,
-                task_type=result.get("task_type", "unknown"),
+                task_type=task_type_val,
                 files_created=result.get("files_created", []),
                 execution_time=result.get("execution_time", 0.0)
             )
