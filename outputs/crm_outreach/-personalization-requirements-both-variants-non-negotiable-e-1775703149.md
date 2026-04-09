@@ -1,0 +1,1 @@
+No drafts created. Either no leads have confirmed emails yet, or all eligible leads have already been contacted. Run 'find leads' to add new ones.
