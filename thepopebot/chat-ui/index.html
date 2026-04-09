@@ -260,9 +260,7 @@
       ta.style.height = 'auto';
       ta.style.height = Math.min(ta.scrollHeight, 160) + 'px';
     });
-    ta.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-    });
+    // Enter key creates a new line — send only via the send button.
 
     document.getElementById('send-btn').addEventListener('click', sendMessage);
 
