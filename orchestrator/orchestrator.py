@@ -706,6 +706,17 @@ def run_orchestrator(task_request: str, from_number: str = "unknown", session_ke
     except Exception as e:
         logger.warning(f"Memory save failed (non-fatal): {e}")
 
+    # Step 6: Sync artifact to Notion (non-blocking daemon thread)
+    try:
+        from memory import sync_artifact_to_notion
+        threading.Thread(
+            target=sync_artifact_to_notion,
+            args=(task_request, task_type, result_summary, files_created, execution_time, session_key),
+            daemon=True
+        ).start()
+    except Exception:
+        pass  # non-fatal
+
     # Build Telegram-friendly summary
     summary = _build_summary(task_type, result_str, files_created, execution_time)
 
