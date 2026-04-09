@@ -3,21 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>agentsHQ — Chat</title>
+  <title>agentsHQ — Catalyst Works</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0d0d0d;
-      --surface: #161616;
-      --surface2: #1e1e1e;
-      --border: #2a2a2a;
-      --accent: #7c3aed;
-      --accent-dim: #4c1d95;
-      --text: #e8e8e8;
-      --text-dim: #888;
-      --user-bubble: #1e1345;
-      --agent-bubble: #161616;
+      --bg: #071A2E;
+      --surface: #0d2540;
+      --surface2: #112d4a;
+      --border: #1a3a58;
+      --accent: #00B7C2;
+      --accent-hover: #008F99;
+      --orange: #FF7A00;
+      --orange-hover: #E06900;
+      --text: #e8f0f7;
+      --text-dim: #7a9bb5;
+      --user-bubble: #0f3a52;
+      --agent-bubble: #0d2540;
       --danger: #ef4444;
       --success: #22c55e;
     }
@@ -31,15 +33,44 @@
       align-items: center;
       justify-content: center;
       height: 100%;
-      gap: 24px;
+      gap: 20px;
       padding: 24px;
     }
 
-    .logo { font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
-    .logo span { color: var(--accent); }
+    .cw-wordmark {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
 
-    #pin-screen h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
-    #pin-screen p { font-size: 14px; color: var(--text-dim); text-align: center; max-width: 280px; }
+    .cw-brand {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text);
+    }
+    .cw-brand span.cw-dot { color: var(--orange); }
+
+    .cw-product {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .cw-divider {
+      width: 40px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--orange));
+      border-radius: 2px;
+      margin-top: 2px;
+    }
+
+    #pin-screen h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
+    #pin-screen p { font-size: 14px; color: var(--text-dim); text-align: center; max-width: 280px; line-height: 1.5; }
 
     #pin-form { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; }
 
@@ -59,7 +90,7 @@
     #pin-input.error { border-color: var(--danger); }
 
     #pin-submit {
-      background: var(--accent);
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
       border: none;
       border-radius: 10px;
       color: #fff;
@@ -67,25 +98,47 @@
       font-size: 15px;
       font-weight: 600;
       padding: 14px;
-      transition: background 0.15s, opacity 0.15s;
+      transition: background 0.15s, opacity 0.15s, transform 0.1s;
     }
-    #pin-submit:hover { background: #6d28d9; }
-    #pin-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    #pin-submit:hover {
+      background: linear-gradient(135deg, var(--orange), var(--orange-hover));
+      transform: translateY(-1px);
+    }
+    #pin-submit:active { transform: translateY(0); }
+    #pin-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
     #pin-error { color: var(--danger); font-size: 13px; text-align: center; min-height: 18px; }
+
+    .pin-footer {
+      margin-top: 12px;
+      font-size: 11px;
+      color: var(--text-dim);
+      opacity: 0.6;
+      letter-spacing: 0.04em;
+    }
 
     /* ── CHAT SCREEN ── */
     #chat-screen { display: none; flex-direction: column; height: 100%; max-width: 760px; margin: 0 auto; }
 
     #chat-header {
       display: flex; align-items: center; gap: 10px;
-      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      padding: 14px 20px; border-bottom: 1px solid var(--border);
       background: var(--bg); position: sticky; top: 0; z-index: 10;
     }
 
     .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
-    #chat-header .title { font-size: 15px; font-weight: 600; }
-    #chat-header .subtitle { font-size: 12px; color: var(--text-dim); margin-left: auto; }
+
+    .header-brand { display: flex; flex-direction: column; gap: 1px; }
+    .header-brand .title {
+      font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: -0.01em;
+    }
+    .header-brand .title span { color: var(--orange); }
+    .header-brand .product-tag {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--accent); opacity: 0.85;
+    }
+
+    #chat-header .subtitle { font-size: 11px; color: var(--text-dim); margin-left: auto; opacity: 0.7; }
 
     #messages {
       flex: 1; overflow-y: auto; padding: 24px 20px;
@@ -101,7 +154,7 @@
       font-size: 14px; line-height: 1.55;
       white-space: pre-wrap; word-break: break-word;
     }
-    .msg.user .bubble { background: var(--user-bubble); border-bottom-right-radius: 4px; border: 1px solid #2d1a6e; }
+    .msg.user .bubble { background: var(--user-bubble); border-bottom-right-radius: 4px; border: 1px solid rgba(0,183,194,0.25); }
     .msg.agent .bubble { background: var(--agent-bubble); border-bottom-left-radius: 4px; border: 1px solid var(--border); }
 
     .msg-meta { font-size: 11px; color: var(--text-dim); padding: 0 4px; }
@@ -114,7 +167,7 @@
     }
     .typing-dots span {
       width: 7px; height: 7px; border-radius: 50%;
-      background: var(--text-dim); animation: pulse 1.2s infinite;
+      background: var(--accent); animation: pulse 1.2s infinite;
     }
     .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
     .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
@@ -149,7 +202,7 @@
       background: transparent;
       border: 1.5px solid var(--border);
       border-radius: 10px;
-      color: #a0a0a0;
+      color: var(--text-dim);
       cursor: pointer;
       flex-shrink: 0;
       width: 42px;
@@ -160,8 +213,8 @@
       transition: border-color 0.15s, color 0.15s, background 0.15s;
       padding: 0;
     }
-    #attach-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(124,58,237,0.08); }
-    #attach-btn.has-file { border-color: var(--accent); color: var(--accent); background: rgba(124,58,237,0.12); }
+    #attach-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,183,194,0.08); }
+    #attach-btn.has-file { border-color: var(--accent); color: var(--accent); background: rgba(0,183,194,0.12); }
     #attach-btn svg { display: block; }
 
     #user-input {
@@ -174,15 +227,27 @@
     #user-input::placeholder { color: var(--text-dim); }
 
     #send-btn {
-      background: var(--accent); border: none; border-radius: 10px;
+      background: var(--orange); border: none; border-radius: 10px;
       color: #fff; cursor: pointer; flex-shrink: 0;
       width: 42px; height: 42px;
       display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s, opacity 0.15s; padding: 0;
+      transition: background 0.15s, opacity 0.15s, transform 0.1s; padding: 0;
     }
-    #send-btn:hover { background: #6d28d9; }
-    #send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    #send-btn:hover { background: var(--orange-hover); transform: translateY(-1px); }
+    #send-btn:active { transform: translateY(0); }
+    #send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
     #send-btn svg { display: block; }
+
+    #chat-footer {
+      padding: 8px 20px;
+      text-align: center;
+      font-size: 10px;
+      color: var(--text-dim);
+      opacity: 0.5;
+      letter-spacing: 0.04em;
+      border-top: 1px solid var(--border);
+    }
+    #chat-footer a { color: var(--accent); text-decoration: none; }
 
     #messages::-webkit-scrollbar { width: 4px; }
     #messages::-webkit-scrollbar-track { background: transparent; }
@@ -195,7 +260,11 @@
 
 <!-- PIN SCREEN -->
 <div id="pin-screen">
-  <div class="logo"><span>agents</span>HQ</div>
+  <div class="cw-wordmark">
+    <div class="cw-brand">Catalyst Works<span class="cw-dot">.</span></div>
+    <div class="cw-product">agentsHQ</div>
+    <div class="cw-divider"></div>
+  </div>
   <h1>Welcome back</h1>
   <p>Enter your PIN to connect to the agentsHQ team</p>
   <form id="pin-form">
@@ -203,13 +272,17 @@
     <button id="pin-submit" type="submit">Connect</button>
     <div id="pin-error"></div>
   </form>
+  <div class="pin-footer">Powered by agentsHQ &middot; Catalyst Works Consulting</div>
 </div>
 
 <!-- CHAT SCREEN -->
 <div id="chat-screen">
   <div id="chat-header">
     <div class="status-dot"></div>
-    <div class="title">agentsHQ</div>
+    <div class="header-brand">
+      <div class="title">Catalyst Works<span>.</span></div>
+      <div class="product-tag">agentsHQ</div>
+    </div>
     <div class="subtitle" id="session-label"></div>
   </div>
   <div id="messages"></div>
@@ -232,6 +305,9 @@
         </svg>
       </button>
     </div>
+  </div>
+  <div id="chat-footer">
+    Powered by <strong>agentsHQ</strong> &middot; Built on <a href="https://thepopebot.com" target="_blank" rel="noopener">thepopebot</a> &middot; Catalyst Works Consulting
   </div>
 </div>
 
