@@ -104,3 +104,10 @@ thepopebot/data/workspaces/
 thepopebot/data/clusters/
 thepopebot/.tmp/
 thepopebot/logs/
+
+# ── Local scratch / runtime files ────────────────────────────
+ideas_full_list.txt
+ideas_full_list_utf8.txt
+test_sankofa.py
+data/
+docs/research/
