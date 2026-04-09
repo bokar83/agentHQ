@@ -67,6 +67,25 @@ services:
     networks:
       - thepopebot-net
 
+  chat-ui:
+    image: nginx:alpine
+    container_name: thepopebot-chat-ui
+    restart: unless-stopped
+    expose:
+      - "80"
+    volumes:
+      - /root/agentsHQ/thepopebot/chat-ui:/usr/share/nginx/html:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.chat-ui.rule=Host(`${APP_HOSTNAME}`) && PathPrefix(`/chat`)"
+      - "traefik.http.routers.chat-ui.tls=true"
+      - "traefik.http.routers.chat-ui.entrypoints=websecure"
+      - "traefik.http.routers.chat-ui.tls.certresolver=mytlschallenge"
+      - "traefik.http.services.chat-ui.loadbalancer.server.port=80"
+      - "traefik.docker.network=root_default"
+    networks:
+      - root_default
+
   runner:
     image: myoung34/github-runner:latest
     container_name: thepopebot-runner

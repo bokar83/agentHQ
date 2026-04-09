@@ -98,13 +98,37 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def verify_api_key(x_api_key: str = Header(default=None)):
-    """Reject requests without the correct API key header. No-op if ORCHESTRATOR_API_KEY is not configured."""
+def verify_api_key(x_api_key: str = Header(default=None), authorization: Optional[str] = Header(default=None)):
+    """
+    Reject requests without valid auth. Accepts two forms:
+    1. X-Api-Key: <raw key>  (Telegram, n8n, existing integrations)
+    2. Authorization: Bearer <jwt>  (browser chat UI)
+    No-op if ORCHESTRATOR_API_KEY is not configured (dev mode).
+    """
     expected = os.environ.get("ORCHESTRATOR_API_KEY", "")
     if not expected:
         return  # No key configured — allow all (dev/backwards compat)
-    if x_api_key != expected:
-        raise HTTPException(status_code=401, detail="Invalid or missing X-Api-Key header")
+
+    # Raw API key header (primary path)
+    if x_api_key == expected:
+        return
+
+    # Bearer JWT (browser chat)
+    if authorization and authorization.startswith("Bearer "):
+        import jwt as pyjwt
+        token = authorization[7:]
+        # Also accept raw key as Bearer for simplicity
+        if token == expected:
+            return
+        try:
+            pyjwt.decode(token, expected, algorithms=["HS256"])
+            return
+        except pyjwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="Session expired. Refresh to get a new token.")
+        except pyjwt.InvalidTokenError:
+            pass
+
+    raise HTTPException(status_code=401, detail="Invalid or missing auth. Use X-Api-Key or Authorization: Bearer <token>.")
 
 @app.on_event("startup")
 async def startup_event():
@@ -1863,6 +1887,64 @@ class SyncSessionRequest(BaseModel):
     summary: str                    # What happened in the browser session
     source: str = "browser"         # "browser" | "telegram" | "api"
     notify_telegram: bool = False   # If true, send a Telegram notification
+
+
+class ChatTokenRequest(BaseModel):
+    pin: str  # simple static PIN gate — keeps crawlers out
+
+
+@app.post("/chat-token")
+async def chat_token(req: ChatTokenRequest):
+    """
+    Issue a short-lived JWT for the browser chat UI.
+    The browser sends this token as Authorization: Bearer <token> on every /run-async call.
+    The real ORCHESTRATOR_API_KEY never leaves the server.
+
+    PIN is set via CHAT_UI_PIN env var (required). No PIN = endpoint disabled.
+    """
+    import jwt as pyjwt
+    from datetime import timedelta
+
+    expected_pin = os.environ.get("CHAT_UI_PIN", "")
+    if not expected_pin:
+        raise HTTPException(status_code=503, detail="Chat UI not configured on this server.")
+    if req.pin != expected_pin:
+        raise HTTPException(status_code=401, detail="Invalid PIN.")
+
+    secret = os.environ.get("ORCHESTRATOR_API_KEY", "fallback-secret")
+    payload = {
+        "sub": "browser-chat",
+        "iat": datetime.utcnow(),
+        "exp": datetime.utcnow() + timedelta(hours=8),
+    }
+    token = pyjwt.encode(payload, secret, algorithm="HS256")
+    return {"token": token}
+
+
+def verify_chat_token(authorization: Optional[str] = Header(None)):
+    """Dependency: accepts either the raw API key OR a valid browser JWT."""
+    import jwt as pyjwt
+
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Missing Authorization header.")
+
+    # Allow raw API key (existing integrations)
+    api_key = os.environ.get("ORCHESTRATOR_API_KEY", "")
+    if authorization == api_key or authorization == f"Bearer {api_key}":
+        return True
+
+    # Validate browser JWT
+    if authorization.startswith("Bearer "):
+        token = authorization[7:]
+        try:
+            pyjwt.decode(token, api_key, algorithms=["HS256"])
+            return True
+        except pyjwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="Session expired. Refresh the page to get a new token.")
+        except pyjwt.InvalidTokenError:
+            raise HTTPException(status_code=401, detail="Invalid token.")
+
+    raise HTTPException(status_code=401, detail="Invalid authorization.")
 
 
 @app.post("/sync-session", dependencies=[Depends(verify_api_key)])

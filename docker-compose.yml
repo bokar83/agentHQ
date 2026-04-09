@@ -172,6 +172,7 @@ services:
       - SMTP_PASS=${SMTP_PASS}
       - HEALTH_REPORT_TOKEN=${HEALTH_REPORT_TOKEN}
       - ORCHESTRATOR_API_KEY=${ORCHESTRATOR_API_KEY}
+      - CHAT_UI_PIN=${CHAT_UI_PIN}
     volumes:
       - ./agent_outputs:/app/outputs
       - ./logs:/app/logs
@@ -183,8 +184,19 @@ services:
         condition: service_started
       metaclaw:
         condition: service_started
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.orc-api.rule=Host(`agentshq.boubacarbarry.com`) && PathPrefix(`/api/orc`)"
+      - "traefik.http.routers.orc-api.tls=true"
+      - "traefik.http.routers.orc-api.entrypoints=websecure"
+      - "traefik.http.routers.orc-api.tls.certresolver=mytlschallenge"
+      - "traefik.http.services.orc-api.loadbalancer.server.port=8000"
+      - "traefik.docker.network=root_default"
+      - "traefik.http.middlewares.orc-strip.stripprefix.prefixes=/api/orc"
+      - "traefik.http.routers.orc-api.middlewares=orc-strip"
     networks:
       - orc-net
+      - root_default
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -195,6 +207,8 @@ services:
 networks:
   orc-net:
     driver: bridge
+  root_default:
+    external: true
 
 volumes:
   metaclaw_config:

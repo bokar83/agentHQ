@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>agentsHQ — Chat</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0d;
+      --surface: #161616;
+      --surface2: #1e1e1e;
+      --border: #2a2a2a;
+      --accent: #7c3aed;
+      --accent-dim: #4c1d95;
+      --text: #e8e8e8;
+      --text-dim: #888;
+      --user-bubble: #1e1345;
+      --agent-bubble: #161616;
+      --danger: #ef4444;
+      --success: #22c55e;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+    /* ── PIN SCREEN ── */
+    #pin-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 24px;
+      padding: 24px;
+    }
+
+    .logo { font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); }
+    .logo span { color: var(--accent); }
+
+    #pin-screen h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+    #pin-screen p { font-size: 14px; color: var(--text-dim); text-align: center; max-width: 280px; }
+
+    #pin-form { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; }
+
+    #pin-input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 16px;
+      padding: 14px 16px;
+      outline: none;
+      text-align: center;
+      letter-spacing: 0.1em;
+      transition: border-color 0.15s;
+    }
+    #pin-input:focus { border-color: var(--accent); }
+    #pin-input.error { border-color: var(--danger); }
+
+    #pin-submit {
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 14px;
+      transition: background 0.15s, opacity 0.15s;
+    }
+    #pin-submit:hover { background: #6d28d9; }
+    #pin-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    #pin-error { color: var(--danger); font-size: 13px; text-align: center; min-height: 18px; }
+
+    /* ── CHAT SCREEN ── */
+    #chat-screen { display: none; flex-direction: column; height: 100%; max-width: 760px; margin: 0 auto; }
+
+    #chat-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      background: var(--bg); position: sticky; top: 0; z-index: 10;
+    }
+
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+    #chat-header .title { font-size: 15px; font-weight: 600; }
+    #chat-header .subtitle { font-size: 12px; color: var(--text-dim); margin-left: auto; }
+
+    #messages {
+      flex: 1; overflow-y: auto; padding: 24px 20px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+
+    .msg { display: flex; flex-direction: column; gap: 4px; max-width: 82%; }
+    .msg.user { align-self: flex-end; align-items: flex-end; }
+    .msg.agent { align-self: flex-start; align-items: flex-start; }
+
+    .bubble {
+      padding: 12px 16px; border-radius: 16px;
+      font-size: 14px; line-height: 1.55;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .msg.user .bubble { background: var(--user-bubble); border-bottom-right-radius: 4px; border: 1px solid #2d1a6e; }
+    .msg.agent .bubble { background: var(--agent-bubble); border-bottom-left-radius: 4px; border: 1px solid var(--border); }
+
+    .msg-meta { font-size: 11px; color: var(--text-dim); padding: 0 4px; }
+
+    /* typing indicator */
+    .typing-dots {
+      display: flex; gap: 5px; padding: 14px 18px;
+      background: var(--agent-bubble); border: 1px solid var(--border);
+      border-radius: 16px; border-bottom-left-radius: 4px; width: fit-content;
+    }
+    .typing-dots span {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--text-dim); animation: pulse 1.2s infinite;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes pulse {
+      0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+      40% { opacity: 1; transform: scale(1); }
+    }
+
+    #input-area {
+      padding: 16px 20px; border-top: 1px solid var(--border);
+      background: var(--bg); display: flex; gap: 10px; align-items: flex-end;
+    }
+
+    #user-input {
+      flex: 1; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; color: var(--text); font-size: 14px; line-height: 1.5;
+      max-height: 160px; min-height: 44px; outline: none; padding: 11px 14px;
+      resize: none; transition: border-color 0.15s;
+    }
+    #user-input:focus { border-color: var(--accent); }
+    #user-input::placeholder { color: var(--text-dim); }
+
+    #send-btn {
+      background: var(--accent); border: none; border-radius: 10px;
+      color: #fff; cursor: pointer; flex-shrink: 0; font-size: 18px;
+      height: 44px; transition: background 0.15s, opacity 0.15s; width: 44px;
+    }
+    #send-btn:hover { background: #6d28d9; }
+    #send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    #messages::-webkit-scrollbar { width: 4px; }
+    #messages::-webkit-scrollbar-track { background: transparent; }
+    #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    @media (max-width: 480px) { .msg { max-width: 92%; } }
+  </style>
+</head>
+<body>
+
+<!-- PIN SCREEN -->
+<div id="pin-screen">
+  <div class="logo"><span>agents</span>HQ</div>
+  <h1>Welcome back</h1>
+  <p>Enter your PIN to connect to the agentsHQ team</p>
+  <form id="pin-form">
+    <input id="pin-input" type="password" placeholder="PIN" autocomplete="current-password" autofocus />
+    <button id="pin-submit" type="submit">Connect</button>
+    <div id="pin-error"></div>
+  </form>
+</div>
+
+<!-- CHAT SCREEN -->
+<div id="chat-screen">
+  <div id="chat-header">
+    <div class="status-dot"></div>
+    <div class="title">agentsHQ</div>
+    <div class="subtitle" id="session-label"></div>
+  </div>
+  <div id="messages"></div>
+  <div id="input-area">
+    <textarea id="user-input" placeholder="Ask the team anything…" rows="1"></textarea>
+    <button id="send-btn" title="Send">&#9650;</button>
+  </div>
+</div>
+
+<script>
+  const ORC_BASE = '/api/orc';
+  const SESSION_KEY = 'browser:7792432594';
+  const TOKEN_TTL_MS = 8 * 60 * 60 * 1000;
+
+  let _token = null;
+
+  // ── Bootstrap ──────────────────────────────────────────────
+  (function init() {
+    const stored = sessionStorage.getItem('chat_token');
+    const storedTs = sessionStorage.getItem('chat_token_ts');
+    if (stored && storedTs && (Date.now() - parseInt(storedTs, 10)) < TOKEN_TTL_MS) {
+      _token = stored;
+      showChat();
+    }
+
+    document.getElementById('pin-form').addEventListener('submit', submitPin);
+
+    const ta = document.getElementById('user-input');
+    ta.addEventListener('input', () => {
+      ta.style.height = 'auto';
+      ta.style.height = Math.min(ta.scrollHeight, 160) + 'px';
+    });
+    ta.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+
+    document.getElementById('send-btn').addEventListener('click', sendMessage);
+  })();
+
+  // ── PIN flow ───────────────────────────────────────────────
+  async function submitPin(e) {
+    e.preventDefault();
+    const pin = document.getElementById('pin-input').value.trim();
+    const btn = document.getElementById('pin-submit');
+    const errEl = document.getElementById('pin-error');
+    const inp = document.getElementById('pin-input');
+
+    if (!pin) return;
+    btn.disabled = true;
+    btn.textContent = 'Connecting\u2026';
+    errEl.textContent = '';
+    inp.classList.remove('error');
+
+    try {
+      const res = await fetch(ORC_BASE + '/chat-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        inp.classList.add('error');
+        errEl.textContent = data.detail || 'Connection failed.';
+        return;
+      }
+      _token = data.token;
+      sessionStorage.setItem('chat_token', _token);
+      sessionStorage.setItem('chat_token_ts', String(Date.now()));
+      showChat();
+    } catch (_) {
+      errEl.textContent = 'Network error. Is the VPS reachable?';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Connect';
+    }
+  }
+
+  function showChat() {
+    document.getElementById('pin-screen').style.display = 'none';
+    const cs = document.getElementById('chat-screen');
+    cs.style.display = 'flex';
+    document.getElementById('session-label').textContent = 'session: ' + SESSION_KEY;
+    document.getElementById('user-input').focus();
+    const msgs = document.getElementById('messages');
+    if (msgs.children.length === 0) {
+      appendMessage('agent', "Hey — I\u2019m connected to the agentsHQ team on the VPS. What do you need?");
+    }
+  }
+
+  // ── Messaging ──────────────────────────────────────────────
+  async function sendMessage() {
+    const ta = document.getElementById('user-input');
+    const text = ta.value.trim();
+    if (!text) return;
+
+    ta.value = '';
+    ta.style.height = 'auto';
+    document.getElementById('send-btn').disabled = true;
+
+    appendMessage('user', text);
+    const typing = appendTyping();
+
+    try {
+      const jobId = await postTask(text);
+      const result = await pollStatus(jobId);
+      typing.remove();
+      appendMessage('agent', result);
+    } catch (ex) {
+      typing.remove();
+      if (ex.message === 'TOKEN_EXPIRED') {
+        sessionStorage.removeItem('chat_token');
+        sessionStorage.removeItem('chat_token_ts');
+        appendMessage('agent', 'Session expired. Refreshing\u2026');
+        setTimeout(() => location.reload(), 1500);
+      } else {
+        appendMessage('agent', 'Error: ' + ex.message);
+      }
+    } finally {
+      document.getElementById('send-btn').disabled = false;
+      document.getElementById('user-input').focus();
+    }
+  }
+
+  async function postTask(text) {
+    const res = await fetch(ORC_BASE + '/run-async', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + _token,
+      },
+      body: JSON.stringify({ task: text, session_key: SESSION_KEY, source: 'browser' }),
+    });
+    if (res.status === 401) throw new Error('TOKEN_EXPIRED');
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw new Error(d.detail || 'HTTP ' + res.status);
+    }
+    const data = await res.json();
+    return data.job_id;
+  }
+
+  async function pollStatus(jobId) {
+    const MAX_POLLS = 180;
+    for (let i = 0; i < MAX_POLLS; i++) {
+      await sleep(2000);
+      const res = await fetch(ORC_BASE + '/status/' + jobId, {
+        headers: { 'Authorization': 'Bearer ' + _token },
+      });
+      if (res.status === 401) throw new Error('TOKEN_EXPIRED');
+      const data = await res.json();
+      if (data.status === 'completed') return data.result || data.summary || '(no output)';
+      if (data.status === 'failed') throw new Error(data.error || 'Task failed.');
+    }
+    throw new Error('Timed out (>6 min). The task may still be running \u2014 check Telegram.');
+  }
+
+  // ── DOM helpers ────────────────────────────────────────────
+  function appendMessage(role, text) {
+    const msgs = document.getElementById('messages');
+    const wrap = document.createElement('div');
+    wrap.className = 'msg ' + role;
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = text;
+
+    const meta = document.createElement('div');
+    meta.className = 'msg-meta';
+    meta.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    wrap.appendChild(bubble);
+    wrap.appendChild(meta);
+    msgs.appendChild(wrap);
+    msgs.scrollTop = msgs.scrollHeight;
+    return wrap;
+  }
+
+  function appendTyping() {
+    const msgs = document.getElementById('messages');
+    const wrap = document.createElement('div');
+    wrap.className = 'msg agent';
+
+    const dots = document.createElement('div');
+    dots.className = 'typing-dots';
+    for (let i = 0; i < 3; i++) {
+      const s = document.createElement('span');
+      dots.appendChild(s);
+    }
+
+    wrap.appendChild(dots);
+    msgs.appendChild(wrap);
+    msgs.scrollTop = msgs.scrollHeight;
+    return wrap;
+  }
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>
