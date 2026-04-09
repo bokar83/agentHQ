@@ -1171,7 +1171,7 @@ NOTION_CAPTURE_TOOLS = [NotionCreateIdeaTool(), NotionQueryIdeasTool()]
 
 
 # Known Notion database IDs (hardcoded so agents don't need to search)
-NOTION_TASK_DB_ID = "249bcf1a302980739c26c61cad212477"
+NOTION_TASK_DB_ID = os.environ.get("NOTION_TASK_DB_ID", "249bcf1a302980739c26c61cad212477")
 
 
 class NotionQueryTasksTool(BaseTool):

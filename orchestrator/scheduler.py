@@ -136,8 +136,8 @@ def _get_or_discover_block_ids(token: str) -> dict:
 
     logger.info("QUOTE: Discovering quote block IDs...")
     ids = {
-        "agentsHQ_quote_block_id": _discover_quote_block_id("327bcf1a-3029-80b7-9b1e-d77f94c9c61c", token),
-        "forge_quote_block_id": _discover_quote_block_id("249bcf1a-3029-807f-86e8-fb97e2671154", token),
+        "agentsHQ_quote_block_id": _discover_quote_block_id(os.environ.get("NOTION_AGENTSHQ_PAGE_ID", "327bcf1a-3029-80b7-9b1e-d77f94c9c61c"), token),
+        "forge_quote_block_id": _discover_quote_block_id(os.environ.get("NOTION_FORGE_PAGE_ID", "249bcf1a-3029-807f-86e8-fb97e2671154"), token),
     }
     try:
         with open(cache_path, "w") as f:

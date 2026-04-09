@@ -92,7 +92,7 @@ def sync_supabase_to_notion() -> int:
     """
     import httpx
 
-    NOTION_DB_ID = "619a842a0e044cb38d1719ec67c130f0"  # CRM Leads page ID
+    NOTION_DB_ID = os.environ.get("NOTION_CRM_LEADS_DB_ID", "619a842a0e044cb38d1719ec67c130f0")
     notion_token = (
         os.environ.get("NOTION_API_KEY")
         or os.environ.get("NOTION_TOKEN")
