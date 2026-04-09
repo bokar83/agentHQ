@@ -273,7 +273,13 @@ def _apollo_search(query: str = "", count: int = 10) -> List[dict]:
         }
         with httpx.Client(timeout=20) as client:
             r = client.post(f"{APOLLO_API_URL}/mixed_people/search", json=data, headers=headers)
-            r.raise_for_status()
+
+        if r.status_code == 403:
+            err = r.json().get("error_code", "")
+            if err == "API_INACCESSIBLE":
+                logger.warning("Apollo: endpoint not available on free plan — skipping fallback. Upgrade at app.apollo.io to enable.")
+                return []
+        r.raise_for_status()
 
         leads = []
         for person in r.json().get("people", []):
