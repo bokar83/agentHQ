@@ -1744,7 +1744,7 @@ def search_memory(query: str, top_k: int = 3):
         return {"query": query, "results": [], "error": str(e)}
 
 
-@app.get("/history/{session_id}")
+@app.get("/history/{session_id}", dependencies=[Depends(verify_api_key)])
 def get_history(session_id: str, limit: int = 10):
     """Get conversation history for a Telegram session."""
     try:

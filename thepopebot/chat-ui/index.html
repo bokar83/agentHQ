@@ -364,9 +364,36 @@
     cs.style.display = 'flex';
     document.getElementById('session-label').textContent = 'session: ' + SESSION_KEY;
     document.getElementById('user-input').focus();
+    loadHistory();
+  }
+
+  async function loadHistory() {
     const msgs = document.getElementById('messages');
-    if (msgs.children.length === 0) {
-      appendMessage('agent', "Hey — I\u2019m connected to the agentsHQ team on the VPS. What do you need?");
+    try {
+      const res = await fetch(ORC_BASE + '/history/' + encodeURIComponent(SESSION_KEY), {
+        headers: { 'Authorization': 'Bearer ' + _token },
+      });
+      if (!res.ok) throw new Error('history fetch failed');
+      const data = await res.json();
+      const history = data.history || [];
+      if (history.length === 0) {
+        appendMessage('agent', "Hey \u2014 I\u2019m connected to the agentsHQ team on the VPS. What do you need?");
+        return;
+      }
+      // Show divider then last 10 turns
+      const divider = document.createElement('div');
+      divider.style.cssText = 'text-align:center;font-size:11px;color:var(--text-dim);padding:8px 0;';
+      divider.textContent = '\u2014 recent history \u2014';
+      msgs.appendChild(divider);
+      const recent = history.slice(-10);
+      for (const turn of recent) {
+        const role = turn.role === 'user' ? 'user' : 'agent';
+        appendMessage(role, turn.content, turn.timestamp);
+      }
+      msgs.scrollTop = msgs.scrollHeight;
+    } catch (_) {
+      // History load failed — just show greeting
+      appendMessage('agent', "Hey \u2014 I\u2019m connected to the agentsHQ team on the VPS. What do you need?");
     }
   }
 
@@ -447,7 +474,7 @@
   }
 
   // ── DOM helpers ────────────────────────────────────────────
-  function appendMessage(role, text) {
+  function appendMessage(role, text, isoTimestamp) {
     const msgs = document.getElementById('messages');
     const wrap = document.createElement('div');
     wrap.className = 'msg ' + role;
@@ -458,7 +485,8 @@
 
     const meta = document.createElement('div');
     meta.className = 'msg-meta';
-    meta.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const ts = isoTimestamp ? new Date(isoTimestamp) : new Date();
+    meta.textContent = ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     wrap.appendChild(bubble);
     wrap.appendChild(meta);
