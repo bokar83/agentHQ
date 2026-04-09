@@ -668,3 +668,97 @@ def purge_lesson(lesson_id: int) -> bool:
     except Exception as e:
         logger.warning(f"purge_lesson failed: {e}")
         return False
+
+
+# ── Notion Artifact Sync ───────────────────────────────────────
+
+# Task types that produce meaningful artifacts worth syncing to Notion
+NOTION_SYNC_TASK_TYPES = {
+    "research_report", "consulting_deliverable", "website_build", "3d_website_build",
+    "app_build", "code_task", "general_writing", "social_content", "linkedin_x_campaign",
+    "notion_overhaul", "voice_polishing", "prompt_engineering", "news_brief",
+}
+
+NOTION_OUTPUTS_DB_ID = os.environ.get("NOTION_OUTPUTS_DB_ID", "33dbcf1a-3029-81ce-bd80-dfa8b23d949f")
+
+
+def sync_artifact_to_notion(
+    task_request: str,
+    task_type: str,
+    result_summary: str,
+    files_created: list = None,
+    execution_time: float = 0.0,
+    session_key: str = "unknown",
+) -> bool:
+    """
+    Post a completed task artifact to the Notion Agent Outputs database.
+    Runs in a daemon thread — never call inline.
+    Only fires for task types in NOTION_SYNC_TASK_TYPES.
+    Returns False if NOTION_SECRET is not set or task type is not tracked.
+    """
+    if task_type not in NOTION_SYNC_TASK_TYPES:
+        return False
+
+    token = os.environ.get("NOTION_SECRET") or os.environ.get("NOTION_API_KEY")
+    if not token:
+        logger.warning("sync_artifact_to_notion: NOTION_SECRET not set, skipping")
+        return False
+
+    try:
+        import httpx
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Notion-Version": "2022-06-28",
+            "Content-Type": "application/json",
+        }
+
+        # Truncate task title to 100 chars (Notion title limit)
+        title = task_request[:100].strip()
+        files_str = ", ".join(files_created[:5]) if files_created else ""
+        summary_trunc = result_summary[:1800]
+        now_iso = datetime.utcnow().isoformat()
+
+        properties = {
+            "Task": {"title": [{"text": {"content": title}}]},
+            "Type": {"select": {"name": task_type if task_type in [
+                "research_report", "website_build", "consulting_deliverable",
+                "social_content", "code_task", "general_writing"
+            ] else "other"}},
+            "Status": {"select": {"name": "completed"}},
+            "Files": {"rich_text": [{"text": {"content": files_str}}]},
+            "ExecTime": {"number": round(execution_time, 1)},
+            "Date": {"date": {"start": now_iso[:10]}},
+            "Session": {"rich_text": [{"text": {"content": session_key[:100]}}]},
+        }
+
+        children = [
+            {
+                "object": "block",
+                "type": "paragraph",
+                "paragraph": {
+                    "rich_text": [{"type": "text", "text": {"content": summary_trunc}}]
+                }
+            }
+        ]
+
+        resp = httpx.post(
+            "https://api.notion.com/v1/pages",
+            headers=headers,
+            json={
+                "parent": {"database_id": NOTION_OUTPUTS_DB_ID},
+                "properties": properties,
+                "children": children,
+            },
+            timeout=15,
+        )
+
+        if resp.status_code in (200, 201):
+            logger.info(f"Notion artifact synced: {title[:50]} (type={task_type})")
+            return True
+        else:
+            logger.warning(f"Notion artifact sync failed: {resp.status_code} {resp.text[:200]}")
+            return False
+
+    except Exception as e:
+        logger.warning(f"sync_artifact_to_notion failed (non-fatal): {e}")
+        return False
