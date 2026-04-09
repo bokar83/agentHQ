@@ -33,96 +33,25 @@ SUBJECT = "Where is your margin actually going?"
 
 TEMPLATE = """Hi {first_name},
 
-I'll keep this simple.
+Most businesses aren't losing margin to bad strategy. They're losing it to one bottleneck: a handoff, an approval loop, a pricing gap quietly taxing everything downstream.
 
-Most businesses aren't losing margin to bad strategy. They're losing it to one bottleneck that often goes unnamed: a handoff, an approval loop, a pricing gap quietly taxing everything downstream.
+The frustrating part: it's almost always findable. And almost always fixable faster than people expect.
 
-I'm Boubacar Barry, founder of Catalyst Works. I work with the people running the business day to day to find that bottleneck and build a clear path to removing it. Over 15 years working with leadership teams across three continents, the constraint is almost always findable, and almost always fixable faster than people expect.
+I'm Boubacar Barry, founder of Catalyst Works. I spent 15 years working with leadership teams across three continents watching the same pattern repeat: the thing slowing the business down is rarely what anyone is looking at.
 
-I'd love a quick 20-minute conversation to hear what's going on in your business and see if there's something worth exploring together. No pitch, no prep required on your end.
+What I do differently: I don't hand you a report. I find the constraint and build a clear, executable path to removing it. One that the people running the business can actually use without me in the room.
 
-Worth a conversation?"""
+One question before I ask for anything:
+
+Is there a place in your operation right now where work slows down or disappears that you haven't been able to fully fix?
+
+If yes, worth a reply.
+
+Boubacar Barry
+Founder, Catalyst Works
+catalystworks.consulting"""
 
 OUTREACH_ACCOUNT = "catalystworks.ai@gmail.com"
-
-# ── Email signature (Option 3: The Constraint Remover) ───────────
-SIGNATURE_HTML = """<table cellpadding="0" cellspacing="0" border="0" style="font-family: Arial, Helvetica, sans-serif; max-width: 520px;">
-  <tr>
-    <td style="padding-bottom: 12px;">
-      <table cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td style="padding-right: 16px; padding-bottom: 4px;" valign="top">
-            <span style="font-size: 17px; font-weight: 800; color: #071A2E; letter-spacing: -0.02em; display: block; line-height: 1.2;">Boubacar Barry</span>
-            <span style="font-size: 11px; color: #718096; font-weight: 500; display: block; margin-top: 2px;">Founder, Catalyst Works</span>
-          </td>
-          <td valign="top" style="border-left: 1px solid #E2E8F0; padding-left: 16px;">
-            <span style="font-size: 11px; color: #4A5568; display: block; line-height: 1.5; max-width: 220px;">
-              I help growing companies remove the constraint blocking their next stage of growth.
-            </span>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-  <tr>
-    <td style="padding-bottom: 12px;">
-      <table cellpadding="0" cellspacing="0" border="0" width="100%">
-        <tr><td style="height: 1px; background-color: #E8ECF0; font-size: 0; line-height: 0;">&nbsp;</td></tr>
-      </table>
-    </td>
-  </tr>
-  <tr>
-    <td style="padding-bottom: 12px;">
-      <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #071A2E; border-radius: 4px;">
-        <tr>
-          <td style="padding: 14px 20px;">
-            <table cellpadding="0" cellspacing="0" border="0" width="100%">
-              <tr>
-                <td valign="middle">
-                  <span style="font-size: 12px; color: rgba(255,255,255,0.85); font-weight: 500; line-height: 1.4; display: block;">
-                    I help growing companies remove the constraint blocking their next stage of growth.
-                  </span>
-                  <span style="font-size: 10px; color: #00B7C2; font-weight: 600; display: block; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.06em;">
-                    One conversation. No pitch.
-                  </span>
-                </td>
-                <td valign="middle" align="right" style="padding-left: 16px;" width="160">
-                  <a href="https://catalystworks.consulting" target="_blank"
-                     style="display: inline-block; background-color: #FF7A00; color: #ffffff; font-size: 11px; font-weight: 700; text-decoration: none; padding: 9px 16px; border-radius: 3px; white-space: nowrap; letter-spacing: 0.02em;">
-                    catalystworks.consulting
-                  </a>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <table cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td style="padding-right: 12px;">
-            <a href="https://catalystworks.consulting" target="_blank"
-               style="font-size: 11px; color: #00B7C2; text-decoration: none; font-weight: 600;">catalystworks.consulting</a>
-          </td>
-          <td style="color: #CBD5E0; font-size: 11px; padding-right: 12px;">&middot;</td>
-          <td style="padding-right: 12px;">
-            <a href="https://boubacarbarry.com" target="_blank"
-               style="font-size: 11px; color: #718096; text-decoration: none;">boubacarbarry.com</a>
-          </td>
-          <td style="color: #CBD5E0; font-size: 11px; padding-right: 12px;">&middot;</td>
-          <td>
-            <a href="mailto:catalystworks.ai@gmail.com"
-               style="font-size: 11px; color: #718096; text-decoration: none;">catalystworks.ai@gmail.com</a>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-"""
 
 
 # ── Database helpers ─────────────────────────────────────────────
@@ -191,28 +120,12 @@ def _get_access_token() -> str:
 
 
 def _create_draft(to_email: str, subject: str, body: str) -> Optional[str]:
-    """Create a Gmail draft via API as pure HTML with signature. Returns draft ID or None on failure."""
+    """Create a Gmail draft via API as plain text. Returns draft ID or None on failure."""
     import httpx
     try:
         token = _get_access_token()
 
-        # Convert plain text body to HTML paragraphs, then append signature
-        paragraphs = body.strip().split("\n\n")
-        html_body = "".join(
-            f"<p style='margin: 0 0 16px 0;'>{p.replace(chr(10), '<br>')}</p>"
-            for p in paragraphs
-        )
-        html = (
-            "<html><body>"
-            "<div style='font-family: Arial, Helvetica, sans-serif; font-size: 14px; "
-            "color: #1a1a1a; line-height: 1.7; max-width: 600px;'>"
-            f"{html_body}"
-            "</div>"
-            f"{SIGNATURE_HTML}"
-            "</body></html>"
-        )
-
-        msg = MIMEText(html, "html")
+        msg = MIMEText(body, "plain")
         msg["to"] = to_email
         msg["from"] = OUTREACH_ACCOUNT
         msg["subject"] = subject
