@@ -138,6 +138,14 @@
     #user-input:focus { border-color: var(--accent); }
     #user-input::placeholder { color: var(--text-dim); }
 
+    #attach-btn {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text-dim); cursor: pointer; flex-shrink: 0; font-size: 18px;
+      height: 44px; transition: background 0.15s, color 0.15s; width: 44px;
+    }
+    #attach-btn:hover { background: var(--border); color: var(--text); }
+    #attach-btn.has-file { border-color: var(--accent); color: var(--accent); }
+
     #send-btn {
       background: var(--accent); border: none; border-radius: 10px;
       color: #fff; cursor: pointer; flex-shrink: 0; font-size: 18px;
@@ -145,6 +153,22 @@
     }
     #send-btn:hover { background: #6d28d9; }
     #send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    #file-chip {
+      display: none; align-items: center; gap: 6px;
+      background: var(--surface2); border: 1px solid var(--accent);
+      border-radius: 8px; padding: 4px 10px; font-size: 12px; color: var(--text-dim);
+      max-width: 200px; overflow: hidden;
+    }
+    #file-chip.visible { display: flex; }
+    #file-chip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #file-chip-remove {
+      cursor: pointer; color: var(--text-dim); font-size: 14px;
+      flex-shrink: 0; line-height: 1;
+    }
+    #file-chip-remove:hover { color: var(--danger); }
+
+    #input-wrapper { display: flex; flex-direction: column; flex: 1; gap: 6px; }
 
     #messages::-webkit-scrollbar { width: 4px; }
     #messages::-webkit-scrollbar-track { background: transparent; }
@@ -176,7 +200,15 @@
   </div>
   <div id="messages"></div>
   <div id="input-area">
-    <textarea id="user-input" placeholder="Ask the team anything…" rows="1"></textarea>
+    <button id="attach-btn" title="Attach file">&#128206;</button>
+    <input id="file-input" type="file" style="display:none" />
+    <div id="input-wrapper">
+      <div id="file-chip">
+        <span id="file-chip-name"></span>
+        <span id="file-chip-remove" title="Remove file">&#215;</span>
+      </div>
+      <textarea id="user-input" placeholder="Ask the team anything…" rows="1"></textarea>
+    </div>
     <button id="send-btn" title="Send">&#9650;</button>
   </div>
 </div>
@@ -187,6 +219,8 @@
   const TOKEN_TTL_MS = 8 * 60 * 60 * 1000;
 
   let _token = null;
+  let _pendingFileId = null;
+  let _pendingFileName = null;
 
   // ── Bootstrap ──────────────────────────────────────────────
   (function init() {
@@ -209,7 +243,65 @@
     });
 
     document.getElementById('send-btn').addEventListener('click', sendMessage);
+
+    // File attachment
+    const attachBtn = document.getElementById('attach-btn');
+    const fileInput = document.getElementById('file-input');
+    attachBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', onFileSelected);
+    document.getElementById('file-chip-remove').addEventListener('click', clearFile);
   })();
+
+  // ── File handling ──────────────────────────────────────────
+  async function onFileSelected() {
+    const fileInput = document.getElementById('file-input');
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    const attachBtn = document.getElementById('attach-btn');
+    attachBtn.textContent = '\u23F3'; // hourglass
+    attachBtn.disabled = true;
+
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch(ORC_BASE + '/upload', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + _token },
+        body: fd,
+      });
+      if (res.status === 401) { clearFile(); throw new Error('TOKEN_EXPIRED'); }
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.detail || 'Upload failed.');
+      }
+      const data = await res.json();
+      _pendingFileId = data.file_id;
+      _pendingFileName = data.filename;
+
+      const chip = document.getElementById('file-chip');
+      document.getElementById('file-chip-name').textContent = data.filename;
+      chip.classList.add('visible');
+      attachBtn.classList.add('has-file');
+      attachBtn.textContent = '\uD83D\uDCCE'; // paperclip
+    } catch (ex) {
+      appendMessage('agent', 'File upload failed: ' + ex.message);
+      clearFile();
+    } finally {
+      attachBtn.disabled = false;
+      if (!_pendingFileId) attachBtn.textContent = '\uD83D\uDCCE';
+    }
+  }
+
+  function clearFile() {
+    _pendingFileId = null;
+    _pendingFileName = null;
+    document.getElementById('file-input').value = '';
+    document.getElementById('file-chip').classList.remove('visible');
+    const attachBtn = document.getElementById('attach-btn');
+    attachBtn.classList.remove('has-file');
+    attachBtn.textContent = '\uD83D\uDCCE';
+  }
 
   // ── PIN flow ───────────────────────────────────────────────
   async function submitPin(e) {
@@ -265,17 +357,24 @@
   async function sendMessage() {
     const ta = document.getElementById('user-input');
     const text = ta.value.trim();
-    if (!text) return;
+    if (!text && !_pendingFileId) return;
+
+    const displayText = _pendingFileName
+      ? '\uD83D\uDCCE ' + _pendingFileName + (text ? '\n' + text : '')
+      : text;
 
     ta.value = '';
     ta.style.height = 'auto';
     document.getElementById('send-btn').disabled = true;
 
-    appendMessage('user', text);
+    const fileId = _pendingFileId;
+    clearFile();
+
+    appendMessage('user', displayText);
     const typing = appendTyping();
 
     try {
-      const jobId = await postTask(text);
+      const jobId = await postTask(text || 'Please review and summarize the attached file.', fileId);
       const result = await pollStatus(jobId);
       typing.remove();
       appendMessage('agent', result);
@@ -295,14 +394,16 @@
     }
   }
 
-  async function postTask(text) {
+  async function postTask(text, fileId) {
+    const body = { task: text, session_key: SESSION_KEY, source: 'browser' };
+    if (fileId) body.file_id = fileId;
     const res = await fetch(ORC_BASE + '/run-async', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + _token,
       },
-      body: JSON.stringify({ task: text, session_key: SESSION_KEY, source: 'browser' }),
+      body: JSON.stringify(body),
     });
     if (res.status === 401) throw new Error('TOKEN_EXPIRED');
     if (!res.ok) {
