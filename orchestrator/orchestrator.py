@@ -290,6 +290,10 @@ def run_chat(message: str, session_key: str = "default") -> dict:
         for turn in history:
             role = turn["role"] if turn["role"] in ("user", "assistant") else "user"
             history_messages.append({"role": role, "content": turn["content"]})
+        # Anthropic requires the last message to be from the user.
+        # Strip trailing assistant messages so the current user message is always last.
+        while history_messages and history_messages[-1]["role"] == "assistant":
+            history_messages.pop()
     except Exception as e:
         logger.warning(f"Chat history load failed (non-fatal): {e}")
 
