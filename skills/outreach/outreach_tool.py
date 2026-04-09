@@ -30,6 +30,8 @@ logger = logging.getLogger(__name__)
 
 # -- Email template -- single source of truth ---------------------
 # To change the template, edit ONLY: templates/email/cold_outreach.py
+if "/app" not in sys.path:
+    sys.path.insert(0, "/app")
 from templates.email.cold_outreach import SUBJECT, BODY as TEMPLATE
 
 OUTREACH_ACCOUNT = "catalystworks.ai@gmail.com"
