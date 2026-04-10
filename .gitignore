@@ -111,3 +111,6 @@ ideas_full_list_utf8.txt
 test_sankofa.py
 data/
 docs/research/
+
+# Runtime deploy state
+.deploy-sha
