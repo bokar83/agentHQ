@@ -99,10 +99,13 @@ services:
       - RUNNER_WORKDIR=/tmp/runner
       - LABELS=self-hosted,vps
     volumes:
+      - /root/agentsHQ:/root/agentsHQ
       - /var/run/docker.sock:/var/run/docker.sock
       - runner_work:/tmp/runner
     networks:
+      - agentshq_orc-net
       - thepopebot-net
+      - root_default
 
 networks:
   agentshq_orc-net:
