@@ -2,13 +2,15 @@
 # deploy-stack.sh -- Auto-deploy for agentsHQ stack
 # Runs inside thepopebot-runner container via docker exec
 # Triggered by .github/workflows/deploy-agentshq.yml
+#
+# Handles: orc-crewai rebuild, thepopebot-chat-ui nginx reload
+# NOT handled here: thepopebot-event-handler (owned by rebuild-event-handler.yml)
 
 set -euo pipefail
 
 REPO="/root/agentsHQ"
 SHA_FILE="${REPO}/.deploy-sha"
 COMPOSE_MAIN="${REPO}/docker-compose.yml"
-COMPOSE_TPB="${REPO}/docker-compose.thepopebot.yml"
 ORCHESTRATOR_IMAGE="agentshq-orchestrator"
 
 # Git credential setup
@@ -47,18 +49,15 @@ changed_in() {
 
 ORC_CHANGED=false
 CHATUI_CHANGED=false
-TPB_COMPOSE_CHANGED=false
 
 changed_in "orchestrator/" && ORC_CHANGED=true || true
 changed_in "thepopebot/chat-ui/" && CHATUI_CHANGED=true || true
-changed_in "docker-compose.thepopebot.yml" && TPB_COMPOSE_CHANGED=true || true
 
-echo "[deploy] orc_changed=${ORC_CHANGED} chatui_changed=${CHATUI_CHANGED} tpb_compose_changed=${TPB_COMPOSE_CHANGED}"
+echo "[deploy] orc_changed=${ORC_CHANGED} chatui_changed=${CHATUI_CHANGED}"
 
 # Track exit codes independently
 ORC_EXIT=0
 CHATUI_EXIT=0
-TPB_EXIT=0
 
 # Orchestrator deploy
 if [ "$ORC_CHANGED" = "true" ]; then
@@ -109,19 +108,8 @@ if [ "$CHATUI_CHANGED" = "true" ]; then
   fi
 fi
 
-# Thepopebot compose redeploy
-if [ "$TPB_COMPOSE_CHANGED" = "true" ]; then
-  echo "[deploy] docker-compose.thepopebot.yml changed -- redeploying thepopebot services..."
-  if docker compose -f "$COMPOSE_TPB" up -d --remove-orphans; then
-    echo "[deploy] Thepopebot stack updated"
-  else
-    echo "[deploy] ERROR: Thepopebot stack redeploy failed"
-    TPB_EXIT=1
-  fi
-fi
-
 # Update deploy SHA atomically, only if no failures
-FINAL_EXIT=$((ORC_EXIT + CHATUI_EXIT + TPB_EXIT))
+FINAL_EXIT=$((ORC_EXIT + CHATUI_EXIT))
 if [ "$FINAL_EXIT" -eq 0 ]; then
   echo "$NEW_SHA" > "${SHA_FILE}.tmp"
   mv "${SHA_FILE}.tmp" "$SHA_FILE"
@@ -130,5 +118,5 @@ else
   echo "[deploy] Skipping .deploy-sha update due to failures"
 fi
 
-echo "[deploy] Done. orc=${ORC_EXIT} chatui=${CHATUI_EXIT} tpb=${TPB_EXIT}"
+echo "[deploy] Done. orc=${ORC_EXIT} chatui=${CHATUI_EXIT}"
 exit $FINAL_EXIT
