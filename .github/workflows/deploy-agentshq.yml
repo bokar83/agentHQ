@@ -1,0 +1,26 @@
+name: Deploy agentsHQ Stack
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'orchestrator/**'
+      - 'thepopebot/chat-ui/**'
+      - 'scripts/deploy-stack.sh'
+      - 'docker-compose.yml'
+      - 'docker-compose.thepopebot.yml'
+
+concurrency:
+  group: event-handler-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    timeout-minutes: 20
+    steps:
+      - name: Deploy agentsHQ stack
+        run: |
+          docker exec thepopebot-runner bash /root/agentsHQ/scripts/deploy-stack.sh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
