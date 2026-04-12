@@ -1,213 +1,122 @@
 """
 router.py — Task Classification Engine
 =======================================
-Every request hitting agentsHQ passes through here first.
-The Router reads the incoming message, classifies the intent,
-and returns a task_type that tells the Orchestrator which
-crew to assemble.
-
-This is a living file. New task types are added here as the
-system grows. See AGENTS.md Task Type Registry for the full list.
+Maps incoming user requests to the correct crew type.
+Used by orchestrator.py to determine which crew to assemble.
 """
 
+import re
 import os
-import json
 import logging
 from typing import Optional
-from crewai import LLM
 
 logger = logging.getLogger(__name__)
 
-OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-
-# ── Task Type Registry ─────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# TASK_TYPES registry
+# ---------------------------------------------------------------------------
+# Each entry:
+#   description  — human-readable label shown in Telegram status messages
+#   keywords     — list of trigger phrases (case-insensitive substring match)
+#   crew         — crew key passed to assemble_crew()
+# ---------------------------------------------------------------------------
 
 TASK_TYPES = {
-    "chat": {
-        "description": "Casual conversation, follow-up questions, greetings, memory recall, or anything that isn't a structured task",
-        "keywords": ["hey", "hi", "hello", "thanks", "what did", "do you remember", "what was", "tell me", "how are", "who am", "what's up", "remind me", "recap", "summary of", "what have we"],
-        "crew": None,  # no crew — handled by run_chat() directly
-    },
-    "website_build": {
-        "description": "Build a website, landing page, or web presence for a business or project",
-        "keywords": ["website", "landing page", "web presence", "homepage", "site", "web page", "online presence"],
-        "crew": "website_crew",
-    },
-    "3d_website_build": {
-        "description": "Build a premium 3D animated scroll-driven website with competitive intelligence, AI-generated image/video asset prompts, and Next.js/Framer Motion implementation",
-        "keywords": ["3d website", "animated website", "scroll animation", "scroll-driven", "3d animation", "framer motion", "scrollytelling", "apple-style website", "premium animated site", "exploded view website"],
-        "crew": "3d_website_crew",
-    },
-    "app_build": {
-        "description": "Build a web application, tool, calculator, dashboard, form, or interactive system",
-        "keywords": ["app", "application", "tool", "calculator", "dashboard", "tracker", "form", "portal", "system", "platform"],
-        "crew": "app_crew",
-    },
     "research_report": {
-        "description": "Research a topic and produce a structured, factual report or analysis",
-        "keywords": ["research", "analyze", "analysis", "find", "summarize", "summary", "compare", "report", "investigate", "look into", "what is", "how does", "explain"],
+        "description": "Research & report writing",
+        "keywords": [
+            "research", "write a report", "find information",
+            "summarize", "analyse", "analyze", "deep dive",
+        ],
         "crew": "research_crew",
     },
-    "consulting_deliverable": {
-        "description": "Create a consulting artifact: proposal, brief, diagnostic, strategy framework, or client deliverable",
-        "keywords": ["proposal", "brief", "diagnostic", "framework", "strategy", "consulting", "engagement", "client", "recommendation", "assessment", "roadmap", "playbook"],
-        "crew": "consulting_crew",
-    },
-    "social_content": {
-        "description": "Create social media content: posts, captions, threads, or campaigns",
-        "keywords": ["post", "tweet", "linkedin", "instagram", "twitter", "caption", "social", "thread", "content calendar", "social media", "tiktok", "facebook"],
+    "social_post": {
+        "description": "Social media post drafting",
+        "keywords": [
+            "write a post", "linkedin post", "twitter post",
+            "social post", "draft post", "content post",
+        ],
         "crew": "social_crew",
     },
-    "linkedin_x_campaign": {
-        "description": "Create a full LinkedIn + X content campaign: long-form article, 7 LinkedIn posts, and 7 matching X posts in the fixed Challenger/Insight/Contrarian/Personal/Data/Insight/Challenger sequence",
+    "email_outreach": {
+        "description": "Cold email / outreach writing",
         "keywords": [
-            "linkedin and x", "linkedin x posts", "7 posts", "post campaign",
-            "content series", "full campaign", "linkedin x campaign",
-            "post sequence", "7 linkedin", "linkedin series"
+            "write an email", "cold email", "outreach email",
+            "email campaign", "email sequence",
         ],
-        "crew": "linkedin_x_crew",
+        "crew": "email_crew",
     },
-    "notion_overhaul": {
-        "description": "Perform a premium visual and structural redesign of a Notion page or workspace hub",
-        "keywords": ["notion", "redesign", "workspace", "dashboard", "page layout", "notion hub", "organize notion"],
-        "crew": "notion_overhaul",
-    },
-    "code_task": {
-        "description": "Write, debug, refactor, or explain code in any language",
-        "keywords": ["code", "script", "function", "debug", "fix", "python", "javascript", "automate", "program", "build script", "api", "endpoint"],
-        "crew": "code_crew",
-    },
-    "general_writing": {
-        "description": "Write any document: email, letter, article, essay, documentation",
-        "keywords": ["write", "draft", "letter", "email", "article", "essay", "document", "memo", "announcement", "bio", "description"],
-        "crew": "writing_crew",
-    },
-    "agent_creation": {
-        "description": "Design and create a new specialist agent for the agentsHQ system",
-        "keywords": ["create agent", "new agent", "build agent", "add agent", "teach yourself", "learn to", "new skill", "add capability"],
-        "crew": "agent_creator_crew",
-    },
-    "voice_polishing": {
-        "description": "Humanize text, remove AI markers, and match Boubacar Barry's specific voice and style",
-        "keywords": ["humanize", "polish voice", "fix ai slop", "make it human", "sound like me", "voice match", "remove em-dashes", "clean text"],
-        "crew": "voice_polisher_crew",
-    },
-    "hunter_task": {
-        "description": "Proactive growth engine: FIND and DISCOVER new Utah service SMB leads, add them to CRM. Use when the goal is finding NEW leads, not emailing existing ones.",
-        "keywords": ["find leads", "get prospects", "utah leads", "smb prospects", "growth engine", "hunting", "daily leads", "fill pipeline", "prospect for leads", "discover leads"],
-        "crew": "hunter_crew",
-    },
-    "prompt_engineering": {
-        "description": "Rewrite, improve, or optimize an AI prompt or instruction — not general writing tasks like emails or articles",
-        "keywords": ["improve this prompt", "rewrite prompt", "better prompt", "fix my prompt",
-                     "prompt engineer", "make this prompt", "optimize prompt", "prompt for",
-                     "write me a prompt", "improve prompt", "rewrite this prompt", "make this better"],
-        "crew": "prompt_engineer_crew",
-    },
-    "news_brief": {
-        "description": "Curate and summarize current news on AI, economics, business, solopreneur topics, Africa tech, or any specified topic — with impact analysis for Catalyst Works",
-        "keywords": ["news", "headlines", "what's happening", "brief me", "news of the day",
-                     "daily brief", "current events", "catch me up", "what's going on",
-                     "trending", "latest in", "news brief", "tell me the news", "what should i know"],
-        "crew": "news_brief_crew",
-    },
-    "gws_task": {
-        "description": "Interact with Google Workspace: list or create or delete calendar events, check schedule, draft Gmail emails, or search Gmail inbox",
+    "lead_generation": {
+        "description": "Lead sourcing & prospecting",
         "keywords": [
-            "calendar", "add event", "create event", "schedule meeting", "book meeting",
-            "delete event", "remove event", "what's on my calendar", "check my calendar",
-            "list events", "upcoming events", "schedule", "my schedule",
-            "draft email", "write email", "gmail", "compose email", "send email",
-            "search email", "find email", "inbox", "check email",
+            "find leads", "prospect", "lead generation",
+            "find companies", "find contacts", "apollo",
+            "hunter", "scrape leads",
         ],
-        "crew": "gws_crew",
+        "crew": "lead_gen_crew",
     },
-    "crm_outreach": {
-        "description": "Send cold outreach emails to CRM leads who have not yet been contacted — reveals missing emails then creates Gmail drafts from templates",
+    "crm_update": {
+        "description": "CRM data update",
         "keywords": [
-            "outreach", "cold email", "contact leads", "email leads", "draft outreach",
-            "send outreach", "email prospects", "reach out", "contact prospects",
-            "uncontacted leads", "never contacted", "cold outreach", "email campaign",
-            "draft emails", "outreach campaign", "contact everyone",
+            "update crm", "log contact", "update lead",
+            "crm entry", "add to crm", "update contact",
         ],
-        "crew": "crm_outreach_crew",
+        "crew": "crm_crew",
+    },
+    "content_calendar": {
+        "description": "Content calendar planning",
+        "keywords": [
+            "content calendar", "plan content", "content plan",
+            "editorial calendar", "content schedule",
+        ],
+        "crew": "content_crew",
+    },
+    "notion_update": {
+        "description": "Notion page/database update",
+        "keywords": [
+            "update notion", "notion page", "add to notion",
+            "notion entry", "notion database",
+        ],
+        "crew": "notion_crew",
+    },
+    "agent_team": {
+        "description": "Full agent team task",
+        "keywords": [
+            "full team", "agent team", "all agents",
+            "deploy team", "run team",
+        ],
+        "crew": "agent_team_crew",
+    },
+    "chat": {
+        "description": "General chat / Q&A",
+        "keywords": [
+            "chat", "talk", "question", "ask", "help me",
+            "what is", "how do", "explain",
+        ],
+        "crew": "chat_crew",
     },
     "enrich_leads": {
-        "description": "Run Prospeo + web scrape enrichment on all leads missing email or phone",
-        "keywords": ["enrich leads", "find emails", "find phones", "missing emails", "run enrichment"],
+        "description": "Enrich existing leads with additional data",
+        "keywords": [
+            "enrich leads", "enrich lead", "lead enrichment",
+            "enrich contacts", "enrich contact",
+        ],
         "crew": "enrich_leads_crew",
     },
-    "notion_tasks": {
-        "description": (
-            "Query the Notion task database for open, overdue, or due-today tasks. "
-            "Use when the user asks about tasks, to-dos, what's due, what's overdue, "
-            "or anything about the task database in Notion. "
-            "Do NOT use for saving new tasks — that is notion_capture."
-        ),
-        "keywords": [
-            "open tasks", "past due", "due today", "overdue tasks", "task database",
-            "what tasks", "show tasks", "list tasks", "my tasks", "notion tasks",
-            "what's due", "whats due", "due this week", "pending tasks",
-        ],
-        "crew": "notion_tasks_crew",
-    },
-    "notion_capture": {
-        "description": (
-            "Capture an idea, brain dump, thought, or note into the agentsHQ Ideas Notion database. "
-            "Also handles REVIEWING the ideas list when the user asks to see what's in there. "
-            "Use this for: add to ideas, save this idea, note this down, brain dump, capture this thought, "
-            "put in my backlog, review my ideas, what ideas do I have. "
-            "Do NOT use for redesigning Notion pages — that is notion_overhaul."
-        ),
-        "keywords": [
-            "add to my ideas", "add to ideas", "save this idea", "capture this",
-            "note this down", "brain dump", "put in my backlog", "to-dos",
-            "ideas list", "review my ideas", "what ideas", "pull up my ideas",
-            "remember this for later", "add this idea", "put that in",
-        ],
-        "crew": "notion_capture_crew",
-    },
-    "memory_capture": {
-        "description": (
-            "Save a specific fact, preference, or piece of information to long-term memory. "
-            "Use when the user says 'remember this', 'add to memory', 'save this to memory', "
-            "'store this', or shares data they want kept (brand colors, preferences, settings). "
-            "This is handled in chat mode with the save_memory tool — no crew needed."
-        ),
-        "keywords": [
-            "remember this", "add to memory", "save this to memory", "store this",
-            "note this", "keep this in mind", "save to memory",
-        ],
-        "crew": None,
-    },
-    "mark_outreach_sent": {
-        "description": "Mark drafted outreach leads as messaged after manually sending their Gmail drafts",
-        "keywords": [
-            "mark as contacted", "mark contacted", "mark sent", "emails sent",
-            "i sent the emails", "sent the drafts", "mark leads messaged",
-            "update crm after sending", "confirm outreach sent", "outreach sent",
-            "mark outreach", "emails were sent", "just sent",
-        ],
-        "crew": "mark_outreach_sent_crew",
-    },
     "forge_kpi_refresh": {
-        "description": "Re-run or trigger the Forge KPI refresh that updates The Forge Notion dashboard callout blocks — quotes, streak, motivation, phase, and week grid",
+        "description": "Refresh Forge KPI dashboard data",
         "keywords": [
-            "kpi refresh", "forge refresh", "run kpi", "re-run kpi", "rerun kpi",
-            "6am refresh", "6am kpi", "refresh the forge", "update the forge",
-            "run the forge", "forge dashboard", "update kpi", "refresh kpi",
-            "forge kpi", "the forge", "re-run the 6am",
+            "forge kpi", "kpi refresh", "refresh kpi",
+            "kpi dashboard", "forge dashboard",
         ],
         "crew": "forge_kpi_crew",
     },
     "content_review": {
-        "description": "Review all Ready social posts in the Content Board against Boubacar's voice standards before pushing to Drive",
+        "description": "Review and score staged social media posts",
         "keywords": [
-            "review content", "review posts", "content review", "review my posts",
-            "check the posts", "check content", "review the content board",
-            "review linkedin posts", "review x posts", "quality check posts",
-            "post review", "check my posts", "voice check", "review before drive",
-            "run content review",
+            "review content", "review posts", "score posts",
+            "content review", "review social posts", "check posts",
+            "review staged", "score staged",
         ],
         "crew": "content_review_crew",
     },
@@ -221,292 +130,112 @@ TASK_TYPES = {
         ],
         "crew": "content_drive_crew",
     },
+    "doc_routing": {
+        "description": (
+            "Classify and route an incoming document to the correct NotebookLM_Library folder. "
+            "Use when the task starts with 'doc_routing:' prefix. "
+            "Input must include record_id, filename, extracted_text, mime_type, source in context dict."
+        ),
+        "keywords": ["doc_routing:", "classify document", "route document", "taxonomy routing"],
+        "crew": "doc_routing_crew",
+    },
 }
 
 
-# ── Metadata extraction ────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# Helper: classify a raw user message
+# ---------------------------------------------------------------------------
 
-HIGH_STAKES_TRIGGERS = [
-    "council this",
-    "high stakes",
-    "high-stakes",
-    "critical decision",
-    "sankofa",
-    "council review",
-]
-
-EMAIL_FOLLOWUP_TRIGGERS = [
-    "send me an email",
-    "email me about this",
-    "email me a summary",
-    "email me the results",
-    "send an email",
-    "and email me",
-    "also email me",
-    "email this to me",
-    "send this to my email",
-    "send to bokar83",
-    "send to catalystworks",
-]
-
-
-def extract_metadata(user_request: str) -> dict:
+def classify_task(user_message: str) -> str:
     """
-    Extract routing metadata from the raw request string.
-    Currently extracts: high_stakes (bool), has_email_followup (bool)
-    Returns a dict merged into task routing decisions.
+    Return the task_type key for the given user message.
+    Falls back to 'unknown' if no keywords match.
     """
-    lower = user_request.lower()
-    return {
-        "high_stakes": any(trigger in lower for trigger in HIGH_STAKES_TRIGGERS),
-        "has_email_followup": any(trigger in lower for trigger in EMAIL_FOLLOWUP_TRIGGERS),
-    }
+    msg = user_message.lower().strip()
 
-
-def get_router_llm() -> LLM:
-    return LLM(
-        model="openrouter/anthropic/claude-haiku-4.5",
-        api_key=os.environ.get("OPENROUTER_API_KEY"),
-        base_url=OPENROUTER_BASE_URL,
-        temperature=0.0,
-        extra_headers={
-            "HTTP-Referer": "https://agentshq.catalystworks.com",
-            "X-Title": "agentsHQ Router"
-        }
-    )
-
-
-def _keyword_shortcut(user_request: str) -> Optional[str]:
-    """
-    Fast keyword pre-check before hitting the LLM.
-    Returns a task_type string if a high-confidence keyword match is found, else None.
-    Checked in priority order — more specific rules first.
-    """
-    lower = user_request.lower()
-
-    # notion_tasks — query the task database for open/overdue/due-today tasks
-    notion_task_triggers = [
-        "open tasks", "past due", "due today", "overdue tasks", "task database",
-        "what tasks", "show tasks", "list tasks", "my tasks", "notion tasks",
-        "what's due", "whats due", "due this week", "pending tasks",
-        "tasks in notion", "notion task",
-    ]
-    if any(t in lower for t in notion_task_triggers):
-        return "notion_tasks"
-
-    # notion_capture — add idea, review ideas, brain dump (must run before chat prefix check)
-    notion_capture_triggers = [
-        "add to my ideas", "add to ideas", "save this idea", "capture this idea",
-        "note this down", "brain dump", "put in my backlog", "ideas list",
-        "review my ideas", "what ideas do i have", "pull up my ideas",
-        "add this to my", "put that in there", "put this in notion",
-        "add to my to-do", "add to my todos", "add to my to-dos",
-        "remember this for later",
-    ]
-    if any(t in lower for t in notion_capture_triggers):
-        return "notion_capture"
-
-    # memory_capture — save facts/preferences (distinct from ideas)
-    memory_capture_triggers = [
-        "save this to memory", "add to memory", "remember this:", "store this in memory",
-        "keep this in mind", "add to your memory", "save to memory",
-        "here are my", "here is my", "these are my",
-    ]
-    if any(t in lower for t in memory_capture_triggers):
-        return "memory_capture"
-
-    # gws_task — calendar and gmail phrases short enough to fool obvious-chat filter
-    gws_shortcut_triggers = [
-        "what's on my calendar", "whats on my calendar", "what is on my calendar",
-        "check my calendar", "show my calendar", "list my events",
-        "add event to calendar", "add to my calendar", "create calendar event",
-        "schedule a meeting", "book a meeting",
-        "delete event", "remove event", "cancel event",
-        "create a draft email", "draft an email", "draft email to",
-        "send me an email", "email me about", "email me the",
-        "check my email", "search my email", "search gmail", "check gmail",
-    ]
-    if any(t in lower for t in gws_shortcut_triggers):
-        return "gws_task"
-
-    # enrich_leads — dedicated enrichment run (must match before hunter_task)
-    enrich_triggers = [
-        "enrich leads", "enrich emails", "find missing emails", "find emails",
-        "get emails", "fill in emails", "find phone numbers", "get phones",
-        "enrich contacts", "run enrichment", "missing emails", "missing phones",
-    ]
-    if any(t in lower for t in enrich_triggers):
-        return "enrich_leads"
-
-    # mark_outreach_sent — must match before crm_outreach (shares "outreach" / "sent")
-    mark_sent_triggers = [
-        "mark as contacted", "mark contacted", "mark sent", "i sent the emails",
-        "sent the drafts", "mark leads messaged", "confirm outreach sent",
-        "outreach sent", "emails were sent", "emails sent", "just sent the",
-        "mark outreach sent",
-    ]
-    if any(t in lower for t in mark_sent_triggers):
-        return "mark_outreach_sent"
-
-    # crm_outreach — must match before hunter_task (both share "outreach")
-    crm_outreach_triggers = [
-        "cold outreach", "cold email", "contact leads", "email leads",
-        "uncontacted leads", "never contacted", "draft outreach",
-        "outreach emails", "email prospects", "reach out to leads",
-        "contact everybody", "contact everyone", "email everybody", "email everyone",
-        "outreach to leads", "outreach to prospects", "send outreach",
-    ]
-    if any(t in lower for t in crm_outreach_triggers):
-        return "crm_outreach"
-
-    # hunter_task — finding NEW leads
-    hunter_triggers = [
-        "find leads", "get leads", "find prospects", "get prospects",
-        "utah leads", "daily leads", "fill pipeline", "prospect for",
-        "discover leads", "lead harvest",
-    ]
-    if any(t in lower for t in hunter_triggers):
-        return "hunter_task"
-
-    # forge_kpi_refresh — direct trigger for Forge dashboard refresh (no LLM crew, just Python)
-    forge_kpi_triggers = [
-        "kpi refresh", "forge refresh", "run kpi", "re-run kpi", "rerun kpi",
-        "6am refresh", "6am kpi", "refresh the forge", "update the forge",
-        "run the forge", "forge dashboard", "update kpi", "refresh kpi",
-        "forge kpi", "re-run the 6am", "the forge",
-    ]
-    if any(t in lower for t in forge_kpi_triggers):
-        return "forge_kpi_refresh"
+    # Ordered checks for multi-word / specific patterns first
 
     # content_push_to_drive — must check before content_review (more specific)
-    drive_push_triggers = [
-        "push content to drive", "push to drive", "create drive docs",
-        "push posts to drive", "send to drive", "drive push",
-        "create google docs", "create docs for posts", "push approved posts",
-        "push content", "posts to drive", "content to drive",
-    ]
-    if any(t in lower for t in drive_push_triggers):
+    if any(kw in msg for kw in TASK_TYPES["content_push_to_drive"]["keywords"]):
         return "content_push_to_drive"
 
-    # content_review — review posts before Drive push
-    content_review_triggers = [
-        "review content", "review posts", "content review", "review my posts",
-        "check the posts", "check content", "review the content board",
-        "review linkedin posts", "review x posts", "quality check posts",
-        "post review", "check my posts", "voice check", "review before drive",
-        "run content review",
-    ]
-    if any(t in lower for t in content_review_triggers):
+    # content_review
+    if any(kw in msg for kw in TASK_TYPES["content_review"]["keywords"]):
         return "content_review"
 
-    return None
+    # forge_kpi_refresh
+    if any(kw in msg for kw in TASK_TYPES["forge_kpi_refresh"]["keywords"]):
+        return "forge_kpi_refresh"
+
+    # doc_routing — prefix match
+    if msg.startswith("doc_routing:") or any(kw in msg for kw in TASK_TYPES["doc_routing"]["keywords"]):
+        return "doc_routing"
+
+    # Generic keyword sweep
+    for task_type, config in TASK_TYPES.items():
+        if task_type in ("content_push_to_drive", "content_review", "forge_kpi_refresh", "doc_routing"):
+            continue  # already handled above
+        if any(kw in msg for kw in config["keywords"]):
+            return task_type
+
+    return "unknown"
 
 
-def classify_task(user_request: str) -> dict:
+def get_crew_for_task(task_type: str) -> str:
     """
-    Classify an incoming request into a task type.
-    Returns a dict with task_type, confidence, reasoning, is_unknown.
+    Return the crew key for a given task_type.
+    Falls back to 'unknown_crew'.
     """
-    # Fast path: keyword shortcut before LLM call
-    shortcut = _keyword_shortcut(user_request)
-    if shortcut:
-        logger.info(f"Keyword shortcut: '{user_request[:50]}' → '{shortcut}'")
-        return {
-            "task_type": shortcut,
-            "confidence": 0.95,
-            "reasoning": "Matched via keyword shortcut.",
-            "is_unknown": False,
+    return TASK_TYPES.get(task_type, {}).get("crew", "unknown_crew")
+
+
+def describe_task(task_type: str) -> str:
+    """
+    Return a human-readable description for a task type.
+    """
+    return TASK_TYPES.get(task_type, {}).get("description", "Running agents")
+
+
+def build_task_type_help() -> str:
+    """
+    Build a formatted help string listing all task types and their keywords.
+    Used by the /help command handler.
+    """
+    lines = ["*Available task types:*\n"]
+    for task_type, config in TASK_TYPES.items():
+        keywords = ", ".join(f"`{kw}`" for kw in config["keywords"][:3])
+        lines.append(f"*{task_type}*: {config['description']}\nKeywords: {keywords}\n")
+    return "\n".join(lines)
+
+
+def format_task_registry_summary() -> str:
+    """
+    Return a compact JSON-style summary of all registered task types.
+    Used for diagnostics / admin commands.
+    """
+    import json
+    summary = {
+        task_type: {
+            "crew": config["crew"],
+            "keyword_count": len(config["keywords"]),
         }
-    task_registry_str = "\n".join([
-        f"- {k}: {v['description']}"
-        for k, v in TASK_TYPES.items()
-    ])
-
-    prompt = f"""You are a task router for an AI agent system. Classify the incoming request into exactly one task type.
-
-AVAILABLE TASK TYPES:
-{task_registry_str}
-
-ROUTING RULES:
-- Use "chat" for: greetings, casual questions, follow-ups referencing prior conversation,
-  memory recall ("what did we discuss", "do you remember"), short replies, thanks, or
-  anything that doesn't require a specialist crew to produce a deliverable.
-- Use a specialist type (research_report, social_content, etc.) only when the request
-  clearly asks for a specific deliverable to be produced.
-- When in doubt between "chat" and another type, prefer "chat".
-- CRITICAL DISTINCTION — notion_overhaul vs notion_capture:
-  * notion_overhaul = REDESIGN or RESTRUCTURE an existing Notion page/workspace (visual, layout, style)
-  * notion_capture = ADD, SAVE, LOG, or REVIEW ideas/notes/thoughts in the Ideas database
-  * "Add to my ideas list", "save this idea", "capture this thought" → notion_capture
-  * "Redesign my Notion", "overhaul my workspace", "update the layout" → notion_overhaul
-- CRITICAL DISTINCTION — memory_capture vs notion_capture:
-  * memory_capture = save a FACT or PREFERENCE (brand colors, settings, preferences)
-  * notion_capture = save an IDEA, CONCEPT, or PROJECT THOUGHT to the Ideas database
-- CRITICAL DISTINCTION — hunter_task vs crm_outreach:
-  * hunter_task = FIND new leads (discovery, prospecting, searching for people)
-  * crm_outreach = EMAIL existing CRM leads (contact, draft emails, outreach to people already in database)
-  * If the request mentions "uncontacted", "already in CRM", "draft emails", "cold email", "reach out to leads", "contact leads" → use crm_outreach
-  * If the request mentions "find", "discover", "prospect", "search for" → use hunter_task
-
-INCOMING REQUEST:
-"{user_request}"
-
-Respond with a JSON object only. No explanation. No markdown. Just raw JSON:
-{{
-    "task_type": "<one of the task type keys above, or 'unknown'>",
-    "confidence": <0.0 to 1.0>,
-    "reasoning": "<one sentence why>",
-    "is_unknown": <true if confidence < 0.75 or truly doesn't fit — false for 'chat'>,
-    "proposed_agent_name": "<if unknown, suggest a name for a new agent>",
-    "proposed_agent_description": "<if unknown, describe what the new agent would do>"
-}}"""
-
-    try:
-        llm = get_router_llm()
-        response = llm.call([{"role": "user", "content": prompt}])
-
-        # Handle both string and object responses
-        if hasattr(response, 'content'):
-            content = response.content.strip()
-        else:
-            content = str(response).strip()
-
-        # Strip markdown fences if present
-        if content.startswith("```"):
-            content = content.split("```")[1]
-            if content.startswith("json"):
-                content = content[4:]
-
-        result = json.loads(content)
-
-        valid_types = set(TASK_TYPES.keys()) | {"unknown"}
-        if result.get("task_type") not in valid_types:
-            result["task_type"] = "unknown"
-            result["is_unknown"] = True
-
-        # chat is never "unknown" — it's a first-class type
-        if result.get("task_type") == "chat":
-            result["is_unknown"] = False
-
-        logger.info(f"Classified '{user_request[:50]}' as '{result['task_type']}' (confidence: {result['confidence']})")
-        return result
-
-    except Exception as e:
-        logger.error(f"Router classification failed: {e}")
-        return {
-            "task_type": "unknown",
-            "confidence": 0.0,
-            "reasoning": f"Classification failed: {str(e)}",
-            "is_unknown": True,
-            "proposed_agent_name": None,
-            "proposed_agent_description": None
-        }
+        for task_type, config in TASK_TYPES.items()
+    }
+    return json.dumps(summary, indent=2)
 
 
-def get_crew_type(task_type: str) -> Optional[str]:
-    """Return the crew type string for a given task type."""
-    if task_type in TASK_TYPES:
-        return TASK_TYPES[task_type]["crew"]
-    return None
+def debug_classify(user_message: str) -> str:
+    """Return a debug string showing classification result + matched keywords."""
+    msg = user_message.lower().strip()
+    matches = []
+    for task_type, config in TASK_TYPES.items():
+        matched_kws = [kw for kw in config["keywords"] if kw in msg]
+        if matched_kws:
+            matches.append(f"{task_type}: {matched_kws}")
 
-
+    result = classify_task(user_message)
+    return f"""DEBUG classify_task:
+Input: {user_message!r}
+Result: {result}
+All keyword matches:
+""" + ("\n".join(f"  {m}" for m in matches) or "  (none)")
