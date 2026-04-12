@@ -68,6 +68,7 @@ TASK_TYPE_LABELS = {
     "content_review":         "Content Reviewer is checking your posts",
     "content_push_to_drive":  "Pushing approved posts to Google Drive",
     "forge_kpi_refresh":      "Running Forge KPI refresh",
+    "doc_routing":            "Document Routing Agent is classifying your file",
 }
 
 TASK_TYPE_CREWS = {
@@ -785,3 +786,54 @@ def send_email(subject: str, body: str, to_addresses: list = None, html: bool = 
     except Exception as e:
         logger.error(f"Email delivery failed: {e}")
         return False
+
+
+def send_doc_routing_alert(filename: str, alert_type: str, details: dict) -> None:
+    """
+    Send a Telegram alert for document routing events.
+
+    alert_type values:
+      "confirm"    -- ready to file, needs operator confirmation
+      "review"     -- low confidence, routed to review queue
+      "unreadable" -- file could not be extracted
+      "error"      -- classification failed after retry
+    """
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+    if not chat_id:
+        logger.warning("TELEGRAM_CHAT_ID not set -- cannot send doc routing alert")
+        return
+
+    if alert_type == "confirm":
+        msg = (
+            f"Ready to file\n\n"
+            f"Original: {filename}\n"
+            f"Renamed: {details.get('standardized_filename', '')}\n"
+            f"Domain: {details.get('domain', '')}\n"
+            f"Project: {details.get('project_id', '')} | {details.get('topic_or_client', '')}\n"
+            f"Doc type: {details.get('doc_type', '')}\n"
+            f"Folder: {details.get('target_folder_path', '')}\n"
+            f"Notebook: {details.get('notebook_assignment', '')}\n"
+            f"Confidence: {details.get('confidence', '')} ({details.get('confidence_score', '')})\n"
+            f"Note: {details.get('routing_notes', '')}\n\n"
+            f"Reply: confirm | edit [field]:[value] to correct | new [name] new project | flag"
+        )
+    elif alert_type == "review":
+        msg = (
+            f"Low confidence: {filename}\n"
+            f"Suggestion: {details.get('target_folder_path', '00_Review_Queue/')}\n"
+            f"Notebook: {details.get('notebook_assignment', 'Unassigned')}\n"
+            f"Confidence: {details.get('confidence_score', 0)}\n"
+            f"Reason: {details.get('routing_notes', '')}\n\n"
+            f"Reply: confirm to accept, edit [field]:[value] to correct, flag to reject."
+        )
+    elif alert_type == "unreadable":
+        msg = (
+            f"Unreadable file: {filename}. Moved to Review Queue.\n"
+            f"Check for scanned PDF or unsupported format."
+        )
+    elif alert_type == "error":
+        msg = f"Classification failed for {filename}. Routed to Review Queue."
+    else:
+        msg = f"Doc routing event [{alert_type}]: {filename}"
+
+    send_message(chat_id, msg)

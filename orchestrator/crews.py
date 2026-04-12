@@ -52,6 +52,14 @@ from agents import (
 
 logger = logging.getLogger(__name__)
 
+try:
+    from skills.doc_routing.doc_routing_crew import build_doc_routing_crew
+except ImportError as e:
+    import logging as _logging
+    _logging.getLogger(__name__).warning(f"doc_routing_crew import failed: {e}")
+    def build_doc_routing_crew(user_request: str, context=None):
+        return build_unknown_crew(user_request)
+
 
 # ── Shared embedder config ─────────────────────────────────────
 # Used by all crews for shared memory
@@ -2273,6 +2281,7 @@ CREW_REGISTRY = {
     "forge_kpi_crew":          build_forge_kpi_crew,
     "content_review_crew":     build_content_review_crew,
     "content_drive_crew":      build_content_push_to_drive_crew,
+    "doc_routing_crew":        build_doc_routing_crew,
     "unknown_crew":           build_unknown_crew,
 }
 
