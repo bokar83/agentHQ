@@ -699,8 +699,44 @@ class GWSDriveListRecentTool(BaseTool):
             return f"Drive list failed: {e}"
 
 
+class GWSDriveCreateFileTool(BaseTool):
+    """Create a new Google Doc in a Drive folder and return its webViewLink."""
+    name: str = "create_drive_doc"
+    description: str = (
+        "Create a new Google Doc in a specified Google Drive folder. "
+        "Input: JSON with 'name' (filename) and optional 'folder_id' (Drive folder ID, "
+        "defaults to CONTENT_DRIVE_FOLDER_ID env var). "
+        "Returns the file ID and webViewLink on success."
+    )
+
+    def _run(self, input_data: str = "{}") -> str:
+        try:
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            name = data.get("name", "Untitled")
+            folder_id = data.get("folder_id") or os.environ.get(
+                "CONTENT_DRIVE_FOLDER_ID", "1lS7VT4aMfo7eQc-zVdOfFfvWvevytwNs"
+            )
+            result = _gws_request(
+                "post",
+                "https://www.googleapis.com/drive/v3/files?fields=id,webViewLink",
+                json={
+                    "name": name,
+                    "mimeType": "application/vnd.google-apps.document",
+                    "parents": [folder_id],
+                },
+            )
+            file_id = result.get("id", "")
+            web_link = result.get(
+                "webViewLink", f"https://docs.google.com/document/d/{file_id}/edit"
+            )
+            return json.dumps({"id": file_id, "webViewLink": web_link})
+        except Exception as e:
+            return f"create_drive_doc failed: {e}"
+
+
 gws_drive_search_tool = GWSDriveSearchTool()
 gws_drive_list_tool = GWSDriveListRecentTool()
+gws_drive_create_tool = GWSDriveCreateFileTool()
 
 GWS_TOOLS = [
     gws_calendar_list_tool,
@@ -710,6 +746,7 @@ GWS_TOOLS = [
     gws_gmail_search_tool,
     gws_drive_search_tool,
     gws_drive_list_tool,
+    gws_drive_create_tool,
 ]
 
 
