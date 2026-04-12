@@ -121,6 +121,17 @@ TASK_TYPES = {
                      "forge kpi", "the forge", "re-run the 6am"],
         "crew": "forge_kpi_crew",
     },
+    "notion_capture": {
+        "description": "Save an idea, thought, or note to the agentsHQ Ideas database, or list/retrieve existing ideas",
+        "keywords": [
+            "add to ideas", "save idea", "ideas database", "add to our ideas",
+            "capture idea", "log idea", "add idea", "store idea",
+            "list ideas", "show ideas", "show me ideas", "show me the list of ideas",
+            "what ideas", "all ideas", "ideas list", "retrieve ideas",
+            "add this idea", "put in ideas", "save this to ideas",
+        ],
+        "crew": "notion_capture_crew",
+    },
     "content_review": {
         "description": "Review Ready social posts against Boubacar's voice standards before Drive push",
         "keywords": ["review content", "review posts", "content review", "review my posts",
@@ -156,8 +167,10 @@ def _classify_raw(user_message: str) -> str:
         return "forge_kpi_refresh"
     if msg.startswith("doc_routing:") or any(kw in msg for kw in TASK_TYPES["doc_routing"]["keywords"]):
         return "doc_routing"
+    if any(kw in msg for kw in TASK_TYPES["notion_capture"]["keywords"]):
+        return "notion_capture"
     for task_type, config in TASK_TYPES.items():
-        if task_type in ("content_push_to_drive", "content_review", "forge_kpi_refresh", "doc_routing"):
+        if task_type in ("content_push_to_drive", "content_review", "forge_kpi_refresh", "doc_routing", "notion_capture"):
             continue
         if any(kw in msg for kw in config["keywords"]):
             return task_type
