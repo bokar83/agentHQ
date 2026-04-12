@@ -419,12 +419,44 @@ def _run_drive_watch(scan_all: bool = False):
     scan_all=False (scheduled): only files created in the last 65 minutes.
     scan_all=True  (/scan-drive): all files currently in root, regardless of age.
       In both cases, deduplication against notebooklm_pending_docs prevents re-processing.
+
+    After classifying, files are moved out of root into their target Drive folder.
+    A Telegram summary lists each file and where it was placed.
     """
     import subprocess
     import json as _json
     import psycopg2
     import httpx
     from datetime import datetime as _dt, timezone as _tz, timedelta as _td
+
+    # -- Folder path -> Drive ID lookup table (full taxonomy) -----------------
+    FOLDER_ID_MAP = {
+        "00_Review_Queue/":                         "1UJ81j0O_AewmmkqrocQ4g5tCVMOEE3x5",
+        "01_Clients/":                              "1nXgYJ7Hnz6TBXBK0GtnZaxHwAHDsbTbS",
+        "02_Catalyst_Works/":                       "1g1Zv70QaSmEluhc6jWm8ELfTmrorkPya",
+        "02_Catalyst_Works/01_Offers/":             "1SSWsl8jYaWBQxD977nmgN3PXV_7_VdI8",
+        "02_Catalyst_Works/02_Methodology/":        "1WgW6OLisvQP0cGrl_MNpJuXeyb6CJM-B",
+        "02_Catalyst_Works/03_agentsHQ/":           "1XTKQ2k-GCDXWvyjOE_MLVJPrnqDCNl0t",
+        "02_Catalyst_Works/04_Systems_and_SOPs/":   "1BKCHMQrXfQeKBaQK-iWL_6x_T_mpMzv4",
+        "02_Catalyst_Works/05_Sales_and_Pipeline/": "18r4PDt_yyTlD-_tKaLcjYzfpC9upoOjY",
+        "03_Research/":                             "1jjPUb5TXvoicJR_3h7n-HdQZl0JDGlJp",
+        "03_Research/01_TOC_and_Constraints/":      "18UY-MvEkLgK104XsKL2Oc7_rxRfWJevM",
+        "03_Research/02_AI_Strategy/":              "1DLAHqzl_3eGl4XjeNBKJZePmxE5CAFeG",
+        "03_Research/03_SMB_and_Operators/":        "1fKDW_ENQnNRw5oLCTgaurB3UCeDizrvA",
+        "03_Research/04_Behavioral_Science/":       "13GUfaom5uAQtK8ZKwWHKcXDy3Ezsj1oB",
+        "03_Research/05_Unsorted/":                 "1KFMPinQxmitCdxQ_K3Yh5QMktn5-BJ4W",
+        "04_Content/":                              "1lS7VT4aMfo7eQc-zVdOfFfvWvevytwNs",
+        "04_Content/01_LinkedIn/":                  "1UQX5tgrh1BYMRCBCDhhEhGwSEOoJa7qz",
+        "04_Content/02_Longform/":                  "1Pg5rNnaQ360vkeuNeqKS4c0HpUx6AFyo",
+        "04_Content/03_Lead_Magnets/":              "1Pi-UVVwcwtcIGkXRzMJx-kQ8Y6Ok9etn",
+        "04_Content/04_Frameworks_and_IP/":         "18EHTT_eEkfNcLlEZS4I34EQ64Q-QI_3a",
+        "05_Learning/":                             "1ob1UFXbmSf32BlDZnz6EqAhEkWXIyHB9",
+        "05_Learning/01_Books/":                    "1wZH6dt96syjtORJ1bM6aTVqAy7ONilsW",
+        "05_Learning/02_Courses/":                  "1ElDkzKAsaaWNT_iIqm12AEb9UBgwqwIY",
+        "05_Learning/03_Transcripts/":              "19yxpuTwCbepaN7-S6QbPrcu2ZkgADu_4",
+        "05_Learning/04_Notes/":                    "1QhcWrwm033_l6SQMJHA4p7h77OWmgbLq",
+        "90_Archive/":                              "1P9cxCq6v4gBxfi_9kJeoIKbNe4EUocI-",
+    }
 
     folder_id = os.environ.get("NOTEBOOKLM_LIBRARY_ROOT_ID", "1S0t78tojgA6VugqMtE3soZYFSEAcSvvH")
     review_queue_id = os.environ.get("NOTEBOOKLM_REVIEW_QUEUE_FOLDER_ID", "")
@@ -486,6 +518,7 @@ def _run_drive_watch(scan_all: bool = False):
 
     try:
         cur = conn.cursor()
+        scan_summary = []  # collects one line per file processed
 
         for f in files:
             file_id = f.get("id", "")
@@ -604,97 +637,111 @@ def _run_drive_watch(scan_all: bool = False):
                     pass
                 continue
 
+            # -- Resolve target Drive folder ID from path -------------------
+            target_folder_id = FOLDER_ID_MAP.get(target_folder_path)
+            if not target_folder_id:
+                # Try stripping trailing slash variants
+                target_folder_id = FOLDER_ID_MAP.get(target_folder_path.rstrip("/") + "/")
+            if not target_folder_id:
+                logger.warning(f"DRIVE WATCH: No folder ID for path '{target_folder_path}' -- routing to Review Queue.")
+                target_folder_id = review_queue_id
+                target_folder_path = "00_Review_Queue/"
+
             # -- Act on routing decision -----------------------------------
+            from skills.doc_routing.gws_cli_tools import GWSDriveMoveRenameTool, GWSSheetsAppendRowTool
+            move_tool = GWSDriveMoveRenameTool()
+
             if auto_file:
-                # Move + rename in Drive
-                try:
-                    from skills.doc_routing.gws_cli_tools import GWSDriveMoveRenameTool, GWSSheetsAppendRowTool
-                    move_tool = GWSDriveMoveRenameTool()
-                    move_tool._run(
-                        file_id=file_id,
-                        new_name=standardized_filename,
-                        target_folder_id=target_folder_path,
-                    )
+                # Move + rename into target folder
+                move_result = move_tool._run(_json.dumps({
+                    "file_id": file_id,
+                    "new_name": standardized_filename,
+                    "new_parent_id": target_folder_id,
+                    "old_parent_id": folder_id,
+                }))
+                move_data = _json.loads(move_result)
+                if "error" in move_data:
+                    logger.error(f"DRIVE WATCH: Move failed for {filename}: {move_data['error']}")
+                    scan_summary.append(f"FAILED {filename} -- {move_data['error']}")
+                else:
+                    logger.info(f"DRIVE WATCH: Auto-filed {standardized_filename} -> {target_folder_path}")
+                    # Mark resolved in DB
+                    try:
+                        cur.execute(
+                            "UPDATE notebooklm_pending_docs SET resolved=true WHERE record_id=%s",
+                            (record_id,),
+                        )
+                        conn.commit()
+                    except Exception as _e:
+                        logger.error(f"DRIVE WATCH: DB resolve failed: {_e}")
                     # Append to Auto-Filed Log sheet
                     if registry_sheet_id:
-                        sheet_tool = GWSSheetsAppendRowTool()
-                        sheet_tool._run(
-                            spreadsheet_id=registry_sheet_id,
-                            range_name="Auto-Filed Log!A:Z",
-                            values=[
-                                file_id, filename, standardized_filename,
-                                domain, topic_or_client, doc_type,
-                                target_folder_path, notebook_assignment,
-                                str(confidence_score), "drive_watch",
-                                _dt.now(_tz.utc).isoformat(),
-                            ],
-                        )
-                except Exception as e:
-                    logger.error(f"DRIVE WATCH: Auto-file move/sheet failed for {filename}: {e}")
-
-                msg = (
-                    f"Auto-filed: {standardized_filename}\n"
-                    f"Folder: {target_folder_path}\n"
-                    f"Notebook: {notebook_assignment}"
-                )
-                _send_telegram_alert(msg)
+                        try:
+                            sheet_tool = GWSSheetsAppendRowTool()
+                            sheet_tool._run(_json.dumps({
+                                "spreadsheet_id": registry_sheet_id,
+                                "range": "Auto-Filed Log!A:G",
+                                "values": [[
+                                    standardized_filename, domain, target_folder_path,
+                                    notebook_assignment, str(confidence_score),
+                                    _dt.now(_tz.utc).strftime("%Y-%m-%d"), "drive_watch",
+                                ]],
+                            }))
+                        except Exception as _e:
+                            logger.warning(f"DRIVE WATCH: Auto-Filed Log append failed: {_e}")
+                    scan_summary.append(f"Filed: {standardized_filename}\n  Folder: {target_folder_path}\n  Notebook: {notebook_assignment}")
 
             elif not review_required:
-                # Medium confidence -- send confirmation request
+                # Medium confidence -- ask for confirmation, leave file in root for now
                 msg = (
                     f"Review needed: {filename}\n"
                     f"Suggested: {standardized_filename}\n"
                     f"Folder: {target_folder_path}\n"
                     f"Notebook: {notebook_assignment}\n"
                     f"Confidence: {confidence_score:.0%}\n\n"
-                    f"confirm | field:value | flag"
+                    f"Reply: confirm or flag"
                 )
                 try:
                     resp = httpx.post(
                         f"https://api.telegram.org/bot{token}/sendMessage",
-                        json={"chat_id": chat_id, "text": msg, "parse_mode": "HTML"},
+                        json={"chat_id": chat_id, "text": msg},
                         timeout=10,
                     )
                     result_data = resp.json()
-                    telegram_message_id = str(
-                        result_data.get("result", {}).get("message_id", "")
-                    )
+                    telegram_message_id = str(result_data.get("result", {}).get("message_id", ""))
                     if record_id and telegram_message_id:
-                        try:
-                            cur.execute(
-                                "UPDATE notebooklm_pending_docs SET telegram_message_id = %s WHERE record_id = %s",
-                                (telegram_message_id, record_id),
-                            )
-                            conn.commit()
-                        except Exception as e:
-                            logger.error(f"DRIVE WATCH: Failed to store telegram_message_id: {e}")
-                            try:
-                                conn.rollback()
-                            except Exception:
-                                pass
-                except Exception as e:
-                    logger.error(f"DRIVE WATCH: Telegram confirmation send failed for {filename}: {e}")
+                        cur.execute(
+                            "UPDATE notebooklm_pending_docs SET telegram_message_id=%s WHERE record_id=%s",
+                            (telegram_message_id, record_id),
+                        )
+                        conn.commit()
+                except Exception as _e:
+                    logger.error(f"DRIVE WATCH: Telegram confirmation send failed: {_e}")
+                scan_summary.append(f"Needs review: {filename} ({confidence_score:.0%}) -- reply sent")
 
             else:
-                # Low confidence -- move to review queue
-                if review_queue_id:
-                    try:
-                        from skills.doc_routing.gws_cli_tools import GWSDriveMoveRenameTool
-                        move_tool = GWSDriveMoveRenameTool()
-                        move_tool._run(
-                            file_id=file_id,
-                            new_name=filename,
-                            target_folder_id=review_queue_id,
-                        )
-                    except Exception as e:
-                        logger.error(f"DRIVE WATCH: Move to review queue failed for {filename}: {e}")
+                # Low confidence -- move to Review Queue immediately
+                move_result = move_tool._run(_json.dumps({
+                    "file_id": file_id,
+                    "new_name": filename,
+                    "new_parent_id": review_queue_id,
+                    "old_parent_id": folder_id,
+                }))
+                move_data = _json.loads(move_result)
+                if "error" in move_data:
+                    logger.error(f"DRIVE WATCH: Review Queue move failed for {filename}: {move_data['error']}")
+                scan_summary.append(f"Review Queue: {filename} ({confidence_score:.0%}) -- {routing_notes[:60]}")
 
-                msg = (
-                    f"Low confidence ({confidence_score:.0%}): {filename}\n"
-                    f"Routed to Review Queue.\n"
-                    f"{routing_notes}"
-                )
-                _send_telegram_alert(msg)
+        # -- Send scan summary Telegram message ----------------------------
+        if scan_summary:
+            total = len(scan_summary)
+            summary_lines = [f"Scan complete -- {total} file(s) processed:"]
+            for line in scan_summary:
+                summary_lines.append(f"\n{line}")
+            _send_telegram_alert("\n".join(summary_lines))
+        else:
+            if scan_all:
+                _send_telegram_alert("Scan complete -- no new files found in Drive inbox.")
 
     finally:
         try:
