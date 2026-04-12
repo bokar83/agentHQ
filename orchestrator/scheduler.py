@@ -444,7 +444,7 @@ def _run_drive_watch(scan_all: bool = False):
         "03_Research/02_AI_Strategy/":              "1DLAHqzl_3eGl4XjeNBKJZePmxE5CAFeG",
         "03_Research/03_SMB_and_Operators/":        "1fKDW_ENQnNRw5oLCTgaurB3UCeDizrvA",
         "03_Research/04_Behavioral_Science/":       "13GUfaom5uAQtK8ZKwWHKcXDy3Ezsj1oB",
-        "03_Research/05_Unsorted/":                 "1KFMPinQxmitCdxQ_K3Yh5QMktn5-BJ4W",
+        "03_Research/05_External_Sources/":         "1KFMPinQxmitCdxQ_K3Yh5QMktn5-BJ4W",
         "04_Content/":                              "1lS7VT4aMfo7eQc-zVdOfFfvWvevytwNs",
         "04_Content/01_LinkedIn/":                  "1UQX5tgrh1BYMRCBCDhhEhGwSEOoJa7qz",
         "04_Content/02_Longform/":                  "1Pg5rNnaQ360vkeuNeqKS4c0HpUx6AFyo",
@@ -455,6 +455,8 @@ def _run_drive_watch(scan_all: bool = False):
         "05_Learning/02_Courses/":                  "1ElDkzKAsaaWNT_iIqm12AEb9UBgwqwIY",
         "05_Learning/03_Transcripts/":              "19yxpuTwCbepaN7-S6QbPrcu2ZkgADu_4",
         "05_Learning/04_Notes/":                    "1QhcWrwm033_l6SQMJHA4p7h77OWmgbLq",
+        "06_Ideas/":                                "1OKotZLVBKITkaHRo2ybN99f3_PAZ5-3A",
+        "02_Catalyst_Works/06_Frameworks_and_IP/":  "1JpTg0zDWNicDoEQOz29NCJOqysQHI_Nl",
         "90_Archive/":                              "1P9cxCq6v4gBxfi_9kJeoIKbNe4EUocI-",
     }
 
