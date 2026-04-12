@@ -25,8 +25,8 @@ def _get_routing_matrix() -> list[dict]:
     Fetch routing matrix from Registry Sheet, with 5-minute in-memory cache.
     Falls back to seed defaults if sheet ID is not configured or fetch fails.
     """
-    from skills.doc_routing.taxonomy_agent import parse_routing_matrix, ROUTING_MATRIX_SEED
-    from skills.doc_routing.gws_cli_tools import GWSSheetsReadRangeTool
+    from doc_routing.taxonomy_agent import parse_routing_matrix, ROUTING_MATRIX_SEED
+    from doc_routing.gws_cli_tools import GWSSheetsReadRangeTool
 
     now = time.time()
     if ROUTING_MATRIX_CACHE["rows"] and (now - ROUTING_MATRIX_CACHE["fetched_at"]) < CACHE_TTL_SECONDS:
@@ -64,7 +64,7 @@ def build_doc_routing_crew(user_request: str, context: Optional[dict] = None) ->
       source         -- "agent-generated" | "manual-upload"
       project_hint   -- project ID string or None
     """
-    from skills.doc_routing.taxonomy_agent import build_taxonomy_routing_agent
+    from doc_routing.taxonomy_agent import build_taxonomy_routing_agent
 
     ctx = context or {}
     record_id = ctx.get("record_id", "unknown")
