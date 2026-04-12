@@ -469,12 +469,12 @@ def _run_drive_watch(scan_all: bool = False):
     # -- 1. Build Drive query -----------------------------------------------
     if scan_all:
         # All files in root, no time filter -- dedup handles re-processing
-        q = f"'{folder_id}' in parents and trashed=false"
+        q = f"'{folder_id}' in parents and trashed=false and mimeType != 'application/vnd.google-apps.folder'"
         logger.info("DRIVE WATCH: scan_all mode -- processing all files in root folder.")
     else:
         cutoff = _dt.now(_tz.utc) - _td(minutes=65)
         cutoff_str = cutoff.strftime("%Y-%m-%dT%H:%M:%S")
-        q = f"'{folder_id}' in parents and trashed=false and createdTime > '{cutoff_str}'"
+        q = f"'{folder_id}' in parents and trashed=false and mimeType != 'application/vnd.google-apps.folder' and createdTime > '{cutoff_str}'"
 
     query_params = {
         "q": q,
@@ -560,9 +560,10 @@ def _run_drive_watch(scan_all: bool = False):
             # -- Run doc routing crew --------------------------------------
             try:
                 import sys as _sys
-                if "/app" not in _sys.path:
-                    _sys.path.insert(0, "/app")
-                from skills.doc_routing.doc_routing_crew import run_doc_routing_with_retry
+                _orc_skills = "/app/orchestrator_skills"
+                if _orc_skills not in _sys.path:
+                    _sys.path.insert(0, _orc_skills)
+                from doc_routing.doc_routing_crew import run_doc_routing_with_retry
                 context = {
                     "record_id": None,
                     "filename": filename,

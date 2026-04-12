@@ -167,7 +167,7 @@ def get_project_registry() -> list[dict]:
     folder_path, drive_folder_id, notebook_assignment, status.
     Falls back to empty list if sheet not configured or fetch fails.
     """
-    from skills.doc_routing.gws_cli_tools import GWSSheetsReadRangeTool
+    from doc_routing.gws_cli_tools import GWSSheetsReadRangeTool
     if not REGISTRY_SHEET_ID:
         return []
     try:

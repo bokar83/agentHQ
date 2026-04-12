@@ -181,6 +181,7 @@ services:
       - ./agent_outputs:/app/outputs
       - ./logs:/app/logs
       - ./secrets:/app/secrets:ro
+      - ./orchestrator/skills/doc_routing:/app/orchestrator_skills/doc_routing:ro
     depends_on:
       postgres:
         condition: service_healthy
