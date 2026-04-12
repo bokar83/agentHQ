@@ -1997,13 +1997,14 @@ def build_mark_outreach_sent_crew(_user_request: str) -> Crew:
 def build_content_review_crew(user_request: str) -> Crew:  # noqa: ARG001
     """
     Crew for: content_review
-    Pulls all Ready posts from the Notion Content DB, reviews each one against
-    Boubacar's voice standards (hook / body / CTA / voice), rewrites failures,
-    then sends a formatted Telegram report and sets status to 'In Review'.
-    Drive doc creation happens separately via content_push_to_drive.
+    Pulls all Ready posts from the Notion Content DB, runs the LLM review
+    directly (not via a sub-crew to avoid Pydantic kickoff restrictions),
+    sends the report to Telegram, sets statuses to 'In Review', and returns
+    a simple reporter crew with the result summary.
     """
     import httpx as _httpx
     from skills.forge_cli.notion_client import NotionClient
+    from crewai import LLM as _LLM
 
     CONTENT_DB_ID = os.environ.get("FORGE_CONTENT_DB", "339bcf1a-3029-81d1-8377-dc2f2de13a20")
     NOTION_SECRET = os.environ.get("NOTION_SECRET", "")
@@ -2025,6 +2026,7 @@ def build_content_review_crew(user_request: str) -> Crew:  # noqa: ARG001
         logger.error(f"content_review_crew: Notion query failed: {e}")
 
     if not posts:
+        result_text = "No posts with status 'Ready' found in the Content Board. Nothing to review."
         reporter = Agent(
             role="Status Reporter",
             goal="Report system status to the user",
@@ -2034,7 +2036,7 @@ def build_content_review_crew(user_request: str) -> Crew:  # noqa: ARG001
             verbose=False,
         )
         task_none = Task(
-            description="Report this to the user: No posts with status 'Ready' found in the Content Board. Nothing to review.",
+            description=f"Report this to the user verbatim: {result_text}",
             expected_output="The status message, as-is.",
             agent=reporter,
         )
@@ -2063,109 +2065,103 @@ def build_content_review_crew(user_request: str) -> Crew:  # noqa: ARG001
             "platform": platform,
         })
 
-    # ── 3. Build review context for the agent ─────────────────────
     posts_block = "\n\n".join(
-        f"POST {i+1} [{p['platform']}] — {p['title']}\nNOTION_ID: {p['id']}\n---\n{p['content']}"
+        f"POST {i+1} [{p['platform']}] | {p['title']}\nNOTION_ID: {p['id']}\n---\n{p['content']}"
         for i, p in enumerate(post_data)
     )
 
-    reviewer = build_content_reviewer_agent()
-
-    task_review = Task(
-        description=f"""
-Review every post below against Boubacar Barry's voice standards.
+    # ── 3. Run the LLM review directly ────────────────────────────
+    review_prompt = f"""You are reviewing social media posts for Boubacar Barry, founder of Catalyst Works Consulting.
 
 VOICE RULES (non-negotiable):
-- Short declarative sentences. Vary length deliberately. (Short. Long. Short.)
-- Open with a bold claim or a question. NEVER "In today's fast-paced world" or any variant.
-- One diagnosis per post. One constraint, one insight. Not a list of ten problems.
-- No em-dashes. No "leverage", "synergy", "tapestry", "delve", "complexities".
-- No hedging: "it might be", "one could argue", "it depends".
-- No generic CTA: "follow me for more", "drop a comment below".
+- Short declarative sentences. Vary length deliberately.
+- Open with a bold claim or question. NEVER "In today's fast-paced world" or any variant.
+- One diagnosis per post. One constraint, one insight.
+- No em-dashes. No leverage, synergy, tapestry, delve, complexities.
+- No hedging: it might be, one could argue, it depends.
+- No generic CTA: follow me for more, drop a comment below.
 - Audience: SMB owner-operators. Direct. Earned. Specific.
-- If it could have been written by any AI assistant, it fails.
+- If it reads like generic AI content, it fails.
 
-FOR EACH POST produce exactly this format:
+FOR EACH POST produce exactly:
 
-**POST [N]: [Title]**
+POST [N]: [Title]
 NOTION_ID: [id]
 PLATFORM: [platform]
-
-HOOK SCORE: [1-10] | [one-line verdict]
-BODY SCORE: [1-10] | [one-line verdict]
-CTA SCORE: [1-10] | [one-line verdict]
-VOICE SCORE: [1-10] | [one-line verdict]
-OVERALL: PASS / NEEDS REWRITE
-
+HOOK: [1-10] | [verdict]
+BODY: [1-10] | [verdict]
+CTA: [1-10] | [verdict]
+VOICE: [1-10] | [verdict]
+RESULT: PASS or NEEDS REWRITE
 FINAL TEXT:
-[original text if PASS; fully rewritten text if NEEDS REWRITE]
-
+[original if PASS; full rewrite if NEEDS REWRITE]
 ---
 
-POSTS TO REVIEW:
+POSTS:
 
 {posts_block}
 
-After all posts, produce a SUMMARY:
-REVIEW COMPLETE. N posts passed, M posts rewritten.
-| # | Title | Hook | Body | CTA | Voice | Result |
-(one row per post)
-        """,
-        expected_output=(
-            "Full per-post review with scores, verdict, and final approved text. "
-            "Summary table at the end."
-        ),
-        agent=reviewer,
-    )
+End with:
+SUMMARY: N passed, M rewritten.
+Reply "push content to drive" when you are happy with these."""
 
-    # ── 4. Side-effects: Notion update + Telegram delivery ─────────
-    def _send_telegram(text: str):
-        if not BOT_TOKEN or not CHAT_ID:
-            return
-        chunks = [text[i:i+4000] for i in range(0, len(text), 4000)]
+    review_text = "Review failed — LLM call error."
+    try:
+        llm = _LLM(
+            model="openai/anthropic/claude-sonnet-4-5",
+            base_url="https://openrouter.ai/api/v1",
+            api_key=os.environ.get("OPENROUTER_API_KEY", ""),
+            temperature=0.3,
+        )
+        review_text = str(llm.call([{"role": "user", "content": review_prompt}]))
+    except Exception as e:
+        logger.error(f"content_review LLM call failed: {e}")
+        review_text = f"Review LLM call failed: {e}"
+
+    # ── 4. Update Notion + send Telegram ──────────────────────────
+    for p in post_data:
+        try:
+            notion.update_page(p["id"], {"Status": {"select": {"name": "In Review"}}})
+        except Exception as e:
+            logger.error(f"content_review Notion update failed for {p['id']}: {e}")
+
+    header = (
+        f"CONTENT REVIEW — {len(post_data)} posts reviewed\n"
+        f"Reply 'push content to drive' when you are happy.\n\n"
+    )
+    full_report = header + review_text
+    if BOT_TOKEN and CHAT_ID:
+        chunks = [full_report[i:i+4000] for i in range(0, len(full_report), 4000)]
         for chunk in chunks:
             try:
                 _httpx.post(
                     f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
                     json={"chat_id": str(CHAT_ID), "text": chunk},
-                    timeout=10,
+                    timeout=15,
                 )
             except Exception as e:
                 logger.error(f"content_review Telegram send failed: {e}")
 
-    def _update_to_in_review(notion_id: str):
-        try:
-            notion.update_page(notion_id, {"Status": {"select": {"name": "In Review"}}})
-        except Exception as e:
-            logger.error(f"content_review Notion update failed for {notion_id}: {e}")
-
-    crew = Crew(
-        agents=[reviewer],
-        tasks=[task_review],
-        process=Process.sequential,
-        verbose=False,
-        memory=False,
+    # ── 5. Return simple reporter crew ────────────────────────────
+    summary = (
+        f"Content review complete. {len(post_data)} posts reviewed and set to 'In Review' in Notion. "
+        f"Full scored report sent to Telegram. "
+        f"Reply 'push content to drive' when approved."
     )
-
-    _original_kickoff = crew.kickoff
-
-    def _kickoff_with_side_effects(*args, **kwargs):
-        result = _original_kickoff(*args, **kwargs)
-        try:
-            report_text = str(result)
-            for p in post_data:
-                _update_to_in_review(p["id"])
-            header = (
-                f"CONTENT REVIEW — {len(post_data)} posts reviewed\n"
-                f"Reply 'push content to drive' once you are happy with these.\n\n"
-            )
-            _send_telegram(header + report_text)
-        except Exception as e:
-            logger.error(f"content_review side effects failed: {e}")
-        return result
-
-    crew.kickoff = _kickoff_with_side_effects  # type: ignore[method-assign]
-    return crew
+    reporter = Agent(
+        role="Status Reporter",
+        goal="Report the outcome of a system operation",
+        backstory="You relay pre-computed system results to the user verbatim.",
+        llm=get_llm("gemini-flash"),
+        max_iter=1,
+        verbose=False,
+    )
+    task_report = Task(
+        description=f"Report this system result to the user verbatim:\n\n{summary}",
+        expected_output="The system result message, reported as-is.",
+        agent=reporter,
+    )
+    return Crew(agents=[reporter], tasks=[task_report], process=Process.sequential, verbose=False, memory=False)
 
 
 def build_content_push_to_drive_crew(user_request: str) -> Crew:  # noqa: ARG001
