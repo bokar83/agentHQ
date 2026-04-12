@@ -7,12 +7,20 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies + Node.js 20 for gws CLI
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
     curl \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Google Workspace CLI (gws) globally
+RUN npm install -g @googleworkspace/cli@0.22.1
+
+# Set gws credentials path (file mounted from secrets/ volume at runtime)
+ENV GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE=/app/secrets/gws-oauth-credentials.json
 
 # Copy and install Python dependencies
 COPY orchestrator/requirements.txt .
