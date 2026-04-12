@@ -65,6 +65,9 @@ TASK_TYPE_LABELS = {
     "agent_team":             "The full team is on it",
     "chat":                   "...",
     "unknown":                "Agents are on it",
+    "content_review":         "Content Reviewer is checking your posts",
+    "content_push_to_drive":  "Pushing approved posts to Google Drive",
+    "forge_kpi_refresh":      "Running Forge KPI refresh",
 }
 
 TASK_TYPE_CREWS = {
@@ -90,6 +93,9 @@ TASK_TYPE_CREWS = {
     "notion_capture":         "Ideas Curator (Notion write/read)",
     "agent_team":             "Full multi-agent team",
     "unknown":                "Orchestrator (improvising)",
+    "content_review":         "Content Reviewer (voice + quality gate)",
+    "content_push_to_drive":  "Drive Publisher (Notion + Google Drive)",
+    "forge_kpi_refresh":      "KPI Engine (direct Python)",
 }
 
 SIMPSONS_QUOTES = [

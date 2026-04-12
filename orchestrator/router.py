@@ -200,6 +200,27 @@ TASK_TYPES = {
         ],
         "crew": "forge_kpi_crew",
     },
+    "content_review": {
+        "description": "Review all Ready social posts in the Content Board against Boubacar's voice standards before pushing to Drive",
+        "keywords": [
+            "review content", "review posts", "content review", "review my posts",
+            "check the posts", "check content", "review the content board",
+            "review linkedin posts", "review x posts", "quality check posts",
+            "post review", "check my posts", "voice check", "review before drive",
+            "run content review",
+        ],
+        "crew": "content_review_crew",
+    },
+    "content_push_to_drive": {
+        "description": "Push all approved 'In Review' social posts to Google Drive as Docs and update Notion with Drive links",
+        "keywords": [
+            "push content to drive", "push to drive", "create drive docs",
+            "push posts to drive", "send to drive", "drive push",
+            "create google docs", "create docs for posts", "push approved posts",
+            "push content", "posts to drive", "content to drive",
+        ],
+        "crew": "content_drive_crew",
+    },
 }
 
 
@@ -356,6 +377,27 @@ def _keyword_shortcut(user_request: str) -> Optional[str]:
     ]
     if any(t in lower for t in forge_kpi_triggers):
         return "forge_kpi_refresh"
+
+    # content_push_to_drive — must check before content_review (more specific)
+    drive_push_triggers = [
+        "push content to drive", "push to drive", "create drive docs",
+        "push posts to drive", "send to drive", "drive push",
+        "create google docs", "create docs for posts", "push approved posts",
+        "push content", "posts to drive", "content to drive",
+    ]
+    if any(t in lower for t in drive_push_triggers):
+        return "content_push_to_drive"
+
+    # content_review — review posts before Drive push
+    content_review_triggers = [
+        "review content", "review posts", "content review", "review my posts",
+        "check the posts", "check content", "review the content board",
+        "review linkedin posts", "review x posts", "quality check posts",
+        "post review", "check my posts", "voice check", "review before drive",
+        "run content review",
+    ]
+    if any(t in lower for t in content_review_triggers):
+        return "content_review"
 
     return None
 

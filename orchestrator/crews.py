@@ -46,6 +46,7 @@ from agents import (
     build_3d_web_builder_agent,
     build_seo_auditor_agent,
     build_notion_visual_architect_agent, # Added
+    build_content_reviewer_agent,
     get_llm,
 )
 
@@ -1993,6 +1994,264 @@ def build_mark_outreach_sent_crew(_user_request: str) -> Crew:
     )
 
 
+def build_content_review_crew(user_request: str) -> Crew:  # noqa: ARG001
+    """
+    Crew for: content_review
+    Pulls all Ready posts from the Notion Content DB, reviews each one against
+    Boubacar's voice standards (hook / body / CTA / voice), rewrites failures,
+    then sends a formatted Telegram report and sets status to 'In Review'.
+    Drive doc creation happens separately via content_push_to_drive.
+    """
+    import httpx as _httpx
+    from skills.forge_cli.notion_client import NotionClient
+
+    CONTENT_DB_ID = os.environ.get("FORGE_CONTENT_DB", "339bcf1a-3029-81d1-8377-dc2f2de13a20")
+    NOTION_SECRET = os.environ.get("NOTION_SECRET", "")
+    CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
+    BOT_TOKEN = os.environ.get(
+        "ORCHESTRATOR_TELEGRAM_BOT_TOKEN",
+        os.environ.get("TELEGRAM_BOT_TOKEN", ""),
+    )
+
+    # ── 1. Fetch Ready posts ───────────────────────────────────────
+    notion = NotionClient(secret=NOTION_SECRET)
+    try:
+        posts = notion.query_database(
+            CONTENT_DB_ID,
+            filter_obj={"property": "Status", "select": {"equals": "Ready"}},
+        )
+    except Exception as e:
+        posts = []
+        logger.error(f"content_review_crew: Notion query failed: {e}")
+
+    if not posts:
+        reporter = Agent(
+            role="Status Reporter",
+            goal="Report system status to the user",
+            backstory="You relay pre-computed results verbatim.",
+            llm=get_llm("gemini-flash"),
+            max_iter=1,
+            verbose=False,
+        )
+        task_none = Task(
+            description="Report this to the user: No posts with status 'Ready' found in the Content Board. Nothing to review.",
+            expected_output="The status message, as-is.",
+            agent=reporter,
+        )
+        return Crew(agents=[reporter], tasks=[task_none], process=Process.sequential, verbose=False, memory=False)
+
+    # ── 2. Extract post data ───────────────────────────────────────
+    def _get_text(prop, key="rich_text"):
+        parts = prop.get(key, [])
+        return "".join(p.get("plain_text", "") for p in parts) if parts else ""
+
+    def _get_select(prop):
+        sel = prop.get("select") or {}
+        return sel.get("name", "")
+
+    post_data = []
+    for page in posts:
+        props = page.get("properties", {})
+        title_parts = props.get("Title", {}).get("title", [])
+        title = "".join(p.get("plain_text", "") for p in title_parts)
+        content = _get_text(props.get("Content", {}))
+        platform = _get_select(props.get("Platform", {}))
+        post_data.append({
+            "id": page["id"],
+            "title": title,
+            "content": content,
+            "platform": platform,
+        })
+
+    # ── 3. Build review context for the agent ─────────────────────
+    posts_block = "\n\n".join(
+        f"POST {i+1} [{p['platform']}] — {p['title']}\nNOTION_ID: {p['id']}\n---\n{p['content']}"
+        for i, p in enumerate(post_data)
+    )
+
+    reviewer = build_content_reviewer_agent()
+
+    task_review = Task(
+        description=f"""
+Review every post below against Boubacar Barry's voice standards.
+
+VOICE RULES (non-negotiable):
+- Short declarative sentences. Vary length deliberately. (Short. Long. Short.)
+- Open with a bold claim or a question. NEVER "In today's fast-paced world" or any variant.
+- One diagnosis per post. One constraint, one insight. Not a list of ten problems.
+- No em-dashes. No "leverage", "synergy", "tapestry", "delve", "complexities".
+- No hedging: "it might be", "one could argue", "it depends".
+- No generic CTA: "follow me for more", "drop a comment below".
+- Audience: SMB owner-operators. Direct. Earned. Specific.
+- If it could have been written by any AI assistant, it fails.
+
+FOR EACH POST produce exactly this format:
+
+**POST [N]: [Title]**
+NOTION_ID: [id]
+PLATFORM: [platform]
+
+HOOK SCORE: [1-10] | [one-line verdict]
+BODY SCORE: [1-10] | [one-line verdict]
+CTA SCORE: [1-10] | [one-line verdict]
+VOICE SCORE: [1-10] | [one-line verdict]
+OVERALL: PASS / NEEDS REWRITE
+
+FINAL TEXT:
+[original text if PASS; fully rewritten text if NEEDS REWRITE]
+
+---
+
+POSTS TO REVIEW:
+
+{posts_block}
+
+After all posts, produce a SUMMARY:
+REVIEW COMPLETE. N posts passed, M posts rewritten.
+| # | Title | Hook | Body | CTA | Voice | Result |
+(one row per post)
+        """,
+        expected_output=(
+            "Full per-post review with scores, verdict, and final approved text. "
+            "Summary table at the end."
+        ),
+        agent=reviewer,
+    )
+
+    # ── 4. Side-effects: Notion update + Telegram delivery ─────────
+    def _send_telegram(text: str):
+        if not BOT_TOKEN or not CHAT_ID:
+            return
+        chunks = [text[i:i+4000] for i in range(0, len(text), 4000)]
+        for chunk in chunks:
+            try:
+                _httpx.post(
+                    f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
+                    json={"chat_id": str(CHAT_ID), "text": chunk},
+                    timeout=10,
+                )
+            except Exception as e:
+                logger.error(f"content_review Telegram send failed: {e}")
+
+    def _update_to_in_review(notion_id: str):
+        try:
+            notion.update_page(notion_id, {"Status": {"select": {"name": "In Review"}}})
+        except Exception as e:
+            logger.error(f"content_review Notion update failed for {notion_id}: {e}")
+
+    crew = Crew(
+        agents=[reviewer],
+        tasks=[task_review],
+        process=Process.sequential,
+        verbose=False,
+        memory=False,
+    )
+
+    _original_kickoff = crew.kickoff
+
+    def _kickoff_with_side_effects(*args, **kwargs):
+        result = _original_kickoff(*args, **kwargs)
+        try:
+            report_text = str(result)
+            for p in post_data:
+                _update_to_in_review(p["id"])
+            header = (
+                f"CONTENT REVIEW — {len(post_data)} posts reviewed\n"
+                f"Reply 'push content to drive' once you are happy with these.\n\n"
+            )
+            _send_telegram(header + report_text)
+        except Exception as e:
+            logger.error(f"content_review side effects failed: {e}")
+        return result
+
+    crew.kickoff = _kickoff_with_side_effects  # type: ignore[method-assign]
+    return crew
+
+
+def build_content_push_to_drive_crew(user_request: str) -> Crew:  # noqa: ARG001
+    """
+    Crew for: content_push_to_drive
+    Takes all 'In Review' posts from the Notion Content DB, creates a Google Doc
+    for each one in the 04_Content Drive folder, updates the Drive Link in
+    Notion, and sets status to 'Published Ready'.
+    """
+    from skills.forge_cli.notion_client import NotionClient
+    from tools import _gws_request
+
+    CONTENT_DB_ID = os.environ.get("FORGE_CONTENT_DB", "339bcf1a-3029-81d1-8377-dc2f2de13a20")
+    CONTENT_FOLDER_ID = os.environ.get("CONTENT_DRIVE_FOLDER_ID", "1lS7VT4aMfo7eQc-zVdOfFfvWvevytwNs")
+    NOTION_SECRET = os.environ.get("NOTION_SECRET", "")
+
+    notion = NotionClient(secret=NOTION_SECRET)
+    try:
+        posts = notion.query_database(
+            CONTENT_DB_ID,
+            filter_obj={"property": "Status", "select": {"equals": "In Review"}},
+        )
+    except Exception as e:
+        posts = []
+        logger.error(f"content_push_to_drive: Notion query failed: {e}")
+
+    results = []
+    errors = []
+    for page in posts:
+        props = page.get("properties", {})
+        title_parts = props.get("Title", {}).get("title", [])
+        title = "".join(p.get("plain_text", "") for p in title_parts) or "Untitled"
+        notion_id = page["id"]
+        try:
+            data = _gws_request(
+                "post",
+                "https://www.googleapis.com/drive/v3/files?fields=id,webViewLink",
+                json={
+                    "name": title,
+                    "mimeType": "application/vnd.google-apps.document",
+                    "parents": [CONTENT_FOLDER_ID],
+                },
+            )
+            file_id = data.get("id", "")
+            web_link = data.get(
+                "webViewLink", f"https://docs.google.com/document/d/{file_id}/edit"
+            )
+            notion.update_page(notion_id, {
+                "Drive Link": {"url": web_link},
+                "Status": {"select": {"name": "Published Ready"}},
+            })
+            results.append(f"OK: {title[:50]} -> {web_link}")
+        except Exception as e:
+            errors.append(notion_id)
+            results.append(f"ERR: {title[:50]} -> {e}")
+            logger.error(f"content_push_to_drive failed for {notion_id}: {e}")
+
+    result_text = (
+        f"Drive push complete. {len(posts) - len(errors)}/{len(posts)} docs created.\n\n"
+        + "\n".join(results)
+    ) if posts else (
+        "No posts with status 'In Review' found. Run content review first, then approve."
+    )
+
+    reporter = Agent(
+        role="Status Reporter",
+        goal="Report the outcome of a system operation",
+        backstory="You relay pre-computed system results to the user verbatim.",
+        llm=get_llm("gemini-flash"),
+        max_iter=1,
+        verbose=False,
+    )
+    task_report = Task(
+        description=f"Report this system result to the user verbatim:\n\n{result_text}",
+        expected_output="The system result message, reported as-is.",
+        agent=reporter,
+    )
+    return Crew(
+        agents=[reporter],
+        tasks=[task_report],
+        process=Process.sequential,
+        verbose=False,
+        memory=False,
+    )
+
+
 CREW_REGISTRY = {
     "website_crew":        build_website_crew,
     "app_crew":            build_app_crew,
@@ -2016,6 +2275,8 @@ CREW_REGISTRY = {
     "mark_outreach_sent_crew": build_mark_outreach_sent_crew,
     "enrich_leads_crew":       build_enrich_leads_crew,
     "forge_kpi_crew":          build_forge_kpi_crew,
+    "content_review_crew":     build_content_review_crew,
+    "content_drive_crew":      build_content_push_to_drive_crew,
     "unknown_crew":           build_unknown_crew,
 }
 
