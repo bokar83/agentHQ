@@ -23,36 +23,36 @@ logger = logging.getLogger(__name__)
 # ── Controlled vocabularies ──────────────────────────────
 VALID_DOMAINS = {"CLIENT", "CATALYST", "RESEARCH", "CONTENT", "LEARNING", "OPS"}
 VALID_DOC_TYPES = {"transcript", "report", "notes", "draft", "proposal", "deliverable", "template", "reference", "sop"}
-VALID_NOTEBOOKS = {"Client Notebook", "Catalyst Notebook", "Research Notebook", "Content Notebook", "Learning Notebook", "Unassigned"}
+VALID_NOTEBOOKS = {"CW_Client Work", "CW_Catalyst Works Ops", "CW_Frameworks and IP", "CW_Research", "CW_Content Studio", "CW_Learning Lab", "CW_Ideas", "Unassigned"}
 VALID_CONFIDENCE = {"high", "medium", "low"}
 
 REGISTRY_SHEET_ID = os.environ.get("NOTEBOOKLM_REGISTRY_SHEET_ID", "")
 
 ROUTING_MATRIX_SEED = [
     {"priority": 1,  "signal_keywords": ["agentsHQ", "CrewAI", "n8n", "VPS", "Docker", "orchestrator", "litellm", "workflow node"],
-     "domain": "CATALYST", "target_folder_path": "02_Catalyst_Works/03_agentsHQ/", "doc_type_hint": "sop or reference", "notebook_assignment": "Catalyst Notebook"},
+     "domain": "CATALYST", "target_folder_path": "02_Catalyst_Works/03_agentsHQ/", "doc_type_hint": "sop or reference", "notebook_assignment": "CW_Catalyst Works Ops"},
     {"priority": 2,  "signal_keywords": ["SOP", "checklist", "protocol", "template", "process doc", "system design"],
-     "domain": "CATALYST", "target_folder_path": "02_Catalyst_Works/04_Systems_and_SOPs/", "doc_type_hint": "sop or template", "notebook_assignment": "Catalyst Notebook"},
+     "domain": "CATALYST", "target_folder_path": "02_Catalyst_Works/04_Systems_and_SOPs/", "doc_type_hint": "sop or template", "notebook_assignment": "CW_Catalyst Works Ops"},
     {"priority": 3,  "signal_keywords": ["proposal", "SOW", "contract", "invoice", "engagement", "client brief", "discovery call"],
-     "domain": "CLIENT", "target_folder_path": "01_Clients/[Client Name]/", "doc_type_hint": "match to doc type", "notebook_assignment": "Client Notebook"},
+     "domain": "CLIENT", "target_folder_path": "01_Clients/[Client Name]/", "doc_type_hint": "match to doc type", "notebook_assignment": "CW_Client Work"},
     {"priority": 4,  "signal_keywords": ["constraint", "throughput", "bottleneck", "TOC", "five whys", "drum-buffer-rope", "Goldratt"],
-     "domain": "RESEARCH", "target_folder_path": "03_Research/01_TOC_and_Constraints/", "doc_type_hint": "report or reference", "notebook_assignment": "Research Notebook"},
+     "domain": "RESEARCH", "target_folder_path": "03_Research/01_TOC_and_Constraints/", "doc_type_hint": "report or reference", "notebook_assignment": "CW_Research"},
     {"priority": 5,  "signal_keywords": ["AI strategy", "LLM", "language model", "prompt", "agent", "automation", "AI tool"],
-     "domain": "RESEARCH", "target_folder_path": "03_Research/02_AI_Strategy/", "doc_type_hint": "report or reference", "notebook_assignment": "Research Notebook"},
+     "domain": "RESEARCH", "target_folder_path": "03_Research/02_AI_Strategy/", "doc_type_hint": "report or reference", "notebook_assignment": "CW_Research"},
     {"priority": 6,  "signal_keywords": ["SMB", "owner-operator", "professional services", "small business", "business owner"],
-     "domain": "RESEARCH", "target_folder_path": "03_Research/03_SMB_and_Operators/", "doc_type_hint": "report or reference", "notebook_assignment": "Research Notebook"},
+     "domain": "RESEARCH", "target_folder_path": "03_Research/03_SMB_and_Operators/", "doc_type_hint": "report or reference", "notebook_assignment": "CW_Research"},
     {"priority": 7,  "signal_keywords": ["behavioral science", "psychology", "decision making", "bias", "motivation"],
-     "domain": "RESEARCH", "target_folder_path": "03_Research/04_Behavioral_Science/", "doc_type_hint": "report or reference", "notebook_assignment": "Research Notebook"},
+     "domain": "RESEARCH", "target_folder_path": "03_Research/04_Behavioral_Science/", "doc_type_hint": "report or reference", "notebook_assignment": "CW_Research"},
     {"priority": 8,  "signal_keywords": ["LinkedIn", "post", "hook", "caption", "carousel", "social media"],
-     "domain": "CONTENT", "target_folder_path": "04_Content/01_LinkedIn/", "doc_type_hint": "draft or reference", "notebook_assignment": "Content Notebook"},
+     "domain": "CONTENT", "target_folder_path": "04_Content/01_LinkedIn/", "doc_type_hint": "draft or reference", "notebook_assignment": "CW_Content Studio"},
     {"priority": 9,  "signal_keywords": ["framework", "IP", "methodology", "flywheel", "offer design", "positioning"],
-     "domain": "CONTENT", "target_folder_path": "04_Content/04_Frameworks_and_IP/", "doc_type_hint": "reference or template", "notebook_assignment": "Content Notebook"},
+     "domain": "CATALYST", "target_folder_path": "02_Catalyst_Works/06_Frameworks_and_IP/", "doc_type_hint": "reference or template", "notebook_assignment": "CW_Frameworks and IP"},
     {"priority": 10, "signal_keywords": ["book summary", "course notes", "transcript", "learning", "chapter notes"],
-     "domain": "LEARNING", "target_folder_path": "05_Learning/", "doc_type_hint": "match to doc type", "notebook_assignment": "Learning Notebook"},
+     "domain": "LEARNING", "target_folder_path": "05_Learning/", "doc_type_hint": "match to doc type", "notebook_assignment": "CW_Learning Lab"},
     {"priority": 11, "signal_keywords": ["idea", "hypothesis", "rough thought", "brainstorm", "shower thought", "what if", "early concept", "voice memo"],
-     "domain": "OPS", "target_folder_path": "06_Ideas/", "doc_type_hint": "notes or reference", "notebook_assignment": "Unassigned"},
+     "domain": "IDEAS", "target_folder_path": "06_Ideas/", "doc_type_hint": "notes or reference", "notebook_assignment": "CW_Ideas"},
     {"priority": 12, "signal_keywords": ["AMPLIFY", "Human AI Workflow Matrix", "proprietary framework", "IP", "methodology", "framework doc"],
-     "domain": "CATALYST", "target_folder_path": "02_Catalyst_Works/06_Frameworks_and_IP/", "doc_type_hint": "reference or template", "notebook_assignment": "Catalyst Notebook"},
+     "domain": "CATALYST", "target_folder_path": "02_Catalyst_Works/06_Frameworks_and_IP/", "doc_type_hint": "reference or template", "notebook_assignment": "CW_Frameworks and IP"},
 ]
 
 
@@ -91,11 +91,35 @@ ROUTING MATRIX (priority order -- first match wins):
 {routing_matrix_text}
 
 FILE NAMING CONVENTION:
-[DOMAIN]_[TopicOrClient]_[doctype]_[YYYY-MM-DD]_[short-descriptor]
+[DOMAIN]_[Subfolder]_[doctype]_[YYYY-MM-DD]_[short-descriptor]
 
-Domain values (exact): CLIENT | CATALYST | RESEARCH | CONTENT | LEARNING | OPS
+Rules:
+- DOMAIN: exact domain value in ALL CAPS (CLIENT, CATALYST, RESEARCH, CONTENT, LEARNING, OPS, IDEAS)
+- Subfolder: the subfolder name slug derived from target_folder_path, title-cased with hyphens
+  Examples: target "02_Catalyst_Works/04_Systems_and_SOPs/" -> Subfolder = "Systems-and-SOPs"
+            target "03_Research/02_AI_Strategy/" -> Subfolder = "AI-Strategy"
+            target "03_Research/01_TOC_and_Constraints/" -> Subfolder = "TOC-and-Constraints"
+            target "02_Catalyst_Works/02_Methodology/" -> Subfolder = "Methodology"
+            target "02_Catalyst_Works/06_Frameworks_and_IP/" -> Subfolder = "Frameworks-and-IP"
+            target "04_Content/01_LinkedIn/" -> Subfolder = "LinkedIn"
+            target "04_Content/04_Frameworks_and_IP/" -> Subfolder = "Frameworks-and-IP"
+            target "05_Learning/01_Books/" -> Subfolder = "Books"
+            target "01_Clients/[Client Name]/" -> Subfolder = the actual client name
+            target top-level only (e.g. "06_Ideas/") -> omit Subfolder entirely: [DOMAIN]_[doctype]_[YYYY-MM-DD]_[short-descriptor]
+- doctype: exact value from controlled list
+- YYYY-MM-DD: today's date
+- short-descriptor: 3 to 5 words, kebab-case, describes the specific document
+
+Full examples:
+  CATALYST_Systems-and-SOPs_sop_2026-04-12_discovery-call-system
+  RESEARCH_TOC-and-Constraints_report_2026-04-12_bottleneck-board-analysis
+  RESEARCH_AI-Strategy_reference_2026-04-12_llm-agent-patterns
+  CLIENT_Acme-Corp_proposal_2026-04-12_ai-audit-scope
+  CONTENT_LinkedIn_draft_2026-04-12_amplify-framework-hook
+  IDEAS_notes_2026-04-12_voice-memo-pricing-model
+
+Domain values (exact): CLIENT | CATALYST | RESEARCH | CONTENT | LEARNING | OPS | IDEAS
 Doc type values (exact): transcript | report | notes | draft | proposal | deliverable | template | reference | sop
-Short descriptor: 3 to 5 words, kebab-case
 
 CONFIDENCE AND AUTO-FILE RULES:
 - confidence_score >= 0.92: set auto_file=true, review_required=false
@@ -103,7 +127,17 @@ CONFIDENCE AND AUTO-FILE RULES:
 - confidence_score < 0.85: set auto_file=false, review_required=true, target_folder_path="00_Review_Queue/"
 
 NOTEBOOK ASSIGNMENT (use ONLY these values):
-Client Notebook | Catalyst Notebook | Research Notebook | Content Notebook | Learning Notebook | Unassigned
+CW_Client Work | CW_Catalyst Works Ops | CW_Frameworks and IP | CW_Research | CW_Content Studio | CW_Learning Lab | CW_Ideas | Unassigned
+
+Rules:
+- Files in 02_Catalyst_Works/06_Frameworks_and_IP/ -> CW_Frameworks and IP
+- Files in 02_Catalyst_Works/ (other subfolders) -> CW_Catalyst Works Ops
+- Files in 01_Clients/ -> CW_Client Work
+- Files in 03_Research/ -> CW_Research
+- Files in 04_Content/ -> CW_Content Studio
+- Files in 05_Learning/ -> CW_Learning Lab
+- Files in 06_Ideas/ -> CW_Ideas
+- Files in 00_Review_Queue/ -> Unassigned
 
 If you cannot determine routing with confidence >= 0.85, set target_folder_path to "00_Review_Queue/" and notebook_assignment to "Unassigned".
 
