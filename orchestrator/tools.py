@@ -81,7 +81,7 @@ except ImportError:
 try:
     from skills.notion_cli.notion_cli import NotionCLI
     from skills.notion_stylist.notion_stylist import NotionStylist
-    from skills.HunterAgent.utils.supabase_client import SupabaseClient
+    # from skills.HunterAgent.utils.supabase_client import SupabaseClient  # module does not exist
     from skills.notion_skill.notion_tool import search_databases, create_page, append_block
 except ImportError:
     def search_databases(*args, **kwargs): return []
