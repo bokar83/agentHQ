@@ -746,7 +746,7 @@ def _run_drive_watch(scan_all: bool = False):
                 )
                 if name_differs:
                     msg += f"\nNote: Name differs significantly from original -- review carefully.\n"
-                msg += f"\nReply ✅ to confirm | ✏️ to edit | ❌ to flag"
+                msg += f"\nReply with ✅ or 'yes' to confirm | ✏️ or 'edit folder:X' to edit | ❌ or 'flag' to discard"
                 try:
                     resp = httpx.post(
                         f"https://api.telegram.org/bot{token}/sendMessage",
@@ -783,7 +783,7 @@ def _run_drive_watch(scan_all: bool = False):
                         f"Proposed name: {standardized_filename}\n"
                         f"Agent reasoning: {routing_notes[:120]}\n"
                         f"Confidence: {confidence_score:.0%}\n\n"
-                        f"Reply ✅ to confirm proposed name+folder | ✏️ to edit | ❌ to discard"
+                        f"Reply ✅ or 'yes' to confirm | ✏️ or 'edit folder:X' to edit | ❌ or 'flag' to discard"
                     )
                     try:
                         resp = httpx.post(

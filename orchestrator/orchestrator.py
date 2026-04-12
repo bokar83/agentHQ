@@ -1185,9 +1185,16 @@ async def process_telegram_update(update: dict):
         logger.warning(f"Unauthorised Telegram access attempt from sender_id={sender_id}")
         return
 
-    # -- Doc routing emoji command handlers --
+    # -- Doc routing emoji + text command handlers --
     _EMOJI_COMMANDS = ("✅", "✏️", "🆕", "❌", "➕")
+    _TEXT_ALIASES = {"yes": "✅", "confirm": "✅", "flag": "❌", "discard": "❌", "reject": "❌"}
     _matched_emoji = next((e for e in _EMOJI_COMMANDS if text.startswith(e)), None)
+    if not _matched_emoji:
+        _text_lower = text.strip().lower().split()[0] if text.strip() else ""
+        _matched_emoji = _TEXT_ALIASES.get(_text_lower)
+        # Also handle "edit field:value" text form -- map to ✏️
+        if not _matched_emoji and _text_lower == "edit":
+            _matched_emoji = "✏️"
     if _matched_emoji:
         from notifier import send_message as _send_emoji
 
