@@ -560,12 +560,14 @@ def _run_drive_watch(scan_all: bool = False):
             # -- Run doc routing crew --------------------------------------
             try:
                 import sys as _sys
+                import uuid as _uuid
                 _orc_skills = "/app/orchestrator_skills"
                 if _orc_skills not in _sys.path:
                     _sys.path.insert(0, _orc_skills)
                 from doc_routing.doc_routing_crew import run_doc_routing_with_retry
+                generated_record_id = str(_uuid.uuid4())
                 context = {
-                    "record_id": None,
+                    "record_id": generated_record_id,
                     "filename": filename,
                     "extracted_text": extracted_text,
                     "mime_type": mime_type,
@@ -612,17 +614,17 @@ def _run_drive_watch(scan_all: bool = False):
                 cur.execute(
                     """
                     INSERT INTO notebooklm_pending_docs (
-                        drive_file_id, original_filename, standardized_filename,
+                        record_id, drive_file_id, original_filename, standardized_filename,
                         domain, topic_or_client, doc_type, target_folder_path,
                         project_id, notebook_assignment, confidence, confidence_score,
                         review_required, auto_file, routing_notes, source,
                         resolved, created_at
                     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                              %s, %s, %s, %s, %s, NOW())
+                              %s, %s, %s, %s, %s, %s, NOW())
                     RETURNING record_id
                     """,
                     (
-                        file_id, filename, standardized_filename,
+                        generated_record_id, file_id, filename, standardized_filename,
                         domain, topic_or_client, doc_type, target_folder_path,
                         project_id, notebook_assignment, confidence, confidence_score,
                         review_required, auto_file, routing_notes, "drive_watch",
@@ -630,7 +632,7 @@ def _run_drive_watch(scan_all: bool = False):
                     ),
                 )
                 row = cur.fetchone()
-                record_id = row[0] if row else None
+                record_id = row[0] if row else generated_record_id
                 conn.commit()
             except Exception as e:
                 logger.error(f"DRIVE WATCH: DB insert failed for {filename}: {e}")
