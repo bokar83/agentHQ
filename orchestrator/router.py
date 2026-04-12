@@ -22,124 +22,123 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 TASK_TYPES = {
+    "website_build": {
+        "description": "Premium landing page / website build",
+        "keywords": ["website", "landing page", "web presence", "build a site", "site layout"],
+        "crew": "web_builder_crew",
+    },
+    "app_build": {
+        "description": "Interactive web app / tool build",
+        "keywords": ["app", "tool", "calculator", "dashboard", "form", "tracker", "build an app"],
+        "crew": "app_builder_crew",
+    },
+    "vercel_task": {
+        "description": "Vercel deployment & monitoring",
+        "keywords": ["vercel", "deploy", "build status", "logs", "projects"],
+        "crew": "code_crew",
+    },
+    "github_task": {
+        "description": "GitHub repository & PR management",
+        "keywords": ["github", "repo", "repository", "issue", "pull request", "pr"],
+        "crew": "code_crew",
+    },
+    "notion_task": {
+        "description": "Notion database & architecting",
+        "keywords": ["notion", "database", "log", "page", "dashboard", "wiki"],
+        "crew": "notion_crew",
+    },
+    "practice_runner_task": {
+        "description": "Practice Runner Mission execution",
+        "keywords": ["practice runner", "marathon prep", "running prep", "training plan"],
+        "crew": "practice_runner_crew",
+    },
     "research_report": {
         "description": "Research & report writing",
         "keywords": [
             "research", "write a report", "find information",
-            "summarize", "analyse", "analyze", "deep dive",
+            "summarize", "analyse", "analyze", "deep dive", "compare",
         ],
         "crew": "research_crew",
     },
-    "social_post": {
+    "social_content": {
         "description": "Social media post drafting",
         "keywords": [
-            "write a post", "linkedin post", "twitter post",
-            "social post", "draft post", "content post",
+            "write a post", "linkedin post", "twitter post", "x post",
+            "social post", "draft post", "content post", "instagram", "caption",
         ],
         "crew": "social_crew",
     },
-    "email_outreach": {
-        "description": "Cold email / outreach writing",
-        "keywords": [
-            "write an email", "cold email", "outreach email",
-            "email campaign", "email sequence",
-        ],
-        "crew": "email_crew",
+    "linkedin_x_campaign": {
+        "description": "Multi-platform content campaign",
+        "keywords": ["linkedin and x", "7 posts", "post campaign", "linkedin x posts", "content series"],
+        "crew": "griot_crew",
     },
-    "lead_generation": {
-        "description": "Lead sourcing & prospecting",
-        "keywords": [
-            "find leads", "prospect", "lead generation",
-            "find companies", "find contacts", "apollo",
-            "hunter", "scrape leads",
-        ],
-        "crew": "lead_gen_crew",
+    "code_task": {
+        "description": "Code engineering & debugging",
+        "keywords": ["code", "script", "function", "debug", "build", "automate"],
+        "crew": "code_crew",
     },
-    "crm_update": {
-        "description": "CRM data update",
-        "keywords": [
-            "update crm", "log contact", "update lead",
-            "crm entry", "add to crm", "update contact",
-        ],
-        "crew": "crm_crew",
+    "general_writing": {
+        "description": "Drafting letters, emails, and documents",
+        "keywords": ["write", "draft", "letter", "email", "document"],
+        "crew": "writing_crew",
     },
-    "content_calendar": {
-        "description": "Content calendar planning",
-        "keywords": [
-            "content calendar", "plan content", "content plan",
-            "editorial calendar", "content schedule",
-        ],
-        "crew": "content_crew",
+    "voice_polishing": {
+        "description": "Humanizing content with Boub AI Voice",
+        "keywords": ["humanize", "polish", "voice match"],
+        "crew": "voice_crew",
     },
-    "notion_update": {
-        "description": "Notion page/database update",
-        "keywords": [
-            "update notion", "notion page", "add to notion",
-            "notion entry", "notion database",
-        ],
-        "crew": "notion_crew",
+    "hunter_task": {
+        "description": "Lead sourcing & prospect hunting",
+        "keywords": ["find leads", "prospect", "utah leads", "growth engine", "hunter"],
+        "crew": "hunter_crew",
     },
-    "agent_team": {
-        "description": "Full agent team task",
-        "keywords": [
-            "full team", "agent team", "all agents",
-            "deploy team", "run team",
-        ],
-        "crew": "agent_team_crew",
+    "skill_build": {
+        "description": "Building new tools & skills (CLI-Anything)",
+        "keywords": ["colonize", "build tool", "wrap software", "cli-anything"],
+        "crew": "skill_builder_crew",
+    },
+    "gws_task": {
+        "description": "Google Workspace automation (Gmail/Calendar)",
+        "keywords": ["calendar", "add event", "check schedule", "gmail", "draft email", "search email"],
+        "crew": "gws_crew",
     },
     "chat": {
         "description": "General chat / Q&A",
-        "keywords": [
-            "chat", "talk", "question", "ask", "help me",
-            "what is", "how do", "explain",
-        ],
+        "keywords": ["chat", "talk", "question", "ask", "help me", "what is", "how do", "explain"],
         "crew": "chat_crew",
     },
-    "enrich_leads": {
-        "description": "Enrich existing leads with additional data",
-        "keywords": [
-            "enrich leads", "enrich lead", "lead enrichment",
-            "enrich contacts", "enrich contact",
-        ],
-        "crew": "enrich_leads_crew",
-    },
-    "forge_kpi_refresh": {
-        "description": "Refresh Forge KPI dashboard data",
-        "keywords": [
-            "forge kpi", "kpi refresh", "refresh kpi",
-            "kpi dashboard", "forge dashboard",
-        ],
-        "crew": "forge_kpi_crew",
-    },
-    "content_review": {
-        "description": "Review and score staged social media posts",
-        "keywords": [
-            "review content", "review posts", "score posts",
-            "content review", "review social posts", "check posts",
-            "review staged", "score staged",
-        ],
-        "crew": "content_review_crew",
-    },
-    "content_push_to_drive": {
-        "description": "Push all approved 'In Review' social posts to Google Drive as Docs and update Notion with Drive links",
-        "keywords": [
-            "push content to drive", "push to drive", "create drive docs",
-            "push posts to drive", "send to drive", "drive push",
-            "create google docs", "create docs for posts", "push approved posts",
-            "push content", "posts to drive", "content to drive",
-        ],
-        "crew": "content_drive_crew",
-    },
     "doc_routing": {
-        "description": (
-            "Classify and route an incoming document to the correct NotebookLM_Library folder. "
-            "Use when the task starts with 'doc_routing:' prefix. "
-            "Input must include record_id, filename, extracted_text, mime_type, source in context dict."
-        ),
+        "description": "Classify and route an incoming document",
         "keywords": ["doc_routing:", "classify document", "route document", "taxonomy routing"],
         "crew": "doc_routing_crew",
     },
+    "forge_kpi_refresh": {
+        "description": "Re-run the Forge KPI refresh that updates The Forge Notion dashboard",
+        "keywords": ["kpi refresh", "forge refresh", "run kpi", "re-run kpi", "rerun kpi",
+                     "6am refresh", "6am kpi", "refresh the forge", "update the forge",
+                     "run the forge", "forge dashboard", "update kpi", "refresh kpi",
+                     "forge kpi", "the forge", "re-run the 6am"],
+        "crew": "forge_kpi_crew",
+    },
+    "content_review": {
+        "description": "Review Ready social posts against Boubacar's voice standards before Drive push",
+        "keywords": ["review content", "review posts", "content review", "review my posts",
+                     "check the posts", "check content", "review the content board",
+                     "review linkedin posts", "review x posts", "quality check posts",
+                     "post review", "check my posts", "voice check", "run content review"],
+        "crew": "content_review_crew",
+    },
+    "content_push_to_drive": {
+        "description": "Push approved In Review social posts to Google Drive and update Notion",
+        "keywords": ["push content to drive", "push to drive", "create drive docs",
+                     "push posts to drive", "send to drive", "drive push",
+                     "create google docs", "push approved posts",
+                     "push content", "posts to drive", "content to drive"],
+        "crew": "content_drive_crew",
+    },
 }
+
 
 
 # ---------------------------------------------------------------------------
@@ -179,6 +178,24 @@ def classify_task(user_message: str) -> str:
             return task_type
 
     return "unknown"
+
+
+# Alias used by orchestrator.py _shortcut_classify()
+def _keyword_shortcut(user_request: str):
+    """Return task_type if keyword match found, else None."""
+    result = classify_task(user_request)
+    return result if result != "unknown" else None
+
+
+def get_crew_type(task_type: str) -> str:
+    """Return the crew key for a given task_type. Alias for get_crew_for_task."""
+    return TASK_TYPES.get(task_type, {}).get("crew", "unknown_crew")
+
+
+def extract_metadata(user_message: str) -> dict:
+    """Extract basic metadata from a user message. Returns a dict with task_type."""
+    task_type = classify_task(user_message)
+    return {"task_type": task_type, "crew": get_crew_type(task_type)}
 
 
 def get_crew_for_task(task_type: str) -> str:
