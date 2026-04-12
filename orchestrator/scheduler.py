@@ -71,7 +71,7 @@ def _update_notion_quote_block(block_id: str, quote: dict) -> bool:
         if not token:
             logger.error("QUOTE: No Notion token found (tried NOTION_API_KEY, NOTION_TOKEN, NOTION_SECRET).")
             return False
-        text = f"\"{quote['text']}\" -- {quote['author']}"
+        text = f"\"{ quote['text']}\" -- {quote['author']}"
         payload = {
             "callout": {
                 "rich_text": [{"type": "text", "text": {"content": text}}]
@@ -182,7 +182,7 @@ def _run_quote_rotation():
     logger.info(f"QUOTE: Rotation complete. {status}")
 
     telegram_msg = (
-        f"💬 *Quote of the Day*\n\n"
+        f"\U0001f4ac *Quote of the Day*\n\n"
         f"_{quote['text']}_\n\n"
         f"-- {quote['author']}\n\n"
         f"Have a sharp one. agentsHQ"
@@ -210,7 +210,7 @@ def _run_daily_harvest():
     from orchestrator import run_orchestrator
     from notifier import send_hunter_report, log_for_remoat
 
-    log_for_remoat("🚀 Starting Daily Ignition (Lead Harvest)...", "PROGRESS")
+    log_for_remoat("\U0001f680 Starting Daily Ignition (Lead Harvest)...", "PROGRESS")
     logger.info("CRON: Starting Daily Lead Harvest...")
 
     task_request = "Find 20 high-intent Utah service SMB leads (Law, Accounting, Agencies, Trades) for Catalyst Works."
@@ -219,13 +219,13 @@ def _run_daily_harvest():
         # 1. Run the crew
         result = run_orchestrator(task_request, session_key="daily_cron")
 
-        # 2. Post-harvest deep enrichment — Serper + Firecrawl, runs before report
+        # 2. Post-harvest deep enrichment -- Serper + Firecrawl, runs before report
         enrich_result = {}
         try:
             from skills.email_enrichment.enrichment_tool import enrich_missing_emails
             enrich_result = enrich_missing_emails(limit=50)
             logger.info(
-                f"CRON: Enrichment — {enrich_result.get('emails_found', 0)} emails, "
+                f"CRON: Enrichment -- {enrich_result.get('emails_found', 0)} emails, "
                 f"{enrich_result.get('linkedin_found', 0)} LinkedIn, "
                 f"{enrich_result.get('no_website', 0)} no website (web prospects)."
             )
@@ -337,12 +337,17 @@ def start_scheduler():
     listen_thread = threading.Thread(target=_listen_for_supabase_changes, daemon=True)
     listen_thread.start()
 
+    if os.environ.get("DRIVE_WATCH_ENABLED", "false").lower() == "true":
+        drive_watch_thread = threading.Thread(target=_drive_watch_loop, daemon=True)
+        drive_watch_thread.start()
+        logger.info("Drive watch thread started.")
+
     logger.info("Background scheduler initialized.")
 
 
 def _periodic_sync():
     """
-    Run Supabase fallback sync every 30 minutes (local Postgres → Supabase).
+    Run Supabase fallback sync every 30 minutes (local Postgres -> Supabase).
     Run Notion CRM sync at 10am and 1pm MT as scheduled fallback.
     Primary Notion sync is triggered by Supabase LISTEN notifications.
     """
@@ -394,6 +399,308 @@ def _listen_for_supabase_changes():
         except Exception as e:
             logger.error(f"LISTEN: Supabase listener error: {e}. Reconnecting in 30s.")
             time.sleep(30)
+
+# ---------------------------------------------------------------------------
+# Drive Watch -- NotebookLM document ingestion poller
+# Enabled via DRIVE_WATCH_ENABLED=true env var (off by default)
+# ---------------------------------------------------------------------------
+
+def _run_drive_watch():
+    """
+    Poll the NotebookLM Library root folder for new files created in the
+    last 2 minutes. For each new file not already in notebooklm_pending_docs:
+      - Extract text (Google-native files only; PDF/binary skipped)
+      - Run doc routing crew
+      - Insert result into notebooklm_pending_docs
+      - Auto-file, request Telegram confirmation, or route to review queue
+    """
+    import subprocess
+    import json as _json
+    import psycopg2
+    import httpx
+    from datetime import datetime as _dt, timezone as _tz, timedelta as _td
+
+    folder_id = os.environ.get("NOTEBOOKLM_LIBRARY_ROOT_ID", "1S0t78tojgA6VugqMtE3soZYFSEAcSvvH")
+    review_queue_id = os.environ.get("NOTEBOOKLM_REVIEW_QUEUE_FOLDER_ID", "")
+    registry_sheet_id = os.environ.get("NOTEBOOKLM_REGISTRY_SHEET_ID", "")
+    token = os.environ.get("ORCHESTRATOR_TELEGRAM_BOT_TOKEN", "")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+
+    # -- 1. List files created in the last 2 minutes -----------------------
+    cutoff = _dt.now(_tz.utc) - _td(minutes=2)
+    cutoff_str = cutoff.strftime("%Y-%m-%dT%H:%M:%S")
+    query_params = {
+        "q": f"'{folder_id}' in parents and trashed=false and createdTime > '{cutoff_str}'",
+        "fields": "files(id,name,mimeType,createdTime)",
+        "orderBy": "createdTime desc",
+        "pageSize": "10",
+    }
+    try:
+        list_result = subprocess.run(
+            ["gws", "drive", "files", "list", "--params", _json.dumps(query_params)],
+            capture_output=True, text=True, timeout=30,
+            env={**os.environ},
+        )
+        raw = list_result.stdout.strip()
+        if not raw:
+            logger.debug("DRIVE WATCH: No output from gws drive files list.")
+            return
+        drive_data = _json.loads(raw)
+    except Exception as e:
+        logger.error(f"DRIVE WATCH: Failed to list Drive files: {e}")
+        return
+
+    files = drive_data.get("files", [])
+    if not files:
+        logger.debug("DRIVE WATCH: No new files found.")
+        return
+
+    logger.info(f"DRIVE WATCH: Found {len(files)} new file(s) to process.")
+
+    # -- 2. Connect to Postgres --------------------------------------------
+    try:
+        conn = psycopg2.connect(
+            host=os.environ.get("POSTGRES_HOST", "orc-postgres"),
+            database=os.environ.get("POSTGRES_DB", "postgres"),
+            user=os.environ.get("POSTGRES_USER", "postgres"),
+            password=os.environ.get("POSTGRES_PASSWORD", ""),
+            port=int(os.environ.get("POSTGRES_PORT", 5432)),
+        )
+        conn.autocommit = False
+    except Exception as e:
+        logger.error(f"DRIVE WATCH: Postgres connection failed: {e}")
+        return
+
+    try:
+        cur = conn.cursor()
+
+        for f in files:
+            file_id = f.get("id", "")
+            filename = f.get("name", "")
+            mime_type = f.get("mimeType", "")
+
+            if not file_id or not filename:
+                continue
+
+            # -- Check if already in pending docs --------------------------
+            try:
+                cur.execute(
+                    "SELECT record_id FROM notebooklm_pending_docs WHERE drive_file_id = %s",
+                    (file_id,),
+                )
+                if cur.fetchone():
+                    logger.debug(f"DRIVE WATCH: Skipping already-processed file: {filename}")
+                    continue
+            except Exception as e:
+                logger.error(f"DRIVE WATCH: DB lookup failed for {filename}: {e}")
+                continue
+
+            # -- Extract text (Google-native only) -------------------------
+            extracted_text = ""
+            if "google-apps" in mime_type:
+                try:
+                    export_params = {"fileId": file_id, "mimeType": "text/plain"}
+                    export_result = subprocess.run(
+                        ["gws", "drive", "files", "export", "--params", _json.dumps(export_params)],
+                        capture_output=True, text=True, timeout=30,
+                        env={**os.environ},
+                    )
+                    extracted_text = (export_result.stdout or "")[:2000]
+                except Exception as e:
+                    logger.warning(f"DRIVE WATCH: Text export failed for {filename}: {e}")
+
+            # -- Run doc routing crew --------------------------------------
+            try:
+                import sys as _sys
+                if "/app" not in _sys.path:
+                    _sys.path.insert(0, "/app")
+                from skills.doc_routing.doc_routing_crew import run_doc_routing_with_retry
+                context = {
+                    "record_id": None,
+                    "filename": filename,
+                    "extracted_text": extracted_text,
+                    "mime_type": mime_type,
+                    "source": "drive_watch",
+                    "project_hint": "",
+                }
+                routing = run_doc_routing_with_retry(
+                    user_request=f"Route this document: {filename}",
+                    context=context,
+                )
+            except Exception as e:
+                logger.error(f"DRIVE WATCH: Routing crew failed for {filename}: {e}")
+                routing = {
+                    "standardized_filename": filename,
+                    "domain": "unknown",
+                    "topic_or_client": "",
+                    "doc_type": "unknown",
+                    "target_folder_path": "",
+                    "project_id": "",
+                    "notebook_assignment": "",
+                    "confidence": "low",
+                    "confidence_score": 0.0,
+                    "review_required": True,
+                    "auto_file": False,
+                    "routing_notes": f"Routing crew error: {e}",
+                }
+
+            standardized_filename = routing.get("standardized_filename", filename)
+            domain = routing.get("domain", "")
+            topic_or_client = routing.get("topic_or_client", "")
+            doc_type = routing.get("doc_type", "")
+            target_folder_path = routing.get("target_folder_path", "")
+            project_id = routing.get("project_id", "")
+            notebook_assignment = routing.get("notebook_assignment", "")
+            confidence = routing.get("confidence", "low")
+            confidence_score = float(routing.get("confidence_score", 0.0))
+            review_required = bool(routing.get("review_required", True))
+            auto_file = bool(routing.get("auto_file", False))
+            routing_notes = routing.get("routing_notes", "")
+
+            # -- Insert into notebooklm_pending_docs -----------------------
+            telegram_message_id = ""
+            try:
+                cur.execute(
+                    """
+                    INSERT INTO notebooklm_pending_docs (
+                        drive_file_id, original_filename, standardized_filename,
+                        domain, topic_or_client, doc_type, target_folder_path,
+                        project_id, notebook_assignment, confidence, confidence_score,
+                        review_required, auto_file, routing_notes, source,
+                        resolved, created_at
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                              %s, %s, %s, %s, %s, NOW())
+                    RETURNING record_id
+                    """,
+                    (
+                        file_id, filename, standardized_filename,
+                        domain, topic_or_client, doc_type, target_folder_path,
+                        project_id, notebook_assignment, confidence, confidence_score,
+                        review_required, auto_file, routing_notes, "drive_watch",
+                        False,
+                    ),
+                )
+                row = cur.fetchone()
+                record_id = row[0] if row else None
+                conn.commit()
+            except Exception as e:
+                logger.error(f"DRIVE WATCH: DB insert failed for {filename}: {e}")
+                try:
+                    conn.rollback()
+                except Exception:
+                    pass
+                continue
+
+            # -- Act on routing decision -----------------------------------
+            if auto_file:
+                # Move + rename in Drive
+                try:
+                    from skills.doc_routing.gws_cli_tools import GWSDriveMoveRenameTool, GWSSheetsAppendRowTool
+                    move_tool = GWSDriveMoveRenameTool()
+                    move_tool._run(
+                        file_id=file_id,
+                        new_name=standardized_filename,
+                        target_folder_id=target_folder_path,
+                    )
+                    # Append to Auto-Filed Log sheet
+                    if registry_sheet_id:
+                        sheet_tool = GWSSheetsAppendRowTool()
+                        sheet_tool._run(
+                            spreadsheet_id=registry_sheet_id,
+                            range_name="Auto-Filed Log!A:Z",
+                            values=[
+                                file_id, filename, standardized_filename,
+                                domain, topic_or_client, doc_type,
+                                target_folder_path, notebook_assignment,
+                                str(confidence_score), "drive_watch",
+                                _dt.now(_tz.utc).isoformat(),
+                            ],
+                        )
+                except Exception as e:
+                    logger.error(f"DRIVE WATCH: Auto-file move/sheet failed for {filename}: {e}")
+
+                msg = (
+                    f"Auto-filed: {standardized_filename}\n"
+                    f"Folder: {target_folder_path}\n"
+                    f"Notebook: {notebook_assignment}"
+                )
+                _send_telegram_alert(msg)
+
+            elif not review_required:
+                # Medium confidence -- send confirmation request
+                msg = (
+                    f"Review needed: {filename}\n"
+                    f"Suggested: {standardized_filename}\n"
+                    f"Folder: {target_folder_path}\n"
+                    f"Notebook: {notebook_assignment}\n"
+                    f"Confidence: {confidence_score:.0%}\n\n"
+                    f"confirm | field:value | flag"
+                )
+                try:
+                    resp = httpx.post(
+                        f"https://api.telegram.org/bot{token}/sendMessage",
+                        json={"chat_id": chat_id, "text": msg, "parse_mode": "HTML"},
+                        timeout=10,
+                    )
+                    result_data = resp.json()
+                    telegram_message_id = str(
+                        result_data.get("result", {}).get("message_id", "")
+                    )
+                    if record_id and telegram_message_id:
+                        try:
+                            cur.execute(
+                                "UPDATE notebooklm_pending_docs SET telegram_message_id = %s WHERE record_id = %s",
+                                (telegram_message_id, record_id),
+                            )
+                            conn.commit()
+                        except Exception as e:
+                            logger.error(f"DRIVE WATCH: Failed to store telegram_message_id: {e}")
+                            try:
+                                conn.rollback()
+                            except Exception:
+                                pass
+                except Exception as e:
+                    logger.error(f"DRIVE WATCH: Telegram confirmation send failed for {filename}: {e}")
+
+            else:
+                # Low confidence -- move to review queue
+                if review_queue_id:
+                    try:
+                        from skills.doc_routing.gws_cli_tools import GWSDriveMoveRenameTool
+                        move_tool = GWSDriveMoveRenameTool()
+                        move_tool._run(
+                            file_id=file_id,
+                            new_name=filename,
+                            target_folder_id=review_queue_id,
+                        )
+                    except Exception as e:
+                        logger.error(f"DRIVE WATCH: Move to review queue failed for {filename}: {e}")
+
+                msg = (
+                    f"Low confidence ({confidence_score:.0%}): {filename}\n"
+                    f"Routed to Review Queue.\n"
+                    f"{routing_notes}"
+                )
+                _send_telegram_alert(msg)
+
+    finally:
+        try:
+            cur.close()
+            conn.close()
+        except Exception:
+            pass
+
+
+def _drive_watch_loop():
+    """Run _run_drive_watch() every 60 seconds on a dedicated thread."""
+    logger.info("DRIVE WATCH: Starting drive watch loop (60s interval).")
+    while True:
+        try:
+            _run_drive_watch()
+        except Exception as e:
+            logger.error(f"DRIVE WATCH: Unhandled error: {e}")
+        time.sleep(60)
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
