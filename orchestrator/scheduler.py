@@ -663,7 +663,7 @@ def _run_drive_watch(scan_all: bool = False):
                     target_folder_path = "00_Review_Queue/"
                 else:
                     try:
-                        from doc_routing.gws_cli_tools import GWSDriveCreateFolderTool
+                        from skills.doc_routing.gws_cli_tools import GWSDriveCreateFolderTool
                         create_tool = GWSDriveCreateFolderTool()
                         result_str = create_tool._run(_json.dumps({
                             "name": folder_name,
@@ -681,7 +681,7 @@ def _run_drive_watch(scan_all: bool = False):
                         target_folder_path = "00_Review_Queue/"
 
             # -- Act on routing decision -----------------------------------
-            from doc_routing.gws_cli_tools import GWSDriveMoveRenameTool, GWSSheetsAppendRowTool
+            from skills.doc_routing.gws_cli_tools import GWSDriveMoveRenameTool, GWSSheetsAppendRowTool
             move_tool = GWSDriveMoveRenameTool()
 
             if auto_file:
@@ -728,15 +728,25 @@ def _run_drive_watch(scan_all: bool = False):
                     scan_summary.append(entry)
 
             elif not review_required:
-                # Medium confidence -- ask for confirmation, leave file in root for now
+                # Medium confidence (0.85-0.92) -- propose rename+folder, wait for confirmation
+                # Check if name differs significantly from original (more than just formatting)
+                orig_clean = filename.lower().replace("_", " ").replace("-", " ").replace(".md", "").replace(".pdf", "").strip()
+                new_clean = standardized_filename.lower().replace("_", " ").replace("-", " ").strip()
+                # Names are "similar" if at least 2 key words from original appear in new name
+                orig_words = set(w for w in orig_clean.split() if len(w) > 3)
+                name_overlap = sum(1 for w in orig_words if w in new_clean)
+                name_differs = name_overlap < 2 or len(orig_words) == 0
+
                 msg = (
-                    f"Review needed: {filename}\n"
-                    f"Suggested: {standardized_filename}\n"
+                    f"Proposed filing for: {filename}\n"
+                    f"New name: {standardized_filename}\n"
                     f"Folder: {target_folder_path}\n"
                     f"Notebook: {notebook_assignment}\n"
-                    f"Confidence: {confidence_score:.0%}\n\n"
-                    f"Reply: confirm or flag"
+                    f"Confidence: {confidence_score:.0%}\n"
                 )
+                if name_differs:
+                    msg += f"\nNote: Name differs significantly from original -- review carefully.\n"
+                msg += f"\nReply ✅ to confirm | ✏️ to edit | ❌ to flag"
                 try:
                     resp = httpx.post(
                         f"https://api.telegram.org/bot{token}/sendMessage",
@@ -753,10 +763,10 @@ def _run_drive_watch(scan_all: bool = False):
                         conn.commit()
                 except Exception as _e:
                     logger.error(f"DRIVE WATCH: Telegram confirmation send failed: {_e}")
-                scan_summary.append(f"Needs review: {filename} ({confidence_score:.0%}) -- reply sent")
+                scan_summary.append(f"Pending confirm: {filename} ({confidence_score:.0%})")
 
             else:
-                # Low confidence -- move to Review Queue immediately
+                # Low confidence (<0.85) -- move to Review Queue, notify with proposed name
                 move_result = move_tool._run(_json.dumps({
                     "file_id": file_id,
                     "new_name": filename,
@@ -766,7 +776,32 @@ def _run_drive_watch(scan_all: bool = False):
                 move_data = _json.loads(move_result)
                 if "error" in move_data:
                     logger.error(f"DRIVE WATCH: Review Queue move failed for {filename}: {move_data['error']}")
-                scan_summary.append(f"Review Queue: {filename} ({confidence_score:.0%}) -- {routing_notes[:60]}")
+                else:
+                    # Notify with proposed name for review
+                    msg = (
+                        f"Sent to Review Queue: {filename}\n"
+                        f"Proposed name: {standardized_filename}\n"
+                        f"Agent reasoning: {routing_notes[:120]}\n"
+                        f"Confidence: {confidence_score:.0%}\n\n"
+                        f"Reply ✅ to confirm proposed name+folder | ✏️ to edit | ❌ to discard"
+                    )
+                    try:
+                        resp = httpx.post(
+                            f"https://api.telegram.org/bot{token}/sendMessage",
+                            json={"chat_id": chat_id, "text": msg},
+                            timeout=10,
+                        )
+                        result_data = resp.json()
+                        telegram_message_id = str(result_data.get("result", {}).get("message_id", ""))
+                        if record_id and telegram_message_id:
+                            cur.execute(
+                                "UPDATE notebooklm_pending_docs SET telegram_message_id=%s WHERE record_id=%s",
+                                (telegram_message_id, record_id),
+                            )
+                            conn.commit()
+                    except Exception as _e:
+                        logger.error(f"DRIVE WATCH: Review Queue Telegram notify failed: {_e}")
+                scan_summary.append(f"Review Queue: {filename} ({confidence_score:.0%})")
 
         # -- Send scan summary Telegram message ----------------------------
         if scan_summary:
