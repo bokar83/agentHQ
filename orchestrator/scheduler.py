@@ -640,12 +640,40 @@ def _run_drive_watch(scan_all: bool = False):
             # -- Resolve target Drive folder ID from path -------------------
             target_folder_id = FOLDER_ID_MAP.get(target_folder_path)
             if not target_folder_id:
-                # Try stripping trailing slash variants
                 target_folder_id = FOLDER_ID_MAP.get(target_folder_path.rstrip("/") + "/")
+
+            new_folder_created = None  # track if we created a new folder this pass
+
             if not target_folder_id:
-                logger.warning(f"DRIVE WATCH: No folder ID for path '{target_folder_path}' -- routing to Review Queue.")
-                target_folder_id = review_queue_id
-                target_folder_path = "00_Review_Queue/"
+                # Unknown path -- create the folder under its parent
+                # e.g. "03_Research/05_NewTopic/" -> parent is "03_Research/"
+                parts = target_folder_path.strip("/").split("/")
+                folder_name = parts[-1]  # last segment is the new folder name
+                parent_path = "/".join(parts[:-1]) + "/" if len(parts) > 1 else ""
+                parent_id = FOLDER_ID_MAP.get(parent_path)
+                if not parent_id:
+                    # Parent also unknown -- fall back to Review Queue
+                    logger.warning(f"DRIVE WATCH: Cannot resolve parent for '{target_folder_path}' -- routing to Review Queue.")
+                    target_folder_id = review_queue_id
+                    target_folder_path = "00_Review_Queue/"
+                else:
+                    try:
+                        from skills.doc_routing.gws_cli_tools import GWSDriveCreateFolderTool
+                        create_tool = GWSDriveCreateFolderTool()
+                        result_str = create_tool._run(_json.dumps({
+                            "name": folder_name,
+                            "parent_id": parent_id,
+                        }))
+                        result_data = _json.loads(result_str)
+                        if "error" in result_data:
+                            raise ValueError(result_data["error"])
+                        target_folder_id = result_data["id"]
+                        new_folder_created = target_folder_path
+                        logger.info(f"DRIVE WATCH: Created new folder '{target_folder_path}' (id={target_folder_id})")
+                    except Exception as _e:
+                        logger.error(f"DRIVE WATCH: Folder creation failed for '{target_folder_path}': {_e} -- routing to Review Queue.")
+                        target_folder_id = review_queue_id
+                        target_folder_path = "00_Review_Queue/"
 
             # -- Act on routing decision -----------------------------------
             from skills.doc_routing.gws_cli_tools import GWSDriveMoveRenameTool, GWSSheetsAppendRowTool
@@ -689,7 +717,10 @@ def _run_drive_watch(scan_all: bool = False):
                             }))
                         except Exception as _e:
                             logger.warning(f"DRIVE WATCH: Auto-Filed Log append failed: {_e}")
-                    scan_summary.append(f"Filed: {standardized_filename}\n  Folder: {target_folder_path}\n  Notebook: {notebook_assignment}")
+                    entry = f"Filed: {standardized_filename}\n  Folder: {target_folder_path}\n  Notebook: {notebook_assignment}"
+                    if new_folder_created:
+                        entry += f"\n  NEW FOLDER CREATED: {new_folder_created} -- add a matching notebook in NotebookLM and link it to this folder."
+                    scan_summary.append(entry)
 
             elif not review_required:
                 # Medium confidence -- ask for confirmation, leave file in root for now
