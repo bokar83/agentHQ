@@ -1532,17 +1532,20 @@ async def process_telegram_update(update: dict):
                 _send_emoji(chat_id, "Error processing command. Check logs.")
             return
 
-    # /scan-drive — manually trigger Drive watch poll
+    # /scan-drive — manually trigger Drive watch, processes ALL files in root folder
     if text.lower().strip() == "/scan-drive":
         from notifier import send_message as _send_msg
-        _send_msg(chat_id, "Scanning Drive for new files...")
-        try:
-            import threading as _threading
-            from scheduler import _run_drive_watch
-            _threading.Thread(target=_run_drive_watch, daemon=True).start()
-        except Exception as _e:
-            logger.error(f"/scan-drive error: {_e}")
-            _send_msg(chat_id, f"Drive scan failed: {_e}")
+        _send_msg(chat_id, "Scanning Drive inbox -- will process all unclassified files and report back.")
+        def _do_scan():
+            try:
+                from scheduler import _run_drive_watch
+                _run_drive_watch(scan_all=True)
+                _send_msg(chat_id, "Drive scan complete.")
+            except Exception as _e:
+                logger.error(f"/scan-drive error: {_e}")
+                _send_msg(chat_id, f"Drive scan failed: {_e}")
+        import threading as _threading
+        _threading.Thread(target=_do_scan, daemon=True).start()
         return
 
     # /lessons [task_type] — list recent lessons
