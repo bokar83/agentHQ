@@ -25,20 +25,6 @@ from pydantic import Field
 
 logger = logging.getLogger(__name__)
 
-GWS_ENV = {
-    **os.environ,
-    "GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE": os.environ.get(
-        "GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE",
-        "/app/secrets/gws-oauth-credentials.json"
-    ),
-    "GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND": "file",
-    "GOOGLE_WORKSPACE_CLI_CONFIG_DIR": os.environ.get(
-        "GOOGLE_WORKSPACE_CLI_CONFIG_DIR",
-        "/app/.config/gws"
-    ),
-}
-
-
 class GWSCliError(Exception):
     pass
 
@@ -47,17 +33,24 @@ class GWSCliBase:
     """Shared subprocess runner for all gws CLI tools."""
 
     def _run_gws(self, args: list[str], binary_output: bool = False) -> Any:
-        """
-        Run a gws command. Returns parsed JSON dict/list for JSON responses,
-        or raw string for binary/text export responses.
-        Raises GWSCliError on non-zero exit.
-        """
+        env = {
+            **os.environ,
+            "GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE": os.environ.get(
+                "GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE",
+                "/app/secrets/gws-oauth-credentials.json"
+            ),
+            "GOOGLE_WORKSPACE_CLI_KEYRING_BACKEND": "file",
+            "GOOGLE_WORKSPACE_CLI_CONFIG_DIR": os.environ.get(
+                "GOOGLE_WORKSPACE_CLI_CONFIG_DIR",
+                "/app/.config/gws"
+            ),
+        }
         cmd = ["gws"] + args
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=not binary_output,
-            env=GWS_ENV,
+            env=env,
             timeout=30,
         )
         if result.returncode != 0:
@@ -69,7 +62,7 @@ class GWSCliBase:
             raise GWSCliError(f"gws {' '.join(args[:3])} failed: {msg}")
 
         if binary_output:
-            return result.stdout  # bytes
+            return result.stdout
         try:
             return json.loads(result.stdout)
         except json.JSONDecodeError:
@@ -180,7 +173,7 @@ class GWSDriveDownloadTool(GWSCliBase, BaseTool):
         try:
             data = json.loads(input_data) if isinstance(input_data, str) else input_data
             file_id = data.get("file_id", "").strip()
-            filename = data.get("filename", f"{file_id}.bin").strip()
+            filename = os.path.basename(data.get("filename", f"{file_id}.bin").strip())
             if not file_id:
                 return "error: file_id is required"
             local_path = f"/tmp/{filename}"
