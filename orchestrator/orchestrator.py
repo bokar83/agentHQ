@@ -1226,7 +1226,7 @@ async def process_telegram_update(update: dict):
             try:
                 import json as _json
                 from datetime import datetime as _dt
-                from skills.doc_routing.gws_cli_tools import GWSDriveMoveRenameTool, GWSSheetsAppendRowTool
+                import sys as _sys; _sys.path.insert(0, "/app/orchestrator_skills") if "/app/orchestrator_skills" not in _sys.path else None; from doc_routing.gws_cli_tools import GWSDriveMoveRenameTool, GWSSheetsAppendRowTool
                 conn = _db_connect()
                 record = _get_pending_doc(conn, reply_msg_id)
                 if not record:
@@ -1338,7 +1338,7 @@ async def process_telegram_update(update: dict):
             try:
                 import json as _json
                 from datetime import datetime as _dt
-                from skills.doc_routing.gws_cli_tools import GWSDriveMoveRenameTool, GWSSheetsAppendRowTool
+                import sys as _sys; _sys.path.insert(0, "/app/orchestrator_skills") if "/app/orchestrator_skills" not in _sys.path else None; from doc_routing.gws_cli_tools import GWSDriveMoveRenameTool, GWSSheetsAppendRowTool
                 payload = text[len("🆕"):].strip()
                 if not payload:
                     _send_emoji(chat_id, "Usage: 🆕 <project name>")
@@ -1444,7 +1444,7 @@ async def process_telegram_update(update: dict):
             try:
                 import json as _json
                 from datetime import datetime as _dt
-                from skills.doc_routing.gws_cli_tools import GWSDriveMoveRenameTool, GWSSheetsAppendRowTool
+                import sys as _sys; _sys.path.insert(0, "/app/orchestrator_skills") if "/app/orchestrator_skills" not in _sys.path else None; from doc_routing.gws_cli_tools import GWSDriveMoveRenameTool, GWSSheetsAppendRowTool
                 conn = _db_connect()
                 record = _get_pending_doc(conn, reply_msg_id)
                 if not record:
@@ -1490,7 +1490,7 @@ async def process_telegram_update(update: dict):
         if _matched_emoji == "➕":
             try:
                 import json as _json
-                from skills.doc_routing.gws_cli_tools import GWSSheetsAppendRowTool
+                import sys as _sys; _sys.path.insert(0, "/app/orchestrator_skills") if "/app/orchestrator_skills" not in _sys.path else None; from doc_routing.gws_cli_tools import GWSSheetsAppendRowTool
                 conn = _db_connect()
                 cur = conn.cursor()
                 cur.execute(
