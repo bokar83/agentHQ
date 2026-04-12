@@ -33,6 +33,11 @@ class GWSCliBase:
     """Shared subprocess runner for all gws CLI tools."""
 
     def _run_gws(self, args: list[str], binary_output: bool = False) -> Any:
+        """
+        Run a gws command. Returns parsed JSON dict/list for JSON responses,
+        or raw string for binary/text export responses.
+        Raises GWSCliError on non-zero exit.
+        """
         env = {
             **os.environ,
             "GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE": os.environ.get(
@@ -62,7 +67,7 @@ class GWSCliBase:
             raise GWSCliError(f"gws {' '.join(args[:3])} failed: {msg}")
 
         if binary_output:
-            return result.stdout
+            return result.stdout  # bytes
         try:
             return json.loads(result.stdout)
         except json.JSONDecodeError:
