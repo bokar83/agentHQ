@@ -433,8 +433,8 @@ def _run_drive_watch():
     token = os.environ.get("ORCHESTRATOR_TELEGRAM_BOT_TOKEN", "")
     chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
 
-    # -- 1. List files created in the last 2 minutes -----------------------
-    cutoff = _dt.now(_tz.utc) - _td(minutes=2)
+    # -- 1. List files created since last poll (65 min window matches 60 min sleep + buffer)
+    cutoff = _dt.now(_tz.utc) - _td(minutes=65)
     cutoff_str = cutoff.strftime("%Y-%m-%dT%H:%M:%S")
     query_params = {
         "q": f"'{folder_id}' in parents and trashed=false and createdTime > '{cutoff_str}'",
@@ -699,14 +699,14 @@ def _run_drive_watch():
 
 
 def _drive_watch_loop():
-    """Run _run_drive_watch() every 60 seconds on a dedicated thread."""
-    logger.info("DRIVE WATCH: Starting drive watch loop (60s interval).")
+    """Run _run_drive_watch() every 60 minutes on a dedicated thread."""
+    logger.info("DRIVE WATCH: Starting drive watch loop (60 min interval).")
     while True:
         try:
             _run_drive_watch()
         except Exception as e:
             logger.error(f"DRIVE WATCH: Unhandled error: {e}")
-        time.sleep(60)
+        time.sleep(3600)
 
 
 def _run_notebooklm_digest():
