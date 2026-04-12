@@ -53,7 +53,7 @@ from agents import (
 logger = logging.getLogger(__name__)
 
 try:
-    from skills.doc_routing.doc_routing_crew import build_doc_routing_crew
+    import sys as _sys; _sys.path.insert(0, "/app/orchestrator_skills") if "/app/orchestrator_skills" not in _sys.path else None; from doc_routing.doc_routing_crew import build_doc_routing_crew
 except ImportError as e:
     import logging as _logging
     _logging.getLogger(__name__).warning(f"doc_routing_crew import failed: {e}")
