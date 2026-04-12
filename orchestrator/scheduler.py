@@ -412,14 +412,13 @@ def _listen_for_supabase_changes():
 # Enabled via DRIVE_WATCH_ENABLED=true env var (off by default)
 # ---------------------------------------------------------------------------
 
-def _run_drive_watch():
+def _run_drive_watch(scan_all: bool = False):
     """
-    Poll the NotebookLM Library root folder for new files created in the
-    last 2 minutes. For each new file not already in notebooklm_pending_docs:
-      - Extract text (Google-native files only; PDF/binary skipped)
-      - Run doc routing crew
-      - Insert result into notebooklm_pending_docs
-      - Auto-file, request Telegram confirmation, or route to review queue
+    Poll the NotebookLM Library root folder for unclassified files.
+
+    scan_all=False (scheduled): only files created in the last 65 minutes.
+    scan_all=True  (/scan-drive): all files currently in root, regardless of age.
+      In both cases, deduplication against notebooklm_pending_docs prevents re-processing.
     """
     import subprocess
     import json as _json
@@ -433,14 +432,21 @@ def _run_drive_watch():
     token = os.environ.get("ORCHESTRATOR_TELEGRAM_BOT_TOKEN", "")
     chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
 
-    # -- 1. List files created since last poll (65 min window matches 60 min sleep + buffer)
-    cutoff = _dt.now(_tz.utc) - _td(minutes=65)
-    cutoff_str = cutoff.strftime("%Y-%m-%dT%H:%M:%S")
+    # -- 1. Build Drive query -----------------------------------------------
+    if scan_all:
+        # All files in root, no time filter -- dedup handles re-processing
+        q = f"'{folder_id}' in parents and trashed=false"
+        logger.info("DRIVE WATCH: scan_all mode -- processing all files in root folder.")
+    else:
+        cutoff = _dt.now(_tz.utc) - _td(minutes=65)
+        cutoff_str = cutoff.strftime("%Y-%m-%dT%H:%M:%S")
+        q = f"'{folder_id}' in parents and trashed=false and createdTime > '{cutoff_str}'"
+
     query_params = {
-        "q": f"'{folder_id}' in parents and trashed=false and createdTime > '{cutoff_str}'",
+        "q": q,
         "fields": "files(id,name,mimeType,createdTime)",
         "orderBy": "createdTime desc",
-        "pageSize": "10",
+        "pageSize": "50",  # higher limit for scan_all
     }
     try:
         list_result = subprocess.run(
