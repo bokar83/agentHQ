@@ -123,20 +123,29 @@ def query_database(database_id: str, filter_body: dict = None, sorts: list = Non
     return r.json().get("results", [])
 
 
-def create_idea_page(database_id: str, title: str, content: str, category: str = "Feature") -> str:
+def create_idea_page(
+    database_id: str,
+    title: str,
+    content: str,
+    category: str = "Feature",
+    impact: str = "",
+    effort: str = "",
+) -> str:
     """Create a new idea page in the Ideas database. Returns the Notion URL."""
     headers = get_notion_headers()
-    payload = {
-        "parent": {"database_id": database_id},
-        "properties": {
-            "Name": {"title": [{"text": {"content": title}}]},
-            "Content": {"rich_text": [{"text": {"content": content[:2000]}}]},
-            "Source": {"select": {"name": "Telegram"}},
-            "Status": {"select": {"name": "New"}},
-            "Category": {"select": {"name": category}},
-            "Created": {"date": {"start": date.today().isoformat()}},
-        },
+    properties = {
+        "Name": {"title": [{"text": {"content": title}}]},
+        "Content": {"rich_text": [{"text": {"content": content[:2000]}}]},
+        "Source": {"select": {"name": "Telegram"}},
+        "Status": {"select": {"name": "New"}},
+        "Category": {"select": {"name": category}},
+        "Created": {"date": {"start": date.today().isoformat()}},
     }
+    if impact in ("High", "Medium", "Low"):
+        properties["Impact"] = {"select": {"name": impact}}
+    if effort in ("High", "Medium", "Low"):
+        properties["Effort"] = {"select": {"name": effort}}
+    payload = {"parent": {"database_id": database_id}, "properties": properties}
     r = httpx.post("https://api.notion.com/v1/pages", headers=headers, json=payload, timeout=10)
     r.raise_for_status()
     return r.json().get("url", "")

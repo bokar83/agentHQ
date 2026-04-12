@@ -3,5 +3,12 @@
   "reportMissingImports": false,
   "reportMissingModuleSource": false,
   "reportUndefinedVariable": false,
-  "reportReturnType": false
+  "reportReturnType": false,
+  "exclude": [
+    "orchestrator/**",
+    "skills/**",
+    ".venv/**",
+    "output/**",
+    "workspace/**"
+  ]
 }
