@@ -127,7 +127,7 @@ def run_doc_routing_with_retry(user_request: str, context: Optional[dict] = None
     import json as _json
 
     filename = (context or {}).get("filename", "unknown")
-    record_id = (context or {}).get("record_id", "unknown")
+    record_id = (context or {}).get("record_id") or "unknown"
 
     fallback = {
         "record_id": record_id,
