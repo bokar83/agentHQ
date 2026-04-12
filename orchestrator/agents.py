@@ -35,6 +35,7 @@ from tools import (
     GWS_TOOLS,
     voice_polisher_tool,
     scoreboard_tool,
+    gws_drive_create_tool,
 )
 
 logger = logging.getLogger(__name__)
@@ -626,6 +627,35 @@ def build_boub_ai_voice_agent() -> Agent:
         tools=WRITING_TOOLS + [voice_polisher_tool, search_tool, QueryMemoryTool()],
         llm=select_llm("voice", "moderate"),
         max_iter=4
+    )
+
+
+def build_content_reviewer_agent() -> Agent:
+    """Builds the Content Reviewer agent for pre-Drive post quality gate."""
+    return Agent(
+        role="Content Reviewer — Boubacar Barry Voice & Quality Specialist",
+        goal=(
+            "Review every social post against Boubacar's voice standards before it goes to Drive. "
+            "Score each post on hook strength, body clarity, CTA sharpness, and voice authenticity. "
+            "Rewrite anything that fails. Only approve posts that are unmistakably Boubacar — "
+            "direct, diagnosis-first, no AI slop, no generic consulting filler."
+        ),
+        backstory=(
+            "You have studied every piece of content Boubacar Barry has ever published. "
+            "You know his voice cold: short declarative sentences, Theory of Constraints framing, "
+            "SMB owner-operators as the audience, one bold diagnosis per post, no hedging. "
+            "You also know every AI writing red flag: em-dash abuse, throat-clearing openers, "
+            "buzzword soup (leverage, synergy, delve, complexities), uniform sentence length, "
+            "wishy-washy multi-answer endings, and generic follow-me-for-more CTAs. "
+            "Your job is to be the last line of defence before content goes public. "
+            "If a post could have been written by any AI assistant, it fails. "
+            "If it sounds like Boubacar on his best day, direct, earned, specific, it passes."
+        ),
+        verbose=False,
+        allow_delegation=False,
+        tools=[voice_polisher_tool, gws_drive_create_tool],
+        llm=select_llm("voice", "high"),
+        max_iter=3,
     )
 
 
