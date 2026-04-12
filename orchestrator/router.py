@@ -145,56 +145,55 @@ TASK_TYPES = {
 # Helper: classify a raw user message
 # ---------------------------------------------------------------------------
 
-def classify_task(user_message: str) -> str:
-    """
-    Return the task_type key for the given user message.
-    Falls back to 'unknown' if no keywords match.
-    """
+def _classify_raw(user_message: str) -> str:
+    """Internal: return task_type string. Used by classify_task and _keyword_shortcut."""
     msg = user_message.lower().strip()
-
-    # Ordered checks for multi-word / specific patterns first
-
-    # content_push_to_drive — must check before content_review (more specific)
     if any(kw in msg for kw in TASK_TYPES["content_push_to_drive"]["keywords"]):
         return "content_push_to_drive"
-
-    # content_review
     if any(kw in msg for kw in TASK_TYPES["content_review"]["keywords"]):
         return "content_review"
-
-    # forge_kpi_refresh
     if any(kw in msg for kw in TASK_TYPES["forge_kpi_refresh"]["keywords"]):
         return "forge_kpi_refresh"
-
-    # doc_routing — prefix match
     if msg.startswith("doc_routing:") or any(kw in msg for kw in TASK_TYPES["doc_routing"]["keywords"]):
         return "doc_routing"
-
-    # Generic keyword sweep
     for task_type, config in TASK_TYPES.items():
         if task_type in ("content_push_to_drive", "content_review", "forge_kpi_refresh", "doc_routing"):
-            continue  # already handled above
+            continue
         if any(kw in msg for kw in config["keywords"]):
             return task_type
-
     return "unknown"
 
 
-# Alias used by orchestrator.py _shortcut_classify()
+def classify_task(user_message: str) -> dict:
+    """
+    Classify user message. Returns dict: {task_type, crew, confidence, is_unknown}.
+    This format is expected by orchestrator.py at lines 594-599.
+    """
+    task_type = _classify_raw(user_message)
+    crew = TASK_TYPES.get(task_type, {}).get("crew", "unknown_crew")
+    confidence = 0.3 if task_type == "unknown" else 0.95
+    return {
+        "task_type": task_type,
+        "crew": crew,
+        "confidence": confidence,
+        "is_unknown": task_type == "unknown",
+    }
+
+
 def _keyword_shortcut(user_request: str):
-    """Return task_type if keyword match found, else None."""
-    result = classify_task(user_request)
-    return result if result != "unknown" else None
+    """Return task_type string if keyword match found, else None."""
+    task_type = _classify_raw(user_request)
+    return task_type if task_type != "unknown" else None
 
 
 def get_crew_type(task_type: str) -> str:
-    """Return the crew key for a given task_type. Alias for get_crew_for_task."""
+    """Return the crew key for a given task_type."""
     return TASK_TYPES.get(task_type, {}).get("crew", "unknown_crew")
 
 
 def extract_metadata(user_message: str) -> dict:
-    """Extract basic metadata from a user message. Returns a dict with task_type."""
-    task_type = classify_task(user_message)
+    """Extract basic metadata from a user message."""
+    task_type = _classify_raw(user_message)
     return {"task_type": task_type, "crew": get_crew_type(task_type)}
 
 
