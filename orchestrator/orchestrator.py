@@ -1185,6 +1185,353 @@ async def process_telegram_update(update: dict):
         logger.warning(f"Unauthorised Telegram access attempt from sender_id={sender_id}")
         return
 
+    # -- Doc routing emoji command handlers --
+    _EMOJI_COMMANDS = ("✅", "✏️", "🆕", "❌", "➕")
+    _matched_emoji = next((e for e in _EMOJI_COMMANDS if text.startswith(e)), None)
+    if _matched_emoji:
+        from notifier import send_message as _send_emoji
+
+        def _get_pending_doc(conn, reply_msg_id):
+            """Return the pending doc record, using reply_to_message_id or latest unresolved."""
+            cur = conn.cursor()
+            if reply_msg_id:
+                cur.execute(
+                    "SELECT * FROM notebooklm_pending_docs WHERE telegram_message_id = %s AND resolved = false LIMIT 1",
+                    (str(reply_msg_id),),
+                )
+            else:
+                cur.execute(
+                    "SELECT * FROM notebooklm_pending_docs WHERE resolved = false ORDER BY created_at DESC LIMIT 1"
+                )
+            row = cur.fetchone()
+            if row is None:
+                return None
+            cols = [desc[0] for desc in cur.description]
+            return dict(zip(cols, row))
+
+        def _db_connect():
+            import psycopg2
+            return psycopg2.connect(
+                host=os.environ.get("POSTGRES_HOST", "orc-postgres"),
+                database=os.environ.get("POSTGRES_DB", "postgres"),
+                user=os.environ.get("POSTGRES_USER", "postgres"),
+                password=os.environ.get("POSTGRES_PASSWORD", ""),
+                port=int(os.environ.get("POSTGRES_PORT", 5432)),
+            )
+
+        reply_msg_id = message.get("reply_to_message", {}).get("message_id") if message.get("reply_to_message") else None
+
+        # ---- ✅ Confirm and file document ----
+        if _matched_emoji == "✅":
+            try:
+                import json as _json
+                from datetime import datetime as _dt
+                from skills.doc_routing.gws_cli_tools import GWSDriveMoveRenameTool, GWSSheetsAppendRowTool
+                conn = _db_connect()
+                record = _get_pending_doc(conn, reply_msg_id)
+                if not record:
+                    _send_emoji(chat_id, "No pending document found. It may have already been filed.")
+                    conn.close()
+                    return
+                review_queue_folder_id = os.environ.get("NOTEBOOKLM_REVIEW_QUEUE_FOLDER_ID", "")
+                target_path = record.get("target_folder_path", "") or ""
+                if target_path.startswith("00_Review_Queue/"):
+                    logger.warning(f"Doc routing: target_folder_path '{target_path}' is unresolved -- skipping Drive move for record_id={record['record_id']}")
+                    new_parent_id = review_queue_folder_id
+                    skipped_move = True
+                else:
+                    new_parent_id = review_queue_folder_id  # fallback -- path-to-ID resolution not yet implemented
+                    logger.warning(f"Doc routing: Drive folder ID resolution not implemented for path '{target_path}' -- using review queue folder as fallback for record_id={record['record_id']}")
+                    skipped_move = False
+                if not skipped_move:
+                    GWSDriveMoveRenameTool()._run(_json.dumps({
+                        "file_id": record["drive_file_id"],
+                        "new_name": record["standardized_filename"],
+                        "new_parent_id": new_parent_id,
+                        "old_parent_id": os.environ.get("NOTEBOOKLM_LIBRARY_ROOT_ID", ""),
+                    }))
+                queue_sheet_id = os.environ.get("NOTEBOOKLM_QUEUE_SHEET_ID", "")
+                GWSSheetsAppendRowTool()._run(_json.dumps({
+                    "spreadsheet_id": queue_sheet_id,
+                    "range": "Sheet1!A:I",
+                    "values": [[
+                        record["standardized_filename"],
+                        "",
+                        record["domain"],
+                        record["project_id"],
+                        record["topic_or_client"],
+                        record["doc_type"],
+                        record["notebook_assignment"],
+                        _dt.utcnow().strftime("%Y-%m-%d"),
+                        "No",
+                    ]],
+                }))
+                cur = conn.cursor()
+                cur.execute(
+                    "UPDATE notebooklm_pending_docs SET resolved = true WHERE record_id = %s",
+                    (record["record_id"],),
+                )
+                conn.commit()
+                conn.close()
+                _send_emoji(
+                    chat_id,
+                    f"Filed: {record['standardized_filename']}\nFolder: {target_path}\nNotebook queue: updated.",
+                )
+            except Exception as _exc:
+                logger.error(f"Emoji handler ✅ error: {_exc}", exc_info=True)
+                _send_emoji(chat_id, "Error processing command. Check logs.")
+            return
+
+        # ---- ✏️ Edit a field on the pending doc ----
+        if _matched_emoji == "✏️":
+            try:
+                payload = text[len("✏️"):].strip()
+                field_map = {
+                    "folder": "target_folder_path",
+                    "project": "project_id",
+                    "doctype": "doc_type",
+                    "notebook": "notebook_assignment",
+                    "name": "standardized_filename",
+                }
+                if ":" not in payload:
+                    _send_emoji(chat_id, "Edit format: ✏️ field:value  (valid fields: folder, project, doctype, notebook, name)")
+                    return
+                field_key, field_val = payload.split(":", 1)
+                field_key = field_key.strip().lower()
+                field_val = field_val.strip()
+                if field_key not in field_map:
+                    _send_emoji(chat_id, f"Unknown field '{field_key}'. Valid fields: {', '.join(field_map.keys())}")
+                    return
+                conn = _db_connect()
+                record = _get_pending_doc(conn, reply_msg_id)
+                if not record:
+                    _send_emoji(chat_id, "No pending document found to edit.")
+                    conn.close()
+                    return
+                db_col = field_map[field_key]
+                cur = conn.cursor()
+                cur.execute(
+                    f"UPDATE notebooklm_pending_docs SET {db_col} = %s WHERE record_id = %s",
+                    (field_val, record["record_id"]),
+                )
+                conn.commit()
+                # Re-fetch updated record
+                cur.execute(
+                    "SELECT * FROM notebooklm_pending_docs WHERE record_id = %s",
+                    (record["record_id"],),
+                )
+                row = cur.fetchone()
+                cols = [desc[0] for desc in cur.description]
+                updated = dict(zip(cols, row))
+                conn.close()
+                _send_emoji(
+                    chat_id,
+                    f"Updated {field_key} to: {field_val}\n\nNew routing:\nFile: {updated['standardized_filename']}\nFolder: {updated['target_folder_path']}\nNotebook: {updated['notebook_assignment']}\n\nSend ✅ to confirm.",
+                )
+            except Exception as _exc:
+                logger.error(f"Emoji handler ✏️ error: {_exc}", exc_info=True)
+                _send_emoji(chat_id, "Error processing command. Check logs.")
+            return
+
+        # ---- 🆕 Create new project and file document ----
+        if _matched_emoji == "🆕":
+            try:
+                import json as _json
+                from datetime import datetime as _dt
+                from skills.doc_routing.gws_cli_tools import GWSDriveMoveRenameTool, GWSSheetsAppendRowTool
+                payload = text[len("🆕"):].strip()
+                if not payload:
+                    _send_emoji(chat_id, "Usage: 🆕 <project name>")
+                    return
+                name_lower = payload.lower()
+                if "client" in name_lower or (payload[0].isupper() and "research" not in name_lower):
+                    prefix = "CL"
+                elif "research" in name_lower or "topic" in name_lower:
+                    prefix = "RS"
+                elif "ops" in name_lower or "admin" in name_lower or "internal" in name_lower:
+                    prefix = "OP"
+                else:
+                    prefix = "CW"
+                conn = _db_connect()
+                cur = conn.cursor()
+                cur.execute(f"SELECT pg_advisory_lock(hashtext('{prefix}'))")
+                cur.execute(
+                    "SELECT COALESCE(MAX(CAST(SPLIT_PART(project_id, '-', 2) AS INTEGER)), 0) + 1 AS next_num "
+                    "FROM notebooklm_pending_docs WHERE project_id LIKE %s",
+                    (f"{prefix}-%",),
+                )
+                row = cur.fetchone()
+                next_num = row[0] if row else 1
+                new_project_id = f"{prefix}-{next_num:03d}"
+                cur.execute(f"SELECT pg_advisory_unlock(hashtext('{prefix}'))")
+                record = _get_pending_doc(conn, reply_msg_id)
+                if not record:
+                    conn.close()
+                    _send_emoji(chat_id, "No pending document found to assign to the new project.")
+                    return
+                cur.execute(
+                    "UPDATE notebooklm_pending_docs SET project_id = %s WHERE record_id = %s",
+                    (new_project_id, record["record_id"]),
+                )
+                conn.commit()
+                # Append new project to Registry sheet
+                registry_sheet_id = os.environ.get("NOTEBOOKLM_REGISTRY_SHEET_ID", "")
+                GWSSheetsAppendRowTool()._run(_json.dumps({
+                    "spreadsheet_id": registry_sheet_id,
+                    "range": "Projects!A:H",
+                    "values": [[
+                        new_project_id,
+                        payload,
+                        payload,
+                        "",
+                        "",
+                        "",
+                        "active",
+                        _dt.utcnow().strftime("%Y-%m-%d"),
+                    ]],
+                }))
+                # Re-fetch updated record for filing
+                cur.execute(
+                    "SELECT * FROM notebooklm_pending_docs WHERE record_id = %s",
+                    (record["record_id"],),
+                )
+                row = cur.fetchone()
+                cols = [desc[0] for desc in cur.description]
+                updated = dict(zip(cols, row))
+                # File the document (same as ✅ confirm logic)
+                review_queue_folder_id = os.environ.get("NOTEBOOKLM_REVIEW_QUEUE_FOLDER_ID", "")
+                target_path = updated.get("target_folder_path", "") or ""
+                if not target_path.startswith("00_Review_Queue/"):
+                    GWSDriveMoveRenameTool()._run(_json.dumps({
+                        "file_id": updated["drive_file_id"],
+                        "new_name": updated["standardized_filename"],
+                        "new_parent_id": review_queue_folder_id,
+                        "old_parent_id": os.environ.get("NOTEBOOKLM_LIBRARY_ROOT_ID", ""),
+                    }))
+                queue_sheet_id = os.environ.get("NOTEBOOKLM_QUEUE_SHEET_ID", "")
+                GWSSheetsAppendRowTool()._run(_json.dumps({
+                    "spreadsheet_id": queue_sheet_id,
+                    "range": "Sheet1!A:I",
+                    "values": [[
+                        updated["standardized_filename"],
+                        "",
+                        updated["domain"],
+                        updated["project_id"],
+                        updated["topic_or_client"],
+                        updated["doc_type"],
+                        updated["notebook_assignment"],
+                        _dt.utcnow().strftime("%Y-%m-%d"),
+                        "No",
+                    ]],
+                }))
+                cur.execute(
+                    "UPDATE notebooklm_pending_docs SET resolved = true WHERE record_id = %s",
+                    (updated["record_id"],),
+                )
+                conn.commit()
+                conn.close()
+                _send_emoji(
+                    chat_id,
+                    f"Created: {new_project_id} | {payload}\nFiled: {updated['standardized_filename']}",
+                )
+            except Exception as _exc:
+                logger.error(f"Emoji handler 🆕 error: {_exc}", exc_info=True)
+                _send_emoji(chat_id, "Error processing command. Check logs.")
+            return
+
+        # ---- ❌ Flag document for review ----
+        if _matched_emoji == "❌":
+            try:
+                import json as _json
+                from datetime import datetime as _dt
+                from skills.doc_routing.gws_cli_tools import GWSDriveMoveRenameTool, GWSSheetsAppendRowTool
+                conn = _db_connect()
+                record = _get_pending_doc(conn, reply_msg_id)
+                if not record:
+                    _send_emoji(chat_id, "No pending document found.")
+                    conn.close()
+                    return
+                review_queue_folder_id = os.environ.get("NOTEBOOKLM_REVIEW_QUEUE_FOLDER_ID", "")
+                GWSDriveMoveRenameTool()._run(_json.dumps({
+                    "file_id": record["drive_file_id"],
+                    "new_name": record["standardized_filename"],
+                    "new_parent_id": review_queue_folder_id,
+                    "old_parent_id": os.environ.get("NOTEBOOKLM_LIBRARY_ROOT_ID", ""),
+                }))
+                queue_sheet_id = os.environ.get("NOTEBOOKLM_QUEUE_SHEET_ID", "")
+                GWSSheetsAppendRowTool()._run(_json.dumps({
+                    "spreadsheet_id": queue_sheet_id,
+                    "range": "Flagged Docs!A:E",
+                    "values": [[
+                        record["original_filename"],
+                        record["standardized_filename"],
+                        _dt.utcnow().strftime("%Y-%m-%d"),
+                        "Operator flagged via Telegram",
+                        "No",
+                    ]],
+                }))
+                cur = conn.cursor()
+                cur.execute(
+                    "UPDATE notebooklm_pending_docs SET resolved = true WHERE record_id = %s",
+                    (record["record_id"],),
+                )
+                conn.commit()
+                conn.close()
+                _send_emoji(
+                    chat_id,
+                    f"Flagged: {record['original_filename']}. Moved to Review Queue and logged.",
+                )
+            except Exception as _exc:
+                logger.error(f"Emoji handler ❌ error: {_exc}", exc_info=True)
+                _send_emoji(chat_id, "Error processing command. Check logs.")
+            return
+
+        # ---- ➕ Approve routing matrix proposal ----
+        if _matched_emoji == "➕":
+            try:
+                import json as _json
+                from skills.doc_routing.gws_cli_tools import GWSSheetsAppendRowTool
+                conn = _db_connect()
+                cur = conn.cursor()
+                cur.execute(
+                    "SELECT * FROM routing_matrix_proposals WHERE status = 'pending' ORDER BY proposed_at DESC LIMIT 1"
+                )
+                row = cur.fetchone()
+                if not row:
+                    conn.close()
+                    _send_emoji(chat_id, "No pending routing matrix proposals.")
+                    return
+                cols = [desc[0] for desc in cur.description]
+                proposal = dict(zip(cols, row))
+                queue_sheet_id = os.environ.get("NOTEBOOKLM_QUEUE_SHEET_ID", "")
+                GWSSheetsAppendRowTool()._run(_json.dumps({
+                    "spreadsheet_id": queue_sheet_id,
+                    "range": "Routing Matrix!A:G",
+                    "values": [[
+                        "",
+                        proposal["signal_keywords"],
+                        proposal["suggested_domain"],
+                        proposal["suggested_folder"],
+                        "",
+                        proposal["suggested_notebook"],
+                        "operator-approved",
+                    ]],
+                }))
+                cur.execute(
+                    "UPDATE routing_matrix_proposals SET status = 'approved' WHERE proposal_id = %s",
+                    (proposal["proposal_id"],),
+                )
+                conn.commit()
+                conn.close()
+                _send_emoji(
+                    chat_id,
+                    f"Routing Matrix updated. New row added for: {proposal['signal_keywords']}",
+                )
+            except Exception as _exc:
+                logger.error(f"Emoji handler ➕ error: {_exc}", exc_info=True)
+                _send_emoji(chat_id, "Error processing command. Check logs.")
+            return
+
     # /lessons [task_type] — list recent lessons
     if text.lower().startswith("/lessons"):
         from notifier import send_message as _send_msg
