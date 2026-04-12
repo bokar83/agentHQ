@@ -156,6 +156,7 @@ def run_doc_routing_with_retry(user_request: str, context: Optional[dict] = None
                 result_str = result_str.split("```")[1]
                 if result_str.startswith("json"):
                     result_str = result_str[4:]
+                result_str = result_str.strip()
             return _json.loads(result_str)
         except Exception as e:
             logger.error(f"doc_routing attempt {attempt + 1} failed: {e}")
@@ -165,11 +166,8 @@ def run_doc_routing_with_retry(user_request: str, context: Optional[dict] = None
 
     # Both attempts failed -- send Telegram alert and return fallback
     try:
-        from notifier import send_message
-        import os
-        chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
-        if chat_id:
-            send_message(chat_id, f"Classification failed for {filename}. Routed to Review Queue.")
+        from notifier import send_doc_routing_alert
+        send_doc_routing_alert(filename, "error", {"record_id": record_id})
     except Exception:
         pass
 
