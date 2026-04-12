@@ -28,7 +28,7 @@ VALID_AGENT_OUTPUT = {
 REQUIRED_FIELDS = [
     "record_id", "domain", "topic_or_client", "doc_type",
     "target_folder_path", "standardized_filename", "project_id",
-    "notebook_assignment", "confidence", "confidence_score",
+    "new_project_name", "notebook_assignment", "confidence", "confidence_score",
     "review_required", "auto_file", "routing_notes"
 ]
 

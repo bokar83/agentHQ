@@ -20,7 +20,7 @@ from crewai import Agent, Task
 
 logger = logging.getLogger(__name__)
 
-# ── Controlled vocabularies ────────────────────────────────────
+# ── Controlled vocabularies ──────────────────────────────
 VALID_DOMAINS = {"CLIENT", "CATALYST", "RESEARCH", "CONTENT", "LEARNING", "OPS"}
 VALID_DOC_TYPES = {"transcript", "report", "notes", "draft", "proposal", "deliverable", "template", "reference", "sop"}
 VALID_NOTEBOOKS = {"Client Notebook", "Catalyst Notebook", "Research Notebook", "Content Notebook", "Learning Notebook", "Unassigned"}
@@ -192,22 +192,20 @@ def propose_matrix_row(signal_keywords: str, suggested_domain: str, suggested_fo
 
     # Log proposal to PostgreSQL
     try:
-        conn = psycopg2.connect(
+        with psycopg2.connect(
             host=os.environ.get("POSTGRES_HOST", "orc-postgres"),
             database=os.environ.get("POSTGRES_DB", "postgres"),
             user=os.environ.get("POSTGRES_USER", "postgres"),
             password=os.environ.get("POSTGRES_PASSWORD", ""),
             port=int(os.environ.get("POSTGRES_PORT", 5432)),
-        )
-        with conn.cursor() as cur:
-            cur.execute(
-                """INSERT INTO routing_matrix_proposals
-                   (signal_keywords, suggested_domain, suggested_folder, suggested_notebook)
-                   VALUES (%s, %s, %s, %s)""",
-                (signal_keywords, suggested_domain, suggested_folder, suggested_notebook),
-            )
-        conn.commit()
-        conn.close()
+        ) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """INSERT INTO routing_matrix_proposals
+                       (signal_keywords, suggested_domain, suggested_folder, suggested_notebook)
+                       VALUES (%s, %s, %s, %s)""",
+                    (signal_keywords, suggested_domain, suggested_folder, suggested_notebook),
+                )
     except Exception as e:
         logger.error(f"propose_matrix_row DB insert failed: {e}")
         return f"error: {e}"
