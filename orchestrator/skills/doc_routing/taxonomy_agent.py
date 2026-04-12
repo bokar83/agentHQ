@@ -49,6 +49,10 @@ ROUTING_MATRIX_SEED = [
      "domain": "CONTENT", "target_folder_path": "04_Content/04_Frameworks_and_IP/", "doc_type_hint": "reference or template", "notebook_assignment": "Content Notebook"},
     {"priority": 10, "signal_keywords": ["book summary", "course notes", "transcript", "learning", "chapter notes"],
      "domain": "LEARNING", "target_folder_path": "05_Learning/", "doc_type_hint": "match to doc type", "notebook_assignment": "Learning Notebook"},
+    {"priority": 11, "signal_keywords": ["idea", "hypothesis", "rough thought", "brainstorm", "shower thought", "what if", "early concept", "voice memo"],
+     "domain": "OPS", "target_folder_path": "06_Ideas/", "doc_type_hint": "notes or reference", "notebook_assignment": "Unassigned"},
+    {"priority": 12, "signal_keywords": ["AMPLIFY", "Human AI Workflow Matrix", "proprietary framework", "IP", "methodology", "framework doc"],
+     "domain": "CATALYST", "target_folder_path": "02_Catalyst_Works/06_Frameworks_and_IP/", "doc_type_hint": "reference or template", "notebook_assignment": "Catalyst Notebook"},
 ]
 
 
