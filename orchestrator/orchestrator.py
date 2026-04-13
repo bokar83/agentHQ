@@ -2176,16 +2176,16 @@ async def run_task_async(request: TaskRequest, background_tasks: BackgroundTasks
                         fname = matches[0][9:]  # strip file_id_ prefix
                         task_text = f"[Attached file: {fname}]\n{file_content}\n\n---\n{request.task}"
 
-            # Chat tasks don't belong in async — run sync and complete immediately
-            _msg = task_text.strip().lower()
-            _is_chat = (
-                len(_msg) < 60 and not any(w in _msg for w in [
-                    "write", "create", "build", "research", "analyze", "make",
-                    "draft", "generate", "code", "script", "website", "report",
-                    "proposal", "post", "email", "article"
-                ])
-            )
-            if _is_chat:
+            # Use the same classification pipeline as /run and /run-sync
+            _shortcut = _shortcut_classify(task_text)
+            if _shortcut and _shortcut != "memory_capture":
+                _routed_as_chat = False
+            elif _classify_obvious_chat(task_text):
+                _routed_as_chat = True
+            else:
+                _routed_as_chat = False
+
+            if _routed_as_chat:
                 result = run_chat(message=task_text, session_key=request.session_key)
             else:
                 result = run_orchestrator(
