@@ -395,12 +395,14 @@ FORGE_TOOLS = [forge_log_tool, forge_pipeline_tool, forge_content_tool]
 # ══════════════════════════════════════════════════════════════
 # GOOGLE WORKSPACE TOOLS (Calendar + Gmail)
 # Supports multiple accounts via separate credentials files:
-#   bokar83@gmail.com       → GOOGLE_OAUTH_CREDENTIALS_JSON (default)
-#   catalystworks.ai@gmail.com → GOOGLE_OAUTH_CREDENTIALS_JSON_CW
+#   bokar83@gmail.com                    → GOOGLE_OAUTH_CREDENTIALS_JSON (default)
+#   boubacar@catalystworks.consulting    → GOOGLE_OAUTH_CREDENTIALS_JSON_CW (outreach account)
+#   catalystworks.ai@gmail.com           → GOOGLE_OAUTH_CREDENTIALS_JSON_CW (legacy alias)
 # ══════════════════════════════════════════════════════════════
 
 _GWS_CREDS_MAP = {
     "bokar83@gmail.com": os.environ.get("GOOGLE_OAUTH_CREDENTIALS_JSON", "/app/secrets/gws-oauth-credentials.json"),
+    "boubacar@catalystworks.consulting": os.environ.get("GOOGLE_OAUTH_CREDENTIALS_JSON_CW", "/app/secrets/gws-oauth-credentials-cw.json"),
     "catalystworks.ai@gmail.com": os.environ.get("GOOGLE_OAUTH_CREDENTIALS_JSON_CW", "/app/secrets/gws-oauth-credentials-cw.json"),
 }
 _GWS_DEFAULT_ACCOUNT = "bokar83@gmail.com"
@@ -552,7 +554,7 @@ class GWSGmailCreateDraftTool(BaseTool):
         "Create a Gmail draft. "
         "Input: JSON with 'to' (email), 'subject', 'body' (plain text). "
         "Optional: 'cc', 'account' (email address to send from — defaults to bokar83@gmail.com; "
-        "use 'catalystworks.ai@gmail.com' for Catalyst Works outreach)."
+        "use 'boubacar@catalystworks.consulting' for Catalyst Works outreach)."
     )
     def _run(self, input_data: str) -> str:
         try:
@@ -1460,12 +1462,80 @@ class CRMMarkOutreachSentTool(BaseTool):
         return f"Marked {marked} lead(s) as messaged: {names}"
 
 
+class CRMQueryTool(BaseTool):
+    """Answer natural-language questions about CRM leads by querying Supabase directly."""
+    name: str = "query_crm"
+    description: str = (
+        "Answer questions about the CRM leads database. "
+        "Use this for questions like: how many leads have been contacted, "
+        "total leads in the CRM, how many leads by status, how many have emails, "
+        "show me leads in a specific industry, or any other CRM data question. "
+        "Input: the user's question as a plain string. "
+        "Returns a plain-text summary with the answer."
+    )
+    def _run(self, question: str = "") -> str:
+        try:
+            import sys
+            if "/app" not in sys.path:
+                sys.path.insert(0, "/app")
+            from db import get_crm_connection_with_fallback
+            conn, _ = get_crm_connection_with_fallback()
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT
+                    COUNT(*) as total,
+                    COUNT(*) FILTER (WHERE status = 'new') as new_leads,
+                    COUNT(*) FILTER (WHERE status = 'messaged') as contacted,
+                    COUNT(*) FILTER (WHERE status = 'replied') as replied,
+                    COUNT(*) FILTER (WHERE status = 'booked') as booked,
+                    COUNT(*) FILTER (WHERE status = 'closed') as closed,
+                    COUNT(*) FILTER (WHERE email IS NOT NULL AND email != '') as with_email,
+                    COUNT(*) FILTER (WHERE linkedin_url IS NOT NULL AND linkedin_url != '') as with_linkedin,
+                    COUNT(*) FILTER (WHERE last_contacted_at IS NOT NULL) as ever_contacted
+                FROM leads
+            """)
+            row = cur.fetchone()
+
+            cur.execute("""
+                SELECT industry, COUNT(*) as cnt
+                FROM leads
+                WHERE industry IS NOT NULL
+                GROUP BY industry
+                ORDER BY cnt DESC
+                LIMIT 10
+            """)
+            by_industry = cur.fetchall()
+            cur.close()
+            conn.close()
+
+            industry_lines = "\n".join(
+                f"  - {r['industry']}: {r['cnt']}" for r in by_industry
+            ) or "  (no industry data)"
+
+            return (
+                f"CRM Summary:\n"
+                f"- Total leads: {row['total']}\n"
+                f"- Never contacted (new): {row['new_leads']}\n"
+                f"- Contacted (messaged): {row['contacted']}\n"
+                f"- Replied: {row['replied']}\n"
+                f"- Calls booked: {row['booked']}\n"
+                f"- Closed: {row['closed']}\n"
+                f"- Ever contacted (last_contacted_at set): {row['ever_contacted']}\n"
+                f"- With email: {row['with_email']}\n"
+                f"- With LinkedIn: {row['with_linkedin']}\n\n"
+                f"By industry:\n{industry_lines}"
+            )
+        except Exception as e:
+            return f"CRM query failed: {e}"
+
+
 crm_add_tool = CRMAddLeadTool()
 crm_log_tool = CRMLogInteractionTool()
 crm_reveal_tool = CRMRevealEmailTool()
 crm_uncontacted_tool = CRMGetUncontactedTool()
 scoreboard_tool = DailyScoreboardTool()
 crm_mark_sent_tool = CRMMarkOutreachSentTool()
+crm_query_tool = CRMQueryTool()
 
 
 class EnrichLeadsTool(BaseTool):

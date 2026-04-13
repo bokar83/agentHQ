@@ -88,6 +88,26 @@ TASK_TYPES = {
         "keywords": ["code", "script", "function", "debug", "build", "automate"],
         "crew": "code_crew",
     },
+    "crm_query": {
+        "description": "Query CRM stats — lead counts, statuses, contacted, pipeline",
+        "keywords": [
+            "how many leads", "leads contacted", "lead count", "crm stats",
+            "leads in the crm", "total leads", "how many contacts", "pipeline stats",
+            "leads by status", "leads with email", "leads replied", "leads booked",
+            "show me leads", "list leads", "who have been contacted", "contacted leads",
+            "crm summary", "leads industry", "how many prospects",
+        ],
+        "crew": "crm_query_crew",
+    },
+    "crm_outreach": {
+        "description": "Cold outreach — create Gmail drafts for uncontacted CRM leads",
+        "keywords": [
+            "contact leads", "email leads", "cold outreach", "outreach drafts",
+            "draft outreach", "cold email leads", "email the leads", "outreach emails",
+            "draft cold emails", "email prospects", "send outreach",
+        ],
+        "crew": "crm_outreach_crew",
+    },
     "general_writing": {
         "description": "Drafting letters, emails, and documents",
         "keywords": ["write", "draft", "letter", "email", "document"],
