@@ -1,0 +1,215 @@
+{
+  "name": "WhatsApp → True Agent Orchestrator v6",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-incoming",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-webhook",
+      "name": "Receive WhatsApp Message",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [180, 400]
+    },
+
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json;\nconst from  = body?.payload?.from || body?.from || 'unknown';\nconst text  = body?.payload?.body || body?.body || body?.text || '';\n\nif (!text || from === 'status@broadcast') {\n  return [{ json: { skip: true } }];\n}\n\nconst lower = text.trim().toLowerCase();\nconst resetThread = lower === 'new thread' || lower === 'reset';\nconst isParallel = text.trim().startsWith('+');\nconst cleanText = isParallel ? text.trim().substring(1).trim() : text.trim();\nconst sessionKey = `wa_${from.replace(/[^0-9]/g,'')}`;\n\nreturn [{ json: {\n  skip: false,\n  from,\n  text: cleanText,\n  sessionKey,\n  resetThread,\n  isParallel,\n  timestamp: new Date().toISOString()\n}}];"
+      },
+      "id": "node-parse",
+      "name": "Parse Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 400]
+    },
+
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            { "leftValue": "={{ $json.skip }}", "rightValue": false,
+              "operator": { "type": "boolean", "operation": "equals" } }
+          ]
+        }
+      },
+      "id": "node-skip",
+      "name": "Real Message?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [620, 400]
+    },
+
+    {
+      "parameters": { "respondWith": "text", "responseBody": "OK" },
+      "id": "node-ignore",
+      "name": "Ignore",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [840, 240]
+    },
+
+    {
+      "parameters": {
+        "url": "http://orc-crewai:8000/health",
+        "options": { "timeout": 5000 }
+      },
+      "id": "node-health",
+      "name": "Check Agent is Running",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [840, 420]
+    },
+
+    {
+      "parameters": {
+        "url": "http://orc-waha:3000/api/sendText",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true, "contentType": "json",
+        "body": {
+          "session": "default",
+          "chatId": "={{ $('Parse Message').first().json.from }}",
+          "text": "=⏳ Got it. My agents are working on this now.\n\nTask: {{ $('Parse Message').first().json.text }}\n\nThis takes 2-4 minutes. I'll reply when it's done."
+        }
+      },
+      "id": "node-ack",
+      "name": "Send Acknowledgment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1060, 340]
+    },
+
+    {
+      "parameters": {
+        "url": "http://orc-crewai:8000/run",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "task": "={{ $('Parse Message').first().json.text }}",
+          "from_number": "={{ $('Parse Message').first().json.from }}",
+          "session_key": "={{ $('Parse Message').first().json.sessionKey }}"
+        },
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "node-run-crew",
+      "name": "Run Agent Crew",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1060, 480]
+    },
+
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst msg = $('Parse Message').first().json;\n\nif (!response.success) {\n  return [{ json: {\n    reply: '❌ Something went wrong with the agents. Please try again.',\n    to: msg.from,\n    success: false\n  }}];\n}\n\nreturn [{ json: {\n  reply: response.result,\n  to: msg.from,\n  files_created: response.files_created || [],\n  execution_time: response.execution_time || 0,\n  success: true,\n  title: `Agent Task — ${new Date(msg.timestamp).toLocaleDateString()}`,\n  content: `TASK: ${msg.text}\\n\\nRESULT:\\n${response.result}`,\n  task_type: 'agent_task'\n}}];"
+      },
+      "id": "node-format",
+      "name": "Format Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1280, 480]
+    },
+
+    {
+      "parameters": {
+        "url": "http://orc-waha:3000/api/sendText",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "Content-Type", "value": "application/json" }] },
+        "sendBody": true, "contentType": "json",
+        "body": {
+          "session": "default",
+          "chatId": "={{ $json.to }}",
+          "text": "={{ $json.reply }}"
+        }
+      },
+      "id": "node-send",
+      "name": "Send Result to WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1500, 400]
+    },
+
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": { "__rl": true, "mode": "name", "value": "public" },
+        "table":  { "__rl": true, "mode": "name", "value": "conversation_archive" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp":    "={{ $('Parse Message').first().json.timestamp }}",
+            "from_number":  "={{ $('Format Result').first().json.to }}",
+            "message_id":   "=agent_{{ Date.now() }}",
+            "message_text": "=TASK: {{ $('Parse Message').first().json.text }}\n\nRESULT: {{ $('Format Result').first().json.reply }}",
+            "direction":    "outbound",
+            "is_parallel":  "={{ $('Parse Message').first().json.isParallel }}",
+            "task_type":    "agent_task",
+            "model_used":   "crewai-orchestrator"
+          }
+        }
+      },
+      "id": "node-archive",
+      "name": "Archive to DB",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [1720, 340],
+      "credentials": { "postgres": { "id": "postgres-cred", "name": "PostgreSQL" } }
+    },
+
+    {
+      "parameters": {
+        "workflowId": { "__rl": true, "mode": "name", "value": "SUB - Always Save" },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "title":       "={{ $('Format Result').first().json.title }}",
+            "content":     "={{ $('Format Result').first().json.content }}",
+            "task_type":   "agent_task",
+            "from_number": "={{ $('Format Result').first().json.to }}"
+          }
+        }
+      },
+      "id": "node-save",
+      "name": "Always Save",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [1720, 480]
+    },
+
+    {
+      "parameters": { "respondWith": "text", "responseBody": "OK" },
+      "id": "node-close",
+      "name": "Close Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1940, 400]
+    }
+  ],
+
+  "connections": {
+    "Receive WhatsApp Message": { "main": [[{ "node": "Parse Message", "type": "main", "index": 0 }]] },
+    "Parse Message":            { "main": [[{ "node": "Real Message?", "type": "main", "index": 0 }]] },
+    "Real Message?":            { "main": [
+      [{ "node": "Ignore", "type": "main", "index": 0 }],
+      [{ "node": "Check Agent is Running", "type": "main", "index": 0 }]
+    ]},
+    "Check Agent is Running":   { "main": [[
+      { "node": "Send Acknowledgment", "type": "main", "index": 0 },
+      { "node": "Run Agent Crew",      "type": "main", "index": 0 }
+    ]]},
+    "Run Agent Crew":           { "main": [[{ "node": "Format Result",           "type": "main", "index": 0 }]] },
+    "Format Result":            { "main": [[{ "node": "Send Result to WhatsApp", "type": "main", "index": 0 }]] },
+    "Send Result to WhatsApp":  { "main": [[
+      { "node": "Archive to DB", "type": "main", "index": 0 },
+      { "node": "Always Save",   "type": "main", "index": 0 },
+      { "node": "Close Webhook", "type": "main", "index": 0 }
+    ]]}
+  },
+  "settings": { "executionOrder": "v1" }
+}

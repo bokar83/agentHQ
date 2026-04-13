@@ -36,6 +36,11 @@ Defaulting to TOC misrepresents him and costs him clients.
 - End every session with git push on both local AND VPS (see session commands in memory)
 - Use the superpowers skills workflow (brainstorming → writing-plans → executing-plans) before building any new agent or feature
 
+## Writing Style — Hard Rules
+
+- **No em dashes. Ever.** Not `--`, not `—`. Rewrite the sentence instead.
+- This applies to all output: code comments, markdown, responses, file content, everything.
+
 ## Project Quick Reference
 
 - VPS: `72.60.209.109` — orchestrator runs on port 8000
