@@ -663,7 +663,7 @@ def _run_drive_watch(scan_all: bool = False):
                     target_folder_path = "00_Review_Queue/"
                 else:
                     try:
-                        from skills.doc_routing.gws_cli_tools import GWSDriveCreateFolderTool
+                        import sys as _sys2; _sys2.path.insert(0, "/app/orchestrator_skills") if "/app/orchestrator_skills" not in _sys2.path else None; from doc_routing.gws_cli_tools import GWSDriveCreateFolderTool
                         create_tool = GWSDriveCreateFolderTool()
                         result_str = create_tool._run(_json.dumps({
                             "name": folder_name,
@@ -681,7 +681,7 @@ def _run_drive_watch(scan_all: bool = False):
                         target_folder_path = "00_Review_Queue/"
 
             # -- Act on routing decision -----------------------------------
-            from skills.doc_routing.gws_cli_tools import GWSDriveMoveRenameTool, GWSSheetsAppendRowTool
+            import sys as _sys2; _sys2.path.insert(0, "/app/orchestrator_skills") if "/app/orchestrator_skills" not in _sys2.path else None; from doc_routing.gws_cli_tools import GWSDriveMoveRenameTool, GWSSheetsAppendRowTool
             move_tool = GWSDriveMoveRenameTool()
 
             if auto_file:
