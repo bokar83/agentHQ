@@ -449,7 +449,6 @@ def _run_drive_watch(scan_all: bool = False):
         "04_Content/01_LinkedIn/":                  "1UQX5tgrh1BYMRCBCDhhEhGwSEOoJa7qz",
         "04_Content/02_Longform/":                  "1Pg5rNnaQ360vkeuNeqKS4c0HpUx6AFyo",
         "04_Content/03_Lead_Magnets/":              "1Pi-UVVwcwtcIGkXRzMJx-kQ8Y6Ok9etn",
-        "04_Content/04_Frameworks_and_IP/":         "18EHTT_eEkfNcLlEZS4I34EQ64Q-QI_3a",
         "05_Learning/":                             "1ob1UFXbmSf32BlDZnz6EqAhEkWXIyHB9",
         "05_Learning/01_Books/":                    "1wZH6dt96syjtORJ1bM6aTVqAy7ONilsW",
         "05_Learning/02_Courses/":                  "1ElDkzKAsaaWNT_iIqm12AEb9UBgwqwIY",
@@ -663,7 +662,7 @@ def _run_drive_watch(scan_all: bool = False):
                     target_folder_path = "00_Review_Queue/"
                 else:
                     try:
-                        import sys as _sys2; _sys2.path.insert(0, "/app/orchestrator_skills") if "/app/orchestrator_skills" not in _sys2.path else None; from doc_routing.gws_cli_tools import GWSDriveCreateFolderTool
+                        from skills.doc_routing.gws_cli_tools import GWSDriveCreateFolderTool
                         create_tool = GWSDriveCreateFolderTool()
                         result_str = create_tool._run(_json.dumps({
                             "name": folder_name,
@@ -681,7 +680,7 @@ def _run_drive_watch(scan_all: bool = False):
                         target_folder_path = "00_Review_Queue/"
 
             # -- Act on routing decision -----------------------------------
-            import sys as _sys2; _sys2.path.insert(0, "/app/orchestrator_skills") if "/app/orchestrator_skills" not in _sys2.path else None; from doc_routing.gws_cli_tools import GWSDriveMoveRenameTool, GWSSheetsAppendRowTool
+            from skills.doc_routing.gws_cli_tools import GWSDriveMoveRenameTool, GWSSheetsAppendRowTool
             move_tool = GWSDriveMoveRenameTool()
 
             if auto_file:
