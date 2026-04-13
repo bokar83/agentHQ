@@ -1,0 +1,169 @@
+{
+  "name": "SUB - Always Save",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger",
+      "name": "When Called By Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── Receive payload from parent workflow ─────────────────\n// Expected input:\n// {\n//   title: string,         — project/task name\n//   content: string,       — the main output/result\n//   task_type: string,     — research | writing | coding | consulting | quick\n//   from_number: string,   — Telegram ID or unique identifier that triggered this\n//   github_repo: string,   — optional: repo name to commit to\n//   github_path: string,   — optional: file path in repo\n//   notion_db_id: string   — optional: override default Notion DB\n// }\n\nconst input = $input.first().json;\n\nconst title = input.title || 'Untitled Task';\nconst content = input.content || '';\nconst task_type = input.task_type || 'general';\nconst timestamp = new Date().toISOString();\nconst date_str = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });\nconst slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 50);\n\nreturn [{\n  json: {\n    title,\n    content,\n    task_type,\n    timestamp,\n    date_str,\n    slug,\n    from_number: input.from_number || 'unknown',\n    github_repo: input.github_repo || 'boubacar-agent-outputs',\n    github_path: input.github_path || `outputs/${task_type}/${slug}.md`,\n    notion_db_id: input.notion_db_id || 'YOUR_NOTION_DB_ID_HERE',\n    drive_folder_id: input.drive_folder_id || 'YOUR_GOOGLE_DRIVE_FOLDER_ID_HERE',\n    markdown_content: `# ${title}\\n\\n**Date:** ${date_str}\\n**Type:** ${task_type}\\n**Triggered by:** Telegram\\n\\n---\\n\\n${content}\\n`\n  }\n}];"
+      },
+      "id": "prepare",
+      "name": "Prepare Save Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "create",
+        "owner": {
+          "__rl": true,
+          "mode": "id",
+          "value": "YOUR_GITHUB_USERNAME"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $json.github_repo }}"
+        },
+        "filePath": "={{ $json.github_path }}",
+        "fileContent": "={{ $json.markdown_content }}",
+        "commitMessage": "=Agent output: {{ $json.title }} ({{ $json.date_str }})",
+        "additionalParameters": {}
+      },
+      "id": "github-save",
+      "name": "Save to GitHub",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [680, 180],
+      "credentials": {
+        "githubApi": {
+          "id": "github-cred",
+          "name": "GitHub"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "name": "={{ $('Prepare Save Payload').first().json.title + ' - ' + $('Prepare Save Payload').first().json.date_str + '.md' }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "MyDrive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Prepare Save Payload').first().json.drive_folder_id }}"
+        },
+        "options": {
+          "mimeType": "text/plain"
+        }
+      },
+      "id": "gdrive-save",
+      "name": "Save to Google Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [680, 300],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "gdrive-cred",
+          "name": "Google Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "page",
+        "operation": "create",
+        "databaseId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Prepare Save Payload').first().json.notion_db_id }}"
+        },
+        "title": "={{ $('Prepare Save Payload').first().json.title }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Status|select",
+              "selectValue": "Done"
+            },
+            {
+              "key": "Type|select",
+              "selectValue": "={{ $('Prepare Save Payload').first().json.task_type }}"
+            },
+            {
+              "key": "Date|date",
+              "dateValue": "={{ $('Prepare Save Payload').first().json.timestamp }}"
+            },
+            {
+              "key": "Triggered By|rich_text",
+              "textContent": "Telegram"
+            }
+          ]
+        },
+        "blockUi": {
+          "blockValues": [
+            {
+              "type": "paragraph",
+              "textContent": "={{ $('Prepare Save Payload').first().json.content }}"
+            }
+          ]
+        }
+      },
+      "id": "notion-save",
+      "name": "Log to Notion",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [680, 420],
+      "credentials": {
+        "notionApi": {
+          "id": "notion-cred",
+          "name": "Notion"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── Collect results from all three saves ─────────────────\nconst github_result = $('Save to GitHub').first()?.json;\nconst drive_result = $('Save to Google Drive').first()?.json;\nconst notion_result = $('Log to Notion').first()?.json;\n\nconst github_url = github_result?.content?.html_url || 'GitHub saved';\nconst drive_url = drive_result?.webViewLink || 'Drive saved';\nconst notion_url = notion_result?.url || 'Notion logged';\n\nreturn [{\n  json: {\n    success: true,\n    github_url,\n    drive_url,\n    notion_url,\n    summary: `Saved everywhere:\\nGitHub: ${github_url}\\nDrive: ${drive_url}\\nNotion: ${notion_url}`\n  }\n}];"
+      },
+      "id": "collect-results",
+      "name": "Collect Save Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [920, 300]
+    }
+  ],
+  "connections": {
+    "When Called By Another Workflow": {
+      "main": [[{ "node": "Prepare Save Payload", "type": "main", "index": 0 }]]
+    },
+    "Prepare Save Payload": {
+      "main": [
+        [
+          { "node": "Save to GitHub", "type": "main", "index": 0 },
+          { "node": "Save to Google Drive", "type": "main", "index": 0 },
+          { "node": "Log to Notion", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Save to GitHub": {
+      "main": [[{ "node": "Collect Save Results", "type": "main", "index": 0 }]]
+    },
+    "Save to Google Drive": {
+      "main": [[{ "node": "Collect Save Results", "type": "main", "index": 0 }]]
+    },
+    "Log to Notion": {
+      "main": [[{ "node": "Collect Save Results", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" }
+}
