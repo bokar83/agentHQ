@@ -105,8 +105,35 @@ logger = logging.getLogger(__name__)
 # SEARCH & RESEARCH TOOLS
 # ══════════════════════════════════════════════════════════════
 
-# Web search via Serper (2500 free searches/month)
+class LaunchVercelAppTool(BaseTool):
+    name: str = "launch_vercel_app"
+    description: str = "Launches a web application to Vercel and GitHub. Synchronizes with a GitHub repo (bokar83/<app_name>) and triggers a Vercel deployment. Parameters: app_name (string), is_prod (boolean)."
+
+    def _run(self, app_name: str, is_prod: bool = False) -> str:
+        # Normalize: remove training -app if provided, script handles re-adding it
+        clean_name = app_name.replace("-app", "")
+        prod_flag = "--prod" if is_prod else ""
+        
+        # Use relative path for best compatibility with various bash environments on Windows
+        base_dir = "D:/Ai_Sandbox/agentsHQ"
+        script_path = "skills/vercel-launch/scripts/launch.sh"
+        
+        cmd = f"bash \"{script_path}\" \"{clean_name}\" {prod_flag}"
+        logger.info(f"Executing Vercel Launch: {cmd}")
+        
+        import subprocess
+        try:
+            # We use bash (Git Bash on Windows) to execute the .sh script
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=base_dir)
+            if result.returncode != 0:
+                return f"Error launching app:\nSTDOUT: {result.stdout}\nSTDERR: {result.stderr}"
+            return result.stdout
+        except Exception as e:
+            return f"System exception during launch: {str(e)}"
+
+# Instantiate core tools
 search_tool = SerperDevTool()
+launch_vercel_tool = LaunchVercelAppTool()
 
 # File operations
 file_writer = FileWriterTool()
@@ -1481,7 +1508,7 @@ RESEARCH_TOOLS = [search_tool, file_reader, QueryMemoryTool()]
 MEMORY_TOOLS = [QueryMemoryTool(), SaveLearningTool()]
 SCRAPING_TOOLS = [FirecrawlScrapeTool(), FirecrawlCrawlTool(), FirecrawlSearchTool()]
 WRITING_TOOLS = [file_writer, SaveOutputTool(), voice_polisher_tool]
-CODE_TOOLS = [t for t in [code_interpreter, file_writer, file_reader, SaveOutputTool(), CLIHubSearchTool()] if t is not None]
-ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool(), GitHubRepoTool(), GitHubIssueTool(), GitHubFileTool(), NotionSearchTool(), NotionPageTool()] + VERCEL_TOOLS + NOTION_STYLING_TOOLS + FORGE_TOOLS + GWS_TOOLS
+CODE_TOOLS = [t for t in [code_interpreter, file_writer, file_reader, SaveOutputTool(), CLIHubSearchTool(), launch_vercel_tool] if t is not None]
+ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool(), GitHubRepoTool(), GitHubIssueTool(), GitHubFileTool(), NotionSearchTool(), NotionPageTool(), launch_vercel_tool] + VERCEL_TOOLS + NOTION_STYLING_TOOLS + FORGE_TOOLS + GWS_TOOLS
 HUNTER_TOOLS = [prospecting_tool, crm_add_tool, crm_log_tool, crm_reveal_tool, enrich_leads_tool, scoreboard_tool, QueryMemoryTool(), NotionPageTool(), forge_pipeline_tool, forge_log_tool]
 OUTREACH_TOOLS = [crm_uncontacted_tool, crm_reveal_tool, crm_log_tool, scoreboard_tool, crm_mark_sent_tool]

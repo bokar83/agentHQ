@@ -24,13 +24,22 @@ done
 APP_BASE=$(echo "$BASE_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g' | sed 's/-app$//')
 APP_NAME="${APP_BASE}-app"
 
+# Fallback for gh on Windows/WSL
+if ! command -v gh &>/dev/null && command -v gh.exe &>/dev/null; then
+  gh() { gh.exe "$@"; }
+fi
+
 echo "App name: $APP_NAME" >&2
 
 # ── Detect agentsHQ root ─────────────────────────────────────────────────────
-if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OS" == "Windows_NT" ]]; then
-  AGENTS_ROOT="D:/Ai_Sandbox/agentsHQ"
-else
-  AGENTS_ROOT="/root/agentsHQ"
+if [[ -z "$AGENTS_ROOT" ]]; then
+  if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OS" == "Windows_NT" ]]; then
+    AGENTS_ROOT="D:/Ai_Sandbox/agentsHQ"
+  elif [[ -d "/mnt/d/Ai_Sandbox/agentsHQ" ]]; then
+    AGENTS_ROOT="/mnt/d/Ai_Sandbox/agentsHQ"
+  else
+    AGENTS_ROOT="/root/agentsHQ"
+  fi
 fi
 
 echo "agentsHQ root: $AGENTS_ROOT" >&2
