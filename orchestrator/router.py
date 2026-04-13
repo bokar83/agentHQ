@@ -39,7 +39,7 @@ TASK_TYPES = {
     },
     "github_task": {
         "description": "GitHub repository & PR management",
-        "keywords": ["github", "repo", "repository", "issue", "pull request", "pr"],
+        "keywords": ["github", "repo", "repository", "pull request", "open pr", "merge pr", "review pr", "create pr", "close pr", "github issue"],
         "crew": "code_crew",
     },
     "notion_task": {
@@ -60,11 +60,21 @@ TASK_TYPES = {
         ],
         "crew": "research_crew",
     },
+    "inline_post_review": {
+        "description": "Review & polish a social post provided inline in the message",
+        "keywords": [
+            "ready to publish", "is it ready", "review this post", "review my post",
+            "can we make it stronger", "improve my voice", "improve our reach",
+            "strengthen the post", "polish this post", "voice check this",
+        ],
+        "crew": "social_crew",
+    },
     "social_content": {
         "description": "Social media post drafting",
         "keywords": [
             "write a post", "linkedin post", "twitter post", "x post",
             "social post", "draft post", "content post", "instagram", "caption",
+            "write me a post", "create a post",
         ],
         "crew": "social_crew",
     },
@@ -159,8 +169,12 @@ TASK_TYPES = {
 def _classify_raw(user_message: str) -> str:
     """Internal: return task_type string. Used by classify_task and _keyword_shortcut."""
     msg = user_message.lower().strip()
+
+    # High-priority explicit task prefixes checked first
     if any(kw in msg for kw in TASK_TYPES["content_push_to_drive"]["keywords"]):
         return "content_push_to_drive"
+    if any(kw in msg for kw in TASK_TYPES["inline_post_review"]["keywords"]):
+        return "inline_post_review"
     if any(kw in msg for kw in TASK_TYPES["content_review"]["keywords"]):
         return "content_review"
     if any(kw in msg for kw in TASK_TYPES["forge_kpi_refresh"]["keywords"]):
@@ -169,8 +183,13 @@ def _classify_raw(user_message: str) -> str:
         return "doc_routing"
     if any(kw in msg for kw in TASK_TYPES["notion_capture"]["keywords"]):
         return "notion_capture"
+
+    _PRIORITY_CHECKED = {
+        "content_push_to_drive", "inline_post_review", "content_review",
+        "forge_kpi_refresh", "doc_routing", "notion_capture",
+    }
     for task_type, config in TASK_TYPES.items():
-        if task_type in ("content_push_to_drive", "content_review", "forge_kpi_refresh", "doc_routing", "notion_capture"):
+        if task_type in _PRIORITY_CHECKED:
             continue
         if any(kw in msg for kw in config["keywords"]):
             return task_type
