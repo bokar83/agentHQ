@@ -1852,6 +1852,33 @@ def build_notion_tasks_crew(user_request: str) -> Crew:
     )
 
 
+def build_crm_query_crew(user_request: str) -> Crew:
+    """
+    Lightweight read-only crew for CRM questions.
+    Calls query_crm + get_daily_scoreboard and returns a plain-text answer.
+    Triggered by: "how many leads", "leads contacted", "crm stats", etc.
+    """
+    from agents import build_hunter_agent
+    from tools import crm_query_tool, scoreboard_tool
+
+    agent = build_hunter_agent()
+    agent.tools = [crm_query_tool, scoreboard_tool]
+
+    task = Task(
+        description=(
+            f"The user is asking a question about the CRM. Answer it directly.\n\n"
+            f"USER QUESTION: {user_request}\n\n"
+            f"Call query_crm to get the full lead breakdown by status, email, industry, etc. "
+            f"Then answer the user's specific question clearly and concisely in plain text. "
+            f"No preamble, no markdown headers — just a direct answer with the relevant numbers."
+        ),
+        agent=agent,
+        expected_output="A concise plain-text answer to the user's CRM question with the relevant numbers."
+    )
+
+    return Crew(agents=[agent], tasks=[task], verbose=False)
+
+
 def build_crm_outreach_crew(user_request: str) -> Crew:
     """
     Crew for: crm_outreach
@@ -1901,7 +1928,7 @@ def build_crm_outreach_crew(user_request: str) -> Crew:
             "- CONFIRMED EMAILS ONLY: Only draft for leads where an email address was "
             "explicitly provided by the previous task. NEVER guess, infer, or construct "
             "an email address. If a lead has no confirmed email, skip them entirely.\n"
-            "- Account: use catalystworks.ai@gmail.com for ALL outreach drafts.\n"
+            "- Account: use boubacar@catalystworks.consulting for ALL outreach drafts.\n"
             "- Template: use the single cold outreach template from the cold outreach skill.\n"
             "- Body: fill in [First Name] with the recipient's actual first name. "
             "No other placeholders. No industry bracket. No size bracket.\n"
@@ -2275,6 +2302,7 @@ CREW_REGISTRY = {
     "gws_crew":               build_gws_crew,
     "notion_capture_crew":    build_notion_capture_crew,
     "notion_tasks_crew":      build_notion_tasks_crew,
+    "crm_query_crew":         build_crm_query_crew,
     "crm_outreach_crew":      build_crm_outreach_crew,
     "mark_outreach_sent_crew": build_mark_outreach_sent_crew,
     "enrich_leads_crew":       build_enrich_leads_crew,
