@@ -37,6 +37,26 @@ from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Depends, H
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+# Task types that produce a tangible saved artifact (HTML, PDF, report, email template, etc.).
+# Only these task types trigger a save to GitHub and Google Drive.
+# Query-only tasks (CRM lookups, chat, notion reads, KPI checks) never save to Drive/GitHub.
+SAVE_REQUIRED_TASK_TYPES = {
+    "research_report",
+    "consulting_deliverable",
+    "website_build",
+    "app_build",
+    "3d_website_build",
+    "code_task",
+    "general_writing",
+    "social_content",
+    "linkedin_x_campaign",
+    "voice_polishing",
+    "crm_outreach",
+    "hunter_task",
+    "content_push_to_drive",
+    "skill_build",
+}
+
 # Task types that benefit from pre-task memory recall.
 # Simple/single-pass tasks (gws, hunter, social) are excluded — no benefit, adds latency.
 MEMORY_GATED_TASK_TYPES = {
@@ -659,7 +679,7 @@ def run_orchestrator(task_request: str, from_number: str = "unknown", session_ke
                     "Run 'find leads' to add new ones."
                 )
             else:
-                lines = [f"Cold outreach drafts created in catalystworks.ai@gmail.com ({drafted} drafts):\n"]
+                lines = [f"Cold outreach drafts created in boubacar@catalystworks.consulting ({drafted} drafts):\n"]
                 for r in results:
                     if r.get("status") == "drafted":
                         lines.append(f"- {r['name']} | {r['company']} | {r['email']} | {r['subject']}")
@@ -955,9 +975,14 @@ def _run_background_job(
         title       = result.get("title", task[:80])
         deliverable = result.get("deliverable", summary)
 
-        # ── Save ─────────────────────────────────────────────
-        github_url = save_to_github(title, task_type, deliverable)
-        drive_url  = save_to_drive(title, task_type, deliverable)
+        # ── Save (only for tasks that produce tangible artifacts) ────────────
+        github_url = ""
+        drive_url  = ""
+        if task_type in SAVE_REQUIRED_TASK_TYPES:
+            github_url = save_to_github(title, task_type, deliverable)
+            drive_url  = save_to_drive(title, task_type, deliverable)
+        else:
+            logger.info(f"Job {job_id}: task_type '{task_type}' is query-only — skipping Drive/GitHub save")
 
         # ── Deliver ──────────────────────────────────────────
         send_result(chat_id, summary, drive_url, github_url)
@@ -983,7 +1008,7 @@ def _run_background_job(
             try:
                 from crews import build_gws_crew
                 email_task_text = (
-                    f"Create a Gmail draft to bokar83@gmail.com and catalystworks.ai@gmail.com "
+                    f"Create a Gmail draft to bokar83@gmail.com, catalystworks.ai@gmail.com, and boubacar@catalystworks.consulting "
                     f"with subject 'agentsHQ Result: {title[:60]}'. "
                     f"Body: Format the following result as clean HTML with a header, "
                     f"bullet points for key findings, and a closing note. "
@@ -2199,15 +2224,18 @@ async def run_task_async(request: TaskRequest, background_tasks: BackgroundTasks
             title_val = result.get("title", task_text[:80])
             deliverable_val = result.get("deliverable", result_text)
 
-            # Save to Drive (non-blocking best-effort)
+            # Save to Drive only for tasks that produce tangible artifacts
             drive_url = ""
-            try:
-                from saver import save_to_drive
-                drive_url = save_to_drive(title_val, task_type_val, deliverable_val)
-                if drive_url:
-                    result_text = result_text + f"\n\nDrive: {drive_url}"
-            except Exception as _drive_err:
-                logger.warning(f"Drive save failed for job {job_id}: {_drive_err}")
+            if task_type_val in SAVE_REQUIRED_TASK_TYPES:
+                try:
+                    from saver import save_to_drive
+                    drive_url = save_to_drive(title_val, task_type_val, deliverable_val)
+                    if drive_url:
+                        result_text = result_text + f"\n\nDrive: {drive_url}"
+                except Exception as _drive_err:
+                    logger.warning(f"Drive save failed for job {job_id}: {_drive_err}")
+            else:
+                logger.info(f"Async job {job_id}: task_type '{task_type_val}' is query-only — skipping Drive save")
 
             update_job(
                 job_id=job_id,
