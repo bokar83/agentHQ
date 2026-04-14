@@ -193,50 +193,63 @@ def _serper_local_business(industry: str, location: str) -> List[dict]:
 def _firecrawl_scrape_contact(website_url: str) -> dict:
     """
     Scrape a business website and extract owner name, phone, email.
+    Tries the homepage first, then /contact and /about if nothing useful found.
     Returns partial dict — only fields successfully extracted.
     """
     if not website_url:
         return {}
     try:
         from firecrawl import V1FirecrawlApp
+        import re
+
         api_key = os.environ.get("FIRECRAWL_API_KEY")
         if not api_key:
             return {}
         client = V1FirecrawlApp(api_key=api_key)
-        response = client.scrape_url(website_url, formats=["markdown"])
-        if not response.success or not response.markdown:
-            return {}
 
-        content = response.markdown[:3000]  # cap to avoid token waste
+        base = website_url.rstrip("/")
+        # Pages to try in order — stop as soon as we get phone or email
+        pages_to_try = [base, f"{base}/contact", f"{base}/about"]
+
+        phone_re = re.compile(r'(\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4})')
+        email_re = re.compile(r'[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}')
+        owner_re = re.compile(
+            r'(?:Owner|Founder|CEO|President|Managing Partner)[:\s]+([A-Z][a-z]+ [A-Z][a-z]+)'
+            r'|([A-Z][a-z]+ [A-Z][a-z]+)[,\s]+(?:Owner|Founder|CEO|President|Managing Partner)'
+        )
+        SKIP_EMAILS = ("noreply", "info@", "support@", "hello@", "admin@", "contact@", "no-reply")
+
         extracted = {}
 
-        # Extract phone — look for common patterns
-        import re
-        phone_match = re.search(
-            r'(\(?\d{3}\)?[\s.\-]?\d{3}[\s.\-]?\d{4})', content
-        )
-        if phone_match:
-            extracted["phone"] = phone_match.group(1)
+        for page_url in pages_to_try:
+            try:
+                resp = client.scrape_url(page_url, formats=["markdown"])
+            except Exception:
+                continue
+            if not resp.success or not resp.markdown:
+                continue
 
-        # Extract email
-        email_match = re.search(
-            r'[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}', content
-        )
-        if email_match:
-            email = email_match.group(0)
-            # Skip generic emails
-            if not any(x in email.lower() for x in ["noreply", "info@", "support@", "hello@"]):
-                extracted["email"] = email
+            content = resp.markdown[:4000]
 
-        # Try to extract owner name from about/team sections
-        owner_patterns = [
-            r'(?:Owner|Founder|CEO|President)[:\s]+([A-Z][a-z]+ [A-Z][a-z]+)',
-            r'([A-Z][a-z]+ [A-Z][a-z]+)[,\s]+(?:Owner|Founder|CEO|President)',
-        ]
-        for pattern in owner_patterns:
-            match = re.search(pattern, content)
-            if match:
-                extracted["name"] = match.group(1)
+            if not extracted.get("phone"):
+                m = phone_re.search(content)
+                if m:
+                    extracted["phone"] = m.group(1)
+
+            if not extracted.get("email"):
+                m = email_re.search(content)
+                if m:
+                    email = m.group(0)
+                    if not any(s in email.lower() for s in SKIP_EMAILS):
+                        extracted["email"] = email
+
+            if not extracted.get("name"):
+                m = owner_re.search(content)
+                if m:
+                    extracted["name"] = (m.group(1) or m.group(2) or "").strip()
+
+            # Stop early if we have the key fields
+            if extracted.get("phone") or extracted.get("email"):
                 break
 
         return extracted
