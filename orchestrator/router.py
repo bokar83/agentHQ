@@ -128,6 +128,28 @@ TASK_TYPES = {
         "keywords": ["colonize", "build tool", "wrap software", "cli-anything"],
         "crew": "skill_builder_crew",
     },
+    "agent_creation": {
+        "description": "Create a new agent or skill for the agentsHQ system",
+        "keywords": [
+            "build an agent", "create an agent", "agent build", "new agent",
+            "build agent", "create agent", "make an agent", "agent creation",
+            "build a new agent", "create a new agent", "new skill", "build a skill",
+            "create a skill", "make a skill",
+        ],
+        "crew": "agent_creator_crew",
+    },
+    "content_board_fetch": {
+        "description": "Fetch queued or ready posts from the Notion Content Board",
+        "keywords": [
+            "queued posts", "get queued", "fetch queued", "pull queued",
+            "content board", "queued linkedin", "queued content",
+            "show queued", "list queued", "queued from notion",
+            "pull posts", "get posts from notion", "fetch posts",
+            "show me posts", "pull linkedin posts", "get linkedin posts",
+            "content board posts", "posts from content board",
+        ],
+        "crew": "content_board_fetch_crew",
+    },
     "gws_task": {
         "description": "Google Workspace automation (Gmail/Calendar)",
         "keywords": ["calendar", "add event", "check schedule", "gmail", "draft email", "search email"],
@@ -197,6 +219,10 @@ def _classify_raw(user_message: str) -> str:
         return "inline_post_review"
     if any(kw in msg for kw in TASK_TYPES["content_review"]["keywords"]):
         return "content_review"
+    if any(kw in msg for kw in TASK_TYPES["content_board_fetch"]["keywords"]):
+        return "content_board_fetch"
+    if any(kw in msg for kw in TASK_TYPES["agent_creation"]["keywords"]):
+        return "agent_creation"
     if any(kw in msg for kw in TASK_TYPES["forge_kpi_refresh"]["keywords"]):
         return "forge_kpi_refresh"
     if msg.startswith("doc_routing:") or any(kw in msg for kw in TASK_TYPES["doc_routing"]["keywords"]):
@@ -206,6 +232,7 @@ def _classify_raw(user_message: str) -> str:
 
     _PRIORITY_CHECKED = {
         "content_push_to_drive", "inline_post_review", "content_review",
+        "content_board_fetch", "agent_creation",
         "forge_kpi_refresh", "doc_routing", "notion_capture",
     }
     for task_type, config in TASK_TYPES.items():

@@ -2283,6 +2283,82 @@ def build_content_push_to_drive_crew(user_request: str) -> Crew:  # noqa: ARG001
     )
 
 
+def build_content_board_fetch_crew(user_request: str) -> Crew:  # noqa: ARG001
+    """
+    Crew for: content_board_fetch
+    Reads queued posts from the Notion Content Board and returns them formatted.
+    Read-only. No status changes. No LLM review pass.
+    """
+    from skills.forge_cli.notion_client import NotionClient
+
+    CONTENT_DB_ID = os.environ.get("FORGE_CONTENT_DB", "339bcf1a-3029-81d1-8377-dc2f2de13a20")
+    NOTION_SECRET = os.environ.get("NOTION_SECRET", "")
+
+    notion = NotionClient(secret=NOTION_SECRET)
+    try:
+        posts = notion.query_database(
+            CONTENT_DB_ID,
+            filter_obj={"property": "Status", "select": {"equals": "Queued"}},
+        )
+    except Exception as e:
+        posts = []
+        logger.error(f"content_board_fetch: Notion query failed: {e}")
+
+    def _get_text(prop, key="rich_text"):
+        parts = prop.get(key, [])
+        return "".join(p.get("plain_text", "") for p in parts) if parts else ""
+
+    def _get_select(prop):
+        sel = prop.get("select") or {}
+        return sel.get("name", "")
+
+    post_data = []
+    for page in (posts or [])[:10]:
+        props = page.get("properties", {})
+        title_parts = props.get("Title", {}).get("title", [])
+        title = "".join(p.get("plain_text", "") for p in title_parts)
+        content = _get_text(props.get("Content", {}))
+        platform = _get_select(props.get("Platform", {}))
+        arc = _get_select(props.get("Arc", {}))
+        post_data.append({
+            "title": title,
+            "platform": platform,
+            "arc": arc,
+            "content": content,
+        })
+
+    if not post_data:
+        result_text = "No posts with status 'Queued' found in the Content Board."
+    else:
+        lines = [f"QUEUED POSTS ({len(post_data)} found)\n"]
+        for i, p in enumerate(post_data, 1):
+            meta = f"[{p['platform']}]" + (f" | Arc: {p['arc']}" if p["arc"] else "")
+            body = p["content"][:400] + ("..." if len(p["content"]) > 400 else "")
+            lines.append(f"POST {i} {meta}\n{p['title']}\n---\n{body}\n")
+        result_text = "\n".join(lines)
+
+    reporter = Agent(
+        role="Content Board Reporter",
+        goal="Return queued posts from the Notion Content Board",
+        backstory="You relay pre-fetched Notion content verbatim. No edits, no opinions.",
+        llm=get_llm("gemini-flash"),
+        max_iter=1,
+        verbose=False,
+    )
+    task_report = Task(
+        description=f"Report this content to the user verbatim:\n\n{result_text}",
+        expected_output="The list of queued posts, as-is.",
+        agent=reporter,
+    )
+    return Crew(
+        agents=[reporter],
+        tasks=[task_report],
+        process=Process.sequential,
+        verbose=False,
+        memory=False,
+    )
+
+
 CREW_REGISTRY = {
     "website_crew":        build_website_crew,
     "app_crew":            build_app_crew,
@@ -2307,10 +2383,11 @@ CREW_REGISTRY = {
     "mark_outreach_sent_crew": build_mark_outreach_sent_crew,
     "enrich_leads_crew":       build_enrich_leads_crew,
     "forge_kpi_crew":          build_forge_kpi_crew,
-    "content_review_crew":     build_content_review_crew,
-    "content_drive_crew":      build_content_push_to_drive_crew,
-    "doc_routing_crew":        build_doc_routing_crew,
-    "unknown_crew":           build_unknown_crew,
+    "content_review_crew":        build_content_review_crew,
+    "content_drive_crew":         build_content_push_to_drive_crew,
+    "content_board_fetch_crew":   build_content_board_fetch_crew,
+    "doc_routing_crew":           build_doc_routing_crew,
+    "unknown_crew":               build_unknown_crew,
 }
 
 

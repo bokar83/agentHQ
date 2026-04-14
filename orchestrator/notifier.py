@@ -67,6 +67,8 @@ TASK_TYPE_LABELS = {
     "unknown":                "Agents are on it",
     "content_review":         "Content Reviewer is checking your posts",
     "content_push_to_drive":  "Pushing approved posts to Google Drive",
+    "content_board_fetch":    "Pulling queued posts from your Notion Content Board",
+    "agent_creation":         "Agent Creator is designing the new agent",
     "forge_kpi_refresh":      "Running Forge KPI refresh",
     "doc_routing":            "Document Routing Agent is classifying your file",
 }
@@ -96,6 +98,8 @@ TASK_TYPE_CREWS = {
     "unknown":                "Orchestrator (improvising)",
     "content_review":         "Content Reviewer (voice + quality gate)",
     "content_push_to_drive":  "Drive Publisher (Notion + Google Drive)",
+    "content_board_fetch":    "Content Board Reader (Notion read-only)",
+    "agent_creation":         "Agent Creator + Orchestrator",
     "forge_kpi_refresh":      "KPI Engine (direct Python)",
 }
 
