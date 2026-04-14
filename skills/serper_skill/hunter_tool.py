@@ -69,20 +69,64 @@ def _serper_linkedin_dork(industry: str, location: str, count: int = 10) -> List
             r.raise_for_status()
         results = r.json().get("organic", [])
 
+        COMPANY_SIGNALS = (
+            " llc", " inc", " corp", " ltd", " consulting", " legal",
+            " law", " group", " firm", " services", " co.", " &",
+        )
+
+        def _is_person_name(s: str) -> bool:
+            """Return True if the string looks like a person's name, not a company."""
+            low = s.lower()
+            if any(sig in low for sig in COMPANY_SIGNALS):
+                return False
+            # Person names are typically 2-3 words, no special chars
+            words = s.split()
+            return 1 < len(words) <= 4
+
+        def _name_from_url(url: str) -> str:
+            """Extract a capitalised name guess from a LinkedIn /in/ URL slug."""
+            slug = url.rstrip("/").split("/in/")[-1].split("?")[0]
+            parts = slug.split("-")
+            # Drop numeric/hash suffixes (e.g. a0337929) and keep only short alpha words
+            words = [p.capitalize() for p in parts if p.isalpha() and len(p) <= 12]
+            # A real name slug is 2-3 short words; longer slugs are companies
+            if len(words) > 3:
+                return "Unknown"
+            return " ".join(words[:3]) if words else "Unknown"
+
         leads = []
         for result in results:
             title_parts = result.get("title", "").split(" - ")
-            name = title_parts[0].strip() if title_parts else "Unknown"
+            raw_name = title_parts[0].strip() if title_parts else ""
             snippet = result.get("snippet", "")
+            link = result.get("link", "")
+
+            # If first segment looks like a company, skip or fall back to URL slug
+            if not _is_person_name(raw_name):
+                name = _name_from_url(link)
+                job_title = raw_name  # first segment was actually the company/role
+                company = title_parts[1].strip() if len(title_parts) > 1 else ""
+            else:
+                name = raw_name
+                job_title = title_parts[1].strip() if len(title_parts) > 1 else ""
+                company = title_parts[2].strip() if len(title_parts) > 2 else ""
+
+            # Strip trailing "| LinkedIn" noise from company field
+            company = company.split(" | ")[0].strip()
+
+            # Skip results where we couldn't resolve a real person name
+            if name in ("Unknown", "") or not _is_person_name(name):
+                continue
+
             leads.append({
                 "name": name,
-                "linkedin_url": result.get("link"),
+                "linkedin_url": link,
                 "industry": industry,
                 "location": location,
                 "source": "serper_linkedin",
                 "snippet": snippet,
-                "company": title_parts[2].strip() if len(title_parts) > 2 else "",
-                "title": title_parts[1].strip() if len(title_parts) > 1 else "",
+                "company": company,
+                "title": job_title,
             })
         return leads
 
@@ -400,28 +444,22 @@ def discover_leads(query: str = "", count: int = DEFAULT_LEAD_COUNT) -> List[dic
                 if email:
                     lead["email"] = email
 
-    # Step 4b: Apollo email enrichment (Always-on per user request)
-    if APOLLO_API_KEY:
-        logger.info("Hunter: Step 4b — Apollo email enrichment fallback")
-        for lead in leads:
-            if not lead.get("email") and lead.get("linkedin_url"):
-                email = reveal_email_for_lead(
-                    name=lead.get("name", ""),
-                    linkedin_url=lead.get("linkedin_url", "")
-                )
-                if email:
-                    lead["email"] = email
+    # Step 4b: Hunter.io email enrichment for leads with a company name but no domain
+    for lead in leads:
+        if not lead.get("email") and lead.get("company") and not lead.get("website"):
+            email = reveal_email_for_lead(
+                name=lead.get("name", ""),
+                company=lead.get("company", ""),
+            )
+            if email:
+                lead["email"] = email
 
-
-    # Step 5: Apollo fallback if not enough leads
+    # Step 5: Apollo fallback blocked on free plan — skipped
     if len(leads) < 5:
-        logger.info(f"Hunter: Step 5 — Apollo fallback (only {len(leads)} leads so far)")
-        apollo_leads = _apollo_search(query=query, count=count - len(leads))
-        for lead in apollo_leads:
-            url = lead.get("linkedin_url", "")
-            if url and url not in seen_urls:
-                seen_urls.add(url)
-                leads.append(lead)
+        logger.warning(
+            f"Hunter: only {len(leads)} leads found after Serper + Hunter.io. "
+            "Apollo people-search requires a paid plan — upgrade at app.apollo.io to enable."
+        )
 
     logger.info(f"Hunter: Discovery complete — {len(leads)} leads found")
     return leads[:count]
