@@ -2283,10 +2283,11 @@ def build_content_push_to_drive_crew(user_request: str) -> Crew:  # noqa: ARG001
     )
 
 
-def build_content_board_fetch_crew(user_request: str) -> Crew:  # noqa: ARG001
+def build_content_board_fetch_crew(user_request: str) -> Crew:
     """
     Crew for: content_board_fetch
-    Reads queued posts from the Notion Content Board and returns them formatted.
+    Reads posts from the Notion Content Board filtered by status detected from the request.
+    Supports: Queued, Ready, Draft, Idea, In Review, Needs rework, Posted, Archived.
     Read-only. No status changes. No LLM review pass.
     """
     from skills.forge_cli.notion_client import NotionClient
@@ -2294,11 +2295,29 @@ def build_content_board_fetch_crew(user_request: str) -> Crew:  # noqa: ARG001
     CONTENT_DB_ID = os.environ.get("FORGE_CONTENT_DB", "339bcf1a-3029-81d1-8377-dc2f2de13a20")
     NOTION_SECRET = os.environ.get("NOTION_SECRET", "")
 
+    # Detect which status to fetch from the user request
+    msg = user_request.lower()
+    STATUS_MAP = {
+        "Idea":         ["idea", "ideas", "brainstorm"],
+        "Draft":        ["draft", "drafts"],
+        "Queued":       ["queue", "queued"],
+        "Ready":        ["ready"],
+        "In Review":    ["in review", "review", "reviewing"],
+        "Needs rework": ["needs rework", "rework", "needs work"],
+        "Posted":       ["posted", "published", "live"],
+        "Archived":     ["archived", "archive"],
+    }
+    target_status = "Queued"  # default
+    for status, keywords in STATUS_MAP.items():
+        if any(kw in msg for kw in keywords):
+            target_status = status
+            break
+
     notion = NotionClient(secret=NOTION_SECRET)
     try:
         posts = notion.query_database(
             CONTENT_DB_ID,
-            filter_obj={"property": "Status", "select": {"equals": "Queued"}},
+            filter_obj={"property": "Status", "select": {"equals": target_status}},
         )
     except Exception as e:
         posts = []
@@ -2328,9 +2347,9 @@ def build_content_board_fetch_crew(user_request: str) -> Crew:  # noqa: ARG001
         })
 
     if not post_data:
-        result_text = "No posts with status 'Queued' found in the Content Board."
+        result_text = f"No posts with status '{target_status}' found in the Content Board."
     else:
-        lines = [f"QUEUED POSTS ({len(post_data)} found)\n"]
+        lines = [f"{target_status.upper()} POSTS ({len(post_data)} shown, up to 10)\n"]
         for i, p in enumerate(post_data, 1):
             meta = f"[{p['platform']}]" + (f" | Arc: {p['arc']}" if p["arc"] else "")
             body = p["content"][:400] + ("..." if len(p["content"]) > 400 else "")
@@ -2339,7 +2358,7 @@ def build_content_board_fetch_crew(user_request: str) -> Crew:  # noqa: ARG001
 
     reporter = Agent(
         role="Content Board Reporter",
-        goal="Return queued posts from the Notion Content Board",
+        goal="Return posts from the Notion Content Board",
         backstory="You relay pre-fetched Notion content verbatim. No edits, no opinions.",
         llm=get_llm("gemini-flash"),
         max_iter=1,
@@ -2347,7 +2366,7 @@ def build_content_board_fetch_crew(user_request: str) -> Crew:  # noqa: ARG001
     )
     task_report = Task(
         description=f"Report this content to the user verbatim:\n\n{result_text}",
-        expected_output="The list of queued posts, as-is.",
+        expected_output="The list of posts, as-is.",
         agent=reporter,
     )
     return Crew(
