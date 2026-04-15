@@ -27,19 +27,35 @@ logger = logging.getLogger(__name__)
 
 # ── Default ICP constants — change here to change everywhere ──
 DEFAULT_LOCATIONS = [
-    # Utah — driveable (Boubacar based in SLC)
+    # Utah — by county + key cities (Boubacar based in SLC, ~1-2hr drive to all)
+    # Salt Lake County
     "Salt Lake City Utah",
+    "Sandy Utah",
+    "Murray Utah",
+    "West Jordan Utah",
+    "Taylorsville Utah",
+    # Utah County
     "Provo Utah",
     "Orem Utah",
     "Lehi Utah",
-    "Murray Utah",
-    "Sandy Utah",
-    "Ogden Utah",
-    "St George Utah",
-    "Logan Utah",
+    "American Fork Utah",
+    "Springville Utah",
+    # Davis County
+    "Bountiful Utah",
+    "Layton Utah",
+    "Kaysville Utah",
+    # Summit County
     "Park City Utah",
-    # Adjacent states — 1-day travel radius
+    # Northern Utah
+    "Ogden Utah",
+    "Logan Utah",
+    # Southern Utah
+    "St George Utah",
+    # Idaho — southern corridor
     "Boise Idaho",
+    "Twin Falls Idaho",
+    "Pocatello Idaho",
+    # Adjacent states — 1-day travel
     "Las Vegas Nevada",
     "Henderson Nevada",
     "Phoenix Arizona",
