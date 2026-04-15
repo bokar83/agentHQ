@@ -39,6 +39,51 @@ Check what argument was passed (if any):
 
 If no argument: run general scan across all sources.
 
+Additional triggers:
+- `/clone-scout calculators` — scoped to utility/calculator tool sites (see HIGH-SIGNAL CATEGORIES below)
+
+---
+
+## HIGH-SIGNAL CATEGORIES — START HERE WHEN NO NICHE GIVEN
+
+These site types score consistently high on the viability matrix. Prioritize them
+in discovery when no niche argument is passed.
+
+### Calculator / Utility Tool Sites
+Single-purpose web tools (calculators, generators, converters) monetized via AdSense.
+Pattern: one keyword cluster + thin site (1-10 pages) + AdSense + no backend.
+
+Why they score high:
+- Clone simplicity: 5 (build in Hostinger Horizons or Framer in 1 day, no code)
+- Monetization clarity: 5 (AdSense script visible in source)
+- Language gap: 5 (virtually all English-only; 36,000+ keyword clusters with "calculator" in them, nearly zero FR/AR/PT coverage)
+- Time to launch: 5 (vibe-code the tool, publish, add AdSense)
+
+Build stack for this category: Hostinger Horizons (no-code vibe coding) or Framer.
+Revenue path: AdSense day-1 + email capture for newsletter upsell.
+
+Discovery query to add (use 1 Serper budget slot):
+```
+site:similarweb.com OR site:semrush.com "calculator" "organic" "monthly visits" 2024 2025
+```
+
+Also search:
+```
+"calculator" site:indiehackers.com "revenue" OR "MRR" 2024 2025
+```
+
+Profile fingerprint (Phase 2 detection):
+- Domain contains "calc", "calculator", "tool", "tools", "converter", "generator"
+- Page count under 10 (site:domain.com returns <10 results)
+- AdSense (`googlesyndication`) in source
+- No `/pricing`, no `/login` — pure utility, no auth required
+- hreflang absent = language gap confirmed
+
+Language arbitrage priority for this category:
+- French Africa (Ivory Coast / Senegal): paycheck, invoice, tax, loan calculators in French
+- Arabic MENA (Morocco / Saudi): mortgage, zakat, currency calculators in Arabic
+- Brazil: financial, health, productivity calculators in Portuguese
+
 ---
 
 ## PHASE 1 — DISCOVER
@@ -197,11 +242,14 @@ VERDICT: [QUALIFY → Notion | DROP → terminal only]
 - 1: No revenue data, pure speculation
 
 **2. Clone simplicity**
-- 5: No-code builder (Webflow, Framer, Carrd, Squarespace) — replicable in hours
+- 5: No-code builder (Webflow, Framer, Carrd, Squarespace, Hostinger Horizons) OR plain utility tool (calculator/generator with no auth) — replicable in hours via vibe coding
 - 4: WordPress or standard CMS — replicable in 1-2 days
 - 3: Next.js/React static — replicable in 2-3 days with scaffold
 - 2: Unknown stack, likely custom — 1+ week estimate
 - 1: Native mobile app or complex backend detected — hard
+
+Note: Calculator/generator sites that are pure HTML+JS with AdSense always score 5 here.
+Vibe-code the tool in Hostinger Horizons (1 day), add AdSense integration (1 prompt), publish.
 
 **3. Monetization clarity**
 - 5: Pricing page + checkout type both confirmed
@@ -397,7 +445,8 @@ Fields to populate on each write:
 - Scouted Date (date — today)
 - Revenue Confirmed Date (date — leave blank)
 
-**Important:** The Clone Targets database may not exist yet on first run. If the Notion MCP
-returns an error finding it, stop and report: "Clone Targets database not found in Notion.
-Please create it or point me to the correct database ID." Do not create the database
-automatically — Boubacar will set it up with the correct schema first.
+**Notion Database ID:** `1e54c4a6-d7dc-4031-b730-89f504257493`
+**Data Source ID:** `collection://f19ceb0d-055a-4ee7-bf58-91d9e3c090e1`
+**Location:** The Forge 2.0 | Execution OS → Clone Targets
+
+Use these IDs directly when writing records. Do not search for the database — it exists.
