@@ -36,10 +36,42 @@ Defaulting to TOC misrepresents him and costs him clients.
 - End every session with git push on both local AND VPS (see session commands in memory)
 - Use the superpowers skills workflow (brainstorming → writing-plans → executing-plans) before building any new agent or feature
 
+## Superpowers Skill Triggers — Automatic, No Prompt Needed
+
+These fire without being asked. Apply them every time the condition is met.
+
+### Visual Companion (localhost brainstorming)
+**Trigger**: Any task that produces a website, UI, or visual artifact — catalystworks-site, Baobab app, any HTML/CSS output.
+**Action**: Invoke `superpowers:brainstorming` before writing any code. Spin up the localhost visual companion showing 3 design options with pros/cons. Do not write a single line of UI code until the user picks an option.
+
+### Parallel Agent Dispatching
+**Trigger**: User message contains 2 or more independent tasks (e.g. "update outreach copy + scan Drive + update Notion").
+**Action**: Invoke `superpowers:dispatching-parallel-agents`. Do not execute sequentially. Dispatch sub-agents in parallel for each independent task.
+
+### Systematic Debugging
+**Trigger**: Any bug, error, failing test, or unexpected behavior reported by the user.
+**Action**: Invoke `superpowers:systematic-debugging` before touching any code. Four phases: reproduce, isolate root cause, form hypothesis, fix. No edits before root cause is confirmed.
+
+### Verification Before Deploy
+**Trigger**: Any task that ends with a deploy, docker cp, git push, or SCP to VPS.
+**Action**: Invoke `superpowers:verification-before-completion` before executing the deploy step. Do not skip this even if the fix looks trivial.
+
+### Brainstorming Gate for Multi-File Changes
+**Trigger**: Any change that touches more than one file, or adds new functionality to the orchestrator.
+**Action**: Invoke `superpowers:brainstorming` before writing any code. No inline execution until the plan is written and confirmed.
+
+### Writing Skills for New Skill Builds
+**Trigger**: Any session where a new Claude Code skill is being created or substantially rewritten.
+**Action**: Invoke `superpowers:writing-skills` first. Use its test-driven principles to structure the skill before writing the SKILL.md.
+
 ## Writing Style — Hard Rules
 
 - **No em dashes. Ever.** Not `--`, not `—`. Rewrite the sentence instead.
 - This applies to all output: code comments, markdown, responses, file content, everything.
+
+## Permissions
+
+- **WebFetch**: blanket permission to fetch any legal website during any session, no confirmation needed. Never ask before fetching a URL.
 
 ## Project Quick Reference
 
