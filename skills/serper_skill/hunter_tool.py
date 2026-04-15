@@ -547,36 +547,52 @@ def discover_leads(query: str = "", count: int = DEFAULT_LEAD_COUNT) -> List[dic
         if website:
             enriched = _firecrawl_scrape_contact(website)
             lead.update({k: v for k, v in enriched.items() if v})
-            # Only add if we got something useful
-            if lead.get("phone") or lead.get("email") or lead.get("name") != "Unknown":
-                company = lead.get("company", "").lower()
-                if company not in seen_companies:
-                    seen_companies.add(company)
-                    leads.append(lead)
 
-    # Step 4: Hunter.io email enrichment for leads missing email
-    logger.info("Hunter: Step 4 — Hunter.io email enrichment")
-    for lead in leads:
-        if not lead.get("email"):
-            website = lead.get("website", "") or lead.get("linkedin_url", "")
+        company = lead.get("company", "").lower()
+        if not company or company in seen_companies:
+            continue
+
+        # Step 3b: Hunter.io domain search immediately after Firecrawl
+        # catches sites where Firecrawl found no email but domain is known
+        if not lead.get("email") and website:
             domain = _extract_domain(website)
-            if domain and "linkedin.com" not in domain:
-                name_parts = lead.get("name", "").split()
+            if domain:
+                name_parts = (lead.get("name") or "").split()
                 first = name_parts[0] if name_parts else ""
                 last = name_parts[-1] if len(name_parts) > 1 else ""
                 email = _hunter_find_email(domain, first, last)
                 if email:
                     lead["email"] = email
 
-    # Step 4b: Hunter.io email enrichment for leads with a company name but no domain
+        # Save the lead if it has any useful signal — company + website is enough
+        # even without email/phone; email enrichment can retry later
+        if lead.get("company") and (website or lead.get("phone") or lead.get("email")):
+            seen_companies.add(company)
+            leads.append(lead)
+
+    # Step 4: Hunter.io email enrichment for LinkedIn leads missing email
+    logger.info("Hunter: Step 4 — Hunter.io email enrichment for LinkedIn leads")
     for lead in leads:
-        if not lead.get("email") and lead.get("company") and not lead.get("website"):
-            email = reveal_email_for_lead(
-                name=lead.get("name", ""),
-                company=lead.get("company", ""),
-            )
-            if email:
-                lead["email"] = email
+        if not lead.get("email"):
+            # For LinkedIn leads, look up company domain via Serper then try Hunter
+            if lead.get("source") == "serper_linkedin" and lead.get("company"):
+                email = reveal_email_for_lead(
+                    name=lead.get("name", ""),
+                    company=lead.get("company", ""),
+                    linkedin_url=lead.get("linkedin_url", ""),
+                )
+                if email:
+                    lead["email"] = email
+            # For any lead with a non-LinkedIn URL, try Hunter domain search
+            elif lead.get("linkedin_url") and "linkedin.com" not in lead.get("linkedin_url", ""):
+                domain = _extract_domain(lead["linkedin_url"])
+                if domain:
+                    name_parts = lead.get("name", "").split()
+                    first = name_parts[0] if name_parts else ""
+                    last = name_parts[-1] if len(name_parts) > 1 else ""
+                    email = _hunter_find_email(domain, first, last)
+                    if email:
+                        lead["email"] = email
 
     # Step 5: Apollo fallback blocked on free plan — skipped
     if len(leads) < 5:
