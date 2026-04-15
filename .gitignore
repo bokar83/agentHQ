@@ -112,5 +112,12 @@ test_sankofa.py
 data/
 docs/research/
 
+# ── Temp uploads (audio, video, chunks — never commit) ───────
+tmp_upload/
+*.mp3
+*.mp4
+*.wav
+*.chunk
+
 # Runtime deploy state
 .deploy-sha
