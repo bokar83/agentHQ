@@ -1212,7 +1212,7 @@ async def process_telegram_update(update: dict):
 
     # -- Doc routing emoji + text command handlers --
     _EMOJI_COMMANDS = ("✅", "✏️", "🆕", "❌", "➕")
-    _TEXT_ALIASES = {"yes": "✅", "confirm": "✅", "flag": "❌", "discard": "❌", "reject": "❌"}
+    _TEXT_ALIASES = {"yes": "✅", "confirm": "✅", "approved": "✅", "approve": "✅", "flag": "❌", "discard": "❌", "reject": "❌"}
     _matched_emoji = next((e for e in _EMOJI_COMMANDS if text.startswith(e)), None)
     if not _matched_emoji:
         _text_lower = text.strip().lower().split()[0] if text.strip() else ""

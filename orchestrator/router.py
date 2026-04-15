@@ -108,6 +108,16 @@ TASK_TYPES = {
         ],
         "crew": "crm_outreach_crew",
     },
+    "mark_outreach_sent": {
+        "description": "Mark drafted outreach emails as sent — update lead status to messaged",
+        "keywords": [
+            "mark as contacted", "mark contacted", "mark as sent", "emails sent",
+            "i sent the emails", "mark outreach sent", "mark sent", "sent the drafts",
+            "emails were sent", "outreach sent", "mark leads contacted",
+            "i sent them", "sent emails", "emails are sent",
+        ],
+        "crew": "mark_outreach_sent_crew",
+    },
     "general_writing": {
         "description": "Drafting letters, emails, and documents",
         "keywords": ["write", "draft", "letter", "email", "document"],
