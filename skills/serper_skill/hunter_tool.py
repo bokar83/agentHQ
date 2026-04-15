@@ -27,18 +27,55 @@ logger = logging.getLogger(__name__)
 
 # ── Default ICP constants — change here to change everywhere ──
 DEFAULT_LOCATIONS = [
+    # Utah — driveable (Boubacar based in SLC)
     "Salt Lake City Utah",
     "Provo Utah",
     "Orem Utah",
     "Lehi Utah",
     "Murray Utah",
     "Sandy Utah",
+    "Ogden Utah",
+    "St George Utah",
+    "Logan Utah",
+    "Park City Utah",
+    # Adjacent states — 1-day travel radius
+    "Boise Idaho",
+    "Las Vegas Nevada",
+    "Henderson Nevada",
+    "Phoenix Arizona",
+    "Scottsdale Arizona",
+    "Denver Colorado",
 ]
 DEFAULT_INDUSTRIES = [
+    # Original core
     "Legal", "Accounting", "Marketing Agency",
     "HVAC", "Plumbing", "Roofing",
+    # AI-disrupted trades and services — high operational complexity, low tech adoption
+    "Electrical Contractor",
+    "General Contractor",
+    "Landscaping",
+    "Commercial Cleaning",
+    "Pest Control",
+    # Professional services — billing models under threat from AI
+    "Insurance Agency",
+    "Financial Advisory",
+    "Mortgage Broker",
+    "Real Estate Agency",
+    "HR Consulting",
+    # Healthcare practices — documentation burden, coding, patient comms all ripe
+    "Dental Practice",
+    "Chiropractic",
+    "Physical Therapy",
+    "Optometry",
+    "Veterinary Practice",
+    # Ops-heavy businesses where margin is thin and AI can find savings
+    "Freight Brokerage",
+    "Auto Repair",
+    "Property Management",
+    "Staffing Agency",
+    "IT Managed Services",
 ]
-DEFAULT_TITLES = ["Owner", "Founder", "CEO", "President", "Managing Partner"]
+DEFAULT_TITLES = ["Owner", "Founder", "CEO", "President", "Managing Partner", "Principal", "COO"]
 DEFAULT_LEAD_COUNT = 20
 
 SERPER_API_KEY = os.environ.get("SERPER_API_KEY")
@@ -183,6 +220,50 @@ def _serper_local_business(industry: str, location: str) -> List[dict]:
 
     except Exception as e:
         logger.error(f"Serper local business search failed: {e}")
+        return []
+
+
+# ══════════════════════════════════════════════════════════════
+# STEP 1b — SERPER MAPS: Dedicated Google Maps search
+# ══════════════════════════════════════════════════════════════
+
+SERPER_MAPS_URL = "https://google.serper.dev/maps"
+
+def _serper_maps_search(industry: str, location: str) -> List[dict]:
+    """
+    Hit Serper /maps endpoint directly for Google Business profiles.
+    Returns leads with website, phone, and address — all ready for Firecrawl.
+    Better email coverage than organic search for trades/SMB.
+    """
+    if not SERPER_API_KEY:
+        return []
+    try:
+        query = f"{industry} {location}"
+        headers = {"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"}
+        with httpx.Client(timeout=15) as client:
+            r = client.post(SERPER_MAPS_URL, headers=headers, json={"q": query, "num": 10})
+            r.raise_for_status()
+        places = r.json().get("places", [])
+        leads = []
+        for place in places:
+            website = place.get("website", "")
+            if not website:
+                continue
+            leads.append({
+                "name": "Unknown",
+                "company": place.get("title", ""),
+                "location": place.get("address", location),
+                "industry": industry,
+                "phone": place.get("phoneNumber", ""),
+                "website": website,
+                "maps_url": place.get("cid", ""),
+                "source": "serper_maps",
+                "title": "Owner",
+            })
+        logger.info(f"Serper Maps: {len(leads)} places with websites for {industry} in {location}")
+        return leads
+    except Exception as e:
+        logger.error(f"Serper Maps search failed ({industry}, {location}): {e}")
         return []
 
 
@@ -397,8 +478,8 @@ def discover_leads(query: str = "", count: int = DEFAULT_LEAD_COUNT) -> List[dic
 
     # Step 1: LinkedIn dorking
     logger.info("Hunter: Step 1 — Serper LinkedIn dorking")
-    for industry in industries[:3]:  # top 3 industries to avoid burning too many credits
-        for location in locations[:2]:  # top 2 locations
+    for industry in industries[:8]:  # top 8 industries
+        for location in locations[:6]:  # top 6 locations
             if len(leads) >= count:
                 break
             batch = _serper_linkedin_dork(
@@ -417,9 +498,23 @@ def discover_leads(query: str = "", count: int = DEFAULT_LEAD_COUNT) -> List[dic
     # Step 2: Local business search for website-based leads
     logger.info("Hunter: Step 2 — Serper local business search")
     local_leads = []
-    for industry in industries[:2]:
-        for location in locations[:2]:
+    for industry in industries[:6]:
+        for location in locations[:4]:
             batch = _serper_local_business(
+                query if query else industry,
+                location
+            )
+            for lead in batch:
+                company = lead.get("company", "").lower()
+                if company and company not in seen_companies:
+                    seen_companies.add(company)
+                    local_leads.append(lead)
+
+    # Step 2b: Google Maps dedicated search — better email coverage for trades/SMB
+    logger.info("Hunter: Step 2b — Serper Maps search")
+    for industry in industries[:6]:
+        for location in locations[:4]:
+            batch = _serper_maps_search(
                 query if query else industry,
                 location
             )
@@ -431,7 +526,7 @@ def discover_leads(query: str = "", count: int = DEFAULT_LEAD_COUNT) -> List[dic
 
     # Step 3: Firecrawl — enrich local leads with contact info from websites
     logger.info("Hunter: Step 3 — Firecrawl website scraping")
-    for lead in local_leads[:10]:  # cap scraping to 10 sites
+    for lead in local_leads[:40]:  # higher cap to match expanded geography
         website = lead.get("website", "")
         if website:
             enriched = _firecrawl_scrape_contact(website)

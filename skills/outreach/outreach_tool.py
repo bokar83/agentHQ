@@ -53,10 +53,30 @@ def _get_conn():
     return conn
 
 
+_TITLE_PATTERNS = [
+    "%owner%", "%founder%", "%ceo%", "%president%",
+    "%managing%", "%principal%", "%coo%", "%partner%", "%attorney%",
+]
+
+_INDUSTRY_PATTERNS = [
+    "%consult%", "%legal%", "%account%", "%engineer%", "%health%",
+    "%market%", "%agenc%", "%logistic%", "%trade%", "%service%",
+    "%hvac%", "%roofing%", "%plumbing%", "%electrical%", "%construction%",
+]
+
+
 def _get_eligible_leads(limit: int) -> list:
     conn = _get_conn()
     cur = conn.cursor()
-    cur.execute("""
+
+    title_clause = " OR ".join(
+        "LOWER(title) LIKE %s" for _ in _TITLE_PATTERNS
+    )
+    industry_clause = " OR ".join(
+        "LOWER(industry) LIKE %s" for _ in _INDUSTRY_PATTERNS
+    )
+
+    query = f"""
         SELECT id, name, company, title, industry, email, linkedin_url
         FROM leads
         WHERE email IS NOT NULL
@@ -64,9 +84,14 @@ def _get_eligible_leads(limit: int) -> list:
           AND status = 'new'
           AND email_drafted_at IS NULL
           AND last_contacted_at IS NULL
+          AND ({title_clause})
+          AND ({industry_clause})
         ORDER BY created_at ASC
         LIMIT %s
-    """, (limit,))
+    """
+
+    params = tuple(_TITLE_PATTERNS) + tuple(_INDUSTRY_PATTERNS) + (limit,)
+    cur.execute(query, params)
     rows = [dict(r) for r in cur.fetchall()]
     cur.close()
     conn.close()
@@ -203,7 +228,7 @@ def run_outreach(contact_all: bool = False) -> dict:
     Returns:
         dict with drafted, skipped, results list
     """
-    limit = 50 if contact_all else 10
+    limit = 50 if contact_all else 20
     logger.info(f"Outreach: fetching up to {limit} uncontacted leads from Supabase...")
 
     try:
@@ -213,8 +238,22 @@ def run_outreach(contact_all: bool = False) -> dict:
         return {"drafted": 0, "skipped": 0, "results": [], "error": str(e)}
 
     if not leads:
-        logger.info("Outreach: no eligible leads found.")
-        return {"drafted": 0, "skipped": 0, "results": [], "error": None}
+        conn = _get_conn()
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) as n FROM leads WHERE status = 'new' AND (email IS NULL OR email = '')")
+        no_email_count = cur.fetchone()["n"]
+        cur.execute("SELECT COUNT(*) as n FROM leads WHERE email_drafted_at IS NOT NULL")
+        drafted_count = cur.fetchone()["n"]
+        cur.close()
+        conn.close()
+        msg = (
+            f"No eligible leads to draft. "
+            f"{drafted_count} already sent. "
+            f"{no_email_count} leads in CRM have no email address (enrichment returned nothing). "
+            f"Run 'find leads' to source fresh leads with emails."
+        )
+        logger.info(f"Outreach: {msg}")
+        return {"drafted": 0, "skipped": 0, "results": [], "error": None, "message": msg}
 
     drafted = 0
     skipped = 0
