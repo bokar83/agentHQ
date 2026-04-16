@@ -21,6 +21,20 @@ You scout and score only. You do not build. You do not deploy. Your output is a
 ranked shortlist with Launch Briefs — everything Boubacar needs to make a build
 decision in 30 seconds.
 
+**HARD FILTER — WEBSITES AND APPS ONLY:**
+Only scout and log targets that are websites or web apps. The following categories
+are explicitly excluded and must be dropped before scoring — do not log them to Notion:
+
+- Digital products (Etsy templates, Gumroad downloads, PDFs, spreadsheets, printables)
+- Physical products or e-commerce stores
+- Newsletters or email-only products
+- Mobile-only apps with no web equivalent
+- PLR / content membership sites
+- Complex SaaS platforms requiring months to build (e.g. tax filing platforms, ERP, CRM)
+
+If a candidate is not a website or web app, drop it immediately with reason "not a website/app".
+Do not score it. Do not log it.
+
 **Read the full spec before starting:**
 `d:/Ai_Sandbox/agentsHQ/docs/superpowers/specs/2026-04-15-clone-scout-design.md`
 
@@ -370,29 +384,33 @@ After all Notion writes, print a ranked table:
 
 ## IMPORTANT RULES
 
-1. **Score honestly.** A dimension with no data gets a 1, not a 3. Phantom scores produce
+1. **Websites and apps only.** If a candidate is not a website or web app (no digital
+   products, newsletters, PLR, complex SaaS), drop it before Phase 2. Do not score it.
+   Do not log it. Print "DROPPED — not a website/app" and move on.
+
+2. **Score honestly.** A dimension with no data gets a 1, not a 3. Phantom scores produce
    phantom results. If a scoring dimension returns null, say so in the justification.
 
-2. **Serper budget is real.** Max 8 queries per run. Count them as you go. If you hit 8,
+3. **Serper budget is real.** Max 8 queries per run. Count them as you go. If you hit 8,
    work with what you have — do not keep searching.
 
-3. **Max 10 candidates profiled per run.** If discovery finds 15+, rank by revenue signal
+4. **Max 10 candidates profiled per run.** If discovery finds 15+, rank by revenue signal
    from Phase 1 and take the top 10 into Phase 2.
 
-4. **The hard gate is real.** 30+ goes to Notion. Below 30 is dropped. No "maybe" pile.
+5. **The hard gate is real.** 30+ goes to Notion. Below 30 is dropped. No "maybe" pile.
    Decision paralysis from maybes is the most common failure mode for this type of system.
 
-5. **Language Play requires 3 specifics or N/A.** Market, payment rail, distribution channel.
+6. **Language Play requires 3 specifics or N/A.** Market, payment rail, distribution channel.
    "French market" alone is not acceptable. If you cannot name all three, score Language gap = 2.
 
-6. **First 100 Users must be specific.** If you cannot answer it specifically, the Launch
+7. **First 100 Users must be specific.** If you cannot answer it specifically, the Launch
    Brief is incomplete and the candidate needs more research before Notion logging. Flag it
    and move on — do not log incomplete briefs.
 
-7. **The feedback loop is how this gets better.** When writing to Notion, always populate
+8. **The feedback loop is how this gets better.** When writing to Notion, always populate
    the Source field accurately. After 20+ Revenue-status entries, patterns emerge.
 
-8. **This skill runs in Claude Code, not on the VPS.** No orchestrator changes needed.
+9. **This skill runs in Claude Code, not on the VPS.** No orchestrator changes needed.
    All Notion writes use the Notion MCP tools available in this session.
 
 ---
