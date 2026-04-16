@@ -1,0 +1,10 @@
+{
+  "name": "dashboards4sale",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build:en": "node budget-template-en/build.js",
+    "build:fr": "node budget-template-fr/build.js",
+    "build:ar": "node budget-template-ar/build.js"
+  }
+}
