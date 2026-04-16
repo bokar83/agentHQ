@@ -1,5 +1,5 @@
 // budget-template-en/data.js
-export const TITLE = 'Monthly Budget Planner — Google Sheets';
+export const TITLE = 'Monthly Budget Planner | Google Sheets';
 
 export const CATEGORIES = [
   'Housing','Food','Transport','Utilities','Subscriptions',
