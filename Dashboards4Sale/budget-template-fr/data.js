@@ -58,3 +58,10 @@ export const INCOME_TYPE  = 'Revenu';
 export const EXPENSE_TYPE = 'Depense';
 export const CURRENCY_FORMAT = '#,##0.00 "€"';
 export const PCT_FORMAT = '0%';
+
+export const DASHBOARD_LABELS = {
+  spendingSplit:  'REPARTITION DEPENSES',
+  spending:       'Depenses',
+  savingsLabel:   'Epargne',
+  topSavingsGoal: 'OBJECTIF EPARGNE',
+};

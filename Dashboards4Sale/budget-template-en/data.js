@@ -58,3 +58,10 @@ export const INCOME_TYPE  = 'Income';
 export const EXPENSE_TYPE = 'Expense';
 export const CURRENCY_FORMAT = '"$"#,##0.00';
 export const PCT_FORMAT = '0%';
+
+export const DASHBOARD_LABELS = {
+  spendingSplit:  'SPENDING SPLIT',
+  spending:       'Spending',
+  savingsLabel:   'Savings',
+  topSavingsGoal: 'TOP SAVINGS GOAL',
+};
