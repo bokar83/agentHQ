@@ -15,7 +15,11 @@ COLORS = {
     'pale_terra': '#F2DDD0',
     'pale_sage':  '#D4EAE0',
     'border':     '#E0D0C8',
+    'stripe':     '#FAF3EE',
 }
+
+# No-# versions for lxml shape injection (EMU color values must be bare hex)
+COLORS_HEX = {k: v.lstrip('#') for k, v in COLORS.items()}
 
 
 def add_formats(wb):
