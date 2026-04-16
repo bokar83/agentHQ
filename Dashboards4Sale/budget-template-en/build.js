@@ -40,12 +40,19 @@ const updated = getSpreadsheet(spreadsheetId);
 const savingsSheetId   = updated.sheets[1].properties.sheetId;
 const dashboardSheetId = updated.sheets[2].properties.sheetId;
 
+// Parse 'MM/DD/YYYY' date string into a Sheets serial-number formula =DATE(y,m,d)
+// so the Date column sorts and filters correctly.
+function dateFormula(mmddyyyy) {
+  const [m, d, y] = mmddyyyy.split('/');
+  return `=DATE(${y},${Number(m)},${Number(d)})`;
+}
+
 function buildBudgetTab(spreadsheetId, sheetId) {
-  // Row 1: banner — merged A1:E1, terracotta bg, white bold 12pt
+  // Row 1: banner — merged A1:F1 (6 cols to cover the full KPI row), terracotta bg, white bold 12pt
   batchUpdate(spreadsheetId, [
-    mergeCells(sheetId, 0, 1, 0, 5),
-    bgColor(sheetId, 0, 1, 0, 5, COLORS.terracotta),
-    textFormat(sheetId, 0, 1, 0, 5, { bold: true, fontSize: 12, color: COLORS.white }),
+    mergeCells(sheetId, 0, 1, 0, 6),
+    bgColor(sheetId, 0, 1, 0, 6, COLORS.terracotta),
+    textFormat(sheetId, 0, 1, 0, 6, { bold: true, fontSize: 12, color: COLORS.white }),
     {
       updateCells: {
         range: { sheetId, startRowIndex: 0, endRowIndex: 1,
@@ -94,9 +101,9 @@ function buildBudgetTab(spreadsheetId, sheetId) {
     }
   }]);
 
-  // Row 4: column headers — cream bg, terracotta bold text
+  // Row 4: column headers — cream bg (A:F), terracotta bold text (A:E only — F has no header)
   batchUpdate(spreadsheetId, [
-    bgColor(sheetId, 3, 4, 0, 5, COLORS.cream),
+    bgColor(sheetId, 3, 4, 0, 6, COLORS.cream),
     {
       updateCells: {
         range: { sheetId, startRowIndex: 3, endRowIndex: 4,
@@ -114,17 +121,20 @@ function buildBudgetTab(spreadsheetId, sheetId) {
     freezeRows(sheetId, 4),
   ]);
 
-  // Column widths: A=100, B=200, C=160, D=100, E=110
+  // Column widths: A=100, B=200, C=160, D=100, E=110, F=110 (Remaining value)
   batchUpdate(spreadsheetId, [
     colWidth(sheetId, 0, 100), colWidth(sheetId, 1, 200),
     colWidth(sheetId, 2, 160), colWidth(sheetId, 3, 100),
-    colWidth(sheetId, 4, 110),
+    colWidth(sheetId, 4, 110), colWidth(sheetId, 5, 110),
   ]);
 
   // Sample data rows 5-19 (indices 4-18)
+  // Dates are written as =DATE(y,m,d) formulas so Sheets treats them as date serials
+  // (sortable, filterable) rather than plain text strings.
   const dataRows = SAMPLE_TRANSACTIONS.map(([date, desc, cat, type, amt]) => ({
     values: [
-      { userEnteredValue: { stringValue: date } },
+      { userEnteredValue: { formulaValue: dateFormula(date) },
+        userEnteredFormat: { numberFormat: { type: 'DATE', pattern: 'mm/dd/yyyy' } } },
       { userEnteredValue: { stringValue: desc } },
       { userEnteredValue: { stringValue: cat } },
       { userEnteredValue: { stringValue: type } },
@@ -147,16 +157,17 @@ function buildBudgetTab(spreadsheetId, sheetId) {
     dropdown(sheetId, 4, 54, 3, 4, TYPES),
   ]);
 
-  // Input styling: pale cream for A-D, pale yellow for Amount (E)
+  // Input styling: pale cream for A-D, pale yellow for Amount (E), cream for F (unused, keep clean)
   batchUpdate(spreadsheetId, [
     bgColor(sheetId, 4, 54, 0, 4, COLORS.cream),
     bgColor(sheetId, 4, 54, 4, 5, COLORS.inputYellow),
+    bgColor(sheetId, 4, 54, 5, 6, COLORS.cream),
   ]);
 
-  // Conditional formatting on F2: green bg if positive, coral bg if negative
+  // Conditional formatting on E2:F2 (REMAINING label + value): sage bg if positive, coral if negative
   batchUpdate(spreadsheetId, [
-    cfSingleColor(sheetId, 1, 2, 5, 6, '=$F$2>=0', COLORS.positiveBg),
-    cfSingleColor(sheetId, 1, 2, 5, 6, '=$F$2<0',  COLORS.negativeBg),
+    cfSingleColor(sheetId, 1, 2, 4, 6, '=$F$2>=0', COLORS.positiveBg),
+    cfSingleColor(sheetId, 1, 2, 4, 6, '=$F$2<0',  COLORS.negativeBg),
   ]);
 
   console.log('BUDGET tab done.');
