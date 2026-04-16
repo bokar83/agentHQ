@@ -300,7 +300,183 @@ function buildSavingsTab(spreadsheetId, sheetId) {
 }
 
 function buildDashboardTab(spreadsheetId, sheetId) {
-  console.log('DASHBOARD tab — stub, will be implemented in Task 4.');
+  // Sheet background: cream
+  batchUpdate(spreadsheetId, [ bgColor(sheetId, 0, 30, 0, 15, COLORS.cream) ]);
+
+  // Row 1: banner with auto month/year
+  batchUpdate(spreadsheetId, [
+    mergeCells(sheetId, 0, 1, 0, 10),
+    bgColor(sheetId, 0, 1, 0, 10, COLORS.terracotta),
+    textFormat(sheetId, 0, 1, 0, 10, { bold: true, fontSize: 12, color: COLORS.white }),
+    {
+      updateCells: {
+        range: { sheetId, startRowIndex: 0, endRowIndex: 1,
+                 startColumnIndex: 0, endColumnIndex: 1 },
+        rows: [{ values: [{
+          userEnteredValue: { formulaValue:
+            `="${BANNER_LABELS.dashboard} · "&TEXT(TODAY(),"MMMM YYYY")` }
+        }] }],
+        fields: 'userEnteredValue'
+      }
+    }
+  ]);
+
+  // LEFT COLUMN — Card 1: Income (rows 2–4, cols A–D / indices 1–4, 0–4)
+  batchUpdate(spreadsheetId, [
+    cardBorder(sheetId, 1, 4, 0, 4),
+    bgColor(sheetId, 1, 4, 0, 4, COLORS.white),
+    {
+      updateCells: {
+        range: { sheetId, startRowIndex: 1, endRowIndex: 4,
+                 startColumnIndex: 0, endColumnIndex: 1 },
+        rows: [
+          { values: [{ userEnteredValue: { stringValue: KPI_LABELS.income },
+            userEnteredFormat: { textFormat: { fontSize: 8, foregroundColor: COLORS.muted } } }] },
+          { values: [{ userEnteredValue: { formulaValue: '=BUDGET!B2' },
+            userEnteredFormat: {
+              numberFormat: { type: 'CURRENCY', pattern: CURRENCY_FORMAT },
+              textFormat: { bold: true, fontSize: 14, foregroundColor: COLORS.terracotta }
+            }
+          }] },
+          { values: [{ userEnteredValue: { stringValue: KPI_LABELS.thisMonth },
+            userEnteredFormat: { textFormat: { fontSize: 8, foregroundColor: COLORS.muted } } }] },
+        ],
+        fields: 'userEnteredValue,userEnteredFormat.numberFormat,userEnteredFormat.textFormat'
+      }
+    }
+  ]);
+
+  // LEFT COLUMN — Card 2: Spent (rows 5–7)
+  batchUpdate(spreadsheetId, [
+    cardBorder(sheetId, 4, 7, 0, 4),
+    bgColor(sheetId, 4, 7, 0, 4, COLORS.white),
+    {
+      updateCells: {
+        range: { sheetId, startRowIndex: 4, endRowIndex: 7,
+                 startColumnIndex: 0, endColumnIndex: 1 },
+        rows: [
+          { values: [{ userEnteredValue: { stringValue: KPI_LABELS.spent },
+            userEnteredFormat: { textFormat: { fontSize: 8, foregroundColor: COLORS.muted } } }] },
+          { values: [{ userEnteredValue: { formulaValue: '=BUDGET!D2' },
+            userEnteredFormat: {
+              numberFormat: { type: 'CURRENCY', pattern: CURRENCY_FORMAT },
+              textFormat: { bold: true, fontSize: 14, foregroundColor: COLORS.coral }
+            }
+          }] },
+          { values: [{ userEnteredValue: {
+              formulaValue: '=TEXT(IFERROR(BUDGET!D2/BUDGET!B2*100,0),"0")&"% of income"' },
+            userEnteredFormat: { textFormat: { fontSize: 8, foregroundColor: COLORS.muted } } }] },
+        ],
+        fields: 'userEnteredValue,userEnteredFormat.numberFormat,userEnteredFormat.textFormat'
+      }
+    }
+  ]);
+
+  // LEFT COLUMN — Card 3: Remaining (rows 8–10)
+  batchUpdate(spreadsheetId, [
+    cardBorder(sheetId, 7, 10, 0, 4),
+    bgColor(sheetId, 7, 10, 0, 4, COLORS.white),
+    {
+      updateCells: {
+        range: { sheetId, startRowIndex: 7, endRowIndex: 10,
+                 startColumnIndex: 0, endColumnIndex: 1 },
+        rows: [
+          { values: [{ userEnteredValue: { stringValue: KPI_LABELS.remaining },
+            userEnteredFormat: { textFormat: { fontSize: 8, foregroundColor: COLORS.muted } } }] },
+          { values: [{ userEnteredValue: { formulaValue: '=BUDGET!F2' },
+            userEnteredFormat: {
+              numberFormat: { type: 'CURRENCY', pattern: CURRENCY_FORMAT },
+              textFormat: { bold: true, fontSize: 14, foregroundColor: COLORS.sage }
+            }
+          }] },
+          { values: [{ userEnteredValue: {
+              formulaValue:
+                `=IF(BUDGET!F2>=0,"${KPI_LABELS.underBudget}","${KPI_LABELS.overBudget}")` },
+            userEnteredFormat: { textFormat: { fontSize: 8, foregroundColor: COLORS.sage } } }] },
+        ],
+        fields: 'userEnteredValue,userEnteredFormat.numberFormat,userEnteredFormat.textFormat'
+      }
+    }
+  ]);
+
+  // Conditional format Card 3 value (row 9, index 8): sage/coral bg
+  // Use local cell reference ($A$9 holds =BUDGET!F2) — cross-sheet refs not allowed in CF formulas
+  batchUpdate(spreadsheetId, [
+    cfSingleColor(sheetId, 8, 9, 0, 4, '=$A$9>=0', COLORS.positiveBg),
+    cfSingleColor(sheetId, 8, 9, 0, 4, '=$A$9<0',  COLORS.negativeBg),
+  ]);
+
+  // RIGHT COLUMN — Spending split card (rows 2–6, cols F–J / indices 1–6, 5–10)
+  batchUpdate(spreadsheetId, [
+    cardBorder(sheetId, 1, 6, 5, 10),
+    bgColor(sheetId, 1, 6, 5, 10, COLORS.white),
+    {
+      updateCells: {
+        range: { sheetId, startRowIndex: 1, endRowIndex: 6,
+                 startColumnIndex: 5, endColumnIndex: 6 },
+        rows: [
+          { values: [{ userEnteredValue: { stringValue: 'SPENDING SPLIT' },
+            userEnteredFormat: { textFormat: { bold: true, fontSize: 9,
+              foregroundColor: COLORS.terracotta } } }] },
+          { values: [{ userEnteredValue: { stringValue: 'Spending' },
+            userEnteredFormat: { textFormat: { fontSize: 9, foregroundColor: COLORS.charcoal } } }] },
+          { values: [{ userEnteredValue: { formulaValue:
+              '=REPT("█",ROUND(IFERROR(BUDGET!D2/BUDGET!B2,0)*10,0))' +
+              '&REPT("░",10-ROUND(IFERROR(BUDGET!D2/BUDGET!B2,0)*10,0))' },
+            userEnteredFormat: { textFormat: { fontFamily: 'Courier New', fontSize: 10,
+              foregroundColor: COLORS.coral } } }] },
+          { values: [{ userEnteredValue: { stringValue: 'Savings' },
+            userEnteredFormat: { textFormat: { fontSize: 9, foregroundColor: COLORS.charcoal } } }] },
+          { values: [{ userEnteredValue: { formulaValue:
+              '=REPT("█",ROUND((1-IFERROR(BUDGET!D2/BUDGET!B2,0))*10,0))' +
+              '&REPT("░",10-ROUND((1-IFERROR(BUDGET!D2/BUDGET!B2,0))*10,0))' },
+            userEnteredFormat: { textFormat: { fontFamily: 'Courier New', fontSize: 10,
+              foregroundColor: COLORS.sage } } }] },
+        ],
+        fields: 'userEnteredValue,userEnteredFormat.textFormat'
+      }
+    }
+  ]);
+
+  // RIGHT COLUMN — Top savings goal card (rows 7–10, cols F–J / indices 6–10, 5–10)
+  batchUpdate(spreadsheetId, [
+    cardBorder(sheetId, 6, 10, 5, 10),
+    bgColor(sheetId, 6, 10, 5, 10, COLORS.white),
+    {
+      updateCells: {
+        range: { sheetId, startRowIndex: 6, endRowIndex: 10,
+                 startColumnIndex: 5, endColumnIndex: 6 },
+        rows: [
+          { values: [{ userEnteredValue: { stringValue: 'TOP SAVINGS GOAL' },
+            userEnteredFormat: { textFormat: { bold: true, fontSize: 9,
+              foregroundColor: COLORS.terracotta } } }] },
+          { values: [{ userEnteredValue: { formulaValue: '=SAVINGS!A5' },
+            userEnteredFormat: { textFormat: { bold: true, fontSize: 10,
+              foregroundColor: COLORS.charcoal } } }] },
+          { values: [{ userEnteredValue: { formulaValue: '=SAVINGS!G5' },
+            userEnteredFormat: { textFormat: { fontFamily: 'Courier New', fontSize: 10,
+              foregroundColor: COLORS.sage } } }] },
+          { values: [{ userEnteredValue: {
+              formulaValue: '=SAVINGS!C5&" / $"&SAVINGS!B5&" · "&TEXT(SAVINGS!E5,"0%")' },
+            userEnteredFormat: { textFormat: { fontSize: 8,
+              foregroundColor: COLORS.muted } } }] },
+        ],
+        fields: 'userEnteredValue,userEnteredFormat.textFormat'
+      }
+    }
+  ]);
+
+  // Column widths for dashboard
+  batchUpdate(spreadsheetId, [
+    colWidth(sheetId, 0, 160), colWidth(sheetId, 1, 80),
+    colWidth(sheetId, 2, 80),  colWidth(sheetId, 3, 80),
+    colWidth(sheetId, 4, 20),  // spacer col E
+    colWidth(sheetId, 5, 160), colWidth(sheetId, 6, 80),
+    colWidth(sheetId, 7, 80),  colWidth(sheetId, 8, 80),
+    colWidth(sheetId, 9, 80),
+  ]);
+
+  console.log('DASHBOARD tab done.');
 }
 
 buildBudgetTab(spreadsheetId, budgetSheetId);
