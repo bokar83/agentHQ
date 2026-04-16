@@ -179,6 +179,7 @@ services:
       - NOTEBOOKLM_LIBRARY_ROOT_ID=${NOTEBOOKLM_LIBRARY_ROOT_ID}
     volumes:
       - ./agent_outputs:/app/outputs
+      - /root/.notebooklm-mcp-cli:/root/.notebooklm-mcp-cli
       - ./logs:/app/logs
       - ./secrets:/app/secrets:ro
       - ./orchestrator/skills/doc_routing:/app/orchestrator_skills/doc_routing:ro
