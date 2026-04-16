@@ -234,7 +234,7 @@ def build_dashboard_tab(wb, fmt):
     # --- Hidden data tables for charts (cols H-M, rows 2+) ---
     # Spending by category (cols H=7, I=8)
     expense_cats = [c for c in CATEGORIES
-                    if c not in ('Income', INCOME_TYPE, 'Savings Transfer', 'Other')]
+                    if c not in (INCOME_TYPE, 'Savings Transfer', 'Other')]
     ws.write(1, 7, 'Category', fmt['subheader'])
     ws.write(1, 8, 'Amount',   fmt['subheader'])
     for i, cat in enumerate(expense_cats):

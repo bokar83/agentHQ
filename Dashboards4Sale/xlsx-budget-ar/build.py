@@ -211,7 +211,7 @@ def build_dashboard_tab(wb, fmt):
         ws.write_formula(3, card['col'], card['formula'], fmt[card['fmt_key']])
 
     expense_cats = [c for c in CATEGORIES
-                    if c not in ('دخل', INCOME_TYPE, 'تحويل الادخار', 'أخرى')]
+                    if c not in (INCOME_TYPE, 'تحويل الادخار', 'أخرى')]
     ws.write(1, 7, 'الفئة', fmt['subheader'])
     ws.write(1, 8, 'المبلغ',   fmt['subheader'])
     for i, cat in enumerate(expense_cats):
