@@ -174,7 +174,129 @@ function buildBudgetTab(spreadsheetId, sheetId) {
 }
 
 function buildSavingsTab(spreadsheetId, sheetId) {
-  console.log('SAVINGS tab — stub, will be implemented in Task 3.');
+  // Row 1: banner
+  batchUpdate(spreadsheetId, [
+    mergeCells(sheetId, 0, 1, 0, 8),
+    bgColor(sheetId, 0, 1, 0, 8, COLORS.terracotta),
+    textFormat(sheetId, 0, 1, 0, 8, { bold: true, fontSize: 12, color: COLORS.white }),
+    {
+      updateCells: {
+        range: { sheetId, startRowIndex: 0, endRowIndex: 1,
+                 startColumnIndex: 0, endColumnIndex: 1 },
+        rows: [{ values: [{ userEnteredValue: { stringValue: BANNER_LABELS.savings } }] }],
+        fields: 'userEnteredValue'
+      }
+    }
+  ]);
+
+  // Row 2: summary — A2 label, B2 total saved, C2 label, D2 total target, E2 label, F2 overall %
+  batchUpdate(spreadsheetId, [{
+    updateCells: {
+      range: { sheetId, startRowIndex: 1, endRowIndex: 2,
+               startColumnIndex: 0, endColumnIndex: 6 },
+      rows: [{
+        values: [
+          { userEnteredValue: { stringValue: 'TOTAL SAVED' },
+            userEnteredFormat: { textFormat: { fontSize: 8, foregroundColor: COLORS.muted } } },
+          { userEnteredValue: { formulaValue: '=SUM(C5:C9)' },
+            userEnteredFormat: {
+              numberFormat: { type: 'CURRENCY', pattern: CURRENCY_FORMAT },
+              textFormat: { bold: true, fontSize: 12, foregroundColor: COLORS.sage }
+            }
+          },
+          { userEnteredValue: { stringValue: 'TOTAL TARGET' },
+            userEnteredFormat: { textFormat: { fontSize: 8, foregroundColor: COLORS.muted } } },
+          { userEnteredValue: { formulaValue: '=SUM(B5:B9)' },
+            userEnteredFormat: {
+              numberFormat: { type: 'CURRENCY', pattern: CURRENCY_FORMAT },
+              textFormat: { bold: true, fontSize: 12, foregroundColor: COLORS.terracotta }
+            }
+          },
+          { userEnteredValue: { stringValue: 'OVERALL %' },
+            userEnteredFormat: { textFormat: { fontSize: 8, foregroundColor: COLORS.muted } } },
+          { userEnteredValue: { formulaValue: '=IFERROR(B2/D2,0)' },
+            userEnteredFormat: {
+              numberFormat: { type: 'PERCENT', pattern: PCT_FORMAT },
+              textFormat: { bold: true, fontSize: 12, foregroundColor: COLORS.terracotta }
+            }
+          },
+        ]
+      }],
+      fields: 'userEnteredValue,userEnteredFormat.numberFormat,userEnteredFormat.textFormat'
+    }
+  }]);
+
+  // Row 4: headers — cream bg, terracotta bold
+  batchUpdate(spreadsheetId, [
+    bgColor(sheetId, 3, 4, 0, 8, COLORS.cream),
+    {
+      updateCells: {
+        range: { sheetId, startRowIndex: 3, endRowIndex: 4,
+                 startColumnIndex: 0, endColumnIndex: 8 },
+        rows: [{
+          values: SAVINGS_HEADERS.map(h => ({
+            userEnteredValue: { stringValue: h },
+            userEnteredFormat: { textFormat: { bold: true, fontSize: 10,
+              foregroundColor: COLORS.terracotta } }
+          }))
+        }],
+        fields: 'userEnteredValue,userEnteredFormat.textFormat'
+      }
+    },
+    freezeRows(sheetId, 4),
+  ]);
+
+  // Rows 5–7: sample goals with formulas (indices 4–6)
+  const goalRows = SAMPLE_GOALS.map(([name, target, saved, dateStr], i) => {
+    const r = i + 5; // 1-based row number for formula references
+    return {
+      values: [
+        { userEnteredValue: { stringValue: name } },
+        { userEnteredValue: { numberValue: target },
+          userEnteredFormat: { numberFormat: { type: 'CURRENCY', pattern: CURRENCY_FORMAT } } },
+        { userEnteredValue: { numberValue: saved },
+          userEnteredFormat: { numberFormat: { type: 'CURRENCY', pattern: CURRENCY_FORMAT } } },
+        { userEnteredValue: { stringValue: dateStr } },
+        { userEnteredValue: { formulaValue: `=IFERROR(C${r}/B${r},0)` },
+          userEnteredFormat: { numberFormat: { type: 'PERCENT', pattern: PCT_FORMAT } } },
+        { userEnteredValue: { formulaValue:
+            `=IFERROR((B${r}-C${r})/MAX(1,DATEDIF(TODAY(),DATEVALUE(D${r}),"M")),0)` },
+          userEnteredFormat: { numberFormat: { type: 'CURRENCY', pattern: CURRENCY_FORMAT } } },
+        { userEnteredValue: { formulaValue:
+            `=REPT("█",MIN(10,ROUND(E${r}*10,0)))&REPT("░",MAX(0,10-MIN(10,ROUND(E${r}*10,0))))` },
+          userEnteredFormat: { textFormat: {
+            fontFamily: 'Courier New', fontSize: 10, foregroundColor: COLORS.sage } } },
+        { userEnteredValue: { formulaValue:
+            `=IF(E${r}>=1,"✓ Funded!",IF(F${r}<=0,"✓ On track","→ "&TEXT(F${r},"$#,##0")&"/mo"))` },
+          userEnteredFormat: { textFormat: { fontSize: 10, foregroundColor: COLORS.sage } } },
+      ]
+    };
+  });
+
+  batchUpdate(spreadsheetId, [{
+    updateCells: {
+      range: { sheetId, startRowIndex: 4, endRowIndex: 4 + goalRows.length,
+               startColumnIndex: 0, endColumnIndex: 8 },
+      rows: goalRows,
+      fields: 'userEnteredValue,userEnteredFormat.numberFormat,userEnteredFormat.textFormat'
+    }
+  }]);
+
+  // Conditional formatting: >=100% funded → sage bg; >=50% → cream bg
+  batchUpdate(spreadsheetId, [
+    cfSingleColor(sheetId, 4, 9, 0, 8, '=$E5>=1',              COLORS.paleSage),
+    cfSingleColor(sheetId, 4, 9, 0, 8, '=AND($E5>=0.5,$E5<1)', COLORS.cream),
+  ]);
+
+  // Column widths
+  batchUpdate(spreadsheetId, [
+    colWidth(sheetId, 0, 160), colWidth(sheetId, 1, 110),
+    colWidth(sheetId, 2, 110), colWidth(sheetId, 3, 100),
+    colWidth(sheetId, 4, 90),  colWidth(sheetId, 5, 130),
+    colWidth(sheetId, 6, 130), colWidth(sheetId, 7, 150),
+  ]);
+
+  console.log('SAVINGS tab done.');
 }
 
 function buildDashboardTab(spreadsheetId, sheetId) {
