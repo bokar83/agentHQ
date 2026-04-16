@@ -7,7 +7,8 @@ import { bgColor, textFormat, mergeCells, cardBorder,
   from '../shared/formatting.js';
 import { TITLE, CATEGORIES, TYPES, SAMPLE_TRANSACTIONS, HEADERS,
          KPI_LABELS, BANNER_LABELS, SAVINGS_HEADERS, SAMPLE_GOALS,
-         INCOME_TYPE, EXPENSE_TYPE, CURRENCY_FORMAT, PCT_FORMAT }
+         INCOME_TYPE, EXPENSE_TYPE, CURRENCY_FORMAT, PCT_FORMAT,
+         DASHBOARD_LABELS }
   from './data.js';
 
 const sheet = createSpreadsheet(TITLE);
@@ -415,17 +416,17 @@ function buildDashboardTab(spreadsheetId, sheetId) {
         range: { sheetId, startRowIndex: 1, endRowIndex: 6,
                  startColumnIndex: 5, endColumnIndex: 6 },
         rows: [
-          { values: [{ userEnteredValue: { stringValue: 'SPENDING SPLIT' },
+          { values: [{ userEnteredValue: { stringValue: DASHBOARD_LABELS.spendingSplit },
             userEnteredFormat: { textFormat: { bold: true, fontSize: 9,
               foregroundColor: COLORS.terracotta } } }] },
-          { values: [{ userEnteredValue: { stringValue: 'Spending' },
+          { values: [{ userEnteredValue: { stringValue: DASHBOARD_LABELS.spending },
             userEnteredFormat: { textFormat: { fontSize: 9, foregroundColor: COLORS.charcoal } } }] },
           { values: [{ userEnteredValue: { formulaValue:
               '=REPT("█",ROUND(IFERROR(BUDGET!D2/BUDGET!B2,0)*10,0))' +
               '&REPT("░",10-ROUND(IFERROR(BUDGET!D2/BUDGET!B2,0)*10,0))' },
             userEnteredFormat: { textFormat: { fontFamily: 'Courier New', fontSize: 10,
               foregroundColor: COLORS.coral } } }] },
-          { values: [{ userEnteredValue: { stringValue: 'Savings' },
+          { values: [{ userEnteredValue: { stringValue: DASHBOARD_LABELS.savingsLabel },
             userEnteredFormat: { textFormat: { fontSize: 9, foregroundColor: COLORS.charcoal } } }] },
           { values: [{ userEnteredValue: { formulaValue:
               '=REPT("█",ROUND((1-IFERROR(BUDGET!D2/BUDGET!B2,0))*10,0))' +
@@ -447,7 +448,7 @@ function buildDashboardTab(spreadsheetId, sheetId) {
         range: { sheetId, startRowIndex: 6, endRowIndex: 10,
                  startColumnIndex: 5, endColumnIndex: 6 },
         rows: [
-          { values: [{ userEnteredValue: { stringValue: 'TOP SAVINGS GOAL' },
+          { values: [{ userEnteredValue: { stringValue: DASHBOARD_LABELS.topSavingsGoal },
             userEnteredFormat: { textFormat: { bold: true, fontSize: 9,
               foregroundColor: COLORS.terracotta } } }] },
           { values: [{ userEnteredValue: { formulaValue: '=SAVINGS!A5' },
