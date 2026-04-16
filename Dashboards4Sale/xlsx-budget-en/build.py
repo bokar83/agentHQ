@@ -9,8 +9,8 @@ from datetime import datetime
 sys.path.insert(0, 'Dashboards4Sale/shared')
 sys.path.insert(0, 'Dashboards4Sale/xlsx-budget-en')
 
-from xl_builder import add_formats, COLORS, COLORS_HEX
-from data import (
+from xl_builder import add_formats, COLORS, COLORS_HEX  # type: ignore
+from data import (  # type: ignore
     TITLE, CATEGORIES, TYPES, SAMPLE_TRANSACTIONS, HEADERS,
     KPI_LABELS, BANNER_LABEL, SAVINGS_LABEL, DASHBOARD_LABEL,
     SAMPLE_GOALS, SAVINGS_HEADERS, INCOME_TYPE, EXPENSE_TYPE,
