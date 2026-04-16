@@ -2,12 +2,12 @@
 """Build budget_fr.xlsx - Modele Budget Mensuel (Francais)."""
 import sys
 import xlsxwriter
-from datetime import date, datetime
+from datetime import datetime
 
 sys.path.insert(0, 'Dashboards4Sale/shared')
 sys.path.insert(0, 'Dashboards4Sale/xlsx-budget-fr')
 
-from xl_builder import add_formats, write_banner, COLORS
+from xl_builder import add_formats, COLORS
 from data import (
     TITLE, CATEGORIES, TYPES, SAMPLE_TRANSACTIONS, HEADERS,
     KPI_LABELS, BANNER_LABEL, SAVINGS_LABEL, DASHBOARD_LABEL,
@@ -140,7 +140,7 @@ def build_savings_tab(wb, fmt):
     for c, h in enumerate(SAVINGS_HEADERS):
         ws.write(2, c, h, fmt['savings_header'])
 
-    from datetime import datetime as dt
+    dt = datetime
     today = dt.today().date()
     for i, goal in enumerate(SAMPLE_GOALS):
         r = 3 + i
@@ -204,7 +204,7 @@ def build_dashboard_tab(wb, fmt):
          'formula': f'={BANNER_LABEL}!D3', 'fmt_key': 'kpi_value_sage'},
         {'col': 4, 'label': 'TAUX EPARGNE',
          'formula': f'=IF({BANNER_LABEL}!A3=0,0,{BANNER_LABEL}!D3/{BANNER_LABEL}!A3)',
-         'fmt_key': 'kpi_value'},
+         'fmt_key': 'kpi_value_pct'},
     ]
     for card in kpi_cards:
         ws.write(2, card['col'], card['label'], fmt['kpi_label'])

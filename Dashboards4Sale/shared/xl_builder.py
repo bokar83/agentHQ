@@ -54,6 +54,12 @@ def add_formats(wb):
         'font_name': 'Calibri', 'num_format': '"$"#,##0.00',
     })
 
+    f['kpi_value_pct'] = wb.add_format({
+        'bold': True, 'font_size': 16, 'font_color': C['terracotta'],
+        'bg_color': C['white'], 'align': 'center', 'valign': 'vcenter',
+        'font_name': 'Calibri', 'num_format': '0%',
+    })
+
     f['kpi_label'] = wb.add_format({
         'font_size': 9, 'font_color': C['muted'],
         'bg_color': C['white'], 'align': 'center', 'valign': 'vcenter',
