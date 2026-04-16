@@ -48,7 +48,7 @@ function dateFormula(mmddyyyy) {
 }
 
 function buildBudgetTab(spreadsheetId, sheetId) {
-  // Row 1: banner — merged A1:F1 (6 cols to cover the full KPI row), terracotta bg, white bold 12pt
+  // Row 1: banner, merged A1:F1 (6 cols to cover the full KPI row), terracotta bg, white bold 12pt
   batchUpdate(spreadsheetId, [
     mergeCells(sheetId, 0, 1, 0, 6),
     bgColor(sheetId, 0, 1, 0, 6, COLORS.terracotta),
@@ -63,7 +63,7 @@ function buildBudgetTab(spreadsheetId, sheetId) {
     }
   ]);
 
-  // Row 2: KPI cells — A2 label, B2 Income value, C2 label, D2 Spent value,
+  // Row 2: KPI cells: A2 label, B2 Income value, C2 label, D2 Spent value,
   //                     E2 label, F2 Remaining value
   batchUpdate(spreadsheetId, [{
     updateCells: {
@@ -101,7 +101,7 @@ function buildBudgetTab(spreadsheetId, sheetId) {
     }
   }]);
 
-  // Row 4: column headers — cream bg (A:F), terracotta bold text (A:E only — F has no header)
+  // Row 4: column headers; cream bg (A:F), terracotta bold text (A:E only; F has no header)
   batchUpdate(spreadsheetId, [
     bgColor(sheetId, 3, 4, 0, 6, COLORS.cream),
     {
@@ -189,7 +189,7 @@ function buildSavingsTab(spreadsheetId, sheetId) {
     }
   ]);
 
-  // Row 2: summary — A2 label, B2 total saved, C2 label, D2 total target, E2 label, F2 overall %
+  // Row 2: summary: A2 label, B2 total saved, C2 label, D2 total target, E2 label, F2 overall %
   batchUpdate(spreadsheetId, [{
     updateCells: {
       range: { sheetId, startRowIndex: 1, endRowIndex: 2,
@@ -226,7 +226,7 @@ function buildSavingsTab(spreadsheetId, sheetId) {
     }
   }]);
 
-  // Row 4: headers — cream bg, terracotta bold
+  // Row 4: headers, cream bg, terracotta bold
   batchUpdate(spreadsheetId, [
     bgColor(sheetId, 3, 4, 0, 8, COLORS.cream),
     {
@@ -246,7 +246,7 @@ function buildSavingsTab(spreadsheetId, sheetId) {
     freezeRows(sheetId, 4),
   ]);
 
-  // Rows 5–7: sample goals with formulas (indices 4–6)
+  // Rows 5-7: sample goals with formulas (indices 4-6)
   const goalRows = SAMPLE_GOALS.map(([name, target, saved, dateStr], i) => {
     const r = i + 5; // 1-based row number for formula references
     return {
@@ -321,7 +321,7 @@ function buildDashboardTab(spreadsheetId, sheetId) {
     }
   ]);
 
-  // LEFT COLUMN — Card 1: Income (rows 2–4, cols A–D / indices 1–4, 0–4)
+  // LEFT COLUMN, Card 1: Income (rows 2-4, cols A-D / indices 1-4, 0-4)
   batchUpdate(spreadsheetId, [
     cardBorder(sheetId, 1, 4, 0, 4),
     bgColor(sheetId, 1, 4, 0, 4, COLORS.white),
@@ -346,7 +346,7 @@ function buildDashboardTab(spreadsheetId, sheetId) {
     }
   ]);
 
-  // LEFT COLUMN — Card 2: Spent (rows 5–7)
+  // LEFT COLUMN, Card 2: Spent (rows 5-7)
   batchUpdate(spreadsheetId, [
     cardBorder(sheetId, 4, 7, 0, 4),
     bgColor(sheetId, 4, 7, 0, 4, COLORS.white),
@@ -372,7 +372,7 @@ function buildDashboardTab(spreadsheetId, sheetId) {
     }
   ]);
 
-  // LEFT COLUMN — Card 3: Remaining (rows 8–10)
+  // LEFT COLUMN, Card 3: Remaining (rows 8-10)
   batchUpdate(spreadsheetId, [
     cardBorder(sheetId, 7, 10, 0, 4),
     bgColor(sheetId, 7, 10, 0, 4, COLORS.white),
@@ -400,13 +400,13 @@ function buildDashboardTab(spreadsheetId, sheetId) {
   ]);
 
   // Conditional format Card 3 value (row 9, index 8): sage/coral bg
-  // Use local cell reference ($A$9 holds =BUDGET!F2) — cross-sheet refs not allowed in CF formulas
+  // Use local cell reference ($A$9 holds =BUDGET!F2); cross-sheet refs not allowed in CF formulas
   batchUpdate(spreadsheetId, [
     cfSingleColor(sheetId, 8, 9, 0, 4, '=$A$9>=0', COLORS.positiveBg),
     cfSingleColor(sheetId, 8, 9, 0, 4, '=$A$9<0',  COLORS.negativeBg),
   ]);
 
-  // RIGHT COLUMN — Spending split card (rows 2–6, cols F–J / indices 1–6, 5–10)
+  // RIGHT COLUMN, Spending split card (rows 2-6, cols F-J / indices 1-6, 5-10)
   batchUpdate(spreadsheetId, [
     cardBorder(sheetId, 1, 6, 5, 10),
     bgColor(sheetId, 1, 6, 5, 10, COLORS.white),
@@ -438,7 +438,7 @@ function buildDashboardTab(spreadsheetId, sheetId) {
     }
   ]);
 
-  // RIGHT COLUMN — Top savings goal card (rows 7–10, cols F–J / indices 6–10, 5–10)
+  // RIGHT COLUMN, Top savings goal card (rows 7-10, cols F-J / indices 6-10, 5-10)
   batchUpdate(spreadsheetId, [
     cardBorder(sheetId, 6, 10, 5, 10),
     bgColor(sheetId, 6, 10, 5, 10, COLORS.white),
