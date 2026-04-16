@@ -260,7 +260,7 @@ function buildSavingsTab(spreadsheetId, sheetId) {
         { userEnteredValue: { formulaValue: `=IFERROR(C${r}/B${r},0)` },
           userEnteredFormat: { numberFormat: { type: 'PERCENT', pattern: PCT_FORMAT } } },
         { userEnteredValue: { formulaValue:
-            `=IFERROR((B${r}-C${r})/MAX(1,DATEDIF(TODAY(),DATEVALUE(D${r}),"M")),0)` },
+            `=IFERROR((B${r}-C${r})/MAX(1,DATEDIF(TODAY(),IFERROR(DATEVALUE(D${r}),D${r}),"M")),0)` },
           userEnteredFormat: { numberFormat: { type: 'CURRENCY', pattern: CURRENCY_FORMAT } } },
         { userEnteredValue: { formulaValue:
             `=REPT("█",MIN(10,ROUND(E${r}*10,0)))&REPT("░",MAX(0,10-MIN(10,ROUND(E${r}*10,0))))` },
@@ -282,10 +282,10 @@ function buildSavingsTab(spreadsheetId, sheetId) {
     }
   }]);
 
-  // Conditional formatting: >=100% funded → sage bg; >=50% → cream bg
+  // Conditional formatting: relative row reference (E5, not $E5) so each row evaluates itself
   batchUpdate(spreadsheetId, [
-    cfSingleColor(sheetId, 4, 9, 0, 8, '=$E5>=1',              COLORS.paleSage),
-    cfSingleColor(sheetId, 4, 9, 0, 8, '=AND($E5>=0.5,$E5<1)', COLORS.cream),
+    cfSingleColor(sheetId, 4, 9, 0, 8, '=E5>=1',              COLORS.paleSage),
+    cfSingleColor(sheetId, 4, 9, 0, 8, '=AND(E5>=0.5,E5<1)', COLORS.cream),
   ]);
 
   // Column widths
