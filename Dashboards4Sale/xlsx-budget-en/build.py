@@ -255,14 +255,14 @@ def build_budget_tab(wb, fmt):
         ws.write_blank(2, c, None, fmt['empty'])
         ws.write_blank(3, c, None, fmt['empty'])
 
-    # KPI formula cells (under shapes, referenced by Dashboard)
-    # B3 = income SUMIF
-    ws.write_formula(3, 1, f'=SUMIF(E:E,"{INCOME_TYPE}",F:F)', fmt['kpi_value'])
-    # C3 = expense SUMIF
-    ws.write_formula(3, 2, f'=SUMIF(E:E,"{EXPENSE_TYPE}",F:F)', fmt['kpi_value_coral'])
-    # D3-E3 merged = remaining
-    ws.merge_range(3, 3, 3, 4, '', fmt['kpi_value_sage'])
-    ws.write_formula(3, 3, '=B4-C4', fmt['kpi_value_sage'])
+    # KPI formula cells (under shapes - hidden font so values don't show through)
+    # B4 = income SUMIF (referenced by Dashboard as Budget!B4)
+    ws.write_formula(3, 1, f'=SUMIF(E:E,"{INCOME_TYPE}",F:F)', fmt['kpi_hidden'])
+    # C4 = expense SUMIF
+    ws.write_formula(3, 2, f'=SUMIF(E:E,"{EXPENSE_TYPE}",F:F)', fmt['kpi_hidden'])
+    # D4-E4 merged = remaining
+    ws.merge_range(3, 3, 3, 4, '', fmt['kpi_hidden'])
+    ws.write_formula(3, 3, '=B4-C4', fmt['kpi_hidden'])
 
     # Row 4 (height 8): spacer
     ws.set_row(4, 8)
@@ -446,7 +446,7 @@ def build_savings_tab(wb, fmt):
         ws.write(r, 3, saved,  fmt['savings_currency'])
         ws.write_datetime(r, 4,
             dt(target_date.year, target_date.month, target_date.day),
-            fmt['savings_data'])
+            fmt['savings_date'])
         ws.write(r, 5, pct,     fmt['savings_pct'])
         ws.write(r, 6, monthly, fmt['savings_currency'])
         ws.write(r, 7, status,  status_fmt)
@@ -522,15 +522,14 @@ def build_dashboard_tab(wb, fmt):
     for c in range(7):
         ws.write_blank(4, c, None, fmt['empty'])
 
-    # Dashboard KPI formula cells (under shapes, row 3 = index 3)
-    # B3=income, C3=spent, D3=remaining, E3:F3=savings rate
-    ws.write_formula(3, 1, f'={BANNER_LABEL}!B4', fmt['kpi_value'])
-    ws.write_formula(3, 2, f'={BANNER_LABEL}!C4', fmt['kpi_value_coral'])
-    ws.write_formula(3, 3, f'={BANNER_LABEL}!D4', fmt['kpi_value_sage'])
-    ws.merge_range(3, 4, 3, 5, '', fmt['kpi_value_pct'])
+    # Dashboard KPI formula cells (under shapes - hidden font so values don't show through)
+    ws.write_formula(3, 1, f'={BANNER_LABEL}!B4', fmt['kpi_hidden'])
+    ws.write_formula(3, 2, f'={BANNER_LABEL}!C4', fmt['kpi_hidden'])
+    ws.write_formula(3, 3, f'={BANNER_LABEL}!D4', fmt['kpi_hidden'])
+    ws.merge_range(3, 4, 3, 5, '', fmt['kpi_hidden'])
     ws.write_formula(3, 4,
         f'=IF({BANNER_LABEL}!B4=0,0,{BANNER_LABEL}!D4/{BANNER_LABEL}!B4)',
-        fmt['kpi_value_pct'])
+        fmt['kpi_hidden'])
 
     # Hidden data tables for charts (cols H-L, rows 2+)
     expense_cats = [c for c in CATEGORIES

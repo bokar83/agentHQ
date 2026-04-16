@@ -154,6 +154,19 @@ def add_formats(wb):
         'num_format': '"$"#,##0.00',
     })
 
+    f['savings_date'] = wb.add_format({
+        'font_size': 10, 'font_color': C['charcoal'],
+        'bg_color': C['white'], 'valign': 'vcenter', 'align': 'center',
+        'font_name': 'Calibri', 'border': 1, 'border_color': C['border'],
+        'num_format': 'mm/dd/yyyy',
+    })
+
+    f['kpi_hidden'] = wb.add_format({
+        'font_size': 10, 'font_color': C['cream'],
+        'bg_color': C['cream'], 'valign': 'vcenter',
+        'font_name': 'Calibri',
+    })
+
     f['progress_bar'] = wb.add_format({
         'font_size': 9, 'font_color': C['sage'],
         'bg_color': C['white'], 'valign': 'vcenter',
