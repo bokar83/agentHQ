@@ -127,9 +127,70 @@ def build_budget_tab(wb, fmt):
 
 
 def build_savings_tab(wb, fmt):
-    """Stub - completed in Task 4."""
     ws = wb.add_worksheet(SAVINGS_LABEL)
+    ws.set_zoom(90)
+    ws.hide_gridlines(2)
     ws.set_tab_color(COLORS['sage'])
+
+    # Column widths
+    ws.set_column(0, 0, 22)
+    ws.set_column(1, 1, 12)
+    ws.set_column(2, 2, 12)
+    ws.set_column(3, 3, 14)
+    ws.set_column(4, 4, 10)
+    ws.set_column(5, 5, 16)
+    ws.set_column(6, 6, 22)
+    ws.set_column(7, 7, 12)
+
+    # Row 0: Banner
+    ws.merge_range(0, 0, 0, 7, SAVINGS_LABEL, fmt['banner'])
+    ws.set_row(0, 36)
+
+    # Row 1: spacer
+    ws.set_row(1, 8)
+
+    # Row 2: column headers
+    ws.set_row(2, 22)
+    for c, h in enumerate(SAVINGS_HEADERS):
+        ws.write(2, c, h, fmt['savings_header'])
+
+    # Rows 3+: sample goals
+    from datetime import datetime as dt
+    today = dt.today().date()
+    for i, goal in enumerate(SAMPLE_GOALS):
+        r = 3 + i
+        ws.set_row(r, 22)
+        name, target, saved, target_date = goal
+
+        pct = saved / target if target else 0
+        filled = round(pct * 20)
+        bar = '\u2588' * filled + '\u2591' * (20 - filled)
+        months_left = max(1, (target_date.year - today.year) * 12
+                          + (target_date.month - today.month))
+        monthly = (target - saved) / months_left
+        status = STATUS_ON_TRACK if pct >= 0.25 else STATUS_BEHIND
+        status_fmt = fmt['status_on_track'] if status == STATUS_ON_TRACK else fmt['status_behind']
+
+        ws.write(r, 0, name,   fmt['savings_data'])
+        ws.write(r, 1, target, fmt['savings_currency'])
+        ws.write(r, 2, saved,  fmt['savings_currency'])
+        ws.write_datetime(r, 3,
+            dt(target_date.year, target_date.month, target_date.day),
+            fmt['savings_data'])
+        ws.write(r, 4, pct,     fmt['savings_pct'])
+        ws.write(r, 5, monthly, fmt['savings_currency'])
+        ws.write(r, 6, bar,     fmt['progress_bar'])
+        ws.write(r, 7, status,  status_fmt)
+
+    # Blank rows for user goals
+    blank_start = 3 + len(SAMPLE_GOALS)
+    for i in range(7):
+        r = blank_start + i
+        ws.set_row(r, 22)
+        for c in range(8):
+            ws.write_blank(r, c, None, fmt['savings_data'])
+
+    ws.freeze_panes(3, 0)
 
 
 def build_dashboard_tab(wb, fmt):
