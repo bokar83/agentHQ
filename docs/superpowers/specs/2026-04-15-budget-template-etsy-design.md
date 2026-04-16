@@ -1,7 +1,7 @@
 # Design Spec: Budget Template — Etsy Digital Product (EN / FR / AR)
 
 **Date:** 2026-04-15
-**Owner:** Boubacar Barry (bokar83@gmail.com)
+**Owner:** Boubacar Barry (<bokar83@gmail.com>)
 **Reference:** prettyarrow.com clone · Clone Targets DB score 38/40
 **Etsy price:** $9 / 9 € / 9 $ per listing (3 separate listings)
 
@@ -22,7 +22,7 @@ This is a v1 "build your muscles" product. Scope is deliberately minimal: 3 tabs
 ### Color Palette
 
 | Role | Color | Hex |
-|------|-------|-----|
+| --- | --- | --- |
 | Background | Warm cream | `#FDF6F0` |
 | Header / accent | Terracotta | `#C8956C` |
 | Danger / overspend | Coral | `#E07A5F` |
@@ -63,7 +63,7 @@ Every section is a "card": white background, 4–6px border-radius, subtle shado
 ## Tab Structure (3 tabs)
 
 | # | Tab Name (EN) | Tab Name (FR) | Tab Name (AR) | Visible |
-|---|---------------|---------------|---------------|---------|
+| --- | --- | --- | --- | --- |
 | 0 | BUDGET | BUDGET | الميزانية | ✅ |
 | 1 | SAVINGS | ÉPARGNE | الادخار | ✅ |
 | 2 | DASHBOARD | TABLEAU DE BORD | لوحة التحكم | ✅ |
@@ -74,10 +74,11 @@ Tab colors: all use terracotta tab color (`#C8956C` text or tab background where
 
 ## Tab 0: BUDGET
 
-### Purpose
+### BUDGET Purpose
+
 Monthly income and expense tracker. The source of truth. All numbers feed into the Dashboard.
 
-### Layout
+### BUDGET Layout
 
 - **Row 1:** Merged banner — tab name in bold white on terracotta, full width
 - **Row 2:** 3 KPI summary cells (Income / Spent / Remaining) — auto-calculated, color-coded
@@ -85,25 +86,25 @@ Monthly income and expense tracker. The source of truth. All numbers feed into t
 - **Row 4:** Column headers (frozen rows 1–4)
 - **Rows 5–54:** 50 transaction rows (enough for any month)
 
-### Row 2 KPI Cells
+### BUDGET Row 2 KPI Cells
 
 | Cell | Label | Formula | Color |
-|------|-------|---------|-------|
+| --- | --- | --- | --- |
 | B2 | Income / Revenus / الدخل | `=SUMIF(D5:D54,"Income",E5:E54)` | Terracotta `#C8956C` |
 | D2 | Spent / Dépenses / المصروف | `=SUMIF(D5:D54,"Expense",E5:E54)` | Coral `#E07A5F` |
 | F2 | Remaining / Solde / المتبقي | `=B2-D2` | Sage green `#81B29A` (positive) / Coral (negative) |
 
-### Transaction Columns
+### BUDGET Transaction Columns
 
 | Col | Header (EN/FR/AR) | Type | Details |
-|-----|-------------------|------|---------|
+| --- | --- | --- | --- |
 | A | Date / Date / التاريخ | Date | MM/DD/YYYY |
 | B | Description | Text | Free text |
 | C | Category / Catégorie / الفئة | Dropdown | From named range CATEGORIES |
 | D | Type | Dropdown | "Income" / "Expense" (hidden from AR version — use Arabic equivalents) |
 | E | Amount / Montant / المبلغ | Currency | Always positive |
 
-### Categories
+### BUDGET Categories
 
 **EN:** Housing, Food, Transport, Utilities, Subscriptions, Dining Out, Health, Shopping, Entertainment, Personal Care, Education, Savings Transfer, Income, Other
 
@@ -111,14 +112,15 @@ Monthly income and expense tracker. The source of truth. All numbers feed into t
 
 **AR:** السكن, الطعام, المواصلات, الفواتير, الاشتراكات, المطاعم, الصحة, التسوق, الترفيه, العناية الشخصية, التعليم, تحويل للادخار, دخل, أخرى
 
-### Conditional Formatting
+### BUDGET Conditional Formatting
 
 - Remaining (F2): green bg `#EEF5F1` if positive, coral bg `#FDE8E4` if negative
 - Amount column (E): terracotta text for Income rows, coral text for Expense rows
 
-### Sample Data (pre-loaded, 15 rows — April 2026)
+### BUDGET Sample Data (pre-loaded, 15 rows — April 2026)
 
 **EN version (USD):**
+
 1. 04/01, Paycheck, Income, $3,500
 2. 04/03, Rent, Housing, Expense, $1,200
 3. 04/05, Groceries, Food, Expense, $187
@@ -145,10 +147,11 @@ Same structure, amounts in MAD, RTL layout (`dir="rtl"` equivalent in sheet — 
 
 ## Tab 1: SAVINGS
 
-### Purpose
+### SAVINGS Purpose
+
 Up to 5 savings goals with progress bars. Shows how close the user is to each goal and how much to save per month.
 
-### Layout
+### SAVINGS Layout
 
 - **Row 1:** Banner
 - **Row 2:** Summary — Total saved across all goals / Total target / Overall % funded
@@ -157,10 +160,10 @@ Up to 5 savings goals with progress bars. Shows how close the user is to each go
 - **Rows 5–9:** 5 savings goal rows
 - **Row 11:** Overall progress bar (full width merged cell, REPT formula)
 
-### Columns
+### SAVINGS Columns
 
 | Col | Header (EN) | Type | Formula |
-|-----|-------------|------|---------|
+| --- | --- | --- | --- |
 | A | Goal | Text | User input |
 | B | Target | Currency | User input |
 | C | Saved | Currency | User input |
@@ -170,13 +173,13 @@ Up to 5 savings goals with progress bars. Shows how close the user is to each go
 | G | Progress | Text (bar) | `=REPT("█",MIN(10,ROUND(E5*10,0)))&REPT("░",MAX(0,10-MIN(10,ROUND(E5*10,0))))` |
 | H | Status | Text | `=IF(E5>=1,"✓ Funded!",IF(F5<=0,"✓ On track","→ "&TEXT(F5,"$#,##0")&"/mo"))` |
 
-### Conditional Formatting
+### SAVINGS Conditional Formatting
 
 - % Funded ≥ 100%: row bg `#EEF5F1` (light sage)
 - % Funded 50–99%: row bg `#FDF6F0` (light cream)
 - % Funded < 50%: no fill (white)
 
-### Sample Goals (EN, pre-loaded)
+### SAVINGS Sample Goals (EN, pre-loaded)
 
 1. Emergency Fund | $5,000 | $1,800 | 2026-12-31
 2. Vacation | $2,000 | $650 | 2026-08-01
@@ -187,10 +190,11 @@ Up to 5 savings goals with progress bars. Shows how close the user is to each go
 
 ## Tab 2: DASHBOARD
 
-### Purpose
+### DASHBOARD Purpose
+
 Visual summary that serves as the Etsy listing thumbnail. 2-column layout: KPI cards on the left, CSS donut + savings progress on the right.
 
-### Layout
+### DASHBOARD Layout
 
 - **Row 1:** Banner — "DASHBOARD · [Month] [Year]" (auto-populated with `=TEXT(TODAY(),"MMMM YYYY")`)
 - **Rows 2–10:** Left column — 3 stacked KPI cards
@@ -203,17 +207,20 @@ Visual summary that serves as the Etsy listing thumbnail. 2-column layout: KPI c
 
 Each card spans 2 rows, merged cells, card-style border:
 
-**Card 1 — Income**
+#### Card 1 — Income
+
 - Label: "INCOME / REVENUS / الدخل" (8pt, uppercase, muted)
 - Value: `=BUDGET!B2` (14pt bold, terracotta)
 - Sub-label: "This month" (8pt, muted)
 
-**Card 2 — Spent**
+#### Card 2 — Spent
+
 - Label: "SPENT / DÉPENSES / المصروف"
 - Value: `=BUDGET!D2` (14pt bold, coral if > 80% of income, sage if ≤ 80%)
 - Sub-label: `=TEXT(BUDGET!D2/BUDGET!B2*100,"0")&"% of income"` (8pt, muted)
 
-**Card 3 — Remaining**
+#### Card 3 — Remaining
+
 - Label: "REMAINING / SOLDE / المتبقي"
 - Value: `=BUDGET!F2` (14pt bold, sage if positive, coral if negative)
 - Sub-label: `=IF(BUDGET!F2>=0,"✓ Under budget","⚠ Over budget")` (8pt)
@@ -222,12 +229,13 @@ Each card spans 2 rows, merged cells, card-style border:
 
 REPT-based visual showing spending vs savings split. No chart object.
 
-```
+```text
 Spending   ████████░░  62%
 Savings    ████░░░░░░  38%
 ```
 
 Formulas:
+
 - Spending %: `=BUDGET!D2/BUDGET!B2`
 - Savings %: `=1-(BUDGET!D2/BUDGET!B2)`
 - Bar: `=REPT("█",ROUND(pct*10,0))&REPT("░",10-ROUND(pct*10,0))`
@@ -235,6 +243,7 @@ Formulas:
 ### Right Column — Top Savings Goal (rows 7–10, cols F–J)
 
 Shows the first savings goal from the SAVINGS tab:
+
 - Goal name: `=SAVINGS!A5`
 - Progress bar: `=SAVINGS!G5`
 - Amount: `=SAVINGS!C5&" / "&SAVINGS!B5&" · "&TEXT(SAVINGS!E5,"0%")`
@@ -273,7 +282,8 @@ Shows the first savings goal from the SAVINGS tab:
 **Price:** $9
 
 **Description excerpt:**
-```
+
+```text
 Take control of your money with this clean, easy-to-use Google Sheets budget template.
 
 ✅ WHAT'S INCLUDED (3 tabs):
