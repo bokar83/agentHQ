@@ -81,6 +81,8 @@ Report the final table. If working trees are still dirty, go back to Step 3.
 - Local uses GitHub CLI for auth (no token needed in URL)
 - Local may have untracked files (`??`) that are not in git — these are ignored and do NOT block sync
 - `output/` is a git submodule — if it shows as modified, check inside it with `git -C output status --short` and commit staged/tracked changes inside the submodule before updating the parent pointer
+- `output/apps/*` and `output/websites/*` may themselves be nested submodules — if `output` still shows `m` after committing session_log/calculatorz-site, run `git -C output status --short` and look for lowercase `m` entries, then check each with `git -C output/apps/<name> status --short` and commit tracked changes there too before updating pointers up the chain
+- **The goal is a fully empty source control panel in VSCode.** Every `M` (tracked modified) at every level must be committed and pushed. Only `??` untracked entries and the `.secrets.baseline.new` file are acceptable leftovers.
 
 ## Speed rules
 
