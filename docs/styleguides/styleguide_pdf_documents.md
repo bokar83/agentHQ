@@ -1,7 +1,7 @@
 # PDF Document Design System — Catalyst Works Consulting
 
-**Version:** 2.0
-**Last updated:** 2026-03-29
+**Version:** 2.1
+**Last updated:** 2026-04-16
 **Palette:** Coastal Clarity
 **For:** Boubacar Barry, Founder — Catalyst Works Consulting
 
@@ -422,7 +422,63 @@ This guide uses Coastal Clarity as default. For other document types, use the fo
 
 ---
 
-## PART 8 — PRODUCTION CHECKLIST
+## PART 8 — XHTML2PDF LAYOUT RULES (PISA ENGINE)
+
+These rules apply to all PDFs generated via xhtml2pdf (pisa). They override general CSS assumptions where xhtml2pdf behavior differs from browsers.
+
+### Rule 1: Cover page must be a single full-bleed navy block
+
+The cover page background is `#1B2A4A` applied to the `.cover` wrapper div. Every child element inside `.cover` must use `margin: 0 0 Xmm 0` (no `margin-top` except on the first element's `padding-top`). Using large `margin-top` values on child divs creates visible white gaps between elements against the navy background because xhtml2pdf renders each element's background independently.
+
+**Correct pattern:**
+
+```css
+.cover { background-color: #1B2A4A; padding: 18mm 20mm; height: 297mm; width: 210mm; }
+.cover-category { margin: 0 0 4mm 0; padding-top: 10mm; }
+.cover-title    { margin: 0 0 4mm 0; }
+.cover-gold-bar { margin: 0 0 4mm 0; height: 4px; background-color: #C49A2E; }
+.cover-subtitle { margin: 0 0 5mm 0; }
+.cover-prepared { margin: 0 0 3mm 0; }
+.cover-meta     { margin: 0; }
+```
+
+**Anti-pattern (causes white gaps):**
+
+```css
+.cover-category { margin-top: 16mm; margin-bottom: 8mm; } /* wrong */
+.cover-subtitle { margin-bottom: 12mm; }                  /* too large */
+```
+
+Total rendered height of all cover child elements must fit inside: `297mm - (top padding + bottom padding)`. If any element overflows, it creates a second page with a lone orphaned block on a white background.
+
+### Rule 2: No orphaned heading at bottom of page
+
+A heading that appears at the bottom of a page with no body content following it on the same page is an orphan. This is unprofessional and never acceptable in a final document.
+
+**Required CSS for all headings in xhtml2pdf:**
+
+```css
+h1, h2, h3, h4 {
+    page-break-after: avoid;
+    -pdf-keep-with-next: true;
+}
+```
+
+Both properties are required. `page-break-after: avoid` alone is insufficient in xhtml2pdf. `-pdf-keep-with-next: true` is the pisa-specific property that actually keeps the heading glued to the content that follows it. Never use one without the other.
+
+**What is allowed:** A paragraph that begins on one page and continues on the next. Body text may break across pages. Only headings are subject to this rule.
+
+### Rule 3: No lone block on an otherwise empty page
+
+If a cover page, section header, or callout box is the only content on a page with nothing else following it on that page, it is an orphaned block. Fix by:
+
+1. Reducing element sizes and margins so content fits on its intended page
+2. Using `<pdf:nextpage />` deliberately only when you want a true page break with content immediately following on the next page
+3. Never placing `<pdf:nextpage />` after content that already ends near a page boundary without verifying the next page has sufficient content
+
+---
+
+## PART 9 — PRODUCTION CHECKLIST
 
 Before exporting or sending any PDF, verify every item:
 
