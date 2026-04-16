@@ -121,3 +121,4 @@ tmp_upload/
 
 # Runtime deploy state
 .deploy-sha
+.secrets.baseline.new
