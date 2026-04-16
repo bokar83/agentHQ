@@ -27,7 +27,6 @@ import json
 import shutil
 import argparse
 import subprocess
-import tempfile
 import re
 from pathlib import Path
 from datetime import date
@@ -178,18 +177,27 @@ def infer_title_from_transcript(text, fallback):
 
 def upload_to_drive(txt_path, doc_name, folder_id):
     """Upload txt as Google Doc. Returns Drive file ID."""
-    rel_path = txt_path.relative_to(AGENTSHQ)
-    cmd = [
-        "gws", "drive", "files", "create",
-        "--json", json.dumps({"name": doc_name, "parents": [folder_id], "mimeType": "application/vnd.google-apps.document"}),
-        "--upload", str(rel_path).replace("\\", "/"),
-        "--upload-content-type", "text/plain"
-    ]
-    result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(AGENTSHQ))
-    if result.returncode != 0:
-        raise RuntimeError(f"gws upload failed: {result.stderr[-300:]}")
-    data = json.loads(result.stdout)
-    return data["id"]
+    # Copy to a short fixed name at AGENTSHQ root to avoid Windows path length
+    # issues and special characters breaking the gws --upload relative path.
+    staging = AGENTSHQ / "_upload_staging.txt"
+    shutil.copy2(str(txt_path), str(staging))
+    try:
+        meta = json.dumps({"name": doc_name, "parents": [folder_id], "mimeType": "application/vnd.google-apps.document"})
+        # Use shell=True so Windows shell PATH resolves gws correctly.
+        meta_escaped = meta.replace('"', '\\"')
+        cmd = (
+            f'gws drive files create '
+            f'--json "{meta_escaped}" '
+            f'--upload _upload_staging.txt '
+            f'--upload-content-type text/plain'
+        )
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(AGENTSHQ), shell=True)
+        if result.returncode != 0:
+            raise RuntimeError(f"gws upload failed: {result.stderr[-300:]}")
+        data = json.loads(result.stdout)
+        return data["id"]
+    finally:
+        staging.unlink(missing_ok=True)
 
 
 # ── NotebookLM ───────────────────────────────────────────────────────────────

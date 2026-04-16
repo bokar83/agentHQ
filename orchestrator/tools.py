@@ -23,6 +23,7 @@ import os
 import sys
 import json
 import logging
+import subprocess
 import httpx
 from datetime import datetime
 from typing import Any, Optional
@@ -1574,7 +1575,51 @@ class EnrichLeadsTool(BaseTool):
 
 enrich_leads_tool = EnrichLeadsTool()
 
-RESEARCH_TOOLS = [search_tool, file_reader, QueryMemoryTool()]
+
+NLM_BIN = r"C:\Users\HUAWEI\AppData\Roaming\Python\Python313\Scripts\nlm.exe"
+AUDIENCE_ENGINE_NOTEBOOK_ID = "e246e525-8618-47ef-afd6-e279eed17d37"
+
+
+class QueryAudienceEngineTool(BaseTool):
+    """Query the CW_Audience Engine NotebookLM notebook for audience-building insights."""
+    name: str = "query_audience_engine"
+    description: str = (
+        "Query the CW_Audience Engine NotebookLM notebook — 62 sources including "
+        "AOP course materials, X growth transcripts, and social media playbooks. "
+        "Use this to ground content in proven audience-building tactics and frameworks. "
+        "Input: a specific question about X/LinkedIn growth, content strategy, "
+        "audience building, monetisation, or personal branding. "
+        "Returns synthesised insights with citations from the source material."
+    )
+
+    def _run(self, question: str) -> str:
+        try:
+            env = {**os.environ, "PYTHONUTF8": "1"}
+            result = subprocess.run(
+                [NLM_BIN, "query", "notebook", AUDIENCE_ENGINE_NOTEBOOK_ID, question,
+                 "--json"],
+                capture_output=True, text=True, env=env, timeout=120
+            )
+            if result.returncode != 0:
+                err = result.stderr.strip()
+                if "Authentication" in err or "expired" in err:
+                    return (
+                        "NotebookLM auth expired. Run the following in PowerShell to re-authenticate:\n"
+                        r"& 'C:\Users\HUAWEI\AppData\Roaming\Python\Python313\Scripts\nlm.exe' login"
+                    )
+                return f"Audience Engine query failed: {err[-300:]}"
+            data = json.loads(result.stdout)
+            answer = data.get("value", {}).get("answer", data.get("answer", ""))
+            if not answer:
+                return "No answer returned from Audience Engine."
+            return f"[Audience Engine]\n{answer}"
+        except subprocess.TimeoutExpired:
+            return "Audience Engine query timed out (120s)."
+        except Exception as e:
+            return f"Audience Engine error: {e}"
+
+
+RESEARCH_TOOLS = [search_tool, file_reader, QueryMemoryTool(), QueryAudienceEngineTool()]
 MEMORY_TOOLS = [QueryMemoryTool(), SaveLearningTool()]
 SCRAPING_TOOLS = [FirecrawlScrapeTool(), FirecrawlCrawlTool(), FirecrawlSearchTool()]
 WRITING_TOOLS = [file_writer, SaveOutputTool(), voice_polisher_tool]
