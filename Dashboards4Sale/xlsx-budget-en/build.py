@@ -194,9 +194,114 @@ def build_savings_tab(wb, fmt):
 
 
 def build_dashboard_tab(wb, fmt):
-    """Stub - completed in Task 5."""
     ws = wb.add_worksheet(DASHBOARD_LABEL)
+    ws.set_zoom(90)
+    ws.hide_gridlines(2)
     ws.set_tab_color(COLORS['coral'])
+
+    # Column widths
+    ws.set_column(0, 0, 3)
+    ws.set_column(1, 5, 18)
+    ws.set_column(6, 6, 3)
+
+    # Row 0: banner
+    ws.merge_range(0, 0, 0, 6, DASHBOARD_LABEL, fmt['banner'])
+    ws.set_row(0, 36)
+
+    # Row 1: spacer
+    ws.set_row(1, 8)
+
+    # Rows 2-3: KPI summary
+    ws.set_row(2, 18)
+    ws.set_row(3, 34)
+    ws.set_row(4, 8)  # spacer
+
+    kpi_cards = [
+        {'col': 1, 'label': KPI_LABELS['income'],
+         'formula': f'={BANNER_LABEL}!A3', 'fmt_key': 'kpi_value'},
+        {'col': 2, 'label': KPI_LABELS['spent'],
+         'formula': f'={BANNER_LABEL}!B3', 'fmt_key': 'kpi_value_coral'},
+        {'col': 3, 'label': KPI_LABELS['remaining'],
+         'formula': f'={BANNER_LABEL}!D3', 'fmt_key': 'kpi_value_sage'},
+        {'col': 4, 'label': 'SAVINGS RATE',
+         'formula': f'=IF({BANNER_LABEL}!A3=0,0,{BANNER_LABEL}!D3/{BANNER_LABEL}!A3)',
+         'fmt_key': 'kpi_value'},
+    ]
+    for card in kpi_cards:
+        ws.write(2, card['col'], card['label'], fmt['kpi_label'])
+        ws.write_formula(3, card['col'], card['formula'], fmt[card['fmt_key']])
+
+    # --- Hidden data tables for charts (cols H-M, rows 2+) ---
+    # Spending by category (cols H=7, I=8)
+    expense_cats = [c for c in CATEGORIES
+                    if c not in ('Income', INCOME_TYPE, 'Savings Transfer', 'Other')]
+    ws.write(1, 7, 'Category', fmt['subheader'])
+    ws.write(1, 8, 'Amount',   fmt['subheader'])
+    for i, cat in enumerate(expense_cats):
+        r = 2 + i
+        ws.write(r, 7, cat, fmt['data_normal'])
+        ws.write_formula(r, 8,
+            f'=SUMIF({BANNER_LABEL}!C:C,H{r+1},{BANNER_LABEL}!E:E)',
+            fmt['data_currency'])
+
+    # Income vs Expenses summary (cols K=10, L=11)
+    ws.write(1, 10, 'Category', fmt['subheader'])
+    ws.write(1, 11, 'Amount',   fmt['subheader'])
+    ws.write(2, 10, KPI_LABELS['income'], fmt['data_normal'])
+    ws.write_formula(2, 11, f'={BANNER_LABEL}!A3', fmt['data_currency'])
+    ws.write(3, 10, KPI_LABELS['spent'],  fmt['data_normal'])
+    ws.write_formula(3, 11, f'={BANNER_LABEL}!B3', fmt['data_currency'])
+
+    # --- Donut chart: spending by category ---
+    n_cats = len(expense_cats)
+    palette = [
+        '#C8956C', '#E07A5F', '#81B29A', '#D4A5A5',
+        '#B5C4B1', '#E8C9A0', '#A8B5A2', '#D4956C',
+        '#C4B59A', '#E0C0A0', '#9E8B8B',
+    ]
+    donut = wb.add_chart({'type': 'doughnut'})
+    donut.add_series({
+        'name':       DASHBOARD_LABELS['spending_split'],
+        'categories': [DASHBOARD_LABEL, 2, 7, 1 + n_cats, 7],
+        'values':     [DASHBOARD_LABEL, 2, 8, 1 + n_cats, 8],
+        'data_labels': {'percentage': True, 'separator': '\n',
+                        'font': {'size': 8}},
+        'points': [
+            {'fill': {'color': c}} for c in palette[:n_cats]
+        ],
+    })
+    donut.set_title({'name': DASHBOARD_LABELS['spending_split'],
+                     'name_font': {'bold': True, 'size': 12,
+                                   'color': COLORS['charcoal']}})
+    donut.set_legend({'position': 'bottom', 'font': {'size': 8}})
+    donut.set_size({'width': 380, 'height': 300})
+    donut.set_chartarea({'border': {'color': COLORS['border']},
+                         'fill':   {'color': COLORS['cream']}})
+    donut.set_plotarea({'fill': {'color': COLORS['cream']}})
+    ws.insert_chart(5, 1, donut, {'x_offset': 5, 'y_offset': 5})
+
+    # --- Bar chart: income vs expenses ---
+    bar = wb.add_chart({'type': 'bar'})
+    bar.add_series({
+        'name':       DASHBOARD_LABELS['spending'],
+        'categories': [DASHBOARD_LABEL, 2, 10, 3, 10],
+        'values':     [DASHBOARD_LABEL, 2, 11, 3, 11],
+        'fill':       {'colors': [COLORS['sage'], COLORS['coral']]},
+        'data_labels': {'value': True,
+                        'num_format': '"$"#,##0',
+                        'font': {'size': 9}},
+    })
+    bar.set_title({'name': 'Income vs Expenses',
+                   'name_font': {'bold': True, 'size': 12,
+                                 'color': COLORS['charcoal']}})
+    bar.set_legend({'none': True})
+    bar.set_size({'width': 380, 'height': 240})
+    bar.set_chartarea({'border': {'color': COLORS['border']},
+                       'fill':   {'color': COLORS['cream']}})
+    bar.set_plotarea({'fill': {'color': COLORS['cream']}})
+    ws.insert_chart(21, 1, bar, {'x_offset': 5, 'y_offset': 5})
+
+    ws.freeze_panes(1, 0)
 
 
 if __name__ == '__main__':
