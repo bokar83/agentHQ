@@ -1,7 +1,7 @@
 # FR Etsy Listing
 
 **Title (140 chars max):**
-Modele Budget Mensuel Google Sheets | Tableau de Bord Finances Personnelles | Telechargement Immediat
+Modele Budget Mensuel Excel Tableur | Tableau de Bord Finances Personnelles | Telechargement Immediat
 
 **Price:** 9 EUR
 
@@ -9,7 +9,7 @@ Modele Budget Mensuel Google Sheets | Tableau de Bord Finances Personnelles | Te
 modele budget mensuel, budget mensuel google sheets, tableau de bord budget, suivi depenses, planificateur budget, feuille de calcul budget, budget familial, gestion budget personnel, modele google sheets, tracker depenses, budget 2026, finance personnelle, suivi finances
 
 **Description:**
-Prends le controle de tes finances avec ce modele Google Sheets propre et facile a utiliser.
+Prends le controle de tes finances avec ce tableur propre et facile a utiliser. Compatible Excel et Google Sheets.
 
 ✅ CE QUI EST INCLUS (3 onglets) :
 📋 BUDGET - Saisis tes revenus et depenses par categorie. Le solde se calcule automatiquement.
@@ -20,18 +20,17 @@ Prends le controle de tes finances avec ce modele Google Sheets propre et facile
 - Donnees exemple pre-chargees, fonctionne immediatement apres le telechargement
 - Code couleur : vert = dans les clous, orange = attention
 - Aucune formule a modifier, tu entres juste tes chiffres
-- Fonctionne dans Google Sheets (gratuit), pas besoin d'Excel
-- Acces instantane via un lien Google Sheets apres l'achat
+- Compatible Excel et Google Sheets (importer via Fichier > Importer)
+- Telechargement instantane - fichier .xlsx livre immediatement apres l'achat
 - Menus deroulants pour les categories
 
 📋 COMMENT CA MARCHE :
-1. Clique sur le lien dans ton telechargement
-2. Fichier > Creer une copie (enregistre dans ton Google Drive)
+
+1. Telecharge le fichier .xlsx apres l'achat
+2. Ouvre dans Excel, ou importe dans Google Sheets via Fichier > Importer
 3. Efface les donnees exemple et entre tes propres chiffres
 4. Ton tableau de bord se met a jour automatiquement
 
-Note : Les montants sont en euros. Le modele fonctionne aussi en FCFA, change simplement le symbole de devise dans la colonne Montant.
+Note : Les montants sont en euros. Fonctionne aussi en FCFA, change simplement le symbole de devise.
 
 💬 Des questions ? Envoie-moi un message, je reponds sous 24h.
-
-**Google Sheets link:** https://docs.google.com/spreadsheets/d/1RIsegsg0IPDSvZAepsCa3W9mCBXv0eOwVwW3W31queM
