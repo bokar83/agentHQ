@@ -34,4 +34,4 @@
 
 💬 أي سؤال؟ راسلني، أرد خلال 24 ساعة.
 
-**Google Sheets link:** [ADD AFTER BUILD]
+**Google Sheets link:** https://docs.google.com/spreadsheets/d/103-4d1EfIQMqU7mChds1i8htN7GNMz2TMa2yX8YdoSc

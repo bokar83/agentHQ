@@ -32,4 +32,4 @@ Take control of your money with this clean, easy-to-use Google Sheets budget tem
 
 💬 Questions? Message me - I respond within 24 hours.
 
-**Google Sheets link:** [ADD AFTER BUILD]
+**Google Sheets link:** https://docs.google.com/spreadsheets/d/1-HdMJo1MU9zph7K0mQYTNsHgYTMmA0cv3S-Mb_35nXE

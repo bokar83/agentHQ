@@ -34,4 +34,4 @@ Note : Les montants sont en euros. Le modele fonctionne aussi en FCFA, change si
 
 💬 Des questions ? Envoie-moi un message, je reponds sous 24h.
 
-**Google Sheets link:** [ADD AFTER BUILD]
+**Google Sheets link:** https://docs.google.com/spreadsheets/d/1RIsegsg0IPDSvZAepsCa3W9mCBXv0eOwVwW3W31queM
