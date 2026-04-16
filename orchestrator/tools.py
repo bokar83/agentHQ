@@ -1576,7 +1576,9 @@ class EnrichLeadsTool(BaseTool):
 enrich_leads_tool = EnrichLeadsTool()
 
 
-NLM_BIN = r"C:\Users\HUAWEI\AppData\Roaming\Python\Python313\Scripts\nlm.exe"
+_NLM_LINUX = "/usr/local/bin/nlm"
+_NLM_WINDOWS = r"C:\Users\HUAWEI\AppData\Roaming\Python\Python313\Scripts\nlm.exe"
+NLM_BIN = _NLM_LINUX if os.path.exists(_NLM_LINUX) else _NLM_WINDOWS
 AUDIENCE_ENGINE_NOTEBOOK_ID = "e246e525-8618-47ef-afd6-e279eed17d37"
 
 
@@ -1604,8 +1606,8 @@ class QueryAudienceEngineTool(BaseTool):
                 err = result.stderr.strip()
                 if "Authentication" in err or "expired" in err:
                     return (
-                        "NotebookLM auth expired. Run the following in PowerShell to re-authenticate:\n"
-                        r"& 'C:\Users\HUAWEI\AppData\Roaming\Python\Python313\Scripts\nlm.exe' login"
+                        "NotebookLM auth expired. Run 'nlm login' on the VPS host "
+                        "to re-authenticate, then retry."
                     )
                 return f"Audience Engine query failed: {err[-300:]}"
             data = json.loads(result.stdout)
