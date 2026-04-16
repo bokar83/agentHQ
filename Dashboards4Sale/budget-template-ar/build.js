@@ -16,7 +16,7 @@ const spreadsheetId = sheet.spreadsheetId;
 console.log('Created:', spreadsheetId);
 console.log('URL: https://docs.google.com/spreadsheets/d/' + spreadsheetId);
 
-// Set Arabic locale (ar — Google Sheets does not support ar_MA)
+// Set Arabic locale (ar). Google Sheets API does not support ar_MA; ar is the accepted code.
 batchUpdate(spreadsheetId, [{
   updateSpreadsheetProperties: {
     properties: { locale: 'ar' },
