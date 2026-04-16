@@ -1,5 +1,12 @@
 import { execFileSync } from 'child_process';
 
+// Pre-flight: fail fast with a clear message if gws is not on PATH.
+try {
+  execFileSync('gws', ['--version'], { encoding: 'utf8', stdio: 'pipe' });
+} catch {
+  throw new Error('gws CLI not found on PATH. Ensure gws is installed and accessible in your shell.');
+}
+
 // Calls the gws CLI using execFileSync (no shell — injection-safe).
 // args: array of strings, e.g. ['sheets', 'spreadsheets', 'create']
 // params: object passed as --params JSON
@@ -7,8 +14,13 @@ import { execFileSync } from 'child_process';
 function gws(args, params = {}, body = null) {
   const argv = [...args, '--params', JSON.stringify(params)];
   if (body) argv.push('--json', JSON.stringify(body));
-  const result = execFileSync('gws', argv, { encoding: 'utf8' });
-  return JSON.parse(result);
+  try {
+    const result = execFileSync('gws', argv, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    return JSON.parse(result);
+  } catch (err) {
+    const detail = err.stderr?.trim() || err.message;
+    throw new Error(`gws ${args.join(' ')} failed: ${detail}`);
+  }
 }
 
 export function createSpreadsheet(title) {

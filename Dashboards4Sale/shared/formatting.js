@@ -12,7 +12,9 @@ export function bgColor(sheetId, startRow, endRow, startCol, endCol, color) {
   };
 }
 
-// Text formatting on a cell range
+// Text formatting on a cell range.
+// NOTE: all three properties (bold, fontSize, color) are always written.
+// Supply the full desired state — partial calls will reset unspecified props to defaults.
 export function textFormat(sheetId, startRow, endRow, startCol, endCol,
   { bold = false, fontSize = 10, color = COLORS.charcoal } = {}) {
   return {
