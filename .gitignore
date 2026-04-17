@@ -122,3 +122,6 @@ tmp_upload/
 # Runtime deploy state
 .deploy-sha
 .secrets.baseline.new
+
+docs/design-references/
+docs/design-decisions/
