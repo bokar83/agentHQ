@@ -217,6 +217,16 @@ TASK_TYPES = {
                      "push content", "posts to drive", "content to drive"],
         "crew": "content_drive_crew",
     },
+    "design_review": {
+        "description": "Review and enhance a visual design artifact",
+        "keywords": [
+            "review this design", "enhance this design", "design review",
+            "improve the design", "make this look better", "design feedback",
+            "review the design", "design critique", "enhance the design",
+            "fix the design", "design check", "visual review",
+        ],
+        "crew": "design_review_crew",
+    },
 }
 
 
@@ -246,11 +256,13 @@ def _classify_raw(user_message: str) -> str:
         return "doc_routing"
     if any(kw in msg for kw in TASK_TYPES["notion_capture"]["keywords"]):
         return "notion_capture"
+    if any(kw in msg for kw in TASK_TYPES["design_review"]["keywords"]):
+        return "design_review"
 
     _PRIORITY_CHECKED = {
         "content_push_to_drive", "inline_post_review", "content_review",
         "content_board_fetch", "agent_creation",
-        "forge_kpi_refresh", "doc_routing", "notion_capture",
+        "forge_kpi_refresh", "doc_routing", "notion_capture", "design_review",
     }
     for task_type, config in TASK_TYPES.items():
         if task_type in _PRIORITY_CHECKED:

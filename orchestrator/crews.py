@@ -2623,6 +2623,93 @@ def build_content_board_fetch_crew(user_request: str) -> Crew:
     )
 
 
+def build_design_review_crew(user_request: str) -> Crew:
+    """
+    Crew for: design_review
+    Reviews and enhances an existing visual artifact against the Catalyst Works
+    styleguide (branded output) or the most appropriate awesome-design-md reference.
+
+    Pipeline: design_agent (review + brief) -> web_builder (apply fixes + save)
+
+    Trigger phrases: "review this design", "enhance this design",
+    "design review", "make this look better", "improve the design"
+    """
+    design_agent = build_design_agent()
+    web_builder = build_web_builder_agent()
+
+    design_ctx = DesignContextLoader.load("design_review")
+
+    task_review = Task(
+        description=f"""
+        Review the design of the artifact described or provided in this request.
+
+        REQUEST: {user_request}
+
+        {design_ctx if design_ctx else "(Load styleguide_master.md from docs/styleguides/ for Catalyst Works context)"}
+
+        STEP 1 - Identify the artifact:
+        Extract the HTML content or file path from the request.
+        If no artifact is provided, state: "No artifact provided - cannot review."
+        and stop.
+
+        STEP 2 - Identify the brand context:
+        Is this Catalyst Works branded output? Apply styleguide.
+        Is this non-branded? Load docs/design-references/INDEX.md and identify
+        which reference best fits, or load an existing design_decision.md.
+
+        STEP 3 - Produce a numbered review:
+        For each issue found, provide:
+        [N]. ISSUE: [what is wrong]
+            FIX: [exact value or instruction to apply]
+            BEFORE: [what it currently is]
+            AFTER: [what it should be]
+
+        Minimum 5 issues. Maximum 20. Be specific. Vague feedback is not acceptable.
+        Give exact pixel values, hex codes, and font names.
+
+        STEP 4 - Rate the current design:
+        DESIGN SCORE: [1-10]
+        BIGGEST WIN: [the single change that will have the most impact]
+        """,
+        expected_output="Numbered design review with specific fixes, design score, and biggest win",
+        agent=design_agent,
+    )
+
+    task_apply = Task(
+        description=f"""
+        Apply every fix from the design review to the artifact.
+
+        REQUEST: {user_request}
+
+        Apply each numbered fix from the review. Do not skip any.
+        After applying all fixes, run the builder checklist:
+        - [ ] Clay (#B47C57) appears somewhere if Catalyst Works branded
+        - [ ] No red tones anywhere
+        - [ ] Heading font is Plus Jakarta Sans (not Inter for headlines)
+        - [ ] Specific claim in first visible element (not category description)
+        - [ ] No purple gradients, no three rounded boxes in a row
+
+        OUTPUT FORMAT:
+        FIXES APPLIED: [numbered list matching the review]
+        DESIGN QA: PASSED or DESIGN QA: REVISED - [what was adjusted]
+        DELIVERABLE:
+        [The complete updated HTML file - always included]
+
+        Save using save_output tool.
+        """,
+        expected_output="Complete revised HTML with fixes applied and QA report, saved to outputs",
+        agent=web_builder,
+        context=[task_review],
+    )
+
+    return Crew(
+        agents=[design_agent, web_builder],
+        tasks=[task_review, task_apply],
+        process=Process.sequential,
+        verbose=False,
+    )
+
+
 CREW_REGISTRY = {
     "website_crew":        build_website_crew,
     "app_crew":            build_app_crew,
@@ -2651,6 +2738,7 @@ CREW_REGISTRY = {
     "content_drive_crew":         build_content_push_to_drive_crew,
     "content_board_fetch_crew":   build_content_board_fetch_crew,
     "doc_routing_crew":           build_doc_routing_crew,
+    "design_review_crew":         build_design_review_crew,
     "unknown_crew":               build_unknown_crew,
 }
 
