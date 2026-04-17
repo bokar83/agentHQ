@@ -540,6 +540,13 @@ def build_3d_website_crew(user_request: str) -> Crew:
         PLACEHOLDER: If no video provided, create placeholder canvas with comment
         <!-- DROP FRAMES INTO /public/sequence/ --> and instructions in README
 
+        DESIGN REQUIREMENTS:
+        - Follow the design brief from the Design Intelligence Specialist EXACTLY.
+        - Use the exact hex values, font names, and spacing from the brief.
+        - Do not substitute fonts or colors — use what was specified.
+        - Before returning output, run the builder_checklist from the brief and
+          confirm each item passes. Include "DESIGN QA: PASSED" in your output.
+
         OUTPUT FILES (save to site/ directory):
         - site/app/page.tsx
         - site/components/ScrollCanvas.tsx
