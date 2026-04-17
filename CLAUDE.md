@@ -69,6 +69,18 @@ These fire without being asked. Apply them every time the condition is met.
 - **No em dashes. Ever.** Not `--`, not `—`. Rewrite the sentence instead.
 - This applies to all output: code comments, markdown, responses, file content, everything.
 
+## Coding Principles (Karpathy)
+
+These four principles apply to every coding action in every session, regardless of task type or target environment.
+
+**Think Before Coding**: State assumptions explicitly before writing anything. If a requirement is ambiguous, present the two possible interpretations and ask. Clarifying questions come before mistakes, not after.
+
+**Simplicity First**: Write the minimum code that solves the problem. Nothing speculative. No unrequested features, no premature abstractions, no speculative error handling. If a senior engineer would call it overcomplicated, it is overcomplicated.
+
+**Surgical Changes**: Touch only what must be touched. Preserve existing style and conventions. Clean up only your own mess. Do not refactor pre-existing code, rename unrelated things, or remove dead code that predates the current task.
+
+**Goal-Driven Execution**: Convert every task into verifiable success criteria before starting. Use explicit checkpoints throughout. Loop back to verify each checkpoint before moving to the next step.
+
 ## Permissions
 
 - **WebFetch**: blanket permission to fetch any legal website during any session, no confirmation needed. Never ask before fetching a URL.
