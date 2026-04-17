@@ -54,3 +54,24 @@ def test_load_reference_returns_empty_when_missing(tmp_path, monkeypatch):
     monkeypatch.setattr(DesignContextLoader, "_REFERENCES_DIR", str(tmp_path))
     result = DesignContextLoader.load_reference("nonexistent-brand")
     assert result == ""
+
+
+def test_load_reference_returns_content_from_subdirectory(tmp_path, monkeypatch):
+    """load_reference() finds DESIGN.md inside a named subdirectory."""
+    ref_dir = tmp_path / "design-references"
+    (ref_dir / "stripe").mkdir(parents=True)
+    (ref_dir / "stripe" / "DESIGN.md").write_text("# Stripe\n## Motion\nbrand-blue: #635BFF")
+
+    monkeypatch.setattr(DesignContextLoader, "_REFERENCES_DIR", str(ref_dir))
+
+    result = DesignContextLoader.load_reference("stripe")
+    assert "#635BFF" in result
+
+
+def test_save_and_load_decision_round_trip(tmp_path, monkeypatch):
+    """save_decision() persists content that load_decision() can retrieve."""
+    monkeypatch.setattr(DesignContextLoader, "_DECISIONS_DIR", str(tmp_path / "decisions"))
+    content = "# Decision\nChose Fulani Indigo palette."
+    assert DesignContextLoader.save_decision("catalystworks", content) is True
+    loaded = DesignContextLoader.load_decision("catalystworks")
+    assert loaded == content.strip()

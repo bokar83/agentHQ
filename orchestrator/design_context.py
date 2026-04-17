@@ -90,6 +90,7 @@ class DesignContextLoader:
         Load a single awesome-design-md reference by name (e.g. 'linear', 'stripe').
         Returns "" if the reference file does not exist.
         """
+        reference_name = reference_name.removesuffix(".md")
         # Try exact name first, then with .md extension
         for candidate in [reference_name, f"{reference_name}.md"]:
             path = os.path.join(cls._REFERENCES_DIR, candidate)
@@ -118,7 +119,11 @@ class DesignContextLoader:
         """Save a design decision file. Returns True on success."""
         try:
             os.makedirs(cls._DECISIONS_DIR, exist_ok=True)
-            path = os.path.join(cls._DECISIONS_DIR, f"{project_slug}.md")
+            decisions_real = os.path.realpath(cls._DECISIONS_DIR)
+            path = os.path.realpath(os.path.join(cls._DECISIONS_DIR, f"{project_slug}.md"))
+            if not path.startswith(decisions_real + os.sep) and path != decisions_real:
+                logger.warning(f"Rejected unsafe project_slug: {project_slug!r}")
+                return False
             with open(path, "w", encoding="utf-8") as f:
                 f.write(content)
             return True
