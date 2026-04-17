@@ -20,6 +20,7 @@ Default ICP (override via query string):
 import os
 import json
 import logging
+import time
 import httpx
 from typing import List, Optional
 
@@ -571,6 +572,7 @@ def discover_leads(query: str = "", count: int = DEFAULT_LEAD_COUNT) -> List[dic
             leads.append(lead)
 
     # Step 4: Hunter.io email enrichment for LinkedIn leads missing email
+    # 0.5s delay between calls to avoid 429 rate-limit errors
     logger.info("Hunter: Step 4 — Hunter.io email enrichment for LinkedIn leads")
     for lead in leads:
         if not lead.get("email"):
@@ -583,6 +585,7 @@ def discover_leads(query: str = "", count: int = DEFAULT_LEAD_COUNT) -> List[dic
                 )
                 if email:
                     lead["email"] = email
+                time.sleep(0.5)
             # For any lead with a non-LinkedIn URL, try Hunter domain search
             elif lead.get("linkedin_url") and "linkedin.com" not in lead.get("linkedin_url", ""):
                 domain = _extract_domain(lead["linkedin_url"])
@@ -593,6 +596,7 @@ def discover_leads(query: str = "", count: int = DEFAULT_LEAD_COUNT) -> List[dic
                     email = _hunter_find_email(domain, first, last)
                     if email:
                         lead["email"] = email
+                time.sleep(0.5)
 
     # Step 5: Apollo fallback blocked on free plan — skipped
     if len(leads) < 5:
