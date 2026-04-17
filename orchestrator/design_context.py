@@ -18,9 +18,15 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Base directories — resolved relative to this file for Docker compatibility
+# Base directories — resolved relative to this file for Docker compatibility.
+# In the Docker container the app root is /app and design_context.py lives at
+# /app/design_context.py, so docs/ is a sibling of __file__, not a sibling of
+# the parent directory.  We check both locations so the code works whether run
+# from the project root (development) or from the flat container layout.
 _BASE = os.path.dirname(os.path.abspath(__file__))
-_DOCS_DIR = os.path.join(_BASE, "..", "docs")
+_DOCS_SIBLING = os.path.join(_BASE, "docs")
+_DOCS_PARENT  = os.path.join(_BASE, "..", "docs")
+_DOCS_DIR = _DOCS_SIBLING if os.path.isdir(_DOCS_SIBLING) else _DOCS_PARENT
 
 
 class DesignContextLoader:
