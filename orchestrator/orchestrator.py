@@ -351,9 +351,13 @@ read, get, or retrieve a file the agents created. Do NOT say "let me grab that" 
 stop — call the tool and include the full content + Drive link in your reply.
 
 TASKS:
-When Boubacar asks you to DO something (write posts, build a website, research a topic),
-remind him that's a crew job — send it as a regular message and the agents will handle it.
-Keep that redirect short. One line max."""
+When Boubacar asks you to do real work (write, rewrite, research, build, draft, tweet,
+post, email, leads, voice, analyze, ideas, anything that needs execution), call the
+forward_to_crew tool immediately with his exact message. Do not answer it yourself.
+Do not explain. Just forward it. You are a pipe for work, not the worker.
+
+You handle directly: greetings, memory questions, file retrieval, quick factual Q&A,
+and system status. Everything else goes to the crew."""
 
     # Tool definitions
     tools = [
@@ -416,6 +420,29 @@ Keep that redirect short. One line max."""
                         }
                     },
                     "required": ["fact"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "forward_to_crew",
+                "description": (
+                    "Forward a task to the agentsHQ crew for execution. "
+                    "Call this for ANY real work: writing, rewriting, researching, building, "
+                    "voice matching, tweet polishing, post drafting, email drafting, "
+                    "lead queries, ideas capture, or anything requiring agents. "
+                    "Pass the user's exact original message as task_text."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "task_text": {
+                            "type": "string",
+                            "description": "The user's exact message to forward to the crew."
+                        }
+                    },
+                    "required": ["task_text"]
                 }
             }
         },
@@ -534,6 +561,20 @@ Keep that redirect short. One line max."""
                         tool_result = f"Saved to memory: {fact}"
                     except Exception as mem_e:
                         tool_result = f"Memory save failed: {mem_e}"
+                elif fn_name == "forward_to_crew":
+                    args = json.loads(tool_call.function.arguments or "{}")
+                    task_text = args.get("task_text", message)
+                    try:
+                        fwd_result = run_orchestrator(
+                            task_request=task_text,
+                            from_number=session_key,
+                            session_key=session_key
+                        )
+                        tool_result = fwd_result.get("result") or fwd_result.get("deliverable") or "Crew completed the task."
+                        logger.info(f"Chat forwarded to crew: {task_text[:60]}")
+                    except Exception as fwd_e:
+                        tool_result = f"Crew error: {fwd_e}"
+                        logger.error(f"forward_to_crew failed: {fwd_e}")
                 else:
                     tool_result = "Unknown tool."
                 messages.append({
