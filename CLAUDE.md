@@ -81,6 +81,18 @@ These four principles apply to every coding action in every session, regardless 
 
 **Goal-Driven Execution**: Convert every task into verifiable success criteria before starting. Use explicit checkpoints throughout. Loop back to verify each checkpoint before moving to the next step.
 
+## Hyperframes Video Production Skill
+
+- Skill location: skills/hyperframes/
+- Soul file: skills/hyperframes/SKILL.md
+- Implementation: skills/hyperframes/skill.py
+- Knowledge doc: docs/agentsHQ-hyperframes-knowledge-update.md
+- Phase gate: Phase 0 = knowledge only. Phase 1 = active.
+- To activate: set PHASE_GATE = "phase_1" in skill.py after first revenue confirmed.
+- Relationship to website_build: sibling skill. Both write HTML. Different output
+  contexts. Do not merge. See SKILL.md for full distinction.
+- Prompt guide: [hyperframes.heygen.com/guides/prompting](https://hyperframes.heygen.com/guides/prompting)
+
 ## Permissions
 
 - **WebFetch**: blanket permission to fetch any legal website during any session, no confirmation needed. Never ask before fetching a URL.

@@ -273,3 +273,11 @@ Before calling this done:
 | Scroll feels too fast | Increase container height: 500vh–600vh |
 | useSpring jitter | Reduce stiffness to 60, increase damping to 40 |
 | Build fails | Requires Node 18+: `node --version` |
+
+---
+
+## Related Skills
+
+- hyperframes: Use when the brief requires a companion video (social hook video,
+  animated findings brief, product demo). Hyperframes is a sibling skill, not
+  part of this skill. Invoke it independently. Do not merge HTML outputs.

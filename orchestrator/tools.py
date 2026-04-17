@@ -43,54 +43,59 @@ from pydantic import Field
 
 from firecrawl_tools import FirecrawlScrapeTool, FirecrawlCrawlTool, FirecrawlSearchTool
 
-# Import Phase 2 Skills
+from orchestrator.health import health_registry
+
 # Core hunter + CRM imports — must not fail silently
 try:
     from skills.local_crm.crm_tool import add_lead, log_interaction, update_lead_status, get_daily_scoreboard, update_lead_email, get_lead_by_name, get_uncontacted_leads, mark_outreach_sent
+    health_registry.register("CRM", "healthy")
 except ImportError as e:
-    logger_pre = __import__("logging").getLogger(__name__)
-    logger_pre.warning(f"crm_tool import failed: {e}")
-    def add_lead(*args, **kwargs): return "crm_not_ready"
-    def log_interaction(*args, **kwargs): return False
-    def update_lead_status(*args, **kwargs): return False
-    def get_daily_scoreboard(*args, **kwargs): return {}
-    def update_lead_email(*args, **kwargs): return False
-    def get_lead_by_name(*args, **kwargs): return {}
-    def mark_outreach_sent(*args, **kwargs): return {"marked": 0, "leads": []}
+    health_registry.register("CRM", "unhealthy", message=str(e))
+    def add_lead(*args, **kwargs): return "ERROR: CRM Skill not ready. Dependency issue: " + str(e)
+    def log_interaction(*args, **kwargs): return "ERROR: CRM Skill not ready. Dependency issue: " + str(e)
+    def update_lead_status(*args, **kwargs): return "ERROR: CRM Skill not ready."
+    def get_daily_scoreboard(*args, **kwargs): return "ERROR: CRM Skill not ready."
+    def update_lead_email(*args, **kwargs): return "ERROR: CRM Skill not ready."
+    def get_lead_by_name(*args, **kwargs): return "ERROR: CRM Skill not ready."
+    def mark_outreach_sent(*args, **kwargs): return {"marked": 0, "leads": [], "error": "CRM_OFFLINE"}
 
 try:
     from skills.serper_skill.hunter_tool import discover_leads, reveal_email_for_lead
+    health_registry.register("Prospecting", "healthy")
 except ImportError as e:
-    logger_pre = __import__("logging").getLogger(__name__)
-    logger_pre.warning(f"hunter_tool import failed: {e}")
-    def discover_leads(*args, **kwargs): return []
-    def reveal_email_for_lead(*args, **kwargs): return None
+    health_registry.register("Prospecting", "unhealthy", message=str(e))
+    def discover_leads(*args, **kwargs): return "ERROR: Discovery Skill not ready. Dependency issue: " + str(e)
+    def reveal_email_for_lead(*args, **kwargs): return "ERROR: Hunter Skill not ready."
 
 try:
     from skills.cli_hub.cli_hub_tool import execute_cli_hub_action
-except ImportError:
-    def execute_cli_hub_action(*args, **kwargs): return "cli_hub_not_ready"
+    health_registry.register("CLI Hub", "healthy")
+except ImportError as e:
+    health_registry.register("CLI Hub", "unhealthy", message=str(e))
+    def execute_cli_hub_action(*args, **kwargs): return "ERROR: CLI Hub Skill not ready. Dependency issue: " + str(e)
 
 # GitHub & Notion Skill Imports
 try:
     from skills.github_skill.github_tool import create_repo, create_issue, create_file
-except ImportError:
-    def create_repo(*args, **kwargs): return "github_not_ready"
-    def create_issue(*args, **kwargs): return "github_not_ready"
-    def create_file(*args, **kwargs): return "github_not_ready"
+    health_registry.register("GitHub", "healthy")
+except ImportError as e:
+    health_registry.register("GitHub", "unhealthy", message=str(e))
+    def create_repo(*args, **kwargs): return "ERROR: GitHub Skill not ready. Dependency issue: " + str(e)
+    def create_issue(*args, **kwargs): return "ERROR: GitHub Skill not ready."
+    def create_file(*args, **kwargs): return "ERROR: GitHub Skill not ready."
 
 try:
     from skills.notion_cli.notion_cli import NotionCLI
     from skills.notion_stylist.notion_stylist import NotionStylist
-    # from skills.HunterAgent.utils.supabase_client import SupabaseClient  # module does not exist
     from skills.notion_skill.notion_tool import search_databases, create_page, append_block
-except ImportError:
-    def search_databases(*args, **kwargs): return []
-    def create_page(*args, **kwargs): return "notion_not_ready"
-    def append_block(*args, **kwargs): return False
+    health_registry.register("Notion", "healthy")
+except ImportError as e:
+    health_registry.register("Notion", "unhealthy", message=str(e))
+    def search_databases(*args, **kwargs): return "ERROR: Notion Skill not ready: " + str(e)
+    def create_page(*args, **kwargs): return "ERROR: Notion Skill not ready."
+    def append_block(*args, **kwargs): return "ERROR: Notion Skill not ready."
     NotionStylist = None
     NotionCLI = None
-    SupabaseClient = None
 
 try:
     from skills.mermaid_diagrammer.skill import mermaid_tool
@@ -98,6 +103,15 @@ except ImportError as e:
     logger_pre = __import__("logging").getLogger(__name__)
     logger_pre.warning(f"mermaid_diagrammer import failed: {e}")
     mermaid_tool = None
+
+# Hyperframes video production skill
+try:
+    from skills.hyperframes.skill import get_hyperframes_tool
+    hyperframes_tool = get_hyperframes_tool()
+except ImportError as e:
+    logger_pre = __import__("logging").getLogger(__name__)
+    logger_pre.warning(f"hyperframes skill import failed: {e}")
+    hyperframes_tool = None
 
 logger = logging.getLogger(__name__)
 
@@ -115,21 +129,25 @@ class LaunchVercelAppTool(BaseTool):
         clean_name = app_name.replace("-app", "")
         prod_flag = "--prod" if is_prod else ""
         
-        # Use relative path for best compatibility with various bash environments on Windows
-        base_dir = "D:/Ai_Sandbox/agentsHQ"
-        script_path = "skills/vercel-launch/scripts/launch.sh"
+        # Use dynamic base directory for cross-platform support
+        base_dir = os.getcwd()
+        script_path = os.path.join("skills", "vercel-launch", "scripts", "launch.sh")
         
+        # Cross-platform bash execution: on Windows, we usually have Git Bash 'bash' in PATH
+        # On Linux/VCN, 'bash' is standard.
         cmd = f"bash \"{script_path}\" \"{clean_name}\" {prod_flag}"
-        logger.info(f"Executing Vercel Launch: {cmd}")
+        logger.info(f"Executing Vercel Launch: {cmd} in {base_dir}")
         
-        import subprocess
         try:
             # We use bash (Git Bash on Windows) to execute the .sh script
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=base_dir)
             if result.returncode != 0:
-                return f"Error launching app:\nSTDOUT: {result.stdout}\nSTDERR: {result.stderr}"
+                error_msg = f"Error launching app:\nSTDOUT: {result.stdout}\nSTDERR: {result.stderr}"
+                logger.error(f"Vercel Launch Failed: {error_msg}")
+                return error_msg
             return result.stdout
         except Exception as e:
+            logger.error(f"Vercel Launch Exception: {e}")
             return f"System exception during launch: {str(e)}"
 
 # Instantiate core tools
@@ -401,10 +419,22 @@ FORGE_TOOLS = [forge_log_tool, forge_pipeline_tool, forge_content_tool]
 #   catalystworks.ai@gmail.com           → GOOGLE_OAUTH_CREDENTIALS_JSON_CW (legacy alias)
 # ══════════════════════════════════════════════════════════════
 
+# Dynamic credentials pathing for cross-platform support
+def _get_default_creds_path(filename: str) -> str:
+    """Resolve credentials path based on environment."""
+    # Try /app/secrets first (Docker/Production)
+    docker_path = os.path.join("/", "app", "secrets", filename)
+    if os.path.exists(docker_path):
+        return docker_path
+    
+    # Fallback to local secrets directory in the workspace
+    local_path = os.path.abspath(os.path.join(os.getcwd(), "secrets", filename))
+    return local_path
+
 _GWS_CREDS_MAP = {
-    "bokar83@gmail.com": os.environ.get("GOOGLE_OAUTH_CREDENTIALS_JSON", "/app/secrets/gws-oauth-credentials.json"),
-    "boubacar@catalystworks.consulting": os.environ.get("GOOGLE_OAUTH_CREDENTIALS_JSON_CW", "/app/secrets/gws-oauth-credentials-cw.json"),
-    "catalystworks.ai@gmail.com": os.environ.get("GOOGLE_OAUTH_CREDENTIALS_JSON_CW", "/app/secrets/gws-oauth-credentials-cw.json"),
+    "bokar83@gmail.com": os.environ.get("GOOGLE_OAUTH_CREDENTIALS_JSON", _get_default_creds_path("gws-oauth-credentials.json")),
+    "boubacar@catalystworks.consulting": os.environ.get("GOOGLE_OAUTH_CREDENTIALS_JSON_CW", _get_default_creds_path("gws-oauth-credentials-cw.json")),
+    "catalystworks.ai@gmail.com": os.environ.get("GOOGLE_OAUTH_CREDENTIALS_JSON_CW", _get_default_creds_path("gws-oauth-credentials-cw.json")),
 }
 _GWS_DEFAULT_ACCOUNT = "bokar83@gmail.com"
 
@@ -1629,3 +1659,4 @@ CODE_TOOLS = [t for t in [code_interpreter, file_writer, file_reader, SaveOutput
 ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool(), GitHubRepoTool(), GitHubIssueTool(), GitHubFileTool(), NotionSearchTool(), NotionPageTool(), launch_vercel_tool] + VERCEL_TOOLS + NOTION_STYLING_TOOLS + FORGE_TOOLS + GWS_TOOLS
 HUNTER_TOOLS = [prospecting_tool, crm_add_tool, crm_log_tool, crm_reveal_tool, enrich_leads_tool, scoreboard_tool, QueryMemoryTool(), NotionPageTool(), forge_pipeline_tool, forge_log_tool]
 OUTREACH_TOOLS = [crm_uncontacted_tool, crm_reveal_tool, crm_log_tool, scoreboard_tool, crm_mark_sent_tool]
+HYPERFRAMES_TOOLS = [t for t in [hyperframes_tool] if t is not None]

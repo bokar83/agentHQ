@@ -131,18 +131,18 @@ _last_quote_index: int = -1
 
 def send_message(chat_id: str, text: str) -> None:
     """Send a plain text message to a Telegram chat. Truncates at 4096 chars."""
-    # Mirror all outgoing orchestrator messages to Remoat for remote tracking
-    log_for_remoat(text)
+    from utils import sanitize_text
+    clean_text = sanitize_text(text)
     
     if not ORCHESTRATOR_BOT_TOKEN or not chat_id:
         print("ERROR: ORCHESTRATOR_TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set in .env", file=sys.stderr)
         return
-    if len(text) > 4096:
-        text = text[:4090] + "\n[...]"
+    if len(clean_text) > 4096:
+        clean_text = clean_text[:4090] + "\n[...]"
     try:
         resp = requests.post(
             f"{TELEGRAM_API_BASE}/sendMessage",
-            json={"chat_id": str(chat_id), "text": text},
+            json={"chat_id": str(chat_id), "text": clean_text},
             timeout=10,
         )
         if resp.status_code != 200:
@@ -155,15 +155,18 @@ def log_for_remoat(message: str, category: str = "NOTIFICATION"):
     Standardized log format for Remoat to capture and forward to Telegram.
     category: NOTIFICATION | APPROVAL | PROGRESS | ERROR | ANALYSIS
     """
+    from utils import sanitize_text
+    safe_message = sanitize_text(message)
+
     # 1. Print to stdout for terminal capture (The primary Remoat bridge)
-    print(f"\n[REMOAT:{category}] {message}")
+    print(f"\n[REMOAT:{category}] {safe_message}")
     sys.stdout.flush()
     
     # 2. Direct Mirror (If tokens are initialized)
     if REMOAT_API_BASE and REMOAT_CHAT_ID:
         try:
             # Handle long messages by truncating/splitting
-            clean_text = f"[{category}] {message}"
+            clean_text = f"[{category}] {safe_message}"
             if len(clean_text) > 4096:
                 clean_text = clean_text[:4090] + "..."
                 
@@ -788,7 +791,9 @@ def send_email(subject: str, body: str, to_addresses: list = None, html: bool = 
         logger.info(f"Email report sent successfully to {len(targets)} addresses.")
         return True
     except Exception as e:
-        logger.error(f"Email delivery failed: {e}")
+        from utils import sanitize_text
+        safe_error = sanitize_text(str(e))
+        logger.error(f"Email delivery failed: {safe_error}")
         return False
 
 
