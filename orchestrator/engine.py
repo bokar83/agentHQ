@@ -272,6 +272,7 @@ def _build_summary(task_type: str, full_output: str, files_created: list, execut
         "general_writing": "Document ready",
         "agent_creation": "Agent proposal submitted",
         "gws_task": "Google Workspace task complete",
+        "design_review": "Design review complete",
         "unknown": "Task complete",
     }
 
