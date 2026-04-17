@@ -43,7 +43,7 @@ from pydantic import Field
 
 from firecrawl_tools import FirecrawlScrapeTool, FirecrawlCrawlTool, FirecrawlSearchTool
 
-from orchestrator.health import health_registry
+from health import health_registry
 
 # Core hunter + CRM imports — must not fail silently
 try:

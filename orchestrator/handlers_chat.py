@@ -18,7 +18,7 @@ def _is_praise(text: str) -> bool:
 
 def _is_feedback_on_prior_job(text: str, chat_id: str) -> bool:
     """Detect if the user is providing corrective feedback on the last job."""
-    from orchestrator.state import _last_completed_job
+    from state import _last_completed_job
     
     if chat_id not in _last_completed_job:
         return False
@@ -36,7 +36,7 @@ def handle_feedback(text: str, chat_id: str):
     if os.environ.get("MEMORY_LEARNING_ENABLED", "false").lower() != "true":
         return
         
-    from orchestrator.state import _last_completed_job
+    from state import _last_completed_job
     from notifier import send_message
     
     if _is_praise(text) and chat_id in _last_completed_job:

@@ -7,11 +7,11 @@ import httpx
 from datetime import datetime
 from typing import Optional
 
-from orchestrator.state import _last_completed_job, _active_project
-from orchestrator.engine import run_orchestrator
-from orchestrator.constants import SAVE_REQUIRED_TASK_TYPES
-from orchestrator.handlers_chat import handle_feedback
-from orchestrator.handlers_doc import handle_doc_emoji
+from state import _last_completed_job, _active_project
+from engine import run_orchestrator
+from constants import SAVE_REQUIRED_TASK_TYPES
+from handlers_chat import handle_feedback
+from handlers_doc import handle_doc_emoji
 
 logger = logging.getLogger("agentsHQ.handlers")
 
@@ -44,7 +44,7 @@ async def process_telegram_update(update: dict):
     
     from notifier import send_message as _send, send_briefing
     from router import classify_task, extract_metadata
-    from orchestrator.worker import _run_background_job
+    from worker import _run_background_job
     
     message = update.get("message") or update.get("edited_message")
     if not message:
