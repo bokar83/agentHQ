@@ -47,8 +47,10 @@ from agents import (
     build_seo_auditor_agent,
     build_notion_visual_architect_agent, # Added
     build_content_reviewer_agent,
+    build_design_agent,
     get_llm,
 )
+from design_context import DesignContextLoader
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +91,10 @@ def build_website_crew(user_request: str) -> Crew:
     copywriter = build_copywriter_agent()
     web_builder = build_web_builder_agent()
     qa = build_qa_agent()
+
+    # Design layer — silent fallback if styleguide files not found
+    design_ctx = DesignContextLoader.load("website_build")
+    design_agent = build_design_agent() if design_ctx else None
 
     task_plan = Task(
         description=f"""
@@ -155,6 +161,55 @@ def build_website_crew(user_request: str) -> Crew:
         context=[task_plan, task_research]
     )
 
+    task_design_brief = None
+    if design_agent:
+        task_design_brief = Task(
+            description=f"""
+            Produce a concrete design brief for this website build.
+
+            REQUEST: {user_request}
+
+            {design_ctx}
+
+            STEP 1 — Identify output type:
+            If the request mentions "catalyst works", "boubacar", "my consulting",
+            "our brand", "cw", or "catalystworks.consulting": this is Catalyst Works
+            branded output. State: "Loaded Catalyst Works Styleguide v1.0 — 2026-03-29."
+            Use the injected styleguide above. Skip steps 2-4.
+
+            STEP 2 — Check for prior design decision:
+            Check docs/design-decisions/ for a file matching a slug from the request.
+            If found, load and use it. Skip step 3.
+
+            STEP 3 — Extract client brand (if URL in request):
+            Use firecrawl_scrape on any client URL to extract brand colors (hex),
+            fonts, logo URL, tone. Use this to inform reference selection.
+
+            STEP 4 — Select from docs/design-references/INDEX.md:
+            Read the index. Pick the reference that best matches the project type
+            and emotional register. State: "Using [name] reference because [reason]."
+
+            STEP 5 — Produce the brief with ALL of:
+            - background_color: #hex
+            - primary_text_color: #hex
+            - accent_color: #hex
+            - secondary_color: #hex
+            - border_color: #hex
+            - heading_font: [name] | import: [Google Fonts URL]
+            - body_font: [name] | import: [Google Fonts URL]
+            - mono_font: [name] | import: [Google Fonts URL]
+            - spacing_base: [px]
+            - button_radius: [px]
+            - card_style: [description]
+            - max_width: [px]
+            - anti_patterns: [3 specific things NOT to do for this output]
+            - builder_checklist: [5 items the builder must verify before returning]
+            """,
+            expected_output="Complete design brief with all token values, font imports, and builder checklist",
+            agent=design_agent,
+            context=[task_plan, task_research],
+        )
+
     task_build = Task(
         description=f"""
         Build a complete, production-ready HTML website using all the copy above.
@@ -172,10 +227,11 @@ def build_website_crew(user_request: str) -> Crew:
         - All copy from the Copywriter used verbatim
 
         DESIGN REQUIREMENTS:
-        - Use the design direction from the plan
-        - Professional, polished appearance
-        - Clear visual hierarchy
-        - Accessible color contrast ratios
+        - Follow the design brief from the Design Intelligence Specialist EXACTLY.
+        - Use the exact hex values, font names, and spacing from the brief.
+        - Do not substitute fonts or colors — use what was specified.
+        - Before returning output, run the builder_checklist from the brief and
+          confirm each item passes. Include "DESIGN QA: PASSED" in your output.
 
         OUTPUT:
         - The COMPLETE HTML file. Start with <!DOCTYPE html>. End with </html>.
@@ -184,7 +240,7 @@ def build_website_crew(user_request: str) -> Crew:
         """,
         expected_output="A complete HTML file starting with <!DOCTYPE html> and ending with </html>, saved to outputs",
         agent=web_builder,
-        context=[task_plan, task_research, task_copy]
+        context=[task_plan, task_research, task_copy] + ([task_design_brief] if task_design_brief else [])
     )
 
     task_seo = Task(
@@ -249,8 +305,8 @@ def build_website_crew(user_request: str) -> Crew:
     )
 
     return Crew(
-        agents=[planner, researcher, copywriter, web_builder, qa],
-        tasks=[task_plan, task_research, task_copy, task_build, task_seo, task_qa],
+        agents=[planner, researcher, copywriter] + ([design_agent] if design_agent else []) + [web_builder, qa],
+        tasks=[task_plan, task_research, task_copy] + ([task_design_brief] if task_design_brief else []) + [task_build, task_seo, task_qa],
         process=Process.sequential,
         verbose=False,
         memory=False,
@@ -269,6 +325,10 @@ def build_3d_website_crew(user_request: str) -> Crew:
     web_builder_3d = build_3d_web_builder_agent()
     seo_auditor = build_seo_auditor_agent()
     qa = build_qa_agent()
+
+    # Design layer — 3D websites share the website_build styleguide
+    design_ctx = DesignContextLoader.load("website_build")
+    design_agent = build_design_agent() if design_ctx else None
 
     task_plan = Task(
         description=f"""
@@ -347,6 +407,55 @@ def build_3d_website_crew(user_request: str) -> Crew:
         agent=intelligence,
         context=[task_intelligence]
     )
+
+    task_design_brief = None
+    if design_agent:
+        task_design_brief = Task(
+            description=f"""
+            Produce a concrete design brief for this 3D website build.
+
+            REQUEST: {user_request}
+
+            {design_ctx}
+
+            STEP 1 — Identify output type:
+            If the request mentions "catalyst works", "boubacar", "my consulting",
+            "our brand", "cw", or "catalystworks.consulting": this is Catalyst Works
+            branded output. State: "Loaded Catalyst Works Styleguide v1.0 — 2026-03-29."
+            Use the injected styleguide above. Skip steps 2-4.
+
+            STEP 2 — Check for prior design decision:
+            Check docs/design-decisions/ for a file matching a slug from the request.
+            If found, load and use it. Skip step 3.
+
+            STEP 3 — Extract client brand (if URL in request):
+            Use firecrawl_scrape on any client URL to extract brand colors (hex),
+            fonts, logo URL, tone. Use this to inform reference selection.
+
+            STEP 4 — Select from docs/design-references/INDEX.md:
+            Read the index. Pick the reference that best matches the project type
+            and emotional register. State: "Using [name] reference because [reason]."
+
+            STEP 5 — Produce the brief with ALL of:
+            - background_color: #hex
+            - primary_text_color: #hex
+            - accent_color: #hex
+            - secondary_color: #hex
+            - border_color: #hex
+            - heading_font: [name] | import: [Google Fonts URL]
+            - body_font: [name] | import: [Google Fonts URL]
+            - mono_font: [name] | import: [Google Fonts URL]
+            - spacing_base: [px]
+            - button_radius: [px]
+            - card_style: [description]
+            - max_width: [px]
+            - anti_patterns: [3 specific things NOT to do for this output]
+            - builder_checklist: [5 items the builder must verify before returning]
+            """,
+            expected_output="Complete design brief with all token values, font imports, and builder checklist",
+            agent=design_agent,
+            context=[task_plan, task_competitive_report],
+        )
 
     task_asset_prompts = Task(
         description=f"""
@@ -440,7 +549,7 @@ def build_3d_website_crew(user_request: str) -> Crew:
         """,
         expected_output="Complete Next.js project files saved to site/ directory",
         agent=web_builder_3d,
-        context=[task_plan, task_intelligence, task_asset_prompts]
+        context=[task_plan, task_intelligence, task_asset_prompts] + ([task_design_brief] if task_design_brief else [])
     )
 
     task_seo = Task(
@@ -512,8 +621,8 @@ def build_3d_website_crew(user_request: str) -> Crew:
     )
 
     return Crew(
-        agents=[planner, intelligence, asset_prompter, web_builder_3d, seo_auditor, qa],
-        tasks=[task_plan, task_intelligence, task_competitive_report, task_asset_prompts, task_3d_build, task_seo, task_qa],
+        agents=[planner, intelligence, asset_prompter] + ([design_agent] if design_agent else []) + [web_builder_3d, seo_auditor, qa],
+        tasks=[task_plan, task_intelligence, task_competitive_report] + ([task_design_brief] if task_design_brief else []) + [task_asset_prompts, task_3d_build, task_seo, task_qa],
         process=Process.sequential,
         verbose=False,
         memory=False,
@@ -614,6 +723,10 @@ def build_consulting_crew(user_request: str, metadata: dict = None) -> Crew:
     researcher = build_researcher_agent()
     qa = build_qa_agent()
 
+    # Design layer — silent fallback if styleguide files not found
+    design_ctx = DesignContextLoader.load("consulting_deliverable")
+    design_agent = build_design_agent() if design_ctx else None
+
     task_plan = Task(
         description=f"""
         Plan a consulting deliverable for:
@@ -709,19 +822,78 @@ DELIVERABLE:
         # Fallback: original single-consultant path
         consultant = build_consulting_agent()
 
+        task_design_brief = None
+        if design_agent:
+            task_design_brief = Task(
+                description=f"""
+                Produce a concrete design brief for this consulting deliverable.
+
+                REQUEST: {user_request}
+
+                {design_ctx}
+
+                STEP 1 — Identify output type:
+                If the request mentions "catalyst works", "boubacar", "my consulting",
+                "our brand", "cw", or "catalystworks.consulting": this is Catalyst Works
+                branded output. State: "Loaded Catalyst Works Styleguide v1.0 — 2026-03-29."
+                Use the injected styleguide above. Skip steps 2-4.
+
+                STEP 2 — Check for prior design decision:
+                Check docs/design-decisions/ for a file matching a slug from the request.
+                If found, load and use it. Skip step 3.
+
+                STEP 3 — Extract client brand (if URL in request):
+                Use firecrawl_scrape on any client URL to extract brand colors (hex),
+                fonts, logo URL, tone. Use this to inform reference selection.
+
+                STEP 4 — Select from docs/design-references/INDEX.md:
+                Read the index. Pick the reference that best matches the project type
+                and emotional register. State: "Using [name] reference because [reason]."
+
+                STEP 5 — Produce the brief with ALL of:
+                - background_color: #hex
+                - primary_text_color: #hex
+                - accent_color: #hex
+                - secondary_color: #hex
+                - border_color: #hex
+                - heading_font: [name] | import: [Google Fonts URL]
+                - body_font: [name] | import: [Google Fonts URL]
+                - mono_font: [name] | import: [Google Fonts URL]
+                - spacing_base: [px]
+                - button_radius: [px]
+                - card_style: [description]
+                - max_width: [px]
+                - anti_patterns: [3 specific things NOT to do for this output]
+                - builder_checklist: [5 items the builder must verify before returning]
+
+                NOTE: This is a consulting deliverable. If Catalyst Works branded,
+                focus on PDF document specs: cover page (#1B2A4A background, #C49A2E gold rule),
+                Plus Jakarta Sans headings, Source Serif 4 body text, callout box styling.
+                """,
+                expected_output="Complete design brief with all token values, font imports, and builder checklist",
+                agent=design_agent,
+                context=[task_plan, task_research],
+            )
+
         task_consult = Task(
             description=f"""
             Create the consulting deliverable for:
             REQUEST: {user_request}
 
-            Apply Theory of Constraints thinking where relevant.
+            DESIGN REQUIREMENTS:
+            - Follow the design brief from the Design Intelligence Specialist EXACTLY.
+            - Use the exact hex values, font names, and spacing from the brief.
+            - Do not substitute fonts or colors — use what was specified.
+            - Before returning output, run the builder_checklist from the brief and
+              confirm each item passes. Include "DESIGN QA: PASSED" in your output.
+
             Be analytically rigorous. Be direct. Avoid filler.
             Every recommendation must be specific and implementable.
             Save using save_output.
             """,
             expected_output="Complete consulting deliverable saved to outputs",
             agent=consultant,
-            context=[task_plan, task_research]
+            context=[task_plan, task_research] + ([task_design_brief] if task_design_brief else [])
         )
 
         task_qa = Task(
@@ -742,8 +914,8 @@ DELIVERABLE:
         )
 
         return Crew(
-            agents=[planner, researcher, consultant, qa],
-            tasks=[task_plan, task_research, task_consult, task_qa],
+            agents=[planner, researcher] + ([design_agent] if design_agent else []) + [consultant, qa],
+            tasks=[task_plan, task_research] + ([task_design_brief] if task_design_brief else []) + [task_consult, task_qa],
             process=Process.sequential,
             verbose=False,
             memory=False,
@@ -1091,6 +1263,10 @@ def build_app_crew(user_request: str) -> Crew:
     app_builder = build_app_builder_agent()
     qa = build_qa_agent()
 
+    # Design layer — silent fallback if styleguide files not found
+    design_ctx = DesignContextLoader.load("app_build")
+    design_agent = build_design_agent() if design_ctx else None
+
     task_plan = Task(
         description=f"""
         Plan the web application for:
@@ -1112,16 +1288,73 @@ def build_app_crew(user_request: str) -> Crew:
         context=[task_plan]
     )
 
+    task_design_brief = None
+    if design_agent:
+        task_design_brief = Task(
+            description=f"""
+            Produce a concrete design brief for this app build.
+
+            REQUEST: {user_request}
+
+            {design_ctx}
+
+            STEP 1 — Identify output type:
+            If the request mentions "catalyst works", "boubacar", "my consulting",
+            "our brand", "cw", or "catalystworks.consulting": this is Catalyst Works
+            branded output. State: "Loaded Catalyst Works Styleguide v1.0 — 2026-03-29."
+            Use the injected styleguide above. Skip steps 2-4.
+
+            STEP 2 — Check for prior design decision:
+            Check docs/design-decisions/ for a file matching a slug from the request.
+            If found, load and use it. Skip step 3.
+
+            STEP 3 — Extract client brand (if URL in request):
+            Use firecrawl_scrape on any client URL to extract brand colors (hex),
+            fonts, logo URL, tone. Use this to inform reference selection.
+
+            STEP 4 — Select from docs/design-references/INDEX.md:
+            Read the index. Pick the reference that best matches the project type
+            and emotional register. State: "Using [name] reference because [reason]."
+
+            STEP 5 — Produce the brief with ALL of:
+            - background_color: #hex
+            - primary_text_color: #hex
+            - accent_color: #hex
+            - secondary_color: #hex
+            - border_color: #hex
+            - heading_font: [name] | import: [Google Fonts URL]
+            - body_font: [name] | import: [Google Fonts URL]
+            - mono_font: [name] | import: [Google Fonts URL]
+            - spacing_base: [px]
+            - button_radius: [px]
+            - card_style: [description]
+            - max_width: [px]
+            - anti_patterns: [3 specific things NOT to do for this output]
+            - builder_checklist: [5 items the builder must verify before returning]
+            """,
+            expected_output="Complete design brief with all token values, font imports, and builder checklist",
+            agent=design_agent,
+            context=[task_plan, task_research],
+        )
+
     task_build = Task(
         description=f"""
         Build the complete web application for:
         REQUEST: {user_request}
+
+        DESIGN REQUIREMENTS:
+        - Follow the design brief from the Design Intelligence Specialist EXACTLY.
+        - Use the exact hex values, font names, and spacing from the brief.
+        - Do not substitute fonts or colors — use what was specified.
+        - Before returning output, run the builder_checklist from the brief and
+          confirm each item passes. Include "DESIGN QA: PASSED" in your output.
+
         All functionality working. Clean UX. Handles edge cases.
         Save using save_output.
         """,
         expected_output="Complete working web application saved to outputs",
         agent=app_builder,
-        context=[task_plan, task_research]
+        context=[task_plan, task_research] + ([task_design_brief] if task_design_brief else [])
     )
 
     task_qa = Task(
@@ -1142,8 +1375,8 @@ def build_app_crew(user_request: str) -> Crew:
     )
 
     return Crew(
-        agents=[planner, researcher, app_builder, qa],
-        tasks=[task_plan, task_research, task_build, task_qa],
+        agents=[planner, researcher] + ([design_agent] if design_agent else []) + [app_builder, qa],
+        tasks=[task_plan, task_research] + ([task_design_brief] if task_design_brief else []) + [task_build, task_qa],
         process=Process.sequential,
         verbose=False,
         memory=False,
