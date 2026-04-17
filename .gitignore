@@ -127,5 +127,12 @@ docs/design-references/*.md
 !docs/design-references/INDEX.md
 docs/design-decisions/
 
+# IDE and tooling directories
+.windsurf/
+.agents/
+
+# External community skill library (cloned separately on each machine, not managed here)
+skills/community/
+
 # Hyperframes skill registry lock (external tool, content hashes flagged as false positives)
 skills-lock.json
