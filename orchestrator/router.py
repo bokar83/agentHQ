@@ -66,6 +66,9 @@ TASK_TYPES = {
             "ready to publish", "is it ready", "review this post", "review my post",
             "can we make it stronger", "improve my voice", "improve our reach",
             "strengthen the post", "polish this post", "voice check this",
+            "make this tweet", "make this post", "make this better",
+            "rewrite this", "in my voice", "full on boubacar",
+            "not my voice", "write in my voice",
         ],
         "crew": "social_crew",
     },
@@ -96,6 +99,7 @@ TASK_TYPES = {
             "leads by status", "leads with email", "leads replied", "leads booked",
             "show me leads", "list leads", "who have been contacted", "contacted leads",
             "crm summary", "leads industry", "how many prospects",
+            "open leads", "how many open", "uncontacted leads",
         ],
         "crew": "crm_query_crew",
     },
@@ -125,7 +129,7 @@ TASK_TYPES = {
     },
     "voice_polishing": {
         "description": "Humanizing content with Boub AI Voice",
-        "keywords": ["humanize", "polish", "voice match"],
+        "keywords": ["humanize", "polish", "voice match", "boub voice", "boubacar voice"],
         "crew": "voice_crew",
     },
     "hunter_task": {
