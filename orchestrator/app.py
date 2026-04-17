@@ -9,21 +9,21 @@ from typing import Optional
 from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Depends, Header, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
-from orchestrator.constants import SAVE_REQUIRED_TASK_TYPES
-from orchestrator.state import _active_project, _git_lock
-from orchestrator.schemas import (
+from constants import SAVE_REQUIRED_TASK_TYPES
+from state import _active_project, _git_lock
+from schemas import (
     TaskRequest, TaskResponse, TeamTaskRequest, StatusResponse, 
     AsyncTaskResponse, JobStatusResponse, HealthReportRequest,
     SyncSessionRequest, ChatTokenRequest
 )
-from orchestrator.health import health_registry
-from orchestrator.engine import run_orchestrator, run_team_orchestrator
-from orchestrator.worker import _run_background_job
-from orchestrator.handlers import (
+from health import health_registry
+from engine import run_orchestrator, run_team_orchestrator
+from worker import _run_background_job
+from handlers import (
     process_telegram_update, telegram_polling_loop, run_chat, 
     _shortcut_classify, _classify_obvious_chat
 )
-from orchestrator.utils import _extract_file_text, _query_system, _build_summary, _save_overflow_if_needed
+from utils import _extract_file_text, _query_system, _build_summary, _save_overflow_if_needed
 
 logger = logging.getLogger("agentsHQ.app")
 _start_time = time.time()

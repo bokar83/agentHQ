@@ -1,8 +1,8 @@
 import threading
 import logging
 from typing import Optional
-from orchestrator.constants import SAVE_REQUIRED_TASK_TYPES
-from orchestrator.engine import run_orchestrator
+from constants import SAVE_REQUIRED_TASK_TYPES
+from engine import run_orchestrator
 
 logger = logging.getLogger("agentsHQ.worker")
 

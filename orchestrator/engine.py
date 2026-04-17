@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 from typing import Optional
 
-from orchestrator.constants import MEMORY_GATED_TASK_TYPES
+from constants import MEMORY_GATED_TASK_TYPES
 
 logger = logging.getLogger("agentsHQ.engine")
 
