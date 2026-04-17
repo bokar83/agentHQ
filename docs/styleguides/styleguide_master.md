@@ -6,6 +6,52 @@
 
 ---
 
+## AGENT USAGE — Read This First
+
+**Version check:** State "Loaded Catalyst Works Styleguide v1.0 — 2026-03-29" in your output before producing any branded artifact. This confirms the correct file was loaded.
+
+**Which files to load by output type:**
+- Website / App: this file + `styleguide_websites.md`
+- PDF / Consulting report: this file + `styleguide_pdf_documents.md`
+- LinkedIn post: this file + `styleguide_linkedin.md`
+- X (Twitter) post: this file + `styleguide_x_twitter.md` + `styleguide_linkedin.md`
+- Markdown document: this file + `styleguide_markdown.md`
+
+**Identifying Catalyst Works output:**
+Output is Catalyst Works branded if the request contains any of: "catalyst works", "boubacar", "my consulting", "our brand", "cw report", "our website", "catalystworks.consulting", or is being built for Boubacar's personal brand. When in doubt, treat it as Catalyst Works branded.
+
+**Self-scoring checklist (run before returning any visual output):**
+- [ ] Clay (#B47C57) appears somewhere in this artifact (border, icon, accent element)
+- [ ] Midnight Navy (#071A2E) is used as the structural dark anchor (hero, nav, or footer)
+- [ ] No red tones anywhere — not for errors, warnings, or any UI state
+- [ ] Plus Jakarta Sans is used for headings/display text (not Inter for headlines)
+- [ ] Inter is used for body text and UI labels only — never as a display or headline font
+- [ ] JetBrains Mono is used for any data, code, or numeric callouts
+- [ ] First visible element leads with a specific claim, not a category description
+- [ ] No purple gradients, no three rounded boxes in a row, no stock illustration faces
+
+**Anti-patterns — never repeat these in any Catalyst Works output:**
+1. Purple gradients as primary or accent color
+2. Three rounded boxes in a row as a "features" or "services" section
+3. Generic centered hero on white background with stock illustration
+4. Excited preamble copy: "We're thrilled to...", "Transform your...", "Unlock your potential"
+5. Orange (#FF7A00) as a large section background (accent only, max 10% of colored elements)
+6. Inter used as a display font at hero scale (Inter is body text; Plus Jakarta Sans is headlines)
+7. Shadow-on-every-card pattern (rounded-2xl + shadow-lg applied uniformly to all cards)
+8. Nested bullet points in any content (signals PowerPoint thinking, not clear reasoning)
+9. Generic CTAs: "Get started", "Click here", "Contact us", "Learn more"
+10. Any content that starts with "I'm excited to share" or "Hot take:"
+
+**Typography update (supersedes all earlier references to Inter as heading font):**
+- Headlines / Display: Plus Jakarta Sans (weights 600, 700, 800)
+  - Google Fonts import: `https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&display=swap`
+- Body text / UI labels: Inter (weights 400, 500, 600)
+  - Google Fonts import: `https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap`
+- Data / Code / Numeric callouts: JetBrains Mono (weight 400)
+  - Google Fonts import: `https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap`
+
+---
+
 ## The Brand in Three Words
 
 **Precise. Grounded. Earned.**
