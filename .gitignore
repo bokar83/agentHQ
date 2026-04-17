@@ -123,5 +123,6 @@ tmp_upload/
 .deploy-sha
 .secrets.baseline.new
 
-docs/design-references/
+docs/design-references/*.md
+!docs/design-references/INDEX.md
 docs/design-decisions/
