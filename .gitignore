@@ -126,3 +126,6 @@ tmp_upload/
 docs/design-references/*.md
 !docs/design-references/INDEX.md
 docs/design-decisions/
+
+# Hyperframes skill registry lock (external tool, content hashes flagged as false positives)
+skills-lock.json
