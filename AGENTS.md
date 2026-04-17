@@ -168,6 +168,12 @@ This is how the system teaches itself.
 
 ---
 
+## Skills Registry
+
+| Skill | Purpose | Status |
+| :--- | :--- | :--- |
+| hyperframes | Video production -- generates Hyperframes HTML compositions for MP4/WebM rendering via headless Chrome + FFmpeg. Sibling to website_build, not an extension of it. | Phase 1 (phase-gated, inactive in Phase 0) |
+
 ## Adding New Skills
 
 Skills are reusable capabilities that agents can invoke. When an agent needs a capability it doesn't have:

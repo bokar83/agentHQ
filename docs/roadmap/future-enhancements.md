@@ -79,4 +79,48 @@ permission model (Allow/Deny/Ask) and path constraints.
 
 ---
 
-_Last updated: 2026-04-08_
+## Inbound Lead Routine (Claude Code Routines + Webhook)
+
+**What it is:**
+A webhook-triggered Claude Code Routine that fires when a prospect submits the discovery 
+intake form. The Routine researches the lead's business, drafts a personalized welcome 
+email in Boubacar's voice, and logs details to the Notion Consulting Pipeline.
+
+**Why it matters:**
+- Immediate response to hot leads with high-context research.
+- Automates the CRM logging and initial outreach drafting phase.
+- Maintains brand voice consistency without manual intervention.
+
+**Architecture & Implementation Notes:**
+- **Trigger:** API webhook (not cron).
+- **Memory:** Stateless by design. Output written to Notion/PostgreSQL.
+- **Connectors:** Notion, Gmail (draft mode only).
+- **n8n Role:** Plumbing and routing. Routine role: judgment and drafting.
+- **Dependencies:** After first revenue / first inbound lead received.
+
+---
+
+## Media & Video Production: kie.ai Integration
+
+**What it is:**
+Integration of **kie.ai** as the primary engine for image and video generation. Similar to 
+OpenRouter, kie.ai provides a unified API to access multiple state-of-the-art media 
+creation tools and models.
+
+**Why it matters:**
+- **Consolidated API:** Reduces the need to maintain separate integrations for Midjourney, 
+  Runway, Pika, etc.
+- **Flexibility:** Allows the system to swap underlying models for the best output 
+  quality without changing code.
+- **Workflow Speed:** Simplifies the pipeline for HyperFrames and social content generation.
+
+**Tasks/Reminders:**
+- [ ] Add `KIE_AI_API_KEY` to the `.env` file.
+- [ ] Implement a `kie_media` skill that wraps the API for both image and video prompts.
+- [ ] Wire the skill into the `app_builder` and `hyperframes` workflows.
+
+---
+
+_Last updated: 2026-04-17_
+
+
