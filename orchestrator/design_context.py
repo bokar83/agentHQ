@@ -79,7 +79,7 @@ class DesignContextLoader:
 
         combined = "\n\n---\n\n".join(sections)
         return (
-            "\n\n=== CATALYST WORKS DESIGN SYSTEM (READ BEFORE BUILDING) ===\n\n"
+            "\n\n=== CATALYST WORKS DESIGN SYSTEM ===\n\n"
             + combined
             + "\n\n=== END DESIGN SYSTEM ===\n"
         )
