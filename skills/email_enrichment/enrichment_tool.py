@@ -25,6 +25,7 @@ import sys
 import os
 import re
 import httpx
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -486,7 +487,8 @@ def enrich_missing_emails(limit: int = 999) -> dict:
     web_prospects = []
     results = []
 
-    for lead in leads:
+    def _enrich_one(lead: dict) -> dict:
+        """Enrich a single lead. Runs in a thread pool — no shared mutable state."""
         lead_id = lead["id"]
         name = lead.get("name", "")
         company = lead.get("company", "")
@@ -494,10 +496,10 @@ def enrich_missing_emails(limit: int = 999) -> dict:
         has_email = bool(lead.get("email"))
         has_phone = bool(lead.get("phone"))
         has_linkedin = bool(linkedin_url)
-        processed += 1
         found_email = None
         found_phone = None
         found_linkedin = None
+        is_web_prospect = False
 
         logger.info(f"Enrichment: processing {name} ({company})...")
 
@@ -507,35 +509,27 @@ def enrich_missing_emails(limit: int = 999) -> dict:
         if not website and not has_email:
             note = f"[{today}] Enriched — no website found. Flagged as web prospect."
             _write_note(conn, lead_id, note)
-            no_website_count += 1
-            web_prospects.append({"name": name, "company": company, "industry": lead.get("industry")})
+            is_web_prospect = True
             logger.info(f"Enrichment: {company} -- no website found, flagged as web prospect")
         elif website and not has_email:
             # ── Step 2: Scrape website for email ─────────────────
-            found_email, scrape_note, _ = _scrape_for_email(website)
+            found_email, _scrape_note, _ = _scrape_for_email(website)
             if found_email:
                 _save_email(conn, lead_id, found_email)
-                emails_found += 1
                 has_email = True
                 _write_note(conn, lead_id, f"[{today}] Enriched — email found via scrape: {found_email}")
             else:
                 _write_note(conn, lead_id, f"[{today}] Enriched — no email found after scraping.")
 
         # ── Step 3: Prospeo fallback ─────────────────────────────
-        # Rules:
-        #   - Has email: skip Prospeo entirely (ready for outreach already)
-        #   - No email: try email lookup (1 credit)
-        #   - No email + IS priority + Prospeo returned no email: try phone (10 credits)
         is_priority = bool(lead.get("priority"))
         if not has_email:
-            # First pass: email only (1 credit)
             prospeo = _prospeo_enrich(
                 name=name,
                 company=company,
                 linkedin_url=linkedin_url or None,
                 want_phone=False,
             )
-            # If priority and still no email found, escalate to phone (10 credits)
             if not prospeo.get("email") and is_priority and not has_phone:
                 prospeo = _prospeo_enrich(
                     name=name,
@@ -543,15 +537,13 @@ def enrich_missing_emails(limit: int = 999) -> dict:
                     linkedin_url=linkedin_url or None,
                     want_phone=True,
                 )
-            if prospeo.get("email") and not has_email:
+            if prospeo.get("email"):
                 _save_email(conn, lead_id, prospeo["email"])
-                emails_found += 1
                 has_email = True
                 found_email = prospeo["email"]
                 _write_note(conn, lead_id, f"[{today}] Enriched — email found via Prospeo: {prospeo['email']}")
             if prospeo.get("phone") and not has_phone:
                 _save_phone(conn, lead_id, prospeo["phone"])
-                phones_found += 1
                 has_phone = True
                 found_phone = prospeo["phone"]
                 _write_note(conn, lead_id, f"[{today}] Enriched — mobile found via Prospeo: {prospeo['phone']}")
@@ -563,18 +555,41 @@ def enrich_missing_emails(limit: int = 999) -> dict:
             found_linkedin = _find_linkedin(name, company)
             if found_linkedin:
                 _save_linkedin(conn, lead_id, found_linkedin)
-                linkedin_found += 1
                 _write_note(conn, lead_id, f"[{today}] Enriched — LinkedIn: {found_linkedin}")
 
-        results.append({
+        return {
             "id": lead_id,
             "name": name,
             "company": company,
+            "industry": lead.get("industry"),
             "email_found": found_email,
             "phone_found": found_phone,
             "linkedin_found": found_linkedin,
             "has_website": bool(website),
-        })
+            "is_web_prospect": is_web_prospect,
+        }
+
+    # Run enrichment in parallel — 5 threads keeps Prospeo within rate limits
+    with ThreadPoolExecutor(max_workers=5) as pool:
+        futures = {pool.submit(_enrich_one, lead): lead for lead in leads}
+        for future in as_completed(futures):
+            try:
+                r = future.result()
+            except Exception as e:
+                lead = futures[future]
+                logger.error(f"Enrichment: unhandled error for {lead.get('name')}: {e}")
+                continue
+            processed += 1
+            if r["email_found"]:
+                emails_found += 1
+            if r["phone_found"]:
+                phones_found += 1
+            if r["linkedin_found"]:
+                linkedin_found += 1
+            if r["is_web_prospect"]:
+                no_website_count += 1
+                web_prospects.append({"name": r["name"], "company": r["company"], "industry": r["industry"]})
+            results.append(r)
 
     conn.close()
     still_missing = sum(1 for r in results if not r["email_found"] and not r["phone_found"])
