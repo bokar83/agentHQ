@@ -205,9 +205,11 @@ def _log_and_update(lead_id: int, subject: str, lead_name: str = ""):
         cur.execute("""
             UPDATE leads
             SET email_drafted_at = %s,
+                status = 'messaged',
+                last_contacted_at = %s,
                 updated_at = %s
             WHERE id = %s
-        """, (now, now, lead_id))
+        """, (now, now, now, lead_id))
         conn.commit()
         cur.close()
         conn.close()
