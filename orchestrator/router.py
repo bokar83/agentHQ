@@ -25,12 +25,12 @@ TASK_TYPES = {
     "website_build": {
         "description": "Premium landing page / website build",
         "keywords": ["website", "landing page", "web presence", "build a site", "site layout"],
-        "crew": "web_builder_crew",
+        "crew": "website_crew",
     },
     "app_build": {
         "description": "Interactive web app / tool build",
         "keywords": ["app", "tool", "calculator", "dashboard", "form", "tracker", "build an app"],
-        "crew": "app_builder_crew",
+        "crew": "app_crew",
     },
     "vercel_task": {
         "description": "Vercel deployment & monitoring",
@@ -45,12 +45,12 @@ TASK_TYPES = {
     "notion_task": {
         "description": "Notion database & architecting",
         "keywords": ["notion", "database", "log", "page", "dashboard", "wiki"],
-        "crew": "notion_crew",
+        "crew": "notion_overhaul",
     },
     "practice_runner_task": {
         "description": "Practice Runner Mission execution",
         "keywords": ["practice runner", "marathon prep", "running prep", "training plan"],
-        "crew": "practice_runner_crew",
+        "crew": "unknown_crew",
     },
     "research_report": {
         "description": "Research & report writing",
@@ -84,7 +84,7 @@ TASK_TYPES = {
     "linkedin_x_campaign": {
         "description": "Multi-platform content campaign",
         "keywords": ["linkedin and x", "7 posts", "post campaign", "linkedin x posts", "content series"],
-        "crew": "griot_crew",
+        "crew": "linkedin_x_crew",
     },
     "code_task": {
         "description": "Code engineering & debugging",
@@ -130,7 +130,7 @@ TASK_TYPES = {
     "voice_polishing": {
         "description": "Humanizing content with Boub AI Voice",
         "keywords": ["humanize", "polish", "voice match", "boub voice", "boubacar voice"],
-        "crew": "voice_crew",
+        "crew": "voice_polisher_crew",
     },
     "hunter_task": {
         "description": "Lead sourcing & prospect hunting",
@@ -140,7 +140,7 @@ TASK_TYPES = {
     "skill_build": {
         "description": "Building new tools & skills (CLI-Anything)",
         "keywords": ["colonize", "build tool", "wrap software", "cli-anything"],
-        "crew": "skill_builder_crew",
+        "crew": "unknown_crew",
     },
     "agent_creation": {
         "description": "Create a new agent or skill for the agentsHQ system",
