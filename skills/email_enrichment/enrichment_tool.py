@@ -75,6 +75,21 @@ _DIRECTORY_DOMAINS = [
     "angieslist.com", "houzz.com", "thumbtack.com", "bark.com",
     "clutch.co", "upcity.com", "expertise.com", "goodfirms.io",
     "indeed.com", "glassdoor.com", "mapquest.com", "whitepages.com",
+    # Legal/professional directories
+    "avvo.com", "justia.com", "lawyers.com", "findlaw.com", "martindale.com",
+    "lawinfo.com", "attorney.com", "nolo.com", "hg.org",
+    # Business/trade directories
+    "buzzfile.com", "dnb.com", "corporationwiki.com", "bizapedia.com",
+    "opencorporates.com", "corporationwiki.com", "signalhire.com",
+    "lusha.com", "contactout.com", "hunter.io", "clearbit.com",
+    # Review/listing sites
+    "trustpilot.com", "g2.com", "capterra.com", "getapp.com",
+    "birdview.com", "homeadvisor.com", "angi.com", "porch.com",
+    # General aggregators
+    "wikipedia.org", "wikidata.org", "w3.org",
+    # Q&A / misc
+    "justanswer.com", "quora.com", "reddit.com", "medium.com",
+    "substack.com", "patreon.com", "alignable.com",
 ]
 
 
@@ -437,7 +452,10 @@ def _prospeo_enrich(name: str, company: str, linkedin_url: str = None,
     if mobile_data.get("revealed") and mobile_data.get("mobile"):
         found_phone = mobile_data.get("mobile_international") or mobile_data.get("mobile")
 
-    return {"email": found_email, "phone": found_phone, "error": None}
+    # Extract company domain — useful for scraping even when email is UNAVAILABLE
+    company_domain = resp.get("company", {}).get("domain") or resp.get("company", {}).get("website")
+
+    return {"email": found_email, "phone": found_phone, "error": None, "company_domain": company_domain}
 
 
 # ── Main entry point ─────────────────────────────────────────────
@@ -529,19 +547,31 @@ def enrich_missing_emails(limit: int = 999) -> dict:
                 company=company,
                 linkedin_url=linkedin_url or None,
                 want_phone=False,
-            )
+            ) or {"email": None, "phone": None, "error": "none_returned"}
             if not prospeo.get("email") and is_priority and not has_phone:
                 prospeo = _prospeo_enrich(
                     name=name,
                     company=company,
                     linkedin_url=linkedin_url or None,
                     want_phone=True,
-                )
+                ) or {"email": None, "phone": None, "error": "none_returned"}
             if prospeo.get("email"):
                 _save_email(conn, lead_id, prospeo["email"])
                 has_email = True
                 found_email = prospeo["email"]
                 _write_note(conn, lead_id, f"[{today}] Enriched — email found via Prospeo: {prospeo['email']}")
+            elif prospeo.get("company_domain") and not has_email:
+                # Prospeo returned a verified company domain even though email was UNAVAILABLE
+                # Use it to scrape the actual business site directly
+                domain_url = prospeo["company_domain"]
+                if not domain_url.startswith("http"):
+                    domain_url = f"https://{domain_url}"
+                scrape_email, _note, _ = _scrape_for_email(domain_url)
+                if scrape_email:
+                    _save_email(conn, lead_id, scrape_email)
+                    has_email = True
+                    found_email = scrape_email
+                    _write_note(conn, lead_id, f"[{today}] Enriched — email scraped from Prospeo domain {prospeo['company_domain']}: {scrape_email}")
             if prospeo.get("phone") and not has_phone:
                 _save_phone(conn, lead_id, prospeo["phone"])
                 has_phone = True
