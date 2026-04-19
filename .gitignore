@@ -136,3 +136,4 @@ skills/community/
 
 # Hyperframes skill registry lock (external tool, content hashes flagged as false positives)
 skills-lock.json
+.claude/worktrees/
