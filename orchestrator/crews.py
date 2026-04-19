@@ -1997,7 +1997,12 @@ def build_notion_capture_crew(user_request: str) -> Crew:
     review_triggers = [
         "review my ideas", "what ideas", "show my ideas", "pull up my ideas",
         "list my ideas", "what's in my ideas", "whats in my ideas",
-        "read my ideas", "see my ideas",
+        "read my ideas", "see my ideas", "my list of ideas", "list of ideas",
+        "send me my ideas", "show me my ideas", "show me ideas", "all ideas",
+        "ideas list", "retrieve ideas", "get my ideas", "fetch my ideas",
+        "pull my ideas", "top ideas", "see ideas", "ideas database",
+        "suggestions on what i should do", "a list of my ideas", "list of my ideas",
+        "see a list of",
     ]
     is_review = any(t in lower for t in review_triggers)
 
