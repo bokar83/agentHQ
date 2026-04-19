@@ -332,7 +332,7 @@ def _llm_classify(user_message: str) -> str:
             },
         )
         response = client.chat.completions.create(
-            model="anthropic/claude-haiku-4-5",
+            model="anthropic/claude-haiku-4.5",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_message},
@@ -345,10 +345,10 @@ def _llm_classify(user_message: str) -> str:
         if result in TASK_TYPES:
             logger.info(f"LLM router classified '{user_message[:60]}' as '{result}'")
             return result
-        logger.warning(f"LLM router returned unrecognised type '{result}' — falling back to unknown")
+        logger.warning(f"LLM router returned unrecognised type '{result!r}' for message '{user_message[:60]}' — falling back to unknown")
         return "unknown"
     except Exception as e:
-        logger.warning(f"LLM router failed ({e}) — falling back to unknown")
+        logger.error(f"LLM router exception ({type(e).__name__}: {e}) — falling back to unknown")
         return "unknown"
 
 
@@ -383,9 +383,9 @@ def get_crew_type(task_type: str) -> str:
 
 
 def extract_metadata(user_message: str) -> dict:
-    """Extract basic metadata from a user message."""
-    task_type = _classify_raw(user_message)
-    return {"task_type": task_type, "crew": get_crew_type(task_type)}
+    """Extract basic metadata from a user message. Uses full classify_task (LLM fallback included)."""
+    result = classify_task(user_message)
+    return {"task_type": result["task_type"], "crew": result["crew"]}
 
 
 def get_crew_for_task(task_type: str) -> str:
