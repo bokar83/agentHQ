@@ -44,6 +44,16 @@ These fire without being asked. Apply them every time the condition is met.
 **Trigger**: Any task that produces a website, UI, or visual artifact — catalystworks-site, Baobab app, any HTML/CSS output.
 **Action**: Invoke `superpowers:brainstorming` before writing any code. Spin up the localhost visual companion showing 3 design options with pros/cons. Do not write a single line of UI code until the user picks an option.
 
+### awesome-design-md Reference — Mandatory for All Website Work
+**Trigger**: Any task that creates, updates, or reviews a website or HTML/CSS artifact.
+**Action** (non-negotiable, every time, no exceptions):
+1. Read `docs/design-references/INDEX.md` to select the most appropriate reference brand for this project type
+2. Read the matching `docs/design-references/{brand}.md` file (run `bash scripts/fetch_design_references.sh` first if the file is missing)
+3. For Catalyst Works output: also load `docs/styleguides/styleguide_master.md` + `docs/styleguides/styleguide_websites.md`
+4. Apply the selected design reference throughout — colors, typography, spacing, tone, layout patterns
+5. Run the styleguide self-scoring checklist before returning any visual output
+Do not write a single line of HTML/CSS before steps 1-3 are complete.
+
 ### Parallel Agent Dispatching
 **Trigger**: User message contains 2 or more independent tasks (e.g. "update outreach copy + scan Drive + update Notion").
 **Action**: Invoke `superpowers:dispatching-parallel-agents`. Do not execute sequentially. Dispatch sub-agents in parallel for each independent task.
