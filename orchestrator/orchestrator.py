@@ -1184,14 +1184,12 @@ def _shortcut_classify(msg: str):
 
 def _classify_obvious_chat(msg: str) -> bool:
     """
-    Fast pre-check before calling the LLM classifier.
-    Returns True if the message is almost certainly casual chat,
-    so we can skip classification and go straight to run_chat().
+    Returns True only for unmistakable single-word greetings with no task content.
+    Everything else goes through classify_task (LLM fallback included).
+    This prevents the heuristic from swallowing short natural-language task requests.
     """
-    m = msg.strip().lower()
-    return (
-        len(m) < 60 and not any(w in m for w in _TASK_KEYWORDS)
-    ) or m.startswith(_CHAT_PREFIXES)
+    m = msg.strip().lower().rstrip("!.,?")
+    return m in {"hi", "hey", "hello", "thanks", "thank you", "morning", "good morning", "good evening"}
 
 
 # ══════════════════════════════════════════════════════════════
@@ -1780,10 +1778,8 @@ async def process_telegram_update(update: dict):
         task_type = "chat"
         classification = {"task_type": "chat", "confidence": 0.95, "is_unknown": False, "has_email_followup": False}
     else:
-        from router import classify_task, extract_metadata
+        from router import classify_task
         classification = classify_task(text)
-        metadata = extract_metadata(text)
-        classification.update(metadata)
         task_type = classification.get("task_type", "unknown")
 
     # 2. Send briefing (no-op for chat; includes crew + one-line plan for tasks)
@@ -1985,10 +1981,8 @@ async def run_task(request: TaskRequest, background_tasks: BackgroundTasks):
         task_type = "chat"
         classification = {"task_type": "chat", "confidence": 0.95, "is_unknown": False, "has_email_followup": False}
     else:
-        from router import classify_task, extract_metadata
+        from router import classify_task
         classification = classify_task(request.task)
-        metadata = extract_metadata(request.task)
-        classification.update(metadata)
         task_type = classification.get("task_type", "unknown")
 
     send_briefing(request.from_number, task_type, request.task)
