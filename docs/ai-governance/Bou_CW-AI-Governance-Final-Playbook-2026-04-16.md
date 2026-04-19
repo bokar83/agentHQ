@@ -16,7 +16,7 @@ project: AI Governance Practice Launch
 
 > **NOTE:** This playbook integrates four source documents: the original Strategic Review, the AI Governance Practitioner Toolkit (Prompt B), the prior CW AI Governance Playbook, and the Boubacar CW AI Governance Playbook 2026 (V3). It was pressure-tested through two Sankofa Council passes and a third final pass on the V3 document. Every regulatory claim was verified against primary sources. Every pricing, positioning, and conversion mechanism was reviewed by five voices. The document is ordered for execution, not for reading.
 
-> **NOTE:** Session length distinction: the **Signal Session** (the productized $497 offer) is **45 minutes**. The **SHIELD Assessment kickoff diagnostic** (internal delivery session) is **60 minutes**. These are two different contexts. Do not conflate them in client-facing materials.
+> **NOTE:** Session length distinction: the **Signal Session** (the productized $497 offer) is **90 minutes**. The **SHIELD Assessment kickoff diagnostic** (internal delivery session) is **90 to 120 minutes** (TBD, pending first live engagements). These are two different contexts. Do not conflate them in client-facing materials.
 
 
 ## Document Map
@@ -92,7 +92,7 @@ Two actions per day for 14 days. Execute in order. If a day is missed, the next 
 - First beta Signal Session scheduled or in active conversation.
 
 **Day 9 (Tuesday):**
-- First beta Signal Session delivered (45 minutes). One-page posture summary produced within 24 hours.
+- First beta Signal Session delivered (90 minutes). One-page posture summary produced within 24 hours.
 - Send 10 more cold emails from new list additions.
 
 **Day 10 (Wednesday):**
@@ -233,7 +233,7 @@ Signature: title, firm name, one URL only. No phone number. No banner. No quote.
 
 ### 1.11 The Beta Session Pitch (for Network Contacts)
 
-*"[Name], I'm testing a new diagnostic I'm calling the Signal Session. 45 minutes, structured, I ask 11 questions about how AI is being used in your firm. You get back a one-page written summary of where you are and what to work on. No charge. I'm looking for two people in my network to run it with before I open it publicly. Would you be open to it? Takes 45 minutes plus a pre-session form that runs about 15 minutes to fill out."*
+*"[Name], I'm testing a new diagnostic I'm calling the Signal Session. 90 minutes, structured, I ask 11 questions about how AI is being used in your firm. You get back a one-page written summary of where you are and what to work on. No charge. I'm looking for two people in my network to run it with before I open it publicly. Would you be open to it? Takes 90 minutes plus a pre-session form that runs about 15 minutes to fill out."*
 
 Two beta sessions by Day 10. Both produce testimonials by Day 14.
 
@@ -315,7 +315,7 @@ Boubacar
 - 11 session questions memorized
 
 **By end of Day 14:**
-- Two beta Signal Sessions delivered (45 minutes each)
+- Two beta Signal Sessions delivered (90 minutes each)
 - Two posture summaries sent within 24 hours each
 - Two testimonial requests sent
 - First LinkedIn post published
@@ -443,7 +443,7 @@ Four productized offers. Each has a clear next step at two to three times the pr
 
 #### 3.1 The Signal Session ($497)
 
-**What it is:** 45 minutes. Structured diagnostic conversation via video call. Delivered with a one-page written posture summary within 24 hours of the session.
+**What it is:** 90 minutes. Structured diagnostic conversation via video call. Delivered with a one-page written posture summary within 24 hours of the session.
 
 **Intake process:** Prospect books via Calendly. Confirmation email includes a 15-question intake form (pre-selected from the 26-question diagnostic in Layer 3). Boubacar reviews the intake before the session and tailors the 11 session questions accordingly.
 
@@ -701,7 +701,7 @@ Prevention: Get ahead of the objection in the Qualification Call: "I'm not a law
 
 #### 1.1 Session Architecture
 
-The Signal Session ($497 productized offer) is **45 minutes.** The SHIELD Assessment kickoff diagnostic (internal first session of a paid engagement) is **60 minutes.** These are two different contexts.
+The Signal Session ($497 productized offer) is **90 minutes.** The SHIELD Assessment kickoff diagnostic (internal first session of a paid engagement) is **90 to 120 minutes** (TBD). These are two different contexts.
 
 **60-minute SHIELD kickoff session flow:**
 
@@ -727,7 +727,7 @@ The Signal Session ($497 productized offer) is **45 minutes.** The SHIELD Assess
 
 #### 1.4 Diagnostic Questions by Category
 
-These are the exact questions. Do not ask all of them. Use the first one in each category to gauge depth, then follow the thread. Your job is to surface the gap, not exhaust the topic. Starred questions (*) are the 11 high-signal questions used in the Signal Session (45-minute version).
+These are the exact questions. Do not ask all of them. Use the first one in each category to gauge depth, then follow the thread. Your job is to surface the gap, not exhaust the topic. Starred questions (*) are the 11 high-signal questions used in the Signal Session (90-minute version).
 
 **CATEGORY A: Current AI Usage**
 - A1: Walk me through every AI tool your team uses on a regular basis, including tools built into software you already use. (*)
@@ -1006,7 +1006,7 @@ Always verify against primary sources before client conversations. This table is
 ### Toolkit Appendix B: 7-Day Actions at Each Stage
 
 - **Stage 1 (Weeks 1 to 2):** Write and publish first LinkedIn post. Topic: "What AI governance is, and what it is not." Target: 400 to 600 words.
-- **Stage 2 (Weeks 2 to 3):** Book two beta diagnostic sessions with people in the network. Frame: "I'm doing research on how organizations are managing AI right now. I'd like to run a 45-minute diagnostic and give you a written summary. No charge, no pitch."
+- **Stage 2 (Weeks 2 to 3):** Book two beta diagnostic sessions with people in the network. Frame: "I'm doing research on how organizations are managing AI right now. I'd like to run a 90-minute diagnostic and give you a written summary. No charge, no pitch."
 - **Stage 3 (Weeks 3 to 4):** Write out personal answers to "We're too small to need this" and "We'll deal with it when regulations require it." Say them aloud until natural. Use in the next three prospecting conversations.
 - **Stage 4 (Weeks 4 to 5):** Draft the three-tier roadmap as a one-page visual. Last thing shown in every discovery session: "Here is where you are and where this goes."
 - **Stage 5 (Weeks 5 to 8):** Write a one-page scope document for the governance agent (deferred to Phase 1): what it does, what it does not do, three failure modes designed against. Clarity document, not technical spec.
