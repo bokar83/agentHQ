@@ -1417,22 +1417,22 @@ class NotionQueryTasksTool(BaseTool):
                 filter_body = {
                     "and": [
                         {
-                            "property": "Due",
+                            "property": "Due Date",
                             "date": {"on_or_before": due_filter},
                         },
                         {
                             "property": "Status",
-                            "status": {"does_not_equal": "Done"},
+                            "select": {"does_not_equal": "Done"},
                         },
                     ]
                 }
             else:
                 filter_body = {
                     "property": "Status",
-                    "status": {"does_not_equal": "Done"},
+                    "select": {"does_not_equal": "Done"},
                 }
             results = query_database(NOTION_TASK_DB_ID, filter_body=filter_body, sorts=[
-                {"property": "Due", "direction": "ascending"}
+                {"property": "Due Date", "direction": "ascending"}
             ])
             if not results:
                 return "No open tasks found matching the criteria."
@@ -1446,14 +1446,14 @@ class NotionQueryTasksTool(BaseTool):
                     title_list = title_prop.get("title", [])
                     if title_list:
                         title = title_list[0].get("plain_text", "Untitled")
-                # Status
+                # Status — DB uses select type, not status type
                 status_prop = props.get("Status", {})
                 status = ""
                 if isinstance(status_prop, dict):
-                    s = status_prop.get("status", {})
+                    s = status_prop.get("select", {})
                     status = s.get("name", "") if s else ""
-                # Due date
-                due_prop = props.get("Due", {})
+                # Due date — DB property is "Due Date" not "Due"
+                due_prop = props.get("Due Date", {})
                 due_str = ""
                 if isinstance(due_prop, dict):
                     d = due_prop.get("date", {})

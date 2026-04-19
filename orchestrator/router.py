@@ -42,6 +42,15 @@ TASK_TYPES = {
         "keywords": ["github", "repo", "repository", "pull request", "open pr", "merge pr", "review pr", "create pr", "close pr", "github issue"],
         "crew": "code_crew",
     },
+    "notion_tasks": {
+        "description": "Query Notion tasks — open, due today, overdue, or past due",
+        "keywords": [
+            "open tasks", "due today", "past due", "overdue", "tasks due",
+            "tasks in notion", "notion tasks", "what tasks", "my tasks",
+            "tasks that are due", "outstanding tasks", "incomplete tasks",
+        ],
+        "crew": "notion_tasks_crew",
+    },
     "notion_task": {
         "description": "Notion database & architecting",
         "keywords": ["notion", "database", "log", "page", "dashboard", "wiki"],
@@ -259,6 +268,8 @@ def _classify_raw(user_message: str) -> str:
         return "forge_kpi_refresh"
     if msg.startswith("doc_routing:") or any(kw in msg for kw in TASK_TYPES["doc_routing"]["keywords"]):
         return "doc_routing"
+    if any(kw in msg for kw in TASK_TYPES["notion_tasks"]["keywords"]):
+        return "notion_tasks"
     if any(kw in msg for kw in TASK_TYPES["notion_capture"]["keywords"]):
         return "notion_capture"
     if any(kw in msg for kw in TASK_TYPES["design_review"]["keywords"]):
@@ -272,7 +283,7 @@ def _classify_raw(user_message: str) -> str:
         "content_push_to_drive", "voice_polishing", "linkedin_x_campaign",
         "inline_post_review", "content_review",
         "content_board_fetch", "agent_creation",
-        "forge_kpi_refresh", "doc_routing", "notion_capture", "design_review", "chat",
+        "forge_kpi_refresh", "doc_routing", "notion_tasks", "notion_capture", "design_review", "chat",
     }
     for task_type, config in TASK_TYPES.items():
         if task_type in _PRIORITY_CHECKED:
