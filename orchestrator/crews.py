@@ -1983,6 +1983,38 @@ def build_gws_crew(user_request: str) -> Crew:
     )
 
 
+def _notion_capture_is_review(user_request: str) -> bool:
+    """
+    Determine whether the user wants to retrieve/list ideas (True)
+    or save a new idea (False). Uses LLM for robustness — no keyword list to maintain.
+    Falls back to False (save mode) on any error so we never lose data.
+    """
+    import os, openai
+    try:
+        client = openai.OpenAI(
+            api_key=os.environ.get("OPENROUTER_API_KEY"),
+            base_url="https://openrouter.ai/api/v1",
+            default_headers={"HTTP-Referer": "https://agentshq.catalystworks.com", "X-Title": "agentsHQ"},
+        )
+        resp = client.chat.completions.create(
+            model="anthropic/claude-haiku-4.5",
+            messages=[
+                {"role": "system", "content": (
+                    "You classify whether the user wants to RETRIEVE existing ideas or SAVE a new idea.\n"
+                    "Reply with exactly one word: retrieve or save"
+                )},
+                {"role": "user", "content": user_request},
+            ],
+            temperature=0,
+            max_tokens=5,
+            timeout=8,
+        )
+        answer = resp.choices[0].message.content.strip().lower()
+        return answer.startswith("retrieve")
+    except Exception:
+        return False
+
+
 def build_notion_capture_crew(user_request: str) -> Crew:
     """
     Crew for: notion_capture
@@ -1993,13 +2025,7 @@ def build_notion_capture_crew(user_request: str) -> Crew:
     from agents import build_notion_capture_agent
     agent = build_notion_capture_agent()
 
-    lower = user_request.lower()
-    review_triggers = [
-        "review my ideas", "what ideas", "show my ideas", "pull up my ideas",
-        "list my ideas", "what's in my ideas", "whats in my ideas",
-        "read my ideas", "see my ideas",
-    ]
-    is_review = any(t in lower for t in review_triggers)
+    is_review = _notion_capture_is_review(user_request)
 
     if is_review:
         task_description = (
