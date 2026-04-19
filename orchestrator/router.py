@@ -174,8 +174,9 @@ TASK_TYPES = {
     },
     "chat": {
         "description": "General chat / Q&A",
-        "keywords": ["chat", "talk", "question", "ask", "help me", "what is", "how do", "explain"],
+        "keywords": ["help me", "what is", "how do", "explain", "good morning", "good evening"],
         "crew": "chat_crew",
+        "whole_word_keywords": ["chat", "talk", "question", "ask", "hello", "hi", "hey"],
     },
     "doc_routing": {
         "description": "Classify and route an incoming document",
@@ -242,6 +243,10 @@ def _classify_raw(user_message: str) -> str:
     # High-priority explicit task prefixes checked first
     if any(kw in msg for kw in TASK_TYPES["content_push_to_drive"]["keywords"]):
         return "content_push_to_drive"
+    if any(kw in msg for kw in TASK_TYPES["voice_polishing"]["keywords"]):
+        return "voice_polishing"
+    if any(kw in msg for kw in TASK_TYPES["linkedin_x_campaign"]["keywords"]):
+        return "linkedin_x_campaign"
     if any(kw in msg for kw in TASK_TYPES["inline_post_review"]["keywords"]):
         return "inline_post_review"
     if any(kw in msg for kw in TASK_TYPES["content_review"]["keywords"]):
@@ -258,11 +263,16 @@ def _classify_raw(user_message: str) -> str:
         return "notion_capture"
     if any(kw in msg for kw in TASK_TYPES["design_review"]["keywords"]):
         return "design_review"
+    _chat_cfg = TASK_TYPES["chat"]
+    if any(kw in msg for kw in _chat_cfg["keywords"]) or \
+       any(re.search(r'\b' + re.escape(kw) + r'\b', msg) for kw in _chat_cfg.get("whole_word_keywords", [])):
+        return "chat"
 
     _PRIORITY_CHECKED = {
-        "content_push_to_drive", "inline_post_review", "content_review",
+        "content_push_to_drive", "voice_polishing", "linkedin_x_campaign",
+        "inline_post_review", "content_review",
         "content_board_fetch", "agent_creation",
-        "forge_kpi_refresh", "doc_routing", "notion_capture", "design_review",
+        "forge_kpi_refresh", "doc_routing", "notion_capture", "design_review", "chat",
     }
     for task_type, config in TASK_TYPES.items():
         if task_type in _PRIORITY_CHECKED:
