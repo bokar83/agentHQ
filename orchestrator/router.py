@@ -5,10 +5,8 @@ Maps incoming user requests to the correct crew type.
 Used by orchestrator.py to determine which crew to assemble.
 """
 
-import re
 import os
 import logging
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -182,10 +180,9 @@ TASK_TYPES = {
         "crew": "gws_crew",
     },
     "chat": {
-        "description": "General chat / Q&A",
-        "keywords": ["help me", "what is", "how do", "explain", "good morning", "good evening"],
+        "description": "General chat / Q&A — greetings, casual questions, no specific task",
+        "keywords": [],
         "crew": "chat_crew",
-        "whole_word_keywords": ["chat", "talk", "question", "ask", "hello", "hi", "hey"],
     },
     "doc_routing": {
         "description": "Classify and route an incoming document",
@@ -278,16 +275,16 @@ def _classify_raw(user_message: str) -> str:
         return "notion_capture"
     if any(kw in msg for kw in TASK_TYPES["design_review"]["keywords"]):
         return "design_review"
-    _chat_cfg = TASK_TYPES["chat"]
-    if any(kw in msg for kw in _chat_cfg["keywords"]) or \
-       any(re.search(r'\b' + re.escape(kw) + r'\b', msg) for kw in _chat_cfg.get("whole_word_keywords", [])):
-        return "chat"
+
+    # chat is intentionally NOT keyword-matched here — conversational openers like
+    # "how do", "help me", "what is" appear in almost every functional request.
+    # Let the LLM fallback decide if it's truly chat vs a functional task.
 
     _PRIORITY_CHECKED = {
         "content_push_to_drive", "voice_polishing", "linkedin_x_campaign",
         "inline_post_review", "content_review",
         "content_board_fetch", "agent_creation",
-        "forge_kpi_refresh", "doc_routing", "notion_tasks", "notion_capture", "design_review", "chat",
+        "forge_kpi_refresh", "doc_routing", "notion_tasks", "notion_capture", "design_review",
     }
     for task_type, config in TASK_TYPES.items():
         if task_type in _PRIORITY_CHECKED:
