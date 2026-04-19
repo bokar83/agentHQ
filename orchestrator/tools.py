@@ -615,24 +615,43 @@ class GWSGmailCreateDraftTool(BaseTool):
 class GWSGmailSearchTool(BaseTool):
     name: str = "gmail_search"
     description: str = (
-        "Search Gmail messages. "
+        "Search Gmail messages. Returns sender, subject, and snippet for each result. "
         "Input: JSON with 'query' (Gmail search syntax, e.g. 'from:someone subject:hello'). "
-        "Optional: 'max_results' (default 5), 'account' (email address to search — defaults to bokar83@gmail.com)."
+        "Optional: 'max_results' (default 10), 'account' (email address to search — defaults to bokar83@gmail.com)."
     )
     def _run(self, input_data: str) -> str:
         try:
             data = json.loads(input_data) if isinstance(input_data, str) else input_data
             account = data.get("account")
+            max_results = data.get("max_results", 10)
             result = _gws_request(
                 "get",
                 "https://gmail.googleapis.com/gmail/v1/users/me/messages",
                 account=account,
-                params={"q": data["query"], "maxResults": data.get("max_results", 5)},
+                params={"q": data["query"], "maxResults": max_results},
             )
             messages = result.get("messages", [])
             if not messages:
                 return "No messages found."
-            return f"Found {len(messages)} message(s). IDs: {', '.join(m['id'] for m in messages)}"
+            lines = [f"Found {len(messages)} message(s):\n"]
+            for msg in messages:
+                msg_id = msg["id"]
+                try:
+                    detail = _gws_request(
+                        "get",
+                        f"https://gmail.googleapis.com/gmail/v1/users/me/messages/{msg_id}",
+                        account=account,
+                        params={"format": "metadata", "metadataHeaders": ["From", "Subject", "Date"]},
+                    )
+                    headers = {h["name"]: h["value"] for h in detail.get("payload", {}).get("headers", [])}
+                    sender = headers.get("From", "Unknown sender")
+                    subject = headers.get("Subject", "(no subject)")
+                    date = headers.get("Date", "")
+                    snippet = detail.get("snippet", "")[:120]
+                    lines.append(f"- From: {sender}\n  Subject: {subject}\n  Date: {date}\n  Preview: {snippet}")
+                except Exception:
+                    lines.append(f"- ID: {msg_id} (could not fetch details)")
+            return "\n".join(lines)
         except Exception as e:
             return f"gmail_search failed: {e}"
 
