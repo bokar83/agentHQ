@@ -337,7 +337,16 @@
       ta.style.height = 'auto';
       ta.style.height = Math.min(ta.scrollHeight, 160) + 'px';
     });
-    // Enter key creates a new line — send only via the send button.
+    // Desktop: Enter sends. Mobile (touch device): Enter inserts newline, send button only.
+    const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
+    if (!isTouchDevice) {
+      ta.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+    }
 
     document.getElementById('send-btn').addEventListener('click', sendMessage);
 
