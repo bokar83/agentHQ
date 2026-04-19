@@ -58,7 +58,12 @@ class CLIHubTool:
 
 # Exported function for the tool registry
 async def execute_cli_hub_action(action: str, **kwargs):
-    registry_path = os.path.join("d:\\Ai_Sandbox\\agentsHQ\\external\\CLI-Anything", "registry.json")
+    _script_dir = os.path.dirname(os.path.abspath(__file__))
+    registry_path = os.environ.get(
+        "CLI_HUB_REGISTRY",
+        os.path.join(_script_dir, "..", "..", "external", "CLI-Anything", "registry.json"),
+    )
+    registry_path = os.path.normpath(registry_path)
     hub = CLIHubTool(registry_path)
     
     if action == "list":
