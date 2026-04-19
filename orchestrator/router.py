@@ -297,12 +297,73 @@ def _classify_raw(user_message: str) -> str:
     return "unknown"
 
 
+def _llm_classify(user_message: str) -> str:
+    """
+    LLM fallback classifier. Called when keyword matching returns 'unknown'.
+    Sends a compact task registry to Haiku and asks for the best task_type.
+    Returns a task_type string or 'unknown' on any failure.
+    """
+    import openai
+
+    registry_lines = []
+    for task_type, config in TASK_TYPES.items():
+        registry_lines.append(f"- {task_type}: {config['description']}")
+    registry = "\n".join(registry_lines)
+
+    system_prompt = (
+        "You are a task router for an AI assistant system called agentsHQ.\n"
+        "Your only job is to classify the user's message into exactly one task type from the list below.\n\n"
+        "TASK TYPES:\n"
+        f"{registry}\n\n"
+        "Rules:\n"
+        "1. Reply with ONLY the task_type string — no explanation, no punctuation, nothing else.\n"
+        "2. If nothing fits, reply with: unknown\n"
+        "3. When in doubt between 'chat' and a functional task, pick the functional task.\n"
+        "4. 'notion_capture' covers both saving new ideas AND retrieving/listing existing ideas.\n"
+        "5. 'notion_tasks' covers queries about open tasks, due dates, overdue items.\n"
+        "6. 'crm_query' covers any question about leads, contacts, pipeline stats.\n"
+        "7. 'social_content' covers writing posts. 'inline_post_review' covers reviewing/improving a post.\n"
+    )
+
+    try:
+        client = openai.OpenAI(
+            api_key=os.environ.get("OPENROUTER_API_KEY"),
+            base_url="https://openrouter.ai/api/v1",
+            default_headers={
+                "HTTP-Referer": "https://agentshq.catalystworks.com",
+                "X-Title": "agentsHQ Router",
+            },
+        )
+        response = client.chat.completions.create(
+            model="anthropic/claude-haiku-4-5",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message},
+            ],
+            temperature=0,
+            max_tokens=20,
+            timeout=8,
+        )
+        result = response.choices[0].message.content.strip().lower()
+        if result in TASK_TYPES:
+            logger.info(f"LLM router classified '{user_message[:60]}' as '{result}'")
+            return result
+        logger.warning(f"LLM router returned unrecognised type '{result}' — falling back to unknown")
+        return "unknown"
+    except Exception as e:
+        logger.warning(f"LLM router failed ({e}) — falling back to unknown")
+        return "unknown"
+
+
 def classify_task(user_message: str) -> dict:
     """
     Classify user message. Returns dict: {task_type, crew, confidence, is_unknown}.
-    This format is expected by orchestrator.py at lines 594-599.
+    Uses keyword fast-path first; falls back to LLM when keywords return unknown.
     """
     task_type = _classify_raw(user_message)
+    if task_type == "unknown":
+        task_type = _llm_classify(user_message)
+
     crew = TASK_TYPES.get(task_type, {}).get("crew", "unknown_crew")
     confidence = 0.3 if task_type == "unknown" else 0.95
     return {
