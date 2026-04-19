@@ -1,0 +1,7 @@
+[submodule "output"]
+	path = output
+	url = https://github.com/bokar83/attire-inspo-app.git
+[submodule "skills/community"]
+	path = skills/community
+	url = https://github.com/sickn33/antigravity-awesome-skills.git
+	ignore = untracked
