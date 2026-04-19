@@ -1859,7 +1859,7 @@ async def telegram_polling_loop():
                 else:
                     await asyncio.sleep(5)
         except Exception as e:
-            logger.error(f"TELEGRAM_POLLING: Error: {e}")
+            logger.error(f"TELEGRAM_POLLING: Error: {e}", exc_info=True)
             await asyncio.sleep(10)
 
 @app.post("/telegram")
