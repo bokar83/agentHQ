@@ -138,3 +138,39 @@ def test_max_turns_cap(mock_anthropic_cls, mock_exec_tool):
     assert result["success"] is False
     assert result["turns"] == research_engine.MAX_TURNS
     assert "MAX_TURNS" in (result["error"] or "")
+
+
+@patch("research_engine.run_research")
+def test_engine_routes_research_report_to_bypass(mock_run_research):
+    """engine.run_orchestrator calls research_engine.run_research for research_report."""
+    import engine
+
+    mock_run_research.return_value = {
+        "success": True,
+        "answer": "Five mechanic shops found.",
+        "tool_calls": 3,
+        "turns": 4,
+        "error": None,
+    }
+
+    with patch("engine.classify_task") as mock_classify, \
+         patch("engine.get_crew_type", return_value="research_crew"), \
+         patch("memory.get_conversation_history", return_value=[]), \
+         patch("memory.save_to_memory"), \
+         patch("memory.save_conversation_turn"):
+        mock_classify.return_value = {
+            "task_type": "research_report",
+            "confidence": 0.95,
+            "is_unknown": False,
+        }
+
+        result = engine.run_orchestrator(
+            task_request="Find mechanic shops near 84095.",
+            from_number="browser:test",
+            session_key="browser:test",
+        )
+
+    assert result["success"] is True
+    assert result["task_type"] == "research_report"
+    assert "mechanic shops" in result["deliverable"].lower()
+    mock_run_research.assert_called_once()

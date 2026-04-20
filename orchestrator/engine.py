@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Optional
 
 from constants import MEMORY_GATED_TASK_TYPES
+from router import classify_task, get_crew_type
 
 logger = logging.getLogger("agentsHQ.engine")
 
@@ -36,7 +37,6 @@ def run_orchestrator(task_request: str, from_number: str = "unknown", session_ke
         logger.warning(f"History injection failed (non-fatal): {e}")
 
     # Step 2: Route
-    from router import classify_task, get_crew_type
     classification = classify_task(task_request)
     task_type = classification.get("task_type", "unknown")
     is_unknown = classification.get("is_unknown", False)
@@ -119,6 +119,53 @@ def run_orchestrator(task_request: str, from_number: str = "unknown", session_ke
         except Exception as e:
             logger.error(f"crm_outreach direct dispatch failed: {e}")
             return {"success": False, "task_type": task_type, "deliverable": f"Outreach error: {e}", "execution_time": 0}
+
+    # Step 3a: Direct dispatch for research_report: bypass CrewAI entirely.
+    # CrewAI's max_iter fallback triggers Anthropic's "assistant message prefill"
+    # 400 on heavy research prompts. See docs/superpowers/plans/2026-04-20-research-engine-bypass.md.
+    if task_type == "research_report":
+        try:
+            from research_engine import run_research
+            research_result = run_research(user_prompt=enriched_task)
+            deliverable = research_result.get("answer") or ""
+            execution_time = (datetime.now() - start_time).total_seconds()
+
+            if not research_result.get("success"):
+                err = research_result.get("error", "unknown")
+                logger.error(f"research_engine failed: {err}")
+                deliverable = (
+                    "Research couldn't complete. Try narrowing the request to one question "
+                    f"or one zip code, then ask again. (Diagnostic: {err})"
+                )
+
+            try:
+                from memory import save_to_memory, save_conversation_turn
+                save_to_memory(
+                    task_request=task_request,
+                    task_type=task_type,
+                    result_summary=deliverable[:1000],
+                    files_created=[],
+                    execution_time=execution_time,
+                    from_number=from_number,
+                )
+                save_conversation_turn(session_key, "user", task_request)
+                save_conversation_turn(session_key, "assistant", deliverable[:1000])
+            except Exception as mem_err:
+                logger.warning(f"Memory save failed (non-fatal): {mem_err}")
+
+            summary = _build_summary(task_type, deliverable, [], execution_time)
+            return {
+                "success": research_result.get("success", False),
+                "result": summary,
+                "task_type": task_type,
+                "files_created": [],
+                "execution_time": execution_time,
+                "title": task_request[:80].strip(),
+                "deliverable": deliverable,
+            }
+        except Exception as e:
+            logger.error(f"research_engine dispatch failed, falling back to CrewAI: {e}", exc_info=True)
+            # fall through to CrewAI crew below
 
     # Step 3: Assemble crew
     from crews import assemble_crew
