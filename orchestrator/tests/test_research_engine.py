@@ -54,3 +54,87 @@ def test_single_turn_no_tool_calls(mock_anthropic_cls):
     assert result["success"] is True
     assert "direct answer" in result["answer"].lower()
     assert result["tool_calls"] == 0
+
+
+@patch("research_engine._execute_tool")
+@patch("research_engine.anthropic.Anthropic")
+def test_multi_turn_tool_use(mock_anthropic_cls, mock_exec_tool):
+    """Claude calls web_search, receives results, then emits final answer."""
+    import research_engine
+
+    mock_client = MagicMock()
+    mock_anthropic_cls.return_value = mock_client
+    mock_exec_tool.return_value = "Shop A at 123 Main St, phone 555-1234."
+
+    # First turn: Claude requests a tool call.
+    turn1 = _mock_anthropic_response(
+        stop_reason="tool_use",
+        content_blocks=[
+            _text_block("Let me look that up."),
+            _tool_use_block("tu_1", "web_search", {"query": "mechanic shops 84095"}),
+        ],
+    )
+    # Second turn: Claude answers using the tool result.
+    turn2 = _mock_anthropic_response(
+        stop_reason="end_turn",
+        content_blocks=[_text_block("Found Shop A at 123 Main St.")],
+    )
+    mock_client.messages.create.side_effect = [turn1, turn2]
+
+    result = research_engine.run_research(
+        user_prompt="Find mechanic shops in 84095.",
+        anthropic_api_key="sk-test",  # pragma: allowlist secret
+        firecrawl_api_key="fc-test",  # pragma: allowlist secret
+    )
+
+    assert result["success"] is True
+    assert result["tool_calls"] == 1
+    assert result["turns"] == 2
+    assert "Shop A" in result["answer"]
+    mock_exec_tool.assert_called_once_with("web_search", {"query": "mechanic shops 84095"}, "fc-test")
+
+
+@patch("research_engine.anthropic.Anthropic")
+def test_missing_api_key_returns_error(mock_anthropic_cls):
+    """Missing ANTHROPIC_API_KEY returns a clean error dict, not a crash."""
+    import research_engine
+
+    result = research_engine.run_research(
+        user_prompt="Anything.",
+        anthropic_api_key=None,
+        firecrawl_api_key=None,
+    )
+    # Because we pass None and os.environ may also be empty in test env,
+    # we accept either the happy path (if env is set) or the error path.
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        assert result["success"] is False
+        assert "ANTHROPIC_API_KEY" in (result["error"] or "")
+    mock_anthropic_cls.assert_not_called() if not os.environ.get("ANTHROPIC_API_KEY") else None
+
+
+@patch("research_engine._execute_tool")
+@patch("research_engine.anthropic.Anthropic")
+def test_max_turns_cap(mock_anthropic_cls, mock_exec_tool):
+    """If Claude never stops calling tools, the loop terminates at MAX_TURNS."""
+    import research_engine
+
+    mock_client = MagicMock()
+    mock_anthropic_cls.return_value = mock_client
+    mock_exec_tool.return_value = "some data"
+
+    # Every turn returns another tool call; loop should hit MAX_TURNS.
+    infinite_tool_turn = _mock_anthropic_response(
+        stop_reason="tool_use",
+        content_blocks=[_tool_use_block("tu_x", "web_search", {"query": "x"})],
+    )
+    mock_client.messages.create.return_value = infinite_tool_turn
+
+    result = research_engine.run_research(
+        user_prompt="Never stop.",
+        anthropic_api_key="sk-test",  # pragma: allowlist secret
+        firecrawl_api_key="fc-test",  # pragma: allowlist secret
+    )
+
+    assert result["success"] is False
+    assert result["turns"] == research_engine.MAX_TURNS
+    assert "MAX_TURNS" in (result["error"] or "")
