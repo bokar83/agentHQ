@@ -168,6 +168,50 @@ async def run_task_sync(request: TaskRequest):
         logger.error(f"Sync request failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/inbound-lead", dependencies=[Depends(verify_api_key)])
+async def inbound_lead_webhook(request: Request, background_tasks: BackgroundTasks):
+    """Webhook for n8n Calendly/Formspree inbound lead events.
+
+    Expected body: InboundPayload JSON (name, email, booking_id, source, optional
+    company, meeting_time ISO8601, raw_company_url, notion_row_id).
+
+    Runs the routine in a background task so n8n gets a fast 202. Result lands
+    in Notion Pipeline + Gmail drafts; Telegram notification goes out at the end.
+    """
+    try:
+        body = await request.json()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON body: {e}")
+
+    logger.info(
+        f"Inbound lead received: {body.get('email', '(no email)')} "
+        f"source={body.get('source', '?')} booking={body.get('booking_id', '?')}"
+    )
+
+    def _run_inbound(payload: dict):
+        try:
+            from skills.inbound_lead.runner import run_inbound_lead
+            from notifier import send_message
+            result = run_inbound_lead(payload)
+            try:
+                from skills.inbound_lead.telegram_notify import format_inbound_telegram_message
+                msg = format_inbound_telegram_message(result)
+                telegram_chat = os.environ.get("TELEGRAM_CHAT_ID", "")
+                if telegram_chat:
+                    send_message(telegram_chat, msg)
+            except Exception as notify_exc:
+                logger.warning(f"Telegram notify failed: {notify_exc}")
+            logger.info(
+                f"Inbound lead done: status={result.status} "
+                f"email={result.payload.email} page={(result.log.notion_page_id if result.log else None)}"
+            )
+        except Exception as exc:
+            logger.error(f"Inbound lead background task failed: {exc}")
+
+    background_tasks.add_task(_run_inbound, body)
+    return {"status": "accepted", "message": "Inbound lead queued."}
+
+
 @app.get("/status/{job_id}", response_model=JobStatusResponse, dependencies=[Depends(verify_api_key)])
 def get_job_status(job_id: str):
     from memory import get_job

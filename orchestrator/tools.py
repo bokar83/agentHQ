@@ -411,6 +411,38 @@ forge_content_tool = ForgeContentTool()
 FORGE_TOOLS = [forge_log_tool, forge_pipeline_tool, forge_content_tool]
 
 
+class InboundLeadTool(BaseTool):
+    """Runs the inbound lead routine end-to-end for a webhook payload.
+
+    Triggered by n8n on Calendly/Formspree events. Handles idempotency,
+    research, voice drafting, Notion logging, and Gmail draft creation.
+    Returns the serialized InboundRoutineResult as a JSON string.
+    """
+    name: str = "inbound_lead_run"
+    description: str = (
+        "Run the inbound lead routine on a webhook payload. "
+        "Input: JSON with 'name', 'email', 'booking_id', 'source' "
+        "('calendly'|'formspree'), and optionally 'company', 'meeting_time' "
+        "(ISO8601), 'raw_company_url', 'notion_row_id'. "
+        "Returns JSON with status (enriched|rebook_update|partial|failed), "
+        "brief, email draft, notion + gmail pointers."
+    )
+
+    def _run(self, input_data: str) -> str:
+        try:
+            from skills.inbound_lead.runner import run_inbound_lead
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            result = run_inbound_lead(data)
+            return result.model_dump_json()
+        except Exception as e:
+            return json.dumps({"status": "failed", "error": f"Tool dispatch failed: {e}"})
+
+
+inbound_lead_tool = InboundLeadTool()
+
+INBOUND_TOOLS = [inbound_lead_tool]
+
+
 # ══════════════════════════════════════════════════════════════
 # GOOGLE WORKSPACE TOOLS (Calendar + Gmail)
 # Supports multiple accounts via separate credentials files:
