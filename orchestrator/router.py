@@ -238,6 +238,11 @@ TASK_TYPES = {
         ],
         "crew": "design_review_crew",
     },
+    "inbound_lead": {
+        "description": "Webhook-triggered inbound lead routine (Calendly/Formspree): research, draft welcome email, log to Notion Pipeline. Not keyword-routed; invoked only by POST /inbound-lead.",
+        "keywords": [],
+        "crew": "inbound_lead_direct",
+    },
 }
 
 

@@ -56,6 +56,15 @@ class NotionClient:
     def get_page(self, page_id: str) -> Dict:
         return self._request("get", f"pages/{page_id}")
 
+    def get_database_schema(self, database_id: str) -> Dict[str, Dict]:
+        """Return the properties map for a database: {property_name: {id, type, ...}}.
+
+        Used by writers that need to discover property types at runtime so they
+        can skip fields that don't exist on a given database.
+        """
+        result = self._request("get", f"databases/{database_id}")
+        return result.get("properties", {})
+
     def append_blocks(self, block_id: str, children: List[Dict]) -> Dict:
         return self._request("patch", f"blocks/{block_id}/children", json={"children": children})
 
