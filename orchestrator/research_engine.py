@@ -81,7 +81,11 @@ def _execute_tool(name: str, tool_input: dict, firecrawl_api_key: str) -> str:
         limit = min(int(tool_input.get("limit", 5) or 5), 10)
         if not query:
             return "Error: query is required."
-        response = client.search(query, limit=limit)
+        try:
+            response = client.search(query, limit=limit)
+        except Exception as exc:
+            logger.warning(f"Firecrawl search failed for '{query}': {exc}")
+            return f"Tool error (web_search failed for '{query}'): {exc}. Try a different query or proceed with what you know."
         if not getattr(response, "success", False) or not getattr(response, "data", None):
             return f"No search results for '{query}'."
 
@@ -105,7 +109,11 @@ def _execute_tool(name: str, tool_input: dict, firecrawl_api_key: str) -> str:
         url = tool_input.get("url", "")
         if not url:
             return "Error: url is required."
-        response = client.scrape_url(url, formats=["markdown"])
+        try:
+            response = client.scrape_url(url, formats=["markdown"])
+        except Exception as exc:
+            logger.warning(f"Firecrawl scrape failed for {url}: {exc}")
+            return f"Tool error (web_scrape failed for {url}): {exc}. Try a different URL or summarize from search results."
         if not getattr(response, "success", False):
             return f"Error scraping {url}: {getattr(response, 'error', 'unknown')}"
         return getattr(response, "markdown", "") or f"No content returned for {url}."
