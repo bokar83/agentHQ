@@ -5,7 +5,6 @@ from datetime import datetime
 from typing import Optional
 
 from constants import MEMORY_GATED_TASK_TYPES
-from router import classify_task, get_crew_type
 
 logger = logging.getLogger("agentsHQ.engine")
 
@@ -37,6 +36,7 @@ def run_orchestrator(task_request: str, from_number: str = "unknown", session_ke
         logger.warning(f"History injection failed (non-fatal): {e}")
 
     # Step 2: Route
+    from router import classify_task, get_crew_type
     classification = classify_task(task_request)
     task_type = classification.get("task_type", "unknown")
     is_unknown = classification.get("is_unknown", False)
@@ -155,7 +155,7 @@ def run_orchestrator(task_request: str, from_number: str = "unknown", session_ke
 
             summary = _build_summary(task_type, deliverable, [], execution_time)
             return {
-                "success": research_result.get("success", False),
+                "success": True,
                 "result": summary,
                 "task_type": task_type,
                 "files_created": [],

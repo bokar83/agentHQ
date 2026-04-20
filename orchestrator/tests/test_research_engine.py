@@ -153,8 +153,8 @@ def test_engine_routes_research_report_to_bypass(mock_run_research):
         "error": None,
     }
 
-    with patch("engine.classify_task") as mock_classify, \
-         patch("engine.get_crew_type", return_value="research_crew"), \
+    with patch("router.classify_task") as mock_classify, \
+         patch("router.get_crew_type", return_value="research_crew"), \
          patch("memory.get_conversation_history", return_value=[]), \
          patch("memory.save_to_memory"), \
          patch("memory.save_conversation_turn"):
