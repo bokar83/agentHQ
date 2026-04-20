@@ -1,5 +1,5 @@
 """
-research_engine.py -- CrewAI bypass for research-type prompts.
+research_engine.py: CrewAI bypass for research-type prompts.
 ============================================================
 Runs a single Anthropic tool-use loop with Firecrawl search/scrape tools.
 No CrewAI, no max_iter, no force-final-answer prefill. The loop terminates

@@ -35,7 +35,7 @@ def _tool_use_block(tool_id, name, input_dict):
 
 @patch("research_engine.anthropic.Anthropic")
 def test_single_turn_no_tool_calls(mock_anthropic_cls):
-    """Claude answers directly without using any tool -- loop exits on end_turn."""
+    """Claude answers directly without using any tool; loop exits on end_turn."""
     import research_engine
 
     mock_client = MagicMock()
