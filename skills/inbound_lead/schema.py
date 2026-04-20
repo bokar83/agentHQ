@@ -37,10 +37,16 @@ class DraftedEmail(BaseModel):
 
 
 class LogResult(BaseModel):
-    """Logger output: what got written to Notion and Gmail."""
-    notion_row_url: str
-    gmail_draft_id: str
-    gmail_draft_url: str
+    """Logger output: what got written to Notion and Gmail.
+
+    All fields optional so the logger can degrade: Gmail drafts can fail,
+    Notion writes can fail, neither prevents the routine from reporting
+    partial progress.
+    """
+    notion_page_id: Optional[str] = None
+    notion_row_url: Optional[str] = None
+    gmail_draft_id: Optional[str] = None
+    gmail_draft_url: Optional[str] = None
     fields_written: list[str] = Field(default_factory=list)
     fields_skipped: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
