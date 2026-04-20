@@ -2316,7 +2316,25 @@ async def run_task_async(request: TaskRequest, background_tasks: BackgroundTasks
         except Exception as e:
             logger.error(f"Async job {job_id} failed: {e}", exc_info=True)
             from memory import update_job as uj
-            uj(job_id=job_id, status="failed", error=str(e))
+            raw = str(e)
+            # Sanitize known provider-shaped errors into plain English for the chat UI.
+            if "assistant message prefill" in raw or "must end with a user message" in raw:
+                friendly = (
+                    "The research agent hit a provider limit on this prompt. "
+                    "Try asking one focused question at a time (for example, "
+                    "'find 5 mechanic shops near 84095 that do safety inspection') "
+                    "and I'll run each one cleanly."
+                )
+            elif "Provider returned error" in raw or "invalid_request_error" in raw:
+                friendly = (
+                    "The model provider rejected this request. Reword the prompt "
+                    "or narrow its scope and try again. I've logged the full trace."
+                )
+            elif "rate" in raw.lower() and "limit" in raw.lower():
+                friendly = "Hit a rate limit. Wait 30 seconds and try again."
+            else:
+                friendly = f"Task failed. (Diagnostic: {raw[:200]})"
+            uj(job_id=job_id, status="failed", error=friendly, result=friendly)
 
             # Fire failure callback if provided
             if request.callback_url:
@@ -2325,7 +2343,7 @@ async def run_task_async(request: TaskRequest, background_tasks: BackgroundTasks
                     _requests.post(request.callback_url, json={
                         "job_id": job_id,
                         "status": "failed",
-                        "result": f"Task failed: {str(e)}",
+                        "result": friendly,
                         "task_type": "unknown",
                         "files_created": [],
                         "execution_time": 0.0,

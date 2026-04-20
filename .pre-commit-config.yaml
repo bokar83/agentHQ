@@ -11,3 +11,13 @@ repos:
           - --exclude-files
           - infrastructure/\.env
         exclude: \.env$
+
+  - repo: local
+    hooks:
+      - id: no-em-dashes
+        name: no em dashes in markdown
+        description: Boubacar's hard rule. Rewrite the sentence.
+        entry: python scripts/check_no_em_dashes.py
+        language: python
+        files: \.md$
+        types: [file]
