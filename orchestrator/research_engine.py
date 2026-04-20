@@ -13,7 +13,6 @@ replaces the research path entirely so the bug class cannot recur here.
 """
 
 import os
-import json
 import logging
 from typing import Optional
 
@@ -164,7 +163,7 @@ def run_research(
 
         if response.stop_reason == "end_turn":
             final_text = "".join(
-                block.text for block in response.content if getattr(block, "type", "") == "text"
+                getattr(block, "text", "") for block in response.content if getattr(block, "type", "") == "text"
             ).strip()
             return {
                 "success": True,
@@ -190,7 +189,7 @@ def run_research(
             continue
 
         final_text = "".join(
-            block.text for block in response.content if getattr(block, "type", "") == "text"
+            getattr(block, "text", "") for block in response.content if getattr(block, "type", "") == "text"
         ).strip()
         return {
             "success": True,
