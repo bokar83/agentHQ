@@ -137,3 +137,9 @@ skills/community/
 # Hyperframes skill registry lock (external tool, content hashes flagged as false positives)
 skills-lock.json
 .claude/worktrees/
+
+# Ephemeral scratch scripts — diagnostic/probe code, never committed
+scratch/
+
+# Codex SSH working directory — contains private keys and probes, NEVER commit
+codex_ssh/
