@@ -375,7 +375,10 @@ def _log_routing_decision(user_message: str, task_type: str, crew: str, used_llm
 
     def _write():
         try:
-            from orchestrator.db import get_crm_connection
+            try:
+                from orchestrator.db import get_crm_connection  # local repo layout
+            except ImportError:
+                from db import get_crm_connection  # flat /app layout inside container
             conn = get_crm_connection()
             try:
                 with conn.cursor() as cur:
