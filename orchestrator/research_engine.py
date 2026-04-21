@@ -167,6 +167,16 @@ def run_research(
             messages=messages,
         )
 
+        try:
+            from usage_logger import log_anthropic_call, merge_context
+            log_anthropic_call(response, merge_context({
+                "agent_name": "research_engine",
+                "task_type": "research_report",
+                "crew_name": "research_engine",
+            }))
+        except Exception as e:
+            logger.debug("usage_logger failed on research turn: %s", e)
+
         messages.append({"role": "assistant", "content": response.content})
 
         if response.stop_reason == "end_turn":

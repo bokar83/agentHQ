@@ -80,10 +80,20 @@ def strip_style_markers(text: str) -> str:
     return text.strip()
 
 
-def _call_model(model_id: str, system_prompt: str, user_content: str) -> str:
+def _call_model(
+    model_id: str,
+    system_prompt: str,
+    user_content: str,
+    voice_name: str = None,
+    council_run_id: str = None,
+) -> str:
     """
     Make a single completion call via litellm → OpenRouter.
     Returns the response text, or an error string (never raises).
+
+    Usage logging is handled by a global litellm callback registered in
+    usage_logger.install_litellm_callback(). We pass metadata through so
+    the callback can tag the row with voice_name + council_run_id.
     """
     try:
         from litellm import completion
@@ -93,10 +103,27 @@ def _call_model(model_id: str, system_prompt: str, user_content: str) -> str:
         extra_body = {}
         if "anthropic/" in model_id:
             extra_body = {"provider": {"order": ["Anthropic"], "allow_fallbacks": False}}
+        # Cache the static system prompt (voice/review/chairman templates
+        # never vary across runs). Anthropic 5-min TTL cache hits give a
+        # ~90% discount on input tokens. Structured content with
+        # cache_control routes through OpenRouter → Anthropic intact.
+        # OpenRouter litellm transform moves message-level cache_control onto
+        # the last content block. Putting it at the message level is the form
+        # litellm expects; it will then forward cache_control to Anthropic.
+        is_anthropic = "anthropic/" in model_id
+        if is_anthropic:
+            system_msg = {
+                "role": "system",
+                "content": system_prompt,
+                "cache_control": {"type": "ephemeral"},
+            }
+        else:
+            system_msg = {"role": "system", "content": system_prompt}
+
         response = completion(
             model=f"openrouter/{model_id}",
             messages=[
-                {"role": "system", "content": system_prompt},
+                system_msg,
                 {"role": "user", "content": user_content},
             ],
             api_key=os.environ.get("OPENROUTER_API_KEY"),
@@ -106,6 +133,12 @@ def _call_model(model_id: str, system_prompt: str, user_content: str) -> str:
                 "X-Title": "agentsHQ Sankofa Council",
             },
             extra_body=extra_body or None,
+            metadata={
+                "agent_name": voice_name or "council_voice",
+                "council_run_id": council_run_id,
+                "task_type": "council",
+                "crew_name": "sankofa_council",
+            },
         )
         return response.choices[0].message.content or ""
     except Exception as e:
@@ -228,6 +261,10 @@ class SankofaCouncil:
         convergence_score = 0.0
         chairman_result = {}
 
+        # Stable run ID used to group all llm_calls rows for this run.
+        council_run_id = datetime.utcnow().strftime("council-%Y%m%d-%H%M%S-") + str(random.randint(1000, 9999))
+        self._current_run_id = council_run_id
+
         for round_num in range(1, COUNCIL_MAX_ROUNDS + 1):
             logger.info(f"Sankofa Council — Round {round_num}")
 
@@ -316,7 +353,11 @@ class SankofaCouncil:
                     f"Then give your revised or reaffirmed analysis."
                 )
             model_id = self.voice_models[vc["name"]]
-            response_text = _call_model(model_id, system_prompt, user_content)
+            response_text = _call_model(
+                model_id, system_prompt, user_content,
+                voice_name=f"voice_{vc['name']}",
+                council_run_id=getattr(self, "_current_run_id", None),
+            )
             return {"voice": vc["name"], "model": model_id, "response": response_text}
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
@@ -354,7 +395,11 @@ class SankofaCouncil:
 
         def call_reviewer(vc):
             model_id = self.voice_models[vc["name"]]
-            raw = _call_model(model_id, review_prompt, user_content)
+            raw = _call_model(
+                model_id, review_prompt, user_content,
+                voice_name=f"review_{vc['name']}",
+                council_run_id=getattr(self, "_current_run_id", None),
+            )
             try:
                 clean = raw.strip()
                 if clean.startswith("```"):
@@ -396,7 +441,11 @@ class SankofaCouncil:
             f"PEER REVIEWS:\n{reviews_block}"
         )
 
-        raw = _call_model(self.chairman_model, chairman_prompt, user_content)
+        raw = _call_model(
+            self.chairman_model, chairman_prompt, user_content,
+            voice_name="chairman",
+            council_run_id=getattr(self, "_current_run_id", None),
+        )
 
         try:
             clean = raw.strip()
