@@ -1738,6 +1738,60 @@ async def process_telegram_update(update: dict):
             _send_msg(chat_id, f"Could not load projects: {e}")
         return
 
+    # /cost [days] — LLM spend rollup from llm_calls (default last 7 days)
+    if text.lower().startswith("/cost"):
+        from notifier import send_message as _send_msg
+        from memory import _pg_conn
+        parts = text.strip().split(maxsplit=1)
+        try:
+            days = int(parts[1]) if len(parts) > 1 else 7
+        except ValueError:
+            days = 7
+        try:
+            conn = _pg_conn()
+            cur = conn.cursor()
+            cur.execute(
+                """
+                SELECT
+                    COUNT(*) AS total_calls,
+                    ROUND(SUM(cost_usd)::numeric, 4) AS total_usd,
+                    ROUND(SUM(cost_usd) FILTER (WHERE ts > NOW() - INTERVAL '24 hours')::numeric, 4) AS today_usd,
+                    COUNT(DISTINCT council_run_id) FILTER (WHERE council_run_id IS NOT NULL) AS council_runs
+                FROM llm_calls
+                WHERE ts > NOW() - INTERVAL '%s days'
+                """,
+                (days,),
+            )
+            total_calls, total_usd, today_usd, council_runs = cur.fetchone()
+            cur.execute(
+                """
+                SELECT agent_name, COUNT(*) AS calls, ROUND(SUM(cost_usd)::numeric, 4) AS usd
+                FROM llm_calls
+                WHERE ts > NOW() - INTERVAL '%s days' AND agent_name IS NOT NULL
+                GROUP BY agent_name
+                ORDER BY usd DESC NULLS LAST
+                LIMIT 8
+                """,
+                (days,),
+            )
+            top = cur.fetchall()
+            cur.close()
+            conn.close()
+            lines = [
+                f"LLM spend (last {days} days):",
+                f"  ${total_usd or 0:.4f} total over {total_calls or 0} calls",
+                f"  ${today_usd or 0:.4f} in last 24h",
+                f"  {council_runs or 0} council runs",
+                "",
+                "Top agents by spend:",
+            ]
+            for agent, calls, usd in top:
+                lines.append(f"  ${usd or 0:.4f}  {agent}  ({calls} calls)")
+            _send_msg(chat_id, "\n".join(lines))
+        except Exception as e:
+            _send_msg(chat_id, f"Could not load cost: {e}")
+        return
+
     # /switch <project-name> — set active project context
     if text.lower().startswith("/switch"):
         from notifier import send_message as _send_msg
