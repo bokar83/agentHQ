@@ -153,10 +153,18 @@ def verify_api_key(x_api_key: str = Header(default=None), authorization: Optiona
 @app.on_event("startup")
 async def startup_event():
     """Run at service startup."""
+    # Per-call LLM ledger: register litellm callback so every completion
+    # logs a row to llm_calls. Must run before any crew or council fires.
+    try:
+        from usage_logger import install_litellm_callback
+        install_litellm_callback()
+    except Exception as e:
+        logger.warning(f"usage_logger startup failed (non-fatal): {e}")
+
     if start_scheduler:
         start_scheduler()
         logger.info("Catalyst Daily Ignition initiated.")
-    
+
     # Start Telegram Polling in background
     asyncio.create_task(telegram_polling_loop())
     logger.info("Telegram Polling Loop scheduled.")
@@ -761,6 +769,19 @@ def run_orchestrator(task_request: str, from_number: str = "unknown", session_ke
     crew = assemble_crew(crew_type, enriched_task)
 
     # Step 4: Execute
+    # Tag every LLM call inside this kickoff with crew/task/session metadata
+    # so the per-call ledger (llm_calls) can attribute spend correctly.
+    try:
+        from usage_logger import current_call_context
+        current_call_context.set({
+            "project": "agentsHQ",
+            "task_type": task_type,
+            "crew_name": crew_type,
+            "session_key": session_key,
+        })
+    except Exception:
+        pass
+
     logger.info(f"Kicking off crew: {crew_type}")
     result = crew.kickoff()
     result_str = result.raw if hasattr(result, 'raw') else str(result)

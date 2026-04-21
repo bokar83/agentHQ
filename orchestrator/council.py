@@ -80,10 +80,20 @@ def strip_style_markers(text: str) -> str:
     return text.strip()
 
 
-def _call_model(model_id: str, system_prompt: str, user_content: str) -> str:
+def _call_model(
+    model_id: str,
+    system_prompt: str,
+    user_content: str,
+    voice_name: str = None,
+    council_run_id: str = None,
+) -> str:
     """
     Make a single completion call via litellm → OpenRouter.
     Returns the response text, or an error string (never raises).
+
+    Usage logging is handled by a global litellm callback registered in
+    usage_logger.install_litellm_callback(). We pass metadata through so
+    the callback can tag the row with voice_name + council_run_id.
     """
     try:
         from litellm import completion
@@ -93,10 +103,27 @@ def _call_model(model_id: str, system_prompt: str, user_content: str) -> str:
         extra_body = {}
         if "anthropic/" in model_id:
             extra_body = {"provider": {"order": ["Anthropic"], "allow_fallbacks": False}}
+        # Cache the static system prompt (voice/review/chairman templates
+        # never vary across runs). Anthropic 5-min TTL cache hits give a
+        # ~90% discount on input tokens. Structured content with
+        # cache_control routes through OpenRouter → Anthropic intact.
+        # OpenRouter litellm transform moves message-level cache_control onto
+        # the last content block. Putting it at the message level is the form
+        # litellm expects; it will then forward cache_control to Anthropic.
+        is_anthropic = "anthropic/" in model_id
+        if is_anthropic:
+            system_msg = {
+                "role": "system",
+                "content": system_prompt,
+                "cache_control": {"type": "ephemeral"},
+            }
+        else:
+            system_msg = {"role": "system", "content": system_prompt}
+
         response = completion(
             model=f"openrouter/{model_id}",
             messages=[
-                {"role": "system", "content": system_prompt},
+                system_msg,
                 {"role": "user", "content": user_content},
             ],
             api_key=os.environ.get("OPENROUTER_API_KEY"),
@@ -106,6 +133,12 @@ def _call_model(model_id: str, system_prompt: str, user_content: str) -> str:
                 "X-Title": "agentsHQ Sankofa Council",
             },
             extra_body=extra_body or None,
+            metadata={
+                "agent_name": voice_name or "council_voice",
+                "council_run_id": council_run_id,
+                "task_type": "council",
+                "crew_name": "sankofa_council",
+            },
         )
         return response.choices[0].message.content or ""
     except Exception as e:
@@ -161,9 +194,28 @@ VOICE_CONFIG = [
 
 CHAIRMAN_CONFIG = {
     "capability": "deep_reasoning",
-    "max_cost_tier": "high",
-    "model_override": "anthropic/claude-opus-4.6",  # Chairman always uses Opus — synthesis fidelity
+    "max_cost_tier": "medium",
+    # Sonnet-4.6 instead of Opus: chairman synthesizes ~5 short voice
+    # responses + 5 short reviews into structured JSON. That's
+    # instruction-following work, not frontier reasoning. Sonnet costs
+    # 60% less per token and produces equivalent synthesis quality
+    # on this prompt shape.
+    "model_override": "anthropic/claude-sonnet-4.6",
     "temperature": 0.2,
+}
+
+# Peer review uses a cheaper model than the voice's own response model.
+# Reviews are short structured JSON over already-written text — they
+# don't need full voice fidelity. Mapped per provider so we keep
+# distribution diversity (an Anthropic voice still reviews via Anthropic).
+REVIEW_MODEL_BY_PROVIDER = {
+    "anthropic": "anthropic/claude-haiku-4.5",
+    "google": "google/gemini-2.5-flash",
+    "openai": "openai/o4-mini",
+    "deepseek": "deepseek/deepseek-v3.2",
+    "x-ai": "x-ai/grok-4",  # no cheap Grok variant in registry; keep same
+    "mistralai": "mistralai/mistral-large-2512",
+    "qwen": "qwen/qwen3-235b-a22b-2507",
 }
 
 
@@ -227,6 +279,10 @@ class SankofaCouncil:
         converged = False
         convergence_score = 0.0
         chairman_result = {}
+
+        # Stable run ID used to group all llm_calls rows for this run.
+        council_run_id = datetime.utcnow().strftime("council-%Y%m%d-%H%M%S-") + str(random.randint(1000, 9999))
+        self._current_run_id = council_run_id
 
         for round_num in range(1, COUNCIL_MAX_ROUNDS + 1):
             logger.info(f"Sankofa Council — Round {round_num}")
@@ -316,7 +372,11 @@ class SankofaCouncil:
                     f"Then give your revised or reaffirmed analysis."
                 )
             model_id = self.voice_models[vc["name"]]
-            response_text = _call_model(model_id, system_prompt, user_content)
+            response_text = _call_model(
+                model_id, system_prompt, user_content,
+                voice_name=f"voice_{vc['name']}",
+                council_run_id=getattr(self, "_current_run_id", None),
+            )
             return {"voice": vc["name"], "model": model_id, "response": response_text}
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
@@ -353,8 +413,14 @@ class SankofaCouncil:
         )
 
         def call_reviewer(vc):
-            model_id = self.voice_models[vc["name"]]
-            raw = _call_model(model_id, review_prompt, user_content)
+            voice_model = self.voice_models[vc["name"]]
+            provider = voice_model.split("/")[0]
+            model_id = REVIEW_MODEL_BY_PROVIDER.get(provider, voice_model)
+            raw = _call_model(
+                model_id, review_prompt, user_content,
+                voice_name=f"review_{vc['name']}",
+                council_run_id=getattr(self, "_current_run_id", None),
+            )
             try:
                 clean = raw.strip()
                 if clean.startswith("```"):
@@ -396,7 +462,11 @@ class SankofaCouncil:
             f"PEER REVIEWS:\n{reviews_block}"
         )
 
-        raw = _call_model(self.chairman_model, chairman_prompt, user_content)
+        raw = _call_model(
+            self.chairman_model, chairman_prompt, user_content,
+            voice_name="chairman",
+            council_run_id=getattr(self, "_current_run_id", None),
+        )
 
         try:
             clean = raw.strip()

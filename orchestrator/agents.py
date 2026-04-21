@@ -271,13 +271,37 @@ def select_by_capability(
 # All calls route through OpenRouter via openai-compatible API.
 # ══════════════════════════════════════════════════════════════
 
+def _resolve_openrouter_model_string(model_alias: str) -> str:
+    """
+    Normalize any model identifier to the full openrouter/<provider>/<slug> form
+    that CrewAI's LLM class needs to route through OpenRouter.
+
+    Accepts:
+      - MODEL_REGISTRY keys ("claude-sonnet")  -> already openrouter/-prefixed
+      - COUNCIL_MODEL_REGISTRY keys ("qwen/qwen3-235b-a22b-2507") -> needs prefix
+      - Already-prefixed strings ("openrouter/anthropic/...") -> passthrough
+
+    Fails loud on a malformed key so a routing typo cannot silently fall back
+    to a wrong provider.
+    """
+    resolved = MODEL_REGISTRY.get(model_alias, model_alias)
+    if resolved.startswith("openrouter/"):
+        return resolved
+    if "/" in resolved:
+        return f"openrouter/{resolved}"
+    raise ValueError(
+        f"Cannot resolve model identifier {model_alias!r}: "
+        f"not in MODEL_REGISTRY and not a provider/slug pair."
+    )
+
+
 def get_llm(model_alias: str = DEFAULT_MODEL, temperature: float = 0.3) -> LLM:
     """
     Get a configured LLM via OpenRouter using CrewAI's LLM class.
     model_alias: key from MODEL_REGISTRY or full model string
     temperature: 0.0 = deterministic, 1.0 = creative
     """
-    model_string = MODEL_REGISTRY.get(model_alias, model_alias)
+    model_string = _resolve_openrouter_model_string(model_alias)
     logger.debug(f"Creating LLM: {model_alias} -> {model_string} (temp={temperature})")
     # Force Anthropic provider for Claude models — prevents OpenRouter from
     # routing through Google Vertex, which rejects CrewAI's prefill pattern.
@@ -304,46 +328,88 @@ def get_llm(model_alias: str = DEFAULT_MODEL, temperature: float = 0.3) -> LLM:
 # To add new models: add to MODEL_REGISTRY, add to matrix below.
 # ══════════════════════════════════════════════════════════════
 
+# Model assignment per (role, complexity). Today these are hard-coded
+# Anthropic models. The Phase 3.5 plan is to migrate non-revenue roles
+# to capability-based routing once a quality harness exists. Until then,
+# this stays a flat dict so rollback is one revert.
+ROLE_MODEL = {
+    ("planner",       "simple"):   "claude-haiku",
+    ("planner",       "moderate"): "claude-haiku",
+    ("planner",       "complex"):  "claude-sonnet",
+    ("researcher",    "simple"):   "claude-sonnet",
+    ("researcher",    "moderate"): "claude-sonnet",
+    ("researcher",    "complex"):  "claude-sonnet",
+    ("writer",        "simple"):   "claude-haiku",
+    ("writer",        "moderate"): "claude-sonnet",
+    ("writer",        "complex"):  "claude-sonnet",
+    ("social",        "simple"):   "claude-sonnet",
+    ("social",        "moderate"): "claude-sonnet",
+    ("social",        "complex"):  "claude-sonnet",
+    ("coder",         "simple"):   "claude-haiku",
+    ("coder",         "moderate"): "claude-sonnet",
+    ("coder",         "complex"):  "claude-sonnet",
+    ("qa",            "simple"):   "gemini-flash",
+    ("qa",            "moderate"): "gemini-flash",
+    ("qa",            "complex"):  "gemini-flash",
+    ("orchestrator",  "simple"):   "claude-sonnet",
+    ("orchestrator",  "moderate"): "claude-opus",
+    ("orchestrator",  "complex"):  "claude-opus",
+    ("consultant",    "simple"):   "claude-sonnet",
+    ("consultant",    "moderate"): "claude-sonnet",
+    ("consultant",    "complex"):  "claude-opus",
+    ("voice",         "complex"):  "claude-sonnet",
+    ("hunter",        "simple"):   "claude-haiku",
+    ("hunter",        "moderate"): "claude-sonnet",
+    ("hunter",        "complex"):  "claude-sonnet",
+    ("skill_builder", "moderate"): "gemini-flash",
+    ("skill_builder", "complex"):  "claude-sonnet",
+}
+
+# Per-role temperature, decoupled from model choice so the two evolve
+# independently. Phase 3.5 routing change should not have to touch these.
+ROLE_TEMPERATURE = {
+    ("planner",       "simple"):   0.1,
+    ("planner",       "moderate"): 0.1,
+    ("planner",       "complex"):  0.2,
+    ("researcher",    "simple"):   0.2,
+    ("researcher",    "moderate"): 0.2,
+    ("researcher",    "complex"):  0.2,
+    ("writer",        "simple"):   0.7,
+    ("writer",        "moderate"): 0.7,
+    ("writer",        "complex"):  0.8,
+    ("social",        "simple"):   0.8,
+    ("social",        "moderate"): 0.8,
+    ("social",        "complex"):  0.9,
+    ("coder",         "simple"):   0.1,
+    ("coder",         "moderate"): 0.1,
+    ("coder",         "complex"):  0.1,
+    ("qa",            "simple"):   0.1,
+    ("qa",            "moderate"): 0.1,
+    ("qa",            "complex"):  0.1,
+    ("orchestrator",  "simple"):   0.2,
+    ("orchestrator",  "moderate"): 0.2,
+    ("orchestrator",  "complex"):  0.3,
+    ("consultant",    "simple"):   0.3,
+    ("consultant",    "moderate"): 0.3,
+    ("consultant",    "complex"):  0.3,
+    ("voice",         "complex"):  0.8,
+    ("hunter",        "simple"):   0.2,
+    ("hunter",        "moderate"): 0.3,
+    ("hunter",        "complex"):  0.4,
+    ("skill_builder", "moderate"): 0.1,
+    ("skill_builder", "complex"):  0.1,
+}
+
+
 def select_llm(agent_role: str, task_complexity: str = "moderate", temperature: float = None) -> LLM:
     """
     Dynamically select the best model for an agent role and task complexity.
     agent_role: planner | researcher | writer | coder | qa | orchestrator | social | consultant
     task_complexity: simple | moderate | complex
     """
-    selection_matrix = {
-        ("planner",     "simple"):   ("claude-haiku",  0.1),
-        ("planner",     "moderate"): ("claude-haiku",  0.1),
-        ("planner",     "complex"):  ("claude-sonnet", 0.2),
-        ("researcher",  "simple"):   ("claude-sonnet", 0.2),
-        ("researcher",  "moderate"): ("claude-sonnet", 0.2),
-        ("researcher",  "complex"):  ("claude-sonnet", 0.2),
-        ("writer",      "simple"):   ("claude-haiku",  0.7),
-        ("writer",      "moderate"): ("claude-sonnet", 0.7),
-        ("writer",      "complex"):  ("claude-sonnet", 0.8),
-        ("social",      "simple"):   ("claude-sonnet", 0.8),
-        ("social",      "moderate"): ("claude-sonnet", 0.8),
-        ("social",      "complex"):  ("claude-sonnet", 0.9),
-        ("coder",       "simple"):   ("claude-haiku",  0.1),
-        ("coder",       "moderate"): ("claude-sonnet", 0.1),
-        ("coder",       "complex"):  ("claude-sonnet", 0.1),
-        ("qa",          "simple"):   ("gemini-flash",  0.1),
-        ("qa",          "moderate"): ("gemini-flash",  0.1),
-        ("qa",          "complex"):  ("gemini-flash",  0.1),
-        ("orchestrator","simple"):   ("claude-sonnet", 0.2),
-        ("orchestrator","moderate"): ("claude-opus",   0.2),
-        ("orchestrator","complex"):  ("claude-opus",   0.3),
-        ("consultant",  "simple"):   ("claude-sonnet", 0.3),
-        ("consultant",  "moderate"): ("claude-sonnet", 0.3),
-        ("consultant",  "complex"):  ("claude-opus",   0.3),
-        ("voice",       "complex"):  ("claude-sonnet", 0.8),
-        ("hunter",      "simple"):   ("claude-haiku",  0.2),
-        ("hunter",      "moderate"): ("claude-sonnet", 0.3),
-        ("hunter",      "complex"):  ("claude-sonnet", 0.4),
-        ("skill_builder", "moderate"): ("gemini-flash", 0.1),
-        ("skill_builder", "complex"):  ("claude-sonnet", 0.1),
-    }
     key = (agent_role, task_complexity)
-    model_alias, default_temp = selection_matrix.get(key, (DEFAULT_MODEL, 0.3))
+    model_alias = ROLE_MODEL.get(key, DEFAULT_MODEL)
+    default_temp = ROLE_TEMPERATURE.get(key, 0.3)
     final_temp = temperature if temperature is not None else default_temp
     logger.info(f"Model selected for {agent_role}/{task_complexity}: {model_alias} (temp={final_temp})")
     return get_llm(model_alias, final_temp)
