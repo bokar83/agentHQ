@@ -256,12 +256,24 @@ def _classify_raw(user_message: str) -> str:
     msg = user_message.lower().strip()
 
     # Read-intent shortcut: a reporting question about CRM entities must never
-    # reach the action branches. Guard terms block questions that are actually
-    # write intents in interrogative form ("how many emails should I send?").
+    # reach the action branches. Guards:
+    #   - interrogative/listing starter
+    #   - a CRM entity somewhere in the message
+    #   - no imperative write verbs ("draft", "send", "write", "email",
+    #     "contact" as a verb). Past-tense forms ("drafted", "emailed") are
+    #     reporting and stay allowed.
+    #   - no "best / strategy / template / should" (planning/prescription)
     _READ_STARTS = ("how many", "how much", "what's the", "whats the", "show me", "list ", "count ")
     _READ_ENTITIES = ("lead", "leads", "outreach", "email", "emails", "prospect", "prospects", "contact", "contacts", "pipeline", "draft", "drafts")
-    _WRITE_BLOCKS = (" should ", " best ", " strategy", " template", " write ", " send ")
-    if msg.startswith(_READ_STARTS) and any(t in msg for t in _READ_ENTITIES) and not any(t in f" {msg} " for t in _WRITE_BLOCKS):
+    _WRITE_VERBS = (" draft ", " drafts ", " send ", " write ", " email ", " contact ", " create ", " make ")
+    _PRESCRIPTIVE = (" should ", " best ", " strategy", " template")
+    padded = f" {msg} "
+    if (
+        msg.startswith(_READ_STARTS)
+        and any(t in msg for t in _READ_ENTITIES)
+        and not any(t in padded for t in _WRITE_VERBS)
+        and not any(t in padded for t in _PRESCRIPTIVE)
+    ):
         return "crm_query"
 
     # High-priority explicit task prefixes checked first
@@ -369,16 +381,28 @@ def _llm_classify(user_message: str) -> str:
 ROUTER_VERSION = "2026-04-20-read-intent"
 
 
-def _log_routing_decision(user_message: str, task_type: str, crew: str, used_llm: bool) -> None:
-    """Fire-and-forget telemetry write. Never blocks or fails classification."""
-    import threading
+# Bounded queue + single worker thread for telemetry writes.
+# Rationale: spawning one daemon thread per classify_task() call creates
+# unbounded fan-out under DB slowness. A bounded queue drops writes cleanly
+# when saturated (non-blocking put), and a single consumer thread keeps
+# memory and connection-count flat regardless of request rate.
+import queue as _queue
+import threading as _threading
 
-    def _write():
+_ROUTER_LOG_QUEUE: "_queue.Queue[tuple]" = _queue.Queue(maxsize=256)
+_ROUTER_LOG_WORKER_STARTED = False
+_ROUTER_LOG_WORKER_LOCK = _threading.Lock()
+
+
+def _router_log_worker() -> None:
+    try:
+        from orchestrator.db import get_crm_connection  # local repo layout
+    except ImportError:
+        from db import get_crm_connection  # flat /app layout inside container
+
+    while True:
+        item = _ROUTER_LOG_QUEUE.get()
         try:
-            try:
-                from orchestrator.db import get_crm_connection  # local repo layout
-            except ImportError:
-                from db import get_crm_connection  # flat /app layout inside container
             conn = get_crm_connection()
             try:
                 with conn.cursor() as cur:
@@ -387,15 +411,37 @@ def _log_routing_decision(user_message: str, task_type: str, crew: str, used_llm
                         INSERT INTO router_log (message, task_type, crew, used_llm, router_version)
                         VALUES (%s, %s, %s, %s, %s)
                         """,
-                        (user_message[:500], task_type, crew, used_llm, ROUTER_VERSION),
+                        item,
                     )
                 conn.commit()
             finally:
                 conn.close()
         except Exception as e:
             logger.debug(f"router_log write skipped: {type(e).__name__}: {e}")
+        finally:
+            _ROUTER_LOG_QUEUE.task_done()
 
-    threading.Thread(target=_write, daemon=True).start()
+
+def _ensure_router_log_worker() -> None:
+    global _ROUTER_LOG_WORKER_STARTED
+    if _ROUTER_LOG_WORKER_STARTED:
+        return
+    with _ROUTER_LOG_WORKER_LOCK:
+        if _ROUTER_LOG_WORKER_STARTED:
+            return
+        _threading.Thread(target=_router_log_worker, name="router-log-worker", daemon=True).start()
+        _ROUTER_LOG_WORKER_STARTED = True
+
+
+def _log_routing_decision(user_message: str, task_type: str, crew: str, used_llm: bool) -> None:
+    """Non-blocking telemetry enqueue. Drops the write if the queue is full."""
+    _ensure_router_log_worker()
+    try:
+        _ROUTER_LOG_QUEUE.put_nowait(
+            (user_message[:500], task_type, crew, used_llm, ROUTER_VERSION)
+        )
+    except _queue.Full:
+        logger.debug("router_log queue full; dropping one telemetry row")
 
 
 def classify_task(user_message: str) -> dict:
