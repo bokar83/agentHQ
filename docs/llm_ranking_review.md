@@ -58,3 +58,4 @@ For each, the source is OpenRouter's models page (`https://openrouter.ai/models`
 | Date | Reviewer | Models added | Models removed | Tags added | Tags removed | Price changes | Notes |
 |---|---|---|---|---|---|---|---|
 | 2026-04-21 | Claude (initial setup) | n/a | n/a | n/a | n/a | n/a | Doc created. First scheduled review 2026-04-27. |
+| 2026-04-21 | Boubacar + Claude (early) | anthropic/claude-opus-4.7, qwen/qwen3.5-flash-02-23 | none | none | none | none | Pulled forward from Apr 27. Opus 4.7 same price as 4.6 but newer training. Qwen3.5-flash adds 1M context at very_low ($0.065/$0.26). Kept opus-4.6 as fallback. No swaps to existing routing. Also: routed x-ai reviews to grok-4-fast (15x/30x cheaper, smoke verified). |

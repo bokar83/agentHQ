@@ -84,12 +84,19 @@ COST_TIER_ORDER = ["very_low", "low", "low-medium", "medium", "medium-high", "hi
 
 COUNCIL_MODEL_REGISTRY = {
     # ── Anthropic ─────────────────────────────────────────────
+    "anthropic/claude-opus-4.7": {
+        "capabilities": ["deep_reasoning", "long_context", "instruction_following"],
+        "cost_tier": "high",
+        "input_per_mtok": 5.00,
+        "output_per_mtok": 25.00,
+        "notes": "Frontier Opus (added 2026-04-21). Same price as 4.6, newer training. Best deep_reasoning.",
+    },
     "anthropic/claude-opus-4.6": {
         "capabilities": ["deep_reasoning", "long_context", "instruction_following"],
         "cost_tier": "high",
         "input_per_mtok": 5.00,
         "output_per_mtok": 25.00,
-        "notes": "Best for Chairman synthesis. 1M context. Voice fidelity.",
+        "notes": "Prior Opus. Kept as fallback. 1M context. Voice fidelity.",
     },
     "anthropic/claude-sonnet-4.6": {
         "capabilities": ["deep_reasoning", "instruction_following", "long_context"],
@@ -195,6 +202,13 @@ COUNCIL_MODEL_REGISTRY = {
         "input_per_mtok": 0.071,
         "output_per_mtok": 0.10,
         "notes": "235B MoE. Exceptional capability-to-cost. Backup for any voice.",
+    },
+    "qwen/qwen3.5-flash-02-23": {
+        "capabilities": ["fast", "cost_efficient", "long_context"],
+        "cost_tier": "very_low",
+        "input_per_mtok": 0.065,
+        "output_per_mtok": 0.26,
+        "notes": "Added 2026-04-21. 1M context at very_low tier. Fast outsider/executor backup.",
     },
 }
 
