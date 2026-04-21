@@ -43,6 +43,19 @@ from pydantic import Field
 
 from firecrawl_tools import FirecrawlScrapeTool, FirecrawlCrawlTool, FirecrawlSearchTool
 
+try:
+    from kie_media import (
+        generate_image as _kie_generate_image,
+        generate_video as _kie_generate_video,
+        list_models as _kie_list_models,
+        check_credits as _kie_check_credits,
+        KieMediaError,
+    )
+    _kie_available = True
+except ImportError as _kie_import_err:
+    _kie_available = False
+    _kie_import_error_msg = str(_kie_import_err)
+
 from health import health_registry
 
 # Core hunter + CRM imports — must not fail silently
@@ -1702,9 +1715,122 @@ class QueryAudienceEngineTool(BaseTool):
             return f"Audience Engine error: {e}"
 
 
+class KieGenerateImageTool(BaseTool):
+    """
+    Generate an image via Kai (kie.ai) using the top-ranked text-to-image model.
+    On failure: retry rank-1 once, escalate to rank-2, rank-3. Every attempt logs to Supabase.
+    Stores output in Google Drive 05_Asset_Library/01_Images/<quarter>/ and local cache.
+    Input: JSON with 'prompt' (required), optional 'aspect_ratio' (default '16:9'),
+    'task_type' (text_to_image or image_to_image, default text_to_image),
+    'linked_content_id' (Notion Content Board row ID if this asset supports a specific post).
+    Returns JSON with drive_url, drive_file_id, local_path, model_used, attempts.
+    """
+    name: str = "kie_generate_image"
+    description: str = (
+        "Generate an image via Kai (kie.ai), saved to Google Drive 05_Asset_Library/01_Images. "
+        "Uses top-ranked model per task_type with auto-fallback on failure. "
+        "Input: JSON with 'prompt' (required), optional 'aspect_ratio' (default '16:9'), "
+        "'task_type' (text_to_image or image_to_image), 'linked_content_id'. "
+        "Returns JSON with drive_url, drive_file_id, local_path, model_used, attempts."
+    )
+
+    def _run(self, input_data: str) -> str:
+        if not _kie_available:
+            return f"kie_media module not available: {_kie_import_error_msg}"
+        try:
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            prompt = data.get("prompt")
+            if not prompt:
+                return "Error: 'prompt' is required."
+            result = _kie_generate_image(
+                prompt=prompt,
+                aspect_ratio=data.get("aspect_ratio", "16:9"),
+                task_type=data.get("task_type", "text_to_image"),
+                linked_content_id=data.get("linked_content_id"),
+            )
+            return json.dumps(result)
+        except Exception as e:
+            logger.error(f"KieGenerateImageTool failed: {type(e).__name__}: {e}")
+            return f"kie_generate_image failed: {type(e).__name__}: {e}"
+
+
+class KieGenerateVideoTool(BaseTool):
+    """
+    Generate a video via Kai (kie.ai) using the top-ranked text-to-video model.
+    Same retry/fallback/storage/logging behavior as kie_generate_image.
+    Input: JSON with 'prompt' (required), optional 'aspect_ratio' (default '16:9'),
+    'task_type' (text_to_video or image_to_video), 'linked_content_id'.
+    Returns JSON with drive_url, drive_file_id, local_path, model_used, attempts.
+    """
+    name: str = "kie_generate_video"
+    description: str = (
+        "Generate a video via Kai (kie.ai), saved to Google Drive 05_Asset_Library/02_Videos. "
+        "Uses top-ranked model per task_type with auto-fallback on failure. "
+        "Input: JSON with 'prompt' (required), optional 'aspect_ratio' (default '16:9'), "
+        "'task_type' (text_to_video or image_to_video), 'linked_content_id'. "
+        "Returns JSON with drive_url, drive_file_id, local_path, model_used, attempts."
+    )
+
+    def _run(self, input_data: str) -> str:
+        if not _kie_available:
+            return f"kie_media module not available: {_kie_import_error_msg}"
+        try:
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            prompt = data.get("prompt")
+            if not prompt:
+                return "Error: 'prompt' is required."
+            result = _kie_generate_video(
+                prompt=prompt,
+                aspect_ratio=data.get("aspect_ratio", "16:9"),
+                task_type=data.get("task_type", "text_to_video"),
+                linked_content_id=data.get("linked_content_id"),
+            )
+            return json.dumps(result)
+        except Exception as e:
+            logger.error(f"KieGenerateVideoTool failed: {type(e).__name__}: {e}")
+            return f"kie_generate_video failed: {type(e).__name__}: {e}"
+
+
+class KieListModelsTool(BaseTool):
+    """
+    List priority-ordered Kai model registry for image and video tasks.
+    Input: JSON with optional 'task_type' (text_to_image, image_to_image, text_to_video, image_to_video).
+    With no input, returns the full registry grouped by task type.
+    """
+    name: str = "kie_list_models"
+    description: str = (
+        "Return the current priority-ordered Kai model registry. "
+        "Input: JSON with optional 'task_type' to filter, or empty for all."
+    )
+
+    def _run(self, input_data: str = "{}") -> str:
+        if not _kie_available:
+            return f"kie_media module not available: {_kie_import_error_msg}"
+        try:
+            data = json.loads(input_data) if isinstance(input_data, str) and input_data else {}
+            return json.dumps(_kie_list_models(task_type=data.get("task_type")))
+        except Exception as e:
+            return f"kie_list_models failed: {e}"
+
+
+class KieCheckCreditsTool(BaseTool):
+    """Return remaining Kai credit balance."""
+    name: str = "kie_check_credits"
+    description: str = "Return remaining Kai (kie.ai) credit balance. No input required."
+
+    def _run(self, _input_data: str = "") -> str:
+        if not _kie_available:
+            return f"kie_media module not available: {_kie_import_error_msg}"
+        try:
+            return json.dumps({"credits_remaining": _kie_check_credits()})
+        except Exception as e:
+            return f"kie_check_credits failed: {e}"
+
+
 RESEARCH_TOOLS = [search_tool, file_reader, QueryMemoryTool(), QueryAudienceEngineTool()]
 MEMORY_TOOLS = [QueryMemoryTool(), SaveLearningTool()]
 SCRAPING_TOOLS = [FirecrawlScrapeTool(), FirecrawlCrawlTool(), FirecrawlSearchTool()]
+MEDIA_TOOLS = [KieGenerateImageTool(), KieGenerateVideoTool(), KieListModelsTool(), KieCheckCreditsTool()]
 WRITING_TOOLS = [file_writer, SaveOutputTool(), voice_polisher_tool]
 CODE_TOOLS = [t for t in [code_interpreter, file_writer, file_reader, SaveOutputTool(), CLIHubSearchTool(), launch_vercel_tool] if t is not None]
 ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool(), GitHubRepoTool(), GitHubIssueTool(), GitHubFileTool(), NotionSearchTool(), NotionPageTool(), launch_vercel_tool] + VERCEL_TOOLS + NOTION_STYLING_TOOLS + FORGE_TOOLS + GWS_TOOLS

@@ -1480,6 +1480,107 @@ def build_forge_kpi_crew(user_request: str) -> Crew:  # noqa: ARG001
     )
 
 
+def _infer_media_task_type(user_request: str) -> tuple[str, str]:
+    """
+    Return (modality, task_subtype):
+      modality: 'image' or 'video'
+      task_subtype: text_to_image | image_to_image | text_to_video | image_to_video
+    """
+    msg = user_request.lower()
+    has_ref = "http://" in msg or "https://" in msg or "reference:" in msg or "from this image" in msg
+    if any(k in msg for k in ["video", "animate", "animation", "mp4", "clip"]):
+        return ("video", "image_to_video" if has_ref else "text_to_video")
+    return ("image", "image_to_image" if has_ref else "text_to_image")
+
+
+def _extract_media_prompt(user_request: str) -> str:
+    """Strip the imperative 'create a video/image of ...' so the prompt is clean."""
+    msg = user_request.strip()
+    for prefix in [
+        "create a video of ", "create a video ", "create video of ", "create video ",
+        "generate a video of ", "generate a video ", "generate video of ", "generate video ",
+        "make a video of ", "make a video ", "make video of ", "make video ",
+        "create an image of ", "create an image ", "create image of ", "create image ",
+        "generate an image of ", "generate an image ", "generate image of ", "generate image ",
+        "make an image of ", "make an image ", "make image of ", "make image ",
+        "picture of ", "image of ", "video of ",
+    ]:
+        if msg.lower().startswith(prefix):
+            return msg[len(prefix):].strip().rstrip(".") or msg
+    return msg
+
+
+def build_media_crew(user_request: str) -> Crew:
+    """
+    Crew for: create_media
+    Generates an image or video via Kai (kie.ai). Picks top-ranked model for the
+    inferred task type, retries with fallback ranks on failure, uploads to
+    Google Drive 05_Asset_Library/, logs metadata to Supabase and the Notion
+    Media_Index DB.
+
+    Pattern follows build_forge_kpi_crew: direct Python call, single reporter agent.
+    Keeps the LLM out of the generation loop so cost is predictable.
+    """
+    try:
+        from kie_media import generate_image, generate_video, KieMediaError
+    except ImportError as e:
+        logger.error(f"kie_media import failed: {e}")
+        return build_unknown_crew(user_request)
+
+    modality, task_subtype = _infer_media_task_type(user_request)
+    prompt = _extract_media_prompt(user_request)
+
+    try:
+        if modality == "video":
+            result = generate_video(prompt=prompt, task_type=task_subtype)
+        else:
+            result = generate_image(prompt=prompt, task_type=task_subtype)
+        result_text = (
+            f"Generated {modality} successfully.\n"
+            f"Model used: {result['model_used']} (rank {result['rank_used']})\n"
+            f"Drive: {result['drive_url']}\n"
+            f"File: {result['filename']}\n"
+            f"Local: {result['local_path']}\n"
+            f"Attempts: {len(result['attempts'])}"
+        )
+    except KieMediaError as e:
+        result_text = (
+            f"{modality.capitalize()} generation failed after all retries.\n"
+            f"Error: {e}\n"
+            f"Prompt attempted: {prompt[:200]}\n"
+            f"Suggest: review docs/kai_model_registry.md and rerank models, "
+            f"or check `kie_check_credits` balance."
+        )
+    except Exception as e:
+        result_text = f"{modality.capitalize()} generation hit unexpected error: {type(e).__name__}: {e}"
+
+    formatter = Agent(
+        role="Media Generation Reporter",
+        goal="Report the outcome of a Kai media generation operation",
+        backstory=(
+            "You relay pre-computed media generation results to the user. "
+            "You do not retry, re-prompt, or call the model again. "
+            "When the user sees your reply they should see the Drive URL if it succeeded, "
+            "or the exact failure reason if it did not."
+        ),
+        llm=get_llm("gemini-flash"),
+        max_iter=1,
+        verbose=False,
+    )
+    task_report = Task(
+        description=f"Report this media generation result to the user verbatim:\n\n{result_text}",
+        expected_output="The media generation result message, reported as-is",
+        agent=formatter,
+    )
+    return Crew(
+        agents=[formatter],
+        tasks=[task_report],
+        process=Process.sequential,
+        verbose=False,
+        memory=False,
+    )
+
+
 def build_unknown_crew(user_request: str) -> Crew:
     """
     Fallback crew for unknown task types.
@@ -2765,6 +2866,7 @@ CREW_REGISTRY = {
     "content_board_fetch_crew":   build_content_board_fetch_crew,
     "doc_routing_crew":           build_doc_routing_crew,
     "design_review_crew":         build_design_review_crew,
+    "media_crew":                 build_media_crew,
     "unknown_crew":               build_unknown_crew,
 }
 
