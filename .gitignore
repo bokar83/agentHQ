@@ -143,3 +143,4 @@ scratch/
 
 # Codex SSH working directory — contains private keys and probes, NEVER commit
 codex_ssh/
+thepopebot/
