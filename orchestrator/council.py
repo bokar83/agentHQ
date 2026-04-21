@@ -213,7 +213,7 @@ REVIEW_MODEL_BY_PROVIDER = {
     "google": "google/gemini-2.5-flash",
     "openai": "openai/o4-mini",
     "deepseek": "deepseek/deepseek-v3.2",
-    "x-ai": "x-ai/grok-4",  # no cheap Grok variant in registry; keep same
+    "x-ai": "x-ai/grok-4-fast",  # 15x cheaper input, 30x cheaper output vs grok-4
     "mistralai": "mistralai/mistral-large-2512",
     "qwen": "qwen/qwen3-235b-a22b-2507",
 }
