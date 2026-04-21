@@ -194,9 +194,28 @@ VOICE_CONFIG = [
 
 CHAIRMAN_CONFIG = {
     "capability": "deep_reasoning",
-    "max_cost_tier": "high",
-    "model_override": "anthropic/claude-opus-4.6",  # Chairman always uses Opus — synthesis fidelity
+    "max_cost_tier": "medium",
+    # Sonnet-4.6 instead of Opus: chairman synthesizes ~5 short voice
+    # responses + 5 short reviews into structured JSON. That's
+    # instruction-following work, not frontier reasoning. Sonnet costs
+    # 60% less per token and produces equivalent synthesis quality
+    # on this prompt shape.
+    "model_override": "anthropic/claude-sonnet-4.6",
     "temperature": 0.2,
+}
+
+# Peer review uses a cheaper model than the voice's own response model.
+# Reviews are short structured JSON over already-written text — they
+# don't need full voice fidelity. Mapped per provider so we keep
+# distribution diversity (an Anthropic voice still reviews via Anthropic).
+REVIEW_MODEL_BY_PROVIDER = {
+    "anthropic": "anthropic/claude-haiku-4.5",
+    "google": "google/gemini-2.5-flash",
+    "openai": "openai/o4-mini",
+    "deepseek": "deepseek/deepseek-v3.2",
+    "x-ai": "x-ai/grok-4",  # no cheap Grok variant in registry; keep same
+    "mistralai": "mistralai/mistral-large-2512",
+    "qwen": "qwen/qwen3-235b-a22b-2507",
 }
 
 
@@ -394,7 +413,9 @@ class SankofaCouncil:
         )
 
         def call_reviewer(vc):
-            model_id = self.voice_models[vc["name"]]
+            voice_model = self.voice_models[vc["name"]]
+            provider = voice_model.split("/")[0]
+            model_id = REVIEW_MODEL_BY_PROVIDER.get(provider, voice_model)
             raw = _call_model(
                 model_id, review_prompt, user_content,
                 voice_name=f"review_{vc['name']}",
