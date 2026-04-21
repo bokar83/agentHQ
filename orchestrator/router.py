@@ -255,6 +255,15 @@ def _classify_raw(user_message: str) -> str:
     """Internal: return task_type string. Used by classify_task and _keyword_shortcut."""
     msg = user_message.lower().strip()
 
+    # Read-intent shortcut: a reporting question about CRM entities must never
+    # reach the action branches. Guard terms block questions that are actually
+    # write intents in interrogative form ("how many emails should I send?").
+    _READ_STARTS = ("how many", "how much", "what's the", "whats the", "show me", "list ", "count ")
+    _READ_ENTITIES = ("lead", "leads", "outreach", "email", "emails", "prospect", "prospects", "contact", "contacts", "pipeline", "draft", "drafts")
+    _WRITE_BLOCKS = (" should ", " best ", " strategy", " template", " write ", " send ")
+    if msg.startswith(_READ_STARTS) and any(t in msg for t in _READ_ENTITIES) and not any(t in f" {msg} " for t in _WRITE_BLOCKS):
+        return "crm_query"
+
     # High-priority explicit task prefixes checked first
     if any(kw in msg for kw in TASK_TYPES["content_push_to_drive"]["keywords"]):
         return "content_push_to_drive"
@@ -357,17 +366,51 @@ def _llm_classify(user_message: str) -> str:
         return "unknown"
 
 
+ROUTER_VERSION = "2026-04-20-read-intent"
+
+
+def _log_routing_decision(user_message: str, task_type: str, crew: str, used_llm: bool) -> None:
+    """Fire-and-forget telemetry write. Never blocks or fails classification."""
+    import threading
+
+    def _write():
+        try:
+            from orchestrator.db import get_crm_connection
+            conn = get_crm_connection()
+            try:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        """
+                        INSERT INTO router_log (message, task_type, crew, used_llm, router_version)
+                        VALUES (%s, %s, %s, %s, %s)
+                        """,
+                        (user_message[:500], task_type, crew, used_llm, ROUTER_VERSION),
+                    )
+                conn.commit()
+            finally:
+                conn.close()
+        except Exception as e:
+            logger.debug(f"router_log write skipped: {type(e).__name__}: {e}")
+
+    threading.Thread(target=_write, daemon=True).start()
+
+
 def classify_task(user_message: str) -> dict:
     """
     Classify user message. Returns dict: {task_type, crew, confidence, is_unknown}.
     Uses keyword fast-path first; falls back to LLM when keywords return unknown.
     """
     task_type = _classify_raw(user_message)
+    used_llm = False
     if task_type == "unknown":
         task_type = _llm_classify(user_message)
+        used_llm = True
 
     crew = TASK_TYPES.get(task_type, {}).get("crew", "unknown_crew")
     confidence = 0.3 if task_type == "unknown" else 0.95
+
+    _log_routing_decision(user_message, task_type, crew, used_llm)
+
     return {
         "task_type": task_type,
         "crew": crew,
