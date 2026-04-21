@@ -173,6 +173,13 @@ COUNCIL_MODEL_REGISTRY = {
         "output_per_mtok": 15.00,
         "notes": "Known for unconventional takes. Default Expansionist voice.",
     },
+    "x-ai/grok-4-fast": {
+        "capabilities": ["fast", "cost_efficient", "fresh_perspective"],
+        "cost_tier": "very_low",
+        "input_per_mtok": 0.20,
+        "output_per_mtok": 0.50,
+        "notes": "Cheap Grok for peer reviews. 15x cheaper input, 30x cheaper output vs grok-4.",
+    },
     # ── Mistral ───────────────────────────────────────────────
     "mistralai/mistral-large-2512": {
         "capabilities": ["instruction_following", "cost_efficient", "fresh_perspective"],
