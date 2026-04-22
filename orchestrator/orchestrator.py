@@ -111,33 +111,51 @@ app = FastAPI(
     version="2.0.0"
 )
 
+# CORS narrowed to known origins. Browser chat uses the same domain, so no CORS
+# is strictly required in prod -- but keeping localhost for dev iterations + the
+# prod domain as explicit allowlist (was "*", which exposed XSRF surface on
+# authenticated routes).
+_CORS_ALLOWED = [
+    "https://agentshq.boubacarbarry.com",
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:8000",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:8000",
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=_CORS_ALLOWED,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "Authorization", "X-Api-Key", "X-Internal-Token"],
+    allow_credentials=True,
 )
 
 def verify_api_key(x_api_key: str = Header(default=None), authorization: Optional[str] = Header(default=None)):
     """
-    Reject requests without valid auth. Accepts two forms:
-    1. X-Api-Key: <raw key>  (Telegram, n8n, existing integrations)
-    2. Authorization: Bearer <jwt>  (browser chat UI)
-    No-op if ORCHESTRATOR_API_KEY is not configured (dev mode).
+    Reject requests without valid auth. Fail-closed when ORCHESTRATOR_API_KEY
+    is unset. Accepts two forms:
+      1. X-Api-Key: <raw key>              Telegram, n8n, existing integrations
+      2. Authorization: Bearer <jwt>       browser chat UI
+
+    Dev override: set DEBUG_NO_AUTH=true to bypass. Only use locally.
     """
     expected = os.environ.get("ORCHESTRATOR_API_KEY", "")
     if not expected:
-        return  # No key configured — allow all (dev/backwards compat)
+        if os.environ.get("DEBUG_NO_AUTH", "false").lower() == "true":
+            return
+        logger.error("verify_api_key: ORCHESTRATOR_API_KEY not configured (fail-closed)")
+        raise HTTPException(status_code=500, detail="Server auth misconfigured.")
 
     # Raw API key header (primary path)
     if x_api_key == expected:
         return
 
-    # Bearer JWT (browser chat)
+    # Bearer JWT (browser chat) or raw key as Bearer
     if authorization and authorization.startswith("Bearer "):
         import jwt as pyjwt
         token = authorization[7:]
-        # Also accept raw key as Bearer for simplicity
         if token == expected:
             return
         try:
@@ -2136,7 +2154,7 @@ async def run_task(request: TaskRequest, background_tasks: BackgroundTasks):
     )
 
 
-@app.post("/run-sync", response_model=TaskResponse)
+@app.post("/run-sync", response_model=TaskResponse, dependencies=[Depends(verify_api_key)])
 async def run_task_sync(request: TaskRequest):
     """
     Synchronous endpoint — blocks until result is ready, returns TaskResponse.
@@ -2229,7 +2247,7 @@ async def run_team(request: TeamTaskRequest):
         raise HTTPException(status_code=500, detail=f"Team execution failed: {str(e)}")
 
 
-@app.get("/classify")
+@app.get("/classify", dependencies=[Depends(verify_api_key)])
 def classify_only(task: str):
     """
     Classify a task without running it.
@@ -2245,7 +2263,7 @@ def classify_only(task: str):
     }
 
 
-@app.get("/capabilities")
+@app.get("/capabilities", dependencies=[Depends(verify_api_key)])
 def capabilities():
     """List all task types the system can handle."""
     from router import TASK_TYPES
@@ -2261,7 +2279,7 @@ def capabilities():
     }
 
 
-@app.get("/outputs")
+@app.get("/outputs", dependencies=[Depends(verify_api_key)])
 def list_outputs():
     """List all files created by the agents."""
     output_dir = os.environ.get("AGENTS_OUTPUT_DIR", "/app/outputs")
@@ -2284,7 +2302,7 @@ def list_outputs():
     return {"files": files, "count": len(files)}
 
 
-@app.get("/outputs/{filename}")
+@app.get("/outputs/{filename}", dependencies=[Depends(verify_api_key)])
 def get_output(filename: str):
     """Retrieve a specific output file."""
     # Security: prevent path traversal
@@ -2305,7 +2323,7 @@ def get_output(filename: str):
     }
 
 
-@app.get("/memory/search")
+@app.get("/memory/search", dependencies=[Depends(verify_api_key)])
 def search_memory(query: str, top_k: int = 3):
     """Search agent memory for relevant past tasks."""
     try:
@@ -2485,7 +2503,7 @@ async def run_task_async(request: TaskRequest, background_tasks: BackgroundTasks
     )
 
 
-@app.get("/status/{job_id}", response_model=JobStatusResponse)
+@app.get("/status/{job_id}", response_model=JobStatusResponse, dependencies=[Depends(verify_api_key)])
 def get_job_status(job_id: str):
     """
     Poll this endpoint after calling /run-async.
@@ -2579,7 +2597,10 @@ async def chat_token(req: ChatTokenRequest):
     if req.pin != expected_pin:
         raise HTTPException(status_code=401, detail="Invalid PIN.")
 
-    secret = os.environ.get("ORCHESTRATOR_API_KEY", "fallback-secret")
+    secret = os.environ.get("ORCHESTRATOR_API_KEY")
+    if not secret:
+        logger.error("/chat-token: ORCHESTRATOR_API_KEY not configured -- cannot sign JWT")
+        raise HTTPException(status_code=503, detail="Chat token issuer not configured.")
     payload = {
         "sub": "browser-chat",
         "iat": datetime.utcnow(),
