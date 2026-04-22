@@ -453,15 +453,20 @@ _ROUTER_LOG_WORKER_LOCK = _threading.Lock()
 
 
 def _router_log_worker() -> None:
+    # router_log is operational telemetry, not CRM data. It lives in the
+    # local orc-postgres alongside llm_calls and job_queue. Earlier code
+    # imported get_crm_connection (Supabase) here by mistake -- that pointed
+    # the writes at a table that does not exist in Supabase, so every row
+    # was silently dropped. Switched to get_local_connection 2026-04-22.
     try:
-        from orchestrator.db import get_crm_connection  # local repo layout
+        from orchestrator.db import get_local_connection  # local repo layout
     except ImportError:
-        from db import get_crm_connection  # flat /app layout inside container
+        from db import get_local_connection  # flat /app layout inside container
 
     while True:
         item = _ROUTER_LOG_QUEUE.get()
         try:
-            conn = get_crm_connection()
+            conn = get_local_connection()
             try:
                 with conn.cursor() as cur:
                     cur.execute(
