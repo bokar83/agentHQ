@@ -138,27 +138,48 @@ class LaunchVercelAppTool(BaseTool):
     description: str = "Launches a web application to Vercel and GitHub. Synchronizes with a GitHub repo (bokar83/<app_name>) and triggers a Vercel deployment. Parameters: app_name (string), is_prod (boolean)."
 
     def _run(self, app_name: str, is_prod: bool = False) -> str:
-        # Normalize: remove training -app if provided, script handles re-adding it
+        # Normalize: strip trailing -app suffix if provided (the script re-adds it).
         clean_name = app_name.replace("-app", "")
-        prod_flag = "--prod" if is_prod else ""
-        
-        # Use dynamic base directory for cross-platform support
+
+        # Validate against a strict allowlist. app_name ends up as the GitHub
+        # repo slug, the Vercel project name, and a local directory, so it must
+        # only contain characters safe in all three contexts. Previously this
+        # value was interpolated into a shell string with shell=True, which
+        # allowed arbitrary command execution via crafted app_name input.
+        import re
+        if not re.match(r"^[a-zA-Z0-9_-]{1,60}$", clean_name):
+            return (
+                f"Invalid app_name {clean_name!r}. "
+                "Use alphanumeric, dash, or underscore only (1-60 chars)."
+            )
+
         base_dir = os.getcwd()
         script_path = os.path.join("skills", "vercel-launch", "scripts", "launch.sh")
-        
-        # Cross-platform bash execution: on Windows, we usually have Git Bash 'bash' in PATH
-        # On Linux/VCN, 'bash' is standard.
-        cmd = f"bash \"{script_path}\" \"{clean_name}\" {prod_flag}"
-        logger.info(f"Executing Vercel Launch: {cmd} in {base_dir}")
-        
+
+        # Argument list, no shell. bash is invoked directly and receives the
+        # script path + name + flag as separate argv entries. No interpolation.
+        args = ["bash", script_path, clean_name]
+        if is_prod:
+            args.append("--prod")
+        logger.info(f"Executing Vercel Launch: {args} in {base_dir}")
+
         try:
-            # We use bash (Git Bash on Windows) to execute the .sh script
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=base_dir)
+            result = subprocess.run(
+                args,
+                shell=False,
+                capture_output=True,
+                text=True,
+                cwd=base_dir,
+                timeout=300,
+            )
             if result.returncode != 0:
                 error_msg = f"Error launching app:\nSTDOUT: {result.stdout}\nSTDERR: {result.stderr}"
                 logger.error(f"Vercel Launch Failed: {error_msg}")
                 return error_msg
             return result.stdout
+        except subprocess.TimeoutExpired:
+            logger.error("Vercel Launch timed out after 300s")
+            return "Vercel launch timed out (300s). Check Vercel dashboard for deploy status."
         except Exception as e:
             logger.error(f"Vercel Launch Exception: {e}")
             return f"System exception during launch: {str(e)}"

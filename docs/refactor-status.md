@@ -100,6 +100,20 @@ A rushed flip at this stage would regress:
 
 These were built deliberately in the monolith and have no equivalent in the shadow modules. The session that does the flip must port every one of them first.
 
+## DB connection consolidation (piggyback on the flip)
+
+The code-review scan on 2026-04-22 counted 17 inline `psycopg2.connect()`
+call sites across 7 files, most of which are in `orchestrator.py` itself.
+Rather than touch those in isolation (risky in the protected window, and
+the same lines are about to be replaced by the refactor anyway), we will
+consolidate on `memory._pg_conn()` (or `db.get_local_connection()`) AS
+PART OF the port work. Every inline connect in the monolith becomes a
+single helper call in the new module.
+
+Net effect: fewer lines in the new modules than the equivalent lines in
+`orchestrator.py`, and a single place to add pooling later if we ever
+need it.
+
 ## Minimum subset for a "just works" flip
 
 If a future session wants to flip with minimum porting, the ABSOLUTE minimum is:

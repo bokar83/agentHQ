@@ -77,41 +77,22 @@ services:
 #    networks:
 #      - orc-net
 
-  # ── METACLAW PROXY ────────────────────────────────────────
-  # Meta-learning proxy: skill injection, memory, RL (phased)
-  # Proxy endpoint: http://orc-metaclaw:30000/v1 (internal only)
-  # Kill switch: set USE_METACLAW=false in .env to bypass
-  metaclaw:
-    build:
-      context: ./metaclaw
-      dockerfile: Dockerfile
-    image: agentshq-metaclaw:latest
-    container_name: orc-metaclaw
-    restart: unless-stopped
-    working_dir: /app
-    volumes:
-      - metaclaw_config:/root/.metaclaw
-      - ./metaclaw:/app/metaclaw_seed:ro
-    environment:
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-    command: >
-      bash -c "
-        mkdir -p /root/.metaclaw/skills &&
-        for d in /app/metaclaw_seed/skills/*/; do skill_name=$$(basename \"$$d\"); [ ! -d /root/.metaclaw/skills/\"$$skill_name\" ] && cp -r \"$$d\" /root/.metaclaw/skills/\"$$skill_name\" || true; done &&
-        if [ ! -f /root/.metaclaw/config.yaml ]; then
-          cp /app/metaclaw_seed/config_template.yaml /root/.metaclaw/config.yaml &&
-          sed -i 's/YOUR_OPENROUTER_API_KEY_HERE/'\"$$OPENROUTER_API_KEY\"'/' /root/.metaclaw/config.yaml;
-        fi &&
-        metaclaw start --mode skills_only
-      "
-    networks:
-      - orc-net
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:30000/healthz"]
-      interval: 30s
-      timeout: 10s
-      start_period: 60s
-      retries: 3
+  # METACLAW PROXY: DECOMMISSIONED 2026-04-22.
+  # Built 2026-03-31 per docs/superpowers/plans/2026-03-31-metaclaw-integration.md
+  # but Phase 1 (get_llm_metaclaw factory in agents.py) was never wired up.
+  # Code scan on 2026-04-22 found zero Python references to metaclaw; docker
+  # logs over 7 days showed only self-healthz hits and zero external API calls.
+  # The container was consuming 177 MB RAM for nothing, so the service block is
+  # removed here. To resurrect: uncomment below, then do Phase 1 of the
+  # integration plan (not the other way around).
+  #
+  # metaclaw:
+  #   build:
+  #     context: ./metaclaw
+  #     dockerfile: Dockerfile
+  #   image: agentshq-metaclaw:latest
+  #   container_name: orc-metaclaw
+  #   ...see git history for full block...
 
   # ── AGENT BRAIN ───────────────────────────────────────────
   # CrewAI orchestrator — receives tasks, assembles crews, returns deliverables
@@ -154,7 +135,7 @@ services:
       - GOOGLE_SERVICE_ACCOUNT_JSON=${GOOGLE_SERVICE_ACCOUNT_JSON}
       - GOOGLE_OAUTH_CREDENTIALS_JSON=${GOOGLE_OAUTH_CREDENTIALS_JSON}
       - REPORT_EMAIL=${REPORT_EMAIL}
-      - USE_METACLAW=${USE_METACLAW:-true}
+      # USE_METACLAW: removed 2026-04-22 with metaclaw decommission
       - NOTION_SECRET=${NOTION_SECRET}
       - NOTION_MEDIA_INDEX_DB_ID=${NOTION_MEDIA_INDEX_DB_ID}
       - KIE_AI_API_KEY=${KIE_AI_API_KEY}
@@ -199,8 +180,7 @@ services:
         condition: service_healthy
       qdrant:
         condition: service_started
-      metaclaw:
-        condition: service_started
+      # metaclaw: decommissioned 2026-04-22
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.orc-api.rule=Host(`agentshq.boubacarbarry.com`) && PathPrefix(`/api/orc`)"
@@ -227,5 +207,5 @@ networks:
   root_default:
     external: true
 
-volumes:
-  metaclaw_config:
+# No named volumes currently in use.
+# (metaclaw_config removed 2026-04-22 with metaclaw decommission.)

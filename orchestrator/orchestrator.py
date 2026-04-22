@@ -1217,29 +1217,44 @@ def _trigger_evolution(task_instruction: str, result_output: str) -> None:
     """
     Helper to run OpenSpace evolution in the background.
     Uses the tool wrapper to either evolve a skill or suggest a new one.
+
+    Logs entry/exit/skip so we can tell from docker logs whether the hook is
+    actually doing work. Prior to 2026-04-22 this fired silently and produced
+    no log output, leaving us unable to tell if OpenSpace was running or broken.
     """
     import asyncio
+    loop = None
     try:
-        # Check if evolution is explicitly disabled via env
         if os.environ.get("DISABLE_EVOLUTION") == "true":
+            logger.info("Evolution skipped: DISABLE_EVOLUTION=true")
+            return
+        if openspace_tool is None:
+            logger.info("Evolution skipped: openspace_tool not loaded")
+            return
+        if len(task_instruction) <= 20 and len(result_output) <= 100:
+            logger.info(
+                "Evolution skipped: task/result below threshold "
+                f"(task={len(task_instruction)} chars, result={len(result_output)} chars)"
+            )
             return
 
+        logger.info(
+            f"Evolution started: task={len(task_instruction)} chars, "
+            f"result={len(result_output)} chars"
+        )
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        
-        # Only evolve if the task was significant (token efficiency)
-        if openspace_tool is not None and (len(task_instruction) > 20 or len(result_output) > 100):
-            logger.info("Triggering OpenSpace evolution...")
-            loop.run_until_complete(openspace_tool.execute_async(
-                command="evolve",
-                task_instruction=f"Task: {task_instruction}\n\nResult:\n{result_output}"
-            ))
-            logger.info("OpenSpace evolution check complete.")
-            
+        loop.run_until_complete(openspace_tool.execute_async(
+            command="evolve",
+            task_instruction=f"Task: {task_instruction}\n\nResult:\n{result_output}"
+        ))
+        logger.info("Evolution complete")
+
     except Exception as e:
-        logger.error(f"Background evolution failed: {e}")
+        logger.error(f"Evolution failed: {e}", exc_info=True)
     finally:
-        loop.close()
+        if loop is not None:
+            loop.close()
 
 
 _TASK_KEYWORDS = [
