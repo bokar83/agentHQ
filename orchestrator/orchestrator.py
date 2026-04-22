@@ -310,8 +310,10 @@ def _query_system() -> str:
         pass
 
     # Infrastructure
+    _vps_ip = os.environ.get("VPS_IP", "(unset)")
     lines.append("\nINFRASTRUCTURE:")
-    lines.append("  VPS: 72.60.209.109 — orchestrator on port 8000")
+    lines.append(f"  VPS: {_vps_ip} (orchestrator on port 8000, localhost-only since 2026-04-22)")
+    lines.append("  Public URL: https://agentshq.boubacarbarry.com/chat (browser) + /api/orc (API)")
     lines.append("  Telegram bot: @agentsHQ4Bou_bot")
     lines.append("  n8n: https://n8n.srv1040886.hstgr.cloud")
     lines.append("  GitHub: https://github.com/bokar83/agentHQ")
