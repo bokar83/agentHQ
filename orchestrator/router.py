@@ -6,9 +6,43 @@ Used by orchestrator.py to determine which crew to assemble.
 """
 
 import os
+import re
 import logging
 
 logger = logging.getLogger(__name__)
+
+# Research-shaped prompts: location+service queries, explicit research framing,
+# and multi-source web-research intent. These route to research_report (handled
+# by the research_engine bypass in engine.py Step 3a). Needed because the keyword
+# loop would otherwise misroute "mechanic shops in 84095" to hunter_task and
+# "research report on X" to app_build/github_task.
+_RESEARCH_REPORT_PHRASES = (
+    "research report on", "research report about", "write a research report",
+    "find me", "list of", "give me a list",
+    "compare options", "compare the options", "compare my options",
+    "best options for", "top options for",
+    "what are the best", "what are the top",
+    "near me", "nearby",
+)
+
+_RESEARCH_REPORT_REGEXES = (
+    # Any 5-digit zip code in the message is a strong signal of a location query.
+    # e.g. "mechanic shops in South Jordan 84095" or "list 84095 plumbers"
+    re.compile(r"\b\d{5}\b"),
+    # "<noun(s)> in <City, ST>": e.g. "dentists in Denver, CO"
+    re.compile(r"\b[a-z][a-z\s]{2,40}\s+in\s+[a-z][a-z\s]{2,30},\s*[a-z]{2}\b"),
+    # "<noun(s)> near <City or zip>": e.g. "plumbers near Salt Lake"
+    re.compile(r"\b[a-z][a-z\s]{2,40}\s+near\s+(?:\d{5}|[a-z][a-z\s]{2,30})\b"),
+    # "best <noun(s)> in <City>": e.g. "best sushi in austin"
+    re.compile(r"\bbest\s+[a-z][a-z\s]{2,40}\s+in\s+[a-z][a-z\s]{2,30}\b"),
+)
+
+
+def _looks_like_research_report(msg: str) -> bool:
+    """Return True when the message matches a research-shaped pattern."""
+    if any(phrase in msg for phrase in _RESEARCH_REPORT_PHRASES):
+        return True
+    return any(rx.search(msg) for rx in _RESEARCH_REPORT_REGEXES)
 
 # ---------------------------------------------------------------------------
 # TASK_TYPES registry
@@ -317,6 +351,13 @@ def _classify_raw(user_message: str) -> str:
     if any(kw in msg for kw in TASK_TYPES["create_media"]["keywords"]):
         return "create_media"
 
+    # research_report is checked here (before the generic keyword loop) so that
+    # location+service prompts like "mechanic shops in 84095" and explicit
+    # research framing like "research report on X" reach the research_engine
+    # bypass in engine.py Step 3a instead of misrouting to hunter_task / app_build.
+    if _looks_like_research_report(msg):
+        return "research_report"
+
     # chat is intentionally NOT keyword-matched here — conversational openers like
     # "how do", "help me", "what is" appear in almost every functional request.
     # Let the LLM fallback decide if it's truly chat vs a functional task.
@@ -326,7 +367,7 @@ def _classify_raw(user_message: str) -> str:
         "inline_post_review", "content_review",
         "content_board_fetch", "agent_creation",
         "forge_kpi_refresh", "doc_routing", "notion_tasks", "notion_capture", "design_review",
-        "create_media",
+        "create_media", "research_report",
     }
     for task_type, config in TASK_TYPES.items():
         if task_type in _PRIORITY_CHECKED:
@@ -362,6 +403,7 @@ def _llm_classify(user_message: str) -> str:
         "5. 'notion_tasks' covers queries about open tasks, due dates, overdue items.\n"
         "6. 'crm_query' covers any question about leads, contacts, pipeline stats.\n"
         "7. 'social_content' covers writing posts. 'inline_post_review' covers reviewing/improving a post.\n"
+        "8. 'research_report' covers location+service queries (e.g. 'mechanic shops in 84095', 'dentists near Denver'), explicit research framing ('research report on X', 'find me', 'list of', 'compare options'), and any prompt that needs live web search across multiple sources to answer. 'hunter_task' is ONLY for explicit B2B lead-sourcing language like 'find leads', 'prospects', 'growth engine', 'utah leads'. When in doubt between the two, pick 'research_report'.\n"
     )
 
     try:
