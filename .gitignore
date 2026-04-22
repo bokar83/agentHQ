@@ -153,3 +153,7 @@ workspace/
 
 # Machine-local tooling config (tmux, etc.)
 config/
+
+# Vendored external tool clones (CLI-Anything, OpenSpace, etc.)
+# Were accidentally committed as orphan gitlinks in 5af0592; deregistered 2026-04-22.
+external/
