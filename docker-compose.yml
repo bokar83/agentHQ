@@ -30,8 +30,11 @@ services:
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
       - ./setup-database.sql:/docker-entrypoint-initdb.d/setup-database.sql
+    # Postgres reachable only from localhost. Orchestrator inside the orc-net
+    # docker network connects via the service name "orc-postgres", NOT via
+    # the host port. This closes a direct brute-force surface on 5432.
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     networks:
       - orc-net
     healthcheck:
@@ -120,8 +123,11 @@ services:
       dockerfile: orchestrator/Dockerfile
     container_name: orc-crewai
     restart: unless-stopped
+    # Port bound to localhost only -- public traffic goes through Traefik
+    # at agentshq.boubacarbarry.com/api/orc. Direct VPS:8000 access is
+    # local-only to block the 142/day scanner probes we were seeing.
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment:
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - SERPER_API_KEY=${SERPER_API_KEY}
