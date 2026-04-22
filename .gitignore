@@ -143,4 +143,11 @@ scratch/
 
 # Codex SSH working directory — contains private keys and probes, NEVER commit
 codex_ssh/
+.codex_ssh/
 thepopebot/
+
+# Runtime workspace for article drafts, media outputs, probes
+workspace/
+
+# Machine-local tooling config (tmux, etc.)
+config/
