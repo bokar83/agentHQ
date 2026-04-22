@@ -1,11 +1,11 @@
-# Cold Outreach -- Catalyst Works Consulting
+# Cold Outreach for Catalyst Works Consulting
 
 **Name:** Cold Outreach
-**Description:** Single cold email template for Catalyst Works Consulting. Universal -- no industry branching. Reply-first model -- no Calendly in the initial email.
+**Description:** Single cold email template for Catalyst Works Consulting. Universal copy, no industry branching. Reply-first model, no Calendly in the initial email.
 
 ---
 
-## IMPORTANT -- Single Source of Truth
+## IMPORTANT: Single Source of Truth
 
 The template lives in one place only:
 
@@ -24,11 +24,19 @@ Do NOT copy the template text into this file, crews.py, or anywhere else.
 - **One template:** Universal copy that works for any prospect regardless of industry or size.
 - **Plain text only:** No HTML, no signature blocks.
 
+## Wider Pipeline Context
+
+Cold email is one channel. Full Phase 0 pipeline strategy (LinkedIn prospecting, face-to-face events, BNI, South Valley Chamber, 30-day sprint, follow-up system, weekly time budget) lives in:
+
+`docs/playbooks/pipeline-building-playbook.md` (+ matching PDF)
+
+Refer there when the ask is about pipeline building broadly, not just cold email.
+
 ---
 
 ## Subject Line
 
-See `templates/email/cold_outreach.py` -- variable `SUBJECT`
+See `templates/email/cold_outreach.py`, variable `SUBJECT`.
 
 ---
 
