@@ -109,6 +109,8 @@ thepopebot/logs/
 ideas_full_list.txt
 ideas_full_list_utf8.txt
 test_sankofa.py
+test_mermaid.py
+*.md.bak
 data/
 docs/research/
 
