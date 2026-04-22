@@ -32,10 +32,12 @@ COPY orchestrator/*.py .
 # Copy voice prompts for the Sankofa Council
 COPY orchestrator/prompts/ prompts/
 
-# Copy skills, templates, tests, and docs (quote bank etc.)
+# Copy skills, templates, and docs (quote bank etc.).
+# tests/ is NOT copied into the production image. Shipping tests to prod
+# inflates the image and leaks fixture data. Removed 2026-04-22 per code
+# review. Run tests locally: pytest (or from the repo root before build).
 COPY skills/ skills/
 COPY templates/ templates/
-COPY tests/ tests/
 COPY docs/ docs/
 
 # Create required directories
