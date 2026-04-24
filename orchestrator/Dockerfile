@@ -50,5 +50,7 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Run the service
-CMD ["uvicorn", "orchestrator:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "info"]
+# Run the service. Flipped from orchestrator:app to app:app on 2026-04-24
+# as part of the shadow module backport. orchestrator.py stays in the
+# image as a rollback reference for at least one week after the flip.
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "info"]

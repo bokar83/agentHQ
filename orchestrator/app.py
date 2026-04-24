@@ -1,57 +1,120 @@
+"""
+app.py - FastAPI entrypoint for the agentsHQ orchestrator.
+
+This is the modular replacement for orchestrator.py. Routes are ported
+verbatim (behavior-wise) from orchestrator.py. State dicts live in state.py
+so the monolith and this app share them during cutover.
+
+Startup hooks (in order):
+  1. install_litellm_callback() , token ledger registration
+  2. start_scheduler()           , daily cron + heartbeat wakes
+  3. telegram_polling_loop()     , background task
+
+Auth is fail-closed: if ORCHESTRATOR_API_KEY is unset and DEBUG_NO_AUTH is
+not "true", every gated endpoint returns 500 on misconfig.
+"""
+import asyncio
+import logging
 import os
 import time
 import uuid
-import logging
-import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, Depends, Header, UploadFile
+# Configure logging BEFORE importing any orchestrator modules, so every
+# module's logger.info/warning lands in docker logs and the file. Matches
+# the monolith's config at orchestrator.py:98-108.
+_LOG_DIR = os.environ.get("AGENTS_LOG_DIR", "/app/logs")
+os.makedirs(_LOG_DIR, exist_ok=True)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler(os.path.join(_LOG_DIR, "orchestrator.log"), mode="a"),
+    ],
+)
+
+from fastapi import (
+    BackgroundTasks,
+    Depends,
+    FastAPI,
+    Header,
+    HTTPException,
+    Request,
+    UploadFile,
+)
 from fastapi.middleware.cors import CORSMiddleware
 
 from constants import SAVE_REQUIRED_TASK_TYPES
-from state import _active_project, _git_lock
-from schemas import (
-    TaskRequest, TaskResponse, TeamTaskRequest, StatusResponse, 
-    AsyncTaskResponse, JobStatusResponse, HealthReportRequest,
-    SyncSessionRequest, ChatTokenRequest
-)
-from health import health_registry
 from engine import run_orchestrator, run_team_orchestrator
-from worker import _run_background_job
 from handlers import (
-    process_telegram_update, telegram_polling_loop, run_chat, 
-    _shortcut_classify, _classify_obvious_chat
+    _classify_obvious_chat,
+    _shortcut_classify,
+    process_telegram_update,
+    telegram_polling_loop,
 )
-from utils import _extract_file_text, _query_system, _build_summary, _save_overflow_if_needed
+from handlers_chat import run_chat
+from health import health_registry
+from schemas import (
+    AsyncTaskResponse,
+    AutonomyApproveBody,
+    ChatTokenRequest,
+    HealthReportRequest,
+    JobStatusResponse,
+    StatusResponse,
+    SyncSessionRequest,
+    TaskRequest,
+    TaskResponse,
+    TeamTaskRequest,
+)
+from utils import _extract_file_text
+from worker import _run_background_job
 
 logger = logging.getLogger("agentsHQ.app")
 _start_time = time.time()
 
-# ── App setup ──────────────────────────────────────────────────
+
+# ══════════════════════════════════════════════════════════════
+# App + middleware
+# ══════════════════════════════════════════════════════════════
+
 app = FastAPI(
     title="agentsHQ Orchestrator",
     description="Self-hosted multi-agent intelligence for Catalyst Works Consulting",
-    version="2.0.0"
+    version="2.0.0",
 )
 
+_CORS_ALLOWED = [
+    "https://agentshq.boubacarbarry.com",
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:8000",
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=_CORS_ALLOWED,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "Authorization", "X-Api-Key", "X-Internal-Token"],
+    allow_credentials=True,
 )
 
-def verify_api_key(x_api_key: str = Header(default=None), authorization: Optional[str] = Header(default=None)):
-    """API Key verification (Fail-closed)."""
-    expected = os.environ.get("ORCHESTRATOR_API_KEY", "")
-    debug_no_auth = os.environ.get("DEBUG_NO_AUTH", "false").lower() == "true"
 
+# ══════════════════════════════════════════════════════════════
+# Auth
+# ══════════════════════════════════════════════════════════════
+
+def verify_api_key(
+    x_api_key: Optional[str] = Header(default=None),
+    authorization: Optional[str] = Header(default=None),
+):
+    """API key verification. Fail-closed unless DEBUG_NO_AUTH=true."""
+    expected = os.environ.get("ORCHESTRATOR_API_KEY", "")
     if not expected:
-        if debug_no_auth:
+        if os.environ.get("DEBUG_NO_AUTH", "false").lower() == "true":
             return
-        logger.error("Security Breach Attempt: No ORCHESTRATOR_API_KEY configured.")
-        raise HTTPException(status_code=500, detail="Server Security Misconfiguration.")
+        logger.error("Security: no ORCHESTRATOR_API_KEY configured.")
+        raise HTTPException(status_code=500, detail="Server auth misconfigured.")
 
     if x_api_key == expected:
         return
@@ -60,9 +123,48 @@ def verify_api_key(x_api_key: str = Header(default=None), authorization: Optiona
 
     raise HTTPException(status_code=401, detail="Invalid API key.")
 
+
+def verify_chat_token(authorization: Optional[str] = Header(None)):
+    """Dependency: accepts either the raw API key OR a valid browser JWT."""
+    import jwt as pyjwt
+
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Missing Authorization header.")
+
+    api_key = os.environ.get("ORCHESTRATOR_API_KEY", "")
+    if authorization == api_key or authorization == f"Bearer {api_key}":
+        return True
+
+    if authorization.startswith("Bearer "):
+        token = authorization[7:]
+        try:
+            pyjwt.decode(token, api_key, algorithms=["HS256"])
+            return True
+        except pyjwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="Session expired. Refresh the page to get a new token.")
+        except pyjwt.InvalidTokenError:
+            raise HTTPException(status_code=401, detail="Invalid token.")
+
+    raise HTTPException(status_code=401, detail="Invalid authorization.")
+
+
+# ══════════════════════════════════════════════════════════════
+# Startup
+# ══════════════════════════════════════════════════════════════
+
 @app.on_event("startup")
 async def startup_event():
     """Run at service startup."""
+    # Token ledger: register litellm callback BEFORE any crew or council
+    # fires. Without this, llm_calls stops receiving rows after the flip.
+    try:
+        from usage_logger import install_litellm_callback
+        install_litellm_callback()
+    except Exception as e:
+        logger.warning(f"usage_logger startup failed (non-fatal): {e}")
+
+    # Daily cron + heartbeat. scheduler.start_scheduler internally calls
+    # heartbeat.start(), registering the 3 default wakes.
     try:
         from scheduler import start_scheduler
         if start_scheduler:
@@ -70,11 +172,15 @@ async def startup_event():
             logger.info("Catalyst Daily Ignition initiated.")
     except ImportError:
         pass
-    
-    asyncio.create_task(telegram_polling_loop())
-    logger.info("Telegram Polling Loop started.")
 
-# ── API Routes ────────────────────────────────────────────────
+    # Telegram polling in the background (hardened loop in handlers.py).
+    asyncio.create_task(telegram_polling_loop())
+    logger.info("Telegram Polling Loop scheduled.")
+
+
+# ══════════════════════════════════════════════════════════════
+# Public routes (no auth)
+# ══════════════════════════════════════════════════════════════
 
 @app.get("/", response_model=StatusResponse)
 def get_status():
@@ -85,23 +191,22 @@ def get_status():
         version="2.0.0",
         task_types=list(TASK_TYPES.keys()),
         agents=["planner", "researcher", "copywriter", "web_builder", "app_builder", "code_agent", "qa_agent"],
-        uptime_seconds=time.time() - _start_time
+        uptime_seconds=time.time() - _start_time,
     )
+
 
 @app.get("/health")
 def health():
     return {
         "status": "ok",
         "timestamp": datetime.utcnow().isoformat(),
-        "uptime_seconds": time.time() - _start_time
+        "uptime_seconds": time.time() - _start_time,
     }
 
-@app.get("/health/report")
-def health_report():
-    return health_registry.get_report()
 
 @app.post("/telegram")
 async def telegram_webhook(request: Request, background_tasks: BackgroundTasks):
+    """Keep webhook endpoint as a backup though polling is primary."""
     try:
         body = await request.json()
         background_tasks.add_task(process_telegram_update, body)
@@ -109,25 +214,95 @@ async def telegram_webhook(request: Request, background_tasks: BackgroundTasks):
         pass
     return {"ok": True}
 
+
+@app.post("/internal/health-report")
+async def receive_health_report(request: HealthReportRequest, req: Request):
+    """
+    Internal webhook called by the agentsHQ Weekly Health Check remote agent.
+    Protected by X-Internal-Token header (HEALTH_REPORT_TOKEN env var).
+    """
+    expected_token = os.environ.get("HEALTH_REPORT_TOKEN", "")
+    provided_token = req.headers.get("X-Internal-Token", "")
+    if not expected_token or provided_token != expected_token:
+        raise HTTPException(status_code=401, detail="Unauthorised")
+
+    try:
+        from notifier import send_health_check_report
+        email_sent = send_health_check_report(request.status, request.report, request.date)
+        logger.info(f"Health check report received: status={request.status}, date={request.date}, email_sent={email_sent}")
+        return {"ok": True, "email_sent": email_sent}
+    except Exception as e:
+        logger.error(f"Health report delivery failed: {e}")
+        return {"ok": True, "email_sent": False}
+
+
+@app.post("/chat-token")
+async def chat_token(req: ChatTokenRequest):
+    """
+    Issue a short-lived JWT for the browser chat UI.
+    PIN via CHAT_UI_PIN env var (required). No PIN = endpoint disabled.
+    """
+    import jwt as pyjwt
+
+    expected_pin = os.environ.get("CHAT_UI_PIN", "")
+    if not expected_pin:
+        raise HTTPException(status_code=503, detail="Chat UI not configured on this server.")
+    if req.pin != expected_pin:
+        raise HTTPException(status_code=401, detail="Invalid PIN.")
+
+    secret = os.environ.get("ORCHESTRATOR_API_KEY")
+    if not secret:
+        logger.error("/chat-token: ORCHESTRATOR_API_KEY not configured, cannot sign JWT")
+        raise HTTPException(status_code=503, detail="Chat token issuer not configured.")
+
+    payload = {
+        "sub": "browser-chat",
+        "iat": datetime.utcnow(),
+        "exp": datetime.utcnow() + timedelta(hours=8),
+    }
+    token = pyjwt.encode(payload, secret, algorithm="HS256")
+    return {"token": token}
+
+
+# ══════════════════════════════════════════════════════════════
+# Task execution routes (auth-gated)
+# ══════════════════════════════════════════════════════════════
+
 @app.post("/run", response_model=AsyncTaskResponse, status_code=202, dependencies=[Depends(verify_api_key)])
 async def run_task(request: TaskRequest, background_tasks: BackgroundTasks):
-    job_id = str(uuid.uuid4())
+    """Main endpoint, async, fire-and-forget. 202 immediately."""
     logger.info(f"Request from {request.from_number}: {request.task[:100]}...")
+    job_id = str(uuid.uuid4())
 
-    # Unified Routing Logic
-    shortcut = _shortcut_classify(request.task)
-    if shortcut:
-        task_type = shortcut
-        classification = {"task_type": shortcut, "confidence": 0.95, "is_unknown": False}
+    # 'more' command: sync, instant
+    if request.task.strip().lower() in ("more", "more please", "continue", "show more"):
+        from memory import get_next_chunk
+        from notifier import send_message
+        chunk_result = get_next_chunk(request.session_key)
+        if chunk_result["found"]:
+            suffix = "\n\n[reply 'more' for the rest]" if chunk_result["has_more"] else "\n\n[end of output]"
+            send_message(request.from_number, chunk_result["chunk"] + suffix)
+        else:
+            send_message(request.from_number, "Nothing more to show, that was the full output.")
+        return AsyncTaskResponse(job_id=job_id, status="completed", message="Chunk delivered.")
+
+    # Classify for an accurate briefing
+    from notifier import send_briefing, send_message
+    _shortcut = _shortcut_classify(request.task)
+    if _shortcut and _shortcut != "memory_capture":
+        task_type = _shortcut
+        classification = {"task_type": _shortcut, "confidence": 0.95, "is_unknown": False, "has_email_followup": False}
+    elif _shortcut == "memory_capture":
+        task_type = "chat"
+        classification = {"task_type": "chat", "confidence": 0.95, "is_unknown": False, "has_email_followup": False}
     elif _classify_obvious_chat(request.task):
         task_type = "chat"
-        classification = {"task_type": "chat", "confidence": 0.95, "is_unknown": False}
+        classification = {"task_type": "chat", "confidence": 0.95, "is_unknown": False, "has_email_followup": False}
     else:
         from router import classify_task
         classification = classify_task(request.task)
         task_type = classification.get("task_type", "unknown")
 
-    from notifier import send_briefing, send_message
     send_briefing(request.from_number, task_type, request.task)
 
     if task_type == "chat":
@@ -145,39 +320,267 @@ async def run_task(request: TaskRequest, background_tasks: BackgroundTasks):
         job_id=job_id,
         classification=classification,
     )
-
     return AsyncTaskResponse(job_id=job_id, message="Job queued. Result will be delivered to Telegram.")
+
 
 @app.post("/run-sync", response_model=TaskResponse, dependencies=[Depends(verify_api_key)])
 async def run_task_sync(request: TaskRequest):
+    """Synchronous task run for Cursor / Claude Code callers."""
     try:
-        # Simplified routing for sync
         if _classify_obvious_chat(request.task):
             result = run_chat(message=request.task, session_key=request.session_key)
         else:
-            result = run_orchestrator(task_request=request.task, from_number=request.from_number, session_key=request.session_key)
-
+            result = run_orchestrator(
+                task_request=request.task,
+                from_number=request.from_number,
+                session_key=request.session_key,
+            )
         return TaskResponse(
             success=result["success"],
             result=result["result"],
             task_type=result.get("task_type", "unknown"),
             files_created=result.get("files_created", []),
-            execution_time=result.get("execution_time", 0.0)
+            execution_time=result.get("execution_time", 0.0),
+            title=result.get("title", ""),
+            deliverable=result.get("deliverable", ""),
         )
     except Exception as e:
         logger.error(f"Sync request failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@app.post("/run-team", response_model=TaskResponse, dependencies=[Depends(verify_api_key)])
+async def run_team(request: TeamTaskRequest):
+    """Run multiple crews in parallel."""
+    logger.info(f"/run-team received {len(request.subtasks)} subtasks from {request.from_number}")
+    if not request.subtasks:
+        raise HTTPException(status_code=400, detail="subtasks list cannot be empty")
+    try:
+        result = run_team_orchestrator(
+            subtasks=request.subtasks,
+            original_request=request.original_request,
+            from_number=request.from_number,
+        )
+        return TaskResponse(
+            success=result["success"],
+            result=result["result"],
+            task_type=result["task_type"],
+            files_created=result.get("files_created", []),
+            execution_time=result.get("execution_time", 0.0),
+        )
+    except Exception as e:
+        logger.error(f"/run-team failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Team execution failed: {str(e)}")
+
+
+@app.post("/run-async", response_model=AsyncTaskResponse, dependencies=[Depends(verify_api_key)])
+async def run_task_async(request: TaskRequest, background_tasks: BackgroundTasks):
+    """Async task endpoint used by the browser chat UI + n8n."""
+    job_id = str(uuid.uuid4())[:8]
+
+    from memory import create_job
+    create_job(
+        job_id=job_id,
+        session_key=request.session_key,
+        from_number=request.from_number,
+        task=request.task,
+    )
+
+    def _run_in_background():
+        from memory import update_job
+        try:
+            update_job(job_id, status="running")
+
+            # Inject uploaded file content into task if file_id provided
+            task_text = request.task
+            if request.file_id:
+                upload_dir = "/app/uploads"
+                matches = [f for f in os.listdir(upload_dir) if f.startswith(request.file_id + "_")] if os.path.isdir(upload_dir) else []
+                if matches:
+                    txt_path = os.path.join(upload_dir, matches[0] + ".txt")
+                    if os.path.exists(txt_path):
+                        with open(txt_path, encoding="utf-8", errors="replace") as fh:
+                            file_content = fh.read()
+                        fname = matches[0][9:]  # strip file_id_ prefix
+                        task_text = f"[Attached file: {fname}]\n{file_content}\n\n---\n{request.task}"
+
+            # Same classification pipeline as /run and /run-sync
+            _shortcut = _shortcut_classify(task_text)
+            if _shortcut and _shortcut != "memory_capture":
+                routed_as_chat = False
+            elif _classify_obvious_chat(task_text):
+                routed_as_chat = True
+            else:
+                routed_as_chat = False
+
+            if routed_as_chat:
+                result = run_chat(message=task_text, session_key=request.session_key)
+            else:
+                result = run_orchestrator(
+                    task_request=task_text,
+                    from_number=request.from_number,
+                    session_key=request.session_key,
+                )
+
+            result_text = (
+                result.get("result")
+                or result.get("deliverable")
+                or result.get("summary")
+                or result.get("output")
+                or ""
+            )
+            task_type_val = result.get("task_type", "unknown")
+            title_val = result.get("title", task_text[:80])
+            deliverable_val = result.get("deliverable", result_text)
+
+            # Save to Drive only for tangible artifacts
+            drive_url = ""
+            if task_type_val in SAVE_REQUIRED_TASK_TYPES:
+                try:
+                    from saver import save_to_drive
+                    drive_url = save_to_drive(title_val, task_type_val, deliverable_val)
+                    if drive_url:
+                        result_text = result_text + f"\n\nDrive: {drive_url}"
+                except Exception as _drive_err:
+                    logger.warning(f"Drive save failed for job {job_id}: {_drive_err}")
+            else:
+                logger.info(f"Async job {job_id}: task_type '{task_type_val}' is query-only, skipping Drive save")
+
+            update_job(
+                job_id=job_id,
+                status="completed",
+                result=result_text,
+                task_type=task_type_val,
+                files_created=result.get("files_created", []),
+                execution_time=result.get("execution_time", 0.0),
+            )
+            logger.info(f"Async job {job_id} completed ({result.get('task_type')})")
+
+            # Fire callback if provided
+            if request.callback_url:
+                try:
+                    import requests as _requests
+                    _requests.post(
+                        request.callback_url,
+                        json={
+                            "job_id": job_id,
+                            "status": "completed",
+                            "result": result_text,
+                            "task_type": result.get("task_type", "unknown"),
+                            "files_created": result.get("files_created", []),
+                            "execution_time": result.get("execution_time", 0.0),
+                            "from_number": request.from_number,
+                            "chat_id": (request.context or {}).get("chat_id", request.from_number),
+                            "success": True,
+                        },
+                        timeout=10,
+                    )
+                    logger.info(f"Callback fired for job {job_id}")
+                except Exception as cb_err:
+                    logger.warning(f"Callback failed for job {job_id}: {cb_err}")
+
+        except Exception as e:
+            logger.error(f"Async job {job_id} failed: {e}", exc_info=True)
+            from memory import update_job as uj
+            raw = str(e)
+            if "assistant message prefill" in raw or "must end with a user message" in raw:
+                friendly = (
+                    "The research agent hit a provider limit on this prompt. "
+                    "Try asking one focused question at a time (for example, "
+                    "'find 5 mechanic shops near 84095 that do safety inspection') "
+                    "and I'll run each one cleanly."
+                )
+            elif "Provider returned error" in raw or "invalid_request_error" in raw:
+                friendly = (
+                    "The model provider rejected this request. Reword the prompt "
+                    "or narrow its scope and try again. I've logged the full trace."
+                )
+            elif "rate" in raw.lower() and "limit" in raw.lower():
+                friendly = "Hit a rate limit. Wait 30 seconds and try again."
+            else:
+                friendly = f"Task failed. (Diagnostic: {raw[:200]})"
+            uj(job_id=job_id, status="failed", error=friendly, result=friendly)
+
+            if request.callback_url:
+                try:
+                    import requests as _requests
+                    _requests.post(
+                        request.callback_url,
+                        json={
+                            "job_id": job_id,
+                            "status": "failed",
+                            "result": friendly,
+                            "task_type": "unknown",
+                            "files_created": [],
+                            "execution_time": 0.0,
+                            "from_number": request.from_number,
+                            "chat_id": (request.context or {}).get("chat_id", request.from_number),
+                            "success": False,
+                        },
+                        timeout=10,
+                    )
+                except Exception:
+                    pass
+
+    background_tasks.add_task(_run_in_background)
+    logger.info(f"Queued async job {job_id} for: {request.task[:60]}... callback={request.callback_url or 'none'} context={request.context}")
+
+    return AsyncTaskResponse(
+        job_id=job_id,
+        status="pending",
+        message=f"Job {job_id} queued. Poll /status/{job_id} for updates.",
+    )
+
+
+# ══════════════════════════════════════════════════════════════
+# Phase 1: laptop-parity approval endpoint
+# ══════════════════════════════════════════════════════════════
+
+@app.post("/autonomy/approve/{queue_id}", dependencies=[Depends(verify_api_key)])
+def http_autonomy_approve(queue_id: int, body: AutonomyApproveBody):
+    """Laptop-parity approval endpoint. Mirrors the Telegram reply flow."""
+    from approval_queue import (
+        approve as _aq_approve,
+        edit as _aq_edit,
+        get as _aq_get,
+        reject as _aq_reject,
+    )
+
+    if body.decision == "approve":
+        row = _aq_approve(queue_id, note=body.note)
+    elif body.decision == "reject":
+        row = _aq_reject(queue_id, note=body.note, feedback_tag=body.feedback_tag)
+    elif body.decision == "edit":
+        if not body.edited_payload:
+            raise HTTPException(status_code=400, detail="edited_payload required for edit")
+        row = _aq_edit(queue_id, body.edited_payload, note=body.note)
+    else:
+        raise HTTPException(status_code=400, detail="decision must be approve|reject|edit")
+
+    if row is None:
+        current = _aq_get(queue_id)
+        if current is None:
+            raise HTTPException(status_code=404, detail=f"queue #{queue_id} not found")
+        raise HTTPException(status_code=409, detail=f"queue #{queue_id} already {current.status}")
+
+    return {
+        "id": row.id,
+        "crew_name": row.crew_name,
+        "proposal_type": row.proposal_type,
+        "status": row.status,
+        "ts_decided": row.ts_decided.isoformat() if row.ts_decided else None,
+        "decision_note": row.decision_note,
+        "boubacar_feedback_tag": row.boubacar_feedback_tag,
+    }
+
+
+# ══════════════════════════════════════════════════════════════
+# Inbound lead webhook
+# ══════════════════════════════════════════════════════════════
+
 @app.post("/inbound-lead", dependencies=[Depends(verify_api_key)])
 async def inbound_lead_webhook(request: Request, background_tasks: BackgroundTasks):
-    """Webhook for n8n Calendly/Formspree inbound lead events.
-
-    Expected body: InboundPayload JSON (name, email, booking_id, source, optional
-    company, meeting_time ISO8601, raw_company_url, notion_row_id).
-
-    Runs the routine in a background task so n8n gets a fast 202. Result lands
-    in Notion Pipeline + Gmail drafts; Telegram notification goes out at the end.
-    """
+    """Webhook for n8n Calendly/Formspree inbound lead events."""
     try:
         body = await request.json()
     except Exception as e:
@@ -212,6 +615,10 @@ async def inbound_lead_webhook(request: Request, background_tasks: BackgroundTas
     return {"status": "accepted", "message": "Inbound lead queued."}
 
 
+# ══════════════════════════════════════════════════════════════
+# Query / introspection endpoints (auth-gated)
+# ══════════════════════════════════════════════════════════════
+
 @app.get("/status/{job_id}", response_model=JobStatusResponse, dependencies=[Depends(verify_api_key)])
 def get_job_status(job_id: str):
     from memory import get_job
@@ -220,40 +627,116 @@ def get_job_status(job_id: str):
         raise HTTPException(status_code=404, detail="Job not found")
     return JobStatusResponse(**job)
 
+
 @app.get("/classify", dependencies=[Depends(verify_api_key)])
 def classify_only(task: str):
     from router import classify_task, get_crew_type
     classification = classify_task(task)
-    return {"task": task, "classification": classification, "crew_type": get_crew_type(classification.get("task_type"))}
+    return {
+        "task": task,
+        "classification": classification,
+        "crew_type": get_crew_type(classification.get("task_type", "unknown")),
+    }
+
+
+@app.get("/capabilities", dependencies=[Depends(verify_api_key)])
+def capabilities():
+    from router import TASK_TYPES
+    return {
+        "task_types": {
+            k: {
+                "description": v["description"],
+                "crew": v["crew"],
+                "example_keywords": v["keywords"][:5],
+            }
+            for k, v in TASK_TYPES.items()
+        }
+    }
+
+
+@app.get("/outputs", dependencies=[Depends(verify_api_key)])
+def list_outputs():
+    output_dir = os.environ.get("AGENTS_OUTPUT_DIR", "/app/outputs")
+    if not os.path.exists(output_dir):
+        return {"files": [], "count": 0}
+    files = []
+    for f in os.listdir(output_dir):
+        if not f.startswith("."):
+            filepath = os.path.join(output_dir, f)
+            if os.path.isdir(filepath):
+                continue
+            files.append({
+                "name": f,
+                "size_bytes": os.path.getsize(filepath),
+                "created": datetime.fromtimestamp(os.path.getctime(filepath)).isoformat(),
+            })
+    files.sort(key=lambda x: x["created"], reverse=True)
+    return {"files": files, "count": len(files)}
+
+
+@app.get("/outputs/{filename}", dependencies=[Depends(verify_api_key)])
+def get_output(filename: str):
+    if ".." in filename or "/" in filename:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    filepath = f"/app/outputs/{filename}"
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="File not found")
+    with open(filepath, "r", encoding="utf-8") as f:
+        content = f.read()
+    return {"filename": filename, "content": content, "size_bytes": len(content)}
+
+
+@app.get("/memory/search", dependencies=[Depends(verify_api_key)])
+def search_memory(query: str, top_k: int = 3):
+    try:
+        from memory import query_memory
+        results = query_memory(query, top_k=top_k)
+        return {"query": query, "results": results, "count": len(results)}
+    except Exception as e:
+        return {"query": query, "results": [], "error": str(e)}
+
+
+@app.get("/history/{session_id}", dependencies=[Depends(verify_api_key)])
+def get_history(session_id: str, limit: int = 10):
+    try:
+        from memory import get_conversation_history
+        history = get_conversation_history(session_id, limit=limit)
+        return {"session_id": session_id, "history": history}
+    except Exception as e:
+        return {"session_id": session_id, "history": [], "error": str(e)}
+
+
+# ══════════════════════════════════════════════════════════════
+# Upload + session sync
+# ══════════════════════════════════════════════════════════════
 
 @app.post("/upload", dependencies=[Depends(verify_api_key)])
 async def upload_file(file: UploadFile):
     upload_dir = "/app/uploads"
     os.makedirs(upload_dir, exist_ok=True)
     file_id = str(uuid.uuid4())[:8]
-    
-    # Path Traversal Protection
+
+    # Path traversal protection
     safe_name = os.path.basename(file.filename or "upload").replace(" ", "_")
     if ".." in safe_name or safe_name.startswith("/") or safe_name.startswith("\\"):
         raise HTTPException(status_code=400, detail="Invalid filename")
-        
+
     dest = os.path.join(upload_dir, f"{file_id}_{safe_name}")
-    
-    # Streaming write for large files
+
     try:
         with open(dest, "wb") as f:
-            while chunk := await file.read(1024 * 1024): # 1MB chunks
+            while chunk := await file.read(1024 * 1024):
                 f.write(chunk)
     except Exception as e:
         logger.error(f"Upload failed: {e}")
         raise HTTPException(status_code=500, detail="File upload failed")
 
     extracted = _extract_file_text(dest, safe_name)
-    # Save the extraction for the agent to read
     with open(dest + ".txt", "w", encoding="utf-8") as f:
         f.write(extracted)
-        
+
     return {"file_id": file_id, "filename": safe_name, "preview": extracted[:300]}
+
 
 @app.post("/sync-session", dependencies=[Depends(verify_api_key)])
 async def sync_session(req: SyncSessionRequest):
@@ -261,15 +744,16 @@ async def sync_session(req: SyncSessionRequest):
     label = f"[Browser session via {req.source}]"
     content = f"{label}\n{req.summary}"
     save_conversation_turn(req.session_key, "assistant", content)
-    save_conversation_turn(req.session_key, "user", f"(Context synced from {req.source} — ready to continue)")
+    save_conversation_turn(req.session_key, "user", f"(Context synced from {req.source}, ready to continue)")
 
     if req.notify_telegram:
         telegram_chat_id = req.session_key.split(":")[0]
         from notifier import send_message as _send
-        _send(telegram_chat_id, f"Browser session saved. Pick up here anytime — I remember what happened.")
+        _send(telegram_chat_id, "Browser session saved. Pick up here anytime, I remember what happened.")
 
     logger.info(f"sync-session: wrote {len(req.summary)} chars for session_key={req.session_key} source={req.source}")
     return {"success": True, "session_key": req.session_key, "chars_written": len(req.summary)}
+
 
 if __name__ == "__main__":
     import uvicorn

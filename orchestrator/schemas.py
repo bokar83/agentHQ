@@ -1,16 +1,18 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional
+
 
 class TaskRequest(BaseModel):
     task: str
     from_number: str = "unknown"
     session_key: str = "default"
-    context: Optional[dict] = None  # optional extra context from caller
-    callback_url: Optional[str] = None  # webhook URL to POST result when async job completes
-    file_id: Optional[str] = None   # ID from /upload — orchestrator prepends extracted text
-    source: Optional[str] = None    # "browser" | "telegram" | "api"
+    context: Optional[dict] = None
+    callback_url: Optional[str] = None
+    file_id: Optional[str] = None
+    source: Optional[str] = None
 
-class TaskResponse(BaseModel) :
+
+class TaskResponse(BaseModel):
     success: bool
     result: str
     task_type: str = "unknown"
@@ -19,27 +21,57 @@ class TaskResponse(BaseModel) :
     title: str = ""
     deliverable: str = ""
 
+
 class AsyncTaskResponse(BaseModel):
     job_id: str
     status: str = "pending"
     message: str = "Job queued. Poll /status/{job_id} for updates."
 
+
 class JobStatusResponse(BaseModel):
     job_id: str
-    status: str          # pending | running | completed | failed
+    status: str
     task_type: str = ""
     result: str = ""
     files_created: list = []
     execution_time: float = 0.0
 
+
 class TeamTaskRequest(BaseModel):
-    subtasks: list           # [{"crew_type": str, "task": str, "label": str}]
+    subtasks: list
     original_request: str
     from_number: str = "unknown"
     session_key: str = "default"
+
 
 class StatusResponse(BaseModel):
     status: str
     service: str
     version: str
     task_types: list
+    agents: list
+    uptime_seconds: float
+
+
+class HealthReportRequest(BaseModel):
+    status: str
+    report: str
+    date: str
+
+
+class SyncSessionRequest(BaseModel):
+    session_key: str
+    summary: str
+    source: str = "browser"
+    notify_telegram: bool = False
+
+
+class ChatTokenRequest(BaseModel):
+    pin: str
+
+
+class AutonomyApproveBody(BaseModel):
+    decision: str
+    note: Optional[str] = None
+    feedback_tag: Optional[str] = None
+    edited_payload: Optional[dict] = None
