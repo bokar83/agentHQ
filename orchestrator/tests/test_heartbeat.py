@@ -165,7 +165,8 @@ def test_fire_calls_callback_when_allowed():
     called = []
     reg = hb.register_wake("f1", crew_name="griot", at="07:00",
                            callback=lambda: called.append(1))
-    with patch.object(hb, "_is_guard_killed", return_value=False):
+    with patch.object(hb, "_is_guard_killed", return_value=False), \
+         patch.object(hb, "_per_crew_allowed", return_value=True):
         hb._fire(reg, _dt(2026, 4, 24, 7, 0))
     assert called == [1]
     assert reg.last_fired_date == date(2026, 4, 24)
@@ -175,10 +176,23 @@ def test_fire_skips_crew_callback_when_killed():
     called = []
     reg = hb.register_wake("f2", crew_name="griot", at="07:00",
                            callback=lambda: called.append(1))
-    with patch.object(hb, "_is_guard_killed", return_value=True):
+    with patch.object(hb, "_is_guard_killed", return_value=True), \
+         patch.object(hb, "_per_crew_allowed", return_value=True):
         hb._fire(reg, _dt(2026, 4, 24, 7, 0))
     assert called == []
     # last_fired still updates so we don't busy-loop retrying
+    assert reg.last_fired_date == date(2026, 4, 24)
+
+
+def test_fire_skips_crew_callback_when_crew_disabled():
+    """Phase 2.6: per-crew enabled flag is enforced at substrate level."""
+    called = []
+    reg = hb.register_wake("f_disabled", crew_name="griot", at="07:00",
+                           callback=lambda: called.append(1))
+    with patch.object(hb, "_is_guard_killed", return_value=False), \
+         patch.object(hb, "_per_crew_allowed", return_value=False):
+        hb._fire(reg, _dt(2026, 4, 24, 7, 0))
+    assert called == []
     assert reg.last_fired_date == date(2026, 4, 24)
 
 
@@ -186,16 +200,32 @@ def test_fire_runs_self_test_even_when_killed():
     called = []
     reg = hb.register_wake("st", crew_name=hb.SELF_TEST_CREW, at="07:00",
                            callback=lambda: called.append(1))
+    # self-test crew bypasses both the kill switch and the per-crew gate
     with patch.object(hb, "_is_guard_killed", return_value=True):
         hb._fire(reg, _dt(2026, 4, 24, 7, 0))
     assert called == [1]
+
+
+def test_per_crew_allowed_self_test_always_true():
+    """Self-test crew is exempt; _per_crew_allowed returns True regardless of state."""
+    assert hb._per_crew_allowed(hb.SELF_TEST_CREW) is True
+
+
+def test_per_crew_allowed_unreachable_guard_fails_closed():
+    """If autonomy_guard import fails, the gate returns False (safe default)."""
+    import sys as _sys
+    fake_exc = RuntimeError("boom")
+    # Patch the lazy-import path by injecting a bad module
+    with patch("autonomy_guard.get_guard", side_effect=fake_exc):
+        assert hb._per_crew_allowed("griot") is False
 
 
 def test_fire_catches_callback_exception():
     def boom():
         raise RuntimeError("planned failure")
     reg = hb.register_wake("f3", crew_name="griot", at="07:00", callback=boom)
-    with patch.object(hb, "_is_guard_killed", return_value=False):
+    with patch.object(hb, "_is_guard_killed", return_value=False), \
+         patch.object(hb, "_per_crew_allowed", return_value=True):
         hb._fire(reg, _dt(2026, 4, 24, 7, 0))
     assert reg.last_fired_date == date(2026, 4, 24)
 
@@ -284,7 +314,8 @@ def test_dry_run_next_returns_future_time_for_daily_wake():
 
 def test_dry_run_next_interval_first_fire_is_immediate():
     hb.register_wake("dn2", crew_name="griot", every="1h", callback=_noop)
-    with patch.object(hb, "_is_guard_killed", return_value=False):
+    with patch.object(hb, "_is_guard_killed", return_value=False), \
+         patch.object(hb, "_per_crew_allowed", return_value=True):
         result = hb.dry_run_next("dn2")
     assert result["seconds_until_fire"] == 0
 
@@ -298,10 +329,21 @@ def test_dry_run_next_self_test_allowed_even_when_killed():
 
 def test_dry_run_next_crew_blocked_when_killed():
     hb.register_wake("dn4", crew_name="griot", at="07:00", callback=_noop)
-    with patch.object(hb, "_is_guard_killed", return_value=True):
+    with patch.object(hb, "_is_guard_killed", return_value=True), \
+         patch.object(hb, "_per_crew_allowed", return_value=True):
         result = hb.dry_run_next("dn4")
     assert result["guard_would_allow"] is False
     assert "killed" in result["guard_reason"]
+
+
+def test_dry_run_next_crew_blocked_when_disabled_in_state():
+    """Phase 2.6: dry_run_next reflects per-crew enabled state."""
+    hb.register_wake("dn5", crew_name="griot", at="07:00", callback=_noop)
+    with patch.object(hb, "_is_guard_killed", return_value=False), \
+         patch.object(hb, "_per_crew_allowed", return_value=False):
+        result = hb.dry_run_next("dn5")
+    assert result["guard_would_allow"] is False
+    assert "disabled" in result["guard_reason"]
 
 
 # ---------- start() + defaults ----------

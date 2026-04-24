@@ -164,8 +164,30 @@ def _is_guard_killed() -> bool:
         return True
 
 
+def _per_crew_allowed(crew_name: str) -> bool:
+    """Return True if this crew is enabled in autonomy_state.json.
+
+    Self-test crew always runs (used for substrate observability).
+    Unreachable guard -> fail-closed (return False).
+    Unknown crew or enabled=False -> return False.
+
+    Substrate-level gate: every autonomous crew (griot, hunter, concierge,
+    chairman) checks per-crew state here instead of re-implementing the
+    check in each callback. Added in Phase 2.6 before the Griot pilot.
+    """
+    if crew_name == SELF_TEST_CREW:
+        return True
+    try:
+        from autonomy_guard import get_guard
+        crew_state = get_guard().state_summary().get("crews", {}).get(crew_name, {})
+        return bool(crew_state.get("enabled", False))
+    except Exception as e:
+        logger.warning(f"HEARTBEAT: per-crew state check failed for {crew_name} ({e}); fail-closed")
+        return False
+
+
 def _fire(wake: WakeRegistration, now: datetime) -> None:
-    """Run the callback unless the guard is killed and this is not a self-test."""
+    """Run the callback unless the guard is killed, or this crew is not enabled."""
     fire_id = str(uuid.uuid4())[:8]
     logger.info(f"HEARTBEAT: fire {fire_id} {wake.name} at {now.isoformat()}")
 
@@ -174,6 +196,11 @@ def _fire(wake: WakeRegistration, now: datetime) -> None:
 
     if killed and not is_self_test:
         logger.info(f"HEARTBEAT: {fire_id} skip (guard killed, crew={wake.crew_name})")
+        _update_last_fired(wake, now)
+        return
+
+    if not _per_crew_allowed(wake.crew_name):
+        logger.info(f"HEARTBEAT: {fire_id} skip (crew disabled, crew={wake.crew_name})")
         _update_last_fired(wake, now)
         return
 
@@ -234,7 +261,22 @@ def dry_run_next(wake_name: str) -> dict:
 
     guard_killed = _is_guard_killed()
     is_self_test = wake.crew_name == SELF_TEST_CREW
-    would_allow = (not guard_killed) or is_self_test
+    crew_enabled = _per_crew_allowed(wake.crew_name)
+
+    # Match _fire semantics: self-test fires even when killed; non-self-test
+    # requires both (not killed) and per-crew enabled.
+    if is_self_test:
+        would_allow = True
+        reason = None
+    elif guard_killed:
+        would_allow = False
+        reason = "guard killed (non-self-test crew)"
+    elif not crew_enabled:
+        would_allow = False
+        reason = f"crew '{wake.crew_name}' disabled in autonomy_state"
+    else:
+        would_allow = True
+        reason = None
 
     return {
         "name": wake.name,
@@ -242,7 +284,7 @@ def dry_run_next(wake_name: str) -> dict:
         "next_fire_local": target.strftime("%Y-%m-%d %H:%M:%S %Z"),
         "seconds_until_fire": max(0, int((target - now).total_seconds())),
         "guard_would_allow": would_allow,
-        "guard_reason": None if would_allow else "guard killed (non-self-test crew)",
+        "guard_reason": reason,
     }
 
 
