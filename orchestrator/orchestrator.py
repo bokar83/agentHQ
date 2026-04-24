@@ -2198,7 +2198,11 @@ async def telegram_polling_loop():
     while True:
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                resp = await client.get(url, params={"offset": offset, "timeout": 20})
+                resp = await client.get(url, params={
+                    "offset": offset,
+                    "timeout": 20,
+                    "allowed_updates": '["message","edited_message","callback_query"]',
+                })
                 if resp.status_code == 200:
                     data = resp.json()
                     for update in data.get("result", []):
