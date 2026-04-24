@@ -419,6 +419,13 @@ def start_scheduler():
     digest_thread.start()
     logger.info("DIGEST: morning digest thread registered")
 
+    # Phase 2: heartbeat scheduler
+    try:
+        import heartbeat as _heartbeat
+        _heartbeat.start()
+    except Exception as e:
+        logger.error(f"HEARTBEAT: start failed ({e}); continuing without heartbeat", exc_info=True)
+
     sync_thread = threading.Thread(target=_periodic_sync, daemon=True)
     sync_thread.start()
 
