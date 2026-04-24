@@ -168,13 +168,15 @@ def _insert_row(generation_id: str, metadata: dict, data: dict) -> None:
             session_key, council_run_id, model,
             tokens_prompt, tokens_completion,
             tokens_cached_read, tokens_cached_write,
-            cost_usd, latency_ms, finish_reason, error
+            cost_usd, latency_ms, finish_reason, error,
+            autonomous, guard_decision
         ) VALUES (
             %s, %s, %s, %s, %s,
             %s, %s, %s,
             %s, %s,
             %s, %s,
-            %s, %s, %s, %s
+            %s, %s, %s, %s,
+            %s, %s
         )
         ON CONFLICT (generation_id) DO NOTHING
     """
@@ -195,6 +197,8 @@ def _insert_row(generation_id: str, metadata: dict, data: dict) -> None:
         latency_ms,
         finish_reason,
         None,
+        bool(metadata.get("autonomous", False)),
+        metadata.get("guard_decision"),
     )
 
     conn = None
