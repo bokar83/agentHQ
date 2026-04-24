@@ -202,6 +202,20 @@ def list_pending(limit: int = 10) -> list:
     return [_row_to_queue(r) for r in rows]
 
 
+def count_pending() -> int:
+    """Return the total number of pending rows (no LIMIT).
+
+    Used by the morning digest so we don't under-report backlog when more
+    than the preview-limit are pending. See Codex review on PR #10.
+    """
+    conn = _conn()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) FROM approval_queue WHERE status = 'pending'")
+    n = cur.fetchone()[0]
+    cur.close()
+    return int(n or 0)
+
+
 def _transition(
     queue_id: int,
     new_status: str,

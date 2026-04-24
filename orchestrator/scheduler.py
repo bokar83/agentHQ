@@ -355,14 +355,21 @@ def _run_morning_digest():
 
         # Phase 1: pending approvals summary
         try:
-            from approval_queue import list_pending
-            pending = list_pending(limit=3)
-            if pending:
+            from approval_queue import list_pending, count_pending
+            total_pending = count_pending()
+            if total_pending > 0:
+                preview = list_pending(limit=3)
                 lines.append("")
-                lines.append(f"Pending approvals: {len(pending)} (first 3):")
+                shown = len(preview)
+                header = (
+                    f"Pending approvals: {total_pending} (first {shown}):"
+                    if total_pending > shown
+                    else f"Pending approvals: {total_pending}:"
+                )
+                lines.append(header)
                 from datetime import datetime as _dt, timezone as _tz
                 _now_utc = _dt.now(_tz.utc)
-                for r in pending:
+                for r in preview:
                     age_min = int((_now_utc - r.ts_created).total_seconds() / 60) if r.ts_created else 0
                     lines.append(f"  #{r.id} {r.crew_name} {r.proposal_type} ({age_min}m)")
             else:

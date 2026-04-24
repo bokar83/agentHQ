@@ -1469,27 +1469,48 @@ async def process_telegram_update(update: dict):
     # Fallback path: naked approval/rejection with no reply target. Requires
     # explicit "yes confirm" / "no confirm" to avoid silent action on ambiguous
     # chat (Council fix).
+    #
+    # Doc-routing precedence: if a notebooklm_pending_docs row is waiting, we
+    # yield to the existing doc-routing handler below so 'yes' still confirms
+    # doc filing (Codex PR #10 P1 finding). Only engage Phase 1 fallback when
+    # no doc routing is pending.
     if not reply_to_msg_id and (_first_word in _APPROVE_ALIASES or _first_word in _REJECT_ALIASES):
-        from approval_queue import find_latest_pending, approve as _aq_approve, reject as _aq_reject
-        from notifier import send_message as _send_msg
-        _pending = find_latest_pending(max_age_hours=2)
-        if _pending is None:
-            # Silent when nothing is pending — lets normal chat flow continue.
-            pass
-        elif _text_lower_full == "yes confirm":
-            _aq_approve(_pending.id, note=None)
-            _send_msg(chat_id, f"✅ Queue #{_pending.id}: approved.")
-            return
-        elif _text_lower_full == "no confirm":
-            _aq_reject(_pending.id, note=None)
-            _send_msg(chat_id, f"❌ Queue #{_pending.id}: rejected. Use /reject {_pending.id} <tag> to add a reason.")
-            return
-        elif _first_word in _APPROVE_ALIASES:
-            _send_msg(chat_id, f"Did you mean queue #{_pending.id} ({_pending.crew_name} {_pending.proposal_type})? Reply 'yes confirm' to approve.")
-            return
-        elif _first_word in _REJECT_ALIASES:
-            _send_msg(chat_id, f"Did you mean queue #{_pending.id} ({_pending.crew_name} {_pending.proposal_type})? Reply 'no confirm' to reject.")
-            return
+        def _doc_routing_pending() -> bool:
+            try:
+                from memory import _pg_conn
+                _c = _pg_conn()
+                _cur = _c.cursor()
+                _cur.execute(
+                    "SELECT 1 FROM notebooklm_pending_docs WHERE resolved = false LIMIT 1"
+                )
+                _hit = _cur.fetchone() is not None
+                _cur.close()
+                return _hit
+            except Exception:
+                # Table may not exist in some envs; fail-open (let fallback proceed).
+                return False
+
+        if not _doc_routing_pending():
+            from approval_queue import find_latest_pending, approve as _aq_approve, reject as _aq_reject
+            from notifier import send_message as _send_msg
+            _pending = find_latest_pending(max_age_hours=2)
+            if _pending is None:
+                # Silent when nothing is pending; lets normal chat flow continue.
+                pass
+            elif _text_lower_full == "yes confirm":
+                _aq_approve(_pending.id, note=None)
+                _send_msg(chat_id, f"✅ Queue #{_pending.id}: approved.")
+                return
+            elif _text_lower_full == "no confirm":
+                _aq_reject(_pending.id, note=None)
+                _send_msg(chat_id, f"❌ Queue #{_pending.id}: rejected. Use /reject {_pending.id} <tag> to add a reason.")
+                return
+            elif _first_word in _APPROVE_ALIASES:
+                _send_msg(chat_id, f"Did you mean queue #{_pending.id} ({_pending.crew_name} {_pending.proposal_type})? Reply 'yes confirm' to approve.")
+                return
+            elif _first_word in _REJECT_ALIASES:
+                _send_msg(chat_id, f"Did you mean queue #{_pending.id} ({_pending.crew_name} {_pending.proposal_type})? Reply 'no confirm' to reject.")
+                return
 
     # -- Doc routing emoji + text command handlers --
     _EMOJI_COMMANDS = ("✅", "✏️", "🆕", "❌", "➕")
