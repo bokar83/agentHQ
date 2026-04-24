@@ -1470,27 +1470,45 @@ async def process_telegram_update(update: dict):
     # explicit "yes confirm" / "no confirm" to avoid silent action on ambiguous
     # chat (Council fix).
     #
-    # Doc-routing precedence: if a notebooklm_pending_docs row is waiting, we
-    # yield to the existing doc-routing handler below so 'yes' still confirms
-    # doc filing (Codex PR #10 P1 finding). Only engage Phase 1 fallback when
-    # no doc routing is pending.
+    # Doc-routing precedence (Codex PR #10 + PR #11 findings):
+    #   Only defer to doc-routing when the user's first word would be handled
+    #   by doc-routing (its _TEXT_ALIASES covers approve-like words + 'flag',
+    #   'discard', 'reject' -- but NOT 'no', 'nope', 'rejected', 'not approved').
+    #   So we defer only for approve-like messages when a pending doc is present,
+    #   preserving the queue rejection fallback in all cases.
+    #
+    # Connection hygiene (Codex PR #11 P2):
+    #   _doc_routing_pending() now closes the connection in all paths via
+    #   try/finally.
     if not reply_to_msg_id and (_first_word in _APPROVE_ALIASES or _first_word in _REJECT_ALIASES):
         def _doc_routing_pending() -> bool:
             try:
                 from memory import _pg_conn
                 _c = _pg_conn()
-                _cur = _c.cursor()
-                _cur.execute(
-                    "SELECT 1 FROM notebooklm_pending_docs WHERE resolved = false LIMIT 1"
-                )
-                _hit = _cur.fetchone() is not None
-                _cur.close()
-                return _hit
+                try:
+                    _cur = _c.cursor()
+                    try:
+                        _cur.execute(
+                            "SELECT 1 FROM notebooklm_pending_docs WHERE resolved = false LIMIT 1"
+                        )
+                        return _cur.fetchone() is not None
+                    finally:
+                        _cur.close()
+                finally:
+                    try:
+                        _c.close()
+                    except Exception:
+                        pass
             except Exception:
                 # Table may not exist in some envs; fail-open (let fallback proceed).
                 return False
 
-        if not _doc_routing_pending():
+        # Defer to doc-routing only for approve-like words when a doc is pending.
+        # Reject words always hit the queue fallback (doc-routing doesn't handle them).
+        _is_approve_word = _first_word in _APPROVE_ALIASES
+        _skip_fallback = _is_approve_word and _doc_routing_pending()
+
+        if not _skip_fallback:
             from approval_queue import find_latest_pending, approve as _aq_approve, reject as _aq_reject
             from notifier import send_message as _send_msg
             _pending = find_latest_pending(max_age_hours=2)
