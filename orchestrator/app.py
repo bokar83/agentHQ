@@ -108,20 +108,40 @@ def verify_api_key(
     x_api_key: Optional[str] = Header(default=None),
     authorization: Optional[str] = Header(default=None),
 ):
-    """API key verification. Fail-closed unless DEBUG_NO_AUTH=true."""
+    """Reject requests without valid auth. Fail-closed when ORCHESTRATOR_API_KEY
+    is unset. Accepts two forms:
+      1. X-Api-Key: <raw key>         Telegram, n8n, existing integrations
+      2. Authorization: Bearer <jwt>  browser chat UI (JWT signed in /chat-token)
+         OR Authorization: Bearer <raw key>  for CLI tooling
+
+    Dev override: set DEBUG_NO_AUTH=true to bypass. Only use locally.
+    """
     expected = os.environ.get("ORCHESTRATOR_API_KEY", "")
     if not expected:
         if os.environ.get("DEBUG_NO_AUTH", "false").lower() == "true":
             return
-        logger.error("Security: no ORCHESTRATOR_API_KEY configured.")
+        logger.error("verify_api_key: ORCHESTRATOR_API_KEY not configured (fail-closed)")
         raise HTTPException(status_code=500, detail="Server auth misconfigured.")
 
+    # Raw API key header (primary path for X-Api-Key)
     if x_api_key == expected:
         return
-    if authorization and authorization.startswith("Bearer ") and authorization[7:] == expected:
-        return
 
-    raise HTTPException(status_code=401, detail="Invalid API key.")
+    # Bearer token: either raw key OR signed JWT from /chat-token
+    if authorization and authorization.startswith("Bearer "):
+        import jwt as pyjwt
+        token = authorization[7:]
+        if token == expected:
+            return
+        try:
+            pyjwt.decode(token, expected, algorithms=["HS256"])
+            return
+        except pyjwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="Session expired. Refresh to get a new token.")
+        except pyjwt.InvalidTokenError:
+            pass
+
+    raise HTTPException(status_code=401, detail="Invalid or missing auth. Use X-Api-Key or Authorization: Bearer <token>.")
 
 
 def verify_chat_token(authorization: Optional[str] = Header(None)):
