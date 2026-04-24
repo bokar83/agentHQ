@@ -236,7 +236,7 @@ Existing: `yes / confirm / approved / approve / flag / discard / reject`. Add: `
    - `approval_queue.find_latest_pending()` → `QueueRow?`
    - If matched, route to that row with a confirmation message: "Assuming latest pending: post_draft from griot 23m ago. Approve? Reply `yes confirm` to confirm."
    - Rationale: ambiguous "yes" shouldn't silently act; require a second-step confirmation only in the fallback path
-3. If reject, prompt for a feedback tag using Telegram inline keyboard (buttons: `off-voice`, `wrong-hook`, `stale`, `too-salesy`, `other`, `skip`). This requires adding inline-button callback handling to the existing handler.
+3. If reject, prompt for a feedback tag via **both** channels (option C, owner choice 2026-04-24): a Telegram inline keyboard shows buttons `off-voice`, `wrong-hook`, `stale`, `too-salesy`, `other`, `skip`, **and** any text reply within the next 5 minutes is accepted too. If Boubacar types free text, we pattern-match against the known tag vocabulary (case-insensitive, normalize hyphens/spaces); unmatched text is stored verbatim as the tag (so "stale angle" becomes the tag value). This requires inline-button callback handling plus a short pending-feedback lookup window on incoming text messages.
 4. If `edit: <text>` or `edit <text>` pattern, treat rest-of-message as new payload text; replaces `payload.body` in the stored row and marks `status=edited`.
 
 **Why inline buttons for feedback tags only:** we keep the main approve/reject flow on natural-language/emoji replies (simple, robust), and reserve inline buttons for the one place where categorical choice beats free text (rejection reason).
