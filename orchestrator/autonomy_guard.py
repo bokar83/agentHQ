@@ -83,10 +83,33 @@ class AutonomyGuard:
                 state = self._default_state()
                 self._state_file.write_text(json.dumps(state, indent=2))
                 return state
-            return json.loads(self._state_file.read_text())
+            loaded = json.loads(self._state_file.read_text())
+            return self._repair_state(loaded)
         except Exception as e:
             logger.warning(f"autonomy_guard: failed to load state, using defaults: {e}")
             return self._default_state()
+
+    def _repair_state(self, loaded: dict) -> dict:
+        """Merge a loaded (possibly partial) state file into the full default shape.
+
+        Protects against partial writes (power cut mid-persist) or manual edits that
+        drop a key. Missing fields fall back to safe defaults (killed=False, all
+        crews off + dry-run).
+        """
+        base = self._default_state()
+        if not isinstance(loaded, dict):
+            return base
+        base["killed"] = bool(loaded.get("killed", False))
+        base["killed_at"] = loaded.get("killed_at")
+        base["killed_reason"] = loaded.get("killed_reason")
+        crews = loaded.get("crews")
+        if isinstance(crews, dict):
+            for crew_name, defaults in base["crews"].items():
+                existing = crews.get(crew_name)
+                if isinstance(existing, dict):
+                    defaults["enabled"] = bool(existing.get("enabled", False))
+                    defaults["dry_run"] = bool(existing.get("dry_run", True))
+        return base
 
     def _persist(self) -> None:
         try:

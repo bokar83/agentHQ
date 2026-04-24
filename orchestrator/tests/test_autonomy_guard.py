@@ -131,3 +131,43 @@ def test_snapshot_remaining_floored_at_zero(_mpc, _ms, tmp_path: Path):
     g = _make_guard(tmp_path, cap=1.00)
     snap = g.snapshot()
     assert snap.remaining_usd == 0.0
+
+
+@patch("autonomy_guard.AutonomyGuard._spent_today_usd", return_value=0.0)
+def test_partial_state_missing_crews_key_falls_back_to_defaults(_m, tmp_path: Path):
+    """If the state file is partially written (missing 'crews'), guard() must not crash."""
+    import json
+    sf = tmp_path / "state.json"
+    sf.write_text(json.dumps({"killed": False}))
+    g = AutonomyGuard(state_file=str(sf), cap_usd=1.0)
+    d = g.guard("griot")
+    assert d.allowed is False
+    assert d.decision_tag == "blocked-disabled"
+
+
+@patch("autonomy_guard.AutonomyGuard._spent_today_usd", return_value=0.0)
+def test_partial_state_missing_one_crew_reads_other_crews(_m, tmp_path: Path):
+    """If 'crews' dict is partial (missing griot), other crews still read correctly."""
+    import json
+    sf = tmp_path / "state.json"
+    sf.write_text(json.dumps({
+        "killed": False,
+        "crews": {"hunter": {"enabled": True, "dry_run": False}},
+    }))
+    g = AutonomyGuard(state_file=str(sf), cap_usd=1.0)
+    d_griot = g.guard("griot")
+    assert d_griot.allowed is False
+    d_hunter = g.guard("hunter")
+    assert d_hunter.allowed is True
+    assert d_hunter.dry_run is False
+
+
+@patch("autonomy_guard.AutonomyGuard._spent_today_usd", return_value=0.0)
+def test_garbage_state_file_falls_back_to_defaults(_m, tmp_path: Path):
+    """Non-dict / garbage shape must not crash guard()."""
+    sf = tmp_path / "state.json"
+    sf.write_text('["not", "a", "dict"]')
+    g = AutonomyGuard(state_file=str(sf), cap_usd=1.0)
+    d = g.guard("griot")
+    assert d.allowed is False
+    assert d.decision_tag == "blocked-disabled"
