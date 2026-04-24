@@ -426,6 +426,22 @@ def start_scheduler():
     except Exception as e:
         logger.error(f"HEARTBEAT: start failed ({e}); continuing without heartbeat", exc_info=True)
 
+    # Phase 3 L0.5: Griot content pilot wake (07:00 America/Denver, weekdays only).
+    # The per-crew enabled gate in heartbeat._fire (Phase 2.6) blocks this from
+    # firing until autonomy_state.json flips griot.enabled=true. The callback
+    # itself also gates on weekday so the wake is a no-op on Saturday + Sunday.
+    try:
+        import heartbeat as _heartbeat
+        from griot import griot_morning_tick
+        _heartbeat.register_wake(
+            "griot-morning",
+            crew_name="griot",
+            callback=griot_morning_tick,
+            at="07:00",
+        )
+    except Exception as e:
+        logger.error(f"GRIOT: wake registration failed ({e}); continuing without griot", exc_info=True)
+
     sync_thread = threading.Thread(target=_periodic_sync, daemon=True)
     sync_thread.start()
 
