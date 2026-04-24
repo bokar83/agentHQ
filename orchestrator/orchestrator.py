@@ -2209,6 +2209,50 @@ async def process_telegram_update(update: dict):
         _send_msg(chat_id, "\n".join(lines))
         return
 
+    # /heartbeat_status -- show registered wakes + next fire times (Phase 2)
+    if text.lower().startswith("/heartbeat_status"):
+        from notifier import send_message as _send_msg
+        import heartbeat as _hb
+        wakes = _hb.list_wakes()
+        if not wakes:
+            _send_msg(chat_id, "Heartbeat: no wakes registered.")
+            return
+        lines = [f"Heartbeat: {len(wakes)} wake(s) registered"]
+        for w in wakes:
+            info = _hb.dry_run_next(w.name)
+            if w.at_hour is not None:
+                cadence = f"at {w.at_hour:02d}:{(w.at_minute or 0):02d}"
+            else:
+                cadence = f"every {w.every_seconds}s"
+            lines.append(f"  {w.name} ({w.crew_name}) {cadence}")
+            lines.append(f"    next: {info['next_fire_local']}  guard_allow={info['guard_would_allow']}")
+        _send_msg(chat_id, "\n".join(lines))
+        return
+
+    # /trigger_heartbeat <wake_name> -- dry-run only in Phase 2 (no actual fire)
+    if text.lower().startswith("/trigger_heartbeat"):
+        from notifier import send_message as _send_msg
+        import heartbeat as _hb
+        parts = text.strip().split(maxsplit=1)
+        if len(parts) < 2:
+            _send_msg(chat_id, "Usage: /trigger_heartbeat <wake_name>.  Use /heartbeat_status to list.")
+            return
+        info = _hb.dry_run_next(parts[1].strip())
+        if "error" in info:
+            _send_msg(chat_id, info["error"])
+            return
+        out = [
+            f"Wake: {info['name']}",
+            f"Crew: {info['crew_name']}",
+            f"Next fire: {info['next_fire_local']} (in {info['seconds_until_fire']}s)",
+            f"Guard would allow: {info['guard_would_allow']}",
+        ]
+        if info.get("guard_reason"):
+            out.append(f"Guard reason: {info['guard_reason']}")
+        out.append("(Phase 2: dry-run only; no actual fire)")
+        _send_msg(chat_id, "\n".join(out))
+        return
+
     # ── Praise / Critique Detection ──────────────────────────────────────
     if os.environ.get("MEMORY_LEARNING_ENABLED", "false").lower() == "true":
         from notifier import send_message as _send_msg
