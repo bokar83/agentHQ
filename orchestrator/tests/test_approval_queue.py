@@ -44,3 +44,9 @@ def test_known_vocab_is_a_tuple():
     # Guard against accidental set/list conversion which would break ordering.
     assert isinstance(KNOWN_FEEDBACK_TAGS, tuple)
     assert "off-voice" in KNOWN_FEEDBACK_TAGS
+
+
+def test_count_pending_is_exposed_and_callable():
+    """Codex PR #10 P2 fix: morning digest needs a true count, not len(preview)."""
+    from approval_queue import count_pending
+    assert callable(count_pending)
