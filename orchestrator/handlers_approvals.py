@@ -93,10 +93,13 @@ def evict_expired_windows() -> None:
 
 def handle_pending_feedback_tag(text: str, chat_id: str, first_word: str, reply_to_msg_id) -> bool:
     """
-    Consume a free-text tag for the most recent rejection if a window is open.
-    Must run BEFORE normal approval logic so text like 'stale' is treated as
-    a tag, not as a new command. Council-fix guards: no slash, no emoji prefix,
-    not an approve/reject alias, <=40 chars, not a reply.
+    Consume a free-text tag for the most recent rejection if a window is open
+    FOR THIS CHAT. Must run BEFORE normal approval logic so text like 'stale'
+    is treated as a tag, not as a new command. Council-fix guards: no slash,
+    no emoji prefix, not an approve/reject alias, <=40 chars, not a reply.
+
+    Codex PR #14 P2: scoped to chat_id so a tag from chat A cannot be applied
+    to a queue item rejected from chat B.
     """
     if not _PENDING_FEEDBACK_WINDOWS or reply_to_msg_id:
         return False
@@ -109,8 +112,14 @@ def handle_pending_feedback_tag(text: str, chat_id: str, first_word: str, reply_
         and not emoji_prefix
     ):
         return False
-    # Pick the most recently opened window (highest ts_rejected).
-    qid_target = max(_PENDING_FEEDBACK_WINDOWS, key=lambda q: _PENDING_FEEDBACK_WINDOWS[q][1])
+    # Filter windows to those opened by THIS chat (Codex P2).
+    chat_windows = {
+        qid: ts for qid, (cid, ts) in _PENDING_FEEDBACK_WINDOWS.items() if cid == chat_id
+    }
+    if not chat_windows:
+        return False
+    # Most recently opened window for this chat.
+    qid_target = max(chat_windows, key=lambda q: chat_windows[q])
     from approval_queue import normalize_feedback_tag, set_feedback_tag
     from notifier import send_message as _send
     tag = normalize_feedback_tag(text)
