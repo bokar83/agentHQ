@@ -175,6 +175,7 @@ services:
       - ./logs:/app/logs
       - ./secrets:/app/secrets:ro
       - ./orchestrator/skills/doc_routing:/app/orchestrator_skills/doc_routing:ro
+      - ./data:/app/data
     depends_on:
       postgres:
         condition: service_healthy

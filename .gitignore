@@ -42,6 +42,9 @@ qdrant_data/
 .qdrant_data/
 waha_sessions/
 
+# Autonomy runtime state (kill switch, crew flags)
+data/autonomy_state.json
+
 # ── Output directories ───────────────────────────────────────
 agent_outputs/
 outputs/

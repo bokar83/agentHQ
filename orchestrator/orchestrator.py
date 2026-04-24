@@ -1886,6 +1886,66 @@ async def process_telegram_update(update: dict):
         _send_msg(chat_id, f"Switched to project: {project_name}\nAll tasks will use this context until you switch again.")
         return
 
+    # /autonomy_status — show autonomy guard state (Phase 0+)
+    if text.lower().startswith("/autonomy_status"):
+        from notifier import send_message as _send_msg
+        from autonomy_guard import get_guard
+        g = get_guard()
+        snap = g.snapshot()
+        summary = g.state_summary()
+        lines = []
+        if summary["killed"]:
+            lines.append(f"KILLED: {summary['killed_reason']}")
+        else:
+            lines.append("Autonomy live")
+        lines.append(f"Spent today: ${snap.spent_today_usd:.4f} / ${snap.cap_usd:.2f}")
+        lines.append(f"Remaining:   ${snap.remaining_usd:.4f}")
+        lines.append("")
+        lines.append("Crews:")
+        for name, cfg in summary["crews"].items():
+            flag = "on" if cfg["enabled"] else "off"
+            mode = "dry-run" if cfg["dry_run"] else "LIVE"
+            lines.append(f"  {name}: {flag} ({mode})")
+        _send_msg(chat_id, "\n".join(lines))
+        return
+
+    # /pause_autonomy — flip the kill switch
+    if text.lower().startswith("/pause_autonomy"):
+        from notifier import send_message as _send_msg
+        from autonomy_guard import get_guard
+        g = get_guard()
+        g.kill("telegram /pause_autonomy")
+        _send_msg(chat_id, "Autonomy KILLED. All autonomous crews blocked.\nRun /resume_autonomy to restore.")
+        return
+
+    # /resume_autonomy — clear the kill switch
+    if text.lower().startswith("/resume_autonomy"):
+        from notifier import send_message as _send_msg
+        from autonomy_guard import get_guard
+        g = get_guard()
+        g.unkill()
+        snap = g.snapshot()
+        _send_msg(chat_id, f"Autonomy resumed. ${snap.spent_today_usd:.4f} / ${snap.cap_usd:.2f} spent today.")
+        return
+
+    # /spend — today's autonomous spend vs cap, per crew
+    if text.lower().startswith("/spend"):
+        from notifier import send_message as _send_msg
+        from autonomy_guard import get_guard
+        g = get_guard()
+        snap = g.snapshot()
+        lines = [f"Autonomous spend today: ${snap.spent_today_usd:.4f} / ${snap.cap_usd:.2f}"]
+        lines.append(f"Remaining: ${snap.remaining_usd:.4f}")
+        if snap.per_crew:
+            lines.append("")
+            lines.append("By crew:")
+            for crew, usd in sorted(snap.per_crew.items(), key=lambda kv: -kv[1]):
+                lines.append(f"  {crew}: ${usd:.4f}")
+        else:
+            lines.append("(no autonomous calls yet today)")
+        _send_msg(chat_id, "\n".join(lines))
+        return
+
     # ── Praise / Critique Detection ──────────────────────────────────────
     if os.environ.get("MEMORY_LEARNING_ENABLED", "false").lower() == "true":
         from notifier import send_message as _send_msg

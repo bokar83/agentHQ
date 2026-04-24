@@ -1,4 +1,4 @@
-# agentsHQ — Orchestrator Guidebook
+# agentsHQ Orchestrator Guidebook
 
 The `orchestrator/` directory is the heart of the agentsHQ system. It handles the lifecycle of a task from classification to delivery.
 
@@ -28,3 +28,28 @@ The `orchestrator/` directory is the heart of the agentsHQ system. It handles th
 - **Asynchronous by Default:** All long-running crew executions are dispatched as background tasks.
 - **Defensive Error Handling:** Every major step is wrapped in try/except with escalation to the `EscalateTool`.
 - **Identity-Driven:** Agents are defined using "Soul" files (`AGENT.md`) to maintain consistent personas.
+
+## Autonomy Layer (Phase 0+)
+
+The autonomy layer lets crews originate work on their own cadence, with hard safety rails. Nothing runs autonomously until a crew's flag is flipped live.
+
+### Env vars
+
+| Var | Default | Purpose |
+| :--- | :--- | :--- |
+| `AUTONOMY_ENABLED` | `true` | Master switch. Not enforced in Phase 0 (rails only); later phases gate crew execution on this. |
+| `AUTONOMY_DAILY_USD_CAP` | `1.00` | Hard cap on autonomous LLM spend per calendar day (MT). Hitting the cap auto-kills the guard. |
+| `AUTONOMY_STATE_FILE` | `data/autonomy_state.json` | Kill switch + per-crew flags. Survives restarts. Gitignored. |
+
+### Owner-only Telegram commands
+
+| Command | What it does |
+| :--- | :--- |
+| `/autonomy_status` | Show kill state, today's spend, per-crew enabled/dry-run flags |
+| `/pause_autonomy` | Flip the kill switch. All autonomous crews blocked until resumed. |
+| `/resume_autonomy` | Clear the kill switch |
+| `/spend` | Today's autonomous spend vs cap, broken down per crew |
+
+### Per-call ledger columns
+
+`llm_calls.autonomous` (bool) and `llm_calls.guard_decision` (text) are populated by `usage_logger` for every autonomous-crew call. User-initiated calls leave them at default (`false`, `NULL`). See `orchestrator/autonomy_guard.py` and migration `004_autonomous_flag.sql`.
