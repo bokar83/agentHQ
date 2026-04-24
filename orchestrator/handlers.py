@@ -1,51 +1,98 @@
-import os
-import json
+"""
+handlers.py - Telegram update orchestrator + polling loop.
+
+Thin dispatcher. All the real work lives in:
+  - handlers_approvals.py  (callback_query, reply approvals, feedback windows)
+  - handlers_commands.py   (15 slash commands)
+  - handlers_doc.py        (doc-routing emoji handlers)
+  - handlers_chat.py       (run_chat + praise/critique)
+  - worker.py              (_run_background_job)
+
+Dispatch order in process_telegram_update MUST match orchestrator.py:1346-2345
+exactly. Reordering any of steps 1-9 risks regressing the PR #10/#11/#13
+feedback-window precedence rules.
+
+The polling loop mirrors orchestrator.py:2347-2398: 3-attempt deleteWebhook
+retry, 401 -> stop, allowed_updates includes callback_query.
+"""
 import asyncio
 import logging
-import threading
-import httpx
-from datetime import datetime
-from typing import Optional
+import os
+import time
+import uuid
 
-from state import _last_completed_job, _active_project
-from engine import run_orchestrator
-from constants import SAVE_REQUIRED_TASK_TYPES
-from handlers_chat import handle_feedback
+import httpx
+
+from handlers_approvals import (
+    handle_callback_query,
+    evict_expired_windows,
+    handle_pending_feedback_tag,
+    handle_approval_reply,
+    handle_naked_approval,
+    APPROVE_ALIASES,
+    REJECT_ALIASES,
+)
+from handlers_chat import run_chat, handle_feedback
+from handlers_commands import dispatch_command
 from handlers_doc import handle_doc_emoji
+from state import _active_project
 
 logger = logging.getLogger("agentsHQ.handlers")
 
-def run_chat(message: str, session_key: str = "default") -> dict:
-    """Direct chat response — runs the base agent without complex orchestration."""
-    from crewai import Agent, Task, Crew
-    
-    agent = Agent(
-        role="Catalyst Assistant",
-        goal="Provide fast, helpful, and accurate assistance to Boubacar.",
-        backstory="You are the core interface of agentsHQ. You are professional, concise, and efficient.",
-        allow_delegation=False,
-        verbose=True
-    )
-    
-    task = Task(
-        description=message,
-        agent=agent,
-        expected_output="A helpful and concise response."
-    )
-    
-    crew = Crew(agents=[agent], tasks=[task], verbose=True)
-    result = crew.kickoff()
-    result_str = result.raw if hasattr(result, 'raw') else str(result)
-    
-    return {"success": True, "result": result_str, "task_type": "chat"}
 
-async def process_telegram_update(update: dict):
-    """Unified processor for Telegram updates. Ported from monolithic orchestrator.py."""
-    
-    from notifier import send_message as _send, send_briefing
-    from router import classify_task, extract_metadata
-    from worker import _run_background_job
-    
+# ══════════════════════════════════════════════════════════════
+# Classifiers (delegating to router per routing-architecture.md)
+# ══════════════════════════════════════════════════════════════
+
+def _shortcut_classify(msg: str):
+    """
+    Run keyword shortcuts BEFORE the obvious-chat pre-filter.
+    Returns a task_type string if matched, else None.
+    This prevents short messages from being swallowed by _classify_obvious_chat().
+
+    Delegates to router._keyword_shortcut per docs/routing-architecture.md.
+    Must not be expanded inline here - the router owns keyword semantics.
+    """
+    from router import _keyword_shortcut
+    return _keyword_shortcut(msg)
+
+
+def _classify_obvious_chat(msg: str) -> bool:
+    """
+    Returns True only for unmistakable single-word greetings with no task content.
+    Everything else goes through classify_task (LLM fallback included).
+
+    Per docs/routing-architecture.md rule 4: do NOT expand this with length
+    checks, prefix lists, or keyword exclusions. Those heuristics blocked the
+    LLM fallback for short natural-language task requests.
+    """
+    m = msg.strip().lower().rstrip("!.,?")
+    return m in {"hi", "hey", "hello", "thanks", "thank you", "morning", "good morning", "good evening"}
+
+
+# ══════════════════════════════════════════════════════════════
+# process_telegram_update
+# ══════════════════════════════════════════════════════════════
+
+async def process_telegram_update(update: dict) -> None:
+    """
+    Unified processor for Telegram updates (webhook or polling).
+
+    Dispatch order matters. It matches orchestrator.py:1346-2345 exactly:
+      1. callback_query (Phase 1 inline-button feedback tag)
+      2. sender auth
+      3. evict expired feedback windows, then 5-min free-text tag window
+      4. reply-to-message approval (approve/reject/edit)
+      5. naked approval fallback (yes confirm / no confirm, with doc-routing precedence)
+      6. doc-routing emoji handlers (✅/✏️/🆕/❌/➕ + text aliases)
+      7. slash commands (15 of them)
+      8. praise/critique (gated by MEMORY_LEARNING_ENABLED)
+      9. classify + dispatch (chat -> run_chat, task -> _run_background_job)
+    """
+    # 1. Phase 1 callback_query taps (inline buttons for feedback_tag)
+    if handle_callback_query(update):
+        return
+
     message = update.get("message") or update.get("edited_message")
     if not message:
         return
@@ -53,121 +100,183 @@ async def process_telegram_update(update: dict):
     text = message.get("text", "").strip()
     chat_id = str(message.get("chat", {}).get("id", ""))
     sender_id = str(message.get("from", {}).get("id", ""))
+    reply_to = message.get("reply_to_message", {}) or {}
+    reply_to_msg_id = reply_to.get("message_id")
 
     if not text or not chat_id:
         return
 
-    # 1. Sender Authentication (Fail-Closed)
+    # 2. Sender authentication (fail-closed when ALLOWED_USER_IDS is set)
     allowed_raw = os.environ.get("ALLOWED_USER_IDS", "")
     allowed_ids = {uid.strip() for uid in allowed_raw.split(",") if uid.strip()}
     if allowed_ids and sender_id not in allowed_ids:
+        from notifier import send_message as _send
         _send(chat_id, "Sorry, you are not authorised to use this bot.")
-        logger.warning(f"Unauthorised access attempt: {sender_id}")
+        logger.warning(f"Unauthorised Telegram access attempt from sender_id={sender_id}")
         return
 
-    # 2. Doc Routing Emoji / Command Check
-    EMOJI_COMMANDS = ("✅", "✏️", "🆕", "❌", "➕")
-    TEXT_ALIASES = {"yes": "✅", "confirm": "✅", "approved": "✅", "reject": "❌", "edit": "✏️"}
-    
-    matched_emoji = next((e for e in EMOJI_COMMANDS if text.startswith(e)), None)
+    text_lower_full = text.strip().lower()
+    first_word = text_lower_full.split()[0] if text_lower_full else ""
+    now_epoch = time.time()
+
+    # 3a. Evict expired feedback windows BEFORE the tag check (5-min TTL)
+    evict_expired_windows()
+
+    # 3b. 5-minute free-text tag window. Must run BEFORE approval logic so
+    #     a short "stale" is treated as a tag, not a new command.
+    if handle_pending_feedback_tag(text, chat_id, first_word, reply_to_msg_id):
+        return
+
+    # 4. Reply-to-message approve/reject/edit
+    if handle_approval_reply(text, chat_id, first_word, reply_to_msg_id, now_epoch):
+        return
+
+    # 5. Naked fallback: yes confirm / no confirm (with doc-routing precedence)
+    if handle_naked_approval(text, chat_id, first_word, reply_to_msg_id):
+        return
+
+    # 6. Doc-routing emoji / text aliases. handle_doc_emoji accepts the emoji
+    #    directly; we resolve the emoji or alias here to match monolith behavior.
+    _EMOJI_COMMANDS = ("✅", "✏️", "🆕", "❌", "➕")
+    _TEXT_ALIASES = {
+        "yes": "✅", "confirm": "✅", "approved": "✅", "approve": "✅",
+        "flag": "❌", "discard": "❌", "reject": "❌",
+    }
+    matched_emoji = next((e for e in _EMOJI_COMMANDS if text.startswith(e)), None)
     if not matched_emoji:
-        first_word = text.lower().split()[0] if text else ""
-        matched_emoji = TEXT_ALIASES.get(first_word)
-
+        matched_emoji = _TEXT_ALIASES.get(first_word)
+        if not matched_emoji and first_word == "edit":
+            matched_emoji = "✏️"
     if matched_emoji:
-        reply_id = message.get("reply_to_message", {}).get("message_id")
-        if handle_doc_emoji(matched_emoji, text, chat_id, reply_id):
+        if handle_doc_emoji(matched_emoji, text, chat_id, reply_to_msg_id):
             return
 
-    # 3. Handle Slash Commands
-    if text.startswith("/"):
-        if text.startswith("/switch"):
-            project = text.replace("/switch", "").strip() or "default"
-            _active_project[chat_id] = project
-            _send(chat_id, f"Switched to project: {project}")
-            return
-        
-        if text.startswith("/status"):
-            from memory import get_job
-            parts = text.split()
-            if len(parts) > 1:
-                job = get_job(parts[1])
-                if job:
-                    _send(chat_id, f"Job {parts[1][:8]}: {job.get('status')} | {job.get('task_type')}")
-                else:
-                    _send(chat_id, "Job not found.")
-            else:
-                prior = _last_completed_job.get(chat_id)
-                if prior:
-                    _send(chat_id, f"Last job: {prior['job_id'][:8]} | {prior['task_type']}")
-                else:
-                    _send(chat_id, "No recent jobs.")
-            return
+    # 7. Slash commands (15: original 6 + /switch + Phase 0/1/2 9)
+    if dispatch_command(text, chat_id):
+        return
 
-    # 4. Handle Praise/Critique Learning
+    # 8. Praise / critique (noop when MEMORY_LEARNING_ENABLED != "true")
     if handle_feedback(text, chat_id):
         return
 
-    # 5. Core Task Routing
-    classification = classify_task(text)
-    task_type = classification.get("task_type", "unknown")
-    
-    active_project = _active_project.get(chat_id, "default")
-    session_key = f"{active_project}:{chat_id}"
-    
+    # 9. Classify and dispatch. Mirrors orchestrator.py:2283-2346.
+    job_id = str(uuid.uuid4())
+    from notifier import send_briefing, send_message
+
+    active_project = _active_project.get(chat_id)
+    session_key = f"{chat_id}:{active_project}" if active_project else chat_id
+
+    # Shortcut first, catches task phrases before the obvious-chat gate eats them
+    shortcut = _shortcut_classify(text)
+    if shortcut and shortcut != "memory_capture":
+        task_type = shortcut
+        classification = {"task_type": shortcut, "confidence": 0.95, "is_unknown": False, "has_email_followup": False}
+    elif shortcut == "memory_capture":
+        # memory_capture is handled in chat via the save_memory tool
+        task_type = "chat"
+        classification = {"task_type": "chat", "confidence": 0.95, "is_unknown": False, "has_email_followup": False}
+    elif _classify_obvious_chat(text):
+        task_type = "chat"
+        classification = {"task_type": "chat", "confidence": 0.95, "is_unknown": False, "has_email_followup": False}
+    else:
+        from router import classify_task
+        classification = classify_task(text)
+        task_type = classification.get("task_type", "unknown")
+
     send_briefing(chat_id, task_type, text)
 
+    loop = asyncio.get_running_loop()
     if task_type == "chat":
-        # Run chat in executor to avoid blocking the loop
-        loop = asyncio.get_running_loop()
-        result = await loop.run_in_executor(None, lambda: run_chat(text, session_key))
-        _send(chat_id, result["result"])
-    else:
-        # Run complex task in threadpool
-        job_id = f"tg-{datetime.now().strftime('%m%d%H%M')}-{sender_id[-4:]}"
-        threading.Thread(
-            target=_run_background_job,
-            args=(text, chat_id, session_key, job_id, classification),
-            daemon=True
-        ).start()
-        _send(chat_id, f"🚀 Job started: {job_id}")
+        # Inject Qdrant context recall for conversational continuity
+        enriched_text = text
+        try:
+            from memory import query_memory
+            memories = query_memory(text, top_k=3)
+            if memories:
+                context_lines = ["[Relevant past context:"]
+                for m in memories:
+                    ts = m.get("date", "?")
+                    summary = m.get("summary", "")[:120]
+                    context_lines.append(f"  {ts}: {summary}")
+                context_lines.append("]")
+                enriched_text = "\n".join(context_lines) + "\n\n" + text
+        except Exception:
+            pass  # non-fatal, proceed with plain text
 
-async def telegram_polling_loop():
-    """Fallback polling loop for Telegram updates."""
+        result = await loop.run_in_executor(
+            None,
+            lambda: run_chat(message=enriched_text, session_key=session_key),
+        )
+        send_message(chat_id, result["result"])
+    else:
+        from worker import _run_background_job
+        loop.run_in_executor(
+            None,
+            lambda: _run_background_job(
+                task=text,
+                from_number=chat_id,
+                session_key=session_key,
+                job_id=job_id,
+                classification=classification,
+            ),
+        )
+
+
+# ══════════════════════════════════════════════════════════════
+# Telegram polling loop (hardened: 3-attempt deleteWebhook, 401 -> stop)
+# ══════════════════════════════════════════════════════════════
+
+async def telegram_polling_loop() -> None:
+    """
+    Poll for Telegram updates instead of waiting on webhooks.
+    Mirrors orchestrator.py:2347-2398 byte-for-byte.
+    """
     token = os.environ.get("ORCHESTRATOR_TELEGRAM_BOT_TOKEN")
     if not token:
-        logger.error("No Telegram token found.")
+        logger.error("TELEGRAM_POLLING: No token found. Polling disabled.")
         return
 
+    logger.info("TELEGRAM_POLLING: Starting loop...")
     url = f"https://api.telegram.org/bot{token}/getUpdates"
     offset = 0
-    
-    # Clear webhook first
-    async with httpx.AsyncClient() as client:
-        await client.get(f"https://api.telegram.org/bot{token}/deleteWebhook")
+
+    # Ensure webhook is cleared so polling works (3 attempts, 2s apart)
+    webhook_cleared = False
+    for attempt in range(3):
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.get(f"https://api.telegram.org/bot{token}/deleteWebhook")
+                if resp.status_code == 200 and resp.json().get("result"):
+                    webhook_cleared = True
+                    break
+        except Exception as e:
+            logger.warning(f"TELEGRAM_POLLING: deleteWebhook attempt {attempt+1} failed: {e}")
+        await asyncio.sleep(2)
+
+    if not webhook_cleared:
+        logger.error("TELEGRAM_POLLING: Could not clear webhook after 3 attempts. Polling may conflict with webhook delivery.")
 
     while True:
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                resp = await client.get(url, params={"offset": offset, "timeout": 20})
+                resp = await client.get(
+                    url,
+                    params={
+                        "offset": offset,
+                        "timeout": 20,
+                        "allowed_updates": '["message","edited_message","callback_query"]',
+                    },
+                )
                 if resp.status_code == 200:
-                    updates = resp.json().get("result", [])
-                    for update in updates:
+                    data = resp.json()
+                    for update in data.get("result", []):
                         offset = update["update_id"] + 1
                         asyncio.create_task(process_telegram_update(update))
+                elif resp.status_code == 401:
+                    logger.error("TELEGRAM_POLLING: Invalid Token. Stopping.")
+                    break
+                else:
+                    await asyncio.sleep(5)
         except Exception as e:
-            logger.error(f"Telegram polling error: {e}")
+            logger.error(f"TELEGRAM_POLLING: Error: {e}", exc_info=True)
             await asyncio.sleep(10)
-
-def _shortcut_classify(msg: str):
-    """Fast prefix classification."""
-    msg_low = msg.lower().strip()
-    if msg_low.startswith(("find leads", "get prospects")): return "hunter_task"
-    if msg_low.startswith("research"): return "research_report"
-    return None
-
-def _classify_obvious_chat(msg: str) -> bool:
-    """Check if message is clearly interactive."""
-    msg_low = msg.lower().strip()
-    chat_triggers = ["hello", "hi ", "who are you", "what can you do", "thanks", "praise", "good job"]
-    return any(trigger in msg_low for trigger in chat_triggers)
