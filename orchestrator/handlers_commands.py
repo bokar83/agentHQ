@@ -456,6 +456,65 @@ def _cmd_trigger_heartbeat(text: str, chat_id: str) -> bool:
 
 
 # ══════════════════════════════════════════════════════════════
+# Phase 3: Griot
+# ══════════════════════════════════════════════════════════════
+
+def _cmd_griot_dryrun(text: str, chat_id: str) -> bool:
+    """Manually exercise the Griot picker without enqueuing to approval_queue.
+
+    Fetches the Content Board, runs the split + dedup + scoring, reports the
+    top candidate (or empty-backlog message) back to Telegram. Useful for
+    tuning SCORING_WEIGHTS before flipping griot.enabled=true.
+    """
+    if not text.lower().startswith("/griot_dryrun"):
+        return False
+    from notifier import send_message as _send
+    try:
+        import griot as _griot
+        from skills.forge_cli.notion_client import NotionClient
+        import os as _os
+        from datetime import date as _date
+        notion_secret = _os.environ.get("NOTION_SECRET") or _os.environ.get("NOTION_API_KEY")
+        notion = NotionClient(secret=notion_secret)
+        rows = _griot._fetch_board_rows(notion)
+        today = _date.today().isoformat()
+        candidates_all, recent_posts = _griot._split_pool(rows, today)
+        candidates = [c for c in candidates_all if not _griot._candidate_already_proposed(c["notion_id"])]
+        dedup_dropped = len(candidates_all) - len(candidates)
+
+        lines = [f"Griot dryrun ({len(rows)} board rows)"]
+        lines.append(f"  candidates (Ready without Scheduled Date): {len(candidates_all)}")
+        lines.append(f"  after dedup (not proposed in last {_griot.CANDIDATE_DEDUP_DAYS}d): {len(candidates)}")
+        lines.append(f"  recent_posts (window {_griot.RECENCY_WINDOW_DAYS}d): {len(recent_posts)}")
+        if dedup_dropped:
+            lines.append(f"  skipped (already proposed recently): {dedup_dropped}")
+        if not candidates:
+            lines.append("")
+            lines.append("No candidates. Backlog empty.")
+            _send(chat_id, "\n".join(lines))
+            return True
+        top = _griot._pick_top_candidate(candidates, recent_posts)
+        lines.append("")
+        lines.append("Top pick:")
+        lines.append(f"  title: {top['title'][:80]}")
+        lines.append(f"  platform: {(top['platform'] or [None])[0]}")
+        lines.append(f"  arc_priority: {top.get('arc_priority')}")
+        lines.append(f"  arc_phase: {top.get('arc_phase')}")
+        lines.append(f"  total_score (Notion): {top.get('total_score')}")
+        lines.append(f"  computed_score: {top.get('score'):.1f}")
+        lines.append(f"  why: {top.get('why_chosen')}")
+        if top.get("hook"):
+            lines.append(f"  hook preview: {top['hook'][:160]}")
+        lines.append("")
+        lines.append("(dry-run: no approval_queue write)")
+        _send(chat_id, "\n".join(lines))
+    except Exception as e:
+        logger.error(f"/griot_dryrun error: {e}", exc_info=True)
+        _send(chat_id, f"Griot dryrun failed: {e}")
+    return True
+
+
+# ══════════════════════════════════════════════════════════════
 # Dispatcher (order matters: longest prefix first to avoid collisions)
 # ══════════════════════════════════════════════════════════════
 
@@ -466,6 +525,7 @@ def _cmd_trigger_heartbeat(text: str, chat_id: str) -> bool:
 _COMMANDS = [
     _cmd_heartbeat_status,
     _cmd_trigger_heartbeat,
+    _cmd_griot_dryrun,
     _cmd_autonomy_status,
     _cmd_pause_autonomy,
     _cmd_resume_autonomy,
