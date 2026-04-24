@@ -2074,6 +2074,102 @@ async def process_telegram_update(update: dict):
         _send_msg(chat_id, "\n".join(lines))
         return
 
+    # /queue -- list pending proposals (Phase 1)
+    if text.lower().startswith("/queue"):
+        from notifier import send_message as _send_msg
+        from approval_queue import list_pending
+        from datetime import datetime, timezone
+        rows = list_pending(limit=10)
+        if not rows:
+            _send_msg(chat_id, "Queue empty. No pending proposals.")
+            return
+        lines = [f"Pending proposals ({len(rows)}):"]
+        now = datetime.now(timezone.utc)
+        for r in rows:
+            age_min = int((now - r.ts_created).total_seconds() / 60) if r.ts_created else 0
+            lines.append(f"  #{r.id}  {r.crew_name}  {r.proposal_type}  ({age_min}m)")
+        _send_msg(chat_id, "\n".join(lines))
+        return
+
+    # /approve <id> [note]  (Phase 1)
+    if text.lower().startswith("/approve"):
+        from notifier import send_message as _send_msg
+        from approval_queue import approve as _aq_approve
+        parts = text.strip().split(maxsplit=2)
+        if len(parts) < 2:
+            _send_msg(chat_id, "Usage: /approve <id> [note]")
+            return
+        try:
+            qid = int(parts[1])
+        except ValueError:
+            _send_msg(chat_id, f"Invalid queue id: {parts[1]}")
+            return
+        note = parts[2] if len(parts) > 2 else None
+        row = _aq_approve(qid, note=note)
+        if row is None:
+            _send_msg(chat_id, f"Queue #{qid}: not found or already decided.")
+        else:
+            _send_msg(chat_id, f"✅ Queue #{qid}: approved.")
+        return
+
+    # /reject <id> [tag] [note]  (Phase 1)
+    if text.lower().startswith("/reject"):
+        from notifier import send_message as _send_msg
+        from approval_queue import reject as _aq_reject, KNOWN_FEEDBACK_TAGS
+        parts = text.strip().split(maxsplit=3)
+        if len(parts) < 2:
+            _send_msg(chat_id, "Usage: /reject <id> [tag] [note]")
+            return
+        try:
+            qid = int(parts[1])
+        except ValueError:
+            _send_msg(chat_id, f"Invalid queue id: {parts[1]}")
+            return
+        tag = None
+        note = None
+        if len(parts) > 2:
+            if parts[2].lower() in KNOWN_FEEDBACK_TAGS:
+                tag = parts[2].lower()
+                note = parts[3] if len(parts) > 3 else None
+            else:
+                note = " ".join(parts[2:])
+        row = _aq_reject(qid, note=note, feedback_tag=tag)
+        if row is None:
+            _send_msg(chat_id, f"Queue #{qid}: not found or already decided.")
+        else:
+            _send_msg(chat_id, f"❌ Queue #{qid}: rejected. Tag: {tag or 'none'}")
+        return
+
+    # /outcomes <crew> [days]  (Phase 1)
+    if text.lower().startswith("/outcomes"):
+        from notifier import send_message as _send_msg
+        from episodic_memory import crew_stats
+        parts = text.strip().split()
+        crew = parts[1] if len(parts) > 1 else None
+        try:
+            days = int(parts[2]) if len(parts) > 2 else 7
+        except ValueError:
+            days = 7
+        if crew is None:
+            _send_msg(chat_id, "Usage: /outcomes <crew> [days].  Crews: griot, hunter, concierge, chairman")
+            return
+        stats = crew_stats(crew, days=days)
+        lines = [
+            f"Outcomes for {crew} (last {days} days):",
+            f"  total:        {stats['total']}",
+            f"  approved:     {stats['approved']}",
+            f"  rejected:     {stats['rejected']}",
+            f"  edited:       {stats['edited']}",
+            f"  approval rate: {stats['approval_rate']*100:.1f}%",
+            f"  avg cost:      ${stats['avg_cost_usd']:.4f}",
+        ]
+        if stats["top_feedback_tags"]:
+            lines.append("  top feedback tags:")
+            for tag, n in stats["top_feedback_tags"]:
+                lines.append(f"    {tag}: {n}")
+        _send_msg(chat_id, "\n".join(lines))
+        return
+
     # ── Praise / Critique Detection ──────────────────────────────────────
     if os.environ.get("MEMORY_LEARNING_ENABLED", "false").lower() == "true":
         from notifier import send_message as _send_msg
