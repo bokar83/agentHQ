@@ -21,6 +21,20 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Optional
 
+# Configure logging BEFORE importing any orchestrator modules, so every
+# module's logger.info/warning lands in docker logs and the file. Matches
+# the monolith's config at orchestrator.py:98-108.
+_LOG_DIR = os.environ.get("AGENTS_LOG_DIR", "/app/logs")
+os.makedirs(_LOG_DIR, exist_ok=True)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler(os.path.join(_LOG_DIR, "orchestrator.log"), mode="a"),
+    ],
+)
+
 from fastapi import (
     BackgroundTasks,
     Depends,
