@@ -236,7 +236,16 @@ Existing: `yes / confirm / approved / approve / flag / discard / reject`. Add: `
    - `approval_queue.find_latest_pending()` → `QueueRow?`
    - If matched, route to that row with a confirmation message: "Assuming latest pending: post_draft from griot 23m ago. Approve? Reply `yes confirm` to confirm."
    - Rationale: ambiguous "yes" shouldn't silently act; require a second-step confirmation only in the fallback path
-3. If reject, prompt for a feedback tag via **both** channels (option C, owner choice 2026-04-24): a Telegram inline keyboard shows buttons `off-voice`, `wrong-hook`, `stale`, `too-salesy`, `other`, `skip`, **and** any text reply within the next 5 minutes is accepted too. If Boubacar types free text, we pattern-match against the known tag vocabulary (case-insensitive, normalize hyphens/spaces); unmatched text is stored verbatim as the tag (so "stale angle" becomes the tag value). This requires inline-button callback handling plus a short pending-feedback lookup window on incoming text messages.
+3. If reject, prompt for a feedback tag via **both** channels (option C, owner choice 2026-04-24):
+   - **Inline keyboard** shows buttons `off-voice`, `wrong-hook`, `stale`, `too-salesy`, `other`, `skip`. A button tap writes the tag and **immediately closes the feedback window** for this rejection.
+   - **Text-reply window** stays open for **up to 5 minutes** OR until a button tap closes it, whichever comes first. During the window, the next incoming message is treated as a tag **only if** it meets ALL of these guards:
+     - length ≤ 40 characters
+     - does not start with `/` (not a slash command)
+     - first word is not in `_TEXT_ALIASES` and not an emoji in `_EMOJI_COMMANDS` (otherwise it's a new approval/rejection, not a tag)
+     - does not contain a `reply_to_message_id` pointing to another pending queue row
+   - If the guards pass: pattern-match the text against known tag vocab (case-insensitive, normalize hyphens/spaces). Match → store canonical tag. No match → store text verbatim (Phase 5 Chairman can classify later).
+   - If the guards fail: the message is handled normally (as a command / approval / chat), the feedback window stays open, and the window closes silently after 5 min if nothing else comes in.
+   - This requires inline-button callback handling plus a short pending-feedback lookup with strict guards in the incoming-text path.
 4. If `edit: <text>` or `edit <text>` pattern, treat rest-of-message as new payload text; replaces `payload.body` in the stored row and marks `status=edited`.
 
 **Why inline buttons for feedback tags only:** we keep the main approve/reject flow on natural-language/emoji replies (simple, robust), and reserve inline buttons for the one place where categorical choice beats free text (rejection reason).
