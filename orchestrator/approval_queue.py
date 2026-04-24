@@ -200,3 +200,80 @@ def list_pending(limit: int = 10) -> list:
     rows = cur.fetchall()
     cur.close()
     return [_row_to_queue(r) for r in rows]
+
+
+def _transition(
+    queue_id: int,
+    new_status: str,
+    note: Optional[str],
+    feedback_tag: Optional[str],
+    edited_payload: Optional[dict],
+) -> Optional[QueueRow]:
+    """Atomically move a pending row to approved / rejected / edited. Returns
+    None if the row doesn't exist or is already decided.
+    """
+    conn = _conn()
+    cur = conn.cursor()
+    cur.execute(
+        f"""
+        UPDATE approval_queue
+           SET status = %s,
+               ts_decided = now(),
+               decision_note = COALESCE(%s, decision_note),
+               boubacar_feedback_tag = COALESCE(%s, boubacar_feedback_tag),
+               edited_payload = COALESCE(%s::jsonb, edited_payload)
+         WHERE id = %s AND status = 'pending'
+        RETURNING {_SELECT_COLS}
+        """,
+        (
+            new_status, note, feedback_tag,
+            json.dumps(edited_payload) if edited_payload is not None else None,
+            queue_id,
+        ),
+    )
+    row = cur.fetchone()
+    conn.commit()
+    cur.close()
+    if row is None:
+        return None
+    out = _row_to_queue(row)
+    # Notify episodic_memory so the outcome row's success flag updates.
+    if out.task_outcome_id is not None:
+        try:
+            from episodic_memory import record_approval_result
+            success = new_status in ("approved", "edited")
+            record_approval_result(out.task_outcome_id, success=success, feedback=note)
+        except Exception as e:
+            logger.warning(f"_transition: episodic_memory update failed for outcome {out.task_outcome_id}: {e}")
+    return out
+
+
+def approve(queue_id: int, note: Optional[str] = None) -> Optional[QueueRow]:
+    return _transition(queue_id, "approved", note, None, None)
+
+
+def reject(queue_id: int, note: Optional[str] = None, feedback_tag: Optional[str] = None) -> Optional[QueueRow]:
+    return _transition(queue_id, "rejected", note, feedback_tag, None)
+
+
+def edit(queue_id: int, new_payload: dict, note: Optional[str] = None) -> Optional[QueueRow]:
+    return _transition(queue_id, "edited", note, None, new_payload)
+
+
+def set_feedback_tag(queue_id: int, feedback_tag: str) -> Optional[QueueRow]:
+    """Used by the post-rejection feedback window (button tap or text reply)."""
+    conn = _conn()
+    cur = conn.cursor()
+    cur.execute(
+        f"""
+        UPDATE approval_queue
+           SET boubacar_feedback_tag = %s
+         WHERE id = %s AND status = 'rejected'
+        RETURNING {_SELECT_COLS}
+        """,
+        (feedback_tag, queue_id),
+    )
+    row = cur.fetchone()
+    conn.commit()
+    cur.close()
+    return _row_to_queue(row) if row else None
