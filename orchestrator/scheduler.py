@@ -327,6 +327,59 @@ def _run_notion_sync():
         logger.error(f"NOTION SYNC: Failed: {e}")
 
 
+def _run_morning_digest():
+    """7am MT: Telegram digest of autonomy state.
+
+    Phase 0 version is minimal -- just autonomy snapshot + crew flags.
+    Later phases will enrich this with proposal queue summary, etc.
+    """
+    try:
+        from autonomy_guard import get_guard
+        g = get_guard()
+        snap = g.snapshot()
+        summary = g.state_summary()
+
+        today = datetime.now(pytz.timezone(TIMEZONE)).strftime("%A %Y-%m-%d")
+        lines = [f"agentsHQ morning digest, {today}", ""]
+        if summary["killed"]:
+            lines.append(f"Autonomy is KILLED: {summary['killed_reason']}")
+        else:
+            lines.append("Autonomy live")
+        lines.append(f"Autonomous spend today: ${snap.spent_today_usd:.4f} (cap ${snap.cap_usd:.2f})")
+
+        enabled = [c for c, cfg in summary["crews"].items() if cfg["enabled"]]
+        if enabled:
+            lines.append(f"Enabled crews: {', '.join(enabled)}")
+        else:
+            lines.append("Enabled crews: none (Phase 0, rails only)")
+
+        _send_telegram_alert("\n".join(lines))
+    except Exception as e:
+        logger.error(f"DIGEST: failed: {e}", exc_info=True)
+
+
+def _morning_digest_loop():
+    """Background thread: fires _run_morning_digest once per day in the 07:00 MT hour.
+
+    Self-debouncing: any sample taken between 07:00:00 and 07:59:59 triggers
+    one fire per calendar day (via last_fire_date). Sleeping 60s between
+    samples is plenty.
+    """
+    tz = pytz.timezone(TIMEZONE)
+    logger.info(f"DIGEST: thread started (07:00 {TIMEZONE})")
+    last_fire_date = None
+    while True:
+        try:
+            now = datetime.now(tz)
+            if now.hour == 7 and last_fire_date != now.date():
+                _run_morning_digest()
+                last_fire_date = now.date()
+            time.sleep(60)
+        except Exception as e:
+            logger.error(f"DIGEST: loop error: {e}", exc_info=True)
+            time.sleep(60)
+
+
 def start_scheduler():
     """
     Launch the scheduler in a daemon thread.
@@ -337,6 +390,10 @@ def start_scheduler():
 
     thread = threading.Thread(target=_scheduler_loop, daemon=True)
     thread.start()
+
+    digest_thread = threading.Thread(target=_morning_digest_loop, daemon=True)
+    digest_thread.start()
+    logger.info("DIGEST: morning digest thread registered")
 
     sync_thread = threading.Thread(target=_periodic_sync, daemon=True)
     sync_thread.start()
