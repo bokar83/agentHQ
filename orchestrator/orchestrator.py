@@ -79,6 +79,10 @@ _last_completed_job: dict = {}
 # Set via /switch <project-name>; used as session_key prefix for crews
 _active_project: dict = {}
 
+# Phase 1: pending rejection-feedback windows.
+# queue_id -> (chat_id, rejected_at_epoch). Closed by button tap or 5-min TTL.
+_PENDING_FEEDBACK_WINDOWS: dict = {}
+
 # OpenSpace Evolution Hook
 try:
     from skills.openspace_skill.openspace_tool import openspace_tool
@@ -1343,6 +1347,35 @@ async def process_telegram_update(update: dict):
     """
     Unified processor for Telegram updates (webhook or polling).
     """
+    # ── Phase 1: callback_query (inline-button taps for rejection-feedback) ──
+    if update.get("callback_query"):
+        cb = update["callback_query"]
+        cb_data = cb.get("data", "")
+        cb_chat_id = str(cb.get("message", {}).get("chat", {}).get("id", ""))
+        cb_id = cb.get("id")
+        cb_sender_id = str(cb.get("from", {}).get("id", ""))
+        _allowed_raw = os.environ.get("ALLOWED_USER_IDS", "")
+        _allowed_ids = {uid.strip() for uid in _allowed_raw.split(",") if uid.strip()}
+        if _allowed_ids and cb_sender_id not in _allowed_ids:
+            return
+        if cb_data.startswith("feedback_tag:"):
+            try:
+                _, qid_str, tag = cb_data.split(":", 2)
+                qid = int(qid_str)
+                from approval_queue import set_feedback_tag
+                from notifier import answer_callback_query, send_message
+                if tag == "skip":
+                    answer_callback_query(cb_id, "Feedback skipped.")
+                else:
+                    set_feedback_tag(qid, tag)
+                    answer_callback_query(cb_id, f"Tagged: {tag}")
+                    send_message(cb_chat_id, f"Queue #{qid}: feedback tag '{tag}' saved.")
+                # Close the feedback window for this queue id
+                _PENDING_FEEDBACK_WINDOWS.pop(qid, None)
+            except Exception as e:
+                logger.warning(f"callback_query feedback_tag handling error: {e}")
+        return
+
     message = update.get("message") or update.get("edited_message")
     if not message:
         return
@@ -1350,6 +1383,9 @@ async def process_telegram_update(update: dict):
     text = message.get("text", "").strip()
     chat_id = str(message.get("chat", {}).get("id", ""))
     sender_id = str(message.get("from", {}).get("id", ""))
+
+    reply_to = message.get("reply_to_message", {}) or {}
+    reply_to_msg_id = reply_to.get("message_id")
 
     if not text or not chat_id:
         return
@@ -1362,6 +1398,98 @@ async def process_telegram_update(update: dict):
         _send(chat_id, "Sorry, you are not authorised to use this bot.")
         logger.warning(f"Unauthorised Telegram access attempt from sender_id={sender_id}")
         return
+
+    # ── Phase 1: approval-queue reply handling ─────────────────────────────
+    import time as _time
+    _APPROVE_ALIASES = {"yes", "yep", "yeah", "approve", "approved", "confirm", "ok"}
+    _REJECT_ALIASES = {"no", "nope", "reject", "rejected", "not approved", "discard"}
+    _text_lower_full = text.strip().lower()
+    _first_word = _text_lower_full.split()[0] if _text_lower_full else ""
+
+    # Evict expired feedback windows (>5 min) before any tag-write attempt.
+    _now_epoch = _time.time()
+    _expired = [qid for qid, (_cid, t0) in _PENDING_FEEDBACK_WINDOWS.items() if _now_epoch - t0 > 300]
+    for _qid in _expired:
+        _PENDING_FEEDBACK_WINDOWS.pop(_qid, None)
+
+    # 5-minute free-text tag window: must run BEFORE normal approval logic so
+    # short text like "stale" is treated as a tag for the last rejection, not
+    # as a new command. Guards from spec Council fix.
+    if _PENDING_FEEDBACK_WINDOWS and not reply_to_msg_id:
+        _emoji_prefix = any(text.startswith(e) for e in ("✅", "✏️", "🆕", "❌", "➕"))
+        _tag_ok = (
+            len(text) <= 40
+            and not text.startswith("/")
+            and _first_word not in _APPROVE_ALIASES
+            and _first_word not in _REJECT_ALIASES
+            and not _emoji_prefix
+        )
+        if _tag_ok:
+            _qid_target = max(_PENDING_FEEDBACK_WINDOWS, key=lambda q: _PENDING_FEEDBACK_WINDOWS[q][1])
+            from approval_queue import normalize_feedback_tag, set_feedback_tag
+            from notifier import send_message as _send_msg
+            _tag = normalize_feedback_tag(text)
+            set_feedback_tag(_qid_target, _tag)
+            _send_msg(chat_id, f"Queue #{_qid_target}: feedback tag '{_tag}' saved.")
+            _PENDING_FEEDBACK_WINDOWS.pop(_qid_target, None)
+            return
+
+    # Reply-to-message approval path
+    _is_edit = text.lower().startswith("edit:") or text.lower().startswith("edit ")
+    if reply_to_msg_id and (_first_word in _APPROVE_ALIASES or _first_word in _REJECT_ALIASES or _is_edit):
+        from approval_queue import find_by_telegram_msg_id, approve as _aq_approve, reject as _aq_reject, edit as _aq_edit
+        from notifier import send_message as _send_msg, send_message_with_buttons
+        _qrow = find_by_telegram_msg_id(reply_to_msg_id)
+        if _qrow and _qrow.status == "pending":
+            if _is_edit:
+                _new_body = text.split(":", 1)[1].strip() if ":" in text else text[5:].strip()
+                _new_payload = dict(_qrow.payload) if _qrow.payload else {}
+                _new_payload["body"] = _new_body
+                _aq_edit(_qrow.id, _new_payload, note=None)
+                _send_msg(chat_id, f"✏️ Queue #{_qrow.id}: edited.")
+                return
+            if _first_word in _APPROVE_ALIASES:
+                _aq_approve(_qrow.id, note=None)
+                _send_msg(chat_id, f"✅ Queue #{_qrow.id}: approved.")
+                return
+            if _first_word in _REJECT_ALIASES:
+                _aq_reject(_qrow.id, note=None)
+                _send_msg(chat_id, f"❌ Queue #{_qrow.id}: rejected. Pick a reason below (or just type one):")
+                _buttons = [
+                    [(t, f"feedback_tag:{_qrow.id}:{t}") for t in ("off-voice", "wrong-hook", "stale")],
+                    [(t, f"feedback_tag:{_qrow.id}:{t}") for t in ("too-salesy", "other", "skip")],
+                ]
+                send_message_with_buttons(chat_id, f"Tag for queue #{_qrow.id}?", _buttons)
+                _PENDING_FEEDBACK_WINDOWS[_qrow.id] = (chat_id, _now_epoch)
+                return
+        elif _qrow and _qrow.status != "pending":
+            _send_msg(chat_id, f"Queue #{_qrow.id}: already {_qrow.status}.")
+            return
+
+    # Fallback path: naked approval/rejection with no reply target. Requires
+    # explicit "yes confirm" / "no confirm" to avoid silent action on ambiguous
+    # chat (Council fix).
+    if not reply_to_msg_id and (_first_word in _APPROVE_ALIASES or _first_word in _REJECT_ALIASES):
+        from approval_queue import find_latest_pending, approve as _aq_approve, reject as _aq_reject
+        from notifier import send_message as _send_msg
+        _pending = find_latest_pending(max_age_hours=2)
+        if _pending is None:
+            # Silent when nothing is pending — lets normal chat flow continue.
+            pass
+        elif _text_lower_full == "yes confirm":
+            _aq_approve(_pending.id, note=None)
+            _send_msg(chat_id, f"✅ Queue #{_pending.id}: approved.")
+            return
+        elif _text_lower_full == "no confirm":
+            _aq_reject(_pending.id, note=None)
+            _send_msg(chat_id, f"❌ Queue #{_pending.id}: rejected. Use /reject {_pending.id} <tag> to add a reason.")
+            return
+        elif _first_word in _APPROVE_ALIASES:
+            _send_msg(chat_id, f"Did you mean queue #{_pending.id} ({_pending.crew_name} {_pending.proposal_type})? Reply 'yes confirm' to approve.")
+            return
+        elif _first_word in _REJECT_ALIASES:
+            _send_msg(chat_id, f"Did you mean queue #{_pending.id} ({_pending.crew_name} {_pending.proposal_type})? Reply 'no confirm' to reject.")
+            return
 
     # -- Doc routing emoji + text command handlers --
     _EMOJI_COMMANDS = ("✅", "✏️", "🆕", "❌", "➕")
