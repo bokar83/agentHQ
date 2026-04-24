@@ -192,17 +192,15 @@ def _mark_scheduled(queue_id: int, scheduled_date_iso: str) -> None:
 # ═════════════════════════════════════════════════════════════════════════════
 
 def _update_notion_schedule(notion, notion_id: str, scheduled_date_iso: str) -> dict:
-    """Set Scheduled Date + status=Queued on the Content Board record.
+    """Set Scheduled Date + Status=Queued on the Content Board record.
 
-    Notion status field on this DB is a `status` property (not select); both
-    shapes are handled because NotionClient accepts either and we don't know
-    which without a schema call. Use `select` shape first; it works for the
-    common select type. For status-type props we'd need `status` wrapper.
+    This Content Board stores Status as a `select` property (verified via
+    get_database_schema on 2026-04-24). If it is ever migrated to a Notion
+    `status` property, update this wrapper accordingly.
     """
-    # Most Content Boards store Status as a select. Try select first.
     properties = {
         "Scheduled Date": {"date": {"start": scheduled_date_iso}},
-        "Status": {"status": {"name": "Queued"}},
+        "Status": {"select": {"name": "Queued"}},
     }
     return notion.update_page(notion_id, properties)
 

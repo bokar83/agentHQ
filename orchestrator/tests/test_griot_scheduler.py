@@ -179,7 +179,7 @@ def test_tick_schedules_approved_x_post(mock_scheduler, monkeypatch):
     pid, props = mock_scheduler.update_page.call_args[0]
     assert pid == "page-abc"
     assert props["Scheduled Date"]["date"]["start"] == "2026-04-27"
-    assert props["Status"]["status"]["name"] == "Queued"
+    assert props["Status"]["select"]["name"] == "Queued"
     mock_scheduler.mark_scheduled.assert_called_once_with(3, "2026-04-27")
 
 
