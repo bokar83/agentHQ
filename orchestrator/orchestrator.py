@@ -2552,6 +2552,49 @@ async def run_team(request: TeamTaskRequest):
         raise HTTPException(status_code=500, detail=f"Team execution failed: {str(e)}")
 
 
+# ── Phase 1: laptop-parity approval endpoint ─────────────────────────────
+class AutonomyApproveBody(BaseModel):
+    decision: str  # approve | reject | edit
+    note: Optional[str] = None
+    feedback_tag: Optional[str] = None
+    edited_payload: Optional[dict] = None
+
+
+@app.post("/autonomy/approve/{queue_id}", dependencies=[Depends(verify_api_key)])
+def http_autonomy_approve(queue_id: int, body: AutonomyApproveBody):
+    """Laptop-parity approval endpoint. API-key gated via existing verify_api_key.
+    Mirrors the Telegram reply flow.
+    """
+    from approval_queue import approve as _aq_approve, reject as _aq_reject, edit as _aq_edit, get as _aq_get
+
+    if body.decision == "approve":
+        row = _aq_approve(queue_id, note=body.note)
+    elif body.decision == "reject":
+        row = _aq_reject(queue_id, note=body.note, feedback_tag=body.feedback_tag)
+    elif body.decision == "edit":
+        if not body.edited_payload:
+            raise HTTPException(status_code=400, detail="edited_payload required for edit")
+        row = _aq_edit(queue_id, body.edited_payload, note=body.note)
+    else:
+        raise HTTPException(status_code=400, detail="decision must be approve|reject|edit")
+
+    if row is None:
+        current = _aq_get(queue_id)
+        if current is None:
+            raise HTTPException(status_code=404, detail=f"queue #{queue_id} not found")
+        raise HTTPException(status_code=409, detail=f"queue #{queue_id} already {current.status}")
+
+    return {
+        "id": row.id,
+        "crew_name": row.crew_name,
+        "proposal_type": row.proposal_type,
+        "status": row.status,
+        "ts_decided": row.ts_decided.isoformat() if row.ts_decided else None,
+        "decision_note": row.decision_note,
+        "boubacar_feedback_tag": row.boubacar_feedback_tag,
+    }
+
+
 @app.get("/classify", dependencies=[Depends(verify_api_key)])
 def classify_only(task: str):
     """
