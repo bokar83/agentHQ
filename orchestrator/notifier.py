@@ -846,3 +846,68 @@ def send_doc_routing_alert(filename: str, alert_type: str, details: dict) -> Non
         msg = f"Doc routing event [{alert_type}]: {filename}"
 
     send_message(chat_id, msg)
+
+
+# ----- Phase 1 additions ---------------------------------------------------
+
+
+def send_message_with_buttons(chat_id, text, buttons, reply_to_message_id=None):
+    """Send a Telegram message with an inline-keyboard.
+
+    buttons: list of rows; each row is a list of (label, callback_data) tuples.
+    Returns the Telegram message_id on success, or None on failure.
+    """
+    if not TELEGRAM_API_BASE:
+        logger.warning("send_message_with_buttons: no bot token; dropping")
+        return None
+    inline_keyboard = [
+        [{"text": label, "callback_data": data} for (label, data) in row]
+        for row in buttons
+    ]
+    payload = {
+        "chat_id": chat_id,
+        "text": text,
+        "reply_markup": {"inline_keyboard": inline_keyboard},
+    }
+    if reply_to_message_id:
+        payload["reply_to_message_id"] = reply_to_message_id
+    try:
+        r = requests.post(f"{TELEGRAM_API_BASE}/sendMessage", json=payload, timeout=10)
+        if r.ok and r.json().get("ok"):
+            return r.json()["result"]["message_id"]
+        logger.warning(f"send_message_with_buttons failed: {r.status_code} {r.text[:200]}")
+        return None
+    except Exception as e:
+        logger.warning(f"send_message_with_buttons error: {e}")
+        return None
+
+
+def answer_callback_query(callback_query_id, text=None):
+    """Dismiss the Telegram button-loading indicator. `text` shows a small toast."""
+    if not TELEGRAM_API_BASE:
+        return
+    payload = {"callback_query_id": callback_query_id}
+    if text:
+        payload["text"] = text
+    try:
+        requests.post(f"{TELEGRAM_API_BASE}/answerCallbackQuery", json=payload, timeout=10)
+    except Exception as e:
+        logger.warning(f"answer_callback_query error: {e}")
+
+
+def send_message_returning_id(chat_id, text, reply_to_message_id=None):
+    """Same as send_message but returns the Telegram message_id so callers can
+    store it back on an approval_queue row. Returns None on failure.
+    """
+    if not TELEGRAM_API_BASE:
+        return None
+    payload = {"chat_id": chat_id, "text": text}
+    if reply_to_message_id:
+        payload["reply_to_message_id"] = reply_to_message_id
+    try:
+        r = requests.post(f"{TELEGRAM_API_BASE}/sendMessage", json=payload, timeout=10)
+        if r.ok and r.json().get("ok"):
+            return r.json()["result"]["message_id"]
+        return None
+    except Exception:
+        return None
