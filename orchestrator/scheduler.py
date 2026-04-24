@@ -353,6 +353,23 @@ def _run_morning_digest():
         else:
             lines.append("Enabled crews: none (Phase 0, rails only)")
 
+        # Phase 1: pending approvals summary
+        try:
+            from approval_queue import list_pending
+            pending = list_pending(limit=3)
+            if pending:
+                lines.append("")
+                lines.append(f"Pending approvals: {len(pending)} (first 3):")
+                from datetime import datetime as _dt, timezone as _tz
+                _now_utc = _dt.now(_tz.utc)
+                for r in pending:
+                    age_min = int((_now_utc - r.ts_created).total_seconds() / 60) if r.ts_created else 0
+                    lines.append(f"  #{r.id} {r.crew_name} {r.proposal_type} ({age_min}m)")
+            else:
+                lines.append("Pending approvals: 0")
+        except Exception as _e:
+            logger.warning(f"DIGEST: pending-approvals read failed: {_e}")
+
         _send_telegram_alert("\n".join(lines))
     except Exception as e:
         logger.error(f"DIGEST: failed: {e}", exc_info=True)
