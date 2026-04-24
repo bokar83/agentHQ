@@ -79,3 +79,124 @@ def normalize_feedback_tag(raw: Optional[str]) -> Optional[str]:
         if tag in s:
             return tag
     return raw.strip()
+
+
+def enqueue(
+    crew_name: str,
+    proposal_type: str,
+    payload: dict,
+    outcome_id: Optional[int] = None,
+    chat_id: Optional[str] = None,
+) -> QueueRow:
+    """Insert a pending row, send a Telegram preview, store the msg_id back.
+
+    If chat_id is None, reads OWNER_TELEGRAM_CHAT_ID or TELEGRAM_CHAT_ID env.
+    If Telegram send fails, row persists with telegram_msg_id=NULL and shows on /queue.
+    """
+    import os as _os
+    from notifier import send_message_returning_id
+
+    conn = _conn()
+    cur = conn.cursor()
+    cur.execute(
+        f"""
+        INSERT INTO approval_queue (crew_name, proposal_type, payload, task_outcome_id)
+        VALUES (%s, %s, %s::jsonb, %s)
+        RETURNING {_SELECT_COLS}
+        """,
+        (crew_name, proposal_type, json.dumps(payload), outcome_id),
+    )
+    row = _row_to_queue(cur.fetchone())
+    conn.commit()
+
+    if chat_id is None:
+        chat_id = _os.environ.get("OWNER_TELEGRAM_CHAT_ID") or _os.environ.get("TELEGRAM_CHAT_ID")
+
+    preview = _format_proposal_preview(row)
+    msg_id = None
+    if chat_id:
+        msg_id = send_message_returning_id(str(chat_id), preview)
+    if msg_id:
+        cur.execute(
+            f"UPDATE approval_queue SET telegram_msg_id = %s WHERE id = %s RETURNING {_SELECT_COLS}",
+            (msg_id, row.id),
+        )
+        row = _row_to_queue(cur.fetchone())
+        conn.commit()
+    else:
+        logger.warning(f"enqueue: Telegram send failed for queue #{row.id}; row persists without msg_id")
+
+    cur.close()
+    return row
+
+
+def _format_proposal_preview(row: QueueRow) -> str:
+    """One-message preview sent to Boubacar when a proposal is queued."""
+    body_preview = ""
+    p = row.payload or {}
+    for key in ("title", "subject", "summary", "body", "text", "content"):
+        if key in p and isinstance(p[key], str):
+            body_preview = p[key][:300]
+            break
+    if not body_preview:
+        body_preview = json.dumps(p)[:300]
+    return (
+        f"Queue #{row.id} ({row.crew_name} / {row.proposal_type})\n"
+        f"---\n"
+        f"{body_preview}\n"
+        f"---\n"
+        f"Reply 'yes' to approve, 'no' to reject, or 'edit: <new text>' to modify."
+    )
+
+
+def get(queue_id: int) -> Optional[QueueRow]:
+    conn = _conn()
+    cur = conn.cursor()
+    cur.execute(f"SELECT {_SELECT_COLS} FROM approval_queue WHERE id = %s", (queue_id,))
+    row = cur.fetchone()
+    cur.close()
+    return _row_to_queue(row) if row else None
+
+
+def find_by_telegram_msg_id(msg_id: int) -> Optional[QueueRow]:
+    conn = _conn()
+    cur = conn.cursor()
+    cur.execute(
+        f"SELECT {_SELECT_COLS} FROM approval_queue WHERE telegram_msg_id = %s ORDER BY id DESC LIMIT 1",
+        (msg_id,),
+    )
+    row = cur.fetchone()
+    cur.close()
+    return _row_to_queue(row) if row else None
+
+
+def find_latest_pending(max_age_hours: int = 2) -> Optional[QueueRow]:
+    """Fallback for naked 'yes' when no reply target was supplied."""
+    conn = _conn()
+    cur = conn.cursor()
+    cur.execute(
+        f"""
+        SELECT {_SELECT_COLS}
+          FROM approval_queue
+         WHERE status = 'pending'
+           AND ts_created > now() - (%s || ' hours')::interval
+         ORDER BY ts_created DESC
+         LIMIT 1
+        """,
+        (str(max_age_hours),),
+    )
+    row = cur.fetchone()
+    cur.close()
+    return _row_to_queue(row) if row else None
+
+
+def list_pending(limit: int = 10) -> list:
+    conn = _conn()
+    cur = conn.cursor()
+    cur.execute(
+        f"SELECT {_SELECT_COLS} FROM approval_queue WHERE status = 'pending' ORDER BY ts_created DESC LIMIT %s",
+        (limit,),
+    )
+    rows = cur.fetchall()
+    cur.close()
+    return [_row_to_queue(r) for r in rows]
