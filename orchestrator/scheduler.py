@@ -442,6 +442,39 @@ def start_scheduler():
     except Exception as e:
         logger.error(f"GRIOT: wake registration failed ({e}); continuing without griot", exc_info=True)
 
+    # Phase 3.75: Griot scheduler wake. Runs every 5 minutes, picks up
+    # approved candidates from approval_queue, writes Scheduled Date +
+    # status=Queued to Notion Content Board. Zero LLM. Uses crew_name='griot'
+    # so it inherits the same per-crew gate: if Griot is paused, scheduling
+    # also pauses, which keeps state consistent.
+    try:
+        import heartbeat as _heartbeat
+        from griot_scheduler import griot_scheduler_tick
+        _heartbeat.register_wake(
+            "griot-scheduler",
+            crew_name="griot",
+            callback=griot_scheduler_tick,
+            every="5m",
+        )
+    except Exception as e:
+        logger.error(f"GRIOT_SCHEDULER: wake registration failed ({e}); continuing without scheduler", exc_info=True)
+
+    # Phase 3.75+: daily publish brief at 07:30 MT. Reads Queued rows with
+    # Scheduled Date = today, sends Telegram digest with Draft text + one-tap
+    # LinkedIn/X share intent URLs. Manual publish (one tap per post).
+    # Uses crew_name='griot' so Griot's per-crew flag gates this too.
+    try:
+        import heartbeat as _heartbeat
+        from publish_brief import publish_brief_tick
+        _heartbeat.register_wake(
+            "publish-brief",
+            crew_name="griot",
+            callback=publish_brief_tick,
+            at="07:30",
+        )
+    except Exception as e:
+        logger.error(f"PUBLISH_BRIEF: wake registration failed ({e}); continuing without brief", exc_info=True)
+
     sync_thread = threading.Thread(target=_periodic_sync, daemon=True)
     sync_thread.start()
 
