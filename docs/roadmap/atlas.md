@@ -209,33 +209,46 @@ That breaks down into 5 closed loops:
 
 **Path locked by M7a:** Blotato API at $20.30/mo Skool-discounted. Direct LinkedIn/X OAuth path descoped (Blotato API verified working with 5-9 sec latency).
 
-**Module shape (sketch, finalize during build session):**
-- `BlotatoPublisher.publish(text, accountId, platform) -> postSubmissionId`
-- `BlotatoPublisher.poll_until_terminal(postSubmissionId, max_wait_sec=120) -> (status, publicUrl|errorMessage)`
-- Persist `postSubmissionId` in Notion record BEFORE polling (idempotency safeguard since Blotato has no documented idempotency key)
-- On `published`, write `publicUrl` back to Notion as Posted URL, flip Status=Posted, write task_outcomes row (M1 reconcile path)
-- On `failed`, log errorMessage and route to Atlas Concierge (M4 dependency, fail-soft until M4 ships: alert Telegram, leave Status=Queued for human retry)
-- Auth: `BLOTATO_API_KEY` added to VPS .env on first deploy day (NOT before; per M7a prep doc rule kept until M7b is real)
+**Spec:** `docs/superpowers/specs/2026-04-26-atlas-m7b-publisher-design.md` (status: spec written, 7 open decisions to lock at top of build session). Pass 2 Council surfaced a fatal idempotency bug, a state-machine gap, and an architectural disagreement; spec captures all of it.
+
+**7 open decisions to lock at build session start (full table in spec):**
+1. Idempotency mechanism (Status=Publishing OR client-generated UUID)
+2. State machine location (granular Notion Status OR Postgres + Notion mirror)
+3. New module vs publish_brief.py patch (depends on Studio M4 timing)
+4. Tick coordination contract with publish_brief
+5. Kill switch `auto_publisher.enabled` in `autonomy_state.json` (non-negotiable)
+6. Posted URL schema (single field or per-platform)
+7. M2 backfill interaction with PublishFailed records
 
 **Why:** Final gap in L3 (currently 🟡 PARTIAL). Without M7b, the system requires Boubacar's daily tap-share-paste.
 
-**Trigger:** Any session.
-**Blockers:** None.
-**Branch:** `feat/atlas-m7-auto-publish` (named after decision is made)
-**ETA:** 60-90 min after M7a.
+**Trigger:** Any session AFTER the 7 decisions are locked.
+**Blockers:** Spec review by Boubacar; lock decisions 1-7 above.
+**Branch:** `feat/atlas-m7b-publisher` (to create at build session start)
+**Save point:** `savepoint-pre-atlas-m7b-publisher-2026-04-26` (use actual build date)
+**ETA corrected:** 3-4 hr including tests, save point, branch, deploy, verify (NOT 60-90 min; original estimate was happy-path-only).
 
-**What:** Replace manual one-tap publish with automatic posting on Scheduled Date.
+---
 
-**Two paths:**
-1. **Blotato** ($9/mo, n8n workflow already built and inactive). 60-min activation.
-2. **LinkedIn/X OAuth apps**. Multi-day app review per platform. Free.
+### M8: Atlas Mission Control (live ops dashboard at /atlas) ⏳ IN PROGRESS
 
-**Why:** Final gap in L3 (currently 🟡 PARTIAL). Without M7, system requires Boubacar's daily tap.
+**What:** Single-page, gated, internal-only dashboard at `agentshq.boubacarbarry.com/atlas` showing live agent activity from data already in Postgres + Notion + autonomy_state.json. Hero strip (System Status / Last Action / Next Fire / Spend Pacing) above 6 cards (Atlas State / Approval Queue / Content Board / Spend 7d / Heartbeats / Errors) with `/chat` embedded as the seventh card. Refresh via htmx polling 30s per card, JWT-PIN gated like `/chat`.
 
-**Trigger gate:** Boubacar's decision on Blotato spend OR willingness to wait for OAuth approvals.
-**Blockers:** External (paid subscription or platform approval).
-**Branch:** `feat/auto-publish-blotato` or `feat/auto-publish-oauth`
-**ETA:** 60 min (Blotato) or several days wall-clock + 90 min build (OAuth).
+**Action set (Standard, post-Council):** Toggle Griot, toggle dry-run, approve/reject queue items, reply posted/skip to publish brief. Kill switch deliberately omitted from the page (Telegram-only, friction by design).
+
+**Visual:** Catalyst Console (T4) - near-black with graphite-blue undertone, terracotta-orange `#FF6B35` as the signature accent, museum-bronze + lapis-tarnished + verdigris support palette. Atkinson Hyperlegible body (dyslexia-safe), Fraunces display, IBM Plex Mono for data. Mockup locked at `workspace/atlas-m8-mocks/v4.html`.
+
+**Why:** "Usage dashboard" has been on `project_task_backlog.md` since 2026-04-16 and slipped weekly to higher-revenue work. Telegram + SSH is the only inspection surface today. The data exists; this is purely a view layer plus a small scoped action layer.
+
+**Why not external/public:** Killed during Sankofa. M8 is internal. A sanitized public variant becomes a separate later milestone if/when wanted, with its own threat model.
+
+**Spec:** `docs/superpowers/specs/2026-04-25-atlas-m8-mission-control-design.md` (status: approved-after-sankofa)
+**Sankofa:** Five voices ran 2026-04-25. Folded fixes: file lock on `autonomy_state.json`, killed Roman-numeral chips (Outsider voice flagged as decorative), dropped external-proof-point framing. Parked: outcomes/quality card (M9 candidate), chat-as-primary reframe.
+**Trigger:** Now (parallel with M7a).
+**Blockers:** None. All data sources verified live.
+**Branch:** `feat/atlas-m8-mission-control` (to create)
+**ETA:** 4.75 hr in 4 blocks (backend data path 2h, visual shell 2h, htmx polling 45min, action layer + polish 75min). Down from original 6h after Sankofa scope cuts.
+**Save point:** `savepoint-pre-atlas-m8-2026-04-25` (to create before block 1)
 
 ---
 
@@ -394,5 +407,70 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 - Idempotency: Blotato has no documented idempotency key. Persist `postSubmissionId` in Notion record BEFORE polling so retries don't double-submit.
 - Failure-mode behavior unverified: HTTP 422 on quota expected but not exercised; `errorMessage` shape unknown. Atlas Concierge (M4) is the right surface to handle failures; until M4 ships, fail-soft = alert Telegram, leave Status=Queued for human retry.
 - BLOTATO_API_KEY currently in `d:/tmp/.env` only. Promote to VPS .env on M7b deploy day, NOT before (per M7a prep-doc rule still in force).
+
+### 2026-04-25 (late evening): M8 spec approved after Sankofa, ready to build
+
+**Trigger:** Boubacar reviewed Jay's RUBRIC dashboard (RoboNuggets Skool), said he wants the same kind of "see what the agents are doing" surface for himself. Verdict: steal RUBRIC's information architecture, not its static-files runtime. Build it on the live data Atlas already writes.
+
+**Brainstorm produced:**
+- Route: `/atlas` (codename matches the project; no new vocabulary).
+- Layout: hero strip (4 rollup tiles: System Status, Last Autonomous Action, Next Scheduled Fire, Spend Pacing) above 3×2 cards (Atlas State, Approval Queue, Content Board, Spend, Heartbeats, Errors) with `/chat` embedded as 4th column.
+- Refresh: htmx 30s polling per card.
+- Mobile: desktop-first, collapses cleanly to single column at <720px.
+- Action set: Standard (toggle Griot, toggle dry-run, approve/reject queue, posted/skip publish reply). Kill switch deliberately Telegram-only.
+
+**Visual lock-in (T4 "Catalyst Console"):** four palettes mocked side by side at `workspace/atlas-m8-mocks/v4.html` (T1 Bogolan v2, T2 Bogolan Loud, T3 Sahel Neon, T4 Catalyst Console - Claude's pick). Boubacar picked T4. Near-black with graphite-blue undertone, terracotta-orange `#FF6B35` as the single signature accent, museum-bronze + lapis-tarnished + verdigris support. Bogolan dot-pattern replaced with single bronze hairlines (the seam where two metal pieces meet on a cast object).
+
+**Typography:** Atkinson Hyperlegible body (Braille Institute, designed against letter confusion - Boubacar is mildly dyslexic), Fraunces display, IBM Plex Mono data. BDA floors enforced: 15px body, 1.5 line-height, weight ≥400, no italic for emphasis, `tnum`+`zero` OT features always on. Type research summary in spec.
+
+**Em-dash leak:** "Atlas, Mission Control" in H1 (with em-dash separator) carried that separator through three mockup iterations before Boubacar caught it. Pre-commit hook only catches committed files; mockups in `workspace/` are not committed. New memory entry `feedback_em_dash_in_ui_text.md` extends the no-em-dash rule to every visible UI string. H1 changed to "Atlas Mission Control" (no separator).
+
+**Sankofa Council ran.** Five voices. Recommended scope cuts:
+- Cut external-proof-point framing (M8 is internal-only; sanitized public variant becomes its own milestone if/when wanted)
+- Add `flock` advisory lock on `autonomy_state.json` to prevent torn writes between heartbeat tick and browser action endpoints
+- Kill Roman-numeral chips on cards (Outsider voice flagged them as decorative-not-informational)
+- Park outcomes/quality card and chat-as-primary reframe as future milestones
+
+**Action layer sized honestly post-Council.** Audit of `handlers_commands.py` and `handlers_approvals.py` confirmed handlers are already pure `(text, chat_id, ...)` functions, not Telegram `Update` objects. No fake-Update glue, no handler refactor needed. Action layer fits in 75 minutes inside M8 itself, not a separate M8.5.
+
+**Spec:** `docs/superpowers/specs/2026-04-25-atlas-m8-mission-control-design.md` (status: approved-after-sankofa).
+
+**ETA: 4.75 hr in 4 blocks** (down from initial 6h after Council scope cuts):
+- Block 1: backend data path (≈2h)
+- Block 2: visual shell (≈2h)
+- Block 3: htmx polling (≈45 min)
+- Block 4: action layer + polish (≈75 min)
+
+**Next:** hand off to writing-plans skill to break each block into tasks. Build any session, parallel with M7b.
+
+---
+
+### 2026-04-25 (late evening, atlas instance): M7b Council Pass 2, spec doc written, build deferred to next session
+
+**Pass 2 Sankofa Council on M7b's proposed design surfaced a fatal idempotency bug, a structural state-machine gap, and an architectural disagreement about whether M7b is a new module at all.**
+
+**Fatal bug found:** the proposed "persist postSubmissionId BEFORE polling" idempotency strategy does NOT prevent the most likely failure (POST returns 200 + ID, then Notion write fails). Next 5-min tick re-submits, double-posting to Boubacar's real LinkedIn 5 minutes apart. Required fix: persist a placeholder (Status=Publishing OR client-generated UUID) BEFORE the POST, not after.
+
+**Structural gap found:** "Status=Queued" silently means three things in the proposed design (waiting, in-flight, failed). Required fix: granular Notion Status values (add `Publishing`, add `PublishFailed`) OR move state machine to Postgres with Notion as mirror.
+
+**Architectural disagreement (Boubacar must call):** is M7b a new module (`orchestrator/blotato_publisher.py` + `orchestrator/auto_publisher.py`, 3-4 hour build, platform-agnostic for Studio M4 reuse) or a 30-line patch on `publish_brief.py` (60-90 min build, Atlas-only, Studio M4 has to refactor later)? Both are valid. Decision depends on Studio M4 timing.
+
+**Smaller fixes captured:** kill switch `auto_publisher.enabled` in `autonomy_state.json` (non-negotiable), tick coordination contract with `publish_brief.py` (three options), 7-day-a-week wake (NOT weekday-only like griot), M2 backfill must skip PublishFailed records, Posted URL field structure for downstream M5/M8 readers.
+
+**Build estimate corrected:** original 60-90 min was happy-path-only. Production-quality M7b with the failure modes the Council surfaced is 3-4 hours including tests, save point, branch, deploy, verification.
+
+**Spec doc written:** `docs/superpowers/specs/2026-04-26-atlas-m7b-publisher-design.md`. Captures all Council findings, enumerates 7 open decisions Boubacar must lock at the top of the build session, documents required reads, build session checklist, hard rules in force, what gets shipped on M7b complete.
+
+**M7b status:** still READY but spec-gated; do not start coding until 7 open decisions are locked at top of build session. A third Council pass on whichever path Boubacar picks (new module vs publish_brief patch) is recommended; should take 5 minutes against the spec.
+
+**Build session NOT today.** Next session at the earliest. Hour-14 rule applies; Boubacar burned the trial today, ran two Councils, shipped the M7a smoke test and the M7a closeout commit. M7b code is Sunday's job.
+
+**Next atlas session:**
+
+1. Pull main, verify three-way nsync, confirm M8 spec + M7b spec both present
+2. Read `docs/superpowers/specs/2026-04-26-atlas-m7b-publisher-design.md` first
+3. Lock the 7 open decisions
+4. Save point + branch + build per the spec checklist
+5. M8 build (4.75 hr) and M7b build (3-4 hr) can run in any order; both have specs ready and no dependency on each other
 
 ---
