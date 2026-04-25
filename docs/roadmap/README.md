@@ -43,6 +43,7 @@ Every roadmap gets a one or two word lowercase codename. Codenames are claimed f
 |---|---|---|---|---|
 | atlas | active | open-ended | the autonomy layer that runs the content pipeline while the laptop is off | [atlas.md](atlas.md) |
 | harvest | active | open-ended | Catalyst Works revenue pipeline (stub until first revenue session) | [harvest.md](harvest.md) |
+| studio | active | open-ended | faceless agency running multiple branded channels on agentsHQ as adjacent revenue to Catalyst Works | [studio.md](studio.md) |
 
 **To add a new codename:** invoke the `roadmap` skill with `roadmap new <codename>`. The skill validates the name, scaffolds the file, and adds the registry entry.
 
