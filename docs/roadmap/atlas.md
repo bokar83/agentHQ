@@ -40,7 +40,7 @@ That breaks down into 5 closed loops:
 | L1 Propose | ✅ LIVE | griot-morning fires Mon-Fri 07:00 MT. Verified weekend gate working today. |
 | L2 Schedule | ✅ LIVE | 5-min wake. Queue #3 scheduled for Monday 2026-04-27. |
 | L3 Publish | 🟡 PARTIAL | Brief sends with share URL. Tap-to-publish is manual. Auto-publish (M7) is future. |
-| L4 Reconcile | ❌ OPEN | **Critical path. Today's build target.** |
+| L4 Reconcile | ✅ LIVE | Reply 'posted' or 'skip' to publish-brief Telegram message; Notion Status flips, task_outcomes written. Shipped 2026-04-25 (M1). |
 | L5 Learn | ❌ OPEN | Blocked: needs ≥14 days of L4 data. Earliest viable 2026-05-08. |
 
 **Infrastructure live:**
@@ -55,7 +55,7 @@ That breaks down into 5 closed loops:
 
 ## Milestones
 
-### M1: L4 Close-Loop, 3-Button Publish Brief Row 🟡 IN PROGRESS
+### M1: L4 Close-Loop, Publish Reply ✅ SHIPPED 2026-04-25
 
 **What:** Add inline button row `[✅ Posted] [⏭ Skip] [📝 Edited]` to the daily publish brief Telegram message. Each button writes Notion Status + task_outcomes row.
 
@@ -63,6 +63,7 @@ That breaks down into 5 closed loops:
 
 - **Posted button** → Notion Status=Posted, outcome=success, ts_decided=now
 - **Skip button** → Notion Status=Skipped, outcome=skipped, frees the slot
+  - Skipped option added to Notion select on 2026-04-25 (gray); see `reference_notion_content_board_schema.md`
 - **Edited button** → Notion Status=Posted, outcome=posted_with_edits (signals leGriot calibration data)
 
 **Idempotency:** Callback handler reads current Notion Status first; tap-after-Posted is a no-op with a "already marked" reply.
@@ -221,5 +222,31 @@ Action taken:
 Sankofa Council ran on original Option A. Council rejected single-button design. M1 redesigned as 3-button row covering Posted/Skip/Edited in one branch. Council-approved.
 
 **Next this session:** brainstorm + write per-feature plan for M1, then build under hour-14 budget. Test target Monday 2026-04-27.
+
+### 2026-04-25 (afternoon): M1 SHIPPED to VPS
+
+Atlas M1 (publish reply) live on VPS. Branch `feat/atlas-m1-reply`, PR pending merge.
+
+Council reframe (second pass on M1): original spec extended `approval_queue` with `proposal_type='publish_brief'` rows. Council rejected because (a) overloaded the table semantically and (b) created a real misroute bug where a stray `yes confirm` reply to a publish-brief message would silently flip the row to `approved` without any Notion write. Switched to in-memory `_PUBLISH_BRIEF_WINDOWS` dict in `state.py`. No new tables, no migrations.
+
+Boubacar reframe (third pass on M1): dropped buttons. Text-reply `posted` / `skip` is simpler, matches existing `yes confirm` UX, and avoids the cosmetic-vs-functional trap. Dropped `edited` keyword (Phase 5 territory; revisit when L5 starts).
+
+Notion-side change: added `Skipped` to Content Board Status select options (gray). Updated `reference_notion_content_board_schema.md`.
+
+Files touched:
+- `state.py`: +1 dict
+- `publish_brief.py`: per-post sends now use `send_message_returning_id`; populate dict; 24h-evict at start of tick; `Reply \`posted\` or \`skip\`` hint line
+- `handlers_approvals.py`: +`POSTED_ALIASES` +`SKIP_ALIASES` +`_open_notion` +`handle_publish_reply` (two-layer idempotency)
+- `handlers.py`: +1 dispatch line between approval_reply and naked_approval
+- `tests/test_publish_reply.py`: NEW, 6 tests
+- `tests/test_publish_brief.py`: updated mock fixture for `send_message_returning_id`
+
+Test counts: 18 publish_*+reply tests pass; 153 in-scope orchestrator tests pass overall (excludes 12 pre-existing test_doc_routing path failures unrelated to M1).
+
+Sankofa Council called twice this session (original 1-button design, then post-spec on the approval_queue overload). Both calls overrode the initial design and prevented bugs. Hour-14 stop discipline: shipping at hour ~6.5.
+
+**Test target:** Monday 2026-04-27 07:30 MT publish brief on queue #3 "One constraint nobody has named yet" (X). Reply `posted` should flip Notion Status to Posted.
+
+**Next:** observe Monday fire. If green, M2 (Skip Self-Heal) on next session. If red, debug before any new milestone.
 
 ---

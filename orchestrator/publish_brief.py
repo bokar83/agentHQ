@@ -163,6 +163,7 @@ def _format_full_brief(today_iso: str, day_name: str, posts: list) -> list:
             lines.append(f"Tap to publish: {publish_url}")
         else:
             lines.append(f"(no share URL for platform {platform})")
+        lines.append("Reply `posted` or `skip` to mark this post.")
         lines.append("")
         lines.append(f"Notion: https://www.notion.so/{post['notion_id'].replace('-', '')}")
         messages.append("\n".join(lines))
@@ -209,7 +210,7 @@ def publish_brief_tick() -> None:
         return
 
     try:
-        from notifier import send_message
+        from notifier import send_message, send_message_returning_id
     except Exception as e:
         logger.error(f"publish_brief_tick: notifier import failed: {e}")
         return
@@ -219,10 +220,43 @@ def publish_brief_tick() -> None:
         logger.info(f"publish_brief_tick: sent empty brief")
         return
 
+    # Atlas M1: evict stale dict entries (24h+) before populating new ones.
+    import time as _time
+    from state import _PUBLISH_BRIEF_WINDOWS
+    cutoff = _time.time() - 86400
+    stale = [k for k, v in _PUBLISH_BRIEF_WINDOWS.items() if v.get("ts_sent", 0) < cutoff]
+    for k in stale:
+        _PUBLISH_BRIEF_WINDOWS.pop(k, None)
+    if stale:
+        logger.info(f"publish_brief_tick: evicted {len(stale)} stale brief windows")
+
     messages = _format_full_brief(today_iso, day_name, posts)
-    for msg in messages:
+
+    # Send header (no dict entry; nothing to mark on the header).
+    try:
+        send_message(str(chat_id), messages[0])
+    except Exception as e:
+        logger.warning(f"publish_brief_tick: header send failed: {e}")
+
+    # Send per-post messages and capture msg_ids into the dict.
+    populated = 0
+    for post, msg in zip(posts, messages[1:]):
         try:
-            send_message(str(chat_id), msg)
+            msg_id = send_message_returning_id(str(chat_id), msg)
         except Exception as e:
-            logger.warning(f"publish_brief_tick: send_message failed: {e}")
-    logger.info(f"publish_brief_tick: sent {len(messages)} messages ({len(posts)} posts)")
+            logger.warning(f"publish_brief_tick: per-post send failed: {e}")
+            msg_id = None
+        if msg_id is not None:
+            _PUBLISH_BRIEF_WINDOWS[msg_id] = {
+                "notion_page_id": post["notion_id"],
+                "title": post["title"],
+                "platform": post["platform"],
+                "chat_id": str(chat_id),
+                "ts_sent": _time.time(),
+            }
+            populated += 1
+
+    logger.info(
+        f"publish_brief_tick: sent {len(messages)} messages "
+        f"({len(posts)} posts, {populated} reply windows opened)"
+    )

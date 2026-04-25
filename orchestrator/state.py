@@ -23,6 +23,16 @@ _active_project: dict = {}
 # queue_id -> (chat_id, rejected_at_epoch). Closed by button tap or 5-min TTL.
 _PENDING_FEEDBACK_WINDOWS: dict = {}
 
+# Atlas M1: pending publish-brief reply windows.
+# telegram_msg_id (int) -> dict with keys:
+#   notion_page_id (str): Notion page id of the Queued post
+#   title (str): post title for the confirmation message
+#   platform (str): 'LinkedIn' | 'X'
+#   chat_id (str): Telegram chat id where the brief landed
+#   ts_sent (float): epoch seconds when the brief message was sent
+# Evicted on first successful reply, or by publish_brief_tick when older than 24h.
+_PUBLISH_BRIEF_WINDOWS: dict = {}
+
 # Serializes git writes when multiple background jobs try to save outputs
 # at the same time. Used by saver.py via the shadow entrypoint.
 _git_lock = threading.Lock()

@@ -125,6 +125,11 @@ def test_full_brief_falls_back_to_hook_if_no_draft():
 def mock_pub(monkeypatch):
     mocks = MagicMock()
     mocks.send_message = MagicMock()
+    # Atlas M1: per-post sends now go through send_message_returning_id and
+    # we expect a fake msg_id back so the dict gets populated. Counter starts
+    # at 5000 to avoid collision with the M1 test seeded ids.
+    _ids = iter(range(5000, 6000))
+    mocks.send_message_returning_id = MagicMock(side_effect=lambda *a, **k: next(_ids))
     mocks.query_database = MagicMock()
 
     class _FakeNotionClient:
@@ -139,7 +144,13 @@ def mock_pub(monkeypatch):
 
     notifier = MagicMock()
     notifier.send_message = mocks.send_message
+    notifier.send_message_returning_id = mocks.send_message_returning_id
     monkeypatch.setitem(sys.modules, "notifier", notifier)
+
+    # Atlas M1: clear the publish-brief windows between tests so populated
+    # entries from one test don't leak into the next.
+    from state import _PUBLISH_BRIEF_WINDOWS
+    _PUBLISH_BRIEF_WINDOWS.clear()
 
     monkeypatch.setenv("TELEGRAM_CHAT_ID", "7792432594")
     return mocks
@@ -169,13 +180,29 @@ def test_tick_sends_full_brief_with_share_urls(mock_pub, monkeypatch):
               draft="One constraint nobody has named yet.", hook=""),
     ]
     pb.publish_brief_tick()
-    # Two sends: header + 1 post
-    assert mock_pub.send_message.call_count == 2
-    # Second send has the share URL
-    second_call = mock_pub.send_message.call_args_list[1]
-    msg_body = second_call[0][1]
-    assert "One constraint nobody has named yet." in msg_body
-    assert "twitter.com/intent/tweet" in msg_body
+    # Atlas M1: header goes through send_message; per-post messages go
+    # through send_message_returning_id. Total: 1 header + 1 per-post.
+    assert mock_pub.send_message.call_count == 1
+    assert mock_pub.send_message_returning_id.call_count == 1
+
+    # Header has the day-name banner
+    header_body = mock_pub.send_message.call_args.args[1]
+    assert "Tuesday 2026-04-28" in header_body
+
+    # Per-post message has draft + share URL + reply hint
+    post_body = mock_pub.send_message_returning_id.call_args.args[1]
+    assert "One constraint nobody has named yet." in post_body
+    assert "twitter.com/intent/tweet" in post_body
+    assert "Reply `posted` or `skip`" in post_body
+
+    # Atlas M1: dict populated with the per-post msg_id
+    from state import _PUBLISH_BRIEF_WINDOWS
+    assert len(_PUBLISH_BRIEF_WINDOWS) == 1
+    [(msg_id, entry)] = list(_PUBLISH_BRIEF_WINDOWS.items())
+    assert isinstance(msg_id, int)
+    assert entry["title"] == "Today X"
+    assert entry["platform"] == "X"
+    assert entry["chat_id"] == "7792432594"
 
 
 def test_tick_skips_when_no_chat_id_env(mock_pub, monkeypatch):
