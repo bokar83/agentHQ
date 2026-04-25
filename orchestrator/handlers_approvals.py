@@ -28,12 +28,20 @@ import logging
 import os
 import time
 
-from state import _PENDING_FEEDBACK_WINDOWS
+from state import _PENDING_FEEDBACK_WINDOWS, _PUBLISH_BRIEF_WINDOWS
+
+# Atlas M1: imports at module level so tests can patch
+# handlers_approvals.<name>. Keep handlers_approvals.send_message symbol
+# even when send_message is unused elsewhere in this module.
+from notifier import send_message
+from episodic_memory import start_task, complete_task
 
 logger = logging.getLogger("agentsHQ.handlers_approvals")
 
 APPROVE_ALIASES = {"yes", "yep", "yeah", "approve", "approved", "confirm", "ok"}
 REJECT_ALIASES = {"no", "nope", "reject", "rejected", "not approved", "discard"}
+POSTED_ALIASES = {"posted", "published", "done"}
+SKIP_ALIASES = {"skip", "skipped", "pass"}
 
 # Emoji prefixes that belong to the doc-routing handler. Used to make sure
 # the 5-min tag window does not swallow an emoji command.
@@ -256,3 +264,104 @@ def handle_naked_approval(text: str, chat_id: str, first_word: str, reply_to_msg
         _send(chat_id, f"Did you mean queue #{pending.id} ({pending.crew_name} {pending.proposal_type})? Reply 'no confirm' to reject.")
         return True
     return False
+
+
+# ══════════════════════════════════════════════════════════════
+# Atlas M1: publish-brief reply (Notion Status reconcile)
+# ══════════════════════════════════════════════════════════════
+
+def _open_notion():
+    """Open a NotionClient using the orchestrator's NOTION_SECRET. Lazy
+    import so test-time patching of handlers_approvals._open_notion can
+    swap in a mock without loading the real client at module-import time.
+    """
+    from skills.forge_cli.notion_client import NotionClient
+    secret = os.environ.get("NOTION_SECRET") or os.environ.get("NOTION_API_KEY")
+    return NotionClient(secret=secret)
+
+
+def handle_publish_reply(text: str, chat_id: str, first_word: str,
+                         reply_to_msg_id) -> bool:
+    """
+    Reply 'posted' or 'skip' to a publish-brief per-post Telegram message.
+
+    Reads _PUBLISH_BRIEF_WINDOWS for the dict entry keyed by reply_to_msg_id.
+    Flips Notion Status to Posted or Skipped (read-before-write so an
+    out-of-band flip is a no-op). Writes one task_outcomes row. Evicts the
+    dict entry on success.
+
+    Returns True if the update was consumed by this handler, False if it
+    falls through to other handlers.
+
+    Atlas M1; see docs/roadmap/atlas.md and
+    docs/superpowers/specs/2026-04-25-atlas-m1-publish-reply-design.md.
+    """
+    if not reply_to_msg_id:
+        return False
+
+    fw = (first_word or "").lower()
+    if fw not in POSTED_ALIASES and fw not in SKIP_ALIASES:
+        return False
+
+    entry = _PUBLISH_BRIEF_WINDOWS.get(reply_to_msg_id)
+    if entry is None:
+        return False
+
+    page_id = entry["notion_page_id"]
+    title = entry.get("title", "")
+    target_status = "Posted" if fw in POSTED_ALIASES else "Skipped"
+    action = "posted" if target_status == "Posted" else "skipped"
+
+    # Layer 2 idempotency: read Notion first.
+    try:
+        notion = _open_notion()
+        page = notion.get_page(page_id)
+        current = (
+            (page.get("properties", {}).get("Status", {}) or {})
+            .get("select") or {}
+        ).get("name")
+    except Exception as e:
+        logger.warning(f"handle_publish_reply: Notion read failed for {page_id}: {e}")
+        send_message(chat_id, "Could not read Notion for this post. Try again or flip manually.")
+        return True
+
+    if current in ("Posted", "Skipped"):
+        # Out-of-band flip already happened. Capture the no-op outcome and evict.
+        try:
+            out = start_task(crew_name="griot",
+                             plan_summary=f"publish:{page_id}:noop_{action}")
+            complete_task(out.id,
+                          result_summary=f"Already {current} in Notion when reply arrived",
+                          total_cost_usd=0.0,
+                          llm_calls_ids=[])
+        except Exception as e:
+            logger.warning(f"handle_publish_reply: task_outcomes write failed: {e}")
+        _PUBLISH_BRIEF_WINDOWS.pop(reply_to_msg_id, None)
+        send_message(chat_id, f"Already marked {current} in Notion.")
+        return True
+
+    # Happy path: flip Notion, write outcome, evict.
+    try:
+        notion.update_page(page_id, properties={
+            "Status": {"select": {"name": target_status}}
+        })
+    except Exception as e:
+        logger.warning(f"handle_publish_reply: Notion update failed for {page_id}: {e}")
+        send_message(chat_id, "Notion write failed. Flip manually for now.")
+        return True
+
+    try:
+        out = start_task(crew_name="griot",
+                         plan_summary=f"publish:{page_id}:{action}")
+        complete_task(out.id,
+                      result_summary=f"{action} via Telegram reply to msg {reply_to_msg_id}",
+                      total_cost_usd=0.0,
+                      llm_calls_ids=[])
+    except Exception as e:
+        logger.warning(f"handle_publish_reply: task_outcomes write failed: {e}")
+
+    _PUBLISH_BRIEF_WINDOWS.pop(reply_to_msg_id, None)
+
+    short_title = (title[:60] + "...") if len(title) > 60 else title
+    send_message(chat_id, f"Marked {target_status}: {short_title}")
+    return True
