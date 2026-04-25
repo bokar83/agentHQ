@@ -54,13 +54,13 @@ That breaks down into 5 closed loops:
 
 ## Status Snapshot
 
-*Last updated: 2026-04-25 (Saturday)*
+*Last updated: 2026-04-25 (Saturday evening, post M7a)*
 
 | Loop | Status | Notes |
 |---|---|---|
 | L1 Propose | ✅ LIVE | griot-morning fires Mon-Fri 07:00 MT. Verified weekend gate working today. |
 | L2 Schedule | ✅ LIVE | 5-min wake. Queue #3 scheduled for Monday 2026-04-27. |
-| L3 Publish | 🟡 PARTIAL | Brief sends with share URL. Tap-to-publish is manual. Auto-publish (M7) is future. |
+| L3 Publish | 🟡 PARTIAL | Brief sends with share URL. Tap-to-publish is manual. M7a SHIPPED (Blotato API verified, $20.30/mo Skool-discounted, 5-9 sec latency). M7b READY to build any session. |
 | L4 Reconcile | ✅ LIVE | Reply 'posted' or 'skip' to publish-brief Telegram message; Notion Status flips, task_outcomes written. Shipped 2026-04-25 (M1). |
 | L5 Learn | ❌ OPEN | Blocked: needs ≥14 days of L4 data. Earliest viable 2026-05-08. |
 
@@ -176,26 +176,51 @@ That breaks down into 5 closed loops:
 
 ---
 
-### M7a: Auto-Publish Decision Spike ⏳ NEXT-SESSION
+### M7a: Auto-Publish Decision Spike ✅ SHIPPED 2026-04-25
 
-**What:** 30-minute exercise (NOT a build). Sign up for Blotato 7-day free trial. Connect LinkedIn + X accounts in Blotato UI. Manually publish ONE test post via Blotato to validate end-to-end. Make trial-week call: keep ($29/mo, then build M7b) vs cancel (use n8n native LinkedIn+X if/when M7b becomes a priority).
+**Verdict:** KEEP Blotato. API contract verified end-to-end. M7b unblocked.
 
-**Why split off from M7:** Sankofa Council (2026-04-25) rejected the "build dormant today" plan because building code against an unverified API is build-then-pray. Blotato Starter is $29/mo (verified live; not the $9/mo memory rot). Pre-revenue, the right pattern is sign-up-first, smoke-test-against-real-API, then build against verified behavior.
+**Effective cost:** $20.30/mo (Skool RoboNuggets lifetime 30% discount applied; not the $29/mo list quoted in the original spike doc).
 
-**Trigger:** Boubacar's choice; week of 2026-04-28 to 2026-05-04.
-**Blockers:** None.
-**ETA:** 30 min spike + 7-day trial period.
+**Latency benchmark:** LinkedIn 5 sec submit-to-live, X 9 sec. Both far below the 2-minute pass threshold. Heartbeat-tick-friendly.
+
+**What got tested:** `GET /v2/users/me/accounts`, `POST /v2/posts` (LinkedIn personal + X @boubacarbarry), `GET /v2/posts/{id}` polling. All four phases passed. Verbatim text passthrough confirmed (LinkedIn paragraph break preserved, no AI editorial creep).
+
+**Test post (real CW content, not a throwaway):** "You already know which AI tool your team is overpaying for. The hard part is saying it out loud in a meeting before someone defends the renewal."
+
+**Spike artifacts:**
+- Notepad: `d:/tmp/m7a-blotato-spike-notes.md` (full credentials, API contract, smoke test results)
+- Smoke-test script: `d:/tmp/blotato-smoke-test.sh` (reusable for future regression checks)
+- Smoke-test log: `d:/tmp/blotato-smoke-test-20260425-160135.log`
+- Live LinkedIn post: linkedin.com/feed/update/urn:li:share:7453926229797142528
+- Live X post: x.com/boubacarbarry/status/2048160547552559336
+
+**Spike doc:** `docs/roadmap/atlas/m7a-decision-spike.md` (now historical artifact).
+
+**Two open risks captured for M7b (not blocking):**
+- Idempotency: Blotato has no documented idempotency key. M7b must persist `postSubmissionId` in the Notion record before status polling, to safely retry on transient failures.
+- Failure-mode behavior unverified (HTTP 422 on quota, errorMessage shape). M7b should defensively assume worst-case and surface failures via Atlas Concierge crew (M4).
 
 ---
 
-### M7b: Auto-Publish Build (After Spike) ⏳ DECISION-GATED
+### M7b: Auto-Publish Build (Blotato API) ⏳ READY
 
-**What:** If M7a leads to "keep Blotato," build the orchestrator publisher module + n8n workflow against the API behavior verified during the trial. If M7a leads to "drop Blotato," reframe M7b as direct LinkedIn/X OAuth + n8n native nodes (free path, multi-day setup).
+**What:** Build `orchestrator/blotato_publisher.py` against the verified Blotato API contract from M7a. Wire it into the publish-brief tick so Scheduled posts auto-fire on Scheduled Date instead of requiring Boubacar's tap-share-paste.
+
+**Path locked by M7a:** Blotato API at $20.30/mo Skool-discounted. Direct LinkedIn/X OAuth path descoped (Blotato API verified working with 5-9 sec latency).
+
+**Module shape (sketch, finalize during build session):**
+- `BlotatoPublisher.publish(text, accountId, platform) -> postSubmissionId`
+- `BlotatoPublisher.poll_until_terminal(postSubmissionId, max_wait_sec=120) -> (status, publicUrl|errorMessage)`
+- Persist `postSubmissionId` in Notion record BEFORE polling (idempotency safeguard since Blotato has no documented idempotency key)
+- On `published`, write `publicUrl` back to Notion as Posted URL, flip Status=Posted, write task_outcomes row (M1 reconcile path)
+- On `failed`, log errorMessage and route to Atlas Concierge (M4 dependency, fail-soft until M4 ships: alert Telegram, leave Status=Queued for human retry)
+- Auth: `BLOTATO_API_KEY` added to VPS .env on first deploy day (NOT before; per M7a prep doc rule kept until M7b is real)
 
 **Why:** Final gap in L3 (currently 🟡 PARTIAL). Without M7b, the system requires Boubacar's daily tap-share-paste.
 
-**Trigger:** M7a complete + decision made.
-**Blockers:** M7a outcome.
+**Trigger:** Any session.
+**Blockers:** None.
 **Branch:** `feat/atlas-m7-auto-publish` (named after decision is made)
 **ETA:** 60-90 min after M7a.
 
@@ -329,5 +354,45 @@ Side commit `fb56633`: engagement-ops skill + PM rigor library + cleanup script 
 2. Manual VPS verification of Monday 07:30 fire on queue #3 (per the routine's checklist)
 3. M7a if you signed up for Blotato (decision matrix at `docs/roadmap/atlas/m7a-decision-spike.md`)
 4. M3-M6 only if their trigger gates have hit
+
+---
+
+### 2026-04-25 (later evening): M7a SHIPPED, M7b unblocked
+
+**M7a verdict: KEEP Blotato. API contract verified end-to-end.**
+
+Boubacar burned the 7-day trial on day 1 to do a real API smoke test rather than dashboard observation. The dashboard's source-to-remix-to-AI flow had already been confirmed as the wrong path for Atlas's use case (dashboard AI confabulated a 12-line LinkedIn post from a 1-line "Keep text as is" instruction). The API path is clean: `text` field publishes verbatim with no AI in the loop.
+
+**Smoke test results (real publish to Boubacar's LinkedIn + X):**
+
+| Metric | LinkedIn | X |
+|---|---|---|
+| Submitted (UTC) | 22:01:39 | 22:01:40 |
+| Published (UTC) | 22:01:44 | 22:01:49 |
+| Latency | 5 sec | 9 sec |
+| Verbatim | yes | yes |
+
+Post text (real CW content, not throwaway): "You already know which AI tool your team is overpaying for. The hard part is saying it out loud in a meeting before someone defends the renewal."
+
+Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notion Content Board records under Status=Draft for future use. The smoke test also pulled double duty as a real published post.
+
+**Pricing correction surfaced:** Boubacar's Skool RoboNuggets membership grants a lifetime 30% discount on Blotato. Effective tiers are Starter $20.30, Creator $67.90, Agency $349.30 (not the list prices). Memory entry `reference_blotato_pricing_2026.md` updated to quote effective prices.
+
+**Windows Schannel gotcha fixed in the smoke-test script:** curl on Windows hit `CRYPT_E_NO_REVOCATION_CHECK` on the first run; resolved with `--ssl-no-revoke` flag. Local-script-only fix; orchestrator (Linux container) won't see the issue.
+
+**M7a artifacts:**
+- Notepad: `d:/tmp/m7a-blotato-spike-notes.md`
+- Smoke-test script: `d:/tmp/blotato-smoke-test.sh` (reusable for regression)
+- Smoke-test log: `d:/tmp/blotato-smoke-test-20260425-160135.log`
+- M7a prep doc `docs/roadmap/atlas/m7a-decision-spike.md` is now historical
+
+**M7a status:** SHIPPED 2026-04-25.
+**M7b status:** READY (was DECISION-GATED). No blockers. Build any session.
+**L3 Publish status:** still 🟡 PARTIAL until M7b ships.
+
+**M7b risks captured for the build session:**
+- Idempotency: Blotato has no documented idempotency key. Persist `postSubmissionId` in Notion record BEFORE polling so retries don't double-submit.
+- Failure-mode behavior unverified: HTTP 422 on quota expected but not exercised; `errorMessage` shape unknown. Atlas Concierge (M4) is the right surface to handle failures; until M4 ships, fail-soft = alert Telegram, leave Status=Queued for human retry.
+- BLOTATO_API_KEY currently in `d:/tmp/.env` only. Promote to VPS .env on M7b deploy day, NOT before (per M7a prep-doc rule still in force).
 
 ---
