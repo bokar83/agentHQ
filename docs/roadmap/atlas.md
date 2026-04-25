@@ -13,6 +13,27 @@
 
 ---
 
+## Session-Start Cheat Block (read this first)
+
+Last session ended **2026-04-25 (evening)**. State at close:
+
+- **Three-way nsync at `75e1c71`** (local + origin + VPS)
+- **M1 SHIPPED**, **M2 SHIPPED**, both verified live in container
+- **M7 split** into M7a (decision spike, prep at `docs/roadmap/atlas/m7a-decision-spike.md`) + M7b (build, blocked on M7a)
+- **Scheduled remote agent** `trig_015aDdXmiTAowm1HVkwQydnT` armed for 2026-04-27 09:00 MT, writes `docs/handoff/2026-04-27-atlas-m1-verification.md`
+- **Studio roadmap** (`docs/roadmap/studio.md`) is sibling project, runs in a SEPARATE Claude Code instance; do not pivot here
+
+**Default next moves (in priority order):**
+
+1. Read `docs/handoff/2026-04-27-atlas-m1-verification.md` if Monday has passed
+2. Manual VPS check: `ssh root@agentshq.boubacarbarry.com 'docker logs orc-crewai --since 6h | grep -E "publish_brief|griot_morning"'`
+3. M7a if Boubacar signed up for the Blotato trial (decision matrix in m7a doc)
+4. M3-M6 only when their date/data triggers hit (see milestone block)
+
+**Do not start a new milestone without reading the latest Session Log entry below.**
+
+---
+
 ## Done Definition
 
 The system runs the content pipeline end-to-end with **zero manual Notion work**, **captures outcome data**, **self-heals on small failures**, and **learns from approvals/rejections**.
