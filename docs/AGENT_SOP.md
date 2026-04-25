@@ -5,7 +5,14 @@ Applies to every coding-agent session (Claude Code, Codex, any future agent). Ag
 ## Session Start
 
 1. Read `D:\Ai_Sandbox\agentsHQ\docs\memory\MEMORY.md` and every linked file.
-2. Check `docs/superpowers/plans/` for a handoff.
+2. Check `docs/roadmap/` for active roadmaps. If any roadmap covers the work being asked about, read that roadmap and the latest session-log entry FIRST. The roadmap's next milestone is the default next move unless explicitly redirected.
+3. Check `docs/superpowers/plans/` for a handoff. Legacy: roadmaps supersede handoff docs for any roadmapped project.
+
+## Session End
+
+1. If a roadmap was touched this session, append a session-log entry to that roadmap. Date, what changed, what's next.
+2. Update milestone statuses in the roadmap (queued / in-progress / shipped / blocked / descoped).
+3. Push (local + VPS, per hard rule below).
 
 ## Who Boubacar Is
 
