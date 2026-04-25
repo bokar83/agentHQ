@@ -70,6 +70,20 @@ rank-3 model
 Every attempt logs to Supabase `media_generations` with `state='fail'` so the
 biweekly audit sees silent failures, not just successful generations.
 
+### Cross-vendor fallback (planned, not wired)
+
+Today the retry+fallback ladder stays inside Kie (rank-1 -> rank-2 -> rank-3
+inside the Kie marketplace). When Kie itself is down or out of credits, the
+skill hard-fails. The next step is a vendor-level fallback: Kie -> Google AI
+Studio -> WaveSpeed AI for the same logical model.
+
+We do not implement that today. The pattern, when to build it, and what to
+copy vs not copy from R57 are documented at:
+`docs/reference/cross-vendor-fallback-pattern.md`.
+
+Trigger to actually build: see that doc's "Trigger to actually implement"
+section.
+
 ---
 
 ## Budget Ceilings
