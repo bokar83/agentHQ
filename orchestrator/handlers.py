@@ -28,6 +28,7 @@ from handlers_approvals import (
     evict_expired_windows,
     handle_pending_feedback_tag,
     handle_approval_reply,
+    handle_publish_reply,
     handle_naked_approval,
     APPROVE_ALIASES,
     REJECT_ALIASES,
@@ -129,6 +130,10 @@ async def process_telegram_update(update: dict) -> None:
 
     # 4. Reply-to-message approve/reject/edit
     if handle_approval_reply(text, chat_id, first_word, reply_to_msg_id, now_epoch):
+        return
+
+    # 4.5 Atlas M1: reply 'posted'/'skip' to a publish-brief message
+    if handle_publish_reply(text, chat_id, first_word, reply_to_msg_id):
         return
 
     # 5. Naked fallback: yes confirm / no confirm (with doc-routing precedence)
