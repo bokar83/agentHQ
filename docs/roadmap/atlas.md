@@ -82,16 +82,17 @@ That breaks down into 5 closed loops:
 
 ---
 
-### M2: Skip Self-Heal, Same-Day Re-Pick ⏳ QUEUED
+### M2: Skip Self-Heal, Same-Day Re-Pick ✅ SHIPPED 2026-04-25
 
-**What:** When M1's Skip button fires, the slot for today is now empty. Today's brief already went out, but tomorrow's griot-morning should *also* check "any Skipped from yesterday" and re-pick or backfill if needed.
+**What shipped:** When you reply `skip` to a publish brief, the Notion record flips to Status=Skipped (M1) but its Scheduled Date is now a "burned" slot. M2 makes `griot_scheduler_tick` (the 5-min wake) scan for Skipped rows whose Scheduled Date is yesterday or today, and backfill that slot with the oldest matching-platform approved candidate from the queue. The Skipped row stays Skipped (audit trail). Forward-scheduling phase runs on the remaining approvals as before.
 
-**Why:** Without this, a Skip on Tuesday means Wednesday's slot is also empty (or whatever was already scheduled keeps that slot, but the Skipped post is dead). Need a clean re-pick path.
+**Files touched:**
+- `orchestrator/griot_scheduler.py`: added `_find_recent_skipped_slots`, `_pick_candidate_for_platform`, backfill phase in `griot_scheduler_tick`
+- `orchestrator/tests/test_griot_scheduler.py`: 5 new tests; total 21 pass
 
-**Trigger:** After M1 ships, on Sunday 2026-04-26 (if Saturday lands clean) or next session.
-**Blockers:** M1 must ship first.
-**Branch:** `feat/griot-skip-recovery`
-**ETA:** 30-60 min build.
+**Spec:** `docs/superpowers/specs/2026-04-25-atlas-m2-skip-recovery-design.md`
+**Branch:** `feat/atlas-m2-skip-recovery`
+**Save point:** `savepoint-pre-atlas-m2-2026-04-25`
 
 ---
 
@@ -154,7 +155,28 @@ That breaks down into 5 closed loops:
 
 ---
 
-### M7: Auto-Publish (L3 Closure) ⏳ DECISION-GATED
+### M7a: Auto-Publish Decision Spike ⏳ NEXT-SESSION
+
+**What:** 30-minute exercise (NOT a build). Sign up for Blotato 7-day free trial. Connect LinkedIn + X accounts in Blotato UI. Manually publish ONE test post via Blotato to validate end-to-end. Make trial-week call: keep ($29/mo, then build M7b) vs cancel (use n8n native LinkedIn+X if/when M7b becomes a priority).
+
+**Why split off from M7:** Sankofa Council (2026-04-25) rejected the "build dormant today" plan because building code against an unverified API is build-then-pray. Blotato Starter is $29/mo (verified live; not the $9/mo memory rot). Pre-revenue, the right pattern is sign-up-first, smoke-test-against-real-API, then build against verified behavior.
+
+**Trigger:** Boubacar's choice; week of 2026-04-28 to 2026-05-04.
+**Blockers:** None.
+**ETA:** 30 min spike + 7-day trial period.
+
+---
+
+### M7b: Auto-Publish Build (After Spike) ⏳ DECISION-GATED
+
+**What:** If M7a leads to "keep Blotato," build the orchestrator publisher module + n8n workflow against the API behavior verified during the trial. If M7a leads to "drop Blotato," reframe M7b as direct LinkedIn/X OAuth + n8n native nodes (free path, multi-day setup).
+
+**Why:** Final gap in L3 (currently 🟡 PARTIAL). Without M7b, the system requires Boubacar's daily tap-share-paste.
+
+**Trigger:** M7a complete + decision made.
+**Blockers:** M7a outcome.
+**Branch:** `feat/atlas-m7-auto-publish` (named after decision is made)
+**ETA:** 60-90 min after M7a.
 
 **What:** Replace manual one-tap publish with automatic posting on Scheduled Date.
 
@@ -254,5 +276,21 @@ Scheduled remote agent `trig_015aDdXmiTAowm1HVkwQydnT` ("Atlas M1 Monday Verific
 **Next:** observe Monday fire. If green, M2 (Skip Self-Heal) on next session. If red, debug before any new milestone.
 
 Side commit `fb56633`: engagement-ops skill + PM rigor library + cleanup script committed to main (parallel-session work; no code changes; container did not need rebuild).
+
+### 2026-04-25 (late afternoon): M2 SHIPPED + M7 split + studio roadmap created
+
+**M2 Skip Self-Heal shipped.** Branch `feat/atlas-m2-skip-recovery`. 5 new tests, 21/21 scheduler suite green, 158 in-scope orchestrator tests pass overall. Backfill phase added to `griot_scheduler_tick` consumes yesterday-or-today Skipped slots BEFORE the forward-scheduling loop, so a Skip on Tuesday gets the Tuesday slot reclaimed within 5 minutes by an approved candidate. The Skipped row stays Skipped (audit trail). Save point `savepoint-pre-atlas-m2-2026-04-25`.
+
+**M7 split into M7a + M7b after Sankofa Council.** Council rejected "build M7 dormant today" because (a) Blotato Starter is $29/mo not $9/mo (memory rot, fixed; new feedback rule logged: always WebFetch pricing before recommending), (b) building code against an unverified API is build-then-pray, (c) Boubacar uses only LinkedIn + X today so Blotato's multi-platform value-add does not yet apply, (d) "draft JSON in repo, you import manually" pattern rots immediately. New plan: M7a is a 30-min decision spike next session (sign up for 7-day trial, manually validate one post, decide); M7b is the build, only if M7a says keep.
+
+**Studio roadmap created.** Sister roadmap `docs/roadmap/studio.md` for the faceless agency project (multi-channel, faceless, AdSense + sponsorship + affiliate, runs on agentsHQ infrastructure, adjacent to Catalyst Works). 8 milestones drafted by parallel subagent. Done definition locks 5 gates (3 channels live + production autonomy + publishing autonomy via M7 + $1k/month net 90 days + Boubacar weekly ops ≤2h). Codename registry updated.
+
+**State at session pause:** local on `feat/atlas-m2-skip-recovery`, all changes committed, pushed to origin pending. VPS still on `4df7dd1` (no M2 deploy yet). M2 PR not yet opened. Boubacar requested a clean restart point.
+
+**Next session resume checklist:**
+1. `git checkout main && git pull` (catch up to whatever lands)
+2. Open PR for `feat/atlas-m2-skip-recovery`, merge, deploy to VPS, container rebuild
+3. M7a decision spike (sign up for Blotato 7-day trial; manually publish one test)
+4. After Monday verification routine fires (`trig_015aDdXmiTAowm1HVkwQydnT` at 09:00 MT), inspect the report at `docs/handoff/2026-04-27-atlas-m1-verification.md`
 
 ---
