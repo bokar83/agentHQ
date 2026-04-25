@@ -244,3 +244,182 @@ def test_tick_schedules_multiple_approvals_without_collision(mock_scheduler, mon
     assert dates[0] == "2026-04-27"  # Monday
     assert dates[1] == "2026-04-28"  # Tuesday (next open X slot since in-memory occupancy reserved Monday)
     assert len(set(dates)) == 2
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Atlas M2: backfill of recently-Skipped slots
+# ═════════════════════════════════════════════════════════════════════════════
+
+def _skipped_page(notion_id, platform, sched, title="Skipped post"):
+    return {
+        "id": notion_id,
+        "properties": {
+            "Title": {"title": [{"plain_text": title}]},
+            "Status": {"select": {"name": "Skipped"}},
+            "Platform": {"multi_select": [{"name": platform}]},
+            "Scheduled Date": {"date": {"start": sched}},
+        },
+    }
+
+
+def _queued_page(notion_id, platform, sched, title="Queued post"):
+    return {
+        "id": notion_id,
+        "properties": {
+            "Title": {"title": [{"plain_text": title}]},
+            "Status": {"select": {"name": "Queued"}},
+            "Platform": {"multi_select": [{"name": platform}]},
+            "Scheduled Date": {"date": {"start": sched}},
+        },
+    }
+
+
+def _freeze_today_to_tuesday_2026_04_28():
+    """Returns a _FakeDT class freezing now() to 2026-04-28 12:00 MT (Tuesday).
+    Yesterday is 2026-04-27 (Monday). The backfill window is yesterday or today.
+    """
+    import pytz
+    from datetime import datetime as _real_dt
+    tz = pytz.timezone("America/Denver")
+
+    class _FakeDT:
+        @staticmethod
+        def now(tz_arg=None):
+            fixed = tz.localize(_real_dt(2026, 4, 28, 12, 0))
+            return fixed.astimezone(tz_arg) if tz_arg else fixed
+
+    return _FakeDT
+
+
+def test_backfill_yesterday_skipped_today_empty(mock_scheduler, monkeypatch):
+    """Yesterday LinkedIn Skipped, today empty for LinkedIn, one approved
+    LinkedIn candidate in queue. Backfill phase fills yesterday's LinkedIn
+    slot with the candidate. Forward-scheduling phase has no work left.
+    """
+    payload = {"notion_id": "page-cand", "title": "Candidate post", "platform": "LinkedIn"}
+    monkeypatch.setattr(gs, "_fetch_unscheduled_approvals", lambda: [(50, payload)])
+    # Yesterday (Mon 04-27) LinkedIn Skipped; nothing else on the board.
+    mock_scheduler.notion_query.return_value = [
+        _skipped_page("page-skipped", "LinkedIn", "2026-04-27", title="Skipped one"),
+    ]
+    monkeypatch.setattr(gs, "datetime", _freeze_today_to_tuesday_2026_04_28())
+
+    gs.griot_scheduler_tick()
+
+    # Candidate gets scheduled on yesterday's date (2026-04-27, the now-empty slot).
+    assert mock_scheduler.update_page.call_count == 1
+    pid, props = mock_scheduler.update_page.call_args[0]
+    assert pid == "page-cand"
+    assert props["Scheduled Date"]["date"]["start"] == "2026-04-27"
+    assert props["Status"]["select"]["name"] == "Queued"
+    mock_scheduler.mark_scheduled.assert_called_once_with(50, "2026-04-27")
+    # Telegram notify fired (backfill announcement)
+    assert mock_scheduler.send_message.called
+
+
+def test_no_backfill_if_slot_already_filled(mock_scheduler, monkeypatch):
+    """Yesterday LinkedIn Skipped, but yesterday LinkedIn ALSO has a Queued
+    row (e.g., a Skipped row from an earlier day plus a backfilled or
+    pre-existing Queued row). Backfill phase must NOT overwrite. Approval
+    falls through to forward-scheduling.
+    """
+    payload = {"notion_id": "page-cand", "title": "Candidate", "platform": "LinkedIn"}
+    monkeypatch.setattr(gs, "_fetch_unscheduled_approvals", lambda: [(60, payload)])
+    mock_scheduler.notion_query.return_value = [
+        _skipped_page("page-skipped", "LinkedIn", "2026-04-27", title="Skipped"),
+        _queued_page("page-existing", "LinkedIn", "2026-04-27", title="Already there"),
+    ]
+    monkeypatch.setattr(gs, "datetime", _freeze_today_to_tuesday_2026_04_28())
+
+    gs.griot_scheduler_tick()
+
+    # Backfill should NOT use 04-27 (occupied). Forward-scheduling kicks in
+    # and assigns the next open LinkedIn slot. Today is Tuesday 04-28, but
+    # the scheduler starts from tomorrow per existing logic, so next LI slot
+    # is Thursday 04-30 (LinkedIn = Tue/Thu only, and 04-28 / 04-29 are
+    # already past or Wed).
+    assert mock_scheduler.update_page.call_count == 1
+    _pid, props = mock_scheduler.update_page.call_args[0]
+    sched = props["Scheduled Date"]["date"]["start"]
+    # Must NOT be the occupied 04-27 (yesterday). Must be a future LinkedIn day.
+    assert sched != "2026-04-27"
+    assert sched in ("2026-04-30", "2026-05-05")  # next Thu or following Tue
+
+
+def test_no_backfill_outside_window(mock_scheduler, monkeypatch):
+    """Skipped row from 3 days ago. Backfill phase ignores it (window is
+    yesterday or today only). Approval forwards to the next open slot.
+    """
+    payload = {"notion_id": "page-cand", "title": "Cand", "platform": "X"}
+    monkeypatch.setattr(gs, "_fetch_unscheduled_approvals", lambda: [(70, payload)])
+    mock_scheduler.notion_query.return_value = [
+        # Skipped 3 days ago (2026-04-25 Saturday) - outside window.
+        _skipped_page("page-old-skip", "X", "2026-04-25", title="Old skip"),
+    ]
+    monkeypatch.setattr(gs, "datetime", _freeze_today_to_tuesday_2026_04_28())
+
+    gs.griot_scheduler_tick()
+
+    # Old Skipped slot ignored. Forward-scheduling places it on next X slot
+    # (tomorrow Wed 04-29 since today Tue is past tomorrow's start_from logic).
+    assert mock_scheduler.update_page.call_count == 1
+    _pid, props = mock_scheduler.update_page.call_args[0]
+    sched = props["Scheduled Date"]["date"]["start"]
+    assert sched != "2026-04-25"  # never backfill an out-of-window date
+    assert sched == "2026-04-29"  # forward-scheduled to next X weekday
+
+
+def test_backfill_chooses_matching_platform(mock_scheduler, monkeypatch):
+    """Yesterday LinkedIn Skipped, but only an X candidate is in the queue.
+    Backfill skips this slot (no platform match). The X candidate is then
+    forward-scheduled normally. Telegram backfill notify NOT fired.
+    """
+    payload = {"notion_id": "page-x-cand", "title": "X cand", "platform": "X"}
+    monkeypatch.setattr(gs, "_fetch_unscheduled_approvals", lambda: [(80, payload)])
+    mock_scheduler.notion_query.return_value = [
+        _skipped_page("page-li-skip", "LinkedIn", "2026-04-27", title="LI skip"),
+    ]
+    monkeypatch.setattr(gs, "datetime", _freeze_today_to_tuesday_2026_04_28())
+
+    gs.griot_scheduler_tick()
+
+    # X candidate forward-scheduled to next X weekday (Wed 04-29).
+    assert mock_scheduler.update_page.call_count == 1
+    _pid, props = mock_scheduler.update_page.call_args[0]
+    assert props["Scheduled Date"]["date"]["start"] == "2026-04-29"
+
+    # The Telegram notify that DID fire is the standard "Scheduled" message,
+    # not a "Backfilled" announcement. Check the body to make sure no backfill
+    # notification was sent.
+    backfill_calls = [
+        c for c in mock_scheduler.send_message.call_args_list
+        if "Backfilled" in (c.args[1] if len(c.args) >= 2 else "")
+    ]
+    assert backfill_calls == []
+
+
+def test_backfill_then_forward_scheduling_independent(mock_scheduler, monkeypatch):
+    """Yesterday X Skipped + 3 approved X candidates. Backfill consumes ONE
+    candidate for yesterday's slot. The other TWO go through forward-scheduling
+    onto future X weekdays. Total update_page calls = 3, all distinct dates.
+    """
+    payloads = [
+        (90, {"notion_id": "p-a", "title": "Cand A", "platform": "X"}),
+        (91, {"notion_id": "p-b", "title": "Cand B", "platform": "X"}),
+        (92, {"notion_id": "p-c", "title": "Cand C", "platform": "X"}),
+    ]
+    monkeypatch.setattr(gs, "_fetch_unscheduled_approvals", lambda: list(payloads))
+    mock_scheduler.notion_query.return_value = [
+        _skipped_page("page-x-skip", "X", "2026-04-27", title="Yesterday X skip"),
+    ]
+    monkeypatch.setattr(gs, "datetime", _freeze_today_to_tuesday_2026_04_28())
+
+    gs.griot_scheduler_tick()
+
+    # 3 update_page calls total: 1 backfill + 2 forward.
+    assert mock_scheduler.update_page.call_count == 3
+    dates = [c.args[1]["Scheduled Date"]["date"]["start"] for c in mock_scheduler.update_page.call_args_list]
+    assert "2026-04-27" in dates  # backfilled into yesterday's slot
+    assert len(set(dates)) == 3   # all distinct
+    # mark_scheduled called for all 3
+    assert mock_scheduler.mark_scheduled.call_count == 3

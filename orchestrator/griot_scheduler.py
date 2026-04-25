@@ -53,6 +53,59 @@ def _title(prop):
     return arr[0].get("plain_text", "") if arr else ""
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+# Atlas M2: backfill of recently-Skipped slots.
+# When Boubacar replies 'skip' to a publish brief (M1), the Notion record
+# flips to Status=Skipped but its Scheduled Date stays. That date+platform
+# slot is then "burned" until griot_scheduler_tick reclaims it. M2 makes the
+# 5-min scheduler scan for Skipped rows in a yesterday-or-today window and
+# backfill the slot with an approved candidate from the queue.
+# ═════════════════════════════════════════════════════════════════════════════
+
+def _find_recent_skipped_slots(notion, today_iso: str) -> list:
+    """Return a list of dicts describing Skipped Notion rows whose Scheduled
+    Date is yesterday or today. Each dict has: platform, date_iso, notion_id, title.
+
+    Used by griot_scheduler_tick to identify slots eligible for backfill.
+    """
+    yesterday_iso = (date.fromisoformat(today_iso) - timedelta(days=1)).isoformat()
+    eligible = {yesterday_iso, today_iso}
+
+    posts = notion.query_database(CONTENT_DB_ID, filter_obj=None)
+    out = []
+    for p in posts:
+        props = p.get("properties", {})
+        if _select(props.get("Status", {})) != "Skipped":
+            continue
+        sd = _date_start(props.get("Scheduled Date", {}))
+        if not sd or sd[:10] not in eligible:
+            continue
+        for pf in _multi(props.get("Platform", {})):
+            if pf in ("LinkedIn", "X"):
+                out.append({
+                    "platform": pf,
+                    "date_iso": sd[:10],
+                    "notion_id": p["id"],
+                    "title": _title(props.get("Title", {})),
+                })
+                break  # match the forward-scheduling pattern: one slot per row
+    # Stable order helps tests + log readability.
+    out.sort(key=lambda s: (s["date_iso"], s["platform"]))
+    return out
+
+
+def _pick_candidate_for_platform(approvals: list, platform: str):
+    """Return the (queue_id, payload) of the oldest approval whose payload
+    platform matches, or None if no candidate matches. approvals is the
+    list returned by _fetch_unscheduled_approvals (already sorted oldest-first
+    by ts_decided).
+    """
+    for queue_id, payload in approvals:
+        if payload.get("platform") == platform:
+            return (queue_id, payload)
+    return None
+
+
 def _select(prop):
     if not prop:
         return None
@@ -238,7 +291,75 @@ def griot_scheduler_tick() -> None:
         return
 
     tz = pytz.timezone(TIMEZONE)
-    start_from = datetime.now(tz).date() + timedelta(days=1)  # start tomorrow
+    today_local = datetime.now(tz).date()
+    today_iso = today_local.isoformat()
+    start_from = today_local + timedelta(days=1)  # start tomorrow for forward-scheduling
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Atlas M2: backfill phase. Consume approvals to fill yesterday-or-today
+    # Skipped slots BEFORE the forward-scheduling loop runs. Backfilled
+    # candidates are removed from `approvals` so they're not double-scheduled.
+    # ─────────────────────────────────────────────────────────────────────
+    approvals = list(approvals)  # mutable copy for backfill consumption
+    backfilled_count = 0
+    try:
+        skipped_slots = _find_recent_skipped_slots(notion, today_iso)
+    except Exception as e:
+        logger.warning(f"griot_scheduler_tick: skipped-slot scan failed: {e}")
+        skipped_slots = []
+
+    for slot in skipped_slots:
+        key = (slot["platform"], slot["date_iso"])
+        if key in occupied:
+            # Slot was already filled (e.g., previous tick backfilled it,
+            # or another Queued/Posted row sits on the same date+platform).
+            continue
+        pick = _pick_candidate_for_platform(approvals, slot["platform"])
+        if pick is None:
+            logger.info(
+                f"griot_scheduler_tick: no candidate available to backfill "
+                f"Skipped slot {slot['platform']} {slot['date_iso']}"
+            )
+            continue
+        queue_id, payload = pick
+        cand_notion_id = payload.get("notion_id")
+        cand_title = payload.get("title", "")
+        if not cand_notion_id:
+            logger.warning(
+                f"griot_scheduler_tick: queue #{queue_id} missing notion_id, "
+                f"cannot backfill {slot['platform']} {slot['date_iso']}"
+            )
+            continue
+        try:
+            _update_notion_schedule(notion, cand_notion_id, slot["date_iso"])
+            occupied[key] = True
+            _mark_scheduled(queue_id, slot["date_iso"])
+            approvals.remove((queue_id, payload))  # consume from forward loop
+            backfilled_count += 1
+            logger.info(
+                f"griot_scheduler_tick: backfilled {slot['platform']} {slot['date_iso']} "
+                f"with queue #{queue_id} '{cand_title[:50]}' "
+                f"(replacing Skipped '{slot['title'][:50]}')"
+            )
+            try:
+                from notifier import send_message
+                chat_id = os.environ.get("OWNER_TELEGRAM_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID")
+                if chat_id:
+                    send_message(
+                        str(chat_id),
+                        f"Backfilled {slot['date_iso']} ({slot['platform']}): "
+                        f"'{cand_title[:60]}' (replacing Skipped: '{slot['title'][:60]}')",
+                    )
+            except Exception as ne:
+                logger.warning(f"griot_scheduler_tick: backfill Telegram notify failed: {ne}")
+        except Exception as e:
+            logger.error(
+                f"griot_scheduler_tick: backfill of {slot['platform']} {slot['date_iso']} "
+                f"failed: {e}", exc_info=True,
+            )
+
+    if backfilled_count:
+        logger.info(f"griot_scheduler_tick: backfilled {backfilled_count} Skipped slot(s)")
 
     scheduled_count = 0
     failed_count = 0
