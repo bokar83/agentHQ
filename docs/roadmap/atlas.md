@@ -247,6 +247,12 @@ Sankofa Council called twice this session (original 1-button design, then post-s
 
 **Test target:** Monday 2026-04-27 07:30 MT publish brief on queue #3 "One constraint nobody has named yet" (X). Reply `posted` should flip Notion Status to Posted.
 
+PR #19 merged at `ef87293`. Three-way nsync confirmed. Container rebuilt + healthy + handler reachable on VPS.
+
+Scheduled remote agent `trig_015aDdXmiTAowm1HVkwQydnT` ("Atlas M1 Monday Verification") fires once Monday 2026-04-27 09:00 MT (15:00 UTC). Static code-on-main verification only (CCR sandbox cannot SSH or send Telegram). Writes `docs/handoff/2026-04-27-atlas-m1-verification.md` with 5 manual VPS checks Boubacar runs himself. URL: <https://claude.ai/code/routines/trig_015aDdXmiTAowm1HVkwQydnT>
+
 **Next:** observe Monday fire. If green, M2 (Skip Self-Heal) on next session. If red, debug before any new milestone.
+
+Side commit `fb56633`: engagement-ops skill + PM rigor library + cleanup script committed to main (parallel-session work; no code changes; container did not need rebuild).
 
 ---
