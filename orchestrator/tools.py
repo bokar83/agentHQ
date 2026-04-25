@@ -1851,6 +1851,18 @@ class KieCheckCreditsTool(BaseTool):
 RESEARCH_TOOLS = [search_tool, file_reader, QueryMemoryTool(), QueryAudienceEngineTool()]
 MEMORY_TOOLS = [QueryMemoryTool(), SaveLearningTool()]
 SCRAPING_TOOLS = [FirecrawlScrapeTool(), FirecrawlCrawlTool(), FirecrawlSearchTool()]
+try:
+    from niche_research import get_tools as _niche_research_tools
+    NICHE_RESEARCH_TOOLS = _niche_research_tools()
+except Exception as _e:
+    logger.warning(f"NICHE_RESEARCH_TOOLS unavailable: {_e}")
+    NICHE_RESEARCH_TOOLS = []
+try:
+    from video_analyze import get_tools as _video_analyze_tools
+    VIDEO_ANALYZE_TOOLS = _video_analyze_tools()
+except Exception as _e:
+    logger.warning(f"VIDEO_ANALYZE_TOOLS unavailable: {_e}")
+    VIDEO_ANALYZE_TOOLS = []
 MEDIA_TOOLS = [KieGenerateImageTool(), KieGenerateVideoTool(), KieListModelsTool(), KieCheckCreditsTool()]
 WRITING_TOOLS = [file_writer, SaveOutputTool(), voice_polisher_tool]
 CODE_TOOLS = [t for t in [code_interpreter, file_writer, file_reader, SaveOutputTool(), CLIHubSearchTool(), launch_vercel_tool] if t is not None]

@@ -2,6 +2,9 @@
 # agentsHQ — .gitignore
 # ============================================================
 
+# Local git worktrees (per superpowers:using-git-worktrees skill)
+.worktrees/
+
 # ── Python ───────────────────────────────────────────────────
 *.pyc
 *.pyo
