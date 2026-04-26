@@ -34,6 +34,12 @@ logger = logging.getLogger("agentsHQ.griot")
 # Timezone anchor (matches heartbeat).
 TIMEZONE = os.environ.get("HEARTBEAT_TIMEZONE", "America/Denver")
 
+
+def _pg_conn():
+    """Thin wrapper around memory._pg_conn. Module-level so tests can patch griot._pg_conn."""
+    from memory import _pg_conn as _mem_pg_conn  # noqa: PLC0415
+    return _mem_pg_conn()
+
 # Notion Content Board database id (same env var that content_board_reorder.py uses).
 CONTENT_DB_ID = os.environ.get("FORGE_CONTENT_DB", "339bcf1a-3029-81d1-8377-dc2f2de13a20")
 
@@ -443,3 +449,47 @@ def griot_morning_tick() -> None:
                 complete_task(outcome_id, result_summary=result_summary, total_cost_usd=0.0)
             except Exception as e:
                 logger.warning(f"griot_morning_tick: complete_task failed: {e}")
+
+
+# =============================================================================
+# Approval signal recorder
+# =============================================================================
+
+def record_content_approval(
+    notion_page_id: str,
+    attempt_number: int,
+    decision: str,
+    evergreen: bool,
+    platform: str,
+    griot_score: Optional[float] = None,
+    decided_at=None,
+) -> None:
+    """Write one row to content_approvals. Non-fatal on DB error.
+
+    Called by the approval handler whenever Boubacar taps approve/reject/skip.
+    attempt_number=1 for first submission; increment for revised re-submissions.
+    """
+    try:
+        conn = _pg_conn()
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO content_approvals
+                (notion_page_id, attempt_number, decision, evergreen,
+                 platform, griot_score, decided_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                notion_page_id,
+                attempt_number,
+                decision,
+                evergreen,
+                platform,
+                griot_score,
+                decided_at,
+            ),
+        )
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        logger.warning(f"griot: record_content_approval failed (non-fatal): {e}")
