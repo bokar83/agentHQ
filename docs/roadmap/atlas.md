@@ -664,7 +664,7 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 
 ### M11: OpenRouter-Native Intelligent Model Routing
 
-**Status:** M11a SHIPPED 2026-04-26. M11b NEXT.
+**Status:** M11a SHIPPED 2026-04-26. M11b IN PROGRESS.
 **Vision:** agentsHQ uses OpenRouter as the single routing layer across ALL providers. Best model for every job, automatically selected. Crew engine uses `select_by_capability()` (same pattern as Sankofa Council) across all 18 models in `COUNCIL_MODEL_REGISTRY` (8 providers: Anthropic, Google, OpenAI, DeepSeek, xAI, Mistral, Qwen). Not loyal to any provider.
 **Save point:** `savepoint-pre-m10a-bug-fixes-2026-04-26` (tagged before M11a work, before the rename to M11)
 
@@ -673,7 +673,7 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 | Sub | Scope | Budget | Branch | Status |
 | --- | --- | --- | --- | --- |
 | M11a | Bug fixes + named model constants | 2h | fix/m10a-model-bugs | SHIPPED 2026-04-26 |
-| M11b | ROLE_CAPABILITY migration: replace ROLE_MODEL with select_by_capability() for crew engine | 3h | feat/m11b-capability-routing | NEXT |
+| M11b | ROLE_CAPABILITY migration: replace ROLE_MODEL with select_by_capability() for crew engine | 3h | feat/m11b-capability-routing | IN PROGRESS |
 | M11c | Research engine rewrite: two-phase Perplexity Sonar Pro + Firecrawl via OpenRouter | 4h | feat/m11c-research-engine | After M11b |
 | M11d | Harvest reviewer migration + weekly model review agent (Sunday 08:00 MT) | 6h | feat/m11d-model-review | After M11b |
 

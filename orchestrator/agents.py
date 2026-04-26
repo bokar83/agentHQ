@@ -346,48 +346,63 @@ def get_llm(model_alias: str = DEFAULT_MODEL, temperature: float = 0.3) -> LLM:
 # ══════════════════════════════════════════════════════════════
 # DYNAMIC MODEL SELECTOR
 # Picks the best model based on agent role and task complexity.
-# To add new models: add to MODEL_REGISTRY, add to matrix below.
+# Extends select_by_capability() from the Council registry to the
+# crew engine. Adding a model to COUNCIL_MODEL_REGISTRY automatically
+# makes it available to all crew roles — no code changes here needed.
 # ══════════════════════════════════════════════════════════════
 
-# Model assignment per (role, complexity). Today these are hard-coded
-# Anthropic models. The Phase 3.5 plan is to migrate non-revenue roles
-# to capability-based routing once a quality harness exists. Until then,
-# this stays a flat dict so rollback is one revert.
-ROLE_MODEL = {
-    ("planner",       "simple"):   "claude-haiku",
-    ("planner",       "moderate"): "claude-haiku",
-    ("planner",       "complex"):  "claude-sonnet",
-    ("researcher",    "simple"):   "claude-sonnet",
-    ("researcher",    "moderate"): "claude-sonnet",
-    ("researcher",    "complex"):  "claude-sonnet",
-    ("writer",        "simple"):   "claude-haiku",
-    ("writer",        "moderate"): "claude-sonnet",
-    ("writer",        "complex"):  "claude-sonnet",
-    ("social",        "simple"):   "claude-sonnet",
-    ("social",        "moderate"): "claude-sonnet",
-    ("social",        "complex"):  "claude-sonnet",
-    ("coder",         "simple"):   "claude-haiku",
-    ("coder",         "moderate"): "claude-sonnet",
-    ("coder",         "complex"):  "claude-sonnet",
-    ("qa",            "simple"):   "gemini-flash",
-    ("qa",            "moderate"): "gemini-flash",
-    ("qa",            "complex"):  "gemini-flash",
-    ("orchestrator",  "simple"):   "claude-sonnet",
-    ("orchestrator",  "moderate"): "claude-opus",
-    ("orchestrator",  "complex"):  "claude-opus",
-    ("consultant",    "simple"):   "claude-sonnet",
-    ("consultant",    "moderate"): "claude-sonnet",
-    ("consultant",    "complex"):  "claude-opus",
-    ("voice",         "complex"):  "claude-sonnet",
-    ("hunter",        "simple"):   "claude-haiku",
-    ("hunter",        "moderate"): "claude-sonnet",
-    ("hunter",        "complex"):  "claude-sonnet",
-    ("skill_builder", "moderate"): "gemini-flash",
-    ("skill_builder", "complex"):  "claude-sonnet",
+# Capability tag + cost ceiling per (role, complexity).
+# select_llm() passes these to select_by_capability() which picks the
+# lowest-cost model within the ceiling that has the required capability.
+ROLE_CAPABILITY = {
+    # planner: structured output, low cost preferred
+    ("planner",       "simple"):   ("instruction_following", "very_low"),
+    ("planner",       "moderate"): ("instruction_following", "low"),
+    ("planner",       "complex"):  ("deep_reasoning",        "medium"),
+    # researcher: reasoning depth scales with complexity
+    ("researcher",    "simple"):   ("instruction_following", "low"),
+    ("researcher",    "moderate"): ("deep_reasoning",        "low-medium"),
+    ("researcher",    "complex"):  ("deep_reasoning",        "medium"),
+    # writer: needs instruction following + moderate ceiling for quality
+    ("writer",        "simple"):   ("cost_efficient",        "very_low"),
+    ("writer",        "moderate"): ("instruction_following", "low"),
+    ("writer",        "complex"):  ("instruction_following", "medium"),
+    # social: creative divergence is the primary signal
+    ("social",        "simple"):   ("creative_divergence",   "low"),
+    ("social",        "moderate"): ("creative_divergence",   "medium"),
+    ("social",        "complex"):  ("creative_divergence",   "medium"),
+    # coder: deep reasoning; complex gets low-medium ceiling (o4-mini territory)
+    ("coder",         "simple"):   ("cost_efficient",        "very_low"),
+    ("coder",         "moderate"): ("deep_reasoning",        "low-medium"),
+    ("coder",         "complex"):  ("deep_reasoning",        "low-medium"),
+    # qa: pure throughput at lowest cost
+    ("qa",            "simple"):   ("fast",                  "very_low"),
+    ("qa",            "moderate"): ("fast",                  "very_low"),
+    ("qa",            "complex"):  ("fast",                  "very_low"),
+    # orchestrator: needs deep reasoning; complex gets high ceiling
+    ("orchestrator",  "simple"):   ("deep_reasoning",        "medium"),
+    ("orchestrator",  "moderate"): ("deep_reasoning",        "medium-high"),
+    ("orchestrator",  "complex"):  ("deep_reasoning",        "high"),
+    # consultant: deep reasoning; complex allowed up to high for Opus-class quality
+    ("consultant",    "simple"):   ("deep_reasoning",        "medium"),
+    ("consultant",    "moderate"): ("deep_reasoning",        "medium"),
+    ("consultant",    "complex"):  ("deep_reasoning",        "high"),
+    # voice: creative divergence with medium ceiling
+    ("voice",         "simple"):   ("creative_divergence",   "low"),
+    ("voice",         "moderate"): ("creative_divergence",   "medium"),
+    ("voice",         "complex"):  ("creative_divergence",   "medium"),
+    # hunter: instruction following; moderate cost ceiling
+    ("hunter",        "simple"):   ("cost_efficient",        "very_low"),
+    ("hunter",        "moderate"): ("instruction_following", "low"),
+    ("hunter",        "complex"):  ("instruction_following", "medium"),
+    # skill_builder: instruction following; cheap for simple, medium for complex
+    ("skill_builder", "simple"):   ("instruction_following", "very_low"),
+    ("skill_builder", "moderate"): ("instruction_following", "low"),
+    ("skill_builder", "complex"):  ("deep_reasoning",        "medium"),
 }
 
 # Per-role temperature, decoupled from model choice so the two evolve
-# independently. Phase 3.5 routing change should not have to touch these.
+# independently.
 ROLE_TEMPERATURE = {
     ("planner",       "simple"):   0.1,
     ("planner",       "moderate"): 0.1,
@@ -413,10 +428,13 @@ ROLE_TEMPERATURE = {
     ("consultant",    "simple"):   0.3,
     ("consultant",    "moderate"): 0.3,
     ("consultant",    "complex"):  0.3,
+    ("voice",         "simple"):   0.7,
+    ("voice",         "moderate"): 0.8,
     ("voice",         "complex"):  0.8,
     ("hunter",        "simple"):   0.2,
     ("hunter",        "moderate"): 0.3,
     ("hunter",        "complex"):  0.4,
+    ("skill_builder", "simple"):   0.1,
     ("skill_builder", "moderate"): 0.1,
     ("skill_builder", "complex"):  0.1,
 }
@@ -425,15 +443,22 @@ ROLE_TEMPERATURE = {
 def select_llm(agent_role: str, task_complexity: str = "moderate", temperature: float = None) -> LLM:
     """
     Dynamically select the best model for an agent role and task complexity.
-    agent_role: planner | researcher | writer | coder | qa | orchestrator | social | consultant
+    Delegates to select_by_capability() across all 18 models in COUNCIL_MODEL_REGISTRY.
+
+    agent_role: planner | researcher | writer | coder | qa | orchestrator |
+                social | consultant | voice | hunter | skill_builder
     task_complexity: simple | moderate | complex
     """
     key = (agent_role, task_complexity)
-    model_alias = ROLE_MODEL.get(key, DEFAULT_MODEL)
+    capability, max_cost_tier = ROLE_CAPABILITY.get(key, ("instruction_following", "medium"))
     default_temp = ROLE_TEMPERATURE.get(key, 0.3)
     final_temp = temperature if temperature is not None else default_temp
-    logger.info(f"Model selected for {agent_role}/{task_complexity}: {model_alias} (temp={final_temp})")
-    return get_llm(model_alias, final_temp)
+    model_id = select_by_capability(capability, max_cost_tier, temperature=final_temp)
+    logger.info(
+        f"select_llm({agent_role}/{task_complexity}) -> "
+        f"capability={capability} max_cost={max_cost_tier} -> {model_id} (temp={final_temp})"
+    )
+    return get_llm(model_id, final_temp)
 
 
 # ══════════════════════════════════════════════════════════════
