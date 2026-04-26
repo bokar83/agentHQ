@@ -126,7 +126,11 @@ def get_content() -> dict:
 
 
 def _spend_aggregates() -> dict:
-    """Today (or yesterday if today=0), week-to-date, and month-to-date totals."""
+    """
+    Today's spend, most-recent-day spend (last 7 days before today),
+    week-to-date, and month-to-date totals.
+    When today=0, the UI shows the most recent day that had actual spend.
+    """
     try:
         from memory import _pg_conn
         conn = _pg_conn()
@@ -134,33 +138,50 @@ def _spend_aggregates() -> dict:
         cur.execute(
             """
             SELECT
-              SUM(CASE WHEN ts >= date_trunc('day',   NOW() AT TIME ZONE 'America/Denver')
-                       THEN cost_usd ELSE 0 END) AS today_usd,
-              SUM(CASE WHEN ts >= date_trunc('day',   NOW() AT TIME ZONE 'America/Denver') - INTERVAL '1 day'
-                       AND  ts <  date_trunc('day',   NOW() AT TIME ZONE 'America/Denver')
-                       THEN cost_usd ELSE 0 END) AS yesterday_usd,
+              SUM(CASE WHEN ts >= date_trunc('day', NOW() AT TIME ZONE 'America/Denver')
+                       THEN cost_usd ELSE 0 END)                              AS today_usd,
               SUM(CASE WHEN ts >= date_trunc('week',  NOW() AT TIME ZONE 'America/Denver')
-                       THEN cost_usd ELSE 0 END) AS week_usd,
+                       THEN cost_usd ELSE 0 END)                              AS week_usd,
               SUM(CASE WHEN ts >= date_trunc('month', NOW() AT TIME ZONE 'America/Denver')
-                       THEN cost_usd ELSE 0 END) AS month_usd
+                       THEN cost_usd ELSE 0 END)                              AS month_usd
             FROM llm_calls
-            WHERE ts >= date_trunc('month', NOW() AT TIME ZONE 'America/Denver') - INTERVAL '1 day'
+            WHERE ts >= date_trunc('month', NOW() AT TIME ZONE 'America/Denver')
             """
         )
         row = cur.fetchone()
-        cur.close()
         today_usd = round(float(row[0] or 0), 4)
-        yesterday_usd = round(float(row[1] or 0), 4)
+
+        # Find most recent day with actual spend (up to 7 days back)
+        cur.execute(
+            """
+            SELECT DATE(ts AT TIME ZONE 'America/Denver') AS day,
+                   SUM(cost_usd)                           AS total
+              FROM llm_calls
+             WHERE ts >= NOW() - INTERVAL '7 days'
+               AND ts <  date_trunc('day', NOW() AT TIME ZONE 'America/Denver')
+             GROUP BY day
+             ORDER BY day DESC
+             LIMIT 1
+            """
+        )
+        last_row = cur.fetchone()
+        cur.close()
+
+        last_day_usd = round(float(last_row[1] or 0), 4) if last_row else 0.0
+        last_day_date = str(last_row[0]) if last_row else None
+
         return {
-            "today_usd": today_usd,
-            "yesterday_usd": yesterday_usd,
-            "show_yesterday": today_usd == 0.0,
-            "week_usd":  round(float(row[2] or 0), 4),
-            "month_usd": round(float(row[3] or 0), 4),
+            "today_usd":    today_usd,
+            "last_day_usd": last_day_usd,
+            "last_day_date": last_day_date,
+            "show_last_day": today_usd == 0.0 and last_day_usd > 0.0,
+            "week_usd":  round(float(row[1] or 0), 4),
+            "month_usd": round(float(row[2] or 0), 4),
         }
     except Exception as e:
         logger.warning(f"_spend_aggregates: {e}")
-        return {"today_usd": 0.0, "yesterday_usd": 0.0, "show_yesterday": False, "week_usd": 0.0, "month_usd": 0.0}
+        return {"today_usd": 0.0, "last_day_usd": 0.0, "last_day_date": None,
+                "show_last_day": False, "week_usd": 0.0, "month_usd": 0.0}
 
 
 def _spend_7d_by_day() -> list:
@@ -187,7 +208,7 @@ def _spend_7d_by_day() -> list:
 
 
 def get_spend() -> dict:
-    """Spend card: today (or yesterday if today=0)/week/month totals + cap."""
+    """Spend card: today (or most recent day with spend)/week/month totals + cap."""
     from autonomy_guard import get_guard
     snap = get_guard().snapshot()
     agg = _spend_aggregates()
@@ -200,11 +221,12 @@ def get_spend() -> dict:
             "remaining_usd": round(snap.cap_usd - today_usd, 4),
             "per_crew": {k: round(v, 4) for k, v in snap.per_crew.items()},
         },
-        "yesterday_usd": agg["yesterday_usd"],
-        "show_yesterday": agg["show_yesterday"],
-        "week_usd": agg["week_usd"],
+        "last_day_usd":  agg["last_day_usd"],
+        "last_day_date": agg["last_day_date"],
+        "show_last_day": agg["show_last_day"],
+        "week_usd":  agg["week_usd"],
         "month_usd": agg["month_usd"],
-        "by_day": by_day,
+        "by_day":    by_day,
     }
 
 
