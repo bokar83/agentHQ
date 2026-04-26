@@ -127,6 +127,9 @@ def test_get_hero_returns_four_tiles():
         result = atlas_dashboard.get_hero()
 
     assert result["system_status"] in ("green", "amber", "red")
+    assert result["system_status"] == "green"
+    assert "killed" in result
+    assert result["killed"] is False
     assert "last_action" in result
     assert "next_fire" in result
     assert "spend_pacing" in result
