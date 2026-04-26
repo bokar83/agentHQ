@@ -27,7 +27,7 @@ from typing import Optional
 
 logger = logging.getLogger("agentsHQ.autonomy_guard")
 
-KNOWN_CREWS = ("griot", "hunter", "concierge", "chairman")
+KNOWN_CREWS = ("griot", "hunter", "concierge", "chairman", "auto_publisher")
 
 DEFAULT_STATE_FILE = os.environ.get(
     "AUTONOMY_STATE_FILE",
