@@ -221,22 +221,27 @@ function renderContent(d) {
   body.replaceChildren();
   const items = d.items || [];
   if (!items.length) {
-    body.appendChild(el('p', { class: 'empty-state' }, 'No posts scheduled this week'));
+    body.appendChild(el('p', { class: 'empty-state' }, 'No posts in window (-7 / +7 days)'));
     return;
   }
+  const todayStr = new Date().toISOString().slice(0, 10);
   items.forEach(function(item) {
     const platform = el('span', { class: 'content-platform' });
     platform.textContent = (item.platform || '').slice(0, 2);
     const title = el('span', { class: 'content-title' });
     title.textContent = item.title || '';
     const rawStatus = (item.status || '').toLowerCase();
-    const sCls = rawStatus === 'queued' ? 'content-status queued'
-               : rawStatus === 'posted' ? 'content-status posted'
+    const isPastDue = item.scheduled_date && item.scheduled_date < todayStr && rawStatus !== 'posted' && rawStatus !== 'skipped';
+    const sCls = isPastDue ? 'content-status past-due'
+               : rawStatus === 'queued'  ? 'content-status queued'
+               : rawStatus === 'posted'  ? 'content-status posted'
                : rawStatus === 'skipped' ? 'content-status skipped'
                : 'content-status';
     const status = el('span', { class: sCls });
-    status.textContent = item.status || '';
-    body.appendChild(el('div', { class: 'content-item' }, platform, title, status));
+    status.textContent = isPastDue ? 'Past Due' : (item.status || '');
+    const dateLabel = el('span', { class: 'content-date' });
+    dateLabel.textContent = item.scheduled_date ? item.scheduled_date.slice(5) : '';
+    body.appendChild(el('div', { class: 'content-item' }, platform, title, dateLabel, status));
   });
 }
 
@@ -255,7 +260,7 @@ function renderSpend(d) {
   const barCls = pct > 90 ? 'spend-bar-fill red' : pct > 70 ? 'spend-bar-fill amber' : 'spend-bar-fill';
 
   body.appendChild(el('div', { class: 'data-row' },
-    el('span', { class: 'data-label' }, 'Today Spent'),
+    el('span', { class: 'data-label' }, 'Today'),
     el('span', { class: 'data-value' }, '$' + spent.toFixed(4)),
   ));
   body.appendChild(el('div', { class: 'data-row' },
@@ -270,18 +275,36 @@ function renderSpend(d) {
   body.appendChild(track);
 
   const pctLabel = el('div', { class: 'data-label' });
-  pctLabel.textContent = pct.toFixed(1) + '% of cap used';
+  pctLabel.textContent = pct.toFixed(1) + '% of daily cap';
   body.appendChild(pctLabel);
 
+  if (d.week_usd != null) {
+    body.appendChild(el('div', { class: 'data-row' },
+      el('span', { class: 'data-label' }, 'This Week'),
+      el('span', { class: 'data-value' }, '$' + (d.week_usd || 0).toFixed(4)),
+    ));
+  }
+  if (d.month_usd != null) {
+    body.appendChild(el('div', { class: 'data-row' },
+      el('span', { class: 'data-label' }, 'Month to Date'),
+      el('span', { class: 'data-value' }, '$' + (d.month_usd || 0).toFixed(4)),
+    ));
+  }
+
   const perCrew = today.per_crew || {};
-  Object.entries(perCrew).forEach(function([crew, usd]) {
-    if (usd > 0) {
+  const crewEntries = Object.entries(perCrew).filter(function([, usd]) { return usd > 0; });
+  if (crewEntries.length) {
+    const divider = el('div', { class: 'data-label' });
+    divider.textContent = 'By Agent (today)';
+    divider.style.marginTop = '8px';
+    body.appendChild(divider);
+    crewEntries.forEach(function([crew, usd]) {
       body.appendChild(el('div', { class: 'data-row' },
         el('span', { class: 'data-label' }, crew),
         el('span', { class: 'data-value' }, '$' + usd.toFixed(4)),
       ));
-    }
-  });
+    });
+  }
 }
 
 async function refreshSpend() {
