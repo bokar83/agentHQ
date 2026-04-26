@@ -11,6 +11,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Named model constant -- update here when model version changes, nowhere else
+ROUTER_LLM_MODEL = "anthropic/claude-haiku-4.5"
+
 # Research-shaped prompts: location+service queries, explicit research framing,
 # and multi-source web-research intent. These route to research_report (handled
 # by the research_engine bypass in engine.py Step 3a). Needed because the keyword
@@ -416,7 +419,7 @@ def _llm_classify(user_message: str) -> str:
             },
         )
         response = client.chat.completions.create(
-            model="anthropic/claude-haiku-4.5",
+            model=ROUTER_LLM_MODEL,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_message},

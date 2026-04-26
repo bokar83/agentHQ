@@ -633,11 +633,77 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 
 ---
 
+### M10: Topic Trend Scout (Atlas content idea pipeline) ⏳ TRIGGER-GATED
+
+**What:** Daily heartbeat crew (08:00 MT) that scans HN + Reddit RSS for AI displacement + first-gen money topics, and a dedicated YouTube channel RSS source set for the Under the Baobab / African storytelling niche. Surfaces ranked candidates per day to Telegram with approve/reject buttons. Approved candidates flow to the existing Atlas Content Board (no new DB). Reuses `_PUBLISH_BRIEF_WINDOWS` dict + `handlers_approvals.py` callback pattern. No new handler code needed.
+
+**Why:** The Atlas publish pipeline assumes humans seed Content Board ideas. When the manual queue drains, the engine starves. M10 closes that gap autonomously.
+
+**African storytelling niche:** YouTube-only. Source = curated YouTube channel RSS feeds (not X/Reddit/HN, which produce near-zero relevant signal for this niche). Source list to be defined at build time by Boubacar.
+
+**Expansion path (optional at build time):** Route approved candidates through `research_engine.py` to add a brief (source, why it matters, 3 post angles) before landing in Content Board. 3x more valuable than bare topic titles; no new dependencies.
+
+**Trigger gate:** 2026-05-01. Three design questions must be answered before build starts:
+
+1. What does a "good" candidate look like? 2-3 scored attributes with thresholds (not just category labels).
+2. Tap budget: auto-approve above threshold and surface only top 1 per day, or full manual review of 3-5 per day?
+3. African storytelling YouTube source list: which specific channels does Boubacar want tracked?
+
+**Reminder:** Scheduled for 2026-05-01 09:00 MT. This entry is the durable record if the session-local cron fires before then.
+**Blockers:** Three design questions above must be answered before any code.
+**Branch:** `feat/atlas-m10-topic-scout`
+**ETA:** 3-4 hours once questions answered (80% of infra already exists in existing handler + scout patterns).
+
+---
+
+### M11: OpenRouter-Native Intelligent Model Routing
+
+**Status:** M11a SHIPPED 2026-04-26. M11b NEXT.
+**Vision:** agentsHQ uses OpenRouter as the single routing layer across ALL providers. Best model for every job, automatically selected. Crew engine uses `select_by_capability()` (same pattern as Sankofa Council) across all 18 models in `COUNCIL_MODEL_REGISTRY` (8 providers: Anthropic, Google, OpenAI, DeepSeek, xAI, Mistral, Qwen). Not loyal to any provider.
+**Save point:** `savepoint-pre-m10a-bug-fixes-2026-04-26` (tagged before M11a work, before the rename to M11)
+
+**Why before M9:** The chat surface (M9) dispatches to crews. Fix the crew routing first so the chat inherits intelligent multi-provider model selection.
+
+| Sub | Scope | Budget | Branch | Status |
+| --- | --- | --- | --- | --- |
+| M11a | Bug fixes + named model constants | 2h | fix/m10a-model-bugs | SHIPPED 2026-04-26 |
+| M11b | ROLE_CAPABILITY migration: replace ROLE_MODEL with select_by_capability() for crew engine | 3h | feat/m11b-capability-routing | NEXT |
+| M11c | Research engine rewrite: two-phase Perplexity Sonar Pro + Firecrawl via OpenRouter | 4h | feat/m11c-research-engine | After M11b |
+| M11d | Harvest reviewer migration + weekly model review agent (Sunday 08:00 MT) | 6h | feat/m11d-model-review | After M11b |
+
+**M11a shipped 2026-04-26: what changed:**
+- `crews.py`: malformed `"openai/anthropic/claude-sonnet-4-5"` fixed to `get_llm("claude-sonnet")` (was silently 404ing every content review run)
+- `crews.py`: `_IDEA_CLASSIFIER_MODEL` named constant added (was inline hardcode)
+- `agents.py:744`: `select_llm("voice", "high")` -> `select_llm("voice", "complex")` (invalid key silently fell through to DEFAULT_MODEL)
+- `router.py`: `ROUTER_LLM_MODEL` named constant added
+- `memory.py`: `LESSON_EXTRACTION_MODEL` named constant added
+- `notifier.py`: `BRIEFING_MODEL` named constant added
+- `handlers_chat.py`: already correct via `llm_helpers.py` env-var pattern
+- 276/276 tests pass
+
+**M11b: ROLE_CAPABILITY mapping (next after M9a):**
+Replaces `ROLE_MODEL` (4 hardcoded Anthropic aliases) with `ROLE_CAPABILITY` (capability tag + cost ceiling). Key routing outcomes when live:
+- `coder/complex` -> o4-mini or GPT-5.1 (GPT beats Opus on coding right now)
+- `social/moderate` -> Grok-4 (unconventional angles for hooks)
+- `researcher/complex` -> DeepSeek-R1, Gemini-2.5-Pro, or GPT-4.1 (deep reasoning)
+- `planner/simple` -> DeepSeek-v3.2 at $0.26/MTok
+- `qa/all` -> Qwen3.5-flash at $0.065/MTok
+- Adding any new model to `COUNCIL_MODEL_REGISTRY` automatically makes it available to all crews. No code changes required.
+
+**Sequence with M9:**
+```
+M11a (done) -> M11b (3h) -> M11c (4h) -> M11d (6h)
+M11a (done) -> M9a  (3-4h, parallel with M11b)
+               M9a verified -> M9b -> M9c
+```
+
+---
+
 **Next session:**
 
 1. M7b monitoring: verify Monday 2026-04-27 07:00 MT X auto-publish fires (or check if it already fired)
 2. M5 (Chairman / L5 Learning) gate: 2026-05-08
-3. **M9 Atlas Chat**: start design/spec (HIGH PRIORITY per Boubacar)
+3. **M9a** (Telegram push alerts + correctness fixes) and **M11b** (capability routing): run in parallel
 4. VPS orphan archive sunset: delete `/root/_archive_20260421/` if no issues by 2026-04-28
 
 ---

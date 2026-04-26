@@ -741,7 +741,7 @@ def build_content_reviewer_agent() -> Agent:
         verbose=False,
         allow_delegation=False,
         tools=[voice_polisher_tool, gws_drive_create_tool],
-        llm=select_llm("voice", "high"),
+        llm=select_llm("voice", "complex"),
         max_iter=3,
     )
 

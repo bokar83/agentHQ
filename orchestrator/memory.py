@@ -11,6 +11,9 @@ Agents query memory at the start of tasks to surface
 relevant past work. This is how the system learns over time.
 """
 
+# Named model constant -- update here when model version changes, nowhere else
+LESSON_EXTRACTION_MODEL = "anthropic/claude-haiku-4.5"
+
 import os
 import json
 import logging
@@ -437,7 +440,7 @@ def _call_extraction_llm(prompt: str) -> str:
         base_url="https://openrouter.ai/api/v1"
     )
     response = client.chat.completions.create(
-        model="anthropic/claude-haiku-4.5",
+        model=LESSON_EXTRACTION_MODEL,
         messages=[{"role": "user", "content": prompt}],
         max_tokens=300,
         temperature=0.2,

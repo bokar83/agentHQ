@@ -321,19 +321,11 @@ def run_chat(message: str, session_key: str = "default") -> dict:
     messages.append({"role": "user", "content": message})
 
     try:
-        import openai
-        client = openai.OpenAI(
-            api_key=os.environ.get("OPENROUTER_API_KEY"),
-            base_url="https://openrouter.ai/api/v1",
-            default_headers={
-                "HTTP-Referer": "https://agentshq.catalystworks.com",
-                "X-Title": "agentsHQ Chat",
-            },
-        )
+        from llm_helpers import call_llm, CHAT_MODEL
 
-        response = client.chat.completions.create(
-            model="anthropic/claude-haiku-4.5",
-            messages=messages,
+        response = call_llm(
+            messages,
+            model=CHAT_MODEL,
             tools=_TOOLS,
             tool_choice="auto",
             temperature=0.85,
@@ -399,11 +391,7 @@ def run_chat(message: str, session_key: str = "default") -> dict:
                     "tool_call_id": tool_call.id,
                     "content": tool_result,
                 })
-            followup = client.chat.completions.create(
-                model="anthropic/claude-haiku-4.5",
-                messages=messages,
-                temperature=0.85,
-            )
+            followup = call_llm(messages, model=CHAT_MODEL, temperature=0.85)
             reply = (followup.choices[0].message.content or "").strip()
         else:
             reply = (msg.content or "").strip()

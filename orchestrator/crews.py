@@ -25,6 +25,9 @@ import os
 import logging
 import concurrent.futures
 from crewai import Agent, Task, Crew, Process
+
+# Named model constants -- update here when model versions change, nowhere else
+_IDEA_CLASSIFIER_MODEL = "anthropic/claude-haiku-4.5"
 from council import SankofaCouncil, should_invoke_council, CouncilTier
 from agents import (
     build_planner_agent,
@@ -2098,7 +2101,7 @@ def _notion_capture_is_review(user_request: str) -> bool:
             default_headers={"HTTP-Referer": "https://agentshq.catalystworks.com", "X-Title": "agentsHQ"},
         )
         resp = client.chat.completions.create(
-            model="anthropic/claude-haiku-4.5",
+            model=_IDEA_CLASSIFIER_MODEL,
             messages=[
                 {"role": "system", "content": (
                     "You classify whether the user wants to RETRIEVE existing ideas or SAVE a new idea.\n"
@@ -2523,12 +2526,8 @@ Reply "push content to drive" when you are happy with these."""
 
     review_text = "Review failed — LLM call error."
     try:
-        llm = _LLM(
-            model="openai/anthropic/claude-sonnet-4-5",
-            base_url="https://openrouter.ai/api/v1",
-            api_key=os.environ.get("OPENROUTER_API_KEY", ""),
-            temperature=0.3,
-        )
+        from agents import get_llm as _get_llm
+        llm = _get_llm("claude-sonnet", temperature=0.3)
         review_text = str(llm.call([{"role": "user", "content": review_prompt}]))
     except Exception as e:
         logger.error(f"content_review LLM call failed: {e}")

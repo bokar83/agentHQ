@@ -12,6 +12,9 @@ import os
 import random
 import logging
 import requests
+
+# Named model constant -- update here when model version changes, nowhere else
+BRIEFING_MODEL = "anthropic/claude-haiku-4.5"
 import smtplib
 import sys
 import time
@@ -209,7 +212,7 @@ def _generate_task_interpretation(task_text: str, task_type: str) -> str:
             f"will take. Be concrete — mention the subject matter. No preamble, no quotes."
         )
         resp = client.chat.completions.create(
-            model="anthropic/claude-haiku-4.5",
+            model=BRIEFING_MODEL,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.3,
             max_tokens=60,
