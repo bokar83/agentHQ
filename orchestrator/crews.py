@@ -2151,11 +2151,20 @@ def build_notion_capture_crew(user_request: str) -> Crew:
             f"1. Extract a short, clear title (5-10 words max) from the request.\n"
             f"2. Use the full request text as the content — do not summarize or truncate.\n"
             f"3. Pick the most fitting category: Tool, Agent, Feature, Business, or Personal.\n"
-            f"4. Call create_notion_idea with the title, content, and category.\n"
-            f"5. Confirm to the user: what was saved, the title, and that it's in Notion."
+            f"4. Score the idea on two dimensions (REQUIRED — never skip):\n"
+            f"   - impact (High|Medium|Low): how much value does this idea deliver to Boubacar or Catalyst Works? "
+            f"High = direct revenue, pipeline acceleration, or core system improvement. "
+            f"Medium = quality-of-life or indirect business benefit. "
+            f"Low = personal, speculative, or niche use case.\n"
+            f"   - effort (High|Medium|Low): how much build work is required? "
+            f"Low = under 2 hours, mostly config or a small script. "
+            f"Medium = a half-day to full-day build. "
+            f"High = multi-session project or architectural change.\n"
+            f"5. Call create_notion_idea with title, content, category, impact, and effort.\n"
+            f"6. Confirm to the user: what was saved, the title, scores, and that it's in Notion."
         )
         expected_output = (
-            "Confirmation that the idea was saved: title, category, and Notion URL. "
+            "Confirmation that the idea was saved: title, category, Impact score, Effort score, and Notion URL. "
             "One sentence confirmation to the user."
         )
 

@@ -1399,7 +1399,10 @@ class NotionCreateIdeaTool(BaseTool):
         "Save a new idea or brain dump to the agentsHQ Ideas database in Notion. "
         "Input: JSON with 'title' (string, short name for the idea), "
         "'content' (string, full description), "
-        "and optional 'category' (Tool|Agent|Feature|Business|Personal, default: Feature)."
+        "'impact' (High|Medium|Low, REQUIRED: score based on value to Boubacar/CW), "
+        "'effort' (High|Medium|Low, REQUIRED: score based on build complexity), "
+        "and optional 'category' (Tool|Agent|Feature|Business|Personal, default: Feature). "
+        "ALWAYS provide impact and effort -- every idea must be scored on save."
     )
 
     def _run(self, input_data: str) -> str:
@@ -1411,9 +1414,12 @@ class NotionCreateIdeaTool(BaseTool):
             title = data.get("title", "Untitled Idea")
             content = data.get("content", "")
             category = data.get("category", "Feature")
+            impact = data.get("impact", "")
+            effort = data.get("effort", "")
             from skills.notion_skill.notion_tool import create_idea_page
-            url = create_idea_page(db_id, title, content, category)
-            return f"Idea saved to Notion: '{title}' — {url}"
+            url = create_idea_page(db_id, title, content, category, impact=impact, effort=effort)
+            scored = f" [Impact: {impact}, Effort: {effort}]" if impact and effort else " [WARNING: impact/effort not scored]"
+            return f"Idea saved to Notion: '{title}'{scored} {url}"
         except Exception as e:
             return f"Error saving idea: {e}"
 
