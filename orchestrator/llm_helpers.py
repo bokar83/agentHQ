@@ -45,6 +45,20 @@ def get_openrouter_client():
     )
 
 
+def _resolve_model(model: str | None, key: str = "CHAT_MODEL") -> str:
+    """
+    Resolve a model slug with priority: explicit arg > DB config > env var > default.
+    DB config lookup is non-fatal; falls back to env/default on any error.
+    """
+    if model:
+        return model
+    try:
+        from agent_config import get_config
+        return get_config(key, default=CHAT_MODEL) or CHAT_MODEL
+    except Exception:
+        return os.environ.get(key, CHAT_MODEL)
+
+
 def call_llm(
     messages: list,
     model: str | None = None,
@@ -59,7 +73,8 @@ def call_llm(
 
     Args:
         messages: OpenAI-format messages list (role/content dicts).
-        model: Model slug, e.g. "anthropic/claude-haiku-4.5". Defaults to CHAT_MODEL.
+        model: Model slug, e.g. "anthropic/claude-haiku-4.5". Defaults to
+               the DB-overridable CHAT_MODEL config key.
         temperature: Sampling temperature (0.0-1.0).
         tools: Optional list of tool defs in OpenAI tool format.
         tool_choice: "auto" | "none" | {"type": "function", ...}
@@ -73,7 +88,7 @@ def call_llm(
         RuntimeError if OPENROUTER_API_KEY is missing.
         openai.APIError on API failures (caller should handle).
     """
-    resolved_model = model or CHAT_MODEL
+    resolved_model = _resolve_model(model)
     client = get_openrouter_client()
 
     kwargs: dict = {
