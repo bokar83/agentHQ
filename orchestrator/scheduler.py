@@ -513,6 +513,21 @@ def start_scheduler():
     except Exception as e:
         logger.error(f"STUDIO_TREND_SCOUT: wake registration failed ({e}); continuing without trend scout", exc_info=True)
 
+    # Hardening: weekly API health sweep. Fires every Sunday at 08:00 MT.
+    # Read-only probes; sends Telegram alert on any failure.
+    # crew_name='health-sweep' (no kill switch needed -- it's diagnostic only).
+    try:
+        import heartbeat as _heartbeat
+        from health_sweep import health_sweep_tick
+        _heartbeat.register_wake(
+            "health-sweep",
+            crew_name="health-sweep",
+            callback=health_sweep_tick,
+            at="08:00",
+        )
+    except Exception as e:
+        logger.error(f"HEALTH_SWEEP: wake registration failed ({e}); continuing without sweep", exc_info=True)
+
     sync_thread = threading.Thread(target=_periodic_sync, daemon=True)
     sync_thread.start()
 

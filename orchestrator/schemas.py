@@ -31,10 +31,11 @@ class AsyncTaskResponse(BaseModel):
 class JobStatusResponse(BaseModel):
     job_id: str
     status: str
-    task_type: str = ""
-    result: str = ""
+    task_type: Optional[str] = ""
+    result: Optional[str] = ""
     files_created: list = []
-    execution_time: float = 0.0
+    execution_time: Optional[float] = 0.0
+    error: Optional[str] = None
 
 
 class TeamTaskRequest(BaseModel):
