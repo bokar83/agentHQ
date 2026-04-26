@@ -301,7 +301,7 @@ def _write_candidate_to_notion(notion, cand: TrendCandidate) -> Optional[str]:
     properties = {k: v for k, v in properties.items() if v is not None}
 
     try:
-        page = notion.create_page(parent_database_id=pipeline_db, properties=properties)
+        page = notion.create_page(database_id=pipeline_db, properties=properties)
         return page.get("id") if page else None
     except Exception as e:
         logger.error(f"studio_trend_scout: Notion write failed for {cand.source_url}: {e}")
