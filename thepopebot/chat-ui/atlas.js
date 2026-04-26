@@ -155,7 +155,6 @@ function renderState(d) {
     ['Kill Switch', d.killed ? 'ACTIVE' : 'Off', d.killed ? 'red' : 'green'],
     ['Griot Enabled', griot.enabled ? 'On' : 'Off', griot.enabled ? 'green' : 'amber'],
     ['Griot Dry-Run', griot.dry_run ? 'On' : 'Off', griot.dry_run ? 'amber' : ''],
-    ['Daily Cap', '$' + (d.cap_usd || 0).toFixed(2), ''],
   ];
   rows.forEach(function(row) {
     body.appendChild(el('div', { class: 'data-row' },
