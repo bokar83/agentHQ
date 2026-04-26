@@ -2,20 +2,22 @@
 
 **Written:** 2026-04-25 night, end of a 13-hour build day.
 **Author:** Claude Code (Atlas instance), Opus 4.7 (1M context).
-**Three-way nsync at:** `2c2845c` (local + origin + VPS).
+**Three-way nsync at:** `b038845` (local + origin + VPS).
 **Tests:** 261/261 passing.
 
 ## TL;DR for the next agent
 
-Two big systems shipped today: Atlas auto-publish and Studio engine. Both are live on VPS. Nothing breaks if you do nothing this weekend. Three things would extract more value if you have time.
+Two big systems shipped today: Atlas auto-publish and Studio engine. Both are live on VPS, both verified working end-to-end. Two silent infra bugs caught and fixed late in the session (docker-compose env allowlist gap, docker-cp wipe pattern). Nothing breaks if you do nothing this weekend.
+
+The next session's first task is the **Topic Trend Scout** (Boubacar's request): a separate agent from the YouTube trend scout that scans X/Reddit/HN/Google News for trending topics in his niches and proposes 3-5 post candidates per day to Telegram. 4-6 hour build. Different from YouTube trend scout because it feeds Boubacar's existing Atlas content board, not Studio video production.
 
 ## What is running RIGHT NOW (no further action required)
 
 | System | State | First fire |
 |---|---|---|
 | Atlas auto-publisher | LIVE, kill switch ON | Mon 2026-04-27 07:00 MT, X "One constraint nobody has named yet" |
-| Studio trend scout | LIVE, kill switch OFF (no YouTube API key) | Won't fire usefully until key + flip |
-| Atlas M8 Mission Control dashboard | DEPLOYED at agentshq.boubacarbarry.com/atlas | available now (not verified) |
+| Studio trend scout | LIVE, kill switch OFF | Will fire daily 06:00 MT once kill switch flipped on. YouTube API key already set. Manually verified end-to-end (15 candidates landed in Notion Pipeline DB tonight; Telegram brief send path tested). |
+| Atlas M8 Mission Control dashboard | DEPLOYED at agentshq.boubacarbarry.com/atlas | available now (not verified by me) |
 | Atlas L1 propose / L2 schedule / L4 reconcile | LIVE since earlier today | continuous |
 | Two remote routines | armed | Monday 09:00 MT verify, May 14 Firecrawl check |
 
@@ -41,52 +43,44 @@ If you see `failed=1` or `errorMessage` in the logs:
 
 If everything green: M7b is operationally validated. Continue normal life.
 
-### 2. Provision YouTube API key + flip studio.enabled=True (~10 min)
+### 2. Flip Studio trend scout kill switch ON Sunday morning (~2 min)
 
-Studio trend scout currently runs daily at 06:00 MT but writes zero candidates because no `YOUTUBE_API_KEY` is set. Without this, the engine is technically alive but producing nothing useful.
+YouTube API key already set on VPS. End-to-end verification done tonight: 15 candidates landed in Studio Pipeline Notion DB across 3 niches. Telegram brief send path tested. The only thing standing between current state and live trend-scout running daily is flipping `studio.enabled=True` per Boubacar's direction (he asked to flip Sunday morning, not tonight).
 
-Steps:
-
-1. Go to https://console.cloud.google.com/apis/credentials
-2. Create or reuse a Google Cloud project
-3. Enable "YouTube Data API v3" for that project
-4. Create an API key (no restrictions needed for v0)
-5. SSH and add the key:
-
-```bash
-ssh root@72.60.209.109 "echo 'YOUTUBE_API_KEY=YOUR_KEY_HERE' >> /root/agentsHQ/.env"
-```
-
-6. Flip the studio kill switch:
+Single command:
 
 ```bash
 ssh root@72.60.209.109 'python3 -c "
 import json, pathlib
 p = pathlib.Path(\"/root/agentsHQ/data/autonomy_state.json\")
 state = json.loads(p.read_text())
-state[\"crews\"][\"studio\"] = {\"enabled\": True, \"dry_run\": False}
+state[\"crews\"][\"studio\"][\"enabled\"] = True
 p.write_text(json.dumps(state, indent=2))
-print(\"Studio enabled\")
-'"
+print(\"studio.enabled=True\")
+" && docker restart orc-crewai'
 ```
 
-7. Restart container so the AutonomyGuard re-reads state and the env vars are fresh:
+(The restart is needed because AutonomyGuard caches state in memory; flip-and-restart is the safe pattern.)
 
-```bash
-ssh root@72.60.209.109 "docker restart orc-crewai"
-```
-
-8. Trigger a manual tick to verify (don't wait for 06:00 MT):
-
-```bash
-ssh root@72.60.209.109 "docker exec orc-crewai sh -c 'cd /app && python -c \"from studio_trend_scout import studio_trend_scout_tick; studio_trend_scout_tick()\"'"
-```
-
-You should see candidates land in the Studio Pipeline Notion DB (`34ebcf1a-3029-8140-a565-f7c26fe9de86`) and a Telegram brief.
+After flipping, the next 06:00 MT (Mon 2026-04-27) wake will fire the studio trend scout for real. Telegram brief lands in Boubacar's chat with up to 15 candidates (5 per niche).
 
 YouTube Data API v3 free quota: 10,000 units/day. Each search costs 100 units, each video stats fetch costs ~3 units per video. The scout uses ~1500-2000 units per niche per run. With 3 niches, daily run uses ~5000-6000 units. Comfortably within quota.
 
-### 3. Verify Atlas M8 Mission Control dashboard (~15 min)
+### 3. Build the Topic Trend Scout (Boubacar's request, ~4-6 hours, Sunday session at earliest)
+
+This is the OTHER trend scout Boubacar wants. Different from the YouTube trend scout that's already shipped.
+
+**What it does:** scan X trending, Reddit (r/HumanResources, r/recruiting, r/AI, plus niche-specific subs), Hacker News, optionally Google News for AI + workforce + first-gen-money keywords. Output 3-5 topic candidates per day to Boubacar's Telegram with [Approve to draft] [Reject] buttons. Approved candidates flow to the Atlas Content Board as Idea/Ready records, then through the existing leGriot path.
+
+**Why this matters:** the existing Atlas pipeline assumes Boubacar (or leGriot) seeds Content Board ideas. Without the Topic Trend Scout, when his manual ideas dry up, the publish engine starves. With it, the engine has an autonomous content-idea source. Closes the loop he described tonight.
+
+**Stack:** Firecrawl (already wired) for Reddit, X trending, Google News scraping. HN API (free, no key). Reddit RSS feeds (free, no key). No new external dependencies.
+
+**Architecture:** mirror the studio_trend_scout.py shape. Heartbeat wake at, say, 08:00 MT daily. Notion writes to the existing Content Board (NOT a new DB; the Topic Trend Scout's job is to feed the Atlas pipeline). New crew name `topic_scout` in autonomy_guard with its own kill switch.
+
+**Acceptance:** by Sunday evening or Monday morning, Boubacar gets a Telegram message that says "5 topic candidates for [date]" with the topics + a quick scoring rubric (relevance to AI displacement, first-gen money, or African storytelling).
+
+### 4. Verify Atlas M8 Mission Control dashboard (~15 min)
 
 The studio session shipped this in commit `7f3667b` (`feat(atlas-m8): Mission Control dashboard at /atlas (#21)`). I have not verified it works end-to-end. Two checks:
 
@@ -235,37 +229,37 @@ The block below is what you paste into the next Claude Code session. It's self-c
 You're picking up agentsHQ on Sunday 2026-04-26 (or later).
 
 CURRENT STATE:
-- Three-way nsync at commit 2c2845c (or later if other agents committed)
+- Three-way nsync at commit b038845 (or later if other agents committed)
 - 261/261 orchestrator tests passing
 - Atlas auto-publisher LIVE on VPS, kill switch ON, fires every 5 min
-- Studio M1 engine LIVE on VPS, kill switch OFF (waiting for YouTube API key)
+- Studio M1 trend scout LIVE on VPS, kill switch OFF, YouTube API key set, 15 candidates already in Pipeline DB from tonight's verification
 - Two remote routines armed (Monday Atlas verification + May 14 Firecrawl check)
 - Atlas M8 Mission Control dashboard deployed at agentshq.boubacarbarry.com/atlas (not yet verified by me)
 
 READ FIRST (in this order):
 1. docs/handoff/2026-04-26-weekend-handoff.md (this is your full context)
-2. docs/AGENT_SOP.md (shared rules; especially the orchestrator.py sunset hard rule)
+2. docs/AGENT_SOP.md (shared rules; especially: orchestrator.py sunset hard rule + container deploy protocol v2 hard rule, both added 2026-04-25)
 3. docs/roadmap/atlas.md and docs/roadmap/studio.md (latest session log entries at the bottom)
-4. C:\Users\HUAWEI\.claude\projects\d--Ai-Sandbox-agentsHQ\memory\MEMORY.md (links to project + feedback memory)
+4. C:\Users\HUAWEI\.claude\projects\d--Ai-Sandbox-agentsHQ\memory\MEMORY.md (links to project + feedback memory; pay attention to project_2026_04_25_marathon_day.md and feedback_container_deploy_protocol_v2.md)
 
 DO NOT:
 - Recreate orchestrator/orchestrator.py. It was deleted 2026-04-25 in commit 4d1aeb3. The codebase is modular now: app.py, engine.py, handlers.py, handlers_chat.py, state.py, constants.py, scheduler.py, heartbeat.py. Full import map in project_orchestrator_sunset.md memory entry.
 - Use em dashes anywhere. Pre-commit hook blocks them.
 - Skip Sankofa Council on plans with new modules, autonomous behavior, or infra changes. Per feedback_sankofa_major_plans.md.
-- Push to VPS without docker cp of changed files. orc-crewai is NOT volume-mounted. Per feedback_container_file_sync.md.
+- Use docker cp to deploy to orc-crewai. Files baked into /app get wiped on container recreation. Use docker compose up -d --build orchestrator instead. New env vars must be added to docker-compose.yml allowlist OR they silently don't reach the container. Full procedure in feedback_container_deploy_protocol_v2.md.
 
-WEEKEND PRIORITIES (only 3, in order):
+WEEKEND PRIORITIES (only 4, in priority order):
 1. Monday 2026-04-27 around 07:30 MT, verify the first auto-publish fired correctly. Quick check: ssh root@72.60.209.109 "docker logs orc-crewai --since 1h | grep -E 'auto_publisher|BLOTATO'". Expected: tick done posted=1. Telegram alert in Boubacar's chat.
-2. Provision Google Cloud YouTube Data API v3 key. Add to VPS .env as YOUTUBE_API_KEY. Flip studio.enabled=True in /root/agentsHQ/data/autonomy_state.json. docker restart. Manual tick to verify candidates land in the Studio Pipeline Notion DB.
-3. Verify Atlas M8 Mission Control dashboard at agentshq.boubacarbarry.com/atlas works end-to-end. PIN gates, 6 cards populate, htmx 30s polling refreshes, action layer toggles Griot.
+2. Sunday morning, flip studio.enabled=True in autonomy_state.json + restart container. Single command in the handoff doc. After this, the studio trend scout fires daily 06:00 MT and Boubacar gets Telegram briefs with candidates per niche.
+3. Build the Topic Trend Scout (Boubacar's request, ~4-6 hours). Different from the YouTube trend scout already shipped. Scans X/Reddit/HN/Google News for trending topics in his niches. Output: 3-5 topic candidates per day to his Telegram with approve/reject buttons. Approved candidates flow to the Atlas Content Board (NOT a new DB). Closes the autonomous-content-idea loop. Full architecture in handoff doc priority 3.
+4. Verify Atlas M8 Mission Control dashboard at agentshq.boubacarbarry.com/atlas works end-to-end. PIN gates, 6 cards populate, htmx 30s polling refreshes, action layer toggles Griot.
 
-The handoff doc has step-by-step bash commands for each. Just follow them.
+The handoff doc has step-by-step bash commands for 1, 2, 4. Priority 3 (Topic Trend Scout) is a real build; mirror the studio_trend_scout.py shape, run a Sankofa Council on the design before coding, follow the Council Pass 2 reframe pattern from the studio M1 build.
 
 WHAT YOU DO NOT NEED TO DO:
-- Any new feature work
 - Studio M2 brand identity (defer to weekday)
 - First Generation Money channel creation (M2 task)
-- Monetization wiring
+- Monetization wiring (M6, blocked on subscriber thresholds)
 
 If anything looks off, three escalation steps: read Telegram alerts, read Notion record Source Note, flip the relevant kill switch (commands in the handoff doc).
 ```
