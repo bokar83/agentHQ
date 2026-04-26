@@ -475,6 +475,26 @@ def start_scheduler():
     except Exception as e:
         logger.error(f"PUBLISH_BRIEF: wake registration failed ({e}); continuing without brief", exc_info=True)
 
+    # Atlas M7b: auto-publisher tick. Runs every 5 minutes 7-days-a-week.
+    # Picks up Notion records where Status=Queued AND Scheduled Date<=today,
+    # flips Status=Publishing BEFORE the Blotato POST (idempotency safeguard),
+    # fires the post via Blotato API, polls until terminal, writes Posted /
+    # PublishFailed back to Notion. Closes Atlas L3.
+    # Uses crew_name='auto_publisher' (separate kill switch from griot so
+    # Boubacar can pause auto-publish without pausing all of Atlas).
+    # Default state: auto_publisher.enabled=False; flip on after VPS deploy.
+    try:
+        import heartbeat as _heartbeat
+        from auto_publisher import auto_publisher_tick
+        _heartbeat.register_wake(
+            "auto-publisher",
+            crew_name="auto_publisher",
+            callback=auto_publisher_tick,
+            every="5m",
+        )
+    except Exception as e:
+        logger.error(f"AUTO_PUBLISHER: wake registration failed ({e}); continuing without auto-publish", exc_info=True)
+
     sync_thread = threading.Thread(target=_periodic_sync, daemon=True)
     sync_thread.start()
 
