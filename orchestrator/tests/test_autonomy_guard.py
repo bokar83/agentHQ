@@ -198,6 +198,14 @@ def test_set_crew_dry_run_false_raises_without_contract(tmp_path):
         g.set_crew_dry_run("griot", False)
 
 
+def test_set_crew_dry_run_true_does_not_require_contract(tmp_path):
+    """Setting dry_run=True never requires a contract."""
+    from autonomy_guard import AutonomyGuard
+    g = AutonomyGuard(state_file=str(tmp_path / "state.json"), cap_usd=1.00,
+                      contracts_dir=str(tmp_path / "contracts"))
+    g.set_crew_dry_run("griot", True)  # must not raise
+
+
 def test_set_crew_enabled_false_does_not_require_contract(tmp_path):
     """Disabling a crew never requires a contract."""
     from autonomy_guard import AutonomyGuard
