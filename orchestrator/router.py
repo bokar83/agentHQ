@@ -2,7 +2,7 @@
 router.py — Task Classification Engine
 =======================================
 Maps incoming user requests to the correct crew type.
-Used by orchestrator.py to determine which crew to assemble.
+Used by engine.run_orchestrator to determine which crew to assemble.
 """
 
 import os

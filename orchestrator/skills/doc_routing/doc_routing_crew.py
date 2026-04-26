@@ -1,7 +1,7 @@
 """
 doc_routing_crew.py — Crew assembly for document taxonomy and routing.
 
-Called by orchestrator.py when task_type == "doc_routing".
+Called by engine.run_orchestrator when task_type == "doc_routing".
 The crew runs a single TaxonomyRoutingAgent task and returns
 a JSON classification decision in TaskResponse.result.
 """
