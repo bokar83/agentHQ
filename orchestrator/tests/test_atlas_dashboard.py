@@ -98,3 +98,35 @@ def test_get_heartbeats_returns_wakes():
     w = result["wakes"][0]
     assert w["name"] == "griot_daily"
     assert w["at_hour"] == 7
+
+
+def test_get_errors_returns_shape():
+    with patch("atlas_dashboard._router_log_fallbacks", return_value=[
+        {"ts": "2026-04-25T09:00:00", "task_type": "griot_run", "raw_input": "test"}
+    ]):
+        with patch("atlas_dashboard._error_log_tail", return_value=[]):
+            result = atlas_dashboard.get_errors()
+
+    assert "fallbacks" in result
+    assert "log_lines" in result
+    assert len(result["fallbacks"]) == 1
+
+
+def test_get_hero_returns_four_tiles():
+    mock_snap = MagicMock()
+    mock_snap.spent_today_usd = 0.05
+    mock_snap.cap_usd = 1.0
+    mock_snap.remaining_usd = 0.95
+
+    with patch("autonomy_guard.get_guard") as mg, \
+         patch("atlas_dashboard._next_scheduled_fire", return_value={"name": "griot_daily", "at": "07:30", "in_minutes": 60}), \
+         patch("atlas_dashboard._last_autonomous_action", return_value={"ts": "2026-04-25T07:30:00", "description": "Griot posted"}), \
+         patch("atlas_dashboard._router_log_fallbacks", return_value=[]):
+        mg.return_value.snapshot.return_value = mock_snap
+        mg.return_value.is_killed.return_value = False
+        result = atlas_dashboard.get_hero()
+
+    assert result["system_status"] in ("green", "amber", "red")
+    assert "last_action" in result
+    assert "next_fire" in result
+    assert "spend_pacing" in result
