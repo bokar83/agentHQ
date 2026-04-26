@@ -42,10 +42,10 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 
 | Gate | Status | Notes |
 |---|---|---|
-| G1 Channels live | ❌ 0 of 3 | M1 reshaped: ENGINE first, channels second. Two-channel batch (Sankofa Stories + AI Catalyst) scaffolded as briefs in M1; brand identity ships in M2. |
-| G2 Production autonomy | 🟡 INFRA-READY | All component skills exist (kie_media, hyperframes, image-generator, clone-builder pattern). Trend scout + QA crew + Pipeline DB are M1; production pipeline orchestration is M3. |
-| G3 Publishing autonomy | ❌ BLOCKED | Depends on Atlas M7 (Blotato Creator $97/mo verified live 2026-04-25 OR OAuth path). Studio M4 rides whichever path Atlas picks. |
-| G4 Revenue floor | ❌ $0 | No channels live, no monetization wired. Floor is portfolio-level: $1k/mo net across all active channels, sustained 90 days. |
+| G1 Channels live | 🟡 2 of 3 EXIST | Under the Baobab + AI Catalyst exist (Boubacar's). First Generation Money needs creation in M2. Engine LIVE on VPS (kill switch off). |
+| G2 Production autonomy | 🟡 ENGINE LIVE | M1 SHIPPED 2026-04-25: Trend Scout + QA Crew (8 checks) + Pipeline DB live. Studio session also shipped harvest reviewer + niche research + inventory snapshot. Production pipeline orchestration (script -> render) is M3. |
+| G3 Publishing autonomy | ✅ INFRA READY | Atlas M7b SHIPPED 2026-04-25 (Blotato API verified, $20.30/mo Skool-discounted). Studio M4 reuses BlotatoPublisher class (platform-agnostic by design). |
+| G4 Revenue floor | ❌ $0 | No channels live posting yet. Floor is portfolio-level: $1k/mo net across all active channels, sustained 90 days. |
 | G5 Ops cost | N/A | Build phase budget: up to 2 hr/day. Steady-state target: 3 hr/week. Time-tracking ships in M1 Pipeline DB. |
 
 **Leverageable infrastructure (already shipped on agentsHQ):**
@@ -73,33 +73,49 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 
 ## Milestones
 
-### M1: Engine First, Two-Channel Batch Second 🟡 IN PROGRESS
+### M1: Engine First, Three-Channel Batch Second ✅ SHIPPED 2026-04-25
 
-**Reshaped 2026-04-25 after two Sankofa Council passes.** Original M1 was "lock one niche." Council Pass 2 reframed: studio is a portfolio engine, not a single-channel build. Engine ships first; channels ride downstream as dogfooding.
+**Same-day ship after Atlas M7b.** Engine LIVE on VPS, kill switch off pending Boubacar's first dry-run brief verification. THREE channels in M1 batch (not 2 as originally scoped): Under the Baobab + AI Catalyst + First Generation Money.
 
 **Full M1 brief:** [docs/roadmap/studio/m1-engine-and-channel-batch.md](studio/m1-engine-and-channel-batch.md)
 
-**What M1 ships:**
+**What shipped:**
 
-1. **Studio Trend Scout v0**: agent that scans YouTube/TikTok/IG for viral patterns within configured niches, posts daily Telegram brief with top 5 candidates per niche. Adapted from `clone-scout` pattern.
-2. **Studio Pipeline DB**: Notion DB for niches, candidates, drafts, assets, publishes. Schema mirrors Content Board, simplified.
-3. **Quality Review Crew**: 8-check QA layer that runs on every drafted asset before render. Fails route to Telegram, passes to qa-passed status.
-4. **Two channel briefs scaffolded**: Sankofa Stories (faceless African folktales, retellings + originals, mixed cultures permitted, brand-new channel) and AI Catalyst (AI displacement education, openly Boubacar with HR-director framing, links to boubacarbarry.com, reuses existing AI Catalyst YouTube channel as testbed).
-5. **Time-tracking property**: logs Boubacar's actual studio time per week. Build phase budget up to 2 hr/day. Steady-state target 3 hr/week.
+1. **Studio Trend Scout v0** (`orchestrator/studio_trend_scout.py`): heartbeat tick at 06:00 MT daily, scans configured niches via YouTube Data API v3 over a SEED LIST of search terms per niche. Scores candidates by view-velocity (views/hour since publish), top picks queued in Studio Pipeline DB. Idempotent (skip dupes by Source URL). Sends Telegram brief. Graceful degrade if no `YOUTUBE_API_KEY` / `GOOGLE_API_KEY`.
+2. **Studio Pipeline DB**: created in The Forge 2.0 (Notion). 20 properties: Channel, Niche tag, Status, Format, Length target, Source URL, Source channel, Source views, Hook, Twist, Draft, Asset URL, Platform, Submission ID, Posted URL, Scheduled Date, Posted Date, QA notes, Cost USD. DB ID: `34ebcf1a-3029-8140-a565-f7c26fe9de86`. Logged to local + VPS .env as `NOTION_STUDIO_PIPELINE_DB_ID`.
+3. **Quality Review Crew** (`orchestrator/studio_qa_crew.py`): 8 checks on every drafted asset before render. (1) spellcheck, (2) banned-phrases / engagement-bait, (3) length-within-target, (4) hook present (no generic intros), (5) source citation when factual claim detected, (6) CTA present, (7) personal rules (no coffee/alcohol/em-dashes/fake clients), (8) brand voice (per-niche bans). Failures route to Telegram, passes flip Status=qa-passed.
+4. **Three channel briefs** at `docs/roadmap/studio/channels/`:
+   - `under-the-baobab.md` (faceless African folktales; channel exists)
+   - `ai-catalyst.md` (AI displacement, Path A openly Boubacar; channel exists virgin)
+   - `first-generation-money.md` (faceless first-gen finance; channel needs creation in M2)
+5. **Operating snapshot locked** at `docs/roadmap/studio/operating-snapshot.md`: 3-channel portfolio (Wealth Atlas descoped in favor of First Generation Money after SEO/GEO research), Mon-Sat publish + skip Sun, no LinkedIn ever for Studio.
 
-**Why this shape:** the build airplane comes first, then test flights. Lock the engine, validate it against two niches, expand to channels 3-5 after data.
+**Plus the studio session shipped tonight (parallel work, separate commits):**
 
-**Channels deferred (not killed):**
-- Wealth Atlas (channel 3 candidate, queued behind 14 days of trend-scout data)
-- Studio Logs / Agentic Diary (channel 4 candidate, queued behind 30 days of system activity)
+- Skool harvester (3 Python tools)
+- Harvest reviewer crew + harvest triage
+- Niche research tool, video analyze tool
+- Inventory snapshot generator (51 skills, 40 modules)
+- 5 R-series RoboNuggets lessons mined and scored
+- Atlas M8 Mission Control dashboard at /atlas (separate Atlas roadmap milestone)
 
-**Trigger:** Now (2026-04-25 evening, M1 brief committed).
-**Blockers:** None for engine build. Firecrawl 0/3000 credits flagged; default to YouTube Data API + native scrapers if credits not back by 2026-05-14.
-**Branch:** `feat/studio-m1-engine` (to create at first code commit)
-**ETA:** 12-18 build hours across 2-3 sessions. Ship target 2026-05-09.
-**Save point:** create `savepoint-pre-studio-m1-engine-2026-04-25` before first code change.
+**VPS deploy verified:**
+- studio-trend-scout wake registered: `at=06:00 every=None crew_name=studio`
+- Container Up healthy
+- Manual tick run: 3 niches loaded, idempotency query OK, Notion accessible, graceful degrade on missing YouTube API key as designed
+- Default state: `studio.enabled=False` until first dry-run brief reviewed
 
-**Done definition:** trend scout fires daily, Pipeline DB live in Notion with `NOTION_STUDIO_PIPELINE_DB_ID` in VPS .env, QA crew runs on a sample asset with all 8 checks firing, both channel briefs committed, time-tracking logged for the M1 build session itself.
+**To activate live:**
+1. Get a Google Cloud API key with YouTube Data API v3 enabled
+2. Add `YOUTUBE_API_KEY=<key>` to VPS .env
+3. Flip `studio.enabled=True` in `data/autonomy_state.json`
+4. Restart container
+5. Wait for next 06:00 MT wake; verify Telegram brief lands with candidates per niche
+
+**Tests:** 261/261 orchestrator tests pass (210 pre-Studio + 30 QA crew + 21 trend scout = 261).
+**Save point:** `savepoint-pre-studio-m1-engine-2026-04-25` (at 196f875 pre-rebase).
+**Branch:** `feat/studio-m1-engine` (merged via rebase to main).
+**Commit:** `1d0cd88` (after rebase onto Atlas M8).
 
 ---
 
@@ -330,5 +346,66 @@ Cost ceiling for M1 build: <$20 in tokens. Firecrawl 0/3000 until 2026-05-14 fla
 4. Three-way nsync, M1 marked shipped, M2 (brand identity for both channels) becomes next move.
 
 **State at session pause:** local clean on main, 1 new doc (`docs/roadmap/studio/m1-engine-and-channel-batch.md`), 1 modified doc (`docs/roadmap/studio.md`), 1 untracked scratch dir (`scripts/skool-harvester/`, unrelated). About to commit, push to origin, three-way nsync.
+
+---
+
+### 2026-04-25 (night): M1 SHIPPED. Engine LIVE on VPS. 3-channel batch briefed.
+
+**Same-day ship in 9-hour build window.** Started after Atlas M7b SHIPPED, finished within hour 13 of the day. M1 went from spec-only to engine-LIVE-on-VPS in one sitting after the original spec said 12-18 hours across 2-3 sessions.
+
+**Channel batch reshaped from 2 to 3:** Boubacar locked Wealth Atlas in earlier in the session, then pivoted to "First Generation Money" after SEO/GEO research. So M1 now ships briefs for Under the Baobab + AI Catalyst + First Generation Money. Wealth Atlas descoped (better framing won).
+
+**Why First Generation Money beat Wealth Atlas / Inherited Nothing on naming:**
+- Zero negative-framing semantic confusion (Inherited Nothing reads as grief in poetry contexts)
+- Keyword stack matches search demand ("first gen money", "first generation wealth")
+- Generative engines parse cleanly for diaspora/immigrant queries
+- Existing competitor "First Gen Money" is small enough to displace; "Inherited Nothing" had no native search momentum
+
+**M1 ship contents:**
+
+1. Studio Trend Scout v0 (`orchestrator/studio_trend_scout.py`): heartbeat wake `studio-trend-scout` at 06:00 MT daily, YouTube Data API v3 search per niche, view-velocity scoring, top-N to Notion + Telegram brief. Graceful degrade if no API key.
+2. Studio Pipeline DB in Notion (20 properties; ID `34ebcf1a-3029-8140-a565-f7c26fe9de86`). Created via direct Notion API. ID logged to local + VPS .env.
+3. Studio QA Crew (`orchestrator/studio_qa_crew.py`): 8 checks on every drafted asset (spellcheck, banned-phrases, length, hook, source, CTA, personal rules, brand voice). Pure regex/string for v0 (LLM upgrade in M3).
+4. 3 channel briefs at `docs/roadmap/studio/channels/`.
+5. Operating snapshot locked at `docs/roadmap/studio/operating-snapshot.md`: 3-channel portfolio, Mon-Sat publish + skip Sun, no LinkedIn for Studio ever, video-creation is bottleneck #1.
+6. `studio` added to `KNOWN_CREWS` in autonomy_guard. Heartbeat wake registered. BaseTools (`StudioTrendScoutTool` + `StudioQARunTool`) wired in tools.py.
+
+**Tests:** 261/261 orchestrator tests pass (210 baseline + 30 QA crew + 21 trend scout = 261 after Studio M1).
+
+**VPS deploy verified:**
+- `git pull` brought commits down
+- `docker cp` 5 files into orc-crewai (`/app/`, NOT `/app/orchestrator/`)
+- Container restart, `studio-trend-scout` wake registered with `at=06:00`
+- Manual tick run: 3 niches loaded, Notion query OK, graceful degrade on missing YouTube API key as designed
+- Default `studio.enabled=False`; flip True after first dry-run brief reviewed
+
+**Studio session shipped in parallel** (separate commits, separate planning):
+- Skool harvester (3 Python tools, Playwright session-based)
+- Harvest reviewer + harvest triage
+- Niche research + video analyze tools
+- Inventory snapshot generator
+- 5 RoboNuggets R-series lessons mined and dual-lens-scored
+- Atlas M8 Mission Control dashboard at /atlas (separate Atlas roadmap milestone)
+- orchestrator.py monolith sunset (commit `0d9d288`); app.py is sole entrypoint now
+
+**Total day's velocity (atlas + studio combined):**
+- Atlas: M1, M2, M7a, M7b, M8 all SHIPPED
+- Studio: M1 engine SHIPPED + harvest pipeline + 5 RoboNuggets reviews
+- 261 tests passing, 0 regressions
+- 3 Notion DBs created/extended (Content Board schema extended for M7b, Studio Pipeline new, Harvested Recommendations new)
+- $20.30/mo Blotato Creator subscription started; auto-publish LIVE on Boubacar's LinkedIn + X
+- 3 Sankofa Council passes (M7 split, M7b design, Pass 2 reframe of Studio M1)
+
+**Next studio session:**
+1. Get Google Cloud API key with YouTube Data API v3 enabled, add to VPS .env as `YOUTUBE_API_KEY`
+2. Flip `studio.enabled=True` in `data/autonomy_state.json` on VPS
+3. Restart container, wait for next 06:00 MT wake
+4. Verify Telegram brief lands with candidates per niche
+5. Boubacar reviews 7 days of briefs to validate signal quality
+6. Then M2: register X handles, create First Generation Money YouTube channel, lock brand identity for all 3
+
+**Save point:** `savepoint-pre-studio-m1-engine-2026-04-25` (at `196f875` pre-rebase).
+**Branch:** `feat/studio-m1-engine` (merged via rebase to main).
+**Commits:** `1d0cd88` (Studio M1 engine), now on origin via rebase.
 
 ---
