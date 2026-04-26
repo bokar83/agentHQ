@@ -110,7 +110,7 @@ def _spend_7d_by_day() -> list:
         )
         rows = cur.fetchall()
         cur.close()
-        return [{"date": str(r[0]), "usd": float(r[1] or 0)} for r in rows]
+        return [{"date": str(r[0]), "usd": round(float(r[1] or 0), 4)} for r in rows]
     except Exception as e:
         logger.warning(f"_spend_7d_by_day: {e}")
         return []
