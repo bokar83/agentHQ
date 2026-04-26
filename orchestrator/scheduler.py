@@ -521,7 +521,7 @@ def start_scheduler():
         from health_sweep import health_sweep_tick
         _heartbeat.register_wake(
             "health-sweep",
-            crew_name="health-sweep",
+            crew_name=_heartbeat.SELF_TEST_CREW,
             callback=health_sweep_tick,
             at="08:00",
         )
