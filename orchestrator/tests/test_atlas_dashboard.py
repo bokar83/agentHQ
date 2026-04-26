@@ -133,3 +133,16 @@ def test_get_hero_returns_four_tiles():
     assert "last_action" in result
     assert "next_fire" in result
     assert "spend_pacing" in result
+
+
+def test_get_ideas_returns_ranked():
+    mock_items = [
+        {"title": "High Impact Low Effort", "impact": "High", "effort": "Low", "category": "Feature", "status": "New", "score": 6},
+        {"title": "Medium Impact Medium Effort", "impact": "Medium", "effort": "Medium", "category": "Tool", "status": "New", "score": 4},
+    ]
+    with patch("atlas_dashboard._fetch_ideas", return_value=mock_items):
+        result = atlas_dashboard.get_ideas()
+
+    assert result["count"] == 2
+    assert result["items"][0]["score"] == 6
+    assert result["items"][0]["title"] == "High Impact Low Effort"

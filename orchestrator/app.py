@@ -819,6 +819,11 @@ async def atlas_hero(_auth=Depends(verify_chat_token)):
     return JSONResponse(_atd.get_hero())
 
 
+@app.get("/atlas/ideas")
+async def atlas_ideas(_auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_ideas())
+
+
 # ======================================================================
 # Atlas M8: Mission Control -- write/action endpoints
 # ======================================================================

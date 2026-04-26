@@ -332,6 +332,30 @@ async function refreshErrors() {
   try { renderErrors(await apiFetch('/atlas/errors')); } catch (_) {}
 }
 
+// Ideas card
+function renderIdeas(d) {
+  const body = document.getElementById('card-ideas-body');
+  body.replaceChildren();
+  const items = d.items || [];
+  if (!items.length) {
+    body.appendChild(el('p', { class: 'empty-state' }, 'No active ideas'));
+    return;
+  }
+  items.forEach(function(item, idx) {
+    const rank = el('span', { class: 'data-label' });
+    rank.textContent = String(idx + 1) + '.';
+    const title = el('span', { class: 'content-title' });
+    title.textContent = item.title || '';
+    const impact = el('span', { class: 'data-label' });
+    impact.textContent = (item.impact || '') + ' / ' + (item.effort || '');
+    body.appendChild(el('div', { class: 'content-item' }, rank, title, impact));
+  });
+}
+
+async function refreshIdeas() {
+  try { renderIdeas(await apiFetch('/atlas/ideas')); } catch (_) {}
+}
+
 // Action stubs (wired fully in Task 17)
 async function actionToggleGriot(enabled, btn) {
   btn.disabled = true;
@@ -385,6 +409,7 @@ function refreshAll() {
   refreshSpend();
   refreshHeartbeats();
   refreshErrors();
+  refreshIdeas();
 }
 
 function startPolling() {

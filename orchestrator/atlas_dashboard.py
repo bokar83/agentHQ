@@ -301,3 +301,64 @@ def get_hero() -> dict:
             "pct": round(pct, 1),
         },
     }
+
+
+def _priority_score(impact: str, effort: str) -> int:
+    """Compute numeric priority from Impact + Effort selects. Higher = more important."""
+    impact_map = {"High": 3, "Medium": 2, "Low": 1}
+    effort_map = {"Low": 3, "Medium": 2, "High": 1}
+    return impact_map.get(impact, 0) + effort_map.get(effort, 0)
+
+
+def _fetch_ideas(limit: int = 10) -> list:
+    """Fetch top-ranked active ideas from the agentsHQ Ideas Notion DB."""
+    import os
+    try:
+        from skills.forge_cli.notion_client import NotionClient
+        secret = os.environ.get("NOTION_SECRET") or os.environ.get("NOTION_API_KEY")
+        db_id = os.environ.get("IDEAS_DB_ID", "")
+        if not db_id:
+            return []
+        nc = NotionClient(secret=secret)
+        results = nc.query_database(
+            db_id,
+            filter={
+                "and": [
+                    {"property": "Status", "select": {"does_not_equal": "Done"}},
+                    {"property": "Status", "select": {"does_not_equal": "Killed"}},
+                    {"property": "Status", "select": {"does_not_equal": "Archived"}},
+                ]
+            },
+        )
+        items = []
+        for page in (results or []):
+            props = page.get("properties", {})
+            title = ""
+            title_prop = props.get("Name") or {}
+            title_list = title_prop.get("title", [])
+            if title_list:
+                title = title_list[0].get("text", {}).get("content", "")
+            impact = (props.get("Impact", {}).get("select") or {}).get("name", "")
+            effort = (props.get("Effort", {}).get("select") or {}).get("name", "")
+            category = (props.get("Category", {}).get("select") or {}).get("name", "")
+            status = (props.get("Status", {}).get("select") or {}).get("name", "")
+            score = _priority_score(impact, effort)
+            items.append({
+                "title": title[:80],
+                "impact": impact,
+                "effort": effort,
+                "category": category,
+                "status": status,
+                "score": score,
+            })
+        items.sort(key=lambda x: x["score"], reverse=True)
+        return items[:limit]
+    except Exception as e:
+        logger.warning(f"_fetch_ideas: {e}")
+        return []
+
+
+def get_ideas() -> dict:
+    """Top Ideas card: top-ranked active ideas sorted by priority score."""
+    items = _fetch_ideas(limit=10)
+    return {"items": items, "count": len(items)}
