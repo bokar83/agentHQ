@@ -94,7 +94,7 @@ def get_content() -> dict:
 
 
 def _spend_aggregates() -> dict:
-    """Week-to-date and month-to-date totals from llm_calls."""
+    """Today (or yesterday if today=0), week-to-date, and month-to-date totals."""
     try:
         from memory import _pg_conn
         conn = _pg_conn()
@@ -102,26 +102,33 @@ def _spend_aggregates() -> dict:
         cur.execute(
             """
             SELECT
+              SUM(CASE WHEN ts >= date_trunc('day',   NOW() AT TIME ZONE 'America/Denver')
+                       THEN cost_usd ELSE 0 END) AS today_usd,
+              SUM(CASE WHEN ts >= date_trunc('day',   NOW() AT TIME ZONE 'America/Denver') - INTERVAL '1 day'
+                       AND  ts <  date_trunc('day',   NOW() AT TIME ZONE 'America/Denver')
+                       THEN cost_usd ELSE 0 END) AS yesterday_usd,
               SUM(CASE WHEN ts >= date_trunc('week',  NOW() AT TIME ZONE 'America/Denver')
                        THEN cost_usd ELSE 0 END) AS week_usd,
               SUM(CASE WHEN ts >= date_trunc('month', NOW() AT TIME ZONE 'America/Denver')
-                       THEN cost_usd ELSE 0 END) AS month_usd,
-              SUM(CASE WHEN ts >= date_trunc('day',   NOW() AT TIME ZONE 'America/Denver')
-                       THEN cost_usd ELSE 0 END) AS today_usd
+                       THEN cost_usd ELSE 0 END) AS month_usd
             FROM llm_calls
-            WHERE ts >= date_trunc('month', NOW() AT TIME ZONE 'America/Denver')
+            WHERE ts >= date_trunc('month', NOW() AT TIME ZONE 'America/Denver') - INTERVAL '1 day'
             """
         )
         row = cur.fetchone()
         cur.close()
+        today_usd = round(float(row[0] or 0), 4)
+        yesterday_usd = round(float(row[1] or 0), 4)
         return {
-            "week_usd":  round(float(row[0] or 0), 4),
-            "month_usd": round(float(row[1] or 0), 4),
-            "today_db_usd": round(float(row[2] or 0), 4),
+            "today_usd": today_usd,
+            "yesterday_usd": yesterday_usd,
+            "show_yesterday": today_usd == 0.0,
+            "week_usd":  round(float(row[2] or 0), 4),
+            "month_usd": round(float(row[3] or 0), 4),
         }
     except Exception as e:
         logger.warning(f"_spend_aggregates: {e}")
-        return {"week_usd": 0.0, "month_usd": 0.0, "today_db_usd": 0.0}
+        return {"today_usd": 0.0, "yesterday_usd": 0.0, "show_yesterday": False, "week_usd": 0.0, "month_usd": 0.0}
 
 
 def _spend_7d_by_day() -> list:
@@ -148,12 +155,12 @@ def _spend_7d_by_day() -> list:
 
 
 def get_spend() -> dict:
-    """Spend card: today/week/month totals + cap + 7-day daily breakdown."""
+    """Spend card: today (or yesterday if today=0)/week/month totals + cap."""
     from autonomy_guard import get_guard
     snap = get_guard().snapshot()
     agg = _spend_aggregates()
     by_day = _spend_7d_by_day()
-    today_usd = max(snap.spent_today_usd, agg["today_db_usd"])
+    today_usd = max(snap.spent_today_usd, agg["today_usd"])
     return {
         "today": {
             "spent_usd": round(today_usd, 4),
@@ -161,6 +168,8 @@ def get_spend() -> dict:
             "remaining_usd": round(snap.cap_usd - today_usd, 4),
             "per_crew": {k: round(v, 4) for k, v in snap.per_crew.items()},
         },
+        "yesterday_usd": agg["yesterday_usd"],
+        "show_yesterday": agg["show_yesterday"],
         "week_usd": agg["week_usd"],
         "month_usd": agg["month_usd"],
         "by_day": by_day,

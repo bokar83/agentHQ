@@ -259,9 +259,14 @@ function renderSpend(d) {
   const pct = Math.min(100, (spent / cap) * 100);
   const barCls = pct > 90 ? 'spend-bar-fill red' : pct > 70 ? 'spend-bar-fill amber' : 'spend-bar-fill';
 
+  const showYesterday = d.show_yesterday && (d.yesterday_usd || 0) > 0;
+  const todayLabel = showYesterday
+    ? 'Yesterday (' + new Date(Date.now() - 86400000).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' }) + ')'
+    : 'Today';
+  const todayValue = showYesterday ? (d.yesterday_usd || 0) : spent;
   body.appendChild(el('div', { class: 'data-row' },
-    el('span', { class: 'data-label' }, 'Today'),
-    el('span', { class: 'data-value' }, '$' + spent.toFixed(4)),
+    el('span', { class: 'data-label' }, todayLabel),
+    el('span', { class: 'data-value' }, '$' + todayValue.toFixed(4)),
   ));
   body.appendChild(el('div', { class: 'data-row' },
     el('span', { class: 'data-label' }, 'Daily Cap'),
