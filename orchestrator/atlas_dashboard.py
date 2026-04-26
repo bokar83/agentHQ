@@ -53,7 +53,7 @@ def _fetch_content_board() -> list:
         week_end = today + timedelta(days=7)
         results = nc.query_database(
             db_id,
-            filter={
+            filter_obj={
                 "and": [
                     {"property": "Scheduled Date", "date": {"on_or_after": today.isoformat()}},
                     {"property": "Scheduled Date", "date": {"on_or_before": week_end.isoformat()}},
@@ -163,7 +163,7 @@ def _router_log_fallbacks(limit: int = 20) -> list:
         cur = conn.cursor()
         cur.execute(
             """
-            SELECT ts, task_type, raw_input
+            SELECT ts, task_type
               FROM router_log
              WHERE fallback = TRUE
                AND ts >= NOW() - INTERVAL '24 hours'
@@ -178,7 +178,6 @@ def _router_log_fallbacks(limit: int = 20) -> list:
             {
                 "ts": r[0].isoformat() if r[0] else None,
                 "task_type": str(r[1] or ""),
-                "raw_input": str(r[2] or "")[:80],
             }
             for r in rows
         ]
@@ -218,10 +217,10 @@ def _last_autonomous_action() -> dict:
         cur = conn.cursor()
         cur.execute(
             """
-            SELECT ts_start, task_type, status, summary
+            SELECT ts_started, task_type, status, summary
               FROM task_outcomes
              WHERE autonomous = TRUE
-             ORDER BY ts_start DESC
+             ORDER BY ts_started DESC
              LIMIT 1
             """
         )
@@ -322,7 +321,7 @@ def _fetch_ideas(limit: int = 10) -> list:
         nc = NotionClient(secret=secret)
         results = nc.query_database(
             db_id,
-            filter={
+            filter_obj={
                 "and": [
                     {"property": "Status", "select": {"does_not_equal": "Done"}},
                     {"property": "Status", "select": {"does_not_equal": "Killed"}},

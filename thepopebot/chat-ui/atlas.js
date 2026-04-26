@@ -3,7 +3,7 @@
 // No user-sourced data is ever injected via innerHTML.
 
 const ORC_BASE = '/api/orc';
-const TOKEN_TTL_MS = 8 * 60 * 60 * 1000;
+const TOKEN_TTL_MS = 0;
 // Separate storage keys from /chat so each page requires its own login
 const TOKEN_KEY = 'atlas_token';
 const TOKEN_TS_KEY = 'atlas_token_ts';
