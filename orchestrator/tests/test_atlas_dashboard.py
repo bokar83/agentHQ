@@ -49,3 +49,52 @@ def test_get_queue_returns_pending_rows():
     assert item["crew_name"] == "griot"
     assert item["proposal_type"] == "linkedin_post"
     assert "ts_created" in item
+
+
+def test_get_content_returns_items():
+    mock_items = [
+        {"title": "Post A", "status": "Queued", "scheduled_date": "2026-04-26", "platform": "LinkedIn"},
+        {"title": "Post B", "status": "Draft",  "scheduled_date": None,         "platform": "X"},
+    ]
+    with patch("atlas_dashboard._fetch_content_board", return_value=mock_items):
+        result = atlas_dashboard.get_content()
+
+    assert result["count"] == 2
+    assert result["items"][0]["title"] == "Post A"
+
+
+def test_get_spend_returns_shape():
+    mock_snap = MagicMock()
+    mock_snap.spent_today_usd = 0.12
+    mock_snap.cap_usd = 1.0
+    mock_snap.remaining_usd = 0.88
+    mock_snap.per_crew = {"griot": 0.10, "chairman": 0.02}
+
+    with patch("autonomy_guard.get_guard") as mock_guard, \
+         patch("atlas_dashboard._spend_7d_by_day", return_value=[{"date": "2026-04-25", "usd": 0.12}]):
+        mock_guard.return_value.snapshot.return_value = mock_snap
+        result = atlas_dashboard.get_spend()
+
+    assert result["today"]["spent_usd"] == 0.12
+    assert result["today"]["cap_usd"] == 1.0
+    assert result["today"]["remaining_usd"] == 0.88
+    assert len(result["by_day"]) == 1
+
+
+def test_get_heartbeats_returns_wakes():
+    mock_wake = MagicMock()
+    mock_wake.name = "griot_daily"
+    mock_wake.crew_name = "griot"
+    mock_wake.at_hour = 7
+    mock_wake.at_minute = 30
+    mock_wake.every_seconds = None
+    mock_wake.last_fired_epoch = None
+    mock_wake.last_fired_date = None
+
+    with patch("heartbeat.list_wakes", return_value=[mock_wake]):
+        result = atlas_dashboard.get_heartbeats()
+
+    assert len(result["wakes"]) == 1
+    w = result["wakes"][0]
+    assert w["name"] == "griot_daily"
+    assert w["at_hour"] == 7
