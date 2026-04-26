@@ -2883,7 +2883,7 @@ CREW_REGISTRY = {
 def assemble_crew(crew_type: str, user_request: str) -> Crew:
     """
     Main entry point for crew assembly.
-    Called by orchestrator.py with the crew_type from the router.
+    Main entry point for crew assembly. Called by engine.run_orchestrator.
     """
     builder = CREW_REGISTRY.get(crew_type, build_unknown_crew)
     
