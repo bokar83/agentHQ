@@ -29,8 +29,9 @@ def test_default_state_blocks_all_crews(_m, tmp_path: Path):
         assert d.decision_tag == "blocked-disabled"
 
 
+@patch("autonomy_guard.AutonomyGuard._assert_contract_satisfied")
 @patch("autonomy_guard.AutonomyGuard._spent_today_usd", return_value=0.0)
-def test_enabled_crew_with_dry_run_allows_and_flags_dry_run(_m, tmp_path: Path):
+def test_enabled_crew_with_dry_run_allows_and_flags_dry_run(_m, _mc, tmp_path: Path):
     g = _make_guard(tmp_path)
     g.set_crew_enabled("griot", True)
     d = g.guard("griot")
@@ -39,8 +40,9 @@ def test_enabled_crew_with_dry_run_allows_and_flags_dry_run(_m, tmp_path: Path):
     assert d.decision_tag == "dry-run"
 
 
+@patch("autonomy_guard.AutonomyGuard._assert_contract_satisfied")
 @patch("autonomy_guard.AutonomyGuard._spent_today_usd", return_value=0.0)
-def test_enabled_live_crew_allows_and_not_dry_run(_m, tmp_path: Path):
+def test_enabled_live_crew_allows_and_not_dry_run(_m, _mc, tmp_path: Path):
     g = _make_guard(tmp_path)
     g.set_crew_enabled("griot", True)
     g.set_crew_dry_run("griot", False)
@@ -50,16 +52,18 @@ def test_enabled_live_crew_allows_and_not_dry_run(_m, tmp_path: Path):
     assert d.decision_tag == "allowed"
 
 
+@patch("autonomy_guard.AutonomyGuard._assert_contract_satisfied")
 @patch("autonomy_guard.AutonomyGuard._spent_today_usd", return_value=0.95)
-def test_near_cap_with_small_estimate_still_allowed(_m, tmp_path: Path):
+def test_near_cap_with_small_estimate_still_allowed(_m, _mc, tmp_path: Path):
     g = _make_guard(tmp_path, cap=1.00)
     g.set_crew_enabled("griot", True)
     d = g.guard("griot", estimated_usd=0.01)
     assert d.allowed is True
 
 
+@patch("autonomy_guard.AutonomyGuard._assert_contract_satisfied")
 @patch("autonomy_guard.AutonomyGuard._spent_today_usd", return_value=0.99)
-def test_cap_exceeded_blocks_and_auto_kills(_m, tmp_path: Path):
+def test_cap_exceeded_blocks_and_auto_kills(_m, _mc, tmp_path: Path):
     g = _make_guard(tmp_path, cap=1.00)
     g.set_crew_enabled("griot", True)
     d = g.guard("griot", estimated_usd=0.05)
@@ -68,8 +72,9 @@ def test_cap_exceeded_blocks_and_auto_kills(_m, tmp_path: Path):
     assert g.is_killed() is True
 
 
+@patch("autonomy_guard.AutonomyGuard._assert_contract_satisfied")
 @patch("autonomy_guard.AutonomyGuard._spent_today_usd", return_value=0.0)
-def test_kill_blocks_all_crews(_m, tmp_path: Path):
+def test_kill_blocks_all_crews(_m, _mc, tmp_path: Path):
     g = _make_guard(tmp_path)
     g.set_crew_enabled("griot", True)
     g.kill("manual test")
@@ -78,8 +83,9 @@ def test_kill_blocks_all_crews(_m, tmp_path: Path):
     assert d.decision_tag == "blocked-killed"
 
 
+@patch("autonomy_guard.AutonomyGuard._assert_contract_satisfied")
 @patch("autonomy_guard.AutonomyGuard._spent_today_usd", return_value=0.0)
-def test_unkill_restores(_m, tmp_path: Path):
+def test_unkill_restores(_m, _mc, tmp_path: Path):
     g = _make_guard(tmp_path)
     g.set_crew_enabled("griot", True)
     g.kill("test")
@@ -96,8 +102,9 @@ def test_unknown_crew_blocked(_m, tmp_path: Path):
     assert d.decision_tag == "blocked-unknown-crew"
 
 
+@patch("autonomy_guard.AutonomyGuard._assert_contract_satisfied")
 @patch("autonomy_guard.AutonomyGuard._spent_today_usd", return_value=0.0)
-def test_state_persists_across_instances(_m, tmp_path: Path):
+def test_state_persists_across_instances(_m, _mc, tmp_path: Path):
     state_file = tmp_path / "autonomy_state.json"
     g1 = AutonomyGuard(state_file=str(state_file), cap_usd=1.00)
     g1.set_crew_enabled("griot", True)
@@ -171,3 +178,47 @@ def test_garbage_state_file_falls_back_to_defaults(_m, tmp_path: Path):
     d = g.guard("griot")
     assert d.allowed is False
     assert d.decision_tag == "blocked-disabled"
+
+
+def test_set_crew_enabled_raises_without_contract(tmp_path):
+    """set_crew_enabled(True) must raise ContractNotSatisfiedError if no contract file exists."""
+    from autonomy_guard import AutonomyGuard, ContractNotSatisfiedError
+    g = AutonomyGuard(state_file=str(tmp_path / "state.json"), cap_usd=1.00,
+                      contracts_dir=str(tmp_path / "contracts"))
+    with pytest.raises(ContractNotSatisfiedError, match="griot"):
+        g.set_crew_enabled("griot", True)
+
+
+def test_set_crew_dry_run_false_raises_without_contract(tmp_path):
+    """set_crew_dry_run(False) must raise ContractNotSatisfiedError if no contract file exists."""
+    from autonomy_guard import AutonomyGuard, ContractNotSatisfiedError
+    g = AutonomyGuard(state_file=str(tmp_path / "state.json"), cap_usd=1.00,
+                      contracts_dir=str(tmp_path / "contracts"))
+    with pytest.raises(ContractNotSatisfiedError, match="griot"):
+        g.set_crew_dry_run("griot", False)
+
+
+def test_set_crew_dry_run_true_does_not_require_contract(tmp_path):
+    """Setting dry_run=True never requires a contract."""
+    from autonomy_guard import AutonomyGuard
+    g = AutonomyGuard(state_file=str(tmp_path / "state.json"), cap_usd=1.00,
+                      contracts_dir=str(tmp_path / "contracts"))
+    g.set_crew_dry_run("griot", True)  # must not raise
+
+
+def test_set_crew_enabled_false_does_not_require_contract(tmp_path):
+    """Disabling a crew never requires a contract."""
+    from autonomy_guard import AutonomyGuard
+    g = AutonomyGuard(state_file=str(tmp_path / "state.json"), cap_usd=1.00,
+                      contracts_dir=str(tmp_path / "contracts"))
+    g._state["crews"]["griot"]["enabled"] = True
+    g.set_crew_enabled("griot", False)  # must not raise
+
+
+def test_cost_ceiling_in_default_state(tmp_path):
+    """Default state includes cost_ceiling_usd per crew."""
+    from autonomy_guard import AutonomyGuard
+    g = AutonomyGuard(state_file=str(tmp_path / "state.json"), cap_usd=1.00,
+                      contracts_dir=str(tmp_path / "contracts"))
+    assert "cost_ceiling_usd" in g._state["crews"]["griot"]
+    assert g._state["crews"]["griot"]["cost_ceiling_usd"] is None
