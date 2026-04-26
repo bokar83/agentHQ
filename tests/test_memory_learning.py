@@ -122,7 +122,7 @@ def test_memory_gated_task_types_constant_exists():
     """MEMORY_GATED_TASK_TYPES contains expected task types and excludes simple ones."""
     import sys, os
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'orchestrator'))
-    from orchestrator import MEMORY_GATED_TASK_TYPES
+    from constants import MEMORY_GATED_TASK_TYPES
     assert "research_report" in MEMORY_GATED_TASK_TYPES
     assert "consulting_deliverable" in MEMORY_GATED_TASK_TYPES
     assert "copywriting" in MEMORY_GATED_TASK_TYPES
@@ -135,7 +135,7 @@ def test_is_praise_detects_explicit_praise():
     """_is_praise returns True for short explicit praise messages."""
     import sys, os
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'orchestrator'))
-    from orchestrator import _is_praise
+    from handlers_chat import _is_praise
     assert _is_praise("good job") is True
     assert _is_praise("Great work!") is True
     assert _is_praise("well done") is True
@@ -149,7 +149,8 @@ def test_is_feedback_on_prior_job_within_window():
     import sys, os
     from datetime import datetime, timedelta
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'orchestrator'))
-    from orchestrator import _is_feedback_on_prior_job, _last_completed_job
+    from handlers_chat import _is_feedback_on_prior_job
+    from state import _last_completed_job
 
     _last_completed_job["12345"] = {
         "job_id": "abc",

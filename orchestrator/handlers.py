@@ -8,12 +8,11 @@ Thin dispatcher. All the real work lives in:
   - handlers_chat.py       (run_chat + praise/critique)
   - worker.py              (_run_background_job)
 
-Dispatch order in process_telegram_update MUST match orchestrator.py:1346-2345
-exactly. Reordering any of steps 1-9 risks regressing the PR #10/#11/#13
-feedback-window precedence rules.
+Dispatch order in process_telegram_update is load-bearing. Reordering any of
+steps 1-9 risks regressing the PR #10/#11/#13 feedback-window precedence rules.
 
-The polling loop mirrors orchestrator.py:2347-2398: 3-attempt deleteWebhook
-retry, 401 -> stop, allowed_updates includes callback_query.
+The polling loop uses 3-attempt deleteWebhook retry, 401 -> stop,
+allowed_updates includes callback_query.
 """
 import asyncio
 import logging
@@ -79,7 +78,7 @@ async def process_telegram_update(update: dict) -> None:
     """
     Unified processor for Telegram updates (webhook or polling).
 
-    Dispatch order matters. It matches orchestrator.py:1346-2345 exactly:
+    Dispatch order matters -- reordering risks regressing feedback-window precedence rules:
       1. callback_query (Phase 1 inline-button feedback tag)
       2. sender auth
       3. evict expired feedback windows, then 5-min free-text tag window
@@ -164,7 +163,7 @@ async def process_telegram_update(update: dict) -> None:
     if handle_feedback(text, chat_id):
         return
 
-    # 9. Classify and dispatch. Mirrors orchestrator.py:2283-2346.
+    # 9. Classify and dispatch.
     job_id = str(uuid.uuid4())
     from notifier import send_briefing, send_message
 
@@ -234,7 +233,7 @@ async def process_telegram_update(update: dict) -> None:
 async def telegram_polling_loop() -> None:
     """
     Poll for Telegram updates instead of waiting on webhooks.
-    Mirrors orchestrator.py:2347-2398 byte-for-byte.
+    Poll for Telegram updates instead of waiting on webhooks.
     """
     token = os.environ.get("ORCHESTRATOR_TELEGRAM_BOT_TOKEN")
     if not token:

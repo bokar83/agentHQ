@@ -144,9 +144,9 @@ class TestHealthReportWebhook:
         self.send_patch = patch("notifier.send_health_check_report", return_value=True)
         self.send_patch.start()
         import importlib
-        import orchestrator
-        importlib.reload(orchestrator)
-        self.client = TestClient(orchestrator.app)
+        import app
+        importlib.reload(app)
+        self.client = TestClient(app.app)
 
     def teardown_method(self):
         self.send_patch.stop()

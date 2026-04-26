@@ -1,13 +1,8 @@
 """
 state.py - In-memory system state trackers.
 
-Shared dicts and locks that span handler modules. Kept here so both the
-live monolith (orchestrator.py) and the modular shadow (app.py + handlers*)
-can import the same object during the cutover.
-
-After the entrypoint flip, the monolith will still import from this module,
-so state survives the transition within a single process. A container
-restart clears all of these - that is intentional.
+Shared dicts and locks that span handler modules. A container restart
+clears all of these - that is intentional.
 """
 import threading
 
@@ -39,8 +34,7 @@ _git_lock = threading.Lock()
 
 # Praise / critique signal word lists.
 # Used by handlers_chat.handle_feedback to decide whether a short message
-# is reacting to the last completed job. Short list is the one the monolith
-# shipped with; extended list folds in the shadow's emoji/regex coverage.
+# is reacting to the last completed job.
 _PRAISE_SIGNALS = {
     "good job", "great", "well done", "perfect", "excellent",
     "love it", "nice work", "brilliant", "solid", "nailed it",
