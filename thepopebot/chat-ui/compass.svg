@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56">
+  <circle cx="28" cy="28" r="27" fill="#10131A" stroke="#C19A6B" stroke-width="1.5"/>
+  <circle cx="28" cy="28" r="2" fill="#C19A6B"/>
+  <circle cx="28" cy="28" r="20" fill="none" stroke="rgba(193,154,107,0.2)" stroke-width="1"/>
+  <!-- N needle (terracotta) -->
+  <polygon points="28,10 25.5,28 30.5,28" fill="#FF6B35"/>
+  <!-- S needle (brass) -->
+  <polygon points="28,46 25.5,28 30.5,28" fill="#C19A6B"/>
+  <!-- Tick marks -->
+  <line x1="28" y1="8" x2="28" y2="12" stroke="#C19A6B" stroke-width="1.5"/>
+  <line x1="48" y1="28" x2="44" y2="28" stroke="#C19A6B" stroke-width="1"/>
+  <line x1="8" y1="28" x2="12" y2="28" stroke="#C19A6B" stroke-width="1"/>
+  <line x1="28" y1="48" x2="28" y2="44" stroke="#C19A6B" stroke-width="1"/>
+  <!-- Cardinal letters -->
+  <text x="28" y="7" text-anchor="middle" font-family="Georgia,serif" font-size="5" font-weight="700" fill="#FF6B35">N</text>
+</svg>

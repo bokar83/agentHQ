@@ -3,7 +3,7 @@
 // No user-sourced data is ever injected via innerHTML.
 
 const ORC_BASE = '/api/orc';
-const TOKEN_TTL_MS = 8 * 60 * 60 * 1000;
+const TOKEN_TTL_MS = 4 * 60 * 60 * 1000;
 // Separate storage keys from /chat so each page requires its own login
 const TOKEN_KEY = 'atlas_token';
 const TOKEN_TS_KEY = 'atlas_token_ts';
@@ -97,6 +97,10 @@ async function apiFetch(path, opts) {
     location.reload();
     throw new Error('TOKEN_EXPIRED');
   }
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error('HTTP ' + res.status + ': ' + body.slice(0, 200));
+  }
   return res.json();
 }
 
@@ -151,7 +155,6 @@ function renderState(d) {
     ['Kill Switch', d.killed ? 'ACTIVE' : 'Off', d.killed ? 'red' : 'green'],
     ['Griot Enabled', griot.enabled ? 'On' : 'Off', griot.enabled ? 'green' : 'amber'],
     ['Griot Dry-Run', griot.dry_run ? 'On' : 'Off', griot.dry_run ? 'amber' : ''],
-    ['Daily Cap', '$' + (d.cap_usd || 0).toFixed(2), ''],
   ];
   rows.forEach(function(row) {
     body.appendChild(el('div', { class: 'data-row' },
@@ -215,25 +218,53 @@ async function refreshQueue() {
 function renderContent(d) {
   const body = document.getElementById('card-content-body');
   body.replaceChildren();
-  const items = d.items || [];
-  if (!items.length) {
-    body.appendChild(el('p', { class: 'empty-state' }, 'No posts scheduled this week'));
+  const upcoming = d.upcoming || [];
+  const pastDue  = d.past_due || [];
+  const recent   = d.recent   || [];
+  if (!upcoming.length && !pastDue.length && !recent.length) {
+    body.appendChild(el('p', { class: 'empty-state' }, 'No content in window'));
     return;
   }
-  items.forEach(function(item) {
+
+  function makeItem(item, forceCls) {
     const platform = el('span', { class: 'content-platform' });
-    platform.textContent = (item.platform || '').slice(0, 2);
+    platform.textContent = (item.platform || '').slice(0, 2).toUpperCase() || '--';
     const title = el('span', { class: 'content-title' });
     title.textContent = item.title || '';
+    const dateLabel = el('span', { class: 'content-date' });
+    dateLabel.textContent = item.scheduled_date ? item.scheduled_date.slice(5) : '';
     const rawStatus = (item.status || '').toLowerCase();
-    const sCls = rawStatus === 'queued' ? 'content-status queued'
-               : rawStatus === 'posted' ? 'content-status posted'
+    const sCls = forceCls ? forceCls
+               : rawStatus === 'queued'  ? 'content-status queued'
+               : rawStatus === 'posted'  ? 'content-status posted'
                : rawStatus === 'skipped' ? 'content-status skipped'
+               : rawStatus === 'ready'   ? 'content-status queued'
                : 'content-status';
-    const status = el('span', { class: sCls });
-    status.textContent = item.status || '';
-    body.appendChild(el('div', { class: 'content-item' }, platform, title, status));
-  });
+    const statusEl = el('span', { class: sCls });
+    statusEl.textContent = forceCls === 'content-status past-due' ? 'Past Due' : (item.status || '');
+    return el('div', { class: 'content-item' }, platform, title, dateLabel, statusEl);
+  }
+
+  function sectionLabel(text) {
+    const lbl = el('div', { class: 'data-label' });
+    lbl.textContent = text;
+    lbl.style.marginTop = '6px';
+    lbl.style.marginBottom = '2px';
+    return lbl;
+  }
+
+  if (pastDue.length) {
+    body.appendChild(sectionLabel('Past Due'));
+    pastDue.forEach(function(item) { body.appendChild(makeItem(item, 'content-status past-due')); });
+  }
+  if (upcoming.length) {
+    body.appendChild(sectionLabel('Upcoming (7 days)'));
+    upcoming.forEach(function(item) { body.appendChild(makeItem(item, null)); });
+  }
+  if (recent.length) {
+    body.appendChild(sectionLabel('Recently Posted'));
+    recent.forEach(function(item) { body.appendChild(makeItem(item, null)); });
+  }
 }
 
 async function refreshContent() {
@@ -250,9 +281,14 @@ function renderSpend(d) {
   const pct = Math.min(100, (spent / cap) * 100);
   const barCls = pct > 90 ? 'spend-bar-fill red' : pct > 70 ? 'spend-bar-fill amber' : 'spend-bar-fill';
 
+  const showLastDay = d.show_last_day && (d.last_day_usd || 0) > 0;
+  const todayLabel = showLastDay && d.last_day_date
+    ? d.last_day_date.slice(5).replace('-', '/') + ' (last spend)'
+    : 'Today';
+  const todayValue = showLastDay ? (d.last_day_usd || 0) : spent;
   body.appendChild(el('div', { class: 'data-row' },
-    el('span', { class: 'data-label' }, 'Today Spent'),
-    el('span', { class: 'data-value' }, '$' + spent.toFixed(4)),
+    el('span', { class: 'data-label' }, todayLabel),
+    el('span', { class: 'data-value' }, '$' + todayValue.toFixed(4)),
   ));
   body.appendChild(el('div', { class: 'data-row' },
     el('span', { class: 'data-label' }, 'Daily Cap'),
@@ -266,18 +302,36 @@ function renderSpend(d) {
   body.appendChild(track);
 
   const pctLabel = el('div', { class: 'data-label' });
-  pctLabel.textContent = pct.toFixed(1) + '% of cap used';
+  pctLabel.textContent = pct.toFixed(1) + '% of daily cap';
   body.appendChild(pctLabel);
 
+  if (d.week_usd != null) {
+    body.appendChild(el('div', { class: 'data-row' },
+      el('span', { class: 'data-label' }, 'This Week'),
+      el('span', { class: 'data-value' }, '$' + (d.week_usd || 0).toFixed(4)),
+    ));
+  }
+  if (d.month_usd != null) {
+    body.appendChild(el('div', { class: 'data-row' },
+      el('span', { class: 'data-label' }, 'Month to Date'),
+      el('span', { class: 'data-value' }, '$' + (d.month_usd || 0).toFixed(4)),
+    ));
+  }
+
   const perCrew = today.per_crew || {};
-  Object.entries(perCrew).forEach(function([crew, usd]) {
-    if (usd > 0) {
+  const crewEntries = Object.entries(perCrew).filter(function([, usd]) { return usd > 0; });
+  if (crewEntries.length) {
+    const divider = el('div', { class: 'data-label' });
+    divider.textContent = 'By Agent (today)';
+    divider.style.marginTop = '8px';
+    body.appendChild(divider);
+    crewEntries.forEach(function([crew, usd]) {
       body.appendChild(el('div', { class: 'data-row' },
         el('span', { class: 'data-label' }, crew),
         el('span', { class: 'data-value' }, '$' + usd.toFixed(4)),
       ));
-    }
-  });
+    });
+  }
 }
 
 async function refreshSpend() {
@@ -430,7 +484,7 @@ var QUOTES = [
   {text:"Absorb what is useful, discard what is not, add what is uniquely your own.",author:"Bruce Lee"},
   {text:"Education is the most powerful weapon which you can use to change the world.",author:"Nelson Mandela"},
   {text:"Mamba mentality is about 4am workouts, doing more than the next guy, and wanting it more.",author:"Kobe Bryant"},
-  {text:"Everything negative -- pressure, challenges -- is all an opportunity for me to rise.",author:"Kobe Bryant"},
+  {text:"Everything negative, pressure, challenges, is all an opportunity for me to rise.",author:"Kobe Bryant"},
   {text:"We preferons la pauvrete dans la liberte a la richesse dans l'esclavage.",author:"Sekou Toure"},
   {text:"L'homme qui travaille et qui pense construit son destin.",author:"Sekou Toure"},
   {text:"Suffer the pain of discipline or suffer the pain of regret.",author:"Jim Rohn"},
