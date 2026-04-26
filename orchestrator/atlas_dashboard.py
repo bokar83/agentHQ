@@ -156,16 +156,16 @@ def get_heartbeats() -> dict:
 
 
 def _router_log_fallbacks(limit: int = 20) -> list:
-    """Last `limit` router_log rows where fallback=true, last 24h."""
+    """Last `limit` router_log rows with no crew assigned (unrouted), last 24h."""
     try:
         from memory import _pg_conn
         conn = _pg_conn()
         cur = conn.cursor()
         cur.execute(
             """
-            SELECT ts, task_type
+            SELECT ts, task_type, crew
               FROM router_log
-             WHERE fallback = TRUE
+             WHERE crew IS NULL
                AND ts >= NOW() - INTERVAL '24 hours'
              ORDER BY ts DESC
              LIMIT %s
@@ -178,6 +178,7 @@ def _router_log_fallbacks(limit: int = 20) -> list:
             {
                 "ts": r[0].isoformat() if r[0] else None,
                 "task_type": str(r[1] or ""),
+                "crew": str(r[2] or "unrouted"),
             }
             for r in rows
         ]
@@ -217,9 +218,8 @@ def _last_autonomous_action() -> dict:
         cur = conn.cursor()
         cur.execute(
             """
-            SELECT ts_started, task_type, status, summary
+            SELECT ts_started, crew_name, success, result_summary
               FROM task_outcomes
-             WHERE autonomous = TRUE
              ORDER BY ts_started DESC
              LIMIT 1
             """
@@ -231,7 +231,7 @@ def _last_autonomous_action() -> dict:
         return {
             "ts": row[0].isoformat() if row[0] else None,
             "task_type": str(row[1] or ""),
-            "status": str(row[2] or ""),
+            "status": "ok" if row[2] else "failed",
             "description": str(row[3] or "")[:120],
         }
     except Exception as e:
@@ -281,11 +281,11 @@ def get_hero() -> dict:
     guard = get_guard()
     snap = guard.snapshot()
     killed = guard.is_killed()
-    errors = _router_log_fallbacks(limit=1)
+    log_errors = _error_log_tail(lines=5)
     pct = (snap.spent_today_usd / snap.cap_usd * 100) if snap.cap_usd else 0.0
     if killed:
         system_status = "red"
-    elif errors or pct > 90:
+    elif log_errors or pct > 90:
         system_status = "amber"
     else:
         system_status = "green"
