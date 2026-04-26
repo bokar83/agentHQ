@@ -281,11 +281,11 @@ function renderSpend(d) {
   const pct = Math.min(100, (spent / cap) * 100);
   const barCls = pct > 90 ? 'spend-bar-fill red' : pct > 70 ? 'spend-bar-fill amber' : 'spend-bar-fill';
 
-  const showYesterday = d.show_yesterday && (d.yesterday_usd || 0) > 0;
-  const todayLabel = showYesterday
-    ? 'Yesterday (' + new Date(Date.now() - 86400000).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' }) + ')'
+  const showLastDay = d.show_last_day && (d.last_day_usd || 0) > 0;
+  const todayLabel = showLastDay && d.last_day_date
+    ? d.last_day_date.slice(5).replace('-', '/') + ' (last spend)'
     : 'Today';
-  const todayValue = showYesterday ? (d.yesterday_usd || 0) : spent;
+  const todayValue = showLastDay ? (d.last_day_usd || 0) : spent;
   body.appendChild(el('div', { class: 'data-row' },
     el('span', { class: 'data-label' }, todayLabel),
     el('span', { class: 'data-value' }, '$' + todayValue.toFixed(4)),
