@@ -39,7 +39,7 @@ def get_queue() -> dict:
 
 
 def _fetch_content_board() -> list:
-    """Fetch this-week content items from Notion Content Board."""
+    """Fetch past-due + next-7-days content items from Notion Content Board."""
     import os
     from datetime import date, timedelta
     try:
@@ -50,12 +50,13 @@ def _fetch_content_board() -> list:
             return []
         nc = NotionClient(secret=secret)
         today = date.today()
+        week_start = today - timedelta(days=7)
         week_end = today + timedelta(days=7)
         results = nc.query_database(
             db_id,
             filter_obj={
                 "and": [
-                    {"property": "Scheduled Date", "date": {"on_or_after": today.isoformat()}},
+                    {"property": "Scheduled Date", "date": {"on_or_after": week_start.isoformat()}},
                     {"property": "Scheduled Date", "date": {"on_or_before": week_end.isoformat()}},
                 ]
             },
@@ -92,18 +93,48 @@ def get_content() -> dict:
     return {"items": items, "count": len(items)}
 
 
-def _spend_7d_by_day() -> list:
-    """7-day daily spend from llm_calls. Returns [{date, usd}] newest-last."""
+def _spend_aggregates() -> dict:
+    """Week-to-date and month-to-date totals from llm_calls."""
     try:
         from memory import _pg_conn
         conn = _pg_conn()
         cur = conn.cursor()
         cur.execute(
             """
-            SELECT DATE(ts AT TIME ZONE 'UTC') AS day, SUM(cost_usd) AS total
+            SELECT
+              SUM(CASE WHEN ts >= date_trunc('week',  NOW() AT TIME ZONE 'America/Denver')
+                       THEN cost_usd ELSE 0 END) AS week_usd,
+              SUM(CASE WHEN ts >= date_trunc('month', NOW() AT TIME ZONE 'America/Denver')
+                       THEN cost_usd ELSE 0 END) AS month_usd,
+              SUM(CASE WHEN ts >= date_trunc('day',   NOW() AT TIME ZONE 'America/Denver')
+                       THEN cost_usd ELSE 0 END) AS today_usd
+            FROM llm_calls
+            WHERE ts >= date_trunc('month', NOW() AT TIME ZONE 'America/Denver')
+            """
+        )
+        row = cur.fetchone()
+        cur.close()
+        return {
+            "week_usd":  round(float(row[0] or 0), 4),
+            "month_usd": round(float(row[1] or 0), 4),
+            "today_db_usd": round(float(row[2] or 0), 4),
+        }
+    except Exception as e:
+        logger.warning(f"_spend_aggregates: {e}")
+        return {"week_usd": 0.0, "month_usd": 0.0, "today_db_usd": 0.0}
+
+
+def _spend_7d_by_day() -> list:
+    """7-day daily spend from llm_calls. Returns [{date, usd}] oldest-first."""
+    try:
+        from memory import _pg_conn
+        conn = _pg_conn()
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT DATE(ts AT TIME ZONE 'America/Denver') AS day, SUM(cost_usd) AS total
               FROM llm_calls
              WHERE ts >= NOW() - INTERVAL '7 days'
-               AND autonomous = TRUE
              GROUP BY day
              ORDER BY day ASC
             """
@@ -117,17 +148,21 @@ def _spend_7d_by_day() -> list:
 
 
 def get_spend() -> dict:
-    """Spend card: today's spend vs cap + 7-day daily breakdown."""
+    """Spend card: today/week/month totals + cap + 7-day daily breakdown."""
     from autonomy_guard import get_guard
     snap = get_guard().snapshot()
+    agg = _spend_aggregates()
     by_day = _spend_7d_by_day()
+    today_usd = max(snap.spent_today_usd, agg["today_db_usd"])
     return {
         "today": {
-            "spent_usd": round(snap.spent_today_usd, 4),
+            "spent_usd": round(today_usd, 4),
             "cap_usd": round(snap.cap_usd, 4),
-            "remaining_usd": round(snap.remaining_usd, 4),
+            "remaining_usd": round(snap.cap_usd - today_usd, 4),
             "per_crew": {k: round(v, 4) for k, v in snap.per_crew.items()},
         },
+        "week_usd": agg["week_usd"],
+        "month_usd": agg["month_usd"],
         "by_day": by_day,
     }
 
