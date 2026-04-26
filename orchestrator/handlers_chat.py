@@ -323,7 +323,14 @@ def run_chat(message: str, session_key: str = "default") -> dict:
     except Exception as e:
         logger.warning(f"Chat history load failed (non-fatal): {e}")
 
-    messages = [{"role": "system", "content": _SYSTEM_PROMPT}]
+    try:
+        from prompt_loader import load_system_prompt
+        _active_prompt = load_system_prompt("chat", fallback=_SYSTEM_PROMPT)
+    except Exception as _pl_e:
+        logger.warning(f"prompt_loader failed, using hardcoded prompt: {_pl_e}")
+        _active_prompt = _SYSTEM_PROMPT
+
+    messages = [{"role": "system", "content": _active_prompt}]
     messages.extend(history_messages)
     messages.append({"role": "user", "content": message})
 
