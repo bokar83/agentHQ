@@ -1,0 +1,30 @@
+{
+  "_doc": "Atlas M7b auto_publisher time-of-day rules. Editable without code changes. Times are local America/Denver. Slot index 0=first post of the day, 1=second, etc.",
+  "_updated": "2026-04-25",
+
+  "platform_slots": {
+    "LinkedIn": [
+      {"slot": 0, "hour": 7, "minute": 0, "label": "morning"},
+      {"slot": 1, "hour": 11, "minute": 0, "label": "late-morning"},
+      {"slot": 2, "hour": 12, "minute": 0, "label": "noon"}
+    ],
+    "X": [
+      {"slot": 0, "hour": 7, "minute": 0, "label": "morning"},
+      {"slot": 1, "hour": 11, "minute": 0, "label": "late-morning"},
+      {"slot": 2, "hour": 14, "minute": 0, "label": "afternoon"}
+    ]
+  },
+
+  "past_due": {
+    "_doc": "When multiple past-due records fire on the same wake, stagger them so they do not burst. Skip stagger inside a thread (future-work; no thread concept yet).",
+    "stagger_seconds": 900,
+    "max_per_tick": 4
+  },
+
+  "weekday_policy": {
+    "_doc": "Which weekdays the publisher acts on. 0=Mon, 6=Sun. Posts scheduled on a disallowed day are still respected (Notion is source of truth) but new auto-scheduling avoids them.",
+    "publish_days": [0, 1, 2, 3, 4, 5],
+    "skip_days": [6],
+    "comment": "Mon-Sat publish, skip Sunday."
+  }
+}

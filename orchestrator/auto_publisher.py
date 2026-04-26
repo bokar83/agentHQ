@@ -40,8 +40,10 @@ Built on the Blotato API contract verified end-to-end during M7a smoke test
 """
 from __future__ import annotations
 
+import json
 import logging
 import os
+import pathlib
 import time
 from datetime import date, datetime, timedelta
 from typing import Optional
@@ -57,6 +59,54 @@ CONTENT_DB_ID = os.environ.get("FORGE_CONTENT_DB", "339bcf1a-3029-81d1-8377-dc2f
 # without resolving, the next tick promotes it to PublishFailed. Protects
 # against orphaned in-flight rows from a process crash during polling.
 PUBLISHING_TTL_HOURS = 24
+
+# Default schedule when data/auto_publisher_schedule.json is missing.
+_DEFAULT_SCHEDULE = {
+    "platform_slots": {
+        "LinkedIn": [
+            {"slot": 0, "hour": 7, "minute": 0},
+            {"slot": 1, "hour": 11, "minute": 0},
+            {"slot": 2, "hour": 12, "minute": 0},
+        ],
+        "X": [
+            {"slot": 0, "hour": 7, "minute": 0},
+            {"slot": 1, "hour": 11, "minute": 0},
+            {"slot": 2, "hour": 14, "minute": 0},
+        ],
+    },
+    "past_due": {"stagger_seconds": 900, "max_per_tick": 4},
+    "weekday_policy": {"publish_days": [0, 1, 2, 3, 4, 5], "skip_days": [6]},
+}
+
+
+def _load_schedule() -> dict:
+    """Read auto_publisher_schedule.json. Search order:
+      1. env AUTO_PUBLISHER_SCHEDULE_FILE
+      2. data/auto_publisher_schedule.json (machine-local, gitignored)
+      3. /app/data/auto_publisher_schedule.json (container path)
+      4. orchestrator/auto_publisher_schedule.default.json (committed template,
+         used when no machine-local override exists)
+      5. _DEFAULT_SCHEDULE constant (last resort if even the template is missing)
+    """
+    here = pathlib.Path(__file__).parent
+    candidates = [
+        os.environ.get("AUTO_PUBLISHER_SCHEDULE_FILE"),
+        "data/auto_publisher_schedule.json",
+        "/app/data/auto_publisher_schedule.json",
+        str(here / "auto_publisher_schedule.default.json"),
+    ]
+    for path in candidates:
+        if not path:
+            continue
+        p = pathlib.Path(path)
+        if not p.exists():
+            continue
+        try:
+            return json.loads(p.read_text())
+        except Exception as e:
+            logger.warning(f"auto_publisher: schedule file {p} unreadable: {e}; trying next candidate")
+            continue
+    return _DEFAULT_SCHEDULE
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -125,17 +175,73 @@ def _account_id_for_platform(platform: str) -> Optional[str]:
 # Fetch eligible records
 # ═════════════════════════════════════════════════════════════════════════════
 
-def _fetch_due_queued(notion, today_iso: str) -> list:
+def _slot_index_for_platform_today(
+    platform: str,
+    today_iso: str,
+    already_published_today_count: int,
+) -> int:
+    """Return the slot index for the next post of this platform today.
+
+    `already_published_today_count` is how many of this platform's posts
+    have already gone Posted (or Publishing) today. The next post claims
+    the next slot (0-indexed). Used to pick the right time-of-day for
+    the post that's about to fire.
+    """
+    return already_published_today_count
+
+
+def _slot_time_today(schedule: dict, platform: str, slot_index: int, today_dt: datetime) -> Optional[datetime]:
+    """Return the localized datetime when slot N for `platform` should fire today.
+    Returns None if the platform has no slot for that index.
+    """
+    slots = schedule.get("platform_slots", {}).get(platform, [])
+    if slot_index >= len(slots):
+        return None
+    s = slots[slot_index]
+    return today_dt.replace(hour=int(s["hour"]), minute=int(s["minute"]), second=0, microsecond=0)
+
+
+def _fetch_due_queued(notion, today_iso: str, now_local: Optional[datetime] = None,
+                       schedule: Optional[dict] = None) -> list:
     """Return Content Board records where:
       Status = Queued
       Scheduled Date <= today
-      Platform contains LinkedIn OR X (or any other supported platform)
+      Platform has an account_id configured
 
-    Past-due records (Scheduled Date in the past) are included; they
-    represent posts that publish_brief notified Boubacar about but
-    he did not tap to publish. M7b auto-publishes them.
+    Time-of-day gate (M7b time slots):
+      - Past-due records (Scheduled Date < today): always included
+      - Today records: included only if the slot's preferred fire-time
+        for this platform has been reached AND the slot is not already taken
+        by an earlier same-platform post today.
+
+    `now_local` and `schedule` are injectable for tests; otherwise computed
+    from current time + the auto_publisher_schedule.json file.
     """
+    if schedule is None:
+        schedule = _load_schedule()
+    if now_local is None:
+        tz = pytz.timezone(TIMEZONE)
+        now_local = datetime.now(tz)
+
     posts = notion.query_database(CONTENT_DB_ID, filter_obj=None)
+
+    # Count how many records per (platform, today) have already moved past
+    # Queued (i.e. Publishing, Posted, or PublishFailed). Used to decide
+    # which slot today's next record claims.
+    already_today = {}  # platform -> count
+    for p in posts:
+        props = p.get("properties", {})
+        st = _select(props.get("Status", {}))
+        if st not in ("Publishing", "Posted", "PublishFailed"):
+            continue
+        sd = _date_start(props.get("Scheduled Date", {}))
+        if not sd or sd[:10] != today_iso:
+            continue
+        for pf in _multi(props.get("Platform", {})):
+            if _account_id_for_platform(pf) is None:
+                continue
+            already_today[pf] = already_today.get(pf, 0) + 1
+
     due = []
     for p in posts:
         props = p.get("properties", {})
@@ -144,20 +250,32 @@ def _fetch_due_queued(notion, today_iso: str) -> list:
         sd = _date_start(props.get("Scheduled Date", {}))
         if not sd:
             continue
-        # sd is "YYYY-MM-DD" or "YYYY-MM-DDTHH:MM:SS+OFFSET"; compare date prefix
-        if sd[:10] > today_iso:
+        sd_iso = sd[:10]
+        if sd_iso > today_iso:
             continue  # future, not due yet
         platforms = _multi(props.get("Platform", {}))
         for pf in platforms:
             if _account_id_for_platform(pf) is None:
-                continue  # no account ID configured for this platform
+                continue
+
+            # Time-of-day gate (only for today's records; past-due always fire)
+            if sd_iso == today_iso:
+                slot_idx = _slot_index_for_platform_today(pf, today_iso, already_today.get(pf, 0))
+                slot_time = _slot_time_today(schedule, pf, slot_idx, now_local)
+                if slot_time is None:
+                    # No slot defined for this index; skip (over budget for the day)
+                    continue
+                if now_local < slot_time:
+                    continue  # slot time hasn't arrived yet
+
             due.append({
                 "notion_id": p["id"],
                 "title": _title(props.get("Title", {})),
                 "draft": _text(props.get("Draft", {})),
                 "hook": _text(props.get("Hook", {})),
                 "platform": pf,
-                "scheduled_date": sd[:10],
+                "scheduled_date": sd_iso,
+                "is_past_due": sd_iso < today_iso,
             })
             break  # one publish per record (first matching platform)
     # Stable order: oldest scheduled first, then platform alpha.
@@ -366,17 +484,51 @@ def auto_publisher_tick() -> None:
     # ─────────────────────────────────────────────────────────────────────
     # Main publish loop.
     # ─────────────────────────────────────────────────────────────────────
+    schedule = _load_schedule()
+
+    # Weekday policy: skip publishing on disallowed days (default: skip Sunday).
+    # Past-due records still fire (audit trail must catch up); only today-records
+    # get gated by the weekday skip rule.
+    weekday = now_local.weekday()
+    skip_today_records = weekday in schedule.get("weekday_policy", {}).get("skip_days", [])
+
     try:
-        due = _fetch_due_queued(notion, today_iso)
+        due = _fetch_due_queued(notion, today_iso, now_local=now_local, schedule=schedule)
     except Exception as e:
         logger.error(f"auto_publisher: due-fetch failed: {e}")
         return
 
+    # Apply weekday skip to TODAY's records only; past-due always fire.
+    if skip_today_records:
+        before = len(due)
+        due = [r for r in due if r["is_past_due"]]
+        if before != len(due):
+            logger.info(
+                f"auto_publisher: weekday {now_local.strftime('%A')} is in skip_days; "
+                f"deferred {before - len(due)} today-records"
+            )
+
+    # Past-due stagger: cap how many past-dues fire per tick. Heartbeat fires
+    # every 5 min so multiple ticks drain the backlog over time without bursting.
+    past_due = [r for r in due if r["is_past_due"]]
+    today_records = [r for r in due if not r["is_past_due"]]
+    if past_due:
+        max_pd = int(schedule.get("past_due", {}).get("max_per_tick", 4))
+        if len(past_due) > max_pd:
+            logger.info(
+                f"auto_publisher: {len(past_due)} past-due records; "
+                f"capping this tick at {max_pd} (rest fire on next tick)"
+            )
+            past_due = past_due[:max_pd]
+        due = past_due + today_records
+    else:
+        due = today_records
+
     if not due:
-        logger.debug("auto_publisher: no due records")
+        logger.debug("auto_publisher: no due records (after time-gate + weekday-skip + stagger)")
         return
 
-    logger.info(f"auto_publisher: {len(due)} due record(s) to publish")
+    logger.info(f"auto_publisher: {len(due)} due record(s) to publish this tick")
 
     # Open the publisher once, reuse the httpx client across records.
     try:
