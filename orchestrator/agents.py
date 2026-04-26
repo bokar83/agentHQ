@@ -383,10 +383,11 @@ ROLE_CAPABILITY = {
     ("orchestrator",  "simple"):   ("deep_reasoning",        "medium"),
     ("orchestrator",  "moderate"): ("deep_reasoning",        "medium-high"),
     ("orchestrator",  "complex"):  ("deep_reasoning",        "high"),
-    # consultant: deep reasoning; complex allowed up to high for Opus-class quality
+    # consultant: deep reasoning; complex floor is medium-high to exclude Qwen-class
+    # models. Consulting deliverables are client-facing -- Sonnet-class minimum.
     ("consultant",    "simple"):   ("deep_reasoning",        "medium"),
     ("consultant",    "moderate"): ("deep_reasoning",        "medium"),
-    ("consultant",    "complex"):  ("deep_reasoning",        "high"),
+    ("consultant",    "complex"):  ("deep_reasoning",        "medium-high"),
     # voice: creative divergence with medium ceiling
     ("voice",         "simple"):   ("creative_divergence",   "low"),
     ("voice",         "moderate"): ("creative_divergence",   "medium"),
@@ -438,6 +439,33 @@ ROLE_TEMPERATURE = {
     ("skill_builder", "moderate"): 0.1,
     ("skill_builder", "complex"):  0.1,
 }
+
+
+# Capability tags present in COUNCIL_MODEL_REGISTRY. Validated at import time so a
+# typo in ROLE_CAPABILITY raises immediately instead of silently falling back to
+# the cheapest model.
+_VALID_CAPABILITIES = frozenset({
+    "deep_reasoning",
+    "creative_divergence",
+    "fast",
+    "cost_efficient",
+    "long_context",
+    "instruction_following",
+    "fresh_perspective",
+})
+
+
+def _validate_role_capability_dict() -> None:
+    """Raise ValueError at import if any capability tag in ROLE_CAPABILITY is misspelled."""
+    for key, (cap, _tier) in ROLE_CAPABILITY.items():
+        if cap not in _VALID_CAPABILITIES:
+            raise ValueError(
+                f"ROLE_CAPABILITY[{key!r}] has unknown capability tag {cap!r}. "
+                f"Valid: {sorted(_VALID_CAPABILITIES)}"
+            )
+
+
+_validate_role_capability_dict()
 
 
 def select_llm(agent_role: str, task_complexity: str = "moderate", temperature: float = None) -> LLM:
