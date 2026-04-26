@@ -594,28 +594,42 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 
 **Enhancements backlog (M8 session 2026-04-26):**
 
-- Agent Activity card: top 5 most active agents this week (calls, cost) from `llm_calls.crew_name` -- held, needs design decision on what "active" means
-- Last Autonomous Action hero tile: currently shows "Unavailable" -- needs `task_outcomes` data to be populated by autonomous runs
+- Agent Activity card: top 5 most active agents this week (calls, cost) from `llm_calls.crew_name`: held, needs design decision on what "active" means
+- Last Autonomous Action hero tile: currently shows "Unavailable": needs `task_outcomes` data to be populated by autonomous runs
 - Next Scheduled Fire hero tile: shows correctly from heartbeat registry
-- Content Board: show this week vs last week spend comparison (Mon-Sun delta) -- deferred
-- Cost ledger: use `llm_calls.project` as engagement/customer dimension; add `cost_ledger` table for non-LLM costs (Blotato, Notion, subscriptions) -- gate on first real client engagement
-- **Atlas Chat -- full agentic conversation loop (high priority):** Chat iframe must behave exactly like Claude Code or another LLM -- full back-and-forth, context retention, tool use. Goal: draft a post in the chat, iterate on it conversationally, then one-tap post from the same window. Currently the iframe is a passive embed; needs the orchestrator to wire a stateful session with memory + content tools so the conversation can actually do things (edit Notion, queue posts, etc.)
+- Content Board: show this week vs last week spend comparison (Mon-Sun delta): deferred
+- Cost ledger: use `llm_calls.project` as engagement/customer dimension; add `cost_ledger` table for non-LLM costs (Blotato, Notion, subscriptions): gate on first real client engagement
+- **Atlas Chat: full agentic conversation loop (high priority):** Chat iframe must behave exactly like Claude Code or another LLM: full back-and-forth, context retention, tool use. Goal: draft a post in the chat, iterate on it conversationally, then one-tap post from the same window. Currently the iframe is a passive embed; needs the orchestrator to wire a stateful session with memory + content tools so the conversation can actually do things (edit Notion, queue posts, etc.)
 
-## M9: Atlas Chat -- Full Agentic Conversation Loop
+## M9: Atlas Chat: Full Command Center
 
-**Status:** Planned (HIGH PRIORITY -- do ASAP)
-**Goal:** The Atlas Chat panel behaves exactly like Claude Code or a full LLM interface -- full back-and-forth, context retention, tool use, memory. Draft a LinkedIn post in the chat, iterate conversationally, then one-tap queue/post from the same window.
+**Status:** Design locked (v4), ready to build (HIGH PRIORITY)
+**Reviews:** Code reviewer (5 blockers) + Sankofa Council + blue/red team + model research: all run 2026-04-26. Full findings folded into spec v4.
+**Save point:** `savepoint-pre-atlas-m9-design-2026-04-26` (rewind: `git checkout savepoint-pre-atlas-m9-design-2026-04-26`)
 
-**Why it matters:** Right now the chat iframe is a passive relay. Boubacar needs to be able to work with agentsHQ on content the same way he works with Claude Code -- no context switching, no copy-paste between windows.
+**Vision:** Chat is a command and execution surface for all non-infrastructure work. Claude Code handles only agentsHQ code changes. Everything else: approvals, drafting, website building, artifact iteration, system monitoring: runs through Telegram or the Atlas web panel chat. The goal is Claude Code-equivalent capability for non-infra work, on both surfaces.
 
-**Scope:**
-- Stateful session with conversation history (multi-turn, not one-shot)
-- Access to content tools: read/write Notion Content Board, queue posts, edit drafts
-- Publish action wired directly from chat (one-tap to approval queue or direct post)
-- Memory: agent remembers what was discussed in the session
-- Stretch: persistent cross-session memory (what posts were discussed, what was approved)
+**Key decisions locked (v4):**
 
-**Gate:** Can start as soon as M8 dashboard is stable (current session).
+- **Model:** `CHAT_MODEL` / `ATLAS_CHAT_MODEL` env vars, default `anthropic/claude-haiku-4.5`. Quality-first: Haiku has the strongest confirmed tool-calling pedigree (bash, computer-use, web search explicitly named). Gemini 2.5 Flash available via env var after reliability confirmed. Sonnet 4.5 available as ceiling for deep-work sessions. Weekly automated model review agent keeps recommendations current.
+- **Action blocks:** structured JSON schema `{"reply": "...", "actions": [...], "artifact": {...}}`. Model always returns JSON. Plain-text fallback on parse failure. No suffix strip pattern.
+- **Async tasks:** `forward_to_crew` kicks off a background job, returns job_id immediately. Client polls `GET /api/orc/atlas/job/{id}` every 3s. No 60-second spinner timeouts.
+- **Artifact storage:** new `chat_artifacts` Postgres table (no size cap). Conversation history references artifacts by ID, not by content. Multi-turn iteration works across page refreshes.
+- **Write-action confirmation:** one explicit confirmation turn before any write (approve, reject, queue, publish). Sandbox mode (`CHAT_SANDBOX=true`) simulates all writes without executing.
+- **Telegram-first = proactive push.** M9a ships action buttons on existing approval/publish notifications: not a new chat REPL. Deep work (drafting, iterating, building) is M9b on the web panel.
+- **Tracked gaps (not design flaws):** `build_site` crew (M9 ships the surface; the crew comes later), Telegram artifact rendering (web is the right surface for that), full responsive QA (Claude Code + Playwright stays for that).
+
+**Split into three milestones:**
+
+| Sub | Scope | Budget | Branch |
+| --- | --- | --- | --- |
+| M9a | Correctness fixes (Postgres leak, double-send, env vars, sandbox mode) + Telegram push alerts with action buttons | 3-4h | feat/atlas-m9a-telegram-push |
+| M9b | Web chat: wire 404, native Atlas panel, async job polling, artifact table, 11-tool set, write-action confirmation | 4-5h | feat/atlas-m9b-web-chat |
+| M9c | Artifact iteration (resize, fullscreen, save-to-Drive), cross-session memory, weekly model review agent | 2-3h | feat/atlas-m9c-artifacts |
+
+**Sequence:** M9a -> M9b -> M9c. Do not start M9b until M9a smoke test passes on VPS.
+
+**Full spec:** `docs/roadmap/atlas/m9-atlas-chat-design.md`: model research, architecture decisions with rationale, tool table, system prompt, sandbox protocol, artifact storage schema, build checklist
 
 ---
 
@@ -623,7 +637,7 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 
 1. M7b monitoring: verify Monday 2026-04-27 07:00 MT X auto-publish fires (or check if it already fired)
 2. M5 (Chairman / L5 Learning) gate: 2026-05-08
-3. **M9 Atlas Chat** -- start design/spec (HIGH PRIORITY per Boubacar)
+3. **M9 Atlas Chat**: start design/spec (HIGH PRIORITY per Boubacar)
 4. VPS orphan archive sunset: delete `/root/_archive_20260421/` if no issues by 2026-04-28
 
 ---
@@ -647,7 +661,7 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 - `cost_ledger` Postgres table: `date, project, customer, category, tool, description, amount_usd, source`
 - `GET /atlas/ledger?days=30` and `POST /atlas/ledger` live in app.py
 - `get_cost_ledger()` in `atlas_dashboard.py` merges `llm_calls` + `cost_ledger`
-- agentsHQ State card renamed from "Atlas State" (correct -- it monitors agentsHQ, not the dashboard)
+- agentsHQ State card renamed from "Atlas State" (correct: it monitors agentsHQ, not the dashboard)
 - Daily Cap removed from agentsHQ State card (already in Spend Pacing)
 - compass.svg added as favicon + topbar icon (was missing from VPS)
 - M9 milestone written to roadmap (HIGH PRIORITY per Boubacar)
