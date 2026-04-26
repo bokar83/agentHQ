@@ -1,115 +1,272 @@
 ---
 name: frontend-design
-description: Use when creating, updating, or reviewing any website, landing page, or HTML/CSS artifact — before writing any code
+description: >
+  Use when creating, updating, or reviewing any website, landing page, or
+  HTML/CSS artifact. Must run before writing any code. Applies the Volta
+  design standard (cinematic, distinctive, business-type-matched) and enforces
+  the banned default skeleton. Trigger on any website build, redesign, section
+  update, clone, demo site, or UI artifact request.
 ---
 
 # Frontend Design Skill
 
-## Rule
-
 **No HTML/CSS before this skill completes. Every time. No exceptions.**
 
-This applies to: new sites, redesigns, section updates, single-page tweaks, clones, and app UIs.
+Applies to: new sites, redesigns, section updates, single-page tweaks,
+clones, demo sites, and app UIs.
 
 ---
 
-## Step 1 — Identify the project type
+## The Volta Standard
 
-Is this Catalyst Works output?
+`workspace/demo-sites/volta-studio/index.html` is the reference bar for
+**quality of thinking and craft**, not for visual style.
 
-Output is Catalyst Works branded if the request mentions: "catalyst works", "boubacar", "my consulting", "our brand", "cw", "catalystworks.consulting", or is for Boubacar's personal brand.
+The Volta site is dark, neon, cinematic, and packed with motion. That is
+right for a creative agency. It would be wrong for a pediatric dentist,
+a bakery, a law firm, or a real estate developer. Do NOT apply Volta's
+aesthetic to every site. Apply Volta's *level of intentionality* to every site.
 
-- **Yes → go to Step 2A**
-- **No → go to Step 2B**
+**What Volta demonstrates that every site must match:**
+
+1. **Research before design.** Volta's dark cinematic style was chosen
+   because it fits a creative agency's emotional register. For every new
+   site, ask: what does premium look like *for this specific category*?
+   What do the best sites in this niche do? What would surprise and delight
+   a visitor who usually sees template sites in this space?
+
+2. **Distinctive layout skeleton.** Volta does not use sticky-nav + split-hero
+   + card-grid. Neither should any other site, but the alternative must fit
+   the business, not just be "different for different's sake."
+
+3. **At least one interaction that makes you feel the site.** Volta has a
+   particle trail, a morphing blob, a pinned horizontal scroll. A kids'
+   dentist might have floating tooth animations and a morphing blob hero.
+   A restaurant might have a full-bleed video section with a parallax food
+   reveal. A law firm might have a slow, weighty clip-path entrance and
+   a typographic hero. The *form* is different every time. The *intention*
+   : that the site feels alive and considered. That is the constant.
+
+4. **No rubber-stamping.** The biggest failure mode is shipping the same
+   skeleton with Volta's neon green swapped for a different accent color.
+   That is still a template. The skeleton, the interaction vocabulary, the
+   font personality, and the emotional register must all be derived from the
+   specific business and its audience.
+
+**Boubacar's rule:** Default to ambitious. Pull back if asked.
+Never the reverse. "I'd rather pull you back than push you further."
+
+The question before every build: *if this business had a $50K design budget,
+what would the agency they hired produce?* Build that. Not the $500 version.
 
 ---
 
-## Step 2A — Catalyst Works output
+## HARD RULES
 
-Load both files before writing any code:
+### 1. The banned skeleton
 
+This layout combination is BANNED:
+
+> sticky-nav + split-hero + ribbon-bar + alternating-2col-sections +
+> card-grid + CTA-box + footer
+
+Changing fonts and colors does NOT make this a different design.
+Boubacar can feel the skeleton through any costume. If you catch yourself
+building this, stop. Change at least 3 structural elements before proceeding.
+
+### 2. No same skeleton twice
+
+Check `workspace/demo-sites/build-log.md` before designing. Avoid
+repeating the same layout archetype, font pairing, or color story used in
+the previous 3 builds.
+
+### 3. Business-type match
+
+Research what premium looks like for THIS specific business category.
+A kids dentist is not a law firm is not a restaurant is not a SaaS.
+Each has its own emotional register, layout language, and interaction
+vocabulary. Spend 2 minutes thinking about the category before picking
+an archetype.
+
+### 4. Custom cursor: no mix-blend-mode ever
+
+`mix-blend-mode: difference` and `mix-blend-mode: exclusion` make the
+cursor invisible on dark backgrounds. They are BANNED on cursor elements.
+Always use explicit colors with no blend mode.
+
+```css
+/* CORRECT */
+#cursor {
+  background: #7BFF6A; /* explicit color, no mix-blend-mode */
+}
+
+/* BANNED */
+#cursor {
+  background: white;
+  mix-blend-mode: difference; /* invisible on dark backgrounds */
+}
+```
+
+### 5. State the brief before writing code
+
+One paragraph before the first `<` character:
+- Archetype chosen and why
+- Font pairing and color story
+- 3 design constraints
+- Anti-patterns being avoided
+
+This is proof the skill ran. If this paragraph is missing, the skill
+did not run.
+
+---
+
+## Cinematic Baseline
+
+Every site gets at least 3 of these. More is better. Pull back if asked.
+
+- [ ] **Custom cursor**: dot + lagging ring, explicit colors, no blend mode
+- [ ] **GSAP SplitText** on hero heading: chars or lines fly in with stagger
+- [ ] **ScrollTrigger stagger** on cards, rows, or list items
+- [ ] **Clip-path reveal** OR **scrub parallax** on at least one section
+- [ ] **Magnetic buttons**: GSAP mousemove + elastic.out on leave
+- [ ] **Wavy SVG section dividers**: never hard horizontal lines between sections
+- [ ] **Particle trail** OR **CSS marquee** OR **morphing SVG blob**
+- [ ] **Pinned horizontal scroll** OR **full-bleed cinematic section** (at least one)
+
+GSAP plugins free as of v3.13: SplitText, ScrambleText, MorphSVG, DrawSVG.
+CDN: `https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/`
+
+---
+
+## Layout Archetypes
+
+Rotate, do not repeat within 3 builds.
+
+| Archetype | Best for | Key structural move |
+|---|---|---|
+| Storybook blob | Kids, family, wellness | Morphing SVG blob hero, organic shapes, no hard edges |
+| Bold editorial | Legal, finance, B2B | Oversized asymmetric type, unexpected negative space |
+| Warm boutique | Spa, restaurant, artisan | Texture, photography-led, no cards, no grid |
+| Kinetic typographic | Tech, agency, startup | Text IS the hero, SplitText, motion-driven |
+| Cinematic dark | Creative agency, luxury, film | Dark bg, particle trail, horizontal scroll, full-bleed |
+| Magazine front page | Media, multi-service, portfolio | Multiple content lanes, editorial hierarchy |
+| Immersive full-bleed | Real estate, architecture, travel | Image/video fills viewport, content overlays |
+| Single-scroll narrative | Personal brand, portfolio, story | One long story, no section breaks, no nav |
+
+---
+
+## Font Rotation
+
+Avoid repeating a pairing within 3 builds.
+
+| Pairing | Personality |
+|---|---|
+| Fredoka + Baloo 2 + Amatic SC | Playful, rounded, kids |
+| DM Serif Display + DM Sans | Editorial, premium, clean |
+| Playfair Display + Inter | Classic, trustworthy, CW-adjacent |
+| Space Grotesk + Syne | Modern, geometric, technical |
+| Cormorant Garamond + Source Sans | Luxury, boutique, high-end |
+| Unbounded + DM Sans | Bold, statement, geometric |
+| Syne + DM Sans | Cinematic dark, agency, confident |
+| Amatic SC + Nunito | Hand-drawn, artisan, warm |
+
+---
+
+## Color Story Rotation
+
+Avoid repeating a story within 3 builds.
+
+| Story | Anchors | Notes |
+|---|---|---|
+| Cobalt + yellow + mint | #1B3F8B + #FFD447 + #B8F0D8 | Playful, bold |
+| Cinematic dark + neon green | #0a0a0a + #7BFF6A | Agency, luxury |
+| Deep forest + gold | #1a2e1f + #c4956a | Premium local |
+| Burnt sienna + ivory | #a0522d + #fdf8f0 | Restaurant, artisan |
+| Plum + blush + cream | #4a1a6b + #f4b8cc | Boutique, spa |
+| Black + yellow | #0a0a0a + #FFD447 | Editorial, bold |
+| Warm red + cream + dark brown | #c0392b + #fdf8f3 + #2c1a0e | Local, trusted |
+| Sage + cream | AVOID for demos | Overused, CW-adjacent |
+| Navy + coral | BANNED for demos | Too close to default CW palette |
+
+---
+
+## Step 1: Project type
+
+Is this Catalyst Works / Boubacar personal brand output?
+
+- **Yes:** Step 2A
+- **No:** Step 2B
+
+---
+
+## Step 2A: Catalyst Works output
+
+Load before writing any code:
 ```
 docs/styleguides/styleguide_master.md
 docs/styleguides/styleguide_websites.md
 ```
 
-Key non-negotiables from the styleguide:
-- Color: `#071A2E` (Midnight Navy) as dark anchor, `#B47C57` (Clay) as accent warmth, `#00B7C2` as primary action color
-- Headlines: Plus Jakarta Sans (600/700/800) — never Inter at display scale
-- Body: Inter (400/500/600)
-- Data/code: JetBrains Mono
-- No red tones anywhere, no purple gradients, no three-rounded-boxes-in-a-row
-- First visible element leads with a specific claim, not a category description
+Non-negotiables: `#071A2E` navy + `#B47C57` clay + `#00B7C2` action.
+Plus Jakarta Sans headlines. Inter body. First element is a specific
+claim, not a category description.
 
-Run the self-scoring checklist from `styleguide_master.md` before returning output.
+The Volta cinematic baseline still applies to CW sites; they should
+feel alive, not static.
 
 ---
 
-## Step 2B — Non-Catalyst Works output
+## Step 2B: Non-CW output
 
-1. Read `docs/design-references/INDEX.md`
-2. Pick the best-match brand reference for this project type using the table below
-3. Read `docs/design-references/{brand}.md`
-
-If the reference `.md` file is missing locally, run:
-```bash
-bash scripts/fetch_design_references.sh
-```
-
-### Quick reference picker
-
-| Project type | Default reference |
-|---|---|
-| B2B SaaS / productivity | `linear.app` |
-| Payments / premium trust | `stripe` |
-| AI product with warmth | `claude` |
-| Dev tool / dark mode | `cursor` or `warp` |
-| No-code / consumer app | `lovable` |
-| Deployment / infra | `vercel` |
-| Docs / portal | `mintlify` |
-| Analytics / data | `posthog` |
-| Marketplace / hospitality | `airbnb` |
-| General fallback | `resend` |
-
-Apply the selected brand's: color system, typography, spacing, layout patterns, and tone throughout.
+1. Pick an archetype from the rotation table that fits the business type
+   AND has not been used in the last 3 builds.
+2. Pick a font pairing and color story from the rotation tables.
+3. Check `workspace/demo-sites/build-log.md` to verify no repeat.
+4. Run the ui-ux-pro-max design system query for the specific business
+   category if the build log does not already have relevant prior art.
 
 ---
 
-## Step 3 — Design brief before code
+## Step 3: Design brief (mandatory, spoken aloud before code)
 
-State out loud (one short paragraph) before writing any HTML:
-- Which reference or styleguide was loaded
-- The 3 most important design constraints that apply to this project
-- Any anti-patterns to avoid
+> "Reference archetype: [name]. Font: [pairing]. Color: [story].
+> 3 constraints: [1], [2], [3]. Anti-patterns avoided: [list]."
 
-This is the proof the skill ran. Skip it = skill did not run.
+No brief = skill did not run.
 
 ---
 
-## Step 4 — Mobile-first
+## Step 4: Mobile first
 
-Build at 375px first. Then 1280px desktop. Then 768px tablet. Verify all three before marking complete.
+375px first. Then 1280px. Then 768px. Verify all three.
 
 ---
 
-## Step 5 — Pre-launch checklist (for any site going live)
+## Step 5: Pre-launch checklist (live deploys)
 
 - [ ] Favicon wired
-- [ ] OG image at 1200×630px
-- [ ] `sitemap.xml` present
-- [ ] `robots.txt` present
+- [ ] OG image 1200x630px
+- [ ] sitemap.xml present
+- [ ] robots.txt present
 - [ ] GA4 wired
-- [ ] `ads.txt` present (AdSense sites only)
+- [ ] HTTP 200 verified on every image URL before embed
 - [ ] No placeholder text or broken links
 - [ ] Schema.org JSON-LD present
-- [ ] Forms wired (Formspree for static sites)
+- [ ] Forms wired (Formspree for static)
 - [ ] GitHub push in same session as build
 
 ---
 
-## Red flags — stop if you catch yourself thinking:
+## Red flags: stop if you think any of these
 
-- "I'll load the reference after I get the structure down" → **stop, load it first**
-- "This is just a small update, not a full redesign" → **still load it**
-- "I know the brand well enough from memory" → **still read the file**
-- "The user is in a hurry" → **still load it — takes 30 seconds**
+- "I'll load the reference after I get the structure down": stop, load first
+- "This is just a small update": still run the skill
+- "The colors and fonts are different so it's a different design": wrong.
+  The skeleton is the tell. Boubacar can feel it through any costume.
+- "This looks clean and professional": clean and professional is not
+  the bar. Volta is the bar.
+- "The user hasn't asked for animations": add them anyway. Pull back if asked.
+- "This business type needs something simple": simple does not mean
+  the same skeleton as every other site. Simple can be a single-scroll
+  narrative or a bold editorial with one color. Simple is a design choice,
+  not a skeleton choice.
