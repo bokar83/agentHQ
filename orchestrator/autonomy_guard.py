@@ -312,6 +312,16 @@ class AutonomyGuard:
                     spent_today_usd=spent, cap_usd=self._cap_usd,
                 )
 
+            # Per-crew cost ceiling (set at contract sign time, stored in state)
+            crew_ceiling = crew.get("cost_ceiling_usd")
+            if crew_ceiling is not None and estimated_usd > crew_ceiling:
+                return GuardDecision(
+                    allowed=False, dry_run=False,
+                    reason=f"per-crew ceiling exceeded: estimated ${estimated_usd:.4f} > ceiling ${crew_ceiling:.4f} for {crew_name}",
+                    decision_tag="blocked-crew-ceiling",
+                    spent_today_usd=spent, cap_usd=self._cap_usd,
+                )
+
             is_dry_run = bool(crew.get("dry_run", True))
             return GuardDecision(
                 allowed=True, dry_run=is_dry_run,
