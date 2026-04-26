@@ -624,10 +624,16 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 | Sub | Scope | Budget | Branch |
 | --- | --- | --- | --- |
 | M9a | Correctness fixes (Postgres leak, double-send, env vars, sandbox mode) + Telegram push alerts with action buttons | 3-4h | feat/atlas-m9a-telegram-push |
-| M9b | Web chat: wire 404, native Atlas panel, async job polling, artifact table, 11-tool set, write-action confirmation | 4-5h | feat/atlas-m9b-web-chat |
+| M9b | Web chat: wire 404, native Atlas panel, async job polling, artifact table, 11-tool set, write-action confirmation + approval queue badge | 4-5h | feat/atlas-m9b-web-chat |
 | M9c | Artifact iteration (resize, fullscreen, save-to-Drive), cross-session memory, weekly model review agent | 2-3h | feat/atlas-m9c-artifacts |
 
 **Sequence:** M9a -> M9b -> M9c. Do not start M9b until M9a smoke test passes on VPS.
+
+**Approval surface design (three surfaces, no duplication):**
+- Telegram push (M9a): proactive notification with inline buttons, meets Boubacar wherever he is
+- Atlas dashboard approval card (live since M8): reactive, always visible when at the dashboard, already has Approve/Reject buttons
+- Web chat (M9b): conversational approve via `approve_item` tool + action block button in chat reply
+- Dashboard badge (M9b): when a new item lands in the approval queue, show a live badge/count on the approval queue card so Boubacar sees it without looking at the card. Implemented as a polling count from `GET /atlas/queue`. The card header shows "Approval Queue (2 pending)" and pulses the accent color when count > 0. No WebSockets needed. Closes the gap where a new approval arrives while Boubacar is in the web chat and would otherwise miss it.
 
 **Full spec:** `docs/roadmap/atlas/m9-atlas-chat-design.md`: model research, architecture decisions with rationale, tool table, system prompt, sandbox protocol, artifact storage schema, build checklist
 
