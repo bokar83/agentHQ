@@ -775,6 +775,132 @@ async def sync_session(req: SyncSessionRequest):
     return {"success": True, "session_key": req.session_key, "chars_written": len(req.summary)}
 
 
+# ======================================================================
+# Atlas M8: Mission Control -- read-only data endpoints
+# All gated by verify_chat_token (same JWT-PIN as /chat).
+# ======================================================================
+
+from fastapi.responses import JSONResponse
+import atlas_dashboard as _atd
+
+
+@app.get("/atlas/state")
+async def atlas_state(_auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_state())
+
+
+@app.get("/atlas/queue")
+async def atlas_queue(_auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_queue())
+
+
+@app.get("/atlas/content")
+async def atlas_content(_auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_content())
+
+
+@app.get("/atlas/spend")
+async def atlas_spend(_auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_spend())
+
+
+@app.get("/atlas/heartbeats")
+async def atlas_heartbeats(_auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_heartbeats())
+
+
+@app.get("/atlas/errors")
+async def atlas_errors(_auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_errors())
+
+
+@app.get("/atlas/hero")
+async def atlas_hero(_auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_hero())
+
+
+@app.get("/atlas/ideas")
+async def atlas_ideas(_auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_ideas())
+
+
+# ======================================================================
+# Atlas M8: Mission Control -- write/action endpoints
+# ======================================================================
+
+from pydantic import BaseModel as _BaseModel
+
+
+class _AtlasToggleBody(_BaseModel):
+    enabled: bool
+
+
+class _AtlasDryRunBody(_BaseModel):
+    dry_run: bool
+
+
+class _AtlasRejectBody(_BaseModel):
+    note: str = ""
+
+
+@app.post("/atlas/toggle/griot")
+async def atlas_toggle_griot(body: _AtlasToggleBody, _auth=Depends(verify_chat_token)):
+    from autonomy_guard import get_guard
+    get_guard().set_crew_enabled("griot", body.enabled)
+    return JSONResponse(_atd.get_state())
+
+
+@app.post("/atlas/toggle/dry_run")
+async def atlas_toggle_dry_run(body: _AtlasDryRunBody, _auth=Depends(verify_chat_token)):
+    from autonomy_guard import get_guard
+    get_guard().set_crew_dry_run("griot", body.dry_run)
+    return JSONResponse(_atd.get_state())
+
+
+@app.post("/atlas/queue/{queue_id}/approve")
+async def atlas_queue_approve(queue_id: int, _auth=Depends(verify_chat_token)):
+    import approval_queue
+    row = approval_queue.approve(queue_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail="Queue item not found or already decided")
+    return JSONResponse(_atd.get_queue())
+
+
+@app.post("/atlas/queue/{queue_id}/reject")
+async def atlas_queue_reject(queue_id: int, body: _AtlasRejectBody, _auth=Depends(verify_chat_token)):
+    import approval_queue
+    row = approval_queue.reject(queue_id, note=body.note or None)
+    if row is None:
+        raise HTTPException(status_code=404, detail="Queue item not found or already decided")
+    return JSONResponse(_atd.get_queue())
+
+
+@app.post("/atlas/brief/posted")
+async def atlas_brief_posted(_auth=Depends(verify_chat_token)):
+    raise HTTPException(
+        status_code=501,
+        detail=(
+            "posted/skip actions require a Telegram reply_to_msg_id to locate the "
+            "publish-brief window. _PUBLISH_BRIEF_WINDOWS is keyed by Telegram message "
+            "ID and cannot be looked up from the dashboard. Reply 'posted' or 'skip' "
+            "directly in Telegram to the per-post brief message."
+        ),
+    )
+
+
+@app.post("/atlas/brief/skip")
+async def atlas_brief_skip(_auth=Depends(verify_chat_token)):
+    raise HTTPException(
+        status_code=501,
+        detail=(
+            "posted/skip actions require a Telegram reply_to_msg_id to locate the "
+            "publish-brief window. _PUBLISH_BRIEF_WINDOWS is keyed by Telegram message "
+            "ID and cannot be looked up from the dashboard. Reply 'posted' or 'skip' "
+            "directly in Telegram to the per-post brief message."
+        ),
+    )
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

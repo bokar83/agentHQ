@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atlas Mission Control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/atlas/atlas.css" />
+</head>
+<body>
+
+<!-- PIN SCREEN -->
+<div id="pin-screen">
+  <div class="pin-brand">
+    <div class="brand-mark">
+      <img src="/atlas/cw-mark.svg" alt="CW" width="56" height="56" />
+    </div>
+    <div class="pin-title">Atlas Mission Control</div>
+    <div class="pin-subtitle">Catalyst Works Consulting</div>
+  </div>
+  <form id="pin-form">
+    <input id="pin-input" type="password" placeholder="Enter PIN" autocomplete="current-password" />
+    <button id="pin-submit" type="submit">Connect</button>
+    <p id="pin-error" role="alert"></p>
+  </form>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" hidden>
+
+  <!-- Topbar -->
+  <header id="topbar">
+    <div class="topbar-left">
+      <div class="brand-mark small">
+        <img src="/atlas/cw-mark.svg" alt="CW" width="32" height="32" />
+      </div>
+      <h1>Atlas <span class="accent-word">Mission Control</span></h1>
+    </div>
+    <div class="topbar-right">
+      <span id="sync-badge" class="badge badge-dim">Syncing...</span>
+      <span id="health-badge" class="badge badge-green">Online</span>
+    </div>
+    <div class="topbar-runner"></div>
+  </header>
+
+  <!-- Hero strip -->
+  <section id="hero-strip">
+    <div class="hero-tile" id="hero-status">
+      <div class="hero-label">System Status</div>
+      <div class="hero-value" id="hero-status-val">--</div>
+    </div>
+    <div class="hero-tile" id="hero-last-action">
+      <div class="hero-label">Last Autonomous Action</div>
+      <div class="hero-value small" id="hero-last-action-val">--</div>
+    </div>
+    <div class="hero-tile" id="hero-next-fire">
+      <div class="hero-label">Next Scheduled Fire</div>
+      <div class="hero-value" id="hero-next-fire-val">--</div>
+    </div>
+    <div class="hero-tile" id="hero-spend">
+      <div class="hero-label">Spend Pacing</div>
+      <div class="hero-value" id="hero-spend-val">--</div>
+    </div>
+  </section>
+
+  <!-- Main grid -->
+  <main id="main-grid">
+
+    <!-- Left: 6 cards -->
+    <div id="cards-col">
+
+      <section class="card" data-card="state" data-color="brass">
+        <div class="card-header">
+          <span class="card-chip">i</span>
+          <h2>Atlas <span class="accent-word">State</span></h2>
+        </div>
+        <div class="card-body" id="card-state-body">Loading...</div>
+        <div class="card-actions" id="card-state-actions"></div>
+      </section>
+
+      <section class="card" data-card="queue" data-color="lapis">
+        <div class="card-header">
+          <span class="card-chip">ii</span>
+          <h2>Approval <span class="accent-word">Queue</span></h2>
+        </div>
+        <div class="card-body" id="card-queue-body">Loading...</div>
+      </section>
+
+      <section class="card" data-card="content" data-color="verdigris">
+        <div class="card-header">
+          <span class="card-chip">iii</span>
+          <h2>Content <span class="accent-word">Board</span></h2>
+        </div>
+        <div class="card-body" id="card-content-body">Loading...</div>
+        <div class="card-actions" id="card-content-actions"></div>
+      </section>
+
+      <section class="card" data-card="spend" data-color="terracotta">
+        <div class="card-header">
+          <span class="card-chip">iv</span>
+          <h2>Spend <span class="accent-word">Pacing</span></h2>
+        </div>
+        <div class="card-body" id="card-spend-body">Loading...</div>
+      </section>
+
+      <section class="card" data-card="heartbeats" data-color="bronze">
+        <div class="card-header">
+          <span class="card-chip">v</span>
+          <h2>Heart<span class="accent-word">beats</span></h2>
+        </div>
+        <div class="card-body" id="card-heartbeats-body">Loading...</div>
+      </section>
+
+      <section class="card" data-card="errors" data-color="rose">
+        <div class="card-header">
+          <span class="card-chip">vi</span>
+          <h2>Error <span class="accent-word">Monitor</span></h2>
+        </div>
+        <div class="card-body" id="card-errors-body">Loading...</div>
+      </section>
+
+      <section class="card" data-card="ideas" data-color="brass">
+        <div class="card-header">
+          <span class="card-chip">viii</span>
+          <h2>Top <span class="accent-word">Ideas</span></h2>
+        </div>
+        <div class="card-body" id="card-ideas-body">Loading...</div>
+      </section>
+
+    </div>
+
+    <!-- Right: chat card -->
+    <section class="card chat-card" data-card="chat" data-color="terracotta">
+      <div class="card-header">
+        <span class="card-chip">vii</span>
+        <h2>Atlas <span class="accent-word">Chat</span></h2>
+      </div>
+      <div class="chat-embed-wrap">
+        <iframe id="chat-iframe" src="/chat" title="Atlas Chat" loading="lazy"></iframe>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="/atlas/atlas.js"></script>
+</body>
+</html>
