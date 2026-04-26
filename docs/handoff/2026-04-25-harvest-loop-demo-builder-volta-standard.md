@@ -108,11 +108,15 @@ buttons: and locked that as the new design standard going forward.
 
 1. **Fix workspace path:** Rename `workspace/outreach/` to `workspace/demo-sites/`
    or update all skill references. One or the other: not both paths existing.
-2. **Deploy the dental demo:** `gh repo create bokar83/thepointpediatricdentistry-site --public`
-   then connect Hostinger Git in hPanel, push `workspace/demo-sites/thepointpediatricdentistry/index.html`.
-3. **Send the LinkedIn DM** with the live URL. Template is in `skills/demo-builder/SKILL.md`.
-4. **Pick a niche + city** for the first Apify scrape batch to find more prospects.
-5. **Run R55-R51 harvest** when ready for more RoboNuggets content.
+2. **Run R55-R51 RoboNuggets harvest.** The reviewer, triage, and Council pipeline
+   are all wired and ready. Run the next batch:
+   `python orchestrator/harvest_reviewer.py robonuggets --max 5`
+   Then push agreed items to the agentsHQ Ideas DB as Queued.
+
+Note: the dental demo site and all other test sites built this session are
+workspace-only (gitignored). They are NOT being deployed: they were built
+to establish the design standard and test the pipeline. No deployment, no
+LinkedIn DM for those test builds.
 
 ---
 
