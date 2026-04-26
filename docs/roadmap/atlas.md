@@ -592,10 +592,78 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 
 **Auto-deploy:** GH Actions triggers on `thepopebot/chat-ui/**` + `orchestrator/**` changes. Merge PR = live at `agentshq.boubacarbarry.com/atlas`.
 
+**Enhancements backlog (M8 session 2026-04-26):**
+
+- Agent Activity card: top 5 most active agents this week (calls, cost) from `llm_calls.crew_name` -- held, needs design decision on what "active" means
+- Last Autonomous Action hero tile: currently shows "Unavailable" -- needs `task_outcomes` data to be populated by autonomous runs
+- Next Scheduled Fire hero tile: shows correctly from heartbeat registry
+- Content Board: show this week vs last week spend comparison (Mon-Sun delta) -- deferred
+- Cost ledger: use `llm_calls.project` as engagement/customer dimension; add `cost_ledger` table for non-LLM costs (Blotato, Notion, subscriptions) -- gate on first real client engagement
+- **Atlas Chat -- full agentic conversation loop (high priority):** Chat iframe must behave exactly like Claude Code or another LLM -- full back-and-forth, context retention, tool use. Goal: draft a post in the chat, iterate on it conversationally, then one-tap post from the same window. Currently the iframe is a passive embed; needs the orchestrator to wire a stateful session with memory + content tools so the conversation can actually do things (edit Notion, queue posts, etc.)
+
+## M9: Atlas Chat -- Full Agentic Conversation Loop
+
+**Status:** Planned (HIGH PRIORITY -- do ASAP)
+**Goal:** The Atlas Chat panel behaves exactly like Claude Code or a full LLM interface -- full back-and-forth, context retention, tool use, memory. Draft a LinkedIn post in the chat, iterate conversationally, then one-tap queue/post from the same window.
+
+**Why it matters:** Right now the chat iframe is a passive relay. Boubacar needs to be able to work with agentsHQ on content the same way he works with Claude Code -- no context switching, no copy-paste between windows.
+
+**Scope:**
+- Stateful session with conversation history (multi-turn, not one-shot)
+- Access to content tools: read/write Notion Content Board, queue posts, edit drafts
+- Publish action wired directly from chat (one-tap to approval queue or direct post)
+- Memory: agent remembers what was discussed in the session
+- Stretch: persistent cross-session memory (what posts were discussed, what was approved)
+
+**Gate:** Can start as soon as M8 dashboard is stable (current session).
+
+---
+
 **Next session:**
 
-1. Merge PR #21 and verify `/atlas` loads with all 8 cards showing data
-2. M7b monitoring: verify Monday 2026-04-27 07:00 MT X auto-publish fires
-3. M5 (Chairman / L5 Learning) gate: 2026-05-08
+1. M7b monitoring: verify Monday 2026-04-27 07:00 MT X auto-publish fires (or check if it already fired)
+2. M5 (Chairman / L5 Learning) gate: 2026-05-08
+3. **M9 Atlas Chat** -- start design/spec (HIGH PRIORITY per Boubacar)
+4. VPS orphan archive sunset: delete `/root/_archive_20260421/` if no issues by 2026-04-28
+
+---
+
+### 2026-04-26: M8 dashboard fully stabilized, cost_ledger built
+
+**What happened:** Full M8 debug + polish session. Dashboard was visually present but functionally dead due to CSS cascade bug (`#dashboard { display: flex }` overrode HTML `hidden` attribute). Fixed with `[hidden] { display: none !important }`. This was root cause of PIN bypass AND cards-never-loading.
+
+**All bugs fixed:**
+- CSS hidden cascade (PIN bypass + cards never loading)
+- API key mismatch between event-handler and orc-crewai (chat broken)
+- `atlas_dashboard.py` column names: `router_log` has no `fallback`/`raw_input`, `task_outcomes` uses `ts_started`/`crew_name`/`success`/`result_summary`
+- `NotionClient.query_database()` kwarg is `filter_obj` not `filter`
+- Content board empty: `FORGE_CONTENT_DB` env var was missing from VPS `.env`; Platform field is `multi_select` not `select`; DB ID: `339bcf1a-3029-81d1-8377-dc2f2de13a20`
+- nginx added `Cache-Control: no-store` to `/atlas/` location
+- `docker cp` requires `docker restart` to reload Python module cache (burned 3 deploys on this)
+
+**Features added this session:**
+- Content Board: 3 sections (Past Due rose badge, Upcoming 7 days, Recently Posted last 3)
+- Spend Pacing: This Week + Month to Date rows; when today=$0, shows most recent day with spend (up to 7 days back) as "MM/DD (last spend)"
+- `cost_ledger` Postgres table: `date, project, customer, category, tool, description, amount_usd, source`
+- `GET /atlas/ledger?days=30` and `POST /atlas/ledger` live in app.py
+- `get_cost_ledger()` in `atlas_dashboard.py` merges `llm_calls` + `cost_ledger`
+- agentsHQ State card renamed from "Atlas State" (correct -- it monitors agentsHQ, not the dashboard)
+- Daily Cap removed from agentsHQ State card (already in Spend Pacing)
+- compass.svg added as favicon + topbar icon (was missing from VPS)
+- M9 milestone written to roadmap (HIGH PRIORITY per Boubacar)
+- OpenDyslexic font experiment tried and reverted; back to Fraunces + Atkinson Hyperlegible + IBM Plex Mono
+
+**State at session close:**
+- Dashboard LIVE and fully functional at agentshq.boubacarbarry.com/atlas
+- Last commit: `b3cb357` on VPS + origin
+- All 8 data cards rendering with real data
+- Chat iframe working (API key fix)
+- Content Board showing 15 upcoming posts + 3 recently posted
+- Spend showing $0.6968 week + month to date; Apr 23 as last spend day
+
+**Next session:**
+1. Monday 2026-04-27 07:00 MT: verify auto-publish fires X "One constraint nobody has named yet"
+2. M9 Atlas Chat design/spec (HIGH PRIORITY)
+3. M5 gate: 2026-05-08
 
 ---

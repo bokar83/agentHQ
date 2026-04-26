@@ -38,22 +38,47 @@ def get_queue() -> dict:
     return {"items": items, "count": len(items)}
 
 
-def _fetch_content_board() -> list:
-    """Fetch this-week content items from Notion Content Board."""
+def _fetch_content_board() -> dict:
+    """
+    Fetch content board entries:
+    - recent: last 3 Posted items (any date)
+    - upcoming: next 7 days from today, all statuses except Posted/Archived/Done
+    - past_due: scheduled before today, not yet Posted/Skipped/Archived/Done
+    """
     import os
     from datetime import date, timedelta
     try:
         from skills.forge_cli.notion_client import NotionClient
         secret = os.environ.get("NOTION_SECRET") or os.environ.get("NOTION_API_KEY")
-        db_id = os.environ.get("NOTION_CONTENT_BOARD_DB_ID", "")
+        db_id = os.environ.get("FORGE_CONTENT_DB", "")
         if not db_id:
-            return []
+            logger.warning("get_content: FORGE_CONTENT_DB env var not set")
+            return {"recent": [], "upcoming": [], "past_due": []}
         nc = NotionClient(secret=secret)
         today = date.today()
         week_end = today + timedelta(days=7)
-        results = nc.query_database(
+
+        def _parse_page(page):
+            props = page.get("properties", {})
+            title_prop = props.get("Title") or props.get("Name") or {}
+            title_list = title_prop.get("title", [])
+            title = title_list[0].get("text", {}).get("content", "") if title_list else ""
+            status = (props.get("Status", {}).get("select") or {}).get("name", "")
+            sched_prop = (props.get("Scheduled Date") or {}).get("date") or {}
+            # Platform is multi_select -- take first value
+            platform_list = (props.get("Platform") or {}).get("multi_select") or []
+            platform = platform_list[0].get("name", "") if platform_list else ""
+            return {
+                "title": title[:80],
+                "status": status,
+                "scheduled_date": sched_prop.get("start"),
+                "platform": platform,
+            }
+
+        # 1. Upcoming: today through +7 days, exclude done/archived
+        upcoming_results = nc.query_database(
             db_id,
-            filter={
+            filter_obj={
                 "and": [
                     {"property": "Scheduled Date", "date": {"on_or_after": today.isoformat()}},
                     {"property": "Scheduled Date", "date": {"on_or_before": week_end.isoformat()}},
@@ -61,49 +86,115 @@ def _fetch_content_board() -> list:
             },
             sorts=[{"property": "Scheduled Date", "direction": "ascending"}],
         )
-        items = []
-        for page in (results or []):
-            props = page.get("properties", {})
-            title = ""
-            title_prop = props.get("Title") or props.get("Name") or {}
-            title_list = title_prop.get("title", [])
-            if title_list:
-                title = title_list[0].get("text", {}).get("content", "")
-            status_prop = props.get("Status", {})
-            status = (status_prop.get("select") or {}).get("name", "")
-            sched_prop = props.get("Scheduled Date", {}).get("date") or {}
-            platform_prop = props.get("Platform", {})
-            platform = (platform_prop.get("select") or {}).get("name", "")
-            items.append({
-                "title": title[:80],
-                "status": status,
-                "scheduled_date": sched_prop.get("start"),
-                "platform": platform,
-            })
-        return items
+        upcoming = [_parse_page(p) for p in (upcoming_results or [])]
+        upcoming = [i for i in upcoming if i["status"] not in ("Archived", "Done")]
+
+        # 2. Past due: before today, not yet resolved
+        past_due_results = nc.query_database(
+            db_id,
+            filter_obj={
+                "and": [
+                    {"property": "Scheduled Date", "date": {"before": today.isoformat()}},
+                ]
+            },
+            sorts=[{"property": "Scheduled Date", "direction": "descending"}],
+        )
+        past_due = [_parse_page(p) for p in (past_due_results or [])]
+        past_due = [i for i in past_due if i["status"] not in ("Posted", "Skipped", "Archived", "Done")][:5]
+
+        # 3. Recent posted: last 3 Posted items
+        recent_results = nc.query_database(
+            db_id,
+            filter_obj={
+                "property": "Status", "select": {"equals": "Posted"}
+            },
+            sorts=[{"property": "Scheduled Date", "direction": "descending"}],
+        )
+        recent = [_parse_page(p) for p in (recent_results or [])][:3]
+
+        return {"recent": recent, "upcoming": upcoming, "past_due": past_due}
     except Exception as e:
         logger.warning(f"get_content: Notion fetch failed: {e}")
-        return []
+        return {"recent": [], "upcoming": [], "past_due": []}
 
 
 def get_content() -> dict:
-    """Content Board card: this-week scheduled posts."""
-    items = _fetch_content_board()
-    return {"items": items, "count": len(items)}
+    """Content Board card: recent posted + upcoming 7 days + past due."""
+    data = _fetch_content_board()
+    total = len(data["recent"]) + len(data["upcoming"]) + len(data["past_due"])
+    return {**data, "count": total}
 
 
-def _spend_7d_by_day() -> list:
-    """7-day daily spend from llm_calls. Returns [{date, usd}] newest-last."""
+def _spend_aggregates() -> dict:
+    """
+    Today's spend, most-recent-day spend (last 7 days before today),
+    week-to-date, and month-to-date totals.
+    When today=0, the UI shows the most recent day that had actual spend.
+    """
     try:
         from memory import _pg_conn
         conn = _pg_conn()
         cur = conn.cursor()
         cur.execute(
             """
-            SELECT DATE(ts AT TIME ZONE 'UTC') AS day, SUM(cost_usd) AS total
+            SELECT
+              SUM(CASE WHEN ts >= date_trunc('day', NOW() AT TIME ZONE 'America/Denver')
+                       THEN cost_usd ELSE 0 END)                              AS today_usd,
+              SUM(CASE WHEN ts >= date_trunc('week',  NOW() AT TIME ZONE 'America/Denver')
+                       THEN cost_usd ELSE 0 END)                              AS week_usd,
+              SUM(CASE WHEN ts >= date_trunc('month', NOW() AT TIME ZONE 'America/Denver')
+                       THEN cost_usd ELSE 0 END)                              AS month_usd
+            FROM llm_calls
+            WHERE ts >= date_trunc('month', NOW() AT TIME ZONE 'America/Denver')
+            """
+        )
+        row = cur.fetchone()
+        today_usd = round(float(row[0] or 0), 4)
+
+        # Find most recent day with actual spend (up to 7 days back)
+        cur.execute(
+            """
+            SELECT DATE(ts AT TIME ZONE 'America/Denver') AS day,
+                   SUM(cost_usd)                           AS total
               FROM llm_calls
              WHERE ts >= NOW() - INTERVAL '7 days'
-               AND autonomous = TRUE
+               AND ts <  date_trunc('day', NOW() AT TIME ZONE 'America/Denver')
+             GROUP BY day
+             ORDER BY day DESC
+             LIMIT 1
+            """
+        )
+        last_row = cur.fetchone()
+        cur.close()
+
+        last_day_usd = round(float(last_row[1] or 0), 4) if last_row else 0.0
+        last_day_date = str(last_row[0]) if last_row else None
+
+        return {
+            "today_usd":    today_usd,
+            "last_day_usd": last_day_usd,
+            "last_day_date": last_day_date,
+            "show_last_day": today_usd == 0.0 and last_day_usd > 0.0,
+            "week_usd":  round(float(row[1] or 0), 4),
+            "month_usd": round(float(row[2] or 0), 4),
+        }
+    except Exception as e:
+        logger.warning(f"_spend_aggregates: {e}")
+        return {"today_usd": 0.0, "last_day_usd": 0.0, "last_day_date": None,
+                "show_last_day": False, "week_usd": 0.0, "month_usd": 0.0}
+
+
+def _spend_7d_by_day() -> list:
+    """7-day daily spend from llm_calls. Returns [{date, usd}] oldest-first."""
+    try:
+        from memory import _pg_conn
+        conn = _pg_conn()
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT DATE(ts AT TIME ZONE 'America/Denver') AS day, SUM(cost_usd) AS total
+              FROM llm_calls
+             WHERE ts >= NOW() - INTERVAL '7 days'
              GROUP BY day
              ORDER BY day ASC
             """
@@ -117,19 +208,117 @@ def _spend_7d_by_day() -> list:
 
 
 def get_spend() -> dict:
-    """Spend card: today's spend vs cap + 7-day daily breakdown."""
+    """Spend card: today (or most recent day with spend)/week/month totals + cap."""
     from autonomy_guard import get_guard
     snap = get_guard().snapshot()
+    agg = _spend_aggregates()
     by_day = _spend_7d_by_day()
+    today_usd = max(snap.spent_today_usd, agg["today_usd"])
     return {
         "today": {
-            "spent_usd": round(snap.spent_today_usd, 4),
+            "spent_usd": round(today_usd, 4),
             "cap_usd": round(snap.cap_usd, 4),
-            "remaining_usd": round(snap.remaining_usd, 4),
+            "remaining_usd": round(snap.cap_usd - today_usd, 4),
             "per_crew": {k: round(v, 4) for k, v in snap.per_crew.items()},
         },
-        "by_day": by_day,
+        "last_day_usd":  agg["last_day_usd"],
+        "last_day_date": agg["last_day_date"],
+        "show_last_day": agg["show_last_day"],
+        "week_usd":  agg["week_usd"],
+        "month_usd": agg["month_usd"],
+        "by_day":    by_day,
     }
+
+
+def get_cost_ledger(days: int = 30) -> dict:
+    """
+    Cost ledger: LLM spend from llm_calls (by project) + manual entries
+    from cost_ledger, merged and grouped by date + project + tool.
+    Returns rows for the last `days` days, newest first.
+    """
+    try:
+        from memory import _pg_conn
+        conn = _pg_conn()
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT
+              DATE(ts AT TIME ZONE 'America/Denver') AS day,
+              COALESCE(project, 'agentsHQ')          AS project,
+              NULL                                    AS customer,
+              'llm'                                   AS category,
+              COALESCE(crew_name, model, 'unknown')   AS tool,
+              COUNT(*)                                AS calls,
+              ROUND(SUM(cost_usd)::numeric, 6)        AS amount_usd
+            FROM llm_calls
+            WHERE ts >= NOW() - INTERVAL '%s days'
+            GROUP BY day, project, tool
+            UNION ALL
+            SELECT
+              date                                    AS day,
+              project,
+              customer,
+              category,
+              tool,
+              1                                       AS calls,
+              amount_usd
+            FROM cost_ledger
+            WHERE date >= CURRENT_DATE - INTERVAL '%s days'
+            ORDER BY day DESC, amount_usd DESC
+            """,
+            (days, days),
+        )
+        rows = cur.fetchall()
+        cur.close()
+        entries = []
+        for r in rows:
+            entries.append({
+                "date":       str(r[0]),
+                "project":    str(r[1] or "agentsHQ"),
+                "customer":   str(r[2]) if r[2] else None,
+                "category":   str(r[3] or ""),
+                "tool":       str(r[4] or ""),
+                "calls":      int(r[5] or 0),
+                "amount_usd": float(r[6] or 0),
+            })
+        total = round(sum(e["amount_usd"] for e in entries), 4)
+        return {"entries": entries, "total_usd": total, "days": days}
+    except Exception as e:
+        logger.warning(f"get_cost_ledger: {e}")
+        return {"entries": [], "total_usd": 0.0, "days": days}
+
+
+def add_cost_ledger_entry(
+    amount_usd: float,
+    tool: str,
+    category: str,
+    project: str = "agentsHQ",
+    customer: str | None = None,
+    description: str | None = None,
+    date_str: str | None = None,
+) -> dict:
+    """Insert a manual cost entry into cost_ledger."""
+    from datetime import date as _date
+    try:
+        from memory import _pg_conn
+        conn = _pg_conn()
+        cur = conn.cursor()
+        entry_date = _date.fromisoformat(date_str) if date_str else _date.today()
+        cur.execute(
+            """
+            INSERT INTO cost_ledger (date, project, customer, category, tool, description, amount_usd, source)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, 'api')
+            RETURNING id
+            """,
+            (entry_date, project, customer, category, tool, description, round(amount_usd, 6)),
+        )
+        row = cur.fetchone()
+        conn.commit()
+        cur.close()
+        return {"ok": True, "id": row[0]}
+    except Exception as e:
+        logger.warning(f"add_cost_ledger_entry: {e}")
+        return {"ok": False, "error": str(e)}
 
 
 def get_heartbeats() -> dict:
@@ -156,16 +345,16 @@ def get_heartbeats() -> dict:
 
 
 def _router_log_fallbacks(limit: int = 20) -> list:
-    """Last `limit` router_log rows where fallback=true, last 24h."""
+    """Last `limit` router_log rows with no crew assigned (unrouted), last 24h."""
     try:
         from memory import _pg_conn
         conn = _pg_conn()
         cur = conn.cursor()
         cur.execute(
             """
-            SELECT ts, task_type, raw_input
+            SELECT ts, task_type, crew
               FROM router_log
-             WHERE fallback = TRUE
+             WHERE crew IS NULL
                AND ts >= NOW() - INTERVAL '24 hours'
              ORDER BY ts DESC
              LIMIT %s
@@ -178,7 +367,7 @@ def _router_log_fallbacks(limit: int = 20) -> list:
             {
                 "ts": r[0].isoformat() if r[0] else None,
                 "task_type": str(r[1] or ""),
-                "raw_input": str(r[2] or "")[:80],
+                "crew": str(r[2] or "unrouted"),
             }
             for r in rows
         ]
@@ -218,10 +407,9 @@ def _last_autonomous_action() -> dict:
         cur = conn.cursor()
         cur.execute(
             """
-            SELECT ts_start, task_type, status, summary
+            SELECT ts_started, crew_name, success, result_summary
               FROM task_outcomes
-             WHERE autonomous = TRUE
-             ORDER BY ts_start DESC
+             ORDER BY ts_started DESC
              LIMIT 1
             """
         )
@@ -232,7 +420,7 @@ def _last_autonomous_action() -> dict:
         return {
             "ts": row[0].isoformat() if row[0] else None,
             "task_type": str(row[1] or ""),
-            "status": str(row[2] or ""),
+            "status": "ok" if row[2] else "failed",
             "description": str(row[3] or "")[:120],
         }
     except Exception as e:
@@ -282,11 +470,11 @@ def get_hero() -> dict:
     guard = get_guard()
     snap = guard.snapshot()
     killed = guard.is_killed()
-    errors = _router_log_fallbacks(limit=1)
+    log_errors = _error_log_tail(lines=5)
     pct = (snap.spent_today_usd / snap.cap_usd * 100) if snap.cap_usd else 0.0
     if killed:
         system_status = "red"
-    elif errors or pct > 90:
+    elif log_errors or pct > 90:
         system_status = "amber"
     else:
         system_status = "green"
@@ -322,7 +510,7 @@ def _fetch_ideas(limit: int = 10) -> list:
         nc = NotionClient(secret=secret)
         results = nc.query_database(
             db_id,
-            filter={
+            filter_obj={
                 "and": [
                     {"property": "Status", "select": {"does_not_equal": "Done"}},
                     {"property": "Status", "select": {"does_not_equal": "Killed"}},

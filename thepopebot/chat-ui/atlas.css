@@ -16,6 +16,7 @@
 
 /* Reset */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
 
 /* Design tokens */
 :root {
@@ -484,9 +485,19 @@ html, body {
   color: var(--ink-muted);
 }
 
-.content-status.queued  { color: var(--amber); }
-.content-status.posted  { color: var(--green); }
-.content-status.skipped { color: var(--ink-muted); }
+.content-status.queued   { color: var(--amber); }
+.content-status.posted   { color: var(--green); }
+.content-status.skipped  { color: var(--ink-muted); }
+.content-status.past-due { color: var(--rose); }
+
+.content-date {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-muted);
+  flex-shrink: 0;
+  width: 36px;
+  text-align: right;
+}
 
 /* Heartbeat rows */
 .hb-row {
