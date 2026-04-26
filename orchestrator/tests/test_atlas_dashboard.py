@@ -52,15 +52,16 @@ def test_get_queue_returns_pending_rows():
 
 
 def test_get_content_returns_items():
-    mock_items = [
-        {"title": "Post A", "status": "Queued", "scheduled_date": "2026-04-26", "platform": "LinkedIn"},
-        {"title": "Post B", "status": "Draft",  "scheduled_date": None,         "platform": "X"},
-    ]
-    with patch("atlas_dashboard._fetch_content_board", return_value=mock_items):
+    mock_board = {
+        "recent": [{"title": "Post A", "status": "Posted", "scheduled_date": "2026-04-25", "platform": "LinkedIn"}],
+        "upcoming": [{"title": "Post B", "status": "Queued", "scheduled_date": "2026-04-27", "platform": "X"}],
+        "past_due": [],
+    }
+    with patch("atlas_dashboard._fetch_content_board", return_value=mock_board):
         result = atlas_dashboard.get_content()
 
     assert result["count"] == 2
-    assert result["items"][0]["title"] == "Post A"
+    assert result["recent"][0]["title"] == "Post A"
 
 
 def test_get_spend_returns_shape():
