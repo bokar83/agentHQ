@@ -809,3 +809,30 @@ Adding any new model to `COUNCIL_MODEL_REGISTRY` automatically makes it availabl
 **Tests:** 265/265 in-scope pass. Commit: `cf30018`. Merged to main 2026-04-26.
 
 ---
+
+### 2026-04-26: M10 Autonomous Crew Contract SHIPPED
+
+**Branch:** `feat/atlas-m10-crew-contract`
+**Spec:** `docs/superpowers/specs/2026-04-26-autonomous-crew-contract-design.md`
+
+16-check gate across 4 failure modes (silent corruption, runaway spend, unrecoverable state, identity drift). Makes it physically impossible to flip a heartbeat crew live without a signed contract file.
+
+**What shipped:**
+
+- `orchestrator/autonomy_guard.py`: `ContractNotSatisfiedError`, `_assert_contract_satisfied()`, `_verify_seven_day_observation()` (C7 machine check via `llm_calls`), per-crew `cost_ceiling_usd` in state schema, `guard()` enforces per-crew ceiling alongside global cap. Both `set_crew_enabled(True)` and `set_crew_dry_run(False)` gated.
+- `orchestrator/contracts/griot.md`: Signed backfill contract (ceiling=$0.01)
+- `orchestrator/contracts/auto_publisher.md`: Signed backfill contract (ceiling=$0.05)
+- `orchestrator/contracts/TEMPLATE.md`: Template for concierge/chairman/studio at build time
+- `orchestrator/db.py` + `orchestrator/griot.py`: `content_approvals` table + `record_content_approval()` for Chairman L5 learning signal (first-try approval rate)
+- `orchestrator/auto_publisher.py`: `_should_hold_for_timely_check()` + `_send_timely_recheck_telegram()`: stale Timely records held and re-checked before publish (C13)
+- Notion Content Board: `Content Type` select field added (`Evergreen` green / `Timely` yellow)
+
+**Tests:** 112/113 pass (1 pre-existing `test_backfill_yesterday_skipped_today_empty` failure unrelated to M10).
+
+**End-to-end verified:** concierge blocked without contract, griot/auto_publisher contracts parse and load ceiling, guard blocks when estimated exceeds per-crew ceiling.
+
+**Future crews:** concierge/chairman/studio must have a signed contract at `orchestrator/contracts/<crew_name>.md` before `set_crew_enabled(True)` or `set_crew_dry_run(False)` will succeed.
+
+**Next:** merge to main + VPS deploy (Boubacar to confirm). Then M9b (web chat native panel) or M5 gate check (2026-05-08).
+
+---
