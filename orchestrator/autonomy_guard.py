@@ -201,13 +201,13 @@ class AutonomyGuard:
 
             if count == 0:
                 raise ContractNotSatisfiedError(
-                    f"{crew_name}: C7 failed -- no autonomous llm_calls rows found in the "
+                    f"{crew_name}: C7 failed: no autonomous llm_calls rows found in the "
                     f"past 7 days. Run the crew in dry_run=True for 7 days before enabling."
                 )
 
             if max_cost is not None and float(max_cost) > ceiling_usd:
                 raise ContractNotSatisfiedError(
-                    f"{crew_name}: C7 failed -- a tick exceeded the cost ceiling "
+                    f"{crew_name}: C7 failed: a tick exceeded the cost ceiling "
                     f"(max observed: ${max_cost:.4f}, ceiling: ${ceiling_usd:.4f}). "
                     f"Lower the ceiling or fix the runaway cost before enabling."
                 )
