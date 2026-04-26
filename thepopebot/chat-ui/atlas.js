@@ -3,7 +3,7 @@
 // No user-sourced data is ever injected via innerHTML.
 
 const ORC_BASE = '/api/orc';
-const TOKEN_TTL_MS = 0;
+const TOKEN_TTL_MS = 4 * 60 * 60 * 1000;
 // Separate storage keys from /chat so each page requires its own login
 const TOKEN_KEY = 'atlas_token';
 const TOKEN_TS_KEY = 'atlas_token_ts';
@@ -96,6 +96,10 @@ async function apiFetch(path, opts) {
     sessionStorage.removeItem(TOKEN_TS_KEY);
     location.reload();
     throw new Error('TOKEN_EXPIRED');
+  }
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error('HTTP ' + res.status + ': ' + body.slice(0, 200));
   }
   return res.json();
 }
@@ -430,7 +434,7 @@ var QUOTES = [
   {text:"Absorb what is useful, discard what is not, add what is uniquely your own.",author:"Bruce Lee"},
   {text:"Education is the most powerful weapon which you can use to change the world.",author:"Nelson Mandela"},
   {text:"Mamba mentality is about 4am workouts, doing more than the next guy, and wanting it more.",author:"Kobe Bryant"},
-  {text:"Everything negative -- pressure, challenges -- is all an opportunity for me to rise.",author:"Kobe Bryant"},
+  {text:"Everything negative, pressure, challenges, is all an opportunity for me to rise.",author:"Kobe Bryant"},
   {text:"We preferons la pauvrete dans la liberte a la richesse dans l'esclavage.",author:"Sekou Toure"},
   {text:"L'homme qui travaille et qui pense construit son destin.",author:"Sekou Toure"},
   {text:"Suffer the pain of discipline or suffer the pain of regret.",author:"Jim Rohn"},
