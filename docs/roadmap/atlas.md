@@ -60,7 +60,7 @@ That breaks down into 5 closed loops:
 |---|---|---|
 | L1 Propose | ✅ LIVE | griot-morning fires Mon-Fri 07:00 MT. Verified weekend gate working today. |
 | L2 Schedule | ✅ LIVE | 5-min wake. Queue #3 scheduled for Monday 2026-04-27. |
-| L3 Publish | 🟡 PARTIAL | Brief sends with share URL. Tap-to-publish is manual. M7a SHIPPED (Blotato API verified, $20.30/mo Skool-discounted, 5-9 sec latency). M7b READY to build any session. |
+| L3 Publish | ✅ LIVE | M7b SHIPPED 2026-04-25. Auto-publisher tick fires every 5 min via Blotato API ($20.30/mo Skool-discounted). Time-of-day slots (LI 07/11/12 MT, X 07/11/14 MT). Mon-Sat cadence, skip Sun. Past-due stagger (max 4/tick). publish_brief still sends Telegram digest as audit; auto_publisher does the actual posting. |
 | L4 Reconcile | ✅ LIVE | Reply 'posted' or 'skip' to publish-brief Telegram message; Notion Status flips, task_outcomes written. Shipped 2026-04-25 (M1). |
 | L5 Learn | ❌ OPEN | Blocked: needs ≥14 days of L4 data. Earliest viable 2026-05-08. |
 
@@ -203,30 +203,60 @@ That breaks down into 5 closed loops:
 
 ---
 
-### M7b: Auto-Publish Build (Blotato API) ⏳ READY
+### M7b: Auto-Publish Build (Blotato API) ✅ SHIPPED 2026-04-25
 
-**What:** Build `orchestrator/blotato_publisher.py` against the verified Blotato API contract from M7a. Wire it into the publish-brief tick so Scheduled posts auto-fire on Scheduled Date instead of requiring Boubacar's tap-share-paste.
+**Closed L3 Publish loop. auto_publisher.enabled=true on VPS at 2026-04-25 ~18:55 MT. Next live publish: Mon 2026-04-27 07:00 MT, X "One constraint nobody has named yet".**
 
-**Path locked by M7a:** Blotato API at $20.30/mo Skool-discounted. Direct LinkedIn/X OAuth path descoped (Blotato API verified working with 5-9 sec latency).
+**7 decisions locked at build start, all implemented:**
+1. Idempotency: Notion Status=Publishing flip BEFORE Blotato POST (prevents double-post on Notion-write failure)
+2. State machine: granular Notion Status (added `Publishing`, `PublishFailed`)
+3. Module shape: NEW module, platform-agnostic (Studio M4 ready)
+4. Tick coordination: disjoint Notion views (auto_publisher includes past-due; publish_brief stays today-only)
+5. Kill switch: `auto_publisher.enabled` in autonomy_state.json (default OFF, flipped ON post-deploy)
+6. Posted URL: per-platform fields (`LinkedIn Posted URL`, `X Posted URL`)
+7. M2 backfill: PublishFailed blocks slot (audit trail preserved)
 
-**Spec:** `docs/superpowers/specs/2026-04-26-atlas-m7b-publisher-design.md` (status: spec written, 7 open decisions to lock at top of build session). Pass 2 Council surfaced a fatal idempotency bug, a state-machine gap, and an architectural disagreement; spec captures all of it.
+**Plus three behavioral layers added in same session:**
+- Time-of-day slots from `auto_publisher_schedule.default.json`: LinkedIn 07/11/12 MT, X 07/11/14 MT
+- Cadence loosen: Mon-Sat both platforms (was Tue/Thu LinkedIn only); skip Sunday for today-records, past-due bypasses Sunday
+- Past-due stagger: max_per_tick=4 caps backlog drain to prevent platform-feed bursts
 
-**7 open decisions to lock at build session start (full table in spec):**
-1. Idempotency mechanism (Status=Publishing OR client-generated UUID)
-2. State machine location (granular Notion Status OR Postgres + Notion mirror)
-3. New module vs publish_brief.py patch (depends on Studio M4 timing)
-4. Tick coordination contract with publish_brief
-5. Kill switch `auto_publisher.enabled` in `autonomy_state.json` (non-negotiable)
-6. Posted URL schema (single field or per-platform)
-7. M2 backfill interaction with PublishFailed records
+**Files shipped:**
+- NEW `orchestrator/blotato_publisher.py` (BlotatoPublisher class, httpx, publish + poll_until_terminal)
+- NEW `orchestrator/auto_publisher.py` (heartbeat tick, time-of-day filter, weekday policy, past-due stagger, stale-Publishing TTL cleanup)
+- NEW `orchestrator/auto_publisher_schedule.default.json` (committed default schedule config)
+- MOD `orchestrator/autonomy_guard.py` (`auto_publisher` added to KNOWN_CREWS)
+- MOD `orchestrator/scheduler.py` (heartbeat wake `auto-publisher` registered, every=5m)
+- MOD `orchestrator/griot_scheduler.py` (occupancy includes Publishing/PublishFailed; LINKEDIN_WEEKDAYS expanded to Mon-Sat)
+- MOD `orchestrator/tools.py` (BlotatoListAccountsTool, BlotatoPublishTool, BlotatoGetStatusTool + PUBLISHER_TOOLS bundle)
+- NEW `orchestrator/tests/test_blotato_publisher.py` (20 tests)
+- NEW `orchestrator/tests/test_auto_publisher.py` (32 tests)
+- MOD `orchestrator/tests/test_griot_scheduler.py` (8 tests updated for Mon-Sat rule)
 
-**Why:** Final gap in L3 (currently 🟡 PARTIAL). Without M7b, the system requires Boubacar's daily tap-share-paste.
+**Notion schema changes (live via API):**
+- Status select: added `Publishing` (yellow), `PublishFailed` (red)
+- New URL fields: `LinkedIn Posted URL`, `X Posted URL`
+- New rich_text field: `Submission ID`
 
-**Trigger:** Any session AFTER the 7 decisions are locked.
-**Blockers:** Spec review by Boubacar; lock decisions 1-7 above.
-**Branch:** `feat/atlas-m7b-publisher` (to create at build session start)
-**Save point:** `savepoint-pre-atlas-m7b-publisher-2026-04-26` (use actual build date)
-**ETA corrected:** 3-4 hr including tests, save point, branch, deploy, verify (NOT 60-90 min; original estimate was happy-path-only).
+**Test coverage:** 210/210 orchestrator tests pass (158 pre-existing + 52 M7b).
+
+**Reschedule done out-of-band (5 records, queue clean of past-dues):**
+- Skipped: 2026-04-22 LI "I needed it" (already posted Apr 21)
+- 2026-04-23 LI -> 2026-05-12 Tue
+- 2026-04-24 X -> 2026-05-13 Wed
+- 2026-04-25 LI -> 2026-05-07 Thu
+- 2026-04-26 Sun X -> 2026-04-28 Tue
+
+**Save point:** `savepoint-pre-atlas-m7b-publisher-2026-04-25` (at 807cc20).
+**Commits:** initial cda98d4 (modules + tests + integration); follow-up 8d8194f (time-of-day + cadence + reschedule support).
+**Spec:** `docs/superpowers/specs/2026-04-26-atlas-m7b-publisher-design.md` (historical now).
+**Branch:** `feat/atlas-m7b-publisher` (merged to main).
+
+**Operating profile:**
+- Effective Blotato cost: $20.30/mo Skool-discounted (Starter tier; Atlas uses 2 of Blotato's 8 platforms)
+- Wake cadence: every 5 min, 7 days a week
+- Active gates: kill switch, weekday policy, time-of-day, past-due cap
+- Telegram alerts on every Posted + every PublishFailed
 
 ---
 
@@ -472,5 +502,44 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 3. Lock the 7 open decisions
 4. Save point + branch + build per the spec checklist
 5. M8 build (4.75 hr) and M7b build (3-4 hr) can run in any order; both have specs ready and no dependency on each other
+
+---
+
+### 2026-04-25 (night): M7b SHIPPED. Atlas L3 Publish closed. Auto-publish LIVE.
+
+**Same-day reversal:** the M7b spec said "build Sunday at the earliest." Boubacar opted to ship same-night after closing M7a, M2, M1, plus the studio session merge. Build started at hour 7 of a 14-hour budget, finished around hour 10.
+
+**7 design decisions locked at start, all implemented as planned.**
+
+**Plus three behavioral layers added in same session that were originally M7c territory:**
+
+1. Time-of-day slots from `auto_publisher_schedule.default.json` (LI 07/11/12 MT, X 07/11/14 MT). Slot N claimed by the Nth Queued record of the day; past-due records ignore the time gate.
+2. Cadence loosen to Mon-Sat both platforms (LinkedIn was Tue/Thu only). Sunday still skipped for today-records; past-due bypasses.
+3. Past-due stagger (max_per_tick=4) to prevent platform-feed bursts when the backlog drains.
+
+**Reschedule done out-of-band BEFORE flipping enabled=True:** 5 Notion records (1 Skipped, 4 rescheduled to clean dates). Queue is now zero past-dues. Next live publish: Mon 2026-04-27 07:00 MT, X "One constraint nobody has named yet".
+
+**Notion schema changes (live via API):**
+- Status select: added `Publishing` (yellow), `PublishFailed` (red)
+- New URL fields: `LinkedIn Posted URL`, `X Posted URL`
+- New rich_text field: `Submission ID`
+
+**Test coverage:** 210/210 orchestrator tests pass (158 pre-existing + 20 publisher + 32 auto_publisher; 8 griot_scheduler tests updated for Mon-Sat).
+
+**Save point:** `savepoint-pre-atlas-m7b-publisher-2026-04-25` (at 807cc20).
+**Commits:** cda98d4 (initial modules + tests + integration), 8d8194f (time-of-day + cadence + past-due stagger).
+**Branch:** `feat/atlas-m7b-publisher` (merged via no-ff).
+
+**VPS deploy:** docker cp 6 files into orc-crewai container (path: `/app/`, NOT `/app/orchestrator/`), restart, auto-publisher wake registered with `every=5m`. Verified live in container logs at 18:51 MT. BLOTATO_API_KEY + LinkedIn/X account IDs added to VPS .env (.env backed up to .env.backup-pre-m7b-2026-04-25 first).
+
+**Kill switch flipped ON at 18:55 MT.** auto_publisher.enabled=true, dry_run=false. Next 5-min wake is the first live tick.
+
+**Atlas Done Definition state after M7b ship: 4 of 5 loops closed (L1, L2, L3, L4). L5 still trigger-gated on ≥14 days of L4 reconcile data; earliest viable 2026-05-08.**
+
+**Next atlas session:**
+1. Monday 2026-04-27 morning: verify the 07:00 MT auto-publish fires X "One constraint nobody has named yet"
+2. If green: M7b validated; observe for one week of normal operation
+3. If red: inspect Telegram alert + Notion Status of the failed record; error_message in Source Note
+4. M5 (Chairman / L5 Learning) gate: 2026-05-08, with 14 days of task_outcomes data accumulated by then
 
 ---
