@@ -664,7 +664,7 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 
 ### M11: OpenRouter-Native Intelligent Model Routing
 
-**Status:** M11a SHIPPED 2026-04-26. M11b NEXT.
+**Status:** M11a SHIPPED 2026-04-26. M11b SHIPPED 2026-04-26.
 **Vision:** agentsHQ uses OpenRouter as the single routing layer across ALL providers. Best model for every job, automatically selected. Crew engine uses `select_by_capability()` (same pattern as Sankofa Council) across all 18 models in `COUNCIL_MODEL_REGISTRY` (8 providers: Anthropic, Google, OpenAI, DeepSeek, xAI, Mistral, Qwen). Not loyal to any provider.
 **Save point:** `savepoint-pre-m10a-bug-fixes-2026-04-26` (tagged before M11a work, before the rename to M11)
 
@@ -673,7 +673,7 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 | Sub | Scope | Budget | Branch | Status |
 | --- | --- | --- | --- | --- |
 | M11a | Bug fixes + named model constants | 2h | fix/m10a-model-bugs | SHIPPED 2026-04-26 |
-| M11b | ROLE_CAPABILITY migration: replace ROLE_MODEL with select_by_capability() for crew engine | 3h | feat/m11b-capability-routing | NEXT |
+| M11b | ROLE_CAPABILITY migration: replace ROLE_MODEL with select_by_capability() for crew engine | 3h | feat/m11b-capability-routing | SHIPPED 2026-04-26 |
 | M11c | Research engine rewrite: two-phase Perplexity Sonar Pro + Firecrawl via OpenRouter | 4h | feat/m11c-research-engine | After M11b |
 | M11d | Harvest reviewer migration + weekly model review agent (Sunday 08:00 MT) | 6h | feat/m11d-model-review | After M11b |
 
@@ -687,14 +687,15 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 - `handlers_chat.py`: already correct via `llm_helpers.py` env-var pattern
 - 276/276 tests pass
 
-**M11b: ROLE_CAPABILITY mapping (next after M9a):**
-Replaces `ROLE_MODEL` (4 hardcoded Anthropic aliases) with `ROLE_CAPABILITY` (capability tag + cost ceiling). Key routing outcomes when live:
-- `coder/complex` -> o4-mini or GPT-5.1 (GPT beats Opus on coding right now)
-- `social/moderate` -> Grok-4 (unconventional angles for hooks)
-- `researcher/complex` -> DeepSeek-R1, Gemini-2.5-Pro, or GPT-4.1 (deep reasoning)
-- `planner/simple` -> DeepSeek-v3.2 at $0.26/MTok
-- `qa/all` -> Qwen3.5-flash at $0.065/MTok
+**M11b shipped 2026-04-26: what changed:**
+
+- `agents.py`: deleted `ROLE_MODEL` (4 hardcoded Anthropic aliases)
+- `agents.py`: added `ROLE_CAPABILITY` (capability tag + cost ceiling per role/complexity)
+- `agents.py`: rewrote `select_llm()` to call `select_by_capability()` across all 18 models
+- `ROLE_TEMPERATURE` unchanged (temp is decoupled from model choice, intentional)
+- Live routing outcomes: `social/moderate` -> Grok-4; `qa/*` -> Qwen3.5-flash; `planner/simple` -> DeepSeek-v3.2; `coder/complex` -> lowest-cost deep_reasoning within low-medium ceiling; `orchestrator/complex` -> full registry up to high ceiling
 - Adding any new model to `COUNCIL_MODEL_REGISTRY` automatically makes it available to all crews. No code changes required.
+- 265/265 in-scope tests pass. Commit: `cf30018`
 
 **Sequence with M9:**
 ```
@@ -709,8 +710,9 @@ M11a (done) -> M9a  (3-4h, parallel with M11b)
 
 1. M7b monitoring: verify Monday 2026-04-27 07:00 MT X auto-publish fires (or check if it already fired)
 2. M5 (Chairman / L5 Learning) gate: 2026-05-08
-3. **M9a** (Telegram push alerts + correctness fixes) and **M11b** (capability routing): run in parallel
+3. **M9a** (Telegram push alerts + correctness fixes): remaining parallel tab
 4. VPS orphan archive sunset: delete `/root/_archive_20260421/` if no issues by 2026-04-28
+5. After M9a verified on VPS: merge feat/m11b-capability-routing -> main, deploy
 
 ---
 
@@ -774,17 +776,18 @@ M11a (done) -> M9a  (3-4h, parallel with M11b)
 - `handlers_approvals.py`: added `_build_button()` helper with 64-byte callback_data assert; added `approve_queue_item:` and `reject_queue_item:` callback dispatch cases that mirror the existing `yes confirm` / `no` handler logic
 - `scripts/test_m9a_smoke.py`: smoke test covering run_chat schema, CHAT_SANDBOX suppression, _build_button byte limit, enqueue uses send_message_with_buttons, connection close on exception
 
-**Deploy checklist (do before VPS rebuild):**
-```bash
-# Add env vars to VPS .env (if not already present)
-ssh root@72.60.209.109 'grep -q CHAT_MODEL /root/agentsHQ/.env || echo "CHAT_MODEL=anthropic/claude-haiku-4.5
-ATLAS_CHAT_MODEL=anthropic/claude-haiku-4.5
-CHAT_TEMPERATURE=0.7
-CHAT_SANDBOX=false" >> /root/agentsHQ/.env'
-# Then: git push, VPS git pull, docker compose up -d --build orchestrator
-# Verify: docker exec orc-crewai env | grep CHAT
-```
+**Next:** VPS deploy + smoke test, then M9b (web chat native panel).
 
-**Next:** Boubacar confirms push. After VPS deploy + smoke test pass, M9b (web chat native panel) can start.
+---
+
+### 2026-04-26: M11b SHIPPED - ROLE_CAPABILITY migration
+
+Replaced `ROLE_MODEL` (4 hardcoded Anthropic aliases) with `ROLE_CAPABILITY` (capability tag + cost ceiling per role/complexity). `select_llm()` now delegates to `select_by_capability()` across all 18 models in `COUNCIL_MODEL_REGISTRY` (8 providers). `ROLE_TEMPERATURE` unchanged.
+
+**Live routing outcomes:** `social/moderate` -> Grok-4; `qa/*` -> Qwen3.5-flash ($0.065/MTok); `planner/simple` -> DeepSeek-v3.2 ($0.26/MTok); `coder/complex` -> lowest-cost deep_reasoning within low-medium ceiling; `orchestrator/complex` -> full registry up to high ceiling.
+
+Adding any new model to `COUNCIL_MODEL_REGISTRY` automatically makes it available to all crews.
+
+**Tests:** 265/265 in-scope pass. Commit: `cf30018`. Merged to main 2026-04-26.
 
 ---
