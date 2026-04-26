@@ -543,3 +543,59 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 4. M5 (Chairman / L5 Learning) gate: 2026-05-08, with 14 days of task_outcomes data accumulated by then
 
 ---
+
+### M8: Atlas Mission Control (live ops dashboard at /atlas) SHIPPED 2026-04-25
+
+**What:** A gated, live, single-page dashboard at `agentshq.boubacarbarry.com/atlas` that shows what the autonomy layer is doing and lets Boubacar take safe actions from a browser anywhere.
+
+**Done:** 8 cards refresh every 30s (state, queue, content board, spend, heartbeats, errors, top ideas, chat embed). Toggle Griot, toggle dry-run, approve/reject queue items. Same JWT-PIN as /chat. Catalyst Console T4 visual theme (Atkinson Hyperlegible + Fraunces + IBM Plex Mono, #08090C background, terracotta #FF6B35 accent). Mobile-responsive. Auto-deploys via existing GH Actions workflow on merge.
+
+**Posted/skip publish brief actions:** Not wired to dashboard (uses Telegram-native message ID context). Telegram remains the channel for those two actions.
+
+**Ideas card:** Top-10 ranked ideas from agentsHQ Ideas Notion DB, sorted by Impact+Effort priority score. Ideas curator also fixed to auto-score every new idea on save (commit f54d26e on main).
+
+**PR:** #21
+**Branch:** `feat/atlas-m8-mission-control`
+**Save point:** `savepoint-pre-atlas-m8-2026-04-25`
+**Spec:** `docs/superpowers/specs/2026-04-25-atlas-m8-mission-control-design.md`
+
+---
+
+### 2026-04-25 (late evening): M8 Atlas Mission Control built and PR open
+
+**M8 Mission Control dashboard built.** PR #21 open on `feat/atlas-m8-mission-control`. Reviewed by Sankofa Council in-session before build. Topology audit caught wrong architecture assumption (Jinja2 templates assumed; real topology is static nginx + JSON endpoints). Corrected before any code was written.
+
+**What shipped:**
+
+- `orchestrator/atlas_dashboard.py`: 8 pure fetchers (get_state, get_queue, get_content, get_spend, get_heartbeats, get_errors, get_hero, get_ideas)
+- `orchestrator/tests/test_atlas_dashboard.py`: 8 unit tests, all passing
+- `orchestrator/app.py`: +14 endpoints (8 GET read + 6 POST action) under `/atlas/*`, all gated by `verify_chat_token`
+- `thepopebot/chat-ui/atlas.html` + `atlas.css` + `atlas.js` + `cw-mark.svg`: static page shell with Catalyst Console T4 theme
+- `thepopebot/chat-ui/nginx.conf`: `/atlas` location blocks added
+- Full test suite: 8 new M8 tests passing
+
+**Ideas DB cleanup done in same session:**
+
+- 1 database confirmed (no duplicates)
+- 9 unscored ideas scored with Impact + Effort in Notion
+- "Force Ranking" note page archived
+- "OpenRouter Dashboard" idea marked Done (M8 built it)
+- Ideas curator fixed to auto-score every new idea on save (commit f54d26e, already on main)
+
+**Notable design decisions:**
+
+- posted/skip dashboard buttons not wired (Telegram message ID is the session key; 501 endpoints with clear explanation)
+- Kill switch intentionally absent from browser (Telegram only)
+- Chat card embeds `/chat` via iframe (same-origin, same nginx, no cross-origin issues)
+- Brand mark slot (`cw-mark.svg`) is a hot-swappable brass-coin placeholder
+- Ideas card computes priority from Impact+Effort selects (formula field is opaque via Notion API)
+
+**Auto-deploy:** GH Actions triggers on `thepopebot/chat-ui/**` + `orchestrator/**` changes. Merge PR = live at `agentshq.boubacarbarry.com/atlas`.
+
+**Next session:**
+
+1. Merge PR #21 and verify `/atlas` loads with all 8 cards showing data
+2. M7b monitoring: verify Monday 2026-04-27 07:00 MT X auto-publish fires
+3. M5 (Chairman / L5 Learning) gate: 2026-05-08
+
+---
