@@ -25,6 +25,7 @@ Diagnostic problem-solver. Eight lenses, equally weighted: Theory of Constraints
 - End every session with git push (local + VPS).
 - No em dashes anywhere. Not `--`, not `—`. Rewrite the sentence. *Why: Boubacar edits every one out by hand when they slip through. A pre-commit hook also blocks them.*
 - WebFetch: blanket permission. Never ask before fetching a URL.
+- **`orchestrator.py` no longer exists.** Sunset 2026-04-25 in commit `4d1aeb3`. The 2800-line monolith was split into modular files (`engine.py`, `constants.py`, `handlers_chat.py`, `state.py`, `handlers.py`, etc.) and `app.py` is the canonical entrypoint. **Never recreate `orchestrator.py`.** All imports use the modular stack. See `project_orchestrator_sunset.md` in memory for the full import map. *Why: agents kept "fixing" missing-orchestrator.py errors by recreating the file, undoing the refactor.*
 
 ## Coding Principles (Karpathy)
 
