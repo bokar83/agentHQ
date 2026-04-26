@@ -399,10 +399,10 @@ def get_job(job_id: str) -> dict:
         return {
             "job_id":         row[0],
             "status":         row[1],
-            "task_type":      row[2],
-            "result":         row[3],
+            "task_type":      row[2] or "",
+            "result":         row[3] or "",
             "files_created":  row[4] if isinstance(row[4], list) else [],
-            "execution_time": row[5],
+            "execution_time": row[5] if row[5] is not None else 0.0,
             "error":          row[6],
             "created_at":     str(row[7]),
             "updated_at":     str(row[8]),
