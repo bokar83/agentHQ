@@ -3,6 +3,8 @@
 **Locked:** 2026-04-25 night, Studio M1 build session.
 **Status:** Channel exists (Boubacar holds it). Engine pointed at it. Awaiting M2 brand identity refresh and X handle registration.
 **Niche tag:** `african-folktales`
+**Blotato YT accountId:** `34864` (env: `BLOTATO_YT_BAOBAB_ACCOUNT_ID`)
+**Reference benchmark video found by trend scout 2026-04-25:** "HER MOTHER IN-LAW AND SISTER-LAW ARRIVED AT HER HOUSE UNANNOUNCED, THEN..." Use as a tone/format reference for early Under the Baobab productions. Boubacar flagged this as exactly the kind of content the channel should aim to produce.
 
 ## What this channel is
 
