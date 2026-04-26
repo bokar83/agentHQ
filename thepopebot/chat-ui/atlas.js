@@ -219,30 +219,53 @@ async function refreshQueue() {
 function renderContent(d) {
   const body = document.getElementById('card-content-body');
   body.replaceChildren();
-  const items = d.items || [];
-  if (!items.length) {
-    body.appendChild(el('p', { class: 'empty-state' }, 'No posts in window (-7 / +7 days)'));
+  const upcoming = d.upcoming || [];
+  const pastDue  = d.past_due || [];
+  const recent   = d.recent   || [];
+  if (!upcoming.length && !pastDue.length && !recent.length) {
+    body.appendChild(el('p', { class: 'empty-state' }, 'No content in window'));
     return;
   }
-  const todayStr = new Date().toISOString().slice(0, 10);
-  items.forEach(function(item) {
+
+  function makeItem(item, forceCls) {
     const platform = el('span', { class: 'content-platform' });
-    platform.textContent = (item.platform || '').slice(0, 2);
+    platform.textContent = (item.platform || '').slice(0, 2).toUpperCase() || '--';
     const title = el('span', { class: 'content-title' });
     title.textContent = item.title || '';
+    const dateLabel = el('span', { class: 'content-date' });
+    dateLabel.textContent = item.scheduled_date ? item.scheduled_date.slice(5) : '';
     const rawStatus = (item.status || '').toLowerCase();
-    const isPastDue = item.scheduled_date && item.scheduled_date < todayStr && rawStatus !== 'posted' && rawStatus !== 'skipped';
-    const sCls = isPastDue ? 'content-status past-due'
+    const sCls = forceCls ? forceCls
                : rawStatus === 'queued'  ? 'content-status queued'
                : rawStatus === 'posted'  ? 'content-status posted'
                : rawStatus === 'skipped' ? 'content-status skipped'
+               : rawStatus === 'ready'   ? 'content-status queued'
                : 'content-status';
-    const status = el('span', { class: sCls });
-    status.textContent = isPastDue ? 'Past Due' : (item.status || '');
-    const dateLabel = el('span', { class: 'content-date' });
-    dateLabel.textContent = item.scheduled_date ? item.scheduled_date.slice(5) : '';
-    body.appendChild(el('div', { class: 'content-item' }, platform, title, dateLabel, status));
-  });
+    const statusEl = el('span', { class: sCls });
+    statusEl.textContent = forceCls === 'content-status past-due' ? 'Past Due' : (item.status || '');
+    return el('div', { class: 'content-item' }, platform, title, dateLabel, statusEl);
+  }
+
+  function sectionLabel(text) {
+    const lbl = el('div', { class: 'data-label' });
+    lbl.textContent = text;
+    lbl.style.marginTop = '6px';
+    lbl.style.marginBottom = '2px';
+    return lbl;
+  }
+
+  if (pastDue.length) {
+    body.appendChild(sectionLabel('Past Due'));
+    pastDue.forEach(function(item) { body.appendChild(makeItem(item, 'content-status past-due')); });
+  }
+  if (upcoming.length) {
+    body.appendChild(sectionLabel('Upcoming (7 days)'));
+    upcoming.forEach(function(item) { body.appendChild(makeItem(item, null)); });
+  }
+  if (recent.length) {
+    body.appendChild(sectionLabel('Recently Posted'));
+    recent.forEach(function(item) { body.appendChild(makeItem(item, null)); });
+  }
 }
 
 async function refreshContent() {

@@ -38,59 +38,91 @@ def get_queue() -> dict:
     return {"items": items, "count": len(items)}
 
 
-def _fetch_content_board() -> list:
-    """Fetch past-due + next-7-days content items from Notion Content Board."""
+def _fetch_content_board() -> dict:
+    """
+    Fetch content board entries:
+    - recent: last 3 Posted items (any date)
+    - upcoming: next 7 days from today, all statuses except Posted/Archived/Done
+    - past_due: scheduled before today, not yet Posted/Skipped/Archived/Done
+    """
     import os
     from datetime import date, timedelta
     try:
         from skills.forge_cli.notion_client import NotionClient
         secret = os.environ.get("NOTION_SECRET") or os.environ.get("NOTION_API_KEY")
-        db_id = os.environ.get("NOTION_CONTENT_BOARD_DB_ID", "")
+        db_id = os.environ.get("FORGE_CONTENT_DB", "")
         if not db_id:
-            return []
+            logger.warning("get_content: FORGE_CONTENT_DB env var not set")
+            return {"recent": [], "upcoming": [], "past_due": []}
         nc = NotionClient(secret=secret)
         today = date.today()
-        week_start = today - timedelta(days=7)
         week_end = today + timedelta(days=7)
-        results = nc.query_database(
+
+        def _parse_page(page):
+            props = page.get("properties", {})
+            title_prop = props.get("Title") or props.get("Name") or {}
+            title_list = title_prop.get("title", [])
+            title = title_list[0].get("text", {}).get("content", "") if title_list else ""
+            status = (props.get("Status", {}).get("select") or {}).get("name", "")
+            sched_prop = (props.get("Scheduled Date") or {}).get("date") or {}
+            # Platform is multi_select -- take first value
+            platform_list = (props.get("Platform") or {}).get("multi_select") or []
+            platform = platform_list[0].get("name", "") if platform_list else ""
+            return {
+                "title": title[:80],
+                "status": status,
+                "scheduled_date": sched_prop.get("start"),
+                "platform": platform,
+            }
+
+        # 1. Upcoming: today through +7 days, exclude done/archived
+        upcoming_results = nc.query_database(
             db_id,
             filter_obj={
                 "and": [
-                    {"property": "Scheduled Date", "date": {"on_or_after": week_start.isoformat()}},
+                    {"property": "Scheduled Date", "date": {"on_or_after": today.isoformat()}},
                     {"property": "Scheduled Date", "date": {"on_or_before": week_end.isoformat()}},
                 ]
             },
             sorts=[{"property": "Scheduled Date", "direction": "ascending"}],
         )
-        items = []
-        for page in (results or []):
-            props = page.get("properties", {})
-            title = ""
-            title_prop = props.get("Title") or props.get("Name") or {}
-            title_list = title_prop.get("title", [])
-            if title_list:
-                title = title_list[0].get("text", {}).get("content", "")
-            status_prop = props.get("Status", {})
-            status = (status_prop.get("select") or {}).get("name", "")
-            sched_prop = props.get("Scheduled Date", {}).get("date") or {}
-            platform_prop = props.get("Platform", {})
-            platform = (platform_prop.get("select") or {}).get("name", "")
-            items.append({
-                "title": title[:80],
-                "status": status,
-                "scheduled_date": sched_prop.get("start"),
-                "platform": platform,
-            })
-        return items
+        upcoming = [_parse_page(p) for p in (upcoming_results or [])]
+        upcoming = [i for i in upcoming if i["status"] not in ("Archived", "Done")]
+
+        # 2. Past due: before today, not yet resolved
+        past_due_results = nc.query_database(
+            db_id,
+            filter_obj={
+                "and": [
+                    {"property": "Scheduled Date", "date": {"before": today.isoformat()}},
+                ]
+            },
+            sorts=[{"property": "Scheduled Date", "direction": "descending"}],
+        )
+        past_due = [_parse_page(p) for p in (past_due_results or [])]
+        past_due = [i for i in past_due if i["status"] not in ("Posted", "Skipped", "Archived", "Done")][:5]
+
+        # 3. Recent posted: last 3 Posted items
+        recent_results = nc.query_database(
+            db_id,
+            filter_obj={
+                "property": "Status", "select": {"equals": "Posted"}
+            },
+            sorts=[{"property": "Scheduled Date", "direction": "descending"}],
+        )
+        recent = [_parse_page(p) for p in (recent_results or [])][:3]
+
+        return {"recent": recent, "upcoming": upcoming, "past_due": past_due}
     except Exception as e:
         logger.warning(f"get_content: Notion fetch failed: {e}")
-        return []
+        return {"recent": [], "upcoming": [], "past_due": []}
 
 
 def get_content() -> dict:
-    """Content Board card: this-week scheduled posts."""
-    items = _fetch_content_board()
-    return {"items": items, "count": len(items)}
+    """Content Board card: recent posted + upcoming 7 days + past due."""
+    data = _fetch_content_board()
+    total = len(data["recent"]) + len(data["upcoming"]) + len(data["past_due"])
+    return {**data, "count": total}
 
 
 def _spend_aggregates() -> dict:
