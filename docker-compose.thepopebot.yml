@@ -78,19 +78,21 @@ services:
       - /root/agentsHQ/thepopebot/chat-ui/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=root_default"
       # /chat route
       - "traefik.http.routers.chat-ui.rule=Host(`${APP_HOSTNAME}`) && PathPrefix(`/chat`)"
       - "traefik.http.routers.chat-ui.tls=true"
       - "traefik.http.routers.chat-ui.entrypoints=websecure"
       - "traefik.http.routers.chat-ui.tls.certresolver=mytlschallenge"
-      - "traefik.http.services.chat-ui.loadbalancer.server.port=80"
-      - "traefik.docker.network=root_default"
+      - "traefik.http.routers.chat-ui.service=nginx-static"
       # /atlas route (Mission Control dashboard)
       - "traefik.http.routers.atlas-ui.rule=Host(`${APP_HOSTNAME}`) && PathPrefix(`/atlas`)"
       - "traefik.http.routers.atlas-ui.tls=true"
       - "traefik.http.routers.atlas-ui.entrypoints=websecure"
       - "traefik.http.routers.atlas-ui.tls.certresolver=mytlschallenge"
-      - "traefik.http.services.atlas-ui.loadbalancer.server.port=80"
+      - "traefik.http.routers.atlas-ui.service=nginx-static"
+      # shared backend service (one service, two routers)
+      - "traefik.http.services.nginx-static.loadbalancer.server.port=80"
     networks:
       - root_default
 
