@@ -88,13 +88,13 @@ def enqueue(
     outcome_id: Optional[int] = None,
     chat_id: Optional[str] = None,
 ) -> QueueRow:
-    """Insert a pending row, send a Telegram preview, store the msg_id back.
+    """Insert a pending row, send a Telegram preview with Approve/Reject buttons, store the msg_id back.
 
     If chat_id is None, reads OWNER_TELEGRAM_CHAT_ID or TELEGRAM_CHAT_ID env.
     If Telegram send fails, row persists with telegram_msg_id=NULL and shows on /queue.
     """
     import os as _os
-    from notifier import send_message_returning_id
+    from notifier import send_message_with_buttons
 
     conn = _conn()
     cur = conn.cursor()
@@ -115,7 +115,11 @@ def enqueue(
     preview = _format_proposal_preview(row)
     msg_id = None
     if chat_id:
-        msg_id = send_message_returning_id(str(chat_id), preview)
+        buttons = [[
+            (f"Approve #{row.id}", f"approve_queue_item:{row.id}"),
+            (f"Reject #{row.id}", f"reject_queue_item:{row.id}"),
+        ]]
+        msg_id = send_message_with_buttons(str(chat_id), preview, buttons)
     if msg_id:
         cur.execute(
             f"UPDATE approval_queue SET telegram_msg_id = %s WHERE id = %s RETURNING {_SELECT_COLS}",

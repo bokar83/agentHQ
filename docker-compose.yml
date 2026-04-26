@@ -179,6 +179,10 @@ services:
       - NOTEBOOKLM_QUEUE_SHEET_ID=${NOTEBOOKLM_QUEUE_SHEET_ID}
       - NOTEBOOKLM_REVIEW_QUEUE_FOLDER_ID=${NOTEBOOKLM_REVIEW_QUEUE_FOLDER_ID}
       - NOTEBOOKLM_LIBRARY_ROOT_ID=${NOTEBOOKLM_LIBRARY_ROOT_ID}
+      - CHAT_MODEL=${CHAT_MODEL}
+      - ATLAS_CHAT_MODEL=${ATLAS_CHAT_MODEL}
+      - CHAT_TEMPERATURE=${CHAT_TEMPERATURE}
+      - CHAT_SANDBOX=${CHAT_SANDBOX}
     volumes:
       - ./agent_outputs:/app/outputs
       - /root/.notebooklm-mcp-cli:/root/.notebooklm-mcp-cli

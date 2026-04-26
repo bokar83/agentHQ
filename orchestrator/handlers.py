@@ -32,7 +32,7 @@ from handlers_approvals import (
     APPROVE_ALIASES,
     REJECT_ALIASES,
 )
-from handlers_chat import run_chat, handle_feedback
+from handlers_chat import run_chat, run_chat_with_buttons, handle_feedback
 from handlers_commands import dispatch_command
 from handlers_doc import handle_doc_emoji
 from state import _active_project
@@ -165,7 +165,7 @@ async def process_telegram_update(update: dict) -> None:
 
     # 9. Classify and dispatch.
     job_id = str(uuid.uuid4())
-    from notifier import send_briefing, send_message
+    from notifier import send_briefing
 
     active_project = _active_project.get(chat_id)
     session_key = f"{chat_id}:{active_project}" if active_project else chat_id
@@ -207,11 +207,15 @@ async def process_telegram_update(update: dict) -> None:
         except Exception:
             pass  # non-fatal, proceed with plain text
 
-        result = await loop.run_in_executor(
+        await loop.run_in_executor(
             None,
-            lambda: run_chat(message=enriched_text, session_key=session_key),
+            lambda: run_chat_with_buttons(
+                message=enriched_text,
+                session_key=session_key,
+                chat_id=chat_id,
+                channel="telegram",
+            ),
         )
-        send_message(chat_id, result["result"])
     else:
         from worker import _run_background_job
         loop.run_in_executor(

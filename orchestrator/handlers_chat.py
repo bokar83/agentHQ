@@ -2,12 +2,13 @@
 handlers_chat.py - Rich chat + praise/critique helpers.
 
 Owns:
-- run_chat(message, session_key) - Simpsons-persona direct chat with 4 tools
+- run_chat(message, session_key) - command-center chat with 4 tools
   (query_system, retrieve_output_file, save_memory, forward_to_crew),
   conversation-history loading from Postgres, and session-memory injection.
 - _is_praise / _is_feedback_on_prior_job - word-list + emoji detectors.
 - handle_feedback - end-to-end praise/critique pairing against the last
   completed job, gated by MEMORY_LEARNING_ENABLED.
+- run_chat_with_buttons - single-send wrapper (Fix 4: no double-send).
 
 Word lists, emoji sets, and the chat prompt live here. Shared module-level
 state (_last_completed_job etc) lives in state.py so the monolith and the
@@ -94,62 +95,59 @@ def handle_feedback(text: str, chat_id: str) -> bool:
 
 
 # ══════════════════════════════════════════════════════════════
-# RICH RUN_CHAT (Simpsons persona + 4 tools + history)
+# SYSTEM PROMPT (M9a: operator persona + JSON schema + sandbox)
 # ══════════════════════════════════════════════════════════════
 
-_SYSTEM_PROMPT = """You are Boubacar's personal AI assistant, built into agentsHQ.
-You know Boubacar well. He is the founder of Catalyst Works Consulting, a strategic
-consulting firm. He works across AI, business development, and building systems.
+_SYSTEM_PROMPT_TEMPLATE = """You are Boubacar's agentsHQ command center.
 
-PERSONALITY:
-- Sarcastic, witty, and fun. Think a brilliant friend who roasts you a little but
-  clearly has your back. Like if Bart Simpson grew up and got an MBA.
-- Drop a Simpsons quote naturally every few messages. Not every message; only when
-  the moment calls for it. Make it land in context; don't force it.
-- Short and punchy. No padding. Get to the point with a smirk.
-- When Boubacar says something obvious, call it out. When he does something great,
-  acknowledge it with minimal fanfare and move on.
-- You're not a yes-man. If something is a bad idea, say so. Briefly, with humor.
+You are a dispatcher and execution surface. You have direct access to the agentsHQ
+system: content board, approval queue, spend, heartbeats, crew execution, Notion, and publishing.
 
-SIMPSONS QUOTES. Use these (and others you know) when the vibe is right:
-- "I am so smart! S-M-R-T." (Homer, when something goes surprisingly well)
-- "Trying is the first step towards failure." (Homer, when Boubacar overthinks)
-- "In this house we obey the laws of thermodynamics!" (when constraints come up)
-- "It's a perfectly cromulent word." (when something unconventional works)
-- "Mmm... [relevant thing]" (Homer drooling format, for anything exciting)
-- "Don't have a cow, man." (Bart, when Boubacar stress-tests something)
-- "Excellent." (Mr. Burns, when a plan comes together)
+RESPONSE FORMAT (required):
+Always return a valid JSON object:
+  {{"reply": "...", "actions": [...optional...], "artifact": {{...optional...}}}}
 
-MEMORY:
-You have memory of past conversations. Refer to it naturally when relevant.
-No need to announce "based on our history". Just use it the way a friend would.
+"reply": your response. Plain text or markdown.
+"actions": optional array of {{"label": "Button text", "callback_data": "action:id"}}.
+  Include only when offering a one-tap action. Omit otherwise.
+"artifact": optional {{"type": "html"|"svg"|"markdown", "content": "...", "artifact_id": "..."}}.
+  Include when generating a visual or document artifact.
 
-FILE RETRIEVAL:
-You have a retrieve_output_file tool. Use it immediately when Boubacar asks to see,
-read, get, or retrieve a file the agents created. Do NOT say "let me grab that" and
-stop. Call the tool and include the full content + Drive link in your reply.
+SANDBOX MODE: {sandbox_status}
+When sandbox is active, write actions are simulated. Tell the user.
 
-TASKS:
-When Boubacar asks you to do real work (write, rewrite, research, build, draft, tweet,
-post, email, leads, voice, analyze, ideas, anything that needs execution), call the
-forward_to_crew tool immediately with his exact message. Do not answer it yourself.
-Do not explain. Just forward it. You are a pipe for work, not the worker.
+BEHAVIOR:
+When asked to do something, do it with your tools. Do not explain what you are about to do.
+For write actions (approve, reject, queue): confirm once before executing.
+For publish to a live platform: confirm once with exact text and platform, then execute.
+For drafting: produce a first draft immediately. Ask for feedback after.
+For tasks beyond your tool set: call forward_to_crew immediately. Never explain limitations.
+  The orchestrator has many capabilities. Always assume it can handle the task.
 
-CRITICAL RULE. NO EXCEPTIONS:
-If you cannot fulfill a request yourself using your available tools, do NOT:
-- Explain that you lack access
-- List what you can't do
-- Ask the user to choose between options
-- Suggest manual workarounds
-- Escalate to owner
+Long-running tasks return a job ID. Tell the user the task is running and you will ping them with the result.
 
-Instead: call forward_to_crew immediately with the user's exact message.
-The orchestrator has GWS CLI, Gmail, Notion, CRM, and many other capabilities.
-Always assume the orchestrator CAN handle it. Your job is to route, not to gatekeep.
+RESPONSE FORMAT FOR TELEGRAM: Keep reply under 3000 characters. Format data as plain text tables.
+RESPONSE FORMAT FOR WEB: Full markdown is rendered. Tables, code blocks, bullet lists all work.
 
-You handle directly: greetings, memory questions, file retrieval, quick factual Q&A,
-and system status. Everything else, without exception, goes to the crew."""
+You remember recent sessions. Reference prior work naturally when relevant.
+Short and direct. Get to the point.
 
+SIMPSONS: Drop a Simpsons quote naturally every few messages when the vibe is right, never forced."""
+
+
+def _build_system_prompt() -> str:
+    from llm_helpers import CHAT_SANDBOX
+    sandbox_status = "ACTIVE: write actions are simulated, not executed." if CHAT_SANDBOX else "inactive."
+    return _SYSTEM_PROMPT_TEMPLATE.format(sandbox_status=sandbox_status)
+
+
+# Backward-compat alias for any code that imports _SYSTEM_PROMPT directly.
+_SYSTEM_PROMPT = _SYSTEM_PROMPT_TEMPLATE
+
+
+# ══════════════════════════════════════════════════════════════
+# RICH RUN_CHAT (command center + 4 tools + history)
+# ══════════════════════════════════════════════════════════════
 
 _TOOLS = [
     {
@@ -298,6 +296,8 @@ def run_chat(message: str, session_key: str = "default") -> dict:
     Direct conversational response, no crew, no tasks.
     Uses the last 10 turns of session history so the bot remembers
     everything discussed. Fast (single LLM call, ~2-3 seconds).
+
+    Returns M9 schema: {"reply": "...", "actions": [...], ...legacy keys...}
     """
     start_time = datetime.now()
 
@@ -325,24 +325,26 @@ def run_chat(message: str, session_key: str = "default") -> dict:
 
     try:
         from prompt_loader import load_system_prompt
-        _active_prompt = load_system_prompt("chat", fallback=_SYSTEM_PROMPT)
+        _active_prompt = load_system_prompt("chat", fallback=_build_system_prompt())
     except Exception as _pl_e:
         logger.warning(f"prompt_loader failed, using hardcoded prompt: {_pl_e}")
-        _active_prompt = _SYSTEM_PROMPT
+        _active_prompt = _build_system_prompt()
 
     messages = [{"role": "system", "content": _active_prompt}]
     messages.extend(history_messages)
     messages.append({"role": "user", "content": message})
 
+    actions: list = []
+
     try:
-        from llm_helpers import call_llm, CHAT_MODEL
+        from llm_helpers import call_llm, CHAT_MODEL, CHAT_TEMPERATURE, CHAT_SANDBOX
 
         response = call_llm(
             messages,
             model=CHAT_MODEL,
             tools=_TOOLS,
             tool_choice="auto",
-            temperature=0.85,
+            temperature=CHAT_TEMPERATURE,
         )
 
         msg = response.choices[0].message
@@ -382,22 +384,26 @@ def run_chat(message: str, session_key: str = "default") -> dict:
                 elif fn_name == "forward_to_crew":
                     args = json.loads(tool_call.function.arguments or "{}")
                     task_text = args.get("task_text", message)
-                    try:
-                        from engine import run_orchestrator
-                        fwd_result = run_orchestrator(
-                            task_request=task_text,
-                            from_number=session_key,
-                            session_key=session_key,
-                        )
-                        tool_result = (
-                            fwd_result.get("result")
-                            or fwd_result.get("deliverable")
-                            or "Crew completed the task."
-                        )
-                        logger.info(f"Chat forwarded to crew: {task_text[:60]}")
-                    except Exception as fwd_e:
-                        tool_result = f"Crew error: {fwd_e}"
-                        logger.error(f"forward_to_crew failed: {fwd_e}")
+                    if CHAT_SANDBOX:
+                        tool_result = f"[SANDBOX] Would have forwarded to crew: {task_text[:120]}"
+                        logger.info(f"Chat sandbox: suppressed forward_to_crew for: {task_text[:60]}")
+                    else:
+                        try:
+                            from engine import run_orchestrator
+                            fwd_result = run_orchestrator(
+                                task_request=task_text,
+                                from_number=session_key,
+                                session_key=session_key,
+                            )
+                            tool_result = (
+                                fwd_result.get("result")
+                                or fwd_result.get("deliverable")
+                                or "Crew completed the task."
+                            )
+                            logger.info(f"Chat forwarded to crew: {task_text[:60]}")
+                        except Exception as fwd_e:
+                            tool_result = f"Crew error: {fwd_e}"
+                            logger.error(f"forward_to_crew failed: {fwd_e}")
                 else:
                     tool_result = "Unknown tool."
                 messages.append({
@@ -405,15 +411,27 @@ def run_chat(message: str, session_key: str = "default") -> dict:
                     "tool_call_id": tool_call.id,
                     "content": tool_result,
                 })
-            followup = call_llm(messages, model=CHAT_MODEL, temperature=0.85)
-            reply = (followup.choices[0].message.content or "").strip()
+            followup = call_llm(messages, model=CHAT_MODEL, temperature=CHAT_TEMPERATURE)
+            raw_reply = (followup.choices[0].message.content or "").strip()
         else:
-            reply = (msg.content or "").strip()
+            raw_reply = (msg.content or "").strip()
+
+        # Parse M9 structured JSON reply. Fall back to plain text on parse failure.
+        try:
+            parsed = json.loads(raw_reply)
+            reply = parsed.get("reply", raw_reply)
+            actions = parsed.get("actions") or []
+        except (json.JSONDecodeError, AttributeError):
+            logger.debug("Chat reply was not JSON; treating as plain text")
+            reply = raw_reply
+            actions = []
 
     except Exception as e:
         logger.error(f"Chat LLM call failed: {e}")
         reply = "Sorry, I hit an error. Try again in a moment."
+        actions = []
 
+    # Save text-only turns (never save actions arrays or tool messages).
     try:
         from memory import save_conversation_turn
         save_conversation_turn(session_key, "user", message)
@@ -425,6 +443,9 @@ def run_chat(message: str, session_key: str = "default") -> dict:
     logger.info(f"Chat response for session '{session_key}' in {execution_time:.1f}s")
 
     return {
+        "reply": reply,
+        "actions": actions,
+        # Legacy keys kept for callers that still read result/full_output.
         "success": True,
         "result": reply,
         "full_output": reply,
@@ -433,3 +454,24 @@ def run_chat(message: str, session_key: str = "default") -> dict:
         "execution_time": execution_time,
         "classification": {"task_type": "chat", "confidence": 1.0, "is_unknown": False},
     }
+
+
+def run_chat_with_buttons(
+    message: str,
+    session_key: str,
+    chat_id: str,
+    channel: str = "telegram",
+) -> None:
+    """
+    Single-send wrapper for Telegram: calls run_chat() then sends exactly one
+    message -- with buttons if actions are present, plain text otherwise.
+    Fixes the double-send bug where handlers.py called both send_message_with_buttons
+    AND send_message in some code paths.
+    """
+    from notifier import send_message, send_message_with_buttons
+    result = run_chat(message, session_key)
+    if result.get("actions"):
+        buttons = [[(a["label"], a["callback_data"]) for a in result["actions"]]]
+        send_message_with_buttons(chat_id, result["reply"], buttons)
+    else:
+        send_message(chat_id, result["reply"])
