@@ -13,7 +13,7 @@ Rules:
   - Logs every draft to lead_interactions (type: outreach_draft)
   - Updates email_drafted_at on each lead
 
-Called by: orchestrator.py when task_type == 'crm_outreach'
+Called by: engine.run_orchestrator when task_type == 'crm_outreach'
            Also importable standalone for testing.
 """
 

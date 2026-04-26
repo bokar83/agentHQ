@@ -13,7 +13,7 @@ _run_background_job is called out-of-band (thread pool or background task) to:
   9. _trigger_evolution (OpenSpace) in a daemon thread after success.
  10. extract_and_save_learnings in a daemon thread after success (gated).
 
-Mirrors orchestrator.py:1062-1220 exactly so runtime behavior does not drift.
+Background job runner for async /run endpoint.
 """
 import logging
 import os

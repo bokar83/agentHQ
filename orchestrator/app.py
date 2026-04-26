@@ -1,10 +1,6 @@
 """
 app.py - FastAPI entrypoint for the agentsHQ orchestrator.
 
-This is the modular replacement for orchestrator.py. Routes are ported
-verbatim (behavior-wise) from orchestrator.py. State dicts live in state.py
-so the monolith and this app share them during cutover.
-
 Startup hooks (in order):
   1. install_litellm_callback() , token ledger registration
   2. start_scheduler()           , daily cron + heartbeat wakes
@@ -22,8 +18,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 # Configure logging BEFORE importing any orchestrator modules, so every
-# module's logger.info/warning lands in docker logs and the file. Matches
-# the monolith's config at orchestrator.py:98-108.
+# module's logger.info/warning lands in docker logs and the file.
 _LOG_DIR = os.environ.get("AGENTS_LOG_DIR", "/app/logs")
 os.makedirs(_LOG_DIR, exist_ok=True)
 logging.basicConfig(
