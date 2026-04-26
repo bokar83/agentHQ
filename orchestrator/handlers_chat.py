@@ -301,6 +301,13 @@ def run_chat(message: str, session_key: str = "default") -> dict:
     """
     start_time = datetime.now()
 
+    # Record session in Postgres (non-fatal if table not yet created).
+    try:
+        from session_store import upsert_session
+        upsert_session(session_id=session_key, agent_name="chat", channel="telegram")
+    except Exception as _sess_e:
+        logger.warning(f"session_store upsert skipped: {_sess_e}")
+
     # Load conversation history (most-recent-last).
     history_messages = []
     try:
