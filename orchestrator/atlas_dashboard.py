@@ -176,6 +176,97 @@ def get_spend() -> dict:
     }
 
 
+def get_cost_ledger(days: int = 30) -> dict:
+    """
+    Cost ledger: LLM spend from llm_calls (by project) + manual entries
+    from cost_ledger, merged and grouped by date + project + tool.
+    Returns rows for the last `days` days, newest first.
+    """
+    try:
+        from memory import _pg_conn
+        conn = _pg_conn()
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT
+              DATE(ts AT TIME ZONE 'America/Denver') AS day,
+              COALESCE(project, 'agentsHQ')          AS project,
+              NULL                                    AS customer,
+              'llm'                                   AS category,
+              COALESCE(crew_name, model, 'unknown')   AS tool,
+              COUNT(*)                                AS calls,
+              ROUND(SUM(cost_usd)::numeric, 6)        AS amount_usd
+            FROM llm_calls
+            WHERE ts >= NOW() - INTERVAL '%s days'
+            GROUP BY day, project, tool
+            UNION ALL
+            SELECT
+              date                                    AS day,
+              project,
+              customer,
+              category,
+              tool,
+              1                                       AS calls,
+              amount_usd
+            FROM cost_ledger
+            WHERE date >= CURRENT_DATE - INTERVAL '%s days'
+            ORDER BY day DESC, amount_usd DESC
+            """,
+            (days, days),
+        )
+        rows = cur.fetchall()
+        cur.close()
+        entries = []
+        for r in rows:
+            entries.append({
+                "date":       str(r[0]),
+                "project":    str(r[1] or "agentsHQ"),
+                "customer":   str(r[2]) if r[2] else None,
+                "category":   str(r[3] or ""),
+                "tool":       str(r[4] or ""),
+                "calls":      int(r[5] or 0),
+                "amount_usd": float(r[6] or 0),
+            })
+        total = round(sum(e["amount_usd"] for e in entries), 4)
+        return {"entries": entries, "total_usd": total, "days": days}
+    except Exception as e:
+        logger.warning(f"get_cost_ledger: {e}")
+        return {"entries": [], "total_usd": 0.0, "days": days}
+
+
+def add_cost_ledger_entry(
+    amount_usd: float,
+    tool: str,
+    category: str,
+    project: str = "agentsHQ",
+    customer: str | None = None,
+    description: str | None = None,
+    date_str: str | None = None,
+) -> dict:
+    """Insert a manual cost entry into cost_ledger."""
+    from datetime import date as _date
+    try:
+        from memory import _pg_conn
+        conn = _pg_conn()
+        cur = conn.cursor()
+        entry_date = _date.fromisoformat(date_str) if date_str else _date.today()
+        cur.execute(
+            """
+            INSERT INTO cost_ledger (date, project, customer, category, tool, description, amount_usd, source)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, 'api')
+            RETURNING id
+            """,
+            (entry_date, project, customer, category, tool, description, round(amount_usd, 6)),
+        )
+        row = cur.fetchone()
+        conn.commit()
+        cur.close()
+        return {"ok": True, "id": row[0]}
+    except Exception as e:
+        logger.warning(f"add_cost_ledger_entry: {e}")
+        return {"ok": False, "error": str(e)}
+
+
 def get_heartbeats() -> dict:
     """Heartbeats card: registered wakes and their last-fire state."""
     from datetime import datetime, timezone

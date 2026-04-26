@@ -838,6 +838,34 @@ class _AtlasRejectBody(_BaseModel):
     note: str = ""
 
 
+class _LedgerEntryBody(_BaseModel):
+    amount_usd: float
+    tool: str
+    category: str
+    project: str = "agentsHQ"
+    customer: str | None = None
+    description: str | None = None
+    date: str | None = None
+
+
+@app.get("/atlas/ledger")
+async def atlas_ledger(days: int = 30, _auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_cost_ledger(days=days))
+
+
+@app.post("/atlas/ledger")
+async def atlas_ledger_add(body: _LedgerEntryBody, _auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.add_cost_ledger_entry(
+        amount_usd=body.amount_usd,
+        tool=body.tool,
+        category=body.category,
+        project=body.project,
+        customer=body.customer,
+        description=body.description,
+        date_str=body.date,
+    ))
+
+
 @app.post("/atlas/toggle/griot")
 async def atlas_toggle_griot(body: _AtlasToggleBody, _auth=Depends(verify_chat_token)):
     from autonomy_guard import get_guard
