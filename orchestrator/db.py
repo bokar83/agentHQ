@@ -15,6 +15,39 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+CREATE_CONTENT_APPROVALS = """
+CREATE TABLE IF NOT EXISTS content_approvals (
+    id               SERIAL PRIMARY KEY,
+    notion_page_id   TEXT NOT NULL,
+    attempt_number   INTEGER NOT NULL DEFAULT 1,
+    submitted_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    decided_at       TIMESTAMPTZ,
+    decision         TEXT NOT NULL,
+    evergreen        BOOLEAN NOT NULL DEFAULT FALSE,
+    platform         TEXT NOT NULL,
+    griot_score      FLOAT,
+    chairman_score   FLOAT
+);
+"""
+
+
+def ensure_content_approvals_table() -> None:
+    """Create content_approvals table if it does not exist (idempotent).
+
+    Called by app startup and griot module init. Safe to call multiple times.
+    """
+    conn = get_local_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(CREATE_CONTENT_APPROVALS)
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        logger.warning(f"ensure_content_approvals_table failed: {e}")
+    finally:
+        conn.close()
+
+
 def get_crm_connection():
     """
     Return a psycopg2 connection to the Supabase CRM database.
