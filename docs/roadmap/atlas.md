@@ -753,3 +753,38 @@ M11a (done) -> M9a  (3-4h, parallel with M11b)
 3. M5 gate: 2026-05-08
 
 ---
+
+### 2026-04-26: M9a Atlas Chat correctness + Telegram action buttons
+
+**Branch:** `feat/atlas-m9a-telegram-push`
+**Save point:** `savepoint-pre-atlas-m9a-20260426`
+**Tests:** 273/274 pass (1 pre-existing `test_backfill_yesterday_skipped_today_empty` failure unrelated to M9a; confirmed pre-existing via stash test)
+
+**All 6 correctness fixes shipped:**
+
+1. `atlas_dashboard.py`: `conn.close()` in `finally` on all 6 `_pg_conn()` callers (`_spend_aggregates`, `_spend_7d_by_day`, `_last_autonomous_action`, `_router_log_fallbacks`, `get_cost_ledger`, `add_cost_ledger_entry`)
+2. `llm_helpers.py`: Added `CHAT_TEMPERATURE` and `CHAT_SANDBOX` constants (env-var driven)
+3. `handlers_chat.py`: Full rewrite. M9 system prompt (operator persona, JSON schema instructions, sandbox-aware). `run_chat()` returns `{"reply", "actions", ...}` schema, parses model JSON with try/except fallback to plain text, strips actions before saving to Postgres history, uses `CHAT_TEMPERATURE` from env var
+4. `handlers_chat.py`: Added `run_chat_with_buttons()` wrapper. Sends exactly one Telegram message per turn (with buttons if actions present, plain text otherwise)
+5. `handlers.py`: Replaced double-send pattern (`run_chat` + `send_message`) with single `run_chat_with_buttons()` call; dropped unused `send_message` import
+6. `docker-compose.yml`: Added `CHAT_MODEL`, `ATLAS_CHAT_MODEL`, `CHAT_TEMPERATURE`, `CHAT_SANDBOX` to orchestrator env allowlist
+
+**Telegram action buttons shipped:**
+- `approval_queue.enqueue()`: now calls `send_message_with_buttons` with `[Approve #N]` and `[Reject #N]` inline keyboard buttons on every new proposal notification
+- `handlers_approvals.py`: added `_build_button()` helper with 64-byte callback_data assert; added `approve_queue_item:` and `reject_queue_item:` callback dispatch cases that mirror the existing `yes confirm` / `no` handler logic
+- `scripts/test_m9a_smoke.py`: smoke test covering run_chat schema, CHAT_SANDBOX suppression, _build_button byte limit, enqueue uses send_message_with_buttons, connection close on exception
+
+**Deploy checklist (do before VPS rebuild):**
+```bash
+# Add env vars to VPS .env (if not already present)
+ssh root@72.60.209.109 'grep -q CHAT_MODEL /root/agentsHQ/.env || echo "CHAT_MODEL=anthropic/claude-haiku-4.5
+ATLAS_CHAT_MODEL=anthropic/claude-haiku-4.5
+CHAT_TEMPERATURE=0.7
+CHAT_SANDBOX=false" >> /root/agentsHQ/.env'
+# Then: git push, VPS git pull, docker compose up -d --build orchestrator
+# Verify: docker exec orc-crewai env | grep CHAT
+```
+
+**Next:** Boubacar confirms push. After VPS deploy + smoke test pass, M9b (web chat native panel) can start.
+
+---

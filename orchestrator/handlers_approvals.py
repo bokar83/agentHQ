@@ -43,6 +43,12 @@ REJECT_ALIASES = {"no", "nope", "reject", "rejected", "not approved", "discard"}
 POSTED_ALIASES = {"posted", "published", "done"}
 SKIP_ALIASES = {"skip", "skipped", "pass"}
 
+
+def _build_button(label: str, callback_data: str) -> dict:
+    """Build a Telegram inline-keyboard button dict. Asserts 64-byte callback_data limit."""
+    assert len(callback_data.encode()) <= 64, f"callback_data too long: {callback_data!r}"
+    return {"text": label, "callback_data": callback_data}
+
 # Emoji prefixes that belong to the doc-routing handler. Used to make sure
 # the 5-min tag window does not swallow an emoji command.
 _DOC_EMOJI_PREFIXES = ("✅", "✏️", "🆕", "❌", "➕")
@@ -84,6 +90,47 @@ def handle_callback_query(update: dict) -> bool:
             _PENDING_FEEDBACK_WINDOWS.pop(qid, None)
         except Exception as e:
             logger.warning(f"callback_query feedback_tag handling error: {e}")
+
+    elif cb_data.startswith("approve_queue_item:"):
+        try:
+            qid = int(cb_data.split(":", 1)[1])
+            from approval_queue import approve as _aq_approve, get as _aq_get
+            from notifier import answer_callback_query, send_message
+            qrow = _aq_get(qid)
+            if qrow and qrow.status == "pending":
+                _aq_approve(qid, note=None)
+                answer_callback_query(cb_id, f"Approved #{qid}")
+                send_message(cb_chat_id, f"Queue #{qid}: approved.")
+            elif qrow:
+                answer_callback_query(cb_id, f"Already {qrow.status}.")
+            else:
+                answer_callback_query(cb_id, "Queue item not found.")
+        except Exception as e:
+            logger.warning(f"callback_query approve_queue_item handling error: {e}")
+
+    elif cb_data.startswith("reject_queue_item:"):
+        try:
+            qid = int(cb_data.split(":", 1)[1])
+            from approval_queue import reject as _aq_reject, get as _aq_get
+            from notifier import answer_callback_query, send_message, send_message_with_buttons
+            qrow = _aq_get(qid)
+            if qrow and qrow.status == "pending":
+                _aq_reject(qid, note=None)
+                answer_callback_query(cb_id, f"Rejected #{qid}")
+                send_message(cb_chat_id, f"Queue #{qid}: rejected. Pick a reason below (or just type one):")
+                buttons = [
+                    [(t, f"feedback_tag:{qid}:{t}") for t in ("off-voice", "wrong-hook", "stale")],
+                    [(t, f"feedback_tag:{qid}:{t}") for t in ("too-salesy", "other", "skip")],
+                ]
+                send_message_with_buttons(cb_chat_id, f"Tag for queue #{qid}?", buttons)
+                _PENDING_FEEDBACK_WINDOWS[qid] = (cb_chat_id, time.time())
+            elif qrow:
+                answer_callback_query(cb_id, f"Already {qrow.status}.")
+            else:
+                answer_callback_query(cb_id, "Queue item not found.")
+        except Exception as e:
+            logger.warning(f"callback_query reject_queue_item handling error: {e}")
+
     return True
 
 

@@ -134,50 +134,53 @@ def _spend_aggregates() -> dict:
     try:
         from memory import _pg_conn
         conn = _pg_conn()
-        cur = conn.cursor()
-        cur.execute(
-            """
-            SELECT
-              SUM(CASE WHEN ts >= date_trunc('day', NOW() AT TIME ZONE 'America/Denver')
-                       THEN cost_usd ELSE 0 END)                              AS today_usd,
-              SUM(CASE WHEN ts >= date_trunc('week',  NOW() AT TIME ZONE 'America/Denver')
-                       THEN cost_usd ELSE 0 END)                              AS week_usd,
-              SUM(CASE WHEN ts >= date_trunc('month', NOW() AT TIME ZONE 'America/Denver')
-                       THEN cost_usd ELSE 0 END)                              AS month_usd
-            FROM llm_calls
-            WHERE ts >= date_trunc('month', NOW() AT TIME ZONE 'America/Denver')
-            """
-        )
-        row = cur.fetchone()
-        today_usd = round(float(row[0] or 0), 4)
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                """
+                SELECT
+                  SUM(CASE WHEN ts >= date_trunc('day', NOW() AT TIME ZONE 'America/Denver')
+                           THEN cost_usd ELSE 0 END)                              AS today_usd,
+                  SUM(CASE WHEN ts >= date_trunc('week',  NOW() AT TIME ZONE 'America/Denver')
+                           THEN cost_usd ELSE 0 END)                              AS week_usd,
+                  SUM(CASE WHEN ts >= date_trunc('month', NOW() AT TIME ZONE 'America/Denver')
+                           THEN cost_usd ELSE 0 END)                              AS month_usd
+                FROM llm_calls
+                WHERE ts >= date_trunc('month', NOW() AT TIME ZONE 'America/Denver')
+                """
+            )
+            row = cur.fetchone()
+            today_usd = round(float(row[0] or 0), 4)
 
-        # Find most recent day with actual spend (up to 7 days back)
-        cur.execute(
-            """
-            SELECT DATE(ts AT TIME ZONE 'America/Denver') AS day,
-                   SUM(cost_usd)                           AS total
-              FROM llm_calls
-             WHERE ts >= NOW() - INTERVAL '7 days'
-               AND ts <  date_trunc('day', NOW() AT TIME ZONE 'America/Denver')
-             GROUP BY day
-             ORDER BY day DESC
-             LIMIT 1
-            """
-        )
-        last_row = cur.fetchone()
-        cur.close()
+            # Find most recent day with actual spend (up to 7 days back)
+            cur.execute(
+                """
+                SELECT DATE(ts AT TIME ZONE 'America/Denver') AS day,
+                       SUM(cost_usd)                           AS total
+                  FROM llm_calls
+                 WHERE ts >= NOW() - INTERVAL '7 days'
+                   AND ts <  date_trunc('day', NOW() AT TIME ZONE 'America/Denver')
+                 GROUP BY day
+                 ORDER BY day DESC
+                 LIMIT 1
+                """
+            )
+            last_row = cur.fetchone()
+            cur.close()
 
-        last_day_usd = round(float(last_row[1] or 0), 4) if last_row else 0.0
-        last_day_date = str(last_row[0]) if last_row else None
+            last_day_usd = round(float(last_row[1] or 0), 4) if last_row else 0.0
+            last_day_date = str(last_row[0]) if last_row else None
 
-        return {
-            "today_usd":    today_usd,
-            "last_day_usd": last_day_usd,
-            "last_day_date": last_day_date,
-            "show_last_day": today_usd == 0.0 and last_day_usd > 0.0,
-            "week_usd":  round(float(row[1] or 0), 4),
-            "month_usd": round(float(row[2] or 0), 4),
-        }
+            return {
+                "today_usd":    today_usd,
+                "last_day_usd": last_day_usd,
+                "last_day_date": last_day_date,
+                "show_last_day": today_usd == 0.0 and last_day_usd > 0.0,
+                "week_usd":  round(float(row[1] or 0), 4),
+                "month_usd": round(float(row[2] or 0), 4),
+            }
+        finally:
+            conn.close()
     except Exception as e:
         logger.warning(f"_spend_aggregates: {e}")
         return {"today_usd": 0.0, "last_day_usd": 0.0, "last_day_date": None,
@@ -189,19 +192,22 @@ def _spend_7d_by_day() -> list:
     try:
         from memory import _pg_conn
         conn = _pg_conn()
-        cur = conn.cursor()
-        cur.execute(
-            """
-            SELECT DATE(ts AT TIME ZONE 'America/Denver') AS day, SUM(cost_usd) AS total
-              FROM llm_calls
-             WHERE ts >= NOW() - INTERVAL '7 days'
-             GROUP BY day
-             ORDER BY day ASC
-            """
-        )
-        rows = cur.fetchall()
-        cur.close()
-        return [{"date": str(r[0]), "usd": round(float(r[1] or 0), 4)} for r in rows]
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                """
+                SELECT DATE(ts AT TIME ZONE 'America/Denver') AS day, SUM(cost_usd) AS total
+                  FROM llm_calls
+                 WHERE ts >= NOW() - INTERVAL '7 days'
+                 GROUP BY day
+                 ORDER BY day ASC
+                """
+            )
+            rows = cur.fetchall()
+            cur.close()
+            return [{"date": str(r[0]), "usd": round(float(r[1] or 0), 4)} for r in rows]
+        finally:
+            conn.close()
     except Exception as e:
         logger.warning(f"_spend_7d_by_day: {e}")
         return []
@@ -239,50 +245,53 @@ def get_cost_ledger(days: int = 30) -> dict:
     try:
         from memory import _pg_conn
         conn = _pg_conn()
-        cur = conn.cursor()
-        cur.execute(
-            """
-            SELECT
-              DATE(ts AT TIME ZONE 'America/Denver') AS day,
-              COALESCE(project, 'agentsHQ')          AS project,
-              NULL                                    AS customer,
-              'llm'                                   AS category,
-              COALESCE(crew_name, model, 'unknown')   AS tool,
-              COUNT(*)                                AS calls,
-              ROUND(SUM(cost_usd)::numeric, 6)        AS amount_usd
-            FROM llm_calls
-            WHERE ts >= NOW() - INTERVAL '%s days'
-            GROUP BY day, project, tool
-            UNION ALL
-            SELECT
-              date                                    AS day,
-              project,
-              customer,
-              category,
-              tool,
-              1                                       AS calls,
-              amount_usd
-            FROM cost_ledger
-            WHERE date >= CURRENT_DATE - INTERVAL '%s days'
-            ORDER BY day DESC, amount_usd DESC
-            """,
-            (days, days),
-        )
-        rows = cur.fetchall()
-        cur.close()
-        entries = []
-        for r in rows:
-            entries.append({
-                "date":       str(r[0]),
-                "project":    str(r[1] or "agentsHQ"),
-                "customer":   str(r[2]) if r[2] else None,
-                "category":   str(r[3] or ""),
-                "tool":       str(r[4] or ""),
-                "calls":      int(r[5] or 0),
-                "amount_usd": float(r[6] or 0),
-            })
-        total = round(sum(e["amount_usd"] for e in entries), 4)
-        return {"entries": entries, "total_usd": total, "days": days}
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                """
+                SELECT
+                  DATE(ts AT TIME ZONE 'America/Denver') AS day,
+                  COALESCE(project, 'agentsHQ')          AS project,
+                  NULL                                    AS customer,
+                  'llm'                                   AS category,
+                  COALESCE(crew_name, model, 'unknown')   AS tool,
+                  COUNT(*)                                AS calls,
+                  ROUND(SUM(cost_usd)::numeric, 6)        AS amount_usd
+                FROM llm_calls
+                WHERE ts >= NOW() - INTERVAL '%s days'
+                GROUP BY day, project, tool
+                UNION ALL
+                SELECT
+                  date                                    AS day,
+                  project,
+                  customer,
+                  category,
+                  tool,
+                  1                                       AS calls,
+                  amount_usd
+                FROM cost_ledger
+                WHERE date >= CURRENT_DATE - INTERVAL '%s days'
+                ORDER BY day DESC, amount_usd DESC
+                """,
+                (days, days),
+            )
+            rows = cur.fetchall()
+            cur.close()
+            entries = []
+            for r in rows:
+                entries.append({
+                    "date":       str(r[0]),
+                    "project":    str(r[1] or "agentsHQ"),
+                    "customer":   str(r[2]) if r[2] else None,
+                    "category":   str(r[3] or ""),
+                    "tool":       str(r[4] or ""),
+                    "calls":      int(r[5] or 0),
+                    "amount_usd": float(r[6] or 0),
+                })
+            total = round(sum(e["amount_usd"] for e in entries), 4)
+            return {"entries": entries, "total_usd": total, "days": days}
+        finally:
+            conn.close()
     except Exception as e:
         logger.warning(f"get_cost_ledger: {e}")
         return {"entries": [], "total_usd": 0.0, "days": days}
@@ -302,20 +311,23 @@ def add_cost_ledger_entry(
     try:
         from memory import _pg_conn
         conn = _pg_conn()
-        cur = conn.cursor()
-        entry_date = _date.fromisoformat(date_str) if date_str else _date.today()
-        cur.execute(
-            """
-            INSERT INTO cost_ledger (date, project, customer, category, tool, description, amount_usd, source)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, 'api')
-            RETURNING id
-            """,
-            (entry_date, project, customer, category, tool, description, round(amount_usd, 6)),
-        )
-        row = cur.fetchone()
-        conn.commit()
-        cur.close()
-        return {"ok": True, "id": row[0]}
+        try:
+            cur = conn.cursor()
+            entry_date = _date.fromisoformat(date_str) if date_str else _date.today()
+            cur.execute(
+                """
+                INSERT INTO cost_ledger (date, project, customer, category, tool, description, amount_usd, source)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, 'api')
+                RETURNING id
+                """,
+                (entry_date, project, customer, category, tool, description, round(amount_usd, 6)),
+            )
+            row = cur.fetchone()
+            conn.commit()
+            cur.close()
+            return {"ok": True, "id": row[0]}
+        finally:
+            conn.close()
     except Exception as e:
         logger.warning(f"add_cost_ledger_entry: {e}")
         return {"ok": False, "error": str(e)}
@@ -349,28 +361,31 @@ def _router_log_fallbacks(limit: int = 20) -> list:
     try:
         from memory import _pg_conn
         conn = _pg_conn()
-        cur = conn.cursor()
-        cur.execute(
-            """
-            SELECT ts, task_type, crew
-              FROM router_log
-             WHERE crew IS NULL
-               AND ts >= NOW() - INTERVAL '24 hours'
-             ORDER BY ts DESC
-             LIMIT %s
-            """,
-            (limit,),
-        )
-        rows = cur.fetchall()
-        cur.close()
-        return [
-            {
-                "ts": r[0].isoformat() if r[0] else None,
-                "task_type": str(r[1] or ""),
-                "crew": str(r[2] or "unrouted"),
-            }
-            for r in rows
-        ]
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                """
+                SELECT ts, task_type, crew
+                  FROM router_log
+                 WHERE crew IS NULL
+                   AND ts >= NOW() - INTERVAL '24 hours'
+                 ORDER BY ts DESC
+                 LIMIT %s
+                """,
+                (limit,),
+            )
+            rows = cur.fetchall()
+            cur.close()
+            return [
+                {
+                    "ts": r[0].isoformat() if r[0] else None,
+                    "task_type": str(r[1] or ""),
+                    "crew": str(r[2] or "unrouted"),
+                }
+                for r in rows
+            ]
+        finally:
+            conn.close()
     except Exception as e:
         logger.warning(f"_router_log_fallbacks: {e}")
         return []
@@ -404,25 +419,28 @@ def _last_autonomous_action() -> dict:
     try:
         from memory import _pg_conn
         conn = _pg_conn()
-        cur = conn.cursor()
-        cur.execute(
-            """
-            SELECT ts_started, crew_name, success, result_summary
-              FROM task_outcomes
-             ORDER BY ts_started DESC
-             LIMIT 1
-            """
-        )
-        row = cur.fetchone()
-        cur.close()
-        if row is None:
-            return {"ts": None, "description": "No autonomous actions yet"}
-        return {
-            "ts": row[0].isoformat() if row[0] else None,
-            "task_type": str(row[1] or ""),
-            "status": "ok" if row[2] else "failed",
-            "description": str(row[3] or "")[:120],
-        }
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                """
+                SELECT ts_started, crew_name, success, result_summary
+                  FROM task_outcomes
+                 ORDER BY ts_started DESC
+                 LIMIT 1
+                """
+            )
+            row = cur.fetchone()
+            cur.close()
+            if row is None:
+                return {"ts": None, "description": "No autonomous actions yet"}
+            return {
+                "ts": row[0].isoformat() if row[0] else None,
+                "task_type": str(row[1] or ""),
+                "status": "ok" if row[2] else "failed",
+                "description": str(row[3] or "")[:120],
+            }
+        finally:
+            conn.close()
     except Exception as e:
         logger.warning(f"_last_autonomous_action: {e}")
         return {"ts": None, "description": "Unavailable"}
