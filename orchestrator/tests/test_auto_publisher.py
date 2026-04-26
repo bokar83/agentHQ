@@ -57,6 +57,14 @@ def _env_setup(monkeypatch):
     monkeypatch.setenv("BLOTATO_API_KEY", "test-key")
 
 
+# Helper: a "noon Mountain Time" datetime, so all platform slots (07:00, 11:00,
+# 12:00, 14:00) are reachable. Tests that check time-of-day behavior use this
+# explicitly via _fetch_due_queued(now_local=...).
+import pytz as _pytz
+def _noon_local(year=2026, month=4, day=25):
+    return _pytz.timezone("America/Denver").localize(datetime(year, month, day, 14, 30))
+
+
 # ═════════════════════════════════════════════════════════════════════════════
 # _account_id_for_platform
 # ═════════════════════════════════════════════════════════════════════════════
@@ -90,7 +98,7 @@ def test_fetch_due_queued_includes_today_and_past_due():
         _page("p-past", "Queued", ["LinkedIn"], "2026-04-20", title="past-due"),
         _page("p-future", "Queued", ["X"], "2026-05-01", title="future"),
     ]
-    due = ap._fetch_due_queued(notion, "2026-04-25")
+    due = ap._fetch_due_queued(notion, "2026-04-25", now_local=_noon_local())
     titles = [d["title"] for d in due]
     assert "today" in titles
     assert "past-due" in titles
@@ -107,7 +115,7 @@ def test_fetch_due_queued_skips_non_queued_status():
         _page("p4", "PublishFailed", ["X"], "2026-04-25"),
         _page("p5", "Skipped", ["X"], "2026-04-25"),
     ]
-    due = ap._fetch_due_queued(notion, "2026-04-25")
+    due = ap._fetch_due_queued(notion, "2026-04-25", now_local=_noon_local())
     assert due == []
 
 
@@ -119,7 +127,7 @@ def test_fetch_due_queued_skips_records_without_account_id(monkeypatch):
         _page("p1", "Queued", ["TikTok"], "2026-04-25"),
         _page("p2", "Queued", ["X"], "2026-04-25", title="X-only"),
     ]
-    due = ap._fetch_due_queued(notion, "2026-04-25")
+    due = ap._fetch_due_queued(notion, "2026-04-25", now_local=_noon_local())
     assert len(due) == 1
     assert due[0]["title"] == "X-only"
 
@@ -133,7 +141,7 @@ def test_fetch_due_queued_one_publish_per_record_first_platform_wins():
     notion.query_database.return_value = [
         _page("p1", "Queued", ["LinkedIn", "X"], "2026-04-25"),
     ]
-    due = ap._fetch_due_queued(notion, "2026-04-25")
+    due = ap._fetch_due_queued(notion, "2026-04-25", now_local=_noon_local())
     assert len(due) == 1
 
 
@@ -144,7 +152,7 @@ def test_fetch_due_queued_sorted_oldest_first():
         _page("p-newer", "Queued", ["X"], "2026-04-24", title="newer"),
         _page("p-older", "Queued", ["X"], "2026-04-20", title="older"),
     ]
-    due = ap._fetch_due_queued(notion, "2026-04-25")
+    due = ap._fetch_due_queued(notion, "2026-04-25", now_local=_noon_local())
     assert [d["title"] for d in due] == ["older", "newer"]
 
 
@@ -407,6 +415,184 @@ def test_tick_skips_record_with_empty_draft_and_hook():
         if "Status" in (c.args[1] if len(c.args) > 1 else {})
     ]
     assert "PublishFailed" in statuses_written
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Time-of-day gate (M7b time slots)
+# ═════════════════════════════════════════════════════════════════════════════
+
+def _at(hour: int, minute: int = 0):
+    """America/Denver datetime helper for tests."""
+    return _pytz.timezone("America/Denver").localize(datetime(2026, 4, 25, hour, minute))
+
+
+def test_today_record_skipped_before_first_slot_time():
+    """6 AM MT, no LinkedIn slot 0 (07:00) yet -> today's LI not in due list."""
+    import auto_publisher as ap
+    notion = MagicMock()
+    notion.query_database.return_value = [
+        _page("p-li", "Queued", ["LinkedIn"], "2026-04-25", title="today LI"),
+    ]
+    due = ap._fetch_due_queued(notion, "2026-04-25", now_local=_at(6, 0))
+    assert due == []
+
+
+def test_today_record_fires_after_first_slot_time():
+    """7:05 AM MT, LinkedIn slot 0 (07:00) reached -> today's LI in due list."""
+    import auto_publisher as ap
+    notion = MagicMock()
+    notion.query_database.return_value = [
+        _page("p-li", "Queued", ["LinkedIn"], "2026-04-25", title="today LI"),
+    ]
+    due = ap._fetch_due_queued(notion, "2026-04-25", now_local=_at(7, 5))
+    assert len(due) == 1
+    assert due[0]["title"] == "today LI"
+
+
+def test_second_today_record_uses_slot_1():
+    """At 7:30 AM, slot 0 already taken (Posted), so the next Queued record
+    waits until slot 1 (11:00 AM)."""
+    import auto_publisher as ap
+    notion = MagicMock()
+    notion.query_database.return_value = [
+        _page("p-li-1", "Posted", ["LinkedIn"], "2026-04-25", title="already-out"),
+        _page("p-li-2", "Queued", ["LinkedIn"], "2026-04-25", title="next-up"),
+    ]
+    # 7:30 AM: slot 0 taken; slot 1 (11:00) not reached
+    due_730 = ap._fetch_due_queued(notion, "2026-04-25", now_local=_at(7, 30))
+    assert due_730 == []
+    # 11:05 AM: slot 1 reached
+    due_1105 = ap._fetch_due_queued(notion, "2026-04-25", now_local=_at(11, 5))
+    assert len(due_1105) == 1
+    assert due_1105[0]["title"] == "next-up"
+
+
+def test_x_third_slot_at_2pm():
+    """X has 3 slots: 07/11/14. Third X record waits until 14:00 MT."""
+    import auto_publisher as ap
+    notion = MagicMock()
+    notion.query_database.return_value = [
+        _page("p-x-1", "Posted", ["X"], "2026-04-25", title="x1"),
+        _page("p-x-2", "Posted", ["X"], "2026-04-25", title="x2"),
+        _page("p-x-3", "Queued", ["X"], "2026-04-25", title="x3"),
+    ]
+    due_12 = ap._fetch_due_queued(notion, "2026-04-25", now_local=_at(12, 0))
+    assert due_12 == []  # slot 2 (14:00) not reached
+    due_14 = ap._fetch_due_queued(notion, "2026-04-25", now_local=_at(14, 5))
+    assert len(due_14) == 1
+    assert due_14[0]["title"] == "x3"
+
+
+def test_past_due_ignores_time_of_day_gate():
+    """Past-due records fire regardless of time-of-day. They have is_past_due=True."""
+    import auto_publisher as ap
+    notion = MagicMock()
+    notion.query_database.return_value = [
+        _page("p-stale", "Queued", ["LinkedIn"], "2026-04-22", title="3-days-late"),
+    ]
+    # 5 AM (before any slot) - past-due still fires
+    due = ap._fetch_due_queued(notion, "2026-04-25", now_local=_at(5, 0))
+    assert len(due) == 1
+    assert due[0]["title"] == "3-days-late"
+    assert due[0]["is_past_due"] is True
+
+
+def test_today_record_marked_not_past_due():
+    import auto_publisher as ap
+    notion = MagicMock()
+    notion.query_database.return_value = [
+        _page("p-today", "Queued", ["X"], "2026-04-25", title="today"),
+    ]
+    due = ap._fetch_due_queued(notion, "2026-04-25", now_local=_at(8, 0))
+    assert due[0]["is_past_due"] is False
+
+
+def test_publishing_status_counts_toward_today_slot():
+    """A record currently mid-flight (Status=Publishing) for today already
+    occupies its slot. The next Queued record waits for the next slot.
+    """
+    import auto_publisher as ap
+    notion = MagicMock()
+    notion.query_database.return_value = [
+        _page("p-pub", "Publishing", ["LinkedIn"], "2026-04-25", title="in-flight"),
+        _page("p-q", "Queued", ["LinkedIn"], "2026-04-25", title="next-up"),
+    ]
+    due_8 = ap._fetch_due_queued(notion, "2026-04-25", now_local=_at(8, 0))
+    assert due_8 == []  # slot 0 taken by Publishing; slot 1 (11:00) not reached
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Weekday policy (M7b: skip Sun, publish Mon-Sat)
+# ═════════════════════════════════════════════════════════════════════════════
+
+def test_sunday_today_records_deferred_past_due_still_fires():
+    """On a Sunday the wake fires but today's records are deferred. Past-due
+    records still publish (audit trail must catch up).
+    """
+    import auto_publisher as ap
+    sunday = _pytz.timezone("America/Denver").localize(datetime(2026, 4, 26, 8, 0))  # Sunday
+    notion = MagicMock()
+    notion.query_database.return_value = [
+        _page("p-today", "Queued", ["X"], "2026-04-26", title="sunday-record"),
+        _page("p-stale", "Queued", ["X"], "2026-04-22", title="past-due"),
+    ]
+    mock_client_cls = MagicMock(return_value=notion)
+    mock_publisher = MagicMock()
+    mock_publisher.publish.return_value = "sub-1"
+    mr = MagicMock(); mr.status = "published"; mr.ok = True; mr.public_url = "https://x"; mr.error_message = None
+    mock_publisher.poll_until_terminal.return_value = mr
+    mock_publisher_cls = MagicMock(return_value=mock_publisher)
+    mock_notifier = MagicMock(); mock_em = MagicMock(); mock_em.start_task.return_value = MagicMock(id="o1")
+
+    with patch("skills.forge_cli.notion_client.NotionClient", mock_client_cls), \
+         patch("blotato_publisher.BlotatoPublisher", mock_publisher_cls), \
+         patch.dict("sys.modules", {"notifier": mock_notifier, "episodic_memory": mock_em}), \
+         patch("auto_publisher.datetime") as mock_dt:
+        # Make datetime.now(tz) return our Sunday for the tick body
+        mock_dt.now.side_effect = lambda tz=None: sunday if tz else datetime.now()
+        mock_dt.fromisoformat = datetime.fromisoformat
+        ap.auto_publisher_tick()
+
+    # Past-due fired; sunday-record did NOT
+    publish_calls = mock_publisher.publish.call_args_list
+    assert len(publish_calls) == 1
+    # Verify it was the past-due record (notion_id=p-stale), not the Sunday record (p-today)
+    notion_ids_touched = [c.args[0] for c in notion.update_page.call_args_list]
+    assert "p-stale" in notion_ids_touched
+    assert "p-today" not in notion_ids_touched
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Past-due stagger (max_per_tick cap)
+# ═════════════════════════════════════════════════════════════════════════════
+
+def test_past_due_capped_per_tick(monkeypatch):
+    """If 6 past-dues exist and max_per_tick=4, only 4 fire this tick.
+    All 6 records are dated in the past (no today-record) so the cap applies cleanly.
+    """
+    import auto_publisher as ap
+    notion = MagicMock()
+    # All 6 past-due (Apr 19, 20, 21, 22, 23, 24 - all before today Apr 25)
+    pages = [
+        _page(f"p-{i}", "Queued", ["X"], f"2026-04-{19+i}", title=f"stale-{i}", draft=f"body-{i}")
+        for i in range(6)
+    ]
+    notion.query_database.return_value = pages
+    mock_client_cls = MagicMock(return_value=notion)
+    mock_publisher = MagicMock()
+    mock_publisher.publish.return_value = "sub-1"
+    mr = MagicMock(); mr.status = "published"; mr.ok = True; mr.public_url = "https://x"; mr.error_message = None
+    mock_publisher.poll_until_terminal.return_value = mr
+    mock_publisher_cls = MagicMock(return_value=mock_publisher)
+    mock_notifier = MagicMock(); mock_em = MagicMock(); mock_em.start_task.return_value = MagicMock(id="o1")
+
+    with patch("skills.forge_cli.notion_client.NotionClient", mock_client_cls), \
+         patch("blotato_publisher.BlotatoPublisher", mock_publisher_cls), \
+         patch.dict("sys.modules", {"notifier": mock_notifier, "episodic_memory": mock_em}):
+        ap.auto_publisher_tick()
+
+    # Should be capped at default max_per_tick (4)
+    assert mock_publisher.publish.call_count == 4
 
 
 def test_tick_stale_publishing_promoted_to_publish_failed():

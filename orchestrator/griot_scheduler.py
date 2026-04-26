@@ -38,10 +38,12 @@ CONTENT_DB_ID = os.environ.get("FORGE_CONTENT_DB", "339bcf1a-3029-81d1-8377-dc2f
 # current backlog. If the backlog grows past a month, bump this.
 MAX_SCHEDULE_HORIZON_DAYS = 30
 
-# LinkedIn posts only on Tuesday (weekday=1) and Thursday (weekday=3).
-LINKEDIN_WEEKDAYS = {1, 3}
-# X posts every weekday.
-X_WEEKDAYS = {0, 1, 2, 3, 4}
+# Weekday cadence (updated 2026-04-25 in M7b):
+# Old rule: LinkedIn Tue+Thu only, X every weekday. That was a manual-author
+# cadence. With M7b auto-publisher live, Boubacar wants daily Mon-Sat for
+# both platforms; skip Sunday only.
+LINKEDIN_WEEKDAYS = {0, 1, 2, 3, 4, 5}  # Mon-Sat
+X_WEEKDAYS = {0, 1, 2, 3, 4, 5}          # Mon-Sat
 
 
 # ═════════════════════════════════════════════════════════════════════════════

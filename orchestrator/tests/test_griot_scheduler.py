@@ -23,9 +23,10 @@ def test_pick_x_from_weekday_returns_same_day():
     assert gs._pick_next_slot("X", {}, date(2026, 4, 27)) == date(2026, 4, 27)  # Mon
 
 
-def test_pick_x_from_weekend_jumps_to_monday():
-    assert gs._pick_next_slot("X", {}, date(2026, 4, 25)) == date(2026, 4, 27)  # Sat -> Mon
-    assert gs._pick_next_slot("X", {}, date(2026, 4, 26)) == date(2026, 4, 27)  # Sun -> Mon
+def test_pick_x_from_sunday_jumps_to_monday():
+    # M7b cadence change 2026-04-25: X publishes Mon-Sat, skip Sun only.
+    assert gs._pick_next_slot("X", {}, date(2026, 4, 25)) == date(2026, 4, 25)  # Sat is now valid
+    assert gs._pick_next_slot("X", {}, date(2026, 4, 26)) == date(2026, 4, 27)  # Sun still skipped
 
 
 def test_pick_x_skips_occupied_day():
@@ -33,24 +34,30 @@ def test_pick_x_skips_occupied_day():
     assert gs._pick_next_slot("X", occ, date(2026, 4, 27)) == date(2026, 4, 28)
 
 
-def test_pick_linkedin_from_monday_goes_to_tuesday():
-    assert gs._pick_next_slot("LinkedIn", {}, date(2026, 4, 27)) == date(2026, 4, 28)
+def test_pick_linkedin_from_monday_stays_monday():
+    # M7b: LinkedIn now publishes Mon-Sat (was Tue/Thu only).
+    assert gs._pick_next_slot("LinkedIn", {}, date(2026, 4, 27)) == date(2026, 4, 27)
 
 
 def test_pick_linkedin_from_tuesday_stays_tuesday_if_open():
     assert gs._pick_next_slot("LinkedIn", {}, date(2026, 4, 28)) == date(2026, 4, 28)
 
 
-def test_pick_linkedin_skips_wednesday_and_friday():
-    # From Wednesday, LinkedIn's next slot is Thursday
-    assert gs._pick_next_slot("LinkedIn", {}, date(2026, 4, 29)) == date(2026, 4, 30)
-    # From Friday, next LinkedIn slot is the following Tuesday
-    assert gs._pick_next_slot("LinkedIn", {}, date(2026, 5, 1)) == date(2026, 5, 5)
+def test_pick_linkedin_takes_any_weekday():
+    # All weekdays + Sat are valid LinkedIn slots after M7b.
+    assert gs._pick_next_slot("LinkedIn", {}, date(2026, 4, 29)) == date(2026, 4, 29)  # Wed
+    assert gs._pick_next_slot("LinkedIn", {}, date(2026, 5, 1)) == date(2026, 5, 1)    # Fri
+    assert gs._pick_next_slot("LinkedIn", {}, date(2026, 4, 25)) == date(2026, 4, 25)  # Sat
 
 
-def test_pick_linkedin_tuesday_occupied_jumps_to_thursday():
-    occ = {("LinkedIn", "2026-04-28"): True}
-    assert gs._pick_next_slot("LinkedIn", occ, date(2026, 4, 27)) == date(2026, 4, 30)
+def test_pick_linkedin_skips_sunday():
+    assert gs._pick_next_slot("LinkedIn", {}, date(2026, 4, 26)) == date(2026, 4, 27)  # Sun -> Mon
+
+
+def test_pick_linkedin_monday_occupied_jumps_to_tuesday():
+    # Was: LinkedIn Tue occupied -> Thu. New: Mon occupied -> Tue (next Mon-Sat day).
+    occ = {("LinkedIn", "2026-04-27"): True}
+    assert gs._pick_next_slot("LinkedIn", occ, date(2026, 4, 27)) == date(2026, 4, 28)
 
 
 def test_pick_unknown_platform_returns_none():
@@ -178,18 +185,20 @@ def test_tick_schedules_approved_x_post(mock_scheduler, monkeypatch):
     mock_scheduler.update_page.assert_called_once()
     pid, props = mock_scheduler.update_page.call_args[0]
     assert pid == "page-abc"
-    assert props["Scheduled Date"]["date"]["start"] == "2026-04-27"
+    # M7b: X publishes Mon-Sat. Today=Fri 04-24, start=Sat 04-25 (now valid).
+    assert props["Scheduled Date"]["date"]["start"] == "2026-04-25"
     assert props["Status"]["select"]["name"] == "Queued"
-    mock_scheduler.mark_scheduled.assert_called_once_with(3, "2026-04-27")
+    mock_scheduler.mark_scheduled.assert_called_once_with(3, "2026-04-25")
 
 
 def test_tick_respects_occupancy_and_picks_next_slot(mock_scheduler, monkeypatch):
-    """If Monday X slot is taken, scheduler should pick Tuesday."""
+    """If Saturday X slot is taken, scheduler should pick Monday (skipping Sun)."""
     payload = {"notion_id": "page-xyz", "title": "Test", "platform": "X"}
     monkeypatch.setattr(gs, "_fetch_unscheduled_approvals", lambda: [(5, payload)])
-    # Monday 04-27 is occupied for X; scheduler should pick Tuesday 04-28
+    # M7b: X = Mon-Sat. Today=Fri 04-24, start=Sat 04-25. Sat occupied -> Sun
+    # skipped -> Mon 04-27.
     mock_scheduler.notion_query.return_value = [
-        _page("Queued", ["X"], "2026-04-27"),
+        _page("Queued", ["X"], "2026-04-25"),
     ]
 
     import pytz
@@ -205,7 +214,7 @@ def test_tick_respects_occupancy_and_picks_next_slot(mock_scheduler, monkeypatch
     gs.griot_scheduler_tick()
 
     _pid, props = mock_scheduler.update_page.call_args[0]
-    assert props["Scheduled Date"]["date"]["start"] == "2026-04-28"
+    assert props["Scheduled Date"]["date"]["start"] == "2026-04-27"
 
 
 def test_tick_skips_unknown_platform(mock_scheduler, monkeypatch):
@@ -241,8 +250,10 @@ def test_tick_schedules_multiple_approvals_without_collision(mock_scheduler, mon
     # Both update_page calls made; dates must differ
     assert mock_scheduler.update_page.call_count == 2
     dates = [call[0][1]["Scheduled Date"]["date"]["start"] for call in mock_scheduler.update_page.call_args_list]
-    assert dates[0] == "2026-04-27"  # Monday
-    assert dates[1] == "2026-04-28"  # Tuesday (next open X slot since in-memory occupancy reserved Monday)
+    # M7b: X = Mon-Sat. Today=Fri 04-24, start=Sat 04-25 (now valid). First lands
+    # on Sat; Sun skipped; second on Mon 04-27.
+    assert dates[0] == "2026-04-25"  # Saturday
+    assert dates[1] == "2026-04-27"  # Monday (Sun skipped)
     assert len(set(dates)) == 2
 
 
@@ -334,16 +345,14 @@ def test_no_backfill_if_slot_already_filled(mock_scheduler, monkeypatch):
     gs.griot_scheduler_tick()
 
     # Backfill should NOT use 04-27 (occupied). Forward-scheduling kicks in
-    # and assigns the next open LinkedIn slot. Today is Tuesday 04-28, but
-    # the scheduler starts from tomorrow per existing logic, so next LI slot
-    # is Thursday 04-30 (LinkedIn = Tue/Thu only, and 04-28 / 04-29 are
-    # already past or Wed).
+    # and assigns the next open LinkedIn slot. M7b: LinkedIn = Mon-Sat, so
+    # today=Tue 04-28, start=Wed 04-29. Wed is valid -> result = 04-29.
     assert mock_scheduler.update_page.call_count == 1
     _pid, props = mock_scheduler.update_page.call_args[0]
     sched = props["Scheduled Date"]["date"]["start"]
     # Must NOT be the occupied 04-27 (yesterday). Must be a future LinkedIn day.
     assert sched != "2026-04-27"
-    assert sched in ("2026-04-30", "2026-05-05")  # next Thu or following Tue
+    assert sched == "2026-04-29"  # M7b: Wed is valid LinkedIn day
 
 
 def test_no_backfill_outside_window(mock_scheduler, monkeypatch):
