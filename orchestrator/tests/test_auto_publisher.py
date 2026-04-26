@@ -621,3 +621,63 @@ def test_tick_stale_publishing_promoted_to_publish_failed():
     # Publisher.publish should NOT have been called (the record is in Publishing,
     # not Queued, so the main loop skips it)
     assert not mock_publisher.publish.called
+
+
+# =============================================================================
+# _should_hold_for_timely_check (C13 TTL gate)
+# =============================================================================
+
+def test_timely_record_within_ttl_publishes():
+    """A Timely record approved 3 days ago (under 14-day TTL) should not be held."""
+    from auto_publisher import _should_hold_for_timely_check
+    from datetime import datetime, timedelta, timezone
+
+    approved_at = datetime.now(timezone.utc) - timedelta(days=3)
+    result = _should_hold_for_timely_check(
+        content_type="Timely",
+        approved_at=approved_at,
+        ttl_days=14,
+    )
+    assert result is False
+
+
+def test_timely_record_past_ttl_holds():
+    """A Timely record approved 20 days ago (past 14-day TTL) should be held."""
+    from auto_publisher import _should_hold_for_timely_check
+    from datetime import datetime, timedelta, timezone
+
+    approved_at = datetime.now(timezone.utc) - timedelta(days=20)
+    result = _should_hold_for_timely_check(
+        content_type="Timely",
+        approved_at=approved_at,
+        ttl_days=14,
+    )
+    assert result is True
+
+
+def test_evergreen_record_never_holds():
+    """An Evergreen record never triggers a TTL hold regardless of age."""
+    from auto_publisher import _should_hold_for_timely_check
+    from datetime import datetime, timedelta, timezone
+
+    approved_at = datetime.now(timezone.utc) - timedelta(days=365)
+    result = _should_hold_for_timely_check(
+        content_type="Evergreen",
+        approved_at=approved_at,
+        ttl_days=14,
+    )
+    assert result is False
+
+
+def test_missing_content_type_defaults_to_timely_behavior():
+    """Records without Content Type field are treated as Timely (safe default)."""
+    from auto_publisher import _should_hold_for_timely_check
+    from datetime import datetime, timedelta, timezone
+
+    approved_at = datetime.now(timezone.utc) - timedelta(days=20)
+    result = _should_hold_for_timely_check(
+        content_type=None,
+        approved_at=approved_at,
+        ttl_days=14,
+    )
+    assert result is True
