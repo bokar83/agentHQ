@@ -687,15 +687,33 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 - `handlers_chat.py`: already correct via `llm_helpers.py` env-var pattern
 - 276/276 tests pass
 
-**M11b shipped 2026-04-26: what changed:**
+**M11b design reviewed + spec finalized 2026-04-26 (Sankofa Council + code expert):**
 
-- `agents.py`: deleted `ROLE_MODEL` (4 hardcoded Anthropic aliases)
-- `agents.py`: added `ROLE_CAPABILITY` (capability tag + cost ceiling per role/complexity)
-- `agents.py`: rewrote `select_llm()` to call `select_by_capability()` across all 18 models
-- `ROLE_TEMPERATURE` unchanged (temp is decoupled from model choice, intentional)
-- Live routing outcomes: `social/moderate` -> Grok-4; `qa/*` -> Qwen3.5-flash; `planner/simple` -> DeepSeek-v3.2; `coder/complex` -> lowest-cost deep_reasoning within low-medium ceiling; `orchestrator/complex` -> full registry up to high ceiling
-- Adding any new model to `COUNCIL_MODEL_REGISTRY` automatically makes it available to all crews. No code changes required.
-- 265/265 in-scope tests pass. Commit: `cf30018`
+Council and code expert review surfaced 5 issues before implementation. All resolved in spec. Key changes to the original plan:
+
+- **ROLE_TEMPERATURE blocker resolved:** new `select_llm()` must explicitly preserve `ROLE_TEMPERATURE.get(key, 0.3)`. Original plan did not mention it. If dropped, all agents revert to `temperature=0.3` silently.
+- **Missing role keys added:** `skill_builder/simple/moderate/complex` and `orchestrator/simple` were absent from the proposed dict. Added.
+- **Voice bug fixed in same commit:** `("voice","simple")` and `("voice","moderate")` missing from both `ROLE_MODEL` and `ROLE_TEMPERATURE` today. M11b adds them to both `ROLE_CAPABILITY` and `ROLE_TEMPERATURE`.
+- **One primary capability per role:** `select_by_capability()` accepts a single string. Multi-capability entries would require signature change breaking `council.py`. Each role gets one primary capability; secondary noted as comment only.
+- **Startup validation added:** `_validate_role_capability_dict()` runs at module import and raises `ValueError` on any misspelled capability tag. Prevents silent degradation.
+- **`MODEL_REGISTRY` not deprecated:** 9 hardcoded `get_llm()` calls in `crews.py` are intentional relay-agent overrides. They remain. Documented explicitly to prevent future cleanup accidents.
+- **`creative_divergence` single-model risk accepted:** only grok-4 has this tag. `writer/complex` and `social` route to it. If grok-4 is excluded, cost-relaxation still returns grok-4 at a higher tier. Documented and accepted.
+
+**SpawnJobTool bug fixes (same session, separate commit):**
+- `from_number` fix: parse `chat_id = session_key.split(":")[0]` instead of passing `session_key` verbatim. Worker was sending Telegram to a string, not a real chat_id.
+- Double `create_job` fix: SpawnJobTool called `create_job` at line 1972, worker called it again at line 96. Remove from SpawnJobTool; worker owns registration.
+- `wait_for_result`, `PollJobTool`, `notify_chat_id` all deferred: no concrete crew needs synchronous delegation today. Reopen when a multi-stage crew is being built.
+
+**Full spec:** `docs/superpowers/specs/2026-04-26-m11b-capability-routing-design.md`
+
+**Build order for next M11b session:**
+1. Write `test_select_llm.py` (parametrized, 15 lines, no live API calls)
+2. Write `ROLE_CAPABILITY` dict + `_VALID_CAPABILITIES` + `_validate_role_capability_dict()` in `agents.py`
+3. Add `voice/simple` and `voice/moderate` to `ROLE_TEMPERATURE`
+4. Rewrite `select_llm()` body (preserve `ROLE_TEMPERATURE` line explicitly)
+5. Run tests, full suite, commit
+6. SCP + docker cp + smoke test (verify grok-4 for social, non-Anthropic for coder)
+7. Separate commit: SpawnJobTool `from_number` + double `create_job` fix
 
 **Sequence with M9:**
 ```
