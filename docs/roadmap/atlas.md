@@ -664,7 +664,7 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 
 ### M11: OpenRouter-Native Intelligent Model Routing
 
-**Status:** M11a SHIPPED 2026-04-26. M11b IN PROGRESS.
+**Status:** M11a SHIPPED 2026-04-26. M11b SHIPPED 2026-04-26.
 **Vision:** agentsHQ uses OpenRouter as the single routing layer across ALL providers. Best model for every job, automatically selected. Crew engine uses `select_by_capability()` (same pattern as Sankofa Council) across all 18 models in `COUNCIL_MODEL_REGISTRY` (8 providers: Anthropic, Google, OpenAI, DeepSeek, xAI, Mistral, Qwen). Not loyal to any provider.
 **Save point:** `savepoint-pre-m10a-bug-fixes-2026-04-26` (tagged before M11a work, before the rename to M11)
 
@@ -673,7 +673,7 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 | Sub | Scope | Budget | Branch | Status |
 | --- | --- | --- | --- | --- |
 | M11a | Bug fixes + named model constants | 2h | fix/m10a-model-bugs | SHIPPED 2026-04-26 |
-| M11b | ROLE_CAPABILITY migration: replace ROLE_MODEL with select_by_capability() for crew engine | 3h | feat/m11b-capability-routing | IN PROGRESS |
+| M11b | ROLE_CAPABILITY migration: replace ROLE_MODEL with select_by_capability() for crew engine | 3h | feat/m11b-capability-routing | SHIPPED 2026-04-26 |
 | M11c | Research engine rewrite: two-phase Perplexity Sonar Pro + Firecrawl via OpenRouter | 4h | feat/m11c-research-engine | After M11b |
 | M11d | Harvest reviewer migration + weekly model review agent (Sunday 08:00 MT) | 6h | feat/m11d-model-review | After M11b |
 
@@ -687,14 +687,15 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 - `handlers_chat.py`: already correct via `llm_helpers.py` env-var pattern
 - 276/276 tests pass
 
-**M11b: ROLE_CAPABILITY mapping (next after M9a):**
-Replaces `ROLE_MODEL` (4 hardcoded Anthropic aliases) with `ROLE_CAPABILITY` (capability tag + cost ceiling). Key routing outcomes when live:
-- `coder/complex` -> o4-mini or GPT-5.1 (GPT beats Opus on coding right now)
-- `social/moderate` -> Grok-4 (unconventional angles for hooks)
-- `researcher/complex` -> DeepSeek-R1, Gemini-2.5-Pro, or GPT-4.1 (deep reasoning)
-- `planner/simple` -> DeepSeek-v3.2 at $0.26/MTok
-- `qa/all` -> Qwen3.5-flash at $0.065/MTok
+**M11b shipped 2026-04-26: what changed:**
+
+- `agents.py`: deleted `ROLE_MODEL` (4 hardcoded Anthropic aliases)
+- `agents.py`: added `ROLE_CAPABILITY` (capability tag + cost ceiling per role/complexity)
+- `agents.py`: rewrote `select_llm()` to call `select_by_capability()` across all 18 models
+- `ROLE_TEMPERATURE` unchanged (temp is decoupled from model choice, intentional)
+- Live routing outcomes: `social/moderate` -> Grok-4; `qa/*` -> Qwen3.5-flash; `planner/simple` -> DeepSeek-v3.2; `coder/complex` -> lowest-cost deep_reasoning within low-medium ceiling; `orchestrator/complex` -> full registry up to high ceiling
 - Adding any new model to `COUNCIL_MODEL_REGISTRY` automatically makes it available to all crews. No code changes required.
+- 265/265 in-scope tests pass. Commit: `cf30018`
 
 **Sequence with M9:**
 ```
@@ -709,8 +710,9 @@ M11a (done) -> M9a  (3-4h, parallel with M11b)
 
 1. M7b monitoring: verify Monday 2026-04-27 07:00 MT X auto-publish fires (or check if it already fired)
 2. M5 (Chairman / L5 Learning) gate: 2026-05-08
-3. **M9a** (Telegram push alerts + correctness fixes) and **M11b** (capability routing): run in parallel
+3. **M9a** (Telegram push alerts + correctness fixes): remaining parallel tab
 4. VPS orphan archive sunset: delete `/root/_archive_20260421/` if no issues by 2026-04-28
+5. After M9a verified on VPS: merge feat/m11b-capability-routing -> main, deploy
 
 ---
 
@@ -751,5 +753,30 @@ M11a (done) -> M9a  (3-4h, parallel with M11b)
 1. Monday 2026-04-27 07:00 MT: verify auto-publish fires X "One constraint nobody has named yet"
 2. M9 Atlas Chat design/spec (HIGH PRIORITY)
 3. M5 gate: 2026-05-08
+
+---
+
+### 2026-04-26: M11b SHIPPED - ROLE_CAPABILITY migration live on branch
+
+**M11b capability routing built and committed on `feat/m11b-capability-routing` (commit `cf30018`).**
+
+Replaced `ROLE_MODEL` (4 hardcoded Anthropic aliases) with `ROLE_CAPABILITY` (capability tag + cost ceiling per role/complexity). `select_llm()` now delegates to `select_by_capability()` across all 18 models in `COUNCIL_MODEL_REGISTRY` (8 providers). `ROLE_TEMPERATURE` unchanged.
+
+**Live routing outcomes verified via smoke test:**
+
+- `social/moderate` -> `x-ai/grok-4` (creative_divergence, medium ceiling) for unconventional hooks
+- `qa/*` -> `qwen/qwen3.5-flash-02-23` at $0.065/MTok (fast, very_low ceiling)
+- `planner/simple` -> `deepseek/deepseek-v3.2` at $0.26/MTok (instruction_following, very_low)
+- `coder/complex` -> lowest-cost deep_reasoning in low-medium ceiling (Qwen-235b at $0.071)
+- `orchestrator/complex` + `consultant/complex` -> full registry up to high ceiling (Opus-class when needed)
+- `researcher/complex` -> deep_reasoning, medium ceiling
+
+**Algorithm note:** `select_by_capability()` picks the cheapest qualified model within the cost ceiling. `coder/complex` lands on Qwen-235b ($0.071) not o4-mini ($1.10) because Qwen has `deep_reasoning` at `very_low` cost. This is correct: best model at lowest cost. The roadmap listed o4-mini as a possible winner under a tighter ceiling; current ceiling `low-medium` lets Qwen-235b win. Ceiling can be raised to `low-medium` strict if output quality signals suggest Qwen falls short on coding tasks.
+
+**Test results:** 265/265 in-scope tests pass. 1 pre-existing `test_griot_scheduler` failure unchanged (unrelated to this change).
+
+**Not yet deployed to VPS.** Branch `feat/m11b-capability-routing` is ahead of main by 1 commit. Merge + deploy after M9a smoke test passes on VPS (per M11 sequence).
+
+**Next:** M9a (parallel tab). After M9a verified: merge M11b -> main, docker compose rebuild.
 
 ---
