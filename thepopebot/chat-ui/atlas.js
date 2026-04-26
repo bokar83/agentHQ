@@ -4,6 +4,9 @@
 
 const ORC_BASE = '/api/orc';
 const TOKEN_TTL_MS = 8 * 60 * 60 * 1000;
+// Separate storage keys from /chat so each page requires its own login
+const TOKEN_KEY = 'atlas_token';
+const TOKEN_TS_KEY = 'atlas_token_ts';
 
 let _token = null;
 
@@ -24,10 +27,10 @@ function el(tag, attrs, ...children) {
   return node;
 }
 
-// Bootstrap
+// Bootstrap -- always show PIN screen; use atlas-specific session keys
 (function init() {
-  const stored = sessionStorage.getItem('chat_token');
-  const storedTs = sessionStorage.getItem('chat_token_ts');
+  const stored = sessionStorage.getItem(TOKEN_KEY);
+  const storedTs = sessionStorage.getItem(TOKEN_TS_KEY);
   if (stored && storedTs && (Date.now() - parseInt(storedTs, 10)) < TOKEN_TTL_MS) {
     _token = stored;
     showDashboard();
@@ -59,8 +62,8 @@ async function submitPin(e) {
       return;
     }
     _token = data.token;
-    sessionStorage.setItem('chat_token', _token);
-    sessionStorage.setItem('chat_token_ts', String(Date.now()));
+    sessionStorage.setItem(TOKEN_KEY, _token);
+    sessionStorage.setItem(TOKEN_TS_KEY, String(Date.now()));
     showDashboard();
   } catch (_) {
     errEl.textContent = 'Network error. Is the VPS reachable?';
@@ -89,8 +92,8 @@ async function apiFetch(path, opts) {
     body: opts.body || undefined,
   });
   if (res.status === 401) {
-    sessionStorage.removeItem('chat_token');
-    sessionStorage.removeItem('chat_token_ts');
+    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(TOKEN_TS_KEY);
     location.reload();
     throw new Error('TOKEN_EXPIRED');
   }
@@ -400,6 +403,73 @@ async function actionQueueReject(id, approveBtn, rejectBtn) {
   } catch (_) { approveBtn.disabled = false; rejectBtn.disabled = false; }
 }
 
+// Quote rotation (uses quote_bank embedded; rotates every 60s with fade)
+var QUOTES = [
+  {text:"Do the work. Especially when you don't feel like it.",author:"Steven Pressfield"},
+  {text:"Vision without execution is hallucination.",author:"Thomas Edison"},
+  {text:"You don't rise to the level of your goals. You fall to the level of your systems.",author:"James Clear"},
+  {text:"Move fast. The market is not waiting for you.",author:"Reid Hoffman"},
+  {text:"The secret of getting ahead is getting started.",author:"Mark Twain"},
+  {text:"You miss 100% of the shots you don't take.",author:"Wayne Gretzky (via Michael Scott)"},
+  {text:"Either you run the day or the day runs you.",author:"Jim Rohn"},
+  {text:"Revenue is oxygen. Everything else is decoration.",author:"Unknown"},
+  {text:"Simplicity is the ultimate sophistication.",author:"Leonardo da Vinci"},
+  {text:"If you're going through hell, keep going.",author:"Winston Churchill"},
+  {text:"Be so good they can't ignore you.",author:"Steve Martin"},
+  {text:"The impediment to action advances action. What stands in the way becomes the way.",author:"Marcus Aurelius"},
+  {text:"Excellence is never an accident.",author:"Aristotle"},
+  {text:"Done is better than perfect.",author:"Sheryl Sandberg"},
+  {text:"If you want to go fast, go alone. If you want to go far, go together.",author:"African Proverb"},
+  {text:"A good plan, violently executed now, is better than a perfect plan next week.",author:"George S. Patton"},
+  {text:"Strategy without tactics is the slowest route to victory. Tactics without strategy is the noise before defeat.",author:"Sun Tzu"},
+  {text:"Culture eats strategy for breakfast.",author:"Peter Drucker"},
+  {text:"Sell or be sold. There is no middle ground.",author:"Grant Cardone"},
+  {text:"People don't buy what you do; they buy why you do it.",author:"Simon Sinek"},
+  {text:"Until the lion learns to write, every story will glorify the hunter.",author:"African Proverb"},
+  {text:"However long the night, the dawn will break.",author:"African Proverb"},
+  {text:"Absorb what is useful, discard what is not, add what is uniquely your own.",author:"Bruce Lee"},
+  {text:"Education is the most powerful weapon which you can use to change the world.",author:"Nelson Mandela"},
+  {text:"Mamba mentality is about 4am workouts, doing more than the next guy, and wanting it more.",author:"Kobe Bryant"},
+  {text:"Everything negative -- pressure, challenges -- is all an opportunity for me to rise.",author:"Kobe Bryant"},
+  {text:"We preferons la pauvrete dans la liberte a la richesse dans l'esclavage.",author:"Sekou Toure"},
+  {text:"L'homme qui travaille et qui pense construit son destin.",author:"Sekou Toure"},
+  {text:"Suffer the pain of discipline or suffer the pain of regret.",author:"Jim Rohn"},
+  {text:"The task ahead of us is never as great as the power behind us.",author:"Ralph Waldo Emerson"},
+  {text:"Rain does not fall on one roof alone.",author:"Cameroonian Proverb"},
+  {text:"A river that forgets its source will dry up.",author:"Yoruba Proverb"},
+  {text:"Doubt kills more dreams than failure ever will.",author:"Suzy Kassem"},
+  {text:"Make your move before you're ready.",author:"Shonda Rhimes"},
+  {text:"Trying is the first step towards failure.",author:"Homer Simpson"}
+];
+
+var _quoteIdx = (function() {
+  var day = Math.floor(Date.now() / 86400000);
+  return day % QUOTES.length;
+})();
+
+function showQuote(idx) {
+  var q = QUOTES[idx % QUOTES.length];
+  var textEl = document.getElementById('quote-text');
+  var authEl = document.getElementById('quote-author');
+  if (!textEl || !authEl) return;
+  textEl.classList.add('fading');
+  authEl.classList.add('fading');
+  setTimeout(function() {
+    textEl.textContent = '“' + q.text + '”';
+    authEl.textContent = q.author;
+    textEl.classList.remove('fading');
+    authEl.classList.remove('fading');
+  }, 600);
+}
+
+function startQuoteRotation() {
+  showQuote(_quoteIdx);
+  setInterval(function() {
+    _quoteIdx = (_quoteIdx + 1) % QUOTES.length;
+    showQuote(_quoteIdx);
+  }, 60000);
+}
+
 // Polling
 function refreshAll() {
   refreshHero();
@@ -414,6 +484,7 @@ function refreshAll() {
 
 function startPolling() {
   refreshAll();
+  startQuoteRotation();
   setInterval(refreshAll, 30000);
   document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'visible') refreshAll();
