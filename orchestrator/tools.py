@@ -1932,6 +1932,64 @@ class BlotatoGetStatusTool(BaseTool):
             return f"blotato_get_status failed: {e}"
 
 
+class SpawnJobTool(BaseTool):
+    """Spawn a background job from inside an agent turn.
+
+    Submits task_text to the existing job queue and returns a job_id
+    immediately. The job runs in a daemon thread via the standard
+    worker._run_background_job path. Use this when a crew agent needs
+    to fire a long-running sub-task without blocking its own turn.
+
+    Input JSON: {"task": "...", "session_key": "optional"}
+    Returns: JSON {"job_id": "...", "status": "queued"}
+    """
+    name: str = "spawn_job"
+    description: str = (
+        "Spawn a background job for a long-running task. "
+        "Input JSON: {\"task\": \"<task text>\", \"session_key\": \"<optional>\"}. "
+        "Returns {\"job_id\": \"...\", \"status\": \"queued\"} immediately. "
+        "The job runs async via the worker pool. Use when you need fire-and-forget sub-tasks."
+    )
+
+    def _run(self, _input_data: str = "") -> str:
+        import uuid
+        import threading
+
+        try:
+            payload = json.loads(_input_data) if _input_data else {}
+        except Exception:
+            payload = {"task": str(_input_data)}
+
+        task_text = (payload.get("task") or "").strip()
+        if not task_text:
+            return json.dumps({"error": "spawn_job: 'task' field is required"})
+
+        session_key = payload.get("session_key") or "spawn_job"
+        job_id = f"job_{uuid.uuid4().hex[:12]}"
+
+        try:
+            from memory import create_job
+            create_job(job_id, session_key, session_key, task_text)
+        except Exception as e:
+            logger.warning(f"SpawnJobTool: create_job failed: {e}")
+
+        def _launch():
+            try:
+                from worker import _run_background_job
+                _run_background_job(
+                    task=task_text,
+                    from_number=session_key,
+                    session_key=session_key,
+                    job_id=job_id,
+                )
+            except Exception as exc:
+                logger.error(f"SpawnJobTool: background job {job_id} failed: {exc}")
+
+        threading.Thread(target=_launch, daemon=True, name=f"spawn-{job_id}").start()
+        logger.info(f"SpawnJobTool: queued job_id={job_id} task={task_text[:60]!r}")
+        return json.dumps({"job_id": job_id, "status": "queued"})
+
+
 RESEARCH_TOOLS = [search_tool, file_reader, QueryMemoryTool(), QueryAudienceEngineTool()]
 MEMORY_TOOLS = [QueryMemoryTool(), SaveLearningTool()]
 SCRAPING_TOOLS = [FirecrawlScrapeTool(), FirecrawlCrawlTool(), FirecrawlSearchTool()]
@@ -2011,7 +2069,7 @@ except Exception as _e:
 MEDIA_TOOLS = [KieGenerateImageTool(), KieGenerateVideoTool(), KieListModelsTool(), KieCheckCreditsTool()]
 WRITING_TOOLS = [file_writer, SaveOutputTool(), voice_polisher_tool]
 CODE_TOOLS = [t for t in [code_interpreter, file_writer, file_reader, SaveOutputTool(), CLIHubSearchTool(), launch_vercel_tool] if t is not None]
-ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool(), GitHubRepoTool(), GitHubIssueTool(), GitHubFileTool(), NotionSearchTool(), NotionPageTool(), launch_vercel_tool] + VERCEL_TOOLS + NOTION_STYLING_TOOLS + FORGE_TOOLS + GWS_TOOLS
+ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool(), GitHubRepoTool(), GitHubIssueTool(), GitHubFileTool(), NotionSearchTool(), NotionPageTool(), launch_vercel_tool, SpawnJobTool()] + VERCEL_TOOLS + NOTION_STYLING_TOOLS + FORGE_TOOLS + GWS_TOOLS
 HUNTER_TOOLS = [prospecting_tool, crm_add_tool, crm_log_tool, crm_reveal_tool, enrich_leads_tool, scoreboard_tool, QueryMemoryTool(), NotionPageTool(), forge_pipeline_tool, forge_log_tool]
 OUTREACH_TOOLS = [crm_uncontacted_tool, crm_reveal_tool, crm_log_tool, scoreboard_tool, crm_mark_sent_tool]
 HYPERFRAMES_TOOLS = [t for t in [hyperframes_tool] if t is not None]
