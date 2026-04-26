@@ -129,14 +129,19 @@ def _date_start(prop):
 
 def _fetch_occupancy(notion) -> dict:
     """Return a set-like dict mapping (platform, date_iso) -> True for every
-    existing Queued / Ready / Posted record with a Scheduled Date.
+    existing Queued / Ready / Posted / Publishing / PublishFailed record with
+    a Scheduled Date.
+
+    Atlas M7b note: Publishing means in-flight via Blotato API; PublishFailed
+    means terminal failure that needs human attention. Both block the slot
+    from new scheduling.
     """
     posts = notion.query_database(CONTENT_DB_ID, filter_obj=None)
     occupied = {}
     for p in posts:
         props = p.get("properties", {})
         status = _select(props.get("Status", {}))
-        if status not in ("Queued", "Ready", "Posted"):
+        if status not in ("Queued", "Ready", "Posted", "Publishing", "PublishFailed"):
             continue
         sd = _date_start(props.get("Scheduled Date", {}))
         if not sd:

@@ -1848,9 +1848,88 @@ class KieCheckCreditsTool(BaseTool):
             return f"kie_check_credits failed: {e}"
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Atlas M7b: Blotato publisher tools (verified API contract via M7a smoke test)
+# Wired here per the always-wire-tools rule; consumers can call publish/status/
+# accounts via standard BaseTool interface or via the auto_publisher tick.
+# ─────────────────────────────────────────────────────────────────────────────
+
+class BlotatoListAccountsTool(BaseTool):
+    """List Blotato connected social accounts. Returns id + platform per account.
+    Read-only, safe to call anywhere. No input required.
+    """
+    name: str = "blotato_list_accounts"
+    description: str = "List all Blotato connected social accounts (LinkedIn/X/etc) with their accountIds. No input required."
+
+    def _run(self, _input_data: str = "") -> str:
+        try:
+            from blotato_publisher import list_accounts
+            return json.dumps({"items": list_accounts()})
+        except Exception as e:
+            return f"blotato_list_accounts failed: {e}"
+
+
+class BlotatoPublishTool(BaseTool):
+    """Publish text to a Blotato connected account. Returns postSubmissionId
+    for status polling. Input format JSON:
+      {"text": "...", "account_id": "12345", "platform": "linkedin|twitter|..."}
+    Optional: media_urls (list of public URLs).
+    """
+    name: str = "blotato_publish"
+    description: str = (
+        "Publish a post via Blotato API. Input JSON: "
+        '{"text": "post body", "account_id": "12345", "platform": "linkedin"}. '
+        "Returns postSubmissionId. Use blotato_get_status to poll."
+    )
+
+    def _run(self, _input_data: str = "") -> str:
+        try:
+            from blotato_publisher import get_publisher
+            payload = json.loads(_input_data) if _input_data else {}
+            text = payload.get("text")
+            account_id = payload.get("account_id")
+            platform = payload.get("platform")
+            if not (text and account_id and platform):
+                return "blotato_publish: missing required field (text, account_id, platform)"
+            sub_id = get_publisher().publish(
+                text=text,
+                account_id=str(account_id),
+                platform=platform,
+                media_urls=payload.get("media_urls"),
+            )
+            return json.dumps({"post_submission_id": sub_id})
+        except Exception as e:
+            return f"blotato_publish failed: {e}"
+
+
+class BlotatoGetStatusTool(BaseTool):
+    """Check status of a previously-submitted Blotato post.
+    Input: post_submission_id (string).
+    Returns: status, publicUrl (on success), errorMessage (on failure).
+    """
+    name: str = "blotato_get_status"
+    description: str = (
+        "Check status of a Blotato submission. "
+        "Input: post_submission_id string. "
+        "Returns status (in-progress|published|failed), plus publicUrl or errorMessage."
+    )
+
+    def _run(self, _input_data: str = "") -> str:
+        try:
+            from blotato_publisher import get_publisher
+            sub_id = (_input_data or "").strip().strip('"').strip("'")
+            if not sub_id:
+                return "blotato_get_status: missing post_submission_id"
+            data = get_publisher().get_status(sub_id)
+            return json.dumps(data)
+        except Exception as e:
+            return f"blotato_get_status failed: {e}"
+
+
 RESEARCH_TOOLS = [search_tool, file_reader, QueryMemoryTool(), QueryAudienceEngineTool()]
 MEMORY_TOOLS = [QueryMemoryTool(), SaveLearningTool()]
 SCRAPING_TOOLS = [FirecrawlScrapeTool(), FirecrawlCrawlTool(), FirecrawlSearchTool()]
+PUBLISHER_TOOLS = [BlotatoListAccountsTool(), BlotatoPublishTool(), BlotatoGetStatusTool()]
 try:
     from niche_research import get_tools as _niche_research_tools
     NICHE_RESEARCH_TOOLS = _niche_research_tools()
