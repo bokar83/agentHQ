@@ -1965,20 +1965,21 @@ class SpawnJobTool(BaseTool):
             return json.dumps({"error": "spawn_job: 'task' field is required"})
 
         session_key = payload.get("session_key") or "spawn_job"
+        # Parse real Telegram chat_id from session_key (format: "<chat_id>:<project>").
+        # Passing session_key verbatim as from_number caused worker to send Telegram
+        # messages to a string instead of a numeric chat_id, failing silently.
+        from_number = session_key.split(":")[0]
         job_id = f"job_{uuid.uuid4().hex[:12]}"
 
-        try:
-            from memory import create_job
-            create_job(job_id, session_key, session_key, task_text)
-        except Exception as e:
-            logger.warning(f"SpawnJobTool: create_job failed: {e}")
+        # Worker owns job registration via create_job() at worker.py:96.
+        # Calling it here too caused a duplicate INSERT on the same job_id.
 
         def _launch():
             try:
                 from worker import _run_background_job
                 _run_background_job(
                     task=task_text,
-                    from_number=session_key,
+                    from_number=from_number,
                     session_key=session_key,
                     job_id=job_id,
                 )
