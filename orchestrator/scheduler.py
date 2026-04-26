@@ -495,6 +495,24 @@ def start_scheduler():
     except Exception as e:
         logger.error(f"AUTO_PUBLISHER: wake registration failed ({e}); continuing without auto-publish", exc_info=True)
 
+    # Studio M1: trend scout tick. Runs daily at 06:00 MT. Scans configured
+    # niches (Under the Baobab, AI Catalyst, First Generation Money) for
+    # viral content patterns via YouTube Data API, scores by view velocity,
+    # writes top picks to Studio Pipeline DB, sends Telegram brief.
+    # Uses crew_name='studio' (separate kill switch from griot/auto_publisher).
+    # Default state: studio.enabled=False; flip on after VPS deploy.
+    try:
+        import heartbeat as _heartbeat
+        from studio_trend_scout import studio_trend_scout_tick
+        _heartbeat.register_wake(
+            "studio-trend-scout",
+            crew_name="studio",
+            callback=studio_trend_scout_tick,
+            at="06:00",
+        )
+    except Exception as e:
+        logger.error(f"STUDIO_TREND_SCOUT: wake registration failed ({e}); continuing without trend scout", exc_info=True)
+
     sync_thread = threading.Thread(target=_periodic_sync, daemon=True)
     sync_thread.start()
 

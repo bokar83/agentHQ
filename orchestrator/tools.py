@@ -1936,6 +1936,66 @@ RESEARCH_TOOLS = [search_tool, file_reader, QueryMemoryTool(), QueryAudienceEngi
 MEMORY_TOOLS = [QueryMemoryTool(), SaveLearningTool()]
 SCRAPING_TOOLS = [FirecrawlScrapeTool(), FirecrawlCrawlTool(), FirecrawlSearchTool()]
 PUBLISHER_TOOLS = [BlotatoListAccountsTool(), BlotatoPublishTool(), BlotatoGetStatusTool()]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Studio M1 tools (trend scout + QA crew). Wired here per always-wire-tools rule.
+# ─────────────────────────────────────────────────────────────────────────────
+
+class StudioTrendScoutTool(BaseTool):
+    """Run the studio trend scout tick on demand. Scans configured niches
+    (Under the Baobab, AI Catalyst, First Generation Money), writes top
+    picks to the Studio Pipeline Notion DB, sends Telegram brief.
+    No input required.
+    """
+    name: str = "studio_trend_scout_run"
+    description: str = (
+        "Run the Studio trend scout tick. Scans niches for viral content patterns, "
+        "writes top picks to Studio Pipeline DB, sends Telegram brief. No input."
+    )
+
+    def _run(self, _input_data: str = "") -> str:
+        try:
+            from studio_trend_scout import studio_trend_scout_tick
+            studio_trend_scout_tick()
+            return "studio_trend_scout_run: tick completed (see logs + Telegram for results)"
+        except Exception as e:
+            return f"studio_trend_scout_run failed: {e}"
+
+
+class StudioQARunTool(BaseTool):
+    """Run the 8-check Studio QA crew on a specific Pipeline DB record.
+    Input: Notion page ID of the record to check.
+    Returns: pass/fail summary per check, plus updates the record's
+    Status to qa-passed or qa-failed.
+    """
+    name: str = "studio_qa_run"
+    description: str = (
+        "Run Studio QA crew (8 checks) on a Pipeline DB record. "
+        "Input: Notion page ID. Updates record Status to qa-passed or qa-failed."
+    )
+
+    def _run(self, _input_data: str = "") -> str:
+        try:
+            from studio_qa_crew import run_qa_on_record
+            page_id = (_input_data or "").strip().strip('"').strip("'")
+            if not page_id:
+                return "studio_qa_run: missing notion page id"
+            report = run_qa_on_record(page_id)
+            if report is None:
+                return f"studio_qa_run: could not load record {page_id}"
+            lines = [f"QA report for {report.title[:60]}: {'PASS' if report.passed else 'FAIL'}"]
+            for c in report.checks:
+                mark = "OK" if c.passed else "FAIL"
+                lines.append(f"  [{mark}] {c.name}: {c.detail}")
+            return "\n".join(lines)
+        except Exception as e:
+            return f"studio_qa_run failed: {e}"
+
+
+STUDIO_TOOLS = [StudioTrendScoutTool(), StudioQARunTool()]
+
+
 try:
     from niche_research import get_tools as _niche_research_tools
     NICHE_RESEARCH_TOOLS = _niche_research_tools()
