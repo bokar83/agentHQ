@@ -775,6 +775,50 @@ async def sync_session(req: SyncSessionRequest):
     return {"success": True, "session_key": req.session_key, "chars_written": len(req.summary)}
 
 
+# ======================================================================
+# Atlas M8: Mission Control -- read-only data endpoints
+# All gated by verify_chat_token (same JWT-PIN as /chat).
+# ======================================================================
+
+from fastapi.responses import JSONResponse
+import atlas_dashboard as _atd
+
+
+@app.get("/atlas/state")
+async def atlas_state(_auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_state())
+
+
+@app.get("/atlas/queue")
+async def atlas_queue(_auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_queue())
+
+
+@app.get("/atlas/content")
+async def atlas_content(_auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_content())
+
+
+@app.get("/atlas/spend")
+async def atlas_spend(_auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_spend())
+
+
+@app.get("/atlas/heartbeats")
+async def atlas_heartbeats(_auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_heartbeats())
+
+
+@app.get("/atlas/errors")
+async def atlas_errors(_auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_errors())
+
+
+@app.get("/atlas/hero")
+async def atlas_hero(_auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_hero())
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
