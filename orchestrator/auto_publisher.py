@@ -79,6 +79,57 @@ _DEFAULT_SCHEDULE = {
 }
 
 
+def _should_hold_for_timely_check(
+    content_type: str | None,
+    approved_at,
+    ttl_days: int = 14,
+) -> bool:
+    """Return True if this record should be held for a Telegram re-check.
+
+    Evergreen records never expire. Timely records (or records with no Content Type,
+    treated as Timely by default) expire after ttl_days days from approved_at.
+    """
+    if content_type == "Evergreen":
+        return False
+    if approved_at is None:
+        return False
+    from datetime import datetime, timezone
+    if not hasattr(approved_at, "tzinfo") or approved_at.tzinfo is None:
+        approved_at = approved_at.replace(tzinfo=timezone.utc)
+    age_days = (datetime.now(timezone.utc) - approved_at).days
+    return age_days > ttl_days
+
+
+def _send_timely_recheck_telegram(record: dict) -> None:
+    """Send Telegram re-check for a Timely record past its TTL.
+
+    Boubacar replies 'posted' to confirm still relevant, 'skip' to skip.
+    Non-fatal if Telegram send fails.
+    """
+    try:
+        from notifier import send_message
+        title = record.get("Title", record.get("id", "unknown"))
+        platform = record.get("Platform", "unknown")
+        approved_at = record.get("approved_at")
+        days_old = "?"
+        if approved_at is not None:
+            from datetime import datetime, timezone
+            if not hasattr(approved_at, "tzinfo") or approved_at.tzinfo is None:
+                approved_at = approved_at.replace(tzinfo=timezone.utc)
+            days_old = (datetime.now(timezone.utc) - approved_at).days
+        chat_id = _telegram_chat_id()
+        if chat_id:
+            msg = (
+                f'Timely post re-check: "{title}" ({platform}) was approved '
+                f"{days_old} days ago. Still good to publish?\n"
+                f"Reply `posted` to confirm, `skip` to skip."
+            )
+            send_message(str(chat_id), msg)
+            logger.info(f"auto_publisher: sent Timely re-check for {title}")
+    except Exception as e:
+        logger.warning(f"auto_publisher: Timely re-check Telegram send failed: {e}")
+
+
 def _load_schedule() -> dict:
     """Read auto_publisher_schedule.json. Search order:
       1. env AUTO_PUBLISHER_SCHEDULE_FILE
@@ -569,6 +620,22 @@ def auto_publisher_tick() -> None:
                     f"auto_publisher: no Blotato account ID configured for "
                     f"platform {platform!r}, skipping {notion_id}"
                 )
+                continue
+
+            # C13: Evergreen/Timely TTL gate
+            content_type = rec.get("content_type")
+            approved_at = rec.get("approved_at")
+            ttl_days = int(os.environ.get("TIMELY_TTL_DAYS", "14"))
+            if _should_hold_for_timely_check(content_type, approved_at, ttl_days):
+                logger.info(
+                    f"auto_publisher: holding {notion_id} for Timely re-check "
+                    f"(approved_at={approved_at}, ttl={ttl_days}d)"
+                )
+                _send_timely_recheck_telegram({
+                    "Title": title,
+                    "Platform": platform,
+                    "approved_at": approved_at,
+                })
                 continue
 
             # Step 1 (idempotency safeguard): flip Status to Publishing
