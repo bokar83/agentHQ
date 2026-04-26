@@ -3,5 +3,6 @@
   "reportMissingImports": false,
   "reportMissingModuleSource": false,
   "reportUndefinedVariable": false,
-  "reportReturnType": false
+  "reportReturnType": false,
+  "reportUnusedImport": false
 }

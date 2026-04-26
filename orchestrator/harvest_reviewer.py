@@ -47,6 +47,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from litellm import completion
+
 logger = logging.getLogger(__name__)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -62,8 +64,6 @@ DECISION_MODEL = "anthropic/claude-haiku-4.5"
 
 def _llm(model_id: str, system_prompt: str, user_content: str, max_tokens: int = 1500) -> str:
     """Single completion via litellm -> OpenRouter, mirroring council._call_model."""
-    from litellm import completion
-
     extra_body = {}
     if "anthropic/" in model_id:
         extra_body = {"provider": {"order": ["Anthropic"], "allow_fallbacks": False}}

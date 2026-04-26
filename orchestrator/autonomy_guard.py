@@ -27,6 +27,15 @@ from typing import Optional
 
 logger = logging.getLogger("agentsHQ.autonomy_guard")
 
+
+class ContractNotSatisfiedError(Exception):
+    """Raised when set_crew_enabled(True) or set_crew_dry_run(False) is called
+    without a valid signed contract file for the crew."""
+    pass
+
+
+DEFAULT_CONTRACTS_DIR = os.path.join(os.path.dirname(__file__), "contracts")
+
 KNOWN_CREWS = ("griot", "hunter", "concierge", "chairman", "auto_publisher", "studio")
 
 DEFAULT_STATE_FILE = os.environ.get(
@@ -58,9 +67,15 @@ class SpendSnapshot:
 class AutonomyGuard:
     """Thread-safe. One instance per process."""
 
-    def __init__(self, state_file: str = DEFAULT_STATE_FILE, cap_usd: float = DEFAULT_CAP_USD):
+    def __init__(
+        self,
+        state_file: str = DEFAULT_STATE_FILE,
+        cap_usd: float = DEFAULT_CAP_USD,
+        contracts_dir: str = DEFAULT_CONTRACTS_DIR,
+    ):
         self._state_file = Path(state_file)
         self._cap_usd = cap_usd
+        self._contracts_dir = Path(contracts_dir)
         self._lock = threading.RLock()
         self._state = self._load_state()
 
@@ -72,7 +87,8 @@ class AutonomyGuard:
             "killed_at": None,
             "killed_reason": None,
             "crews": {
-                c: {"enabled": False, "dry_run": True} for c in KNOWN_CREWS
+                c: {"enabled": False, "dry_run": True, "cost_ceiling_usd": None}
+                for c in KNOWN_CREWS
             },
         }
 
@@ -109,7 +125,99 @@ class AutonomyGuard:
                 if isinstance(existing, dict):
                     defaults["enabled"] = bool(existing.get("enabled", False))
                     defaults["dry_run"] = bool(existing.get("dry_run", True))
+                    defaults["cost_ceiling_usd"] = existing.get("cost_ceiling_usd", None)
         return base
+
+    def _assert_contract_satisfied(self, crew_name: str) -> None:
+        """Raises ContractNotSatisfiedError if the crew has no valid signed contract.
+
+        Checks:
+          1. Contract file exists at contracts/<crew_name>.md
+          2. File contains a SIGNED: line with a non-empty value
+          3. COST_CEILING_USD line present and parseable as float
+          4. C7: llm_calls queried for this crew over past 7 days (non-fatal if DB unreachable)
+        """
+        contract_path = self._contracts_dir / f"{crew_name}.md"
+        if not contract_path.exists():
+            raise ContractNotSatisfiedError(
+                f"{crew_name}: contract file missing at {contract_path}. "
+                f"Create and sign orchestrator/contracts/{crew_name}.md before enabling."
+            )
+
+        content = contract_path.read_text()
+
+        signed_line = next(
+            (line for line in content.splitlines() if line.startswith("SIGNED:")), None
+        )
+        if not signed_line or len(signed_line.split(":", 1)[-1].strip()) < 5:
+            raise ContractNotSatisfiedError(
+                f"{crew_name}: contract file exists but has no valid SIGNED: line. "
+                f"Fill in: SIGNED: <approver> <YYYY-MM-DD>"
+            )
+
+        ceiling_line = next(
+            (line for line in content.splitlines() if line.startswith("COST_CEILING_USD:")), None
+        )
+        if not ceiling_line:
+            raise ContractNotSatisfiedError(
+                f"{crew_name}: contract file missing COST_CEILING_USD: line."
+            )
+        try:
+            ceiling = float(ceiling_line.split(":", 1)[-1].strip())
+        except ValueError:
+            raise ContractNotSatisfiedError(
+                f"{crew_name}: COST_CEILING_USD must be a float (e.g. COST_CEILING_USD: 0.05)."
+            )
+
+        self._state["crews"][crew_name]["cost_ceiling_usd"] = ceiling
+        self._persist()
+
+        self._verify_seven_day_observation(crew_name, ceiling)
+
+    def _verify_seven_day_observation(self, crew_name: str, ceiling_usd: float) -> None:
+        """C7: query llm_calls for this crew over the past 7 days.
+
+        Raises ContractNotSatisfiedError if no rows found or a tick exceeded ceiling.
+        Non-fatal if DB unreachable.
+        """
+        try:
+            from memory import _pg_conn
+            conn = _pg_conn()
+            cur = conn.cursor()
+            cur.execute(
+                """
+                SELECT COUNT(*), MAX(cost_usd)
+                FROM llm_calls
+                WHERE crew_name = %s
+                  AND autonomous = TRUE
+                  AND ts >= NOW() - INTERVAL '7 days'
+                """,
+                (crew_name,),
+            )
+            row = cur.fetchone()
+            cur.close()
+
+            count, max_cost = row[0], row[1]
+
+            if count == 0:
+                raise ContractNotSatisfiedError(
+                    f"{crew_name}: C7 failed: no autonomous llm_calls rows found in the "
+                    f"past 7 days. Run the crew in dry_run=True for 7 days before enabling."
+                )
+
+            if max_cost is not None and float(max_cost) > ceiling_usd:
+                raise ContractNotSatisfiedError(
+                    f"{crew_name}: C7 failed: a tick exceeded the cost ceiling "
+                    f"(max observed: ${max_cost:.4f}, ceiling: ${ceiling_usd:.4f}). "
+                    f"Lower the ceiling or fix the runaway cost before enabling."
+                )
+        except ContractNotSatisfiedError:
+            raise
+        except Exception as e:
+            logger.warning(
+                f"autonomy_guard: C7 DB check for {crew_name} failed (non-fatal, "
+                f"proceeding without 7-day verification): {e}"
+            )
 
     def _persist(self) -> None:
         try:
@@ -204,6 +312,16 @@ class AutonomyGuard:
                     spent_today_usd=spent, cap_usd=self._cap_usd,
                 )
 
+            # Per-crew cost ceiling (set at contract sign time, stored in state)
+            crew_ceiling = crew.get("cost_ceiling_usd")
+            if crew_ceiling is not None and estimated_usd > crew_ceiling:
+                return GuardDecision(
+                    allowed=False, dry_run=False,
+                    reason=f"per-crew ceiling exceeded: estimated ${estimated_usd:.4f} > ceiling ${crew_ceiling:.4f} for {crew_name}",
+                    decision_tag="blocked-crew-ceiling",
+                    spent_today_usd=spent, cap_usd=self._cap_usd,
+                )
+
             is_dry_run = bool(crew.get("dry_run", True))
             return GuardDecision(
                 allowed=True, dry_run=is_dry_run,
@@ -236,6 +354,8 @@ class AutonomyGuard:
         with self._lock:
             if crew_name not in self._state["crews"]:
                 raise ValueError(f"unknown crew: {crew_name}")
+            if enabled:
+                self._assert_contract_satisfied(crew_name)
             self._state["crews"][crew_name]["enabled"] = bool(enabled)
             self._persist()
 
@@ -243,6 +363,8 @@ class AutonomyGuard:
         with self._lock:
             if crew_name not in self._state["crews"]:
                 raise ValueError(f"unknown crew: {crew_name}")
+            if not dry_run:
+                self._assert_contract_satisfied(crew_name)
             self._state["crews"][crew_name]["dry_run"] = bool(dry_run)
             self._persist()
 
