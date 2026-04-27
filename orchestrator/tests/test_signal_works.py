@@ -28,3 +28,28 @@ def test_upsert_signal_works_lead_calls_supabase():
         sql_call = mock_cursor.execute.call_args[0][0]
         assert "leads" in sql_call.lower()
         assert "signal_works" in mock_cursor.execute.call_args[0][1]
+
+
+def test_scraper_returns_valid_lead_shape():
+    """scrape_google_maps_leads returns list of dicts with required fields."""
+    from signal_works.lead_scraper import scrape_google_maps_leads
+    from unittest.mock import patch
+    with patch("signal_works.lead_scraper._fetch_maps_results") as mock_fetch:
+        mock_fetch.return_value = [
+            {
+                "name": "Test Dental",
+                "phone": "801-555-0001",
+                "website": "https://testdental.com",
+                "rating": 4.5,
+                "review_count": 62,
+                "maps_url": "https://maps.google.com/?cid=99",
+            }
+        ]
+        results = scrape_google_maps_leads("pediatric dentist", "Salt Lake City", min_reviews=20, max_reviews=100)
+        assert len(results) >= 1
+        r = results[0]
+        assert "name" in r
+        assert "review_count" in r
+        assert r["review_count"] >= 20
+        assert "niche" in r
+        assert "city" in r
