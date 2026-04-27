@@ -3,28 +3,26 @@ signal_works/send_drafts.py
 Daily runner: renders personalized HTML emails for un-drafted leads and
 creates Gmail drafts in boubacar@catalystworks.consulting.
 
-ARCHITECTURE NOTE:
+SAFETY RULE: Drafts with [TEST] in the subject are NEVER marked as drafted.
+Only run --mark-drafted after you have reviewed real (non-test) drafts in Gmail.
+
+ARCHITECTURE:
   Gmail draft creation uses the Gmail MCP tool (mcp__claude_ai_Gmail__create_draft).
-  This script generates the payloads; Claude Code session creates the drafts via MCP.
+  This script generates the payloads; a Claude Code session creates the drafts via MCP.
 
-  Run this script to get the draft payloads:
-    python -m signal_works.send_drafts --export
-
-  Or run it in --dry-run mode to validate rendering without touching Gmail or DB.
-
-Daily flow:
-  1. Run harvester first to ensure >= 10 email-eligible leads exist:
-       python -m signal_works.run_pipeline --niche "roofer" --city "Salt Lake City"
-  2. Export payloads:
-       python -m signal_works.send_drafts --export
-  3. Claude session reads payloads and calls Gmail MCP to create drafts.
-  4. Mark drafted: python -m signal_works.send_drafts --mark-drafted
+Daily flow (automated at 07:00 MT):
+  1. topup_leads.py runs first -- harvests until >= 10 email leads exist
+  2. send_drafts.py --export writes draft_payloads.json
+  3. Claude session reads payloads and calls Gmail MCP to create drafts
+  4. send_drafts.py --mark-drafted marks them drafted in DB
 
 Usage:
-  python -m signal_works.send_drafts --dry-run       # validate rendering only
-  python -m signal_works.send_drafts --export        # write draft_payloads.json
-  python -m signal_works.send_drafts --mark-drafted  # mark all un-drafted as drafted
-  python -m signal_works.send_drafts --count         # print how many ready to draft
+  python -m signal_works.send_drafts --dry-run          # validate rendering only
+  python -m signal_works.send_drafts --dry-run --test   # dry run with [TEST] subjects
+  python -m signal_works.send_drafts --export           # write draft_payloads.json (real)
+  python -m signal_works.send_drafts --export --test    # write payloads with [TEST] subjects
+  python -m signal_works.send_drafts --mark-drafted     # mark drafted (NEVER after --test)
+  python -m signal_works.send_drafts --count            # print count of ready leads
 """
 import argparse
 import json
@@ -49,40 +47,69 @@ def count_ready() -> int:
     return len(leads)
 
 
-def export_payloads(limit: int = DAILY_MINIMUM) -> list[dict]:
-    """Render HTML for each un-drafted lead. Returns list of draft payload dicts."""
+def export_payloads(limit: int = DAILY_MINIMUM, test_mode: bool = False) -> list[dict]:
+    """Render HTML for each un-drafted lead. Returns list of draft payload dicts.
+
+    test_mode=True: prepends [TEST] to every subject.
+    IMPORTANT: Leads are NOT marked as drafted after a test run.
+    Only call --mark-drafted for real (non-test) exports.
+    """
     leads = get_leads_for_drafting(limit=limit)
 
     if not leads:
-        logger.info("No un-drafted leads. Run the harvester first.")
+        logger.info("No un-drafted leads. Run: python -m signal_works.topup_leads")
         return []
 
     if len(leads) < DAILY_MINIMUM:
         logger.warning(
             f"Only {len(leads)} leads ready -- below the {DAILY_MINIMUM}/day minimum. "
-            "Run the harvester: python -m signal_works.run_pipeline"
+            "Run: python -m signal_works.topup_leads"
         )
 
     payloads = []
     for lead in leads:
+        subject = _subject(lead)
+        if test_mode:
+            subject = f"[TEST] {subject}"
         payloads.append({
             "lead_id": lead["id"],
             "name": lead["name"],
             "to": lead["email"],
-            "subject": _subject(lead),
+            "subject": subject,
             "html": render_html(lead),
+            "is_test": test_mode,
         })
-        logger.info(f"Rendered: {lead['name']} <{lead['email']}>")
+        prefix = "[TEST] " if test_mode else ""
+        logger.info(f"Rendered: {prefix}{lead['name']} <{lead['email']}>")
 
     with open(EXPORT_PATH, "w", encoding="utf-8") as f:
         json.dump(payloads, f, ensure_ascii=False, indent=2)
 
-    logger.info(f"Exported {len(payloads)} draft payloads -> {EXPORT_PATH}")
+    logger.info(f"Exported {len(payloads)} payloads -> {EXPORT_PATH}")
+    if test_mode:
+        logger.warning(
+            "TEST MODE: Do NOT run --mark-drafted after reviewing these drafts. "
+            "Leads remain un-drafted so real emails can be sent later."
+        )
     return payloads
 
 
 def mark_all_drafted(limit: int = DAILY_MINIMUM) -> int:
-    """Mark up to `limit` un-drafted leads as drafted (call after Gmail MCP push)."""
+    """Mark up to `limit` un-drafted leads as drafted.
+
+    SAFETY: Refuses to run if draft_payloads.json contains any [TEST] subjects.
+    """
+    if EXPORT_PATH.exists():
+        with open(EXPORT_PATH, encoding="utf-8") as f:
+            payloads = json.load(f)
+        test_subjects = [p["subject"] for p in payloads if "[TEST]" in p.get("subject", "")]
+        if test_subjects:
+            logger.error(
+                f"BLOCKED: {len(test_subjects)} payload(s) have [TEST] in subject. "
+                "Re-run --export without --test before marking as drafted."
+            )
+            return 0
+
     conn = get_crm_connection()
     try:
         cur = conn.cursor()
@@ -114,7 +141,7 @@ def mark_all_drafted(limit: int = DAILY_MINIMUM) -> int:
         conn.close()
 
 
-def dry_run(limit: int = DAILY_MINIMUM) -> int:
+def dry_run(limit: int = DAILY_MINIMUM, test_mode: bool = False) -> int:
     leads = get_leads_for_drafting(limit=limit)
     if not leads:
         logger.info("No un-drafted leads found.")
@@ -123,8 +150,12 @@ def dry_run(limit: int = DAILY_MINIMUM) -> int:
         logger.warning(f"Only {len(leads)} leads ready -- need {DAILY_MINIMUM} minimum.")
     for lead in leads:
         subject = _subject(lead)
+        if test_mode:
+            subject = f"[TEST] {subject}"
         html = render_html(lead)
         logger.info(f"[DRY RUN] {lead['name']} <{lead['email']}> | {subject} | {len(html)} chars")
+    if test_mode:
+        logger.info("TEST MODE: No DB changes. Leads remain un-drafted.")
     logger.info(f"Dry run complete. {len(leads)} emails would be drafted.")
     return len(leads)
 
@@ -133,9 +164,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Signal Works draft runner")
     parser.add_argument("--limit", type=int, default=DAILY_MINIMUM)
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--export", action="store_true", help="Write draft_payloads.json")
-    parser.add_argument("--mark-drafted", action="store_true", help="Mark un-drafted leads as drafted")
-    parser.add_argument("--count", action="store_true", help="Print count of leads ready to draft")
+    parser.add_argument("--test", action="store_true",
+                        help="Add [TEST] to subjects. Leads are NOT marked drafted.")
+    parser.add_argument("--export", action="store_true",
+                        help="Write draft_payloads.json for Gmail MCP")
+    parser.add_argument("--mark-drafted", action="store_true",
+                        help="Mark un-drafted leads as drafted (real emails only)")
+    parser.add_argument("--count", action="store_true",
+                        help="Print count of leads ready to draft")
     args = parser.parse_args()
 
     if args.count:
@@ -143,10 +179,13 @@ if __name__ == "__main__":
         print(f"{n} leads ready to draft")
         sys.exit(0 if n >= DAILY_MINIMUM else 1)
     elif args.dry_run:
-        dry_run(limit=args.limit)
+        dry_run(limit=args.limit, test_mode=args.test)
     elif args.export:
-        export_payloads(limit=args.limit)
+        export_payloads(limit=args.limit, test_mode=args.test)
     elif args.mark_drafted:
+        if args.test:
+            logger.error("Cannot combine --mark-drafted with --test. That would defeat the safety check.")
+            sys.exit(1)
         mark_all_drafted(limit=args.limit)
     else:
         parser.print_help()
