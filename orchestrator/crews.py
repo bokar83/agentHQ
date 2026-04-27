@@ -1001,6 +1001,8 @@ def build_newsletter_crew(user_request: str) -> Crew:
     """
     Crew for: newsletter
     Drafts newsletter content in Boubacar's voice using leGriot.
+    Voice standard: colleague walking alongside the reader, not professor lecturing.
+    Personal stories from Boubacar's real experience. Citations with superscripts.
     """
     planner = build_planner_agent()
     griot = build_social_media_agent()
@@ -1011,11 +1013,20 @@ def build_newsletter_crew(user_request: str) -> Crew:
         Plan a newsletter issue for:
         REQUEST: {user_request}
 
-        Identify: audience segment, core insight or story to lead with,
-        3-5 section structure (hook, body, CTA), and any relevant links
-        or resources to include.
+        Identify:
+        - The one real story or personal experience from Boubacar's life that
+          anchors this issue. If none is provided, note that griot must use a
+          clearly labeled hypothetical ("Picture this..." / "Imagine if...").
+        - The core insight the reader walks away with -- framed as something
+          Boubacar learned the hard way, not a lesson he is teaching down to them.
+        - 3-5 section structure: hook (story open), body (what happened / what it
+          means), practical takeaway (what the reader can do today), CTA.
+        - Any external facts, stats, or studies that would strengthen the piece
+          and will need citations (superscript numbers in body, full source at bottom).
+        - Tone check: is the planned angle collegial and warm, or does it drift
+          toward professorial? Flag any section that lectures rather than shares.
         """,
-        expected_output="Newsletter plan with structure, audience, and key insight",
+        expected_output="Newsletter plan: anchor story, core insight, section structure, facts needing citations, tone flags",
         agent=planner
     )
 
@@ -1024,31 +1035,79 @@ def build_newsletter_crew(user_request: str) -> Crew:
         Write the newsletter for:
         REQUEST: {user_request}
 
-        Write in Boubacar's voice: direct, insightful, specific, and real.
-        Format: subject line, preview text, hook (2-3 sentences), body
-        sections with subheadings, and a clear CTA. 400-600 words total.
-        No buzzword soup. No fabricated client stories.
-        Save using save_output.
+        VOICE STANDARD -- NON-NEGOTIABLE:
+        - Boubacar is walking ALONGSIDE the reader, not ahead of them. He is a
+          colleague and a friend sharing what he lived through, not a professor
+          delivering a lecture. Never talk down. Never explain what the reader
+          should already know.
+        - Lead with a real personal story or experience. If none was provided,
+          open with "Picture this..." or "Imagine if..." to signal it is
+          hypothetical. NEVER invent a story and present it as real.
+        - The point of the story is: "I made this mistake / had this moment /
+          noticed this thing -- here is what it cost me and what I learned, so
+          you do not have to go through the same thing."
+        - Wit and warmth are required. This should be easy and fun to read.
+          A reader should finish it and want to forward it to someone.
+        - No buzzword soup. No "synergy," "leverage," "disruptive," or
+          "transformative." Write like a smart friend texting you something real.
+        - No em dashes. Rewrite any sentence that needs one.
+
+        CITATIONS -- REQUIRED when using external facts or stats:
+        - Every external stat, study, quote, or framework gets a superscript
+          number inline: e.g. "Companies using AI report 40% faster turnaround[1]"
+        - At the very end of the newsletter, after the CTA, include a
+          "Sources" section with numbered citations:
+          [1] Author/Org, "Title," Publication, Year. URL if available.
+        - If no external facts are used, omit the Sources section entirely.
+        - NEVER cite something you cannot verify. If unsure, flag it for
+          Boubacar to verify before sending.
+
+        FORMAT:
+        Subject line: (compelling, specific, not clickbait)
+        Preview text: (one sentence, 90 chars max)
+        ---
+        [Body: hook story, 2-3 body sections with light subheadings, CTA]
+        ---
+        Sources: (if applicable)
+        [1] ...
+
+        Length: 400-600 words in the body. Save using save_output.
         """,
-        expected_output="Full newsletter draft with subject line, preview text, and body",
+        expected_output="Full newsletter: subject line, preview text, body with inline citation superscripts, Sources section if applicable",
         agent=griot,
         context=[task_plan]
     )
 
     task_qa = Task(
         description=f"""
-        Review the newsletter. Does it sound like Boubacar? Is the subject
-        line compelling? Does the CTA ask for one clear action?
+        Review the newsletter against Boubacar's voice standard.
         Original request: {user_request}
 
+        CHECK EACH OF THESE -- flag any that fail:
+        1. COLLEAGUE VOICE: Does it feel like a friend sharing, or a professor
+           teaching? Any sentence that explains something to the reader as if
+           they do not know it = rewrite it.
+        2. STORY ANCHOR: Is there a real (or clearly labeled hypothetical) personal
+           story? Does it open the piece? Is it specific and vivid?
+        3. NO INVENTED FACTS: Every first-person narrative must have been provided
+           by Boubacar or labeled hypothetical. Flag anything that reads as invented.
+        4. CITATIONS: Every external stat or study has a superscript number. Sources
+           section at the bottom matches every number used in the body.
+        5. FORWARDABILITY: Would a reader finish this and immediately want to send
+           it to someone? If not, what is flat or generic?
+        6. WIT AND WARMTH: Is there at least one moment of real wit or warmth?
+           Not forced humor -- genuine personality.
+        7. NO EM DASHES: Flag any em dash and rewrite the sentence.
+        8. CTA: Is there exactly one clear action asked of the reader?
+
         OUTPUT FORMAT (mandatory every time):
-        WHAT WAS DONE: [what newsletter was created and for which audience]
-        WHY IT WAS DONE THIS WAY: [voice and angle decisions]
-        QUALITY CHECK: PASSED or QUALITY CHECK: REVISED -- [what was fixed]
+        WHAT WAS DONE: [topic, audience, anchor story used]
+        WHY IT WAS DONE THIS WAY: [voice and structural decisions]
+        QUALITY CHECK: PASSED or QUALITY CHECK: REVISED -- [exactly what was fixed]
         DELIVERABLE:
-        [Full newsletter in final form -- always included, never omitted]
+        [Full newsletter in final form -- always included, never omitted, including Sources]
         """,
-        expected_output="Structured QA report followed by the full newsletter",
+        expected_output="QA report against all 8 checks, then the full final newsletter",
         agent=qa,
         context=[task_write]
     )
