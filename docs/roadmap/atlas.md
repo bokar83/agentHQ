@@ -917,3 +917,20 @@ M11c placed on TRIPLE HOLD. No measured quality gap in research engine productio
 - M9b web chat: next priority after deploy
 
 ---
+
+### 2026-04-27: NotebookLM skill + Drive Watch + Deliverable Pipeline
+
+**What shipped:**
+
+- NotebookLM CLI skill installed locally + VPS (`~/.claude/skills/notebooklm/`). Auth wired. Auto-refresh cron live (VPS, every 3 days, Telegram alert on failure).
+- Drive Watch enabled (`DRIVE_WATCH_ENABLED=true`). 60-min scan of `NotebookLM_Library` root. New files auto-classified and moved to correct subfolder.
+- Routing matrix: 12 rules + P0 skool guard. 19/19 test cases pass. 3 exclusion categories (scripts, raw HTML, `.py`/`.js`/`.sh`). Signal keywords complete.
+- Deliverable pipeline: `SAVE_REQUIRED_TASK_TYPES` -> Drive via `saver.py`. `CONTENT_TASK_TYPES` -> Drive + Notion content board Draft entry with `Drive Link`. New `nlm_artifact` task type for NLM podcasts/slides.
+- Notion content board field confirmed as `Drive Link` (url type). `saver.py` fixed to use correct field name.
+- 11 docs backfilled into CW_* notebooks. Drive vs NLM audit complete: one gap found and filled (`pipeline-playbook`). All `notebooklm_pending_docs` resolved.
+- Daily Postgres-to-Sheets export built (`scripts/nlm_registry_export.py`). VPS cron 06:00 UTC daily.
+
+**What is NOT done (next session):**
+
+- End-to-end test: trigger real `social_content` task, confirm Drive + Notion entries appear.
+- Google Drive Organizer / Cleanup Agent (Ideas DB, high effort, prerequisite for full-Drive sync at scale).
