@@ -1033,3 +1033,31 @@ in the weekly model review agent (first run: Sunday 2026-05-03 08:00 MT).
 343/343 tests pass. Deployed to VPS.
 
 ---
+
+### 2026-04-27: Blotato 201 bug fixed + test infrastructure repaired
+
+**Bug found:** auto-publisher fired at 07:01 MT and posted "One constraint nobody has named yet" to X via Blotato. Blotato returned HTTP 201 (Created), but `blotato_publisher.py` only accepted 200. It raised `RuntimeError`, flipped the Notion record to `PublishFailed`, and never polled for the result. The post (submission ID `555b3507`) was live on X at `https://x.com/boubacarbarry/status/2048749476999811174`.
+
+**Fixes shipped (commit a469bfa):**
+- `orchestrator/blotato_publisher.py`: all three status checks changed from `!= 200` to `not in (200, 201)`
+- `orchestrator/skills/doc_routing/doc_routing_crew.py`: fixed bare `from doc_routing.*` imports to `from skills.doc_routing.*`
+- `orchestrator/conftest.py` + `orchestrator/pytest.ini` (new): add both agentsHQ root and orchestrator to sys.path so `skills.*` namespace package resolves correctly in all test files
+- `orchestrator/tests/test_doc_routing/conftest.py` (new): secondary path insert for the doc_routing test package
+- `orchestrator/tests/test_doc_routing/__init__.py` (deleted): was forcing package-mode import which blocked namespace resolution
+- `orchestrator/tests/test_blotato_publisher.py`: added `test_publish_http_201_accepted_as_success`
+- `orchestrator/tests/test_signal_works.py`: fixed stale test assertion (force INSERT path via `fetchone.return_value = None`)
+
+**Notion record 341bcf1a repaired manually:** Status=Posted, X Posted URL + Submission ID set.
+
+**Test result:** 370/370 pass (up from 353; 17 previously-broken doc_routing tests now pass). Deployed to VPS at `70aa317`.
+
+**NLM export cron:** fired at 06:00 UTC, not yet checked (fires tonight).
+
+**M9c gate:** still holds. 1 week of M9b usage required before cross-session memory build.
+
+**Next session:**
+1. Check `/var/log/nlm_registry_export.log` on VPS (first run fired tonight)
+2. M9c (cross-session memory): after 2026-05-03 (1 week of M9b)
+3. M5 (Chairman / L5 Learning): gate opens 2026-05-08
+
+---
