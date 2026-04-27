@@ -1,0 +1,257 @@
+{
+  "name": "Create Video (Veo3-fast via Kie AI)",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/veo/generate",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"prompt\":{{ JSON.stringify($json.video_prompt) }},\n  \"model\": \"veo3_fast\",\n  \"aspectRatio\": \"{{ $json.aspect_ratio }}\",\n  \"imageUrls\": \"{{ $json.image_reference }}\",\n  \"enableFallback\": true\n}\n\n\n",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1904,
+        464
+      ],
+      "id": "6e7f186e-6093-453c-a0f0-d71e147a9041",
+      "name": "Create Video",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GY8EwBg1KMzSwh9X",
+          "name": "Kie AI Credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 60
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2064,
+        464
+      ],
+      "id": "8c1398a4-dc51-478a-bfcb-1d875a73157a",
+      "name": "Wait 2",
+      "webhookId": "6831d9a2-576d-49cb-8f28-4faeeae50b14"
+    },
+    {
+      "parameters": {
+        "url": "https://api.kie.ai/api/v1/veo/record-info",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "taskId",
+              "value": "={{ $('Create Video').item.json.data.taskId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2432,
+        464
+      ],
+      "id": "b39d5cf2-b310-4b46-9349-3f035489aaaf",
+      "name": "Get Video",
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GY8EwBg1KMzSwh9X",
+          "name": "Kie AI Credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 60
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2176,
+        464
+      ],
+      "id": "0d2fdf77-7e6c-42ac-9d4d-9547e98528d4",
+      "name": "Wait ",
+      "webhookId": "6831d9a2-576d-49cb-8f28-4faeeae50b14"
+    },
+    {
+      "parameters": {
+        "amount": 60
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2288,
+        464
+      ],
+      "id": "5a5686f4-115e-4c32-bbf5-4f39534f3c1b",
+      "name": "Wait 1",
+      "webhookId": "6831d9a2-576d-49cb-8f28-4faeeae50b14"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "92155caa-4151-415e-a940-b1c0eaef6ca6",
+              "name": "video_result",
+              "value": "={{ $json.data.response.resultUrls[0] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2656,
+        464
+      ],
+      "id": "b93669d2-8863-4597-8c89-768cc58268d9",
+      "name": "Return"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "video_prompt"
+            },
+            {
+              "name": "aspect_ratio"
+            },
+            {
+              "name": "image_reference"
+            }
+          ]
+        }
+      },
+      "id": "2a3d295c-19e4-48be-b9f1-69695e62b9a7",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        1664,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# Create Video  (Veo3-Fast via Kie AI)\n### by Jay E from RoboNuggets🥚",
+        "height": 96,
+        "width": 752,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1872,
+        304
+      ],
+      "id": "ccafeda4-1402-4cd6-acfe-8b9075f391ed",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Create Video": {
+      "main": [
+        [
+          {
+            "node": "Wait 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2": {
+      "main": [
+        [
+          {
+            "node": "Wait ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait ": {
+      "main": [
+        [
+          {
+            "node": "Wait 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 1": {
+      "main": [
+        [
+          {
+            "node": "Get Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Video": {
+      "main": [
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Create Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "7a561d04-2ddf-483b-a5fd-c49f48b5158d",
+  "meta": {
+    "instanceId": "addaa68bf5af965c06c3765c811549851eb65db8df4677e0c6253726ffcac493"
+  },
+  "id": "QM1koLqcQGOD9kSz",
+  "tags": []
+}

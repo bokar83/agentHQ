@@ -1,0 +1,610 @@
+{
+  "name": "n27 | Sora2 Character Cameos",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## INPUT Section",
+        "height": 144,
+        "width": 288,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        176
+      ],
+      "id": "5188ebdb-3f4b-49ec-b3d1-610266c582c8",
+      "name": "Sticky Note",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        432
+      ],
+      "id": "cd88aad8-204d-47ad-aa40-54eba4f8f380",
+      "name": "Wait",
+      "webhookId": "ab419d4f-5ecc-4043-8592-4cce5e6f382e"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a96f17f2-5967-4b13-acc9-4d41f226453b",
+                    "leftValue": "={{ $json.data.state }}",
+                    "rightValue": "=success",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "success"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "52ad92ea-901f-4af8-a462-84b045dd2803",
+                    "leftValue": "={{ $json.data.state }}",
+                    "rightValue": "ing",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "in progress"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        480,
+        432
+      ],
+      "id": "298aa675-cbe2-4964-9b3b-d0c86b00e26a",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        256,
+        144
+      ],
+      "id": "a8e1b98c-9676-4850-9f76-dec3f0636506",
+      "name": "GPT",
+      "credentials": {
+        "openAiApi": {
+          "id": "NyuhXI96tWK9dR2J",
+          "name": "OpenAi account 4"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1,
+      "position": [
+        384,
+        192
+      ],
+      "id": "003d126a-3f98-4866-9c14-c30c0057db15",
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"scenes\": [\n    {\n      \"task_id\": 1,\n      \"Title\": \"Title here\",\n      \"Caption\": \"Short caption with emoji 😀 #topic1 #topic2 #topic3 #topic4 #popular1 #popular2 #popular3 #popular4 #trend1 #trend2 #trend3 #trend4\",\n      \"Prompt\": \"Prompt here with @cameo if applicable\",\n      \"aspect_ratio\": \"16:9\",\n      \"image_reference\": \"https://example.com/image.jpg\",\n      \"model\": \"sora2 or sora2-pro\",\n      \"duration\": \"10 or 15\"\n    }\n  ]\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        304
+      ],
+      "id": "458ac51d-84c2-4e44-87de-cf2d961d75d8",
+      "name": "Structure"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output.scenes",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        432
+      ],
+      "id": "92164b5e-ba9a-4c07-8854-0a381b253fbb",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=\nNumber of clips {{ $('Form').item.json['How many clips'] }}\nThe cameo to include is: {{ $('Form').item.json.Cameos }}\n\nDescription of scenes:\n{{ $('Form').item.json['Describe the scenes you want'] }}\n\nThe size, duration, and quality: {{ $('Form').item.json['Size, duration, and quality of video'] }}\n\n\n\n\n________\n\n\n\nIf provided, here is the Image reference URL: \n{{ $json.data.downloadUrl }}\n\n\nHere's the description of the image reference if it is provided:\n{{ $('Form').item.json['Product description'] }}\n\n__________\n\nAlways use the Think tool",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=system_prompt: |\n  ## SYSTEM PROMPT: Video Scene Prompt Expander 🎬\n\n  A – Ask:\n    Suggest detailed video prompts based on the user’s input. Make sure to analyze and follow the user's description of the scenes to generate the best prompts. Output count is defined by the user.\n\n  G – Guidance:\n    role: Visual director or prompt artist\n    output_count: As specified by the user\n    constraints: \n      - Always follow the user’s tone, brand, or direction.\n      - If a dialogue or script is specified, make sure to use that across ALL prompts\n      - Keep the prompts simple but structured, aligning the order of the elements in the example below.\n      - Never use copyrighted or trademarked characters, brands, or IP.\n      - The aspect_ratio field must be either \"9:16\" (portrait) or \"16:9\" (landscape). No other values are allowed.\n      - If the user provides an `image_reference` URL, copy it exactly into the output.\n      - If a `cameo` is provided, include it in the **Prompt** as a tagged @mention (e.g., @username) per user instruction. The @mention should be the core character of the prompt and must be placed near the top of each prompt\n      - If `cameo` is not provided, do not include any.\n      - The `model` field must be either \"sora2\" or \"sora2-pro\". If not provided, default to \"sora2\".\n      - The `task_id` is an integer provided by the user. Include it in each output exactly as given.\n      - The 'duration' is an integer either 10 or 15 (in seconds). The user may provide a duration so just choose the closest. If none provided, choose 10.\n\nIMPORTANT:\n     - If the user includes in their scene description to \"Use this prompt directly\". Only output the prompt they gave as is without any changes. Ignore all other guidelines above and just output that as the prompt directly copied. But still include and ideate for the other parameters requested like the Title and the Caption.\n\n  E – Examples:\n\nExample structure of the Prompt attribute:\n\n\"\"\"\n[describe the scene at the top of the prompt, basically what happens in the video]\n\ndialogue: none unless requested\nmusic: none unless requested or specified\nmetatokens: [camera used, style of footage, lighting etc]\n\"\"\"\"\n\n  N – Notation:\n    format: JSON\n    example_output: |\n      {\n        \"scenes\": [\n            {\n      \"task_id\": 1,\n      \"Title\": \"Title here\",\n      \"Caption\": \"Short caption with emoji 😀 #topic1 #topic2 \",\n      \"Prompt\": \"Prompt here with @cameo if applicable, check example above for structure\",\n      \"aspect_ratio\": \"16:9\",\n      \"image_reference\": \"https://example.com/image.jpg\",\n      \"model\": \"sora2 or sora2-pro\",\n      \"duration\": \"10 or 15\"\n    }\n        ]\n      }\n\n  T – Tools:\n    You have access to the following tools. Each one is described clearly:\n    - Think Tool: Always use this to reflect and reason before responding.\n\n\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        160,
+        288
+      ],
+      "id": "5445c8c8-b19c-41ca-9192-f6cafa719f4a",
+      "name": "promptRobo AIAgent"
+    },
+    {
+      "parameters": {
+        "content": "# Sora2 Character Cameos - (by RoboNuggets) \n## Author: Jay E | n27",
+        "height": 192,
+        "width": 1632,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -512,
+        48
+      ],
+      "id": "25bbe087-688d-4d17-85ea-64f7adc2024a",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## OUTPUT Section",
+        "height": 144,
+        "width": 288,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        752,
+        192
+      ],
+      "id": "805214af-0cdf-43ba-9086-f755c99f005e",
+      "name": "Sticky Note2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/jobs/createTask",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"model\": \"{{ $json.model === 'sora2-pro' ? ($json.image_reference ? 'sora-2-pro-image-to-video' : 'sora-2-pro-text-to-video') : ($json.image_reference ? 'sora-2-image-to-video' : 'sora-2-text-to-video') }}\",\n  \"input\": {\n    \"prompt\": {{ JSON.stringify($json.Prompt) }},\n    \"aspect_ratio\": \"{{ $json.aspect_ratio === '9:16' ? 'portrait' : ($json.aspect_ratio === '16:9' ? 'landscape' : $json.aspect_ratio) }}\",\n    \"n_frames\": \"{{ $json.duration === '15s' ? '15' : ($json.duration === '10s' ? '10' : '15') }}\",\n\n    {{ $json.image_reference ? '\"image_urls\": [\"' + $json.image_reference + '\"],' : '' }}\n\n    \"remove_watermark\": true{{ $json.model === 'sora2-pro' ? ', \"n_frames\": \"10\", \"size\": \"standard\"' : '' }}\n  }\n}\n",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        96,
+        432
+      ],
+      "id": "4ea3f414-cea0-42c5-81ca-b750195bb0b7",
+      "name": "Create Sora2",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GY8EwBg1KMzSwh9X",
+          "name": "Kie AI Credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Create with Sora2",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Cameos",
+              "placeholder": "add your @cameo"
+            },
+            {
+              "fieldLabel": "How many clips",
+              "fieldType": "number",
+              "placeholder": "1",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Describe the scenes you want",
+              "placeholder": "I want the dialogue to be...",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Product image",
+              "fieldType": "file",
+              "multipleFiles": false
+            },
+            {
+              "fieldLabel": "Product description",
+              "placeholder": "tip: copy from your website"
+            },
+            {
+              "fieldLabel": "Size, duration, and quality of video",
+              "placeholder": "Default is vertical, 10sec, and sora2 cheaper model"
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -336,
+        272
+      ],
+      "id": "c653b21f-4e10-443d-abd0-6dd01d9526bb",
+      "name": "Form",
+      "webhookId": "896aed00-b6a4-4e3f-9ec6-8b91158e7973"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://kieai.redpandaai.co/api/file-base64-upload",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "base64Data",
+              "value": "={{ $json.data }}"
+            },
+            {
+              "name": "uploadPath",
+              "value": "documents/uploads"
+            },
+            {
+              "name": "fileName",
+              "value": "={{ $now }}.jpg"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2000
+            }
+          }
+        }
+      },
+      "id": "184d9896-82e5-4b9a-8ea3-c848c2af66ca",
+      "name": "Image URL",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -336,
+        528
+      ],
+      "typeVersion": 4,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GY8EwBg1KMzSwh9X",
+          "name": "Kie AI Credential"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "binaryPropertyName": "Product_image",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        400
+      ],
+      "id": "4054fc8e-087c-42e2-86d4-e5b5e9f71cd5",
+      "name": "Load Image",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.kie.ai/api/v1/jobs/recordInfo?taskId={{ $('Create Sora2').item.json.data.taskId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        352,
+        432
+      ],
+      "id": "e24dc5d5-0bb6-4be7-a6c2-45d7ab53a89d",
+      "name": "Get Sora2",
+      "alwaysOutputData": false,
+      "retryOnFail": false,
+      "waitBetweenTries": 5000,
+      "executeOnce": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GY8EwBg1KMzSwh9X",
+          "name": "Kie AI Credential"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "={{ JSON.parse($json.data.resultJson).resultUrls[0] }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        848,
+        288
+      ],
+      "id": "4b087482-41ac-40fa-bd55-55b09e7d9e2a",
+      "name": "Load Video"
+    },
+    {
+      "parameters": {
+        "fileName": "={{ $('Split Out').item.json.Title }}_{{ $execution.id }}.mp4",
+        "binaryData": true
+      },
+      "type": "n8n-nodes-base.box",
+      "typeVersion": 1,
+      "position": [
+        848,
+        416
+      ],
+      "id": "f28af384-3871-4cb2-a074-24431a0a26c7",
+      "name": "Upload Video",
+      "credentials": {
+        "boxOAuth2Api": {
+          "id": "z1F7fuocI0Mht5WE",
+          "name": "Box account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ $('Get Sora2').item.json.data.failMsg }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        848,
+        560
+      ],
+      "id": "20814190-61e7-433b-9bd3-8218475fedaa",
+      "name": "Stop and Error"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Get Sora2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Load Video",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "promptRobo AIAgent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "promptRobo AIAgent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structure": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "promptRobo AIAgent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Create Sora2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "promptRobo AIAgent": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Sora2": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Form": {
+      "main": [
+        [
+          {
+            "node": "Load Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image URL": {
+      "main": [
+        [
+          {
+            "node": "promptRobo AIAgent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Image": {
+      "main": [
+        [
+          {
+            "node": "Image URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Sora2": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Video": {
+      "main": [
+        [
+          {
+            "node": "Upload Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c6aaa429-3b10-4984-8e0e-a81192263992",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "addaa68bf5af965c06c3765c811549851eb65db8df4677e0c6253726ffcac493"
+  },
+  "id": "a0AP2CKji9BH1TjD",
+  "tags": []
+}

@@ -131,10 +131,28 @@ generate_video(prompt: str, aspect_ratio: str = "16:9",
                task_type: str = "text_to_video",
                linked_content_id: str | None = None) -> dict
 
+generate_promo_video(
+    image_urls: list[str],             # 2-5 publicly accessible screenshot URLs
+    subject_descriptions: list[str],   # one plain-English label per image
+    accent_color: str = "",            # brand accent, e.g. "orange"
+    duration_hint: str = "10",         # "4" | "6" | "10" | "15" -- 10s is the sweet spot
+    custom_prompt: str | None = None,  # override the auto-generated liquid glass prompt
+    linked_content_id: str | None = None,
+) -> dict
+
 list_models(task_type: str | None = None) -> dict
 
 check_credits() -> int
 ```
+
+### When to use `generate_promo_video` vs `generate_video`
+
+| You want...                                              | Use                                                     |
+| -------------------------------------------------------- | ------------------------------------------------------- |
+| A cinematic liquid glass promo from app/site screenshots | `generate_promo_video` (Seedance 2, reference-to-video) |
+| A standard text-to-video or image-to-video clip          | `generate_video` (Veo3/Kling/Runway ladder)             |
+
+`generate_promo_video` always uses Seedance 2 via Kie. There is no fallback ladder. If Seedance fails, it reports clearly rather than falling back to a different aesthetic.
 
 Each `generate_*` returns:
 ```python
@@ -179,6 +197,7 @@ Wired in `orchestrator/tools.py` and bundled as `MEDIA_TOOLS`:
 
 - `kie_generate_image`
 - `kie_generate_video`
+- `kie_generate_promo_video`
 - `kie_list_models`
 - `kie_check_credits`
 

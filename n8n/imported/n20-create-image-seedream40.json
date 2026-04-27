@@ -1,0 +1,194 @@
+{
+  "name": "Create Image (Seedream 4.0 via Kie AI)",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/jobs/createTask",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"bytedance/seedream-v4-edit\",\n  \"input\":{\n  \"prompt\": {{ JSON.stringify($json.image_prompt) }},\n  \"image_urls\": [\"{{ $json.image_reference }}\"\n  ],\n  \"image_size\": \"{{ $json.aspect_ratio === \"9:16\" ? \"portrait_16_9\" : ($json.aspect_ratio === \"16:9\" ? \"landscape_16_9\" : $json.aspect_ratio) }}\"\n}\n\n\n}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1152,
+        592
+      ],
+      "id": "caede81d-27ef-4d07-91bd-6c6fb9277ce9",
+      "name": "Create Image",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GY8EwBg1KMzSwh9X",
+          "name": "Kie AI Credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.kie.ai/api/v1/jobs/recordInfo",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "taskId",
+              "value": "={{ $('Create Image').item.json.data.taskId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1648,
+        592
+      ],
+      "id": "bc3beb2b-8d94-4f57-80a8-9557e9886d2d",
+      "name": "Get Image",
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GY8EwBg1KMzSwh9X",
+          "name": "Kie AI Credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 60
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1392,
+        592
+      ],
+      "id": "59db42ae-29aa-4518-952c-20bc75483bdc",
+      "name": "Wait2",
+      "webhookId": "764fde22-6a90-4f26-ad14-8b30c5b8078e"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ea52740c-ba3b-4a73-82ee-2b7a0b9d7e01",
+              "name": "image_result",
+              "value": "={{ JSON.parse($json.data.resultJson).resultUrls[0] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1840,
+        592
+      ],
+      "id": "5ffc17df-6605-4872-a212-e34aa519fd87",
+      "name": "Return"
+    },
+    {
+      "parameters": {
+        "content": "# Create Image (Seedream 4.0 💤 via Kie AI)\n### by Jay E from RoboNuggets🥚",
+        "height": 96,
+        "width": 752,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1072,
+        480
+      ],
+      "id": "95088c00-a9b8-4c82-af96-6568f5b481dd",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "ec8d1e75-4705-4f06-80ac-8b361f352627",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        880,
+        592
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Create Image": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Image": {
+      "main": [
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Get Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Create Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "dc4fcd0d-3ab2-4a28-b650-67c87ed516e6",
+  "meta": {
+    "instanceId": "addaa68bf5af965c06c3765c811549851eb65db8df4677e0c6253726ffcac493"
+  },
+  "id": "Qp7bnbO07q2eRuVU",
+  "tags": []
+}
