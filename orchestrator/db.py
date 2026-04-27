@@ -613,6 +613,85 @@ def ensure_email_jobs_table() -> None:
         conn.close()
 
 
+CREATE_SESSION_SUMMARIES = """
+CREATE TABLE IF NOT EXISTS session_summaries (
+    id            SERIAL PRIMARY KEY,
+    session_id    TEXT NOT NULL,
+    summary       TEXT NOT NULL,
+    turn_count    INTEGER NOT NULL,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    window_end_at TIMESTAMPTZ NOT NULL,
+    tags          TEXT[]
+);
+CREATE INDEX IF NOT EXISTS idx_session_summaries_session
+    ON session_summaries (session_id, created_at DESC);
+"""
+
+
+def ensure_session_summaries_table() -> None:
+    """Create session_summaries table if it does not exist (idempotent)."""
+    conn = get_local_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(CREATE_SESSION_SUMMARIES)
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        logger.warning(f"ensure_session_summaries_table failed: {e}")
+    finally:
+        conn.close()
+
+
+def save_session_summary(session_id: str, summary: str, turn_count: int,
+                         window_end_at: str) -> None:
+    """Persist a compressed session summary."""
+    conn = get_local_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """INSERT INTO session_summaries (session_id, summary, turn_count, window_end_at)
+               VALUES (%s, %s, %s, %s)""",
+            (session_id, summary, turn_count, window_end_at),
+        )
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        logger.warning(f"save_session_summary failed: {e}")
+    finally:
+        conn.close()
+
+
+def get_latest_session_summary(session_id: str, max_age_hours: int = 24) -> dict | None:
+    """Return the most recent summary for a session, within max_age_hours. None if none found."""
+    conn = get_local_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """SELECT summary, turn_count, created_at, window_end_at
+               FROM session_summaries
+               WHERE session_id = %s
+                 AND created_at > NOW() - INTERVAL '%s hours'
+               ORDER BY created_at DESC
+               LIMIT 1""",
+            (session_id, max_age_hours),
+        )
+        row = cur.fetchone()
+        cur.close()
+        if not row:
+            return None
+        return {
+            "summary": row[0],
+            "turn_count": row[1],
+            "created_at": row[2],
+            "window_end_at": row[3],
+        }
+    except Exception as e:
+        logger.warning(f"get_latest_session_summary failed: {e}")
+        return None
+    finally:
+        conn.close()
+
+
 def fetch_pending_email_jobs() -> list[dict]:
     conn = get_local_connection()
     try:
