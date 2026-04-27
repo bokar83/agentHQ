@@ -20,7 +20,7 @@ from typing import Optional
 logger = logging.getLogger("agentsHQ.approval_queue")
 
 # Controlled rejection-feedback vocabulary. Extend in code, not DB.
-KNOWN_FEEDBACK_TAGS = ("off-voice", "wrong-hook", "stale", "too-salesy", "other")
+KNOWN_FEEDBACK_TAGS = ("off-voice", "wrong-hook", "stale", "too-salesy", "enhance", "other")
 
 
 @dataclass
@@ -115,10 +115,13 @@ def enqueue(
     preview = _format_proposal_preview(row)
     msg_id = None
     if chat_id:
-        buttons = [[
-            (f"Approve #{row.id}", f"approve_queue_item:{row.id}"),
-            (f"Reject #{row.id}", f"reject_queue_item:{row.id}"),
-        ]]
+        buttons = [
+            [
+                (f"Approve #{row.id}", f"approve_queue_item:{row.id}"),
+                (f"Enhance #{row.id}", f"enhance_queue_item:{row.id}"),
+                (f"Reject #{row.id}", f"reject_queue_item:{row.id}"),
+            ],
+        ]
         msg_id = send_message_with_buttons(str(chat_id), preview, buttons)
     if msg_id:
         cur.execute(
@@ -136,20 +139,21 @@ def enqueue(
 
 def _format_proposal_preview(row: QueueRow) -> str:
     """One-message preview sent to Boubacar when a proposal is queued."""
-    body_preview = ""
     p = row.payload or {}
-    for key in ("title", "subject", "summary", "body", "text", "content"):
-        if key in p and isinstance(p[key], str):
-            body_preview = p[key][:300]
-            break
-    if not body_preview:
-        body_preview = json.dumps(p)[:300]
+    title = p.get("title", "")
+    platform = p.get("platform", "")
+    post_text = p.get("text") or p.get("body") or p.get("content") or p.get("draft") or ""
+    post_text = post_text.strip()
+
+    platform_label = f" [{platform}]" if platform else ""
+    body_section = post_text if post_text else "(no body)"
+
     return (
-        f"Queue #{row.id} ({row.crew_name} / {row.proposal_type})\n"
+        f"Queue #{row.id}{platform_label}: {title}\n"
         f"---\n"
-        f"{body_preview}\n"
+        f"{body_section}\n"
         f"---\n"
-        f"Reply 'yes' to approve, 'no' to reject, or 'edit: <new text>' to modify."
+        f"Approve to schedule. Enhance to queue for rewrite. Edit: reply 'edit: <new text>'."
     )
 
 

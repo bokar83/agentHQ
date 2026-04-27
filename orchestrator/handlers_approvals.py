@@ -108,6 +108,29 @@ def handle_callback_query(update: dict) -> bool:
         except Exception as e:
             logger.warning(f"callback_query approve_queue_item handling error: {e}")
 
+    elif cb_data.startswith("enhance_queue_item:"):
+        try:
+            qid = int(cb_data.split(":", 1)[1])
+            from approval_queue import reject as _aq_reject, get as _aq_get
+            from notifier import answer_callback_query, send_message
+            qrow = _aq_get(qid)
+            if qrow and qrow.status == "pending":
+                _aq_reject(qid, note="queued-for-enhancement", feedback_tag="enhance")
+                answer_callback_query(cb_id, f"Queued for enhancement #{qid}")
+                title = (qrow.payload or {}).get("title", f"queue #{qid}")
+                send_message(
+                    cb_chat_id,
+                    f"Queue #{qid} ({title}): marked for enhancement.\n"
+                    f"The post body needs work before it can be scheduled. "
+                    f"Update the Draft in Notion and it will re-enter the candidate pool.",
+                )
+            elif qrow:
+                answer_callback_query(cb_id, f"Already {qrow.status}.")
+            else:
+                answer_callback_query(cb_id, "Queue item not found.")
+        except Exception as e:
+            logger.warning(f"callback_query enhance_queue_item handling error: {e}")
+
     elif cb_data.startswith("reject_queue_item:"):
         try:
             qid = int(cb_data.split(":", 1)[1])

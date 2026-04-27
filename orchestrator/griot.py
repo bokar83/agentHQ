@@ -131,6 +131,7 @@ def _row_from_notion(p: dict) -> dict:
         "arc_phase": _get_select(props.get("Arc Phase", {})),
         "total_score": _get_number(props.get("Total Score", {})),
         "hook": _get_text(props.get("Hook", {})),
+        "draft": _get_text(props.get("Draft", {})),
         "scheduled_date": _get_date(props.get("Scheduled Date", {})),
     }
 
@@ -233,7 +234,7 @@ def _split_pool(rows: list, today_iso: str) -> tuple:
     for r in rows:
         if r["status"] == "Ready" and not r["scheduled_date"]:
             if any(pl in {"LinkedIn", "X"} for pl in r["platform"]):
-                if r["title"] or r["hook"]:
+                if r["draft"]:  # must have a post body ready to publish
                     candidates.append(r)
         elif r["status"] in {"Queued", "Posted", "Ready"} and r["scheduled_date"]:
             if r["scheduled_date"] >= cutoff:
@@ -423,6 +424,7 @@ def griot_morning_tick() -> None:
             "arc_priority": top["arc_priority"],
             "total_score": top["total_score"],
             "hook_preview": (top.get("hook") or "")[:280],
+            "text": (top.get("draft") or ""),  # full post body for Telegram preview
             "why_chosen": top.get("why_chosen", ""),
             "score": top.get("score"),
         }
