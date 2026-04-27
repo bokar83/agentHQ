@@ -35,6 +35,24 @@ Diagnostic problem-solver. Eight lenses, equally weighted: Theory of Constraints
 3. **Surgical changes**: touch only what must change.
 4. **Goal-driven execution**: verifiable success criteria, checkpoints, loop back.
 
+## Codex-First Rule
+
+**Default to Codex for all implementation work.** Codex is faster, more surgical, and keeps the main Claude Code context clean. Claude Code handles planning, architecture decisions, Council review, and Notion writes. Codex handles the actual code.
+
+When to use Codex (`/codex:rescue` or via `codex:rescue` skill):
+
+- Any function, class, or file that needs to be written or modified
+- Multi-file changes across orchestrator modules
+- Anything that would take more than 10 lines of code in a Claude Code response
+
+When Claude Code writes code directly:
+
+- One-line fixes (removing an unused import, fixing a typo)
+- Config files and settings with no logic
+- Scaffolding a file that Codex will then fill in
+
+Always `python -m py_compile` every touched file after Codex finishes. Read the result before moving on.
+
 ## Automatic Skill Triggers
 
 Fire without being asked. Check each trigger on every user message.
