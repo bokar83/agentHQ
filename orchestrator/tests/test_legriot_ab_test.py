@@ -94,3 +94,42 @@ def test_rubric_injected_into_scoring_sheet(tmp_path):
     assert "Hook Strength" in sheet or "rubric not found" in sheet
     # Decision rule threshold must be stated
     assert ">= 3" in sheet or "3 points" in sheet
+
+
+def test_run_legriot_handles_non_string_raw_output():
+    """Grok-4 can return a list of function-call objects instead of a string.
+    _run_legriot_for_model must normalize this to a string without crashing.
+    """
+    # Simulate a CrewAI result whose .raw is a list (Grok-4 Pydantic bug)
+    fake_function_call = MagicMock()
+    fake_function_call.content = None
+    fake_function_call.text = None
+    # str() of the mock will give something non-empty
+    list_result = MagicMock()
+    list_result.raw = [fake_function_call]
+
+    with patch("agents.select_llm"):
+        with patch("agents.get_llm", return_value=MagicMock()):
+            with patch("crews.build_social_crew") as mock_crew:
+                mock_crew.return_value.kickoff.return_value = list_result
+                import agents as _agents_mod
+                with patch.object(_agents_mod, "select_llm", return_value=MagicMock()):
+                    result = ab._run_legriot_for_model("test idea", "LinkedIn", "x-ai/grok-4")
+
+    # Must return a string, not raise
+    assert isinstance(result, str)
+
+
+def test_run_legriot_handles_none_raw_output():
+    """If result.raw is None, fall back to str(result) without crashing."""
+    none_result = MagicMock()
+    none_result.raw = None
+
+    with patch("agents.get_llm", return_value=MagicMock()):
+        with patch("crews.build_social_crew") as mock_crew:
+            mock_crew.return_value.kickoff.return_value = none_result
+            import agents as _agents_mod
+            with patch.object(_agents_mod, "select_llm", return_value=MagicMock()):
+                result = ab._run_legriot_for_model("test idea", "LinkedIn", "x-ai/grok-4")
+
+    assert isinstance(result, str)
