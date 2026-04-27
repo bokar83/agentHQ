@@ -416,14 +416,12 @@ def run_chat(message: str, session_key: str = "default") -> dict:
         else:
             raw_reply = (msg.content or "").strip()
 
-        # Parse M9 structured JSON reply. Fall back to plain text on parse failure.
+        # Extract human-readable reply. Never lets raw JSON reach the user.
+        reply = _extract_reply(raw_reply)
         try:
-            parsed = json.loads(raw_reply)
-            reply = parsed.get("reply", raw_reply)
+            parsed = json.loads(raw_reply.strip())
             actions = parsed.get("actions") or []
-        except (json.JSONDecodeError, AttributeError):
-            logger.debug("Chat reply was not JSON; treating as plain text")
-            reply = raw_reply
+        except (json.JSONDecodeError, AttributeError, TypeError):
             actions = []
 
     except Exception as e:
@@ -484,6 +482,41 @@ def run_chat_with_buttons(
 import re as _re
 import uuid as _uuid
 import time as _time
+
+
+def _extract_reply(raw: str) -> str:
+    """
+    Pull the human-readable reply out of whatever the model returned.
+    Handles three cases in priority order:
+      1. Valid M9 JSON with a "reply" key -> extract and return that string
+      2. Raw JSON-looking string (starts with { or [) -> strip the shell,
+         try to pull "reply"/"text"/"content"/"message", else return empty
+      3. Plain text -> return as-is
+    The goal: the user NEVER sees raw JSON, HTML tags, or code wrapper
+    unless they explicitly asked for code.
+    """
+    if not raw:
+        return ""
+    stripped = raw.strip()
+
+    # Try standard M9 JSON parse first
+    if stripped.startswith("{"):
+        try:
+            parsed = json.loads(stripped)
+            # M9 schema: {"reply": "...", "actions": [...]}
+            if "reply" in parsed:
+                return (parsed["reply"] or "").strip()
+            # Fallback keys used by some crew outputs
+            for key in ("text", "content", "message", "result", "output"):
+                if key in parsed and isinstance(parsed[key], str):
+                    return parsed[key].strip()
+            # JSON object but no recognisable text key -- return empty rather than dumping JSON
+            return ""
+        except (json.JSONDecodeError, TypeError):
+            pass
+
+    # Not valid JSON -- plain text or markdown, return as-is
+    return stripped
 
 
 def _resolve_artifact_refs(text: str) -> str:
@@ -640,9 +673,10 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
         else:
             raw_reply = (msg.content or "").strip()
 
+        # Extract human-readable reply. Never lets raw JSON reach the user.
+        reply = _extract_reply(raw_reply)
         try:
-            parsed = json.loads(raw_reply)
-            reply = parsed.get("reply", raw_reply)
+            parsed = json.loads(raw_reply.strip())
             if not actions:
                 actions = parsed.get("actions") or []
             parsed_artifact = parsed.get("artifact")
@@ -657,8 +691,8 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
                     logger.warning(f"artifact save failed: {db_e}")
                 artifact = {"artifact_id": art_id, "type": art_type,
                             "content": parsed_artifact["content"]}
-        except (json.JSONDecodeError, AttributeError):
-            reply = raw_reply
+        except (json.JSONDecodeError, AttributeError, TypeError):
+            pass
 
     except Exception as e:
         logger.error(f"run_atlas_chat LLM call failed: {e}")

@@ -559,6 +559,59 @@
     throw new Error('Timed out (>6 min). The task may still be running \u2014 check Telegram.');
   }
 
+  // Markdown renderer identical to atlas-chat.js -- safe DOM only, no innerHTML
+  function _mdFragment(text) {
+    var frag = document.createDocumentFragment();
+    if (!text) return frag;
+    var parts = text.split(/(```[\s\S]*?```)/g);
+    parts.forEach(function(part) {
+      if (part.startsWith('```')) {
+        var inner = part.replace(/^```[^\n]*\n?/, '').replace(/```$/, '');
+        var pre = document.createElement('pre');
+        var code = document.createElement('code');
+        code.textContent = inner;
+        pre.appendChild(code);
+        frag.appendChild(pre);
+        return;
+      }
+      part.split(/\n\n+/).forEach(function(block) {
+        block = block.trim();
+        if (!block) return;
+        var lines = block.split('\n');
+        var hasDash = lines.some(function(l){return l.startsWith('- ');});
+        if (hasDash && lines.every(function(l){return !l.trim()||l.startsWith('- ');})) {
+          var ul = document.createElement('ul');
+          lines.forEach(function(l){if(l.trim()){var li=document.createElement('li');li.textContent=l.slice(2);ul.appendChild(li);}});
+          frag.appendChild(ul); return;
+        }
+        var numRe = /^\d+\. /;
+        if (lines.some(function(l){return numRe.test(l);}) && lines.every(function(l){return !l.trim()||numRe.test(l);})) {
+          var ol = document.createElement('ol');
+          lines.forEach(function(l){if(l.trim()){var li=document.createElement('li');li.textContent=l.replace(numRe,'');ol.appendChild(li);}});
+          frag.appendChild(ol); return;
+        }
+        var hm = block.match(/^(#{1,3}) (.+)/);
+        if (hm) {
+          var h = document.createElement('h'+Math.min(hm[1].length,3));
+          h.textContent = hm[2]; frag.appendChild(h); return;
+        }
+        var p = document.createElement('p');
+        var re = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g, last=0, m;
+        while ((m=re.exec(block))!==null) {
+          if(m.index>last) p.appendChild(document.createTextNode(block.slice(last,m.index)));
+          var t=m[0],n;
+          if(t.startsWith('**')){n=document.createElement('strong');n.textContent=t.slice(2,-2);}
+          else if(t.startsWith('*')){n=document.createElement('em');n.textContent=t.slice(1,-1);}
+          else{n=document.createElement('code');n.textContent=t.slice(1,-1);}
+          p.appendChild(n); last=m.index+t.length;
+        }
+        if(last<block.length) p.appendChild(document.createTextNode(block.slice(last)));
+        frag.appendChild(p);
+      });
+    });
+    return frag;
+  }
+
   // ── DOM helpers ────────────────────────────────────────────
   function appendMessage(role, text, isoTimestamp) {
     const msgs = document.getElementById('messages');
@@ -567,7 +620,8 @@
 
     const bubble = document.createElement('div');
     bubble.className = 'bubble';
-    bubble.textContent = text;
+    if (role === 'user') { bubble.textContent = text; }
+    else { bubble.appendChild(_mdFragment(text)); }
 
     const meta = document.createElement('div');
     meta.className = 'msg-meta';
