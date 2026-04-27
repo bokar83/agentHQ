@@ -950,3 +950,46 @@ Five files in `thepopebot/chat-ui/` are intentionally NOT committed. Reason docu
 | `OpenDyslexic-Regular.otf` | 176 KB binary font file. Same reason as above. |
 
 These can be deleted from the working directory at any time. They are not referenced by any live code.
+
+---
+
+### 2026-04-26: M9b SHIPPED: Atlas Web Chat Native Panel
+
+**Branch:** `feat/atlas-m9b-web-chat`
+**Save point:** `savepoint-pre-atlas-m9b-20260426`
+**Tests:** 341/341 pass
+
+**What shipped:**
+
+Backend:
+
+- `orchestrator/db.py`: `chat_artifacts` table + startup migration, `save_chat_artifact()`, `get_chat_artifact()`
+- `orchestrator/state.py`: `_confirm_store` dict for write-action pending confirmations (5-min TTL)
+- `orchestrator/handlers_chat.py`: `run_atlas_chat()` using `ATLAS_CHAT_MODEL`, artifact ref resolution, artifact Postgres storage, `forward_to_crew` confirm gate
+- `orchestrator/app.py`: `POST /atlas/chat`, `GET /atlas/job/{job_id}`, `POST /atlas/confirm/{token}`, `POST /atlas/confirm/{token}/cancel`
+
+Frontend:
+
+- `thepopebot/chat-ui/atlas.html`: replaced chat iframe with native panel + sandboxed artifact iframe
+- `thepopebot/chat-ui/atlas-chat.js`: `atlasChat` module; DocumentFragment markdown renderer (DOM APIs only, zero string injection); localStorage session key; 3s job polling; confirm/cancel action handlers
+- `thepopebot/chat-ui/atlas.css`: chat panel, bubble, input row, artifact frame, action button styles
+
+Also in this session:
+
+- `orchestrator/model_review_agent.py` + contract + tests (built by A/B agent, committed to main at `6cb56c5`)
+- Stale `feat/atlas-m10-crew-contract` branches deleted (local + remote); M10 code confirmed on main at `83f9e2b`
+- `.gitignore`: removed erroneous bare `thepopebot/` glob
+
+**M9c scope locked:**
+
+- Model review agent: DONE (pulled forward)
+- Artifact iteration: deferred 1 week post-M9b
+- Cross-session memory: M9c after 1 week of M9b usage
+
+**Next session:**
+
+1. Monday 07:00 MT: verify auto-publish + M9a button tap (check docker logs)
+2. Merge `feat/atlas-m9b-web-chat` to main (Boubacar confirms) then VPS deploy
+3. After deploy: PIN into `/atlas`, send test message, verify native chat responds
+4. M9c (cross-session memory) after 1 week of M9b usage
+5. M5 (Chairman / L5 Learning) gate: 2026-05-08
