@@ -200,8 +200,20 @@ def _opening(lead: dict) -> str:
     niche_raw = (lead.get("niche") or "local business").lower()
     city = lead.get("city", "your city")
     score = lead.get("ai_score", 0)
-    owner = lead.get("owner_name") or ""
-    greeting = f"Hi {owner}," if owner and owner.lower() not in ("", "there") else "Hi,"
+    owner = (lead.get("owner_name") or "").strip()
+    # Fallback: use first word of business name only if it looks like a person's name
+    # (capitalized, not a generic word like "the", "a", "roofing", "dental", etc.)
+    _generic = {"the", "a", "an", "dental", "roofing", "hvac", "air", "heating",
+                "cooling", "pediatric", "family", "services", "llc", "inc", "co",
+                "modern", "professional", "elite", "quality", "best", "top", "pro",
+                "utah", "salt", "lake", "city", "valley", "action", "power",
+                "powerful", "easy", "ez", "mountain", "summit", "apex", "peak",
+                "west", "east", "north", "south", "central", "local", "premier"}
+    if not owner:
+        first_word = name.split()[0] if name.split() else ""
+        if first_word and first_word.lower() not in _generic and first_word[0].isupper():
+            owner = first_word
+    greeting = f"Hi {owner}," if owner else "Hi,"
 
     if _has_no_website(lead):
         # No-website variant: different angle entirely
