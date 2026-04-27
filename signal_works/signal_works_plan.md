@@ -471,5 +471,5 @@ Competitors are manually building every piece. Signal Works runs on a production
 | `docs/superpowers/specs/2026-04-27-signal-works-design.md` | Full design spec |
 | `docs/superpowers/plans/2026-04-27-signal-works-monday-build.md` | Build plan |
 | `signal_works/signal_works_business_plan.md` | Full business plan |
-| `output/websites/signal-works-demo-dental/` | Dental niche demo site |
-| `output/websites/signal-works-demo-roofing/` | Roofing niche demo site |
+| `bokar83/signal-works-demo-dental` | Dental demo repo (Bright Smiles, signal-works-demo-dental.vercel.app) |
+| `bokar83/signal-works-demo-roofing` | Roofing demo repo (Summit Roofing Utah, signal-works-demo-roofing.vercel.app) |
