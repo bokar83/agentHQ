@@ -997,6 +997,70 @@ def build_social_crew(user_request: str) -> Crew:
     )
 
 
+def build_newsletter_crew(user_request: str) -> Crew:
+    """
+    Crew for: newsletter
+    Drafts newsletter content in Boubacar's voice using leGriot.
+    """
+    planner = build_planner_agent()
+    griot = build_social_media_agent()
+    qa = build_qa_agent()
+
+    task_plan = Task(
+        description=f"""
+        Plan a newsletter issue for:
+        REQUEST: {user_request}
+
+        Identify: audience segment, core insight or story to lead with,
+        3-5 section structure (hook, body, CTA), and any relevant links
+        or resources to include.
+        """,
+        expected_output="Newsletter plan with structure, audience, and key insight",
+        agent=planner
+    )
+
+    task_write = Task(
+        description=f"""
+        Write the newsletter for:
+        REQUEST: {user_request}
+
+        Write in Boubacar's voice: direct, insightful, specific, and real.
+        Format: subject line, preview text, hook (2-3 sentences), body
+        sections with subheadings, and a clear CTA. 400-600 words total.
+        No buzzword soup. No fabricated client stories.
+        Save using save_output.
+        """,
+        expected_output="Full newsletter draft with subject line, preview text, and body",
+        agent=griot,
+        context=[task_plan]
+    )
+
+    task_qa = Task(
+        description=f"""
+        Review the newsletter. Does it sound like Boubacar? Is the subject
+        line compelling? Does the CTA ask for one clear action?
+        Original request: {user_request}
+
+        OUTPUT FORMAT (mandatory every time):
+        WHAT WAS DONE: [what newsletter was created and for which audience]
+        WHY IT WAS DONE THIS WAY: [voice and angle decisions]
+        QUALITY CHECK: PASSED or QUALITY CHECK: REVISED -- [what was fixed]
+        DELIVERABLE:
+        [Full newsletter in final form -- always included, never omitted]
+        """,
+        expected_output="Structured QA report followed by the full newsletter",
+        agent=qa,
+        context=[task_write]
+    )
+
+    return Crew(
+        agents=[planner, griot, qa],
+        tasks=[task_plan, task_write, task_qa],
+        process=Process.sequential,
+        verbose=False
+    )
+
+
 def build_linkedin_x_crew(user_request: str) -> Crew:
     """
     Crew for: linkedin_x_campaign
@@ -2851,6 +2915,7 @@ CREW_REGISTRY = {
     "research_crew":       build_research_crew,
     "consulting_crew":     build_consulting_crew,
     "social_crew":         build_social_crew,
+    "newsletter_crew":     build_newsletter_crew,
     "linkedin_x_crew":     build_linkedin_x_crew,
     "code_crew":           build_code_crew,
     "notion_overhaul":     build_notion_overhaul_crew,

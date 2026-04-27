@@ -125,6 +125,15 @@ TASK_TYPES = {
         ],
         "crew": "social_crew",
     },
+    "newsletter": {
+        "description": "Newsletter drafting and email content",
+        "keywords": [
+            "newsletter", "write a newsletter", "draft newsletter", "email newsletter",
+            "weekly newsletter", "monthly newsletter", "newsletter issue",
+            "email blast", "subscriber email", "nurture email", "email content",
+        ],
+        "crew": "newsletter_crew",
+    },
     "linkedin_x_campaign": {
         "description": "Multi-platform content campaign",
         "keywords": ["linkedin and x", "7 posts", "post campaign", "linkedin x posts", "content series"],
@@ -406,7 +415,8 @@ def _llm_classify(user_message: str) -> str:
         "5. 'notion_tasks' covers queries about open tasks, due dates, overdue items.\n"
         "6. 'crm_query' covers any question about leads, contacts, pipeline stats.\n"
         "7. 'social_content' covers writing posts. 'inline_post_review' covers reviewing/improving a post.\n"
-        "8. 'research_report' covers location+service queries (e.g. 'mechanic shops in 84095', 'dentists near Denver'), explicit research framing ('research report on X', 'find me', 'list of', 'compare options'), and any prompt that needs live web search across multiple sources to answer. 'hunter_task' is ONLY for explicit B2B lead-sourcing language like 'find leads', 'prospects', 'growth engine', 'utah leads'. When in doubt between the two, pick 'research_report'.\n"
+        "8. 'newsletter' covers email newsletter drafting and nurture emails.\n"
+        "9. 'research_report' covers location+service queries (e.g. 'mechanic shops in 84095', 'dentists near Denver'), explicit research framing ('research report on X', 'find me', 'list of', 'compare options'), and any prompt that needs live web search across multiple sources to answer. 'hunter_task' is ONLY for explicit B2B lead-sourcing language like 'find leads', 'prospects', 'growth engine', 'utah leads'. When in doubt between the two, pick 'research_report'.\n"
     )
 
     try:
