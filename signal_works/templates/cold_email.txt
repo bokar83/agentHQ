@@ -1,0 +1,27 @@
+Subject: ChatGPT doesn't know {business_name} exists -- your AI score: {ai_score}/100
+
+Hi {owner_name},
+
+I just ran {business_name} through an AI Visibility check -- the kind of scan that shows whether your business appears when someone asks ChatGPT or Google AI "best {niche} in {city}."
+
+Your score came back {ai_score}/100.
+
+Here is what that means: when a potential customer asks an AI assistant for a recommendation in your area, your business is not in the answer. Your competitor {competitor_example} scored higher and is appearing in results.
+
+I built a quick demo showing what your online presence could look like with AI optimization in place:
+{demo_url}
+
+And here is a 90-second walkthrough:
+{loom_url}
+
+The three fastest wins for you specifically:
+{quick_wins}
+
+I help local businesses like {business_name} become the one AI recommends -- through a combination of website optimization, structured data, and monthly content updates that AI tools actually read and cite.
+
+If this is relevant, grab 20 minutes here: {calendly_url}
+
+No pitch, no pressure. I will show you exactly what the gap is and what fixing it looks like.
+
+{sender_name}
+Signal Works | We make your business the one AI recommends.
