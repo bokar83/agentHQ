@@ -3,9 +3,6 @@
 **Locked:** 2026-04-25 night, Studio M1 build session.
 **Status:** Channel exists (Boubacar holds it, virgin / no content yet). Engine pointed at it. Awaiting M2 brand identity lock and X handle registration.
 **Niche tag:** `ai-displacement`
-**Blotato YT accountId:** `34865` (env: `BLOTATO_YT_CATALYST_ACCOUNT_ID`)
-**Boubacar's LinkedIn personal accountId:** `19365` (env: `BLOTATO_LINKEDIN_ACCOUNT_ID`). Used for AI Catalyst cross-promotion only when Boubacar opts in per-post.
-**Catalyst Works LinkedIn Page ID:** `114214027` (env: `BLOTATO_LINKEDIN_PAGE_ID`). Available for posts where the AI Catalyst content has direct CW relevance. Use sparingly to keep CW page focused on the consulting brand.
 
 ## What this channel is
 
