@@ -190,6 +190,28 @@ async def startup_event():
     except ImportError:
         pass
 
+    try:
+        from db import ensure_video_jobs_table
+        ensure_video_jobs_table()
+        logger.info("video_jobs table ensured.")
+    except Exception as e:
+        logger.warning(f"video_jobs ensure failed (non-fatal): {e}")
+
+    try:
+        if os.environ.get("VIDEO_CREW_ENABLED") == "1":
+            from heartbeat import register_wake
+            from video_crew import run_video_tick
+
+            register_wake(
+                "video-crew-tick",
+                crew_name="video_crew",
+                callback=run_video_tick,
+                every="5m",
+            )
+            logger.info("video_crew heartbeat wake registered.")
+    except Exception as e:
+        logger.warning(f"video_crew wake registration failed (non-fatal): {e}")
+
     # Telegram polling in the background (hardened loop in handlers.py).
     asyncio.create_task(telegram_polling_loop())
     logger.info("Telegram Polling Loop scheduled.")
