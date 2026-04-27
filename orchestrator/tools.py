@@ -1919,6 +1919,102 @@ class KieGeneratePromoVideoTool(BaseTool):
             return f"kie_generate_promo_video failed: {type(e).__name__}: {e}"
 
 
+class KieSoraWatermarkRemoveTool(BaseTool):
+    """
+    Remove a Sora watermark from a video via Kai (kie.ai).
+    Input: JSON with 'video_url' (required).
+    Returns JSON with result_url and task_id.
+    """
+    name: str = "kie_sora_watermark_remove"
+    description: str = (
+        "Remove a Sora watermark from a video via Kai (kie.ai). "
+        "Input: JSON with 'video_url' (required). "
+        "Returns JSON with result_url and task_id."
+    )
+
+    def _run(self, input_data: str) -> str:
+        if not _kie_available:
+            return f"kie_media module not available: {_kie_import_error_msg}"
+        try:
+            import kie_media
+
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            video_url = data.get("video_url")
+            if not video_url:
+                return "Error: 'video_url' is required."
+            result = kie_media.sora_watermark_remover(video_url)
+            return json.dumps(result)
+        except Exception as e:
+            logger.error(f"KieSoraWatermarkRemoveTool failed: {type(e).__name__}: {e}")
+            return f"kie_sora_watermark_remove failed: {type(e).__name__}: {e}"
+
+
+class KieAudioRemixTool(BaseTool):
+    """
+    Remix audio via Kai (kie.ai).
+    Input: JSON with 'source_url' (required) and 'prompt' (required).
+    Returns JSON with result_url and task_id.
+    """
+    name: str = "kie_audio_remix"
+    description: str = (
+        "Remix audio via Kai (kie.ai). "
+        "Input: JSON with 'source_url' (required) and 'prompt' (required). "
+        "Returns JSON with result_url and task_id."
+    )
+
+    def _run(self, input_data: str) -> str:
+        if not _kie_available:
+            return f"kie_media module not available: {_kie_import_error_msg}"
+        try:
+            import kie_media
+
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            source_url = data.get("source_url")
+            prompt = data.get("prompt")
+            if not source_url:
+                return "Error: 'source_url' is required."
+            if not prompt:
+                return "Error: 'prompt' is required."
+            result = kie_media.audio_remix(source_url, prompt)
+            return json.dumps(result)
+        except Exception as e:
+            logger.error(f"KieAudioRemixTool failed: {type(e).__name__}: {e}")
+            return f"kie_audio_remix failed: {type(e).__name__}: {e}"
+
+
+class KieEnqueueVideoJobTool(BaseTool):
+    """
+    Enqueue a unified video crew job.
+    Input: JSON with 'job_type' and 'prompt', plus optional 'params',
+    'linked_content_id', and 'requested_by'.
+    Returns JSON with job_id.
+    """
+    name: str = "kie_enqueue_video_job"
+    description: str = (
+        "Enqueue a unified video crew job. "
+        "Input: JSON with 'job_type' and 'prompt', plus optional 'params', "
+        "'linked_content_id', and 'requested_by'. "
+        "Returns JSON with job_id."
+    )
+
+    def _run(self, input_data: str) -> str:
+        try:
+            from video_crew import enqueue_video_job
+
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            result = enqueue_video_job(
+                job_type=data.get("job_type"),
+                prompt=data.get("prompt"),
+                params=data.get("params"),
+                linked_content_id=data.get("linked_content_id"),
+                requested_by=data.get("requested_by", "system"),
+            )
+            return json.dumps(result)
+        except Exception as e:
+            logger.error(f"KieEnqueueVideoJobTool failed: {type(e).__name__}: {e}")
+            return f"kie_enqueue_video_job failed: {type(e).__name__}: {e}"
+
+
 class KieListModelsTool(BaseTool):
     """
     List priority-ordered Kai model registry for image and video tasks.
@@ -2168,7 +2264,16 @@ try:
 except Exception as _e:
     logger.warning(f"VIDEO_ANALYZE_TOOLS unavailable: {_e}")
     VIDEO_ANALYZE_TOOLS = []
-MEDIA_TOOLS = [KieGenerateImageTool(), KieGenerateVideoTool(), KieGeneratePromoVideoTool(), KieListModelsTool(), KieCheckCreditsTool()]
+MEDIA_TOOLS = [
+    KieGenerateImageTool(),
+    KieGenerateVideoTool(),
+    KieGeneratePromoVideoTool(),
+    KieSoraWatermarkRemoveTool(),
+    KieAudioRemixTool(),
+    KieEnqueueVideoJobTool(),
+    KieListModelsTool(),
+    KieCheckCreditsTool(),
+]
 VALIDATION_TOOLS = [ValidateOutputTool()]
 WRITING_TOOLS = [file_writer, SaveOutputTool(), voice_polisher_tool]
 CODE_TOOLS = [t for t in [code_interpreter, file_writer, file_reader, SaveOutputTool(), CLIHubSearchTool(), launch_vercel_tool] if t is not None]

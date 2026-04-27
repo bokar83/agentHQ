@@ -198,6 +198,29 @@ async def startup_event():
     except Exception as e:
         logger.warning(f"ensure_chat_artifacts_table failed (non-fatal): {e}")
 
+    # P5: ensure video_jobs table exists (idempotent, non-fatal).
+    try:
+        from db import ensure_video_jobs_table
+        ensure_video_jobs_table()
+        logger.info("video_jobs table ready.")
+    except Exception as e:
+        logger.warning(f"ensure_video_jobs_table failed (non-fatal): {e}")
+
+    # P5: video-crew heartbeat wake (feature-flagged, disabled by default).
+    try:
+        if os.environ.get("VIDEO_CREW_ENABLED") == "1":
+            import heartbeat as _heartbeat
+            from video_crew import run_video_tick
+            _heartbeat.register_wake(
+                "video-crew-tick",
+                crew_name="video_crew",
+                fn=run_video_tick,
+                every="5m",
+            )
+            logger.info("video_crew heartbeat wake registered.")
+    except Exception as e:
+        logger.warning(f"video_crew wake registration failed (non-fatal): {e}")
+
     # Telegram polling in the background (hardened loop in handlers.py).
     asyncio.create_task(telegram_polling_loop())
     logger.info("Telegram Polling Loop scheduled.")
@@ -796,249 +819,4 @@ async def sync_session(req: SyncSessionRequest):
     return {"success": True, "session_key": req.session_key, "chars_written": len(req.summary)}
 
 
-# ======================================================================
-# Atlas M8: Mission Control -- read-only data endpoints
-# All gated by verify_chat_token (same JWT-PIN as /chat).
-# ======================================================================
-
-from fastapi.responses import JSONResponse
-import atlas_dashboard as _atd
-
-
-@app.get("/atlas/state")
-async def atlas_state(_auth=Depends(verify_chat_token)):
-    return JSONResponse(_atd.get_state())
-
-
-@app.get("/atlas/queue")
-async def atlas_queue(_auth=Depends(verify_chat_token)):
-    return JSONResponse(_atd.get_queue())
-
-
-@app.get("/atlas/content")
-async def atlas_content(_auth=Depends(verify_chat_token)):
-    return JSONResponse(_atd.get_content())
-
-
-@app.get("/atlas/spend")
-async def atlas_spend(_auth=Depends(verify_chat_token)):
-    return JSONResponse(_atd.get_spend())
-
-
-@app.get("/atlas/heartbeats")
-async def atlas_heartbeats(_auth=Depends(verify_chat_token)):
-    return JSONResponse(_atd.get_heartbeats())
-
-
-@app.get("/atlas/errors")
-async def atlas_errors(_auth=Depends(verify_chat_token)):
-    return JSONResponse(_atd.get_errors())
-
-
-@app.get("/atlas/hero")
-async def atlas_hero(_auth=Depends(verify_chat_token)):
-    return JSONResponse(_atd.get_hero())
-
-
-@app.get("/atlas/ideas")
-async def atlas_ideas(_auth=Depends(verify_chat_token)):
-    return JSONResponse(_atd.get_ideas())
-
-
-# ======================================================================
-# Atlas M8: Mission Control -- write/action endpoints
-# ======================================================================
-
-from pydantic import BaseModel as _BaseModel
-
-
-class _AtlasToggleBody(_BaseModel):
-    enabled: bool
-
-
-class _AtlasDryRunBody(_BaseModel):
-    dry_run: bool
-
-
-class _AtlasRejectBody(_BaseModel):
-    note: str = ""
-
-
-class _LedgerEntryBody(_BaseModel):
-    amount_usd: float
-    tool: str
-    category: str
-    project: str = "agentsHQ"
-    customer: str | None = None
-    description: str | None = None
-    date: str | None = None
-
-
-@app.get("/atlas/ledger")
-async def atlas_ledger(days: int = 30, _auth=Depends(verify_chat_token)):
-    return JSONResponse(_atd.get_cost_ledger(days=days))
-
-
-@app.post("/atlas/ledger")
-async def atlas_ledger_add(body: _LedgerEntryBody, _auth=Depends(verify_chat_token)):
-    return JSONResponse(_atd.add_cost_ledger_entry(
-        amount_usd=body.amount_usd,
-        tool=body.tool,
-        category=body.category,
-        project=body.project,
-        customer=body.customer,
-        description=body.description,
-        date_str=body.date,
-    ))
-
-
-@app.post("/atlas/toggle/griot")
-async def atlas_toggle_griot(body: _AtlasToggleBody, _auth=Depends(verify_chat_token)):
-    from autonomy_guard import get_guard
-    get_guard().set_crew_enabled("griot", body.enabled)
-    return JSONResponse(_atd.get_state())
-
-
-@app.post("/atlas/toggle/dry_run")
-async def atlas_toggle_dry_run(body: _AtlasDryRunBody, _auth=Depends(verify_chat_token)):
-    from autonomy_guard import get_guard
-    get_guard().set_crew_dry_run("griot", body.dry_run)
-    return JSONResponse(_atd.get_state())
-
-
-@app.post("/atlas/queue/{queue_id}/approve")
-async def atlas_queue_approve(queue_id: int, _auth=Depends(verify_chat_token)):
-    import approval_queue
-    row = approval_queue.approve(queue_id)
-    if row is None:
-        raise HTTPException(status_code=404, detail="Queue item not found or already decided")
-    return JSONResponse(_atd.get_queue())
-
-
-@app.post("/atlas/queue/{queue_id}/reject")
-async def atlas_queue_reject(queue_id: int, body: _AtlasRejectBody, _auth=Depends(verify_chat_token)):
-    import approval_queue
-    row = approval_queue.reject(queue_id, note=body.note or None)
-    if row is None:
-        raise HTTPException(status_code=404, detail="Queue item not found or already decided")
-    return JSONResponse(_atd.get_queue())
-
-
-@app.post("/atlas/brief/posted")
-async def atlas_brief_posted(_auth=Depends(verify_chat_token)):
-    raise HTTPException(
-        status_code=501,
-        detail=(
-            "posted/skip actions require a Telegram reply_to_msg_id to locate the "
-            "publish-brief window. _PUBLISH_BRIEF_WINDOWS is keyed by Telegram message "
-            "ID and cannot be looked up from the dashboard. Reply 'posted' or 'skip' "
-            "directly in Telegram to the per-post brief message."
-        ),
-    )
-
-
-@app.post("/atlas/brief/skip")
-async def atlas_brief_skip(_auth=Depends(verify_chat_token)):
-    raise HTTPException(
-        status_code=501,
-        detail=(
-            "posted/skip actions require a Telegram reply_to_msg_id to locate the "
-            "publish-brief window. _PUBLISH_BRIEF_WINDOWS is keyed by Telegram message "
-            "ID and cannot be looked up from the dashboard. Reply 'posted' or 'skip' "
-            "directly in Telegram to the per-post brief message."
-        ),
-    )
-
-
-# ══════════════════════════════════════════════════════════════
-# M9b: Atlas web chat endpoint + job polling
-# ══════════════════════════════════════════════════════════════
-
-class _AtlasChatRequest(_BaseModel):
-    messages: list
-    session_key: str = "atlas:browser:default"
-
-
-class _AtlasChatResponse(_BaseModel):
-    reply: str
-    actions: list = []
-    artifact: Optional[dict] = None
-    job_id: Optional[str] = None
-
-
-@app.post("/atlas/chat", response_model=_AtlasChatResponse)
-async def atlas_chat(body: _AtlasChatRequest, _auth=Depends(verify_chat_token)):
-    """M9b native web chat. Accepts full message array, returns M9 schema."""
-    from handlers_chat import run_atlas_chat
-    loop = asyncio.get_event_loop()
-    result = await loop.run_in_executor(
-        None, lambda: run_atlas_chat(body.messages, body.session_key, channel="web")
-    )
-    return _AtlasChatResponse(
-        reply=result.get("reply", ""),
-        actions=result.get("actions") or [],
-        artifact=result.get("artifact"),
-        job_id=result.get("job_id"),
-    )
-
-
-@app.get("/atlas/job/{job_id}", dependencies=[Depends(verify_chat_token)])
-async def atlas_job_status(job_id: str):
-    """Poll background job status. Used by atlas.js pollJob() every 3s."""
-    try:
-        from memory import get_job
-        job = get_job(job_id)
-        if not job:
-            raise HTTPException(status_code=404, detail="Job not found")
-        return {
-            "job_id": job_id,
-            "status": job.get("status", "pending"),
-            "result": job.get("result"),
-            "error": job.get("error"),
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/atlas/confirm/{confirm_token}", dependencies=[Depends(verify_chat_token)])
-async def atlas_confirm_action(confirm_token: str):
-    """Execute a pending write-action that was held for confirmation."""
-    from state import _confirm_store
-    entry = _confirm_store.pop(confirm_token, None)
-    if not entry:
-        raise HTTPException(status_code=404, detail="Confirm token expired or not found")
-
-    action = entry.get("action")
-    payload = entry.get("payload", {})
-    session_key = entry.get("session_key", "atlas:browser:default")
-
-    if action == "forward_to_crew":
-        task_text = payload.get("task_text", "")
-        job_id = str(uuid.uuid4())
-        background_tasks = BackgroundTasks()
-        background_tasks.add_task(
-            _run_background_job,
-            task=task_text,
-            session_key=session_key,
-            from_number=session_key,
-            job_id=job_id,
-        )
-        return {"status": "queued", "job_id": job_id,
-                "message": f"Task queued. Poll /atlas/job/{job_id} for result."}
-
-    raise HTTPException(status_code=400, detail=f"Unknown action: {action}")
-
-
-@app.post("/atlas/confirm/{confirm_token}/cancel", dependencies=[Depends(verify_chat_token)])
-async def atlas_cancel_action(confirm_token: str):
-    """Discard a pending write-action confirmation."""
-    from state import _confirm_store
-    _confirm_store.pop(confirm_token, None)
-    return {"status": "cancelled"}
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+# ===============================================================

@@ -302,6 +302,14 @@ TASK_TYPES = {
         ],
         "crew": "media_crew",
     },
+    "video_job": {
+        "description": "Unified video crew intake and queueing",
+        "keywords": [
+            "generate video", "batch video", "ugc video", "video ad",
+            "remove watermark", "video job", "make video", "create video",
+        ],
+        "crew": "video_crew",
+    },
 }
 
 
@@ -360,6 +368,8 @@ def _classify_raw(user_message: str) -> str:
         return "notion_capture"
     if any(kw in msg for kw in TASK_TYPES["design_review"]["keywords"]):
         return "design_review"
+    if any(kw in msg for kw in TASK_TYPES["video_job"]["keywords"]):
+        return "video_job"
     if any(kw in msg for kw in TASK_TYPES["create_media"]["keywords"]):
         return "create_media"
 
@@ -379,7 +389,7 @@ def _classify_raw(user_message: str) -> str:
         "inline_post_review", "content_review",
         "content_board_fetch", "agent_creation",
         "forge_kpi_refresh", "doc_routing", "notion_tasks", "notion_capture", "design_review",
-        "create_media", "research_report",
+        "video_job", "create_media", "research_report",
     }
     for task_type, config in TASK_TYPES.items():
         if task_type in _PRIORITY_CHECKED:
