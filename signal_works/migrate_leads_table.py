@@ -4,15 +4,18 @@ Adds Signal Works columns to the existing Supabase leads table.
 Run once: python -m signal_works.migrate_leads_table
 
 Columns added (all safe to re-run -- uses ADD COLUMN IF NOT EXISTS):
-  website_url     TEXT
-  review_count    INTEGER
-  ai_score        INTEGER
-  google_maps_url TEXT
-  niche           TEXT
-  city            TEXT
-  lead_type       TEXT   -- e.g. 'website_prospect', 'consulting', 'inbound'
-  ai_breakdown    JSONB  -- per-dimension score details
-  ai_quick_wins   TEXT   -- comma-separated quick win suggestions
+  website_url      TEXT
+  review_count     INTEGER
+  ai_score         INTEGER
+  google_maps_url  TEXT
+  niche            TEXT
+  city             TEXT
+  lead_type        TEXT   -- e.g. 'website_prospect', 'consulting', 'inbound'
+  ai_breakdown     JSONB  -- per-dimension score details
+  ai_quick_wins    TEXT   -- comma-separated quick win suggestions
+  email_drafted    BOOLEAN -- True once a Gmail draft has been created for this lead
+  email_drafted_at TIMESTAMPTZ -- when the draft was created
+  email_sent_at    TIMESTAMPTZ -- when the email was actually sent (future use)
 """
 import logging
 from orchestrator.db import get_crm_connection
@@ -36,7 +39,10 @@ ALTER TABLE leads
   ADD COLUMN IF NOT EXISTS google_address  TEXT,
   ADD COLUMN IF NOT EXISTS baseline_reviews INTEGER,
   ADD COLUMN IF NOT EXISTS baseline_rating  NUMERIC(3,1),
-  ADD COLUMN IF NOT EXISTS baseline_date    DATE;
+  ADD COLUMN IF NOT EXISTS baseline_date    DATE,
+  ADD COLUMN IF NOT EXISTS email_drafted    BOOLEAN DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS email_drafted_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS email_sent_at    TIMESTAMPTZ;
 
 COMMENT ON COLUMN leads.lead_type       IS 'website_prospect | consulting | inbound | cold_outreach';
 COMMENT ON COLUMN leads.ai_score        IS '0-100 AI visibility score (Signal Works scoring system)';
@@ -46,6 +52,9 @@ COMMENT ON COLUMN leads.google_address  IS 'Full address from Google Maps listin
 COMMENT ON COLUMN leads.baseline_reviews IS 'review_count snapshot when first added -- track growth over time';
 COMMENT ON COLUMN leads.baseline_rating  IS 'google_rating snapshot when first added';
 COMMENT ON COLUMN leads.baseline_date    IS 'Date baseline was captured';
+COMMENT ON COLUMN leads.email_drafted    IS 'True once a Gmail draft has been created for this lead';
+COMMENT ON COLUMN leads.email_drafted_at IS 'When the Gmail draft was created';
+COMMENT ON COLUMN leads.email_sent_at    IS 'When the email was actually sent (future use)';
 """
 
 if __name__ == "__main__":
