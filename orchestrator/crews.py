@@ -54,6 +54,7 @@ from agents import (
     get_llm,
 )
 from design_context import DesignContextLoader
+from video_crew_agents import build_video_director_agent
 
 logger = logging.getLogger(__name__)
 
@@ -1710,6 +1711,60 @@ def build_media_crew(user_request: str) -> Crew:
     )
 
 
+def build_video_crew(user_request: str) -> Crew:
+    """
+    Crew for: video_job
+    Classifies a video request into one of six unified job types, then enqueues it.
+    """
+    video_director = build_video_director_agent()
+
+    task_classify = Task(
+        description=f"""
+        Classify this request into exactly one unified video job type:
+        batch, ugc, cameo, narrative, ads, watermark_remove.
+
+        REQUEST: {user_request}
+
+        Return valid JSON only with this shape:
+        {{
+          "job_type": "...",
+          "prompt": "...",
+          "params": {{}},
+          "linked_content_id": null,
+          "requested_by": "system"
+        }}
+
+        Rules:
+        - Pick exactly one valid job_type.
+        - Preserve the user's actual creative intent in prompt.
+        - Put structured extras in params only.
+        - For watermark removal, params must include video_url when present.
+        """,
+        expected_output="Valid JSON with job_type, prompt, params, linked_content_id, and requested_by",
+        agent=video_director,
+    )
+
+    task_enqueue = Task(
+        description="""
+        Use the kie_enqueue_video_job tool to enqueue the classified video job.
+
+        Input is the JSON from the previous task.
+        Return a short confirmation that includes the job_id and chosen job_type.
+        """,
+        expected_output="A short enqueue confirmation with job_id and job_type",
+        agent=video_director,
+        context=[task_classify],
+    )
+
+    return Crew(
+        agents=[video_director],
+        tasks=[task_classify, task_enqueue],
+        process=Process.sequential,
+        verbose=False,
+        memory=False,
+    )
+
+
 def build_unknown_crew(user_request: str) -> Crew:
     """
     Fallback crew for unknown task types.
@@ -3002,6 +3057,7 @@ CREW_REGISTRY = {
     "doc_routing_crew":           build_doc_routing_crew,
     "design_review_crew":         build_design_review_crew,
     "media_crew":                 build_media_crew,
+    "video_crew":                 build_video_crew,
     "unknown_crew":               build_unknown_crew,
 }
 

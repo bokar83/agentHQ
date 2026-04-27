@@ -36,7 +36,7 @@ class ContractNotSatisfiedError(Exception):
 
 DEFAULT_CONTRACTS_DIR = os.path.join(os.path.dirname(__file__), "contracts")
 
-KNOWN_CREWS = ("griot", "hunter", "concierge", "chairman", "auto_publisher", "studio")
+KNOWN_CREWS = ("griot", "hunter", "concierge", "chairman", "auto_publisher", "studio", "video_crew", "model_review_agent")
 
 DEFAULT_STATE_FILE = os.environ.get(
     "AUTONOMY_STATE_FILE",
