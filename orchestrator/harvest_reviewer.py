@@ -55,9 +55,24 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE_BASE = REPO_ROOT / "workspace" / "skool-harvest"
 INVENTORY_JSON = REPO_ROOT / "docs" / "agentsHQ_inventory.json"
 
-# Models. Switch to claude-sonnet-4.6 if the Mapper output ever feels shallow.
-MAPPER_MODEL = "anthropic/claude-haiku-4.5"
-DECISION_MODEL = "anthropic/claude-haiku-4.5"
+
+def _resolve_model() -> tuple[str, str]:
+    """Return (mapper_model_id, decision_model_id) via capability routing.
+
+    Uses select_by_capability so the harvest reviewer automatically benefits
+    from ROLE_CAPABILITY improvements without manual model constant updates.
+    Mapper needs instruction_following at low cost (structured JSON output).
+    Decision needs the same -- it is a confirmation/override pass, not deep reasoning.
+    Falls back to haiku-4.5 if agents module is unavailable.
+    """
+    try:
+        from agents import select_by_capability
+        mapper = select_by_capability("instruction_following", max_cost_tier="low")
+        decision = select_by_capability("instruction_following", max_cost_tier="low")
+        return mapper, decision
+    except Exception as exc:
+        logger.warning("select_by_capability unavailable (%s); using haiku fallback", exc)
+        return "anthropic/claude-haiku-4.5", "anthropic/claude-haiku-4.5"
 
 
 # ---- LLM call --------------------------------------------------------------
@@ -65,10 +80,9 @@ DECISION_MODEL = "anthropic/claude-haiku-4.5"
 def _llm(model_id: str, system_prompt: str, user_content: str, max_tokens: int = 1500) -> str:
     """Single completion via litellm -> OpenRouter, mirroring council._call_model."""
     extra_body = {}
-    if "anthropic/" in model_id:
-        extra_body = {"provider": {"order": ["Anthropic"], "allow_fallbacks": False}}
     is_anthropic = "anthropic/" in model_id
     if is_anthropic:
+        extra_body = {"provider": {"order": ["Anthropic"], "allow_fallbacks": False}}
         system_msg = {
             "role": "system",
             "content": system_prompt,
@@ -77,8 +91,9 @@ def _llm(model_id: str, system_prompt: str, user_content: str, max_tokens: int =
     else:
         system_msg = {"role": "system", "content": system_prompt}
 
+    openrouter_model = model_id if model_id.startswith("openrouter/") else f"openrouter/{model_id}"
     response = completion(
-        model=f"openrouter/{model_id}",
+        model=openrouter_model,
         messages=[
             system_msg,
             {"role": "user", "content": user_content},
@@ -338,12 +353,14 @@ def review_lesson(community: str, plan_entry: dict, inventory_block: str) -> dic
     lesson_id = plan_entry["lesson_id"]
     artifacts = _load_lesson_artifacts(community, lesson_id)
 
+    mapper_model, decision_model = _resolve_model()
+
     mapper_user = _mapper_user_content(plan_entry, artifacts, inventory_block)
-    mapper_raw = _llm(MAPPER_MODEL, _MAPPER_SYSTEM, mapper_user, max_tokens=1800)
+    mapper_raw = _llm(mapper_model, _MAPPER_SYSTEM, mapper_user, max_tokens=1800)
     mapper_out = _parse_json_lenient(mapper_raw)
 
     decision_user = _decision_user_content(plan_entry, mapper_out)
-    decision_raw = _llm(DECISION_MODEL, _DECISION_SYSTEM, decision_user, max_tokens=600)
+    decision_raw = _llm(decision_model, _DECISION_SYSTEM, decision_user, max_tokens=600)
     decision_out = _parse_json_lenient(decision_raw)
 
     verdict = {
