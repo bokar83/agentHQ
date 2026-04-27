@@ -10,6 +10,7 @@ SAVE_REQUIRED_TASK_TYPES = {
     "3d_website_build",
     "code_task",
     "general_writing",
+    "newsletter",
     "social_content",
     "linkedin_x_campaign",
     "voice_polishing",
@@ -23,6 +24,7 @@ SAVE_REQUIRED_TASK_TYPES = {
 # Task types that produce publishable content -- after Drive save, also log to
 # the Notion content board with the Drive URL.
 CONTENT_TASK_TYPES = {
+    "newsletter",
     "social_content",
     "linkedin_x_campaign",
     "general_writing",

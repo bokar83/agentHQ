@@ -8,9 +8,10 @@ from constants import MEMORY_GATED_TASK_TYPES
 
 logger = logging.getLogger("agentsHQ.engine")
 
-def run_orchestrator(task_request: str, from_number: str = "unknown", session_key: str = "default") -> dict:
+def run_orchestrator(task_request: str, from_number: str = "unknown", session_key: str = "default", explicit_task_type: str = "") -> dict:  # noqa: E501
     """
     Main orchestration function.
+    explicit_task_type: skip LLM classification and use this type directly (must be a valid TASK_TYPES key).
     """
     start_time = datetime.now()
 
@@ -37,7 +38,7 @@ def run_orchestrator(task_request: str, from_number: str = "unknown", session_ke
 
     # Step 2: Route
     from router import classify_task, get_crew_type
-    classification = classify_task(task_request)
+    classification = classify_task(task_request, explicit_task_type=explicit_task_type)
     task_type = classification.get("task_type", "unknown")
     is_unknown = classification.get("is_unknown", False)
 
@@ -314,6 +315,7 @@ def _build_summary(task_type: str, full_output: str, files_created: list, execut
         "research_report": "Research complete",
         "consulting_deliverable": "Consulting deliverable ready",
         "social_content": "Social content created",
+        "newsletter": "Newsletter drafted",
         "linkedin_x_campaign": "LinkedIn/X campaign ready",
         "code_task": "Code task complete",
         "general_writing": "Document ready",
