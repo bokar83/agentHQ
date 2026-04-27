@@ -201,6 +201,7 @@ def _last_edited_time(page) -> Optional[str]:
 
 def _account_id_for_platform(platform: str) -> Optional[str]:
     """Resolve the Blotato accountId env var for a Notion-side platform name."""
+    platform_lc = (platform or "").strip().lower()
     if platform == "LinkedIn":
         return os.environ.get("BLOTATO_LINKEDIN_ACCOUNT_ID")
     if platform == "X":
@@ -208,13 +209,18 @@ def _account_id_for_platform(platform: str) -> Optional[str]:
     if platform == "Facebook":
         return os.environ.get("BLOTATO_FACEBOOK_ACCOUNT_ID")
     if platform == "Instagram":
-        return os.environ.get("BLOTATO_INSTAGRAM_ACCOUNT_ID")
+        return os.environ.get("BLOTATO_IG_ACCOUNT_ID") or os.environ.get("BLOTATO_INSTAGRAM_ACCOUNT_ID")
     if platform == "TikTok":
         return os.environ.get("BLOTATO_TIKTOK_ACCOUNT_ID")
     if platform == "Threads":
         return os.environ.get("BLOTATO_THREADS_ACCOUNT_ID")
-    if platform == "YouTube":
-        return os.environ.get("BLOTATO_YOUTUBE_ACCOUNT_ID")
+    if platform == "YouTube" or platform_lc.startswith("youtube"):
+        if "catalyst" in platform_lc:
+            return os.environ.get("BLOTATO_YT_CATALYST_ACCOUNT_ID")
+        return (
+            os.environ.get("BLOTATO_YT_BAOBAB_ACCOUNT_ID")
+            or os.environ.get("BLOTATO_YOUTUBE_ACCOUNT_ID")
+        )
     if platform == "Pinterest":
         return os.environ.get("BLOTATO_PINTEREST_ACCOUNT_ID")
     if platform == "Bluesky":

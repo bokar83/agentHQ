@@ -1031,6 +1031,48 @@ class VoicePolisherTool(BaseTool):
             return text
 
 
+class ValidateOutputTool(BaseTool):
+    """LLM-side validation for structured outputs and voice guardrails."""
+    name: str = "validate_output"
+    description: str = (
+        "LLM check of task output for JSON schema compliance, tone drift, completeness, and no em-dashes. "
+        "Input: output text, optional schema text, optional extra rules. Returns PASS or FAIL: <reason>."
+    )
+
+    def _run(self, output: str, schema: str = "", rules: str = "") -> str:
+        try:
+            from llm_helpers import call_llm
+
+            prompt = (
+                "Validate the output against the required rules.\n"
+                "Return exactly one line.\n"
+                "If the output passes, return: PASS\n"
+                "If it fails, return: FAIL: <brief reason>\n\n"
+                "Validation rules:\n"
+                "1. If a schema is provided, the output must comply with it.\n"
+                "2. Output must be complete and usable, not partial.\n"
+                "3. Tone must not drift from the requested constraints.\n"
+                "4. Output must not contain em-dashes.\n"
+                "5. Keep the verdict strict and concise.\n\n"
+                f"Schema:\n{schema or '[none provided]'}\n\n"
+                f"Additional rules:\n{rules or '[none provided]'}\n\n"
+                f"Output to validate:\n{output}"
+            )
+            resp = call_llm(
+                [{"role": "user", "content": prompt}],
+                model="anthropic/claude-haiku-4.5",
+                temperature=0.0,
+                max_tokens=120,
+            )
+            verdict = (resp.choices[0].message.content or "").strip()
+            if verdict == "PASS" or verdict.startswith("FAIL:"):
+                return verdict
+            return f"FAIL: Invalid validator response: {verdict[:120]}"
+        except Exception as e:
+            logger.error(f"ValidateOutputTool failed: {e}")
+            return f"FAIL: validator error: {e}"
+
+
 class EscalateTool(BaseTool):
     """
     Sends an escalation message to Boubacar when an agent is blocked,
@@ -2127,6 +2169,7 @@ except Exception as _e:
     logger.warning(f"VIDEO_ANALYZE_TOOLS unavailable: {_e}")
     VIDEO_ANALYZE_TOOLS = []
 MEDIA_TOOLS = [KieGenerateImageTool(), KieGenerateVideoTool(), KieGeneratePromoVideoTool(), KieListModelsTool(), KieCheckCreditsTool()]
+VALIDATION_TOOLS = [ValidateOutputTool()]
 WRITING_TOOLS = [file_writer, SaveOutputTool(), voice_polisher_tool]
 CODE_TOOLS = [t for t in [code_interpreter, file_writer, file_reader, SaveOutputTool(), CLIHubSearchTool(), launch_vercel_tool] if t is not None]
 ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool(), GitHubRepoTool(), GitHubIssueTool(), GitHubFileTool(), NotionSearchTool(), NotionPageTool(), launch_vercel_tool, SpawnJobTool()] + VERCEL_TOOLS + NOTION_STYLING_TOOLS + FORGE_TOOLS + GWS_TOOLS

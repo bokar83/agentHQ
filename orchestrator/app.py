@@ -51,6 +51,7 @@ from handlers import (
 )
 from handlers_chat import run_chat
 from health import health_registry
+from webhooks import router as webhooks_router
 from schemas import (
     AsyncTaskResponse,
     AutonomyApproveBody,
@@ -93,6 +94,7 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization", "X-Api-Key", "X-Internal-Token"],
     allow_credentials=True,
 )
+app.include_router(webhooks_router)
 
 
 # ══════════════════════════════════════════════════════════════
