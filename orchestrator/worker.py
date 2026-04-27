@@ -80,6 +80,7 @@ def _run_background_job(
     session_key: str,
     job_id: str,
     classification: dict = None,
+    explicit_task_type: str = "",
 ) -> None:
     """
     Background worker: runs the crew, sends progress pings, saves output,
@@ -126,6 +127,7 @@ def _run_background_job(
             task_request=task,
             from_number=from_number,
             session_key=session_key,
+            explicit_task_type=explicit_task_type,
         )
 
         summary = result.get("result", "")
@@ -141,6 +143,17 @@ def _run_background_job(
             drive_url = save_to_drive(title, task_type, deliverable)
         else:
             logger.info(f"Job {job_id}: task_type '{task_type}' is query-only, skipping Drive/GitHub save")
+
+        # ── Notion content board (content task types only) ─────────────
+        from constants import CONTENT_TASK_TYPES
+        if task_type in CONTENT_TASK_TYPES:
+            try:
+                from saver import save_to_notion_content_board
+                notion_url = save_to_notion_content_board(title, task_type, drive_url, deliverable)
+                if notion_url:
+                    logger.info(f"Job {job_id}: Notion content board entry created at {notion_url}")
+            except Exception as _notion_err:
+                logger.warning(f"Job {job_id}: Notion content board save failed: {_notion_err}")
 
         # ── Deliver ──────────────────────────────────────────
         send_result(chat_id, summary, drive_url, github_url)

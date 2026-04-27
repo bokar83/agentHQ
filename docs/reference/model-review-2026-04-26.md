@@ -8,13 +8,13 @@ Threshold: challenger must beat incumbent by >= 3 pts total across seeds
 | Model | Seed 1 | Seed 2 | Seed 3 | Total |
 |-------|--------|--------|--------|-------|
 | `xai/grok-4` | 5 | 5 | 5 | **15** |
-| `anthropic/claude-sonnet-4.6` | 13 | 14 | 15 | **42** |
-| `mistralai/mistral-large-2407` | 14 | 15 | 14 | **43** |
-| `google/gemini-2.5-flash` | 8 | 15 | 14 | **37** |
+| `anthropic/claude-sonnet-4.6` | 15 | 14 | 15 | **44** |
+| `mistralai/mistral-large-2407` | 15 | 12 | 14 | **41** |
+| `google/gemini-2.5-flash` | 12 | 15 | 14 | **41** |
 
 ## Recommendation
 
-RECOMMENDATION: Switch social/moderate from `xai/grok-4` to `mistralai/mistral-large-2407` (+28 pts total, +9.3 avg/post). Proposal sent to approval queue.
+RECOMMENDATION: Switch social/moderate from `xai/grok-4` to `anthropic/claude-sonnet-4.6` (+29 pts total, +9.7 avg/post). Proposal sent to approval queue.
 
 ## Seed Posts Used
 

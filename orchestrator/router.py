@@ -520,16 +520,20 @@ def _log_routing_decision(user_message: str, task_type: str, crew: str, used_llm
         logger.debug("router_log queue full; dropping one telemetry row")
 
 
-def classify_task(user_message: str) -> dict:
+def classify_task(user_message: str, explicit_task_type: str = "") -> dict:
     """
     Classify user message. Returns dict: {task_type, crew, confidence, is_unknown}.
     Uses keyword fast-path first; falls back to LLM when keywords return unknown.
+    If explicit_task_type is a valid TASK_TYPES key, skip classification entirely.
     """
-    task_type = _classify_raw(user_message)
     used_llm = False
-    if task_type == "unknown":
-        task_type = _llm_classify(user_message)
-        used_llm = True
+    if explicit_task_type and explicit_task_type in TASK_TYPES:
+        task_type = explicit_task_type
+    else:
+        task_type = _classify_raw(user_message)
+        if task_type == "unknown":
+            task_type = _llm_classify(user_message)
+            used_llm = True
 
     crew = TASK_TYPES.get(task_type, {}).get("crew", "unknown_crew")
     confidence = 0.3 if task_type == "unknown" else 0.95

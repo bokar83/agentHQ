@@ -344,6 +344,7 @@ async def run_task(request: TaskRequest, background_tasks: BackgroundTasks):
         session_key=crew_session_key,
         job_id=job_id,
         classification=classification,
+        explicit_task_type=request.task_type if request.task_type not in ('unknown', '') else '',
     )
     return AsyncTaskResponse(job_id=job_id, message="Job queued. Result will be delivered to Telegram.")
 
@@ -359,6 +360,7 @@ async def run_task_sync(request: TaskRequest):
                 task_request=request.task,
                 from_number=request.from_number,
                 session_key=request.session_key,
+                explicit_task_type=request.task_type if request.task_type not in ("unknown", "") else "",
             )
         return TaskResponse(
             success=result["success"],
@@ -445,6 +447,7 @@ async def run_task_async(request: TaskRequest, background_tasks: BackgroundTasks
                     task_request=task_text,
                     from_number=request.from_number,
                     session_key=request.session_key,
+                    explicit_task_type=request.task_type if request.task_type not in ("unknown", "") else "",
                 )
 
             result_text = (
