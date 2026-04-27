@@ -11,7 +11,7 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 TEMPLATE_PATH = Path(__file__).parent / "templates" / "cold_email.txt"
-CALENDLY_URL = os.environ.get("SIGNAL_WORKS_CALENDLY", "https://calendly.com/boubacarbarry/signal-works")
+CALENDLY_URL = os.environ.get("SIGNAL_WORKS_CALENDLY", "https://calendly.com/boubacarbarry/signal-works-discovery-call")
 SENDER_NAME = os.environ.get("SIGNAL_WORKS_SENDER", "Boubacar Barry")
 
 DEMO_URLS = {
