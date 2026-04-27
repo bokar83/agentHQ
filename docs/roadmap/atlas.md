@@ -1008,3 +1008,28 @@ Also in this session:
 3. After deploy: PIN into `/atlas`, send test message, verify native chat responds
 4. M9c (cross-session memory) after 1 week of M9b usage
 5. M5 (Chairman / L5 Learning) gate: 2026-05-08
+
+### 2026-04-26: A/B test bugs fixed + deployed (commit f972756)
+
+Two bugs surfaced during the Option A A/B test run and fixed same session.
+
+**Bug 1: Sonnet assistant-prefill (social crew QA agent):**
+- Root cause: `build_qa_agent()` defaults to `max_iter=3`. When Sonnet exhausts iterations,
+  CrewAI appends an assistant-prefill turn. Anthropic rejects this with HTTP 400.
+- Fix: `build_social_crew()` sets `qa.max_iter=1` after agent construction. QA is a
+  single-pass review, no retries needed. Same fix pattern as consultant crew + research_engine.py.
+
+**Bug 2: Grok-4 Pydantic string_type crash (A/B script):**
+- Root cause: Grok-4 occasionally returns a list of `ChatCompletionMessageFunctionCall`
+  objects as `TaskOutput.raw` instead of a plain string. Pydantic rejects non-string raw.
+- Fix: `_run_legriot_for_model()` in `legriot_ab_test.py` normalizes `result.raw` to str
+  before use. Extracts `.content`/`.text` from list items; falls back to `str(result)` on None.
+- 2 regression tests added.
+
+**A/B test verdict (recorded):** Grok-4 stays on `social/moderate`. No challenger cleared
++3 pts threshold. Mistral-Large-2512 is closest and had zero failures, worth watching
+in the weekly model review agent (first run: Sunday 2026-05-03 08:00 MT).
+
+343/343 tests pass. Deployed to VPS.
+
+---

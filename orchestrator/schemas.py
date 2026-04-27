@@ -6,6 +6,7 @@ class TaskRequest(BaseModel):
     task: str
     from_number: str = "unknown"
     session_key: str = "default"
+    task_type: str = "unknown"
     context: Optional[dict] = None
     callback_url: Optional[str] = None
     file_id: Optional[str] = None
