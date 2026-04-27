@@ -234,7 +234,7 @@ def _split_pool(rows: list, today_iso: str) -> tuple:
     for r in rows:
         if r["status"] == "Ready" and not r["scheduled_date"]:
             if any(pl in {"LinkedIn", "X"} for pl in r["platform"]):
-                if r["draft"]:  # must have a post body ready to publish
+                if r["title"] or r["hook"] or r["draft"]:  # body optional -- Enhance can fill it
                     candidates.append(r)
         elif r["status"] in {"Queued", "Posted", "Ready"} and r["scheduled_date"]:
             if r["scheduled_date"] >= cutoff:

@@ -200,17 +200,39 @@ def handle_callback_query(update: dict) -> bool:
             logger.warning(f"callback_query approve_variation handling error: {e}")
 
     elif cb_data.startswith("reject_variation:"):
-        # reject_variation:<queue_id>:<variation_index>  -- rejects the whole queue row
+        # reject_variation:<queue_id>:<variation_index>
+        # Removes that one variation from the list. Does NOT reject the queue row.
+        # If it was the last variation, marks row rejected so griot can re-propose.
         try:
             parts = cb_data.split(":", 2)
-            qid = int(parts[1])
-            from approval_queue import get as _aq_get, reject as _aq_reject
+            qid, var_idx = int(parts[1]), int(parts[2])
+            from approval_queue import get as _aq_get, reject as _aq_reject, _conn as _aq_conn
             from notifier import answer_callback_query, send_message
+            import json as _json
             qrow = _aq_get(qid)
-            if qrow and qrow.status in ("pending", "enhancing"):
-                _aq_reject(qid, note="rejected after enhance", feedback_tag="other")
-                answer_callback_query(cb_id, f"Rejected #{qid}")
-                send_message(cb_chat_id, f"Queue #{qid}: rejected. It will not be scheduled.")
+            if qrow and qrow.status == "enhancing":
+                variations = list((qrow.payload or {}).get("variations", []))
+                if 1 <= var_idx <= len(variations):
+                    variations.pop(var_idx - 1)
+                    if variations:
+                        # Still have other variations -- just update the list
+                        conn = _aq_conn()
+                        cur = conn.cursor()
+                        cur.execute(
+                            "UPDATE approval_queue SET payload = payload || %s::jsonb WHERE id = %s",
+                            (_json.dumps({"variations": variations}), qid),
+                        )
+                        conn.commit()
+                        cur.close()
+                        answer_callback_query(cb_id, f"Variation {var_idx} removed.")
+                        send_message(cb_chat_id, f"Variation {var_idx} removed. {len(variations)} remaining.")
+                    else:
+                        # No variations left -- reject the row so griot can try again
+                        _aq_reject(qid, note="all variations dismissed", feedback_tag="enhance")
+                        answer_callback_query(cb_id, "All variations dismissed.")
+                        send_message(cb_chat_id, f"Queue #{qid}: all variations dismissed. Griot will propose a new candidate tomorrow.")
+                else:
+                    answer_callback_query(cb_id, "Invalid variation.")
             elif qrow:
                 answer_callback_query(cb_id, f"Already {qrow.status}.")
             else:
