@@ -9,7 +9,7 @@ Built and deployed Atlas M9b (web chat native panel) end-to-end. Replaced the ch
 **Backend:**
 - `orchestrator/db.py`: `chat_artifacts` table; `ensure_chat_artifacts_table()` (idempotent startup migration); `save_chat_artifact()`, `get_chat_artifact()` helpers
 - `orchestrator/state.py`: `_confirm_store` dict for write-action pending confirmations (5-min TTL)
-- `orchestrator/handlers_chat.py`: `run_atlas_chat(messages, session_key, channel="web")`: uses `ATLAS_CHAT_MODEL`, resolves `[artifact:art_id]` refs, stores artifacts, routes `forward_to_crew` through confirm gate
+- `orchestrator/handlers_chat.py`: `run_atlas_chat(messages, session_key, channel="web")` using `ATLAS_CHAT_MODEL`, resolves `[artifact:art_id]` refs, stores artifacts, routes `forward_to_crew` through confirm gate
 - `orchestrator/app.py`: `POST /atlas/chat`, `GET /atlas/job/{job_id}`, `POST /atlas/confirm/{token}`, `POST /atlas/confirm/{token}/cancel`; startup table migration
 
 **Frontend:**
@@ -29,7 +29,7 @@ Built and deployed Atlas M9b (web chat native panel) end-to-end. Replaced the ch
 
 ## Decisions made
 
-**M9a smoke test gate lifted.** M9b has zero code dependency on Monday tap. Both can proceed in parallel. If tap fails, bug is isolated to `handlers_approvals.py` callback dispatch.
+**M9a smoke test gate lifted.** M9b has zero code dependency on Monday tap. If tap fails, bug is isolated to `handlers_approvals.py` callback dispatch; does not require M9b rollback.
 
 **M9c scope replan locked.** Weekly model review agent pulled forward (done). Artifact iteration deferred 1 week. Cross-session memory remains M9c proper.
 
@@ -50,32 +50,32 @@ After Monday tap confirms M9a buttons work: start M9c (cross-session memory) imm
 
 ## Next session must start here
 
-1. Check Monday griot fire result: docker logs orc-crewai last 24h, filter for auto_publisher, approve_queue_item, reject_queue_item
+1. Check Monday griot fire result: `ssh root@72.60.209.109 'docker logs orc-crewai --tail 200'` and scan for auto_publisher, approve_queue_item, reject_queue_item
 2. If M9a buttons worked: test native chat. PIN into agentshq.boubacarbarry.com/atlas, send "show me my content board", verify response.
-3. Delete VPS orphan archive if past 2026-04-28.
+3. Delete VPS orphan archive if past 2026-04-28: `ssh root@72.60.209.109 'rm -rf /root/_archive_20260421'`
 4. Decide M9c timing.
 5. M5 (Chairman / L5 Learning) gate: 2026-05-08.
 
 ## Files changed this session
 
 ```
-orchestrator/db.py                         : chat_artifacts table + helpers
-orchestrator/state.py                      : _confirm_store dict
-orchestrator/handlers_chat.py              : run_atlas_chat()
-orchestrator/app.py                        : 4 new endpoints + startup migration
-orchestrator/model_review_agent.py         : NEW (A/B agent)
-orchestrator/contracts/model_review_agent.md: NEW
-orchestrator/tests/test_model_review_agent.py: NEW
-orchestrator/tests/test_legriot_ab_test.py : NEW
-orchestrator/scheduler.py                  : model-review-agent heartbeat
-orchestrator/harvest_reviewer.py           : select_by_capability() migration
-thepopebot/chat-ui/atlas.html              : native chat panel
-thepopebot/chat-ui/atlas-chat.js           : NEW atlasChat module
-thepopebot/chat-ui/atlas.css              : chat panel styles
-scripts/legriot_ab_test.py                 : A/B harness (A/B agent)
-docs/roadmap/atlas.md                      : M9b session log
-docs/reference/model-review-2026-04-26.md : NEW sample report
-.gitignore                                 : removed bare thepopebot/ glob
+orchestrator/db.py                           chat_artifacts table + helpers
+orchestrator/state.py                        _confirm_store dict
+orchestrator/handlers_chat.py                run_atlas_chat()
+orchestrator/app.py                          4 new endpoints + startup migration
+orchestrator/model_review_agent.py           NEW (A/B agent)
+orchestrator/contracts/model_review_agent.md NEW
+orchestrator/tests/test_model_review_agent.py NEW
+orchestrator/tests/test_legriot_ab_test.py   NEW
+orchestrator/scheduler.py                    model-review-agent heartbeat
+orchestrator/harvest_reviewer.py             select_by_capability() migration
+thepopebot/chat-ui/atlas.html                native chat panel
+thepopebot/chat-ui/atlas-chat.js             NEW atlasChat module
+thepopebot/chat-ui/atlas.css                chat panel styles
+scripts/legriot_ab_test.py                   A/B harness (A/B agent)
+docs/roadmap/atlas.md                        M9b session log
+docs/reference/model-review-2026-04-26.md   NEW sample report
+.gitignore                                   removed bare thepopebot/ glob
 ```
 
 Commits on main this session: 6cb56c5, e27c79a, d50de59, 3cdbc18, f242828 (PR #23 merge), ef03672
