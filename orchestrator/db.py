@@ -425,3 +425,49 @@ def sync_fallback_to_supabase() -> int:
     except Exception as e:
         logger.error(f"sync_fallback_to_supabase failed: {e}")
         return 0
+
+
+def upsert_signal_works_lead(lead: dict) -> None:
+    """Insert or update a Signal Works lead in Supabase leads table.
+
+    Uses email as the unique key. Tags the row with source='signal_works'.
+    Fields: name, email, phone, website_url, review_count, google_maps_url,
+            niche (stored in notes as JSON), city (stored in location), ai_score (in notes).
+    """
+    import json
+    conn = get_crm_connection()
+    try:
+        notes_payload = json.dumps({
+            "niche": lead.get("niche", ""),
+            "city": lead.get("city", ""),
+            "ai_score": lead.get("ai_score", 0),
+            "google_maps_url": lead.get("google_maps_url", ""),
+        })
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO leads (name, email, phone, company, location, source, notes, status, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                ON CONFLICT (email) DO UPDATE SET
+                    phone        = EXCLUDED.phone,
+                    location     = EXCLUDED.location,
+                    notes        = EXCLUDED.notes,
+                    updated_at   = NOW()
+                WHERE leads.source = 'signal_works'
+                """,
+                (
+                    lead.get("name", ""),
+                    lead.get("email", ""),
+                    lead.get("phone", ""),
+                    lead.get("name", ""),
+                    lead.get("city", ""),
+                    "signal_works",
+                    notes_payload,
+                    "new",
+                ),
+            )
+            conn.commit()
+    except Exception as exc:
+        logger.warning(f"upsert_signal_works_lead failed: {exc}")
+    finally:
+        conn.close()
