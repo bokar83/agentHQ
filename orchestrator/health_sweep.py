@@ -1,5 +1,5 @@
 """
-health_sweep.py - Weekly automated API health sweep.
+health_sweep.py - Daily automated API health sweep.
 
 Probes every public-facing endpoint with edge-case inputs (pending job,
 missing job, null fields, empty strings) and asserts that every response
@@ -7,7 +7,7 @@ is valid JSON with an expected status code.  Any probe that returns a
 non-JSON body, a 5xx, or a Pydantic validation error fires a Telegram
 alert so the bug is caught before Boubacar sees it.
 
-Fires every Sunday at 08:00 MT via heartbeat.register_wake().
+Fires every day at 08:00 MT via heartbeat.register_wake().
 Read-only: no Notion writes, no crew invocations, no data mutations.
 
 Results are sent to Telegram as a short summary:
@@ -177,6 +177,27 @@ def _probe_atlas_state() -> tuple[str, bool, str]:
         return label, False, str(e)[:120]
 
 
+def _probe_atlas_chat() -> tuple[str, bool, str]:
+    """/atlas/chat must exist (401, not 404). Catches route-wipeout regressions."""
+    label = "POST /atlas/chat (route exists)"
+    api_key = _api_key()
+    if not api_key:
+        return label, True, "(skipped -- no auth configured)"
+    try:
+        r = _requests.post(
+            f"{_base_url()}/atlas/chat",
+            headers={"Authorization": "Bearer bad-token-sweep", "Content-Type": "application/json"},
+            json={"messages": [{"role": "user", "content": "ping"}], "session_key": "health-sweep"},
+            timeout=_TIMEOUT,
+        )
+        # 401 = route exists, auth rejected (correct). 404 = route missing (regression).
+        if r.status_code == 401:
+            return label, True, ""
+        return label, False, f"Expected 401 got {r.status_code}: {r.text[:120]}"
+    except Exception as e:
+        return label, False, str(e)[:120]
+
+
 def _probe_history_empty_session() -> tuple[str, bool, str]:
     """/history/<unknown-session> must return JSON with empty list, not 500."""
     label = "GET /history/<unknown>"
@@ -207,6 +228,7 @@ _PROBES = [
     _probe_chat_token_bad_pin,
     _probe_classify,
     _probe_atlas_state,
+    _probe_atlas_chat,
     _probe_history_empty_session,
 ]
 
@@ -226,7 +248,7 @@ def run_health_sweep() -> dict[str, Any]:
 
 def health_sweep_tick() -> None:
     """Heartbeat callback: run sweep and notify via Telegram."""
-    logger.info("HEALTH_SWEEP: starting weekly sweep")
+    logger.info("HEALTH_SWEEP: starting daily sweep")
     try:
         summary = run_health_sweep()
     except Exception as e:

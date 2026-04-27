@@ -568,7 +568,7 @@ def start_scheduler():
     except Exception as e:
         logger.error(f"STUDIO_TREND_SCOUT: wake registration failed ({e}); continuing without trend scout", exc_info=True)
 
-    # Hardening: weekly API health sweep. Fires every Sunday at 08:00 MT.
+    # Hardening: daily API health sweep. Fires every day at 08:00 MT.
     # Read-only probes; sends Telegram alert on any failure.
     # crew_name='health-sweep' (no kill switch needed -- it's diagnostic only).
     try:
