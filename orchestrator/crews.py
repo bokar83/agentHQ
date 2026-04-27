@@ -2938,16 +2938,14 @@ def build_content_board_fetch_crew(user_request: str) -> Crew:
                 f"Try listing posts first to confirm the exact title."
             )
         else:
-            page_id = matched_page["id"]
             props = matched_page.get("properties", {})
             status = _get_select(props.get("Status", {}))
             platform = _get_multi_select(props.get("Platform", {})) or _get_select(props.get("Platform", {}))
-            try:
-                body = notion.get_page_blocks(page_id)
-            except Exception as e:
-                body = f"[Could not fetch post body: {e}]"
-            if not body.strip():
-                body = "[Post body is empty in Notion]"
+            # Post body is in the "Draft" rich_text property, not page blocks
+            draft_parts = props.get("Draft", {}).get("rich_text", [])
+            body = "".join(seg.get("plain_text", "") for seg in draft_parts).strip()
+            if not body:
+                body = "[No Draft text in Notion for this post]"
             result_text = (
                 f"TITLE: {matched_title}\n"
                 f"STATUS: {status} | PLATFORM: {platform}\n\n"
