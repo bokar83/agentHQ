@@ -62,11 +62,11 @@ def test_ai_scorer_returns_score_dict():
     with patch("signal_works.ai_scorer._query_chatgpt") as mock_gpt, \
          patch("signal_works.ai_scorer._query_perplexity") as mock_perp, \
          patch("signal_works.ai_scorer._check_robots_txt") as mock_robots, \
-         patch("signal_works.ai_scorer._check_bing_places") as mock_bing:
+         patch("signal_works.ai_scorer._check_serp_presence") as mock_serp:
         mock_gpt.return_value = False
         mock_perp.return_value = True
         mock_robots.return_value = True
-        mock_bing.return_value = False
+        mock_serp.return_value = False
         result = score_business("Valley Dental", "Salt Lake City", "pediatric dentist", "https://valleydental.com")
         assert "score" in result
         assert 0 <= result["score"] <= 100
