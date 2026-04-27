@@ -27,7 +27,6 @@ Models above ceiling require explicit user confirmation (Phase 2, not enforced y
 
 import os
 import json
-import time
 import logging
 import urllib.request
 import urllib.error
@@ -36,6 +35,16 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+
+from orchestrator.async_poll import (
+    poll_until_done,
+    submit_and_poll,
+    high_res_params,
+    ENDPOINT_JOBS,
+    ENDPOINT_GENERATE,
+    PollFailed,
+    PollTimeout,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -200,32 +209,23 @@ def _create_task(model_config: dict, prompt: str, extra_input: dict | None = Non
     return task_id
 
 
-def _poll_task(task_id: str) -> dict:
-    """Poll /jobs/recordInfo until state is terminal. Return parsed result."""
-    url = f"{KIE_BASE}/api/v1/jobs/recordInfo"
-    for attempt in range(MAX_POLL_ATTEMPTS):
-        resp = httpx.get(url, headers=_headers(), params={"taskId": task_id}, timeout=15)
-        resp.raise_for_status()
-        data = resp.json().get("data", {})
-        state = data.get("state", "")
-        if state == "success":
-            result_raw = data.get("resultJson", "{}")
-            result = json.loads(result_raw) if isinstance(result_raw, str) else result_raw
-            urls = result.get("resultUrls", []) or []
-            if not urls:
-                raise KieMediaError(f"Task {task_id} succeeded but returned no resultUrls: {result}")
-            return {
-                "state": "success",
-                "result_urls": urls,
-                "cost_time_ms": data.get("costTime", 0),
-            }
-        if state == "fail":
-            raise KieMediaError(
-                f"Task {task_id} failed: {data.get('failMsg', 'unknown')} "
-                f"(code={data.get('failCode')})"
-            )
-        time.sleep(POLL_INTERVAL_SECS)
-    raise KieMediaError(f"Task {task_id} timed out after {MAX_POLL_ATTEMPTS * POLL_INTERVAL_SECS}s")
+def _poll_task(task_id: str, endpoint: str = ENDPOINT_JOBS) -> dict:
+    """Poll a Kie task until terminal state. Delegates to shared async_poll utility."""
+    try:
+        result = poll_until_done(
+            task_id,
+            headers=_headers(),
+            endpoint=endpoint,
+            interval=POLL_INTERVAL_SECS,
+            max_wait=MAX_POLL_ATTEMPTS * POLL_INTERVAL_SECS,
+            backoff_factor=1.3,
+            backoff_cap=30.0,
+        )
+        return result
+    except PollFailed as e:
+        raise KieMediaError(str(e)) from e
+    except PollTimeout as e:
+        raise KieMediaError(str(e)) from e
 
 
 def _run_single_model(model_config: dict, prompt: str, extra_input: dict | None) -> dict:
