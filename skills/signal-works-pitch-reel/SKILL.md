@@ -111,7 +111,9 @@ Run the `hyperframes` skill. Build a composition with these hard rules - never d
 
 Every text overlay must:
 
-1. **Frosted pill container:** `background: rgba(0,0,0,0.45); border-radius: 8px; padding: 12px 20px; backdrop-filter: blur(4px)` - no raw floating text
+1. **No containers, no pills, no boxes.** Text sits directly over the image. Legibility comes from a layered text-shadow halo, not a background element:
+   `text-shadow: 0 0 20px rgba(0,0,0,0.9), 0 0 40px rgba(0,0,0,0.7), 0 2px 4px rgba(0,0,0,0.95)`
+   This creates a soft dark glow that makes white text readable on any background without any visible box.
 2. **Mixed color:** the highlighted phrase (marked with `**` in Step 3) renders in the niche accent color. All other text is white `#FFFFFF` or light gray `#E8E8E8`
 3. **Varied position:** each shot places text in a different screen region. Use this rotation:
    - Shot 1: bottom-left (10% from left, 12% from bottom)
