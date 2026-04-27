@@ -345,7 +345,7 @@ def _run_pending_email_jobs():
         for job in jobs:
             try:
                 message = MIMEText(job["body_text"], "plain")
-                message["From"] = "me"
+                message["From"] = "monkeybiz@catalystworks.consulting"
                 message["To"] = job["to_addr"]
                 message["Subject"] = job["subject"]
                 encoded = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8").rstrip("=\n")
