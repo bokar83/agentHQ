@@ -335,14 +335,15 @@ def _run_enhance_crew(qid: int, qrow, chat_id: str) -> None:
         conn.commit()
         cur.close()
 
-        # Send each variation as its own message with Approve / Enhance / Reject
+        # Send each variation as its own message with Approve / Enhance / No
+        # "No" removes only that variation; it does not touch the other variations or the row.
         send_message(chat_id, f"Queue #{qid}: {len(variations)} variation(s) ready.")
         for i, v in enumerate(variations, 1):
             msg = f"Variation {i} of {len(variations)}:\n\n{v}"
             buttons = [[
-                (f"Approve", f"approve_variation:{qid}:{i}"),
-                (f"Enhance", f"enhance_variation:{qid}:{i}"),
-                (f"Reject", f"reject_variation:{qid}:{i}"),
+                ("Approve", f"approve_variation:{qid}:{i}"),
+                ("Enhance", f"enhance_variation:{qid}:{i}"),
+                ("No", f"reject_variation:{qid}:{i}"),
             ]]
             send_message_with_buttons(chat_id, msg, buttons)
 
