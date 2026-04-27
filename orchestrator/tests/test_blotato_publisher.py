@@ -165,6 +165,17 @@ def test_publish_http_422_quota_raises_runtimeerror():
         pub.publish(text="hi", account_id="123", platform="twitter")
 
 
+def test_publish_http_201_accepted_as_success():
+    """Blotato returns 201 (Created) for some POSTs -- must not raise."""
+    from blotato_publisher import BlotatoPublisher
+    pub = BlotatoPublisher(api_key="k")
+    fake_client = MagicMock()
+    fake_client.post.return_value = _http_response(201, {"postSubmissionId": "sub-201"})
+    pub._client = fake_client
+    result = pub.publish(text="hi", account_id="123", platform="twitter")
+    assert result == "sub-201"
+
+
 def test_publish_no_post_submission_id_raises():
     from blotato_publisher import BlotatoPublisher
     pub = BlotatoPublisher(api_key="k")

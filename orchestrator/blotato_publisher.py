@@ -197,7 +197,7 @@ class BlotatoPublisher:
         except Exception as e:
             raise RuntimeError(f"Blotato POST /v2/posts network error: {e}") from e
 
-        if resp.status_code != 200:
+        if resp.status_code not in (200, 201):
             raise RuntimeError(
                 f"Blotato POST /v2/posts returned {resp.status_code}: "
                 f"{resp.text[:500]}"
@@ -241,7 +241,7 @@ class BlotatoPublisher:
         except Exception as e:
             raise RuntimeError(f"Blotato GET /v2/posts/{post_submission_id} network error: {e}") from e
 
-        if resp.status_code != 200:
+        if resp.status_code not in (200, 201):
             raise RuntimeError(
                 f"Blotato GET /v2/posts/{post_submission_id} returned {resp.status_code}: "
                 f"{resp.text[:500]}"
@@ -384,7 +384,7 @@ def list_accounts() -> list:
     pub = get_publisher()
     client = pub._http()
     resp = client.get("/users/me/accounts")
-    if resp.status_code != 200:
+    if resp.status_code not in (200, 201):
         raise RuntimeError(
             f"GET /v2/users/me/accounts returned {resp.status_code}: {resp.text[:500]}"
         )
