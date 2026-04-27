@@ -719,6 +719,18 @@ def _run_drive_watch(scan_all: bool = False):
             if not file_id or not filename:
                 continue
 
+            # -- Skip excluded file types (code, raw HTML site builds) -----
+            try:
+                from doc_routing.taxonomy_agent import EXCLUDED_EXTENSIONS, EXCLUDED_FILENAME_PATTERNS
+                import os as _os
+                _ext = _os.path.splitext(filename)[1].lower()
+                _fname_lower = filename.lower()
+                if _ext in EXCLUDED_EXTENSIONS or any(p in _fname_lower for p in EXCLUDED_FILENAME_PATTERNS):
+                    logger.debug(f"DRIVE WATCH: Skipping excluded file type: {filename}")
+                    continue
+            except Exception:
+                pass
+
             # -- Check if already in pending docs --------------------------
             try:
                 cur.execute(

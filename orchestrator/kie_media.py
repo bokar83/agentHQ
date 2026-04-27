@@ -721,10 +721,75 @@ def check_credits() -> int:
     return resp.json().get("data", 0)
 
 
+def sora_watermark_remover(video_url: str) -> dict:
+    """Remove Sora watermark via Kie AI. Returns {result_url, task_id}."""
+    try:
+        resp = httpx.post(
+            f"{KIE_BASE}/api/v1/jobs/createTask",
+            headers=_headers(),
+            json={
+                "model": "sora-watermark-remover",
+                "input": {"video_url": video_url},
+            },
+            timeout=30,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        if data.get("code") != 200:
+            raise KieMediaError(f"Kai Sora watermark remover failed: {data.get('msg')} (code={data.get('code')})")
+        task_id = data.get("data", {}).get("taskId")
+        if not task_id:
+            raise KieMediaError(f"Kai Sora watermark remover returned no taskId: {data}")
+        result = _poll_task(task_id, endpoint=ENDPOINT_JOBS)
+        urls = result.get("result_urls") or []
+        if not urls:
+            raise KieMediaError(f"Kai Sora watermark remover returned no result URLs for task {task_id}")
+        return {"result_url": urls[0], "task_id": task_id}
+    except KieMediaError:
+        raise
+    except Exception as e:
+        raise KieMediaError(f"Kai Sora watermark remover failed: {e}") from e
+
+
+def audio_remix(source_url: str, prompt: str) -> dict:
+    """Remix audio via Kie AI Suno V5. Returns {result_url, task_id}."""
+    try:
+        resp = httpx.post(
+            f"{KIE_BASE}/api/v1/generate/upload-cover",
+            headers=_headers(),
+            json={
+                "uploadUrl": source_url,
+                "prompt": prompt,
+                "customMode": True,
+                "instrumental": True,
+                "model": "V5",
+            },
+            timeout=30,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        if data.get("code") != 200:
+            raise KieMediaError(f"Kai audio remix failed: {data.get('msg')} (code={data.get('code')})")
+        task_id = data.get("data", {}).get("taskId")
+        if not task_id:
+            raise KieMediaError(f"Kai audio remix returned no taskId: {data}")
+        result = _poll_task(task_id, endpoint=ENDPOINT_GENERATE)
+        urls = result.get("result_urls") or []
+        if not urls:
+            raise KieMediaError(f"Kai audio remix returned no result URLs for task {task_id}")
+        return {"result_url": urls[0], "task_id": task_id}
+    except KieMediaError:
+        raise
+    except Exception as e:
+        raise KieMediaError(f"Kai audio remix failed: {e}") from e
+
+
 __all__ = [
     "generate_image",
     "generate_video",
     "generate_promo_video",
+    "sora_watermark_remover",
+    "audio_remix",
     "list_models",
     "check_credits",
     "MODEL_REGISTRY",
