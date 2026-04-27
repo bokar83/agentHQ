@@ -1,5 +1,5 @@
 # Signal Works 90-Day Master Plan
-**Last updated:** 2026-04-27
+**Last updated:** 2026-04-27 (video strategy pivot)
 **Status:** LIVE, build started April 27, first emails April 28
 **Owner:** Boubacar Barry
 **Codename:** signal_works
@@ -139,11 +139,23 @@ The entry hook. Generated before every cold email is sent.
 
 ### Channel 1: Cold Email
 **Subject line:** "ChatGPT doesn't know [Business Name] exists (your AI score: [X]/100)"
-**Body:** Loom video link showing their score vs. competitor + demo site + Calendly link
+**Body:** AI score + demo site link + Calendly link
 **Sequence:**
-- Email 1: Score + Loom + demo (Day 1)
-- Email 2: Follow-up if no reply (Day 4): "Did you get a chance to watch?"
+- Email 1: Score + demo link + Calendly (Day 1)
+- Email 2: Follow-up if no reply (Day 4): "Did you get a chance to look?"
 - Email 3: Final (Day 8): "Leaving this open for 48 more hours"
+
+**VIDEO STRATEGY (updated 2026-04-27, Sankofa Council verdict):**
+Personalized Loom per prospect is ELIMINATED. Reasons: low click rate on cold email video links, high manual time per lead, does not scale.
+
+Instead: one Seedance cinematic promo video per niche, generated once via `kie_media generate_promo_video`, embedded as autoplay muted hero video on each demo site. Zero marginal cost per prospect. The demo site IS the video experience.
+
+**Niche videos to generate (one-time, then reuse forever):**
+- [ ] Roofing: generate_promo_video from signal-works-demo-roofing screenshots
+- [ ] Dental: generate_promo_video from signal-works-demo-dental screenshots
+- [ ] HVAC: generate_promo_video from signal-works-demo-hvac screenshots (after site built)
+
+Screenshots folder: `d:/Ai_Sandbox/agentsHQ/workspace/demo-sites/screenshots/`
 
 ### Channel 2: Instagram DM
 **Target:** Businesses with visual portfolios (landscapers, painters, interior designers, restaurants)
@@ -210,9 +222,11 @@ The entry hook. Generated before every cold email is sent.
 - [ ] Set up Stripe payment links (6 links: 3 monthly + 3 setup fees)
 - [ ] Configure Calendly "Signal Works Discovery Call" (30 min, Tue-Fri 9-5 MT)
 - [ ] Set up HelloSign contract template
-- [ ] Find 10 real leads on Google Maps (5 dentists + 5 roofers, SLC)
-- [ ] Record two 90-second Loom videos (dental + roofing)
-- [ ] Queue 10 Gmail drafts scheduled for Tuesday 8 AM
+- [x] Find 19 real leads (10 original + 9 new from Serper scrape), all in Supabase
+- [ ] Generate Seedance promo video for roofing demo (via kie_media generate_promo_video)
+- [ ] Embed roofing promo video as autoplay muted hero on signal-works-demo-roofing
+- [ ] Add pricing anchor to both demo sites ("Setup from $500 (reply to book a call)")
+- [ ] Queue 5 Gmail drafts for leads with emails, scheduled Tuesday 8 AM
 
 **Tuesday April 28:**
 - [ ] 10 cold emails auto-send at 8 AM MT
@@ -335,7 +349,7 @@ The entry hook. Generated before every cold email is sent.
 | Payment | Stripe | SETUP TODAY | 2.9%+$0.30/tx |
 | Booking | Calendly | SETUP TODAY | $0 free tier |
 | Contract | HelloSign | SETUP TODAY | $0 (3/mo free) |
-| Screen recording | Loom | TODAY | $0 free tier |
+| Niche promo videos | Kie/Seedance (generate_promo_video) | ONE-TIME per niche | ~$0.50/video |
 | Client site hosting | Vercel Pro | At client 1 | $20/month |
 | Uptime monitoring | UptimeRobot | At client 1 | $0 free tier |
 | AI Visibility monitoring | Semrush free + OtterlyAI | At client 3+ | $0 / $50-100 |
