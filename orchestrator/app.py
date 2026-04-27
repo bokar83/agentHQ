@@ -41,7 +41,7 @@ from fastapi import (
 )
 from fastapi.middleware.cors import CORSMiddleware
 
-from constants import SAVE_REQUIRED_TASK_TYPES
+from constants import SAVE_REQUIRED_TASK_TYPES, CONTENT_TASK_TYPES
 from engine import run_orchestrator, run_team_orchestrator
 from handlers import (
     _classify_obvious_chat,
@@ -462,6 +462,19 @@ async def run_task_async(request: TaskRequest, background_tasks: BackgroundTasks
                     logger.warning(f"Drive save failed for job {job_id}: {_drive_err}")
             else:
                 logger.info(f"Async job {job_id}: task_type '{task_type_val}' is query-only, skipping Drive save")
+
+            # For content task types, also log to Notion content board with Drive URL
+            if task_type_val in CONTENT_TASK_TYPES:
+                try:
+                    from saver import save_to_notion_content_board
+                    notion_url = save_to_notion_content_board(
+                        title_val, task_type_val, drive_url, deliverable_val
+                    )
+                    if notion_url:
+                        result_text = result_text + f"\n\nNotion: {notion_url}"
+                        logger.info(f"Async job {job_id}: content board entry created at {notion_url}")
+                except Exception as _notion_err:
+                    logger.warning(f"Notion content board save failed for job {job_id}: {_notion_err}")
 
             update_job(
                 job_id=job_id,

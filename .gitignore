@@ -156,6 +156,8 @@ thepopebot/
 
 # Runtime workspace for article drafts, media outputs, probes
 workspace/
+workspace/memory-index/*
+!workspace/memory-index/.gitkeep
 
 # Machine-local tooling config (tmux, etc.)
 config/
