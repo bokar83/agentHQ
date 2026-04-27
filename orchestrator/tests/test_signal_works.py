@@ -73,3 +73,24 @@ def test_ai_scorer_returns_score_dict():
         assert "breakdown" in result
         assert result["breakdown"]["perplexity"] is True
         assert result["score"] == 50
+
+
+def test_email_builder_fills_template():
+    """build_email returns string with all placeholders replaced."""
+    from signal_works.email_builder import build_email
+    lead = {
+        "name": "Valley Dental",
+        "owner_name": "Dr. Smith",
+        "email": "owner@valleydental.com",
+        "niche": "pediatric dentist",
+        "city": "Salt Lake City",
+        "ai_score": 12,
+        "ai_quick_wins": ["Fix robots.txt", "Claim Bing Places"],
+        "demo_url": "https://demo-dental.vercel.app",
+        "loom_url": "https://loom.com/share/abc123",
+    }
+    result = build_email(lead)
+    assert "Valley Dental" in result
+    assert "12/100" in result
+    assert "Fix robots.txt" in result
+    assert "{" not in result
