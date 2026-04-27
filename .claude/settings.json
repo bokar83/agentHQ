@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Edit(./.env)",
+      "Edit(./.env.*)",
+      "Write(./.env)",
+      "Write(./.env.*)",
+      "Bash(ssh root@* rm -rf:*)",
+      "Bash(ssh root@* DROP:*)",
+      "Bash(ssh root@* TRUNCATE:*)",
+      "Bash(ssh root@* docker rm -f:*)",
+      "Bash(ssh root@* docker-compose down -v:*)",
+      "Bash(ssh root@* psql * -c \"DROP:*)",
+      "Bash(ssh root@* psql * -c \"TRUNCATE:*)"
+    ]
+  }
+}
