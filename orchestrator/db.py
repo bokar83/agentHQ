@@ -430,43 +430,146 @@ def sync_fallback_to_supabase() -> int:
 def upsert_signal_works_lead(lead: dict) -> None:
     """Insert or update a Signal Works lead in Supabase leads table.
 
-    Uses email as the unique key. Tags the row with source='signal_works'.
-    Fields: name, email, phone, website_url, review_count, google_maps_url,
-            niche (stored in notes as JSON), city (stored in location), ai_score (in notes).
+    Strategy:
+    - If email is present: upsert on email (unique constraint).
+    - If no email: check for existing row by (name, city) to avoid duplicates, then insert.
+    All rows get source='signal_works' and lead_type from the lead dict (default 'website_prospect').
+    Baseline (review_count + rating) is captured on first insert only -- never overwritten.
+    Uses dedicated columns -- no JSON blobs for filterable fields.
     """
     import json
+    from datetime import date
     conn = get_crm_connection()
+    email = lead.get("email", "").strip()
+    name = lead.get("name", "")
+    city = lead.get("city", "")
+    ai_breakdown = lead.get("ai_breakdown")
+    breakdown_json = json.dumps(ai_breakdown) if ai_breakdown else None
+    review_count = int(lead.get("review_count", 0) or 0)
+    ai_score = int(lead.get("ai_score", 0) or 0)
+    google_rating = lead.get("google_rating") or None
+    has_website = bool(lead.get("has_website", bool(lead.get("website_url", ""))))
+    google_address = lead.get("google_address", "") or ""
+    today = date.today().isoformat()
+
+    def _shared_cols():
+        return (
+            lead.get("phone", ""),
+            lead.get("website_url", ""),
+            has_website,
+            review_count,
+            ai_score,
+            google_rating,
+            google_address,
+            lead.get("google_maps_url", ""),
+            lead.get("niche", ""),
+            city,
+            lead.get("lead_type", "website_prospect"),
+            breakdown_json,
+            lead.get("ai_quick_wins", ""),
+        )
+
     try:
-        notes_payload = json.dumps({
-            "niche": lead.get("niche", ""),
-            "city": lead.get("city", ""),
-            "ai_score": lead.get("ai_score", 0),
-            "google_maps_url": lead.get("google_maps_url", ""),
-        })
         with conn.cursor() as cur:
-            cur.execute(
-                """
-                INSERT INTO leads (name, email, phone, company, location, source, notes, status, created_at, updated_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
-                ON CONFLICT (email) DO UPDATE SET
-                    phone        = EXCLUDED.phone,
-                    location     = EXCLUDED.location,
-                    notes        = EXCLUDED.notes,
-                    updated_at   = NOW()
-                WHERE leads.source = 'signal_works'
-                """,
-                (
-                    lead.get("name", ""),
-                    lead.get("email", ""),
-                    lead.get("phone", ""),
-                    lead.get("name", ""),
-                    lead.get("city", ""),
-                    "signal_works",
-                    notes_payload,
-                    "new",
-                ),
-            )
-            conn.commit()
+            if email:
+                cur.execute(
+                    """
+                    INSERT INTO leads (
+                        name, email, phone, company, location, source, status,
+                        website_url, has_website, review_count, ai_score,
+                        google_rating, google_address, google_maps_url,
+                        niche, city, lead_type, ai_breakdown, ai_quick_wins,
+                        baseline_reviews, baseline_rating, baseline_date,
+                        created_at, updated_at
+                    )
+                    VALUES (%s,%s,%s,%s,%s,'signal_works','new',
+                            %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                            %s,%s,%s,
+                            NOW(),NOW())
+                    ON CONFLICT (email) DO UPDATE SET
+                        phone           = EXCLUDED.phone,
+                        website_url     = EXCLUDED.website_url,
+                        has_website     = EXCLUDED.has_website,
+                        review_count    = EXCLUDED.review_count,
+                        ai_score        = EXCLUDED.ai_score,
+                        google_rating   = EXCLUDED.google_rating,
+                        google_address  = EXCLUDED.google_address,
+                        google_maps_url = EXCLUDED.google_maps_url,
+                        niche           = EXCLUDED.niche,
+                        city            = EXCLUDED.city,
+                        lead_type       = EXCLUDED.lead_type,
+                        ai_breakdown    = EXCLUDED.ai_breakdown,
+                        ai_quick_wins   = EXCLUDED.ai_quick_wins,
+                        updated_at      = NOW()
+                    WHERE leads.source = 'signal_works'
+                    """,
+                    (
+                        name, email, lead.get("phone", ""),
+                        name, city,
+                        *_shared_cols(),
+                        review_count, google_rating, today,
+                    ),
+                )
+            else:
+                cur.execute(
+                    "SELECT id, baseline_reviews FROM leads WHERE name=%s AND city=%s AND source='signal_works'",
+                    (name, city),
+                )
+                existing = cur.fetchone()
+                if existing:
+                    row_id = existing['id']
+                    has_baseline = existing['baseline_reviews'] is not None
+                    if has_baseline:
+                        cur.execute(
+                            """
+                            UPDATE leads SET
+                                phone=%s, website_url=%s, has_website=%s,
+                                review_count=%s, ai_score=%s, google_rating=%s,
+                                google_address=%s, google_maps_url=%s, niche=%s,
+                                city=%s, lead_type=%s, ai_breakdown=%s, ai_quick_wins=%s,
+                                updated_at=NOW()
+                            WHERE id=%s
+                            """,
+                            (*_shared_cols(), row_id),
+                        )
+                    else:
+                        cur.execute(
+                            """
+                            UPDATE leads SET
+                                phone=%s, website_url=%s, has_website=%s,
+                                review_count=%s, ai_score=%s, google_rating=%s,
+                                google_address=%s, google_maps_url=%s, niche=%s,
+                                city=%s, lead_type=%s, ai_breakdown=%s, ai_quick_wins=%s,
+                                baseline_reviews=%s, baseline_rating=%s, baseline_date=%s,
+                                updated_at=NOW()
+                            WHERE id=%s
+                            """,
+                            (*_shared_cols(), review_count, google_rating, today, row_id),
+                        )
+                else:
+                    cur.execute(
+                        """
+                        INSERT INTO leads (
+                            name, email, phone, company, location, source, status,
+                            website_url, has_website, review_count, ai_score,
+                            google_rating, google_address, google_maps_url,
+                            niche, city, lead_type, ai_breakdown, ai_quick_wins,
+                            baseline_reviews, baseline_rating, baseline_date,
+                            created_at, updated_at
+                        )
+                        VALUES (%s,%s,%s,%s,%s,'signal_works','new',
+                                %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                                %s,%s,%s,
+                                NOW(),NOW())
+                        """,
+                        (
+                            name, "", lead.get("phone", ""),
+                            name, city,
+                            *_shared_cols(),
+                            review_count, google_rating, today,
+                        ),
+                    )
+        conn.commit()
     except Exception as exc:
         logger.warning(f"upsert_signal_works_lead failed: {exc}")
     finally:

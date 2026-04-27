@@ -312,6 +312,55 @@ No brief = skill did not run.
 
 ---
 
+## Image Generation via Kie
+
+When building a site and the right image does not exist in the project assets, **do not use placeholder images, stock photo URLs, or Unsplash hotlinks.** Generate the image using Kie.
+
+### When to generate
+
++ Hero background / full-bleed section image
++ Team photo placeholder (client-branded illustration, not a real face)
++ Service illustration or icon set
++ OG image (1200x630)
++ Any image the client has not provided
+
+### How to generate
+
+Invoke the `kie_media` skill. Use `generate_image()` from `orchestrator/kie_media.py`:
+
+```python
+from orchestrator.kie_media import generate_image
+
+result = generate_image(
+    prompt="...",          # detailed prompt -- see format below
+    aspect_ratio="16:9",   # hero: 16:9 | card: 1:1 | OG: 1.91:1
+    task_type="text_to_image",
+)
+# result["local_path"] -> use this path in the HTML src
+# result["drive_url"]  -> backup
+```
+
+Kie picks the best model automatically (ranked registry). Budget auto-approved up to $0.20/image.
+
+### Prompt format for site images
+
+```
+[Style adjective] [subject], [lighting], [color palette matching site], [composition], [mood]
+No text. No watermarks. Photorealistic / Illustration / etc.
+```
+
+Example for a pediatric dentist hero:
+> "Bright, inviting dental office waiting room with colorful children's toys, warm natural light, soft blues and yellows, wide angle, welcoming and playful mood. No text. No people. Photorealistic."
+
+### Rules
+
++ Generate images **before** writing the HTML that references them. Never write `src=""` placeholders.
++ Match the color palette of the site (include accent color in prompt)
++ OG image: always 1200x630, include site name as text overlay in a second pass if needed
++ If generation fails after the Kie retry ladder, use a CSS gradient as fallback. Never ship a broken img tag.
+
+---
+
 ## Step 5: Pre-launch checklist (live deploys)
 
 - [ ] Favicon wired

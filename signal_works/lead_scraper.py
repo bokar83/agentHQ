@@ -1,90 +1,140 @@
 """
 signal_works/lead_scraper.py
 Scrapes Google Maps for local businesses matching Signal Works criteria.
-Uses SerpAPI (free tier) or direct HTTP to maps.google.com search.
-Falls back to a manual CSV input mode if API unavailable.
+Uses Serper.dev /maps endpoint (SERPER_API_KEY already in .env, 2500 free/month).
+Email extraction uses Firecrawl to scrape business websites (FIRECRAWL_API_KEY in .env).
+Falls back to manual CSV input mode if keys unavailable.
 """
 import os
+import re
 import logging
 import requests
 from orchestrator.db import upsert_signal_works_lead
 
 logger = logging.getLogger(__name__)
 
-SERPAPI_KEY = os.environ.get("SERPAPI_KEY", "")
+SERPER_API_KEY = os.environ.get("SERPER_API_KEY", "")
+FIRECRAWL_API_KEY = os.environ.get("FIRECRAWL_API_KEY", "")
+
+EMAIL_RE = re.compile(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}")
+SKIP_EMAIL_DOMAINS = {"example.com", "sentry.io", "wixpress.com", "squarespace.com"}
 
 
 def _fetch_maps_results(query: str, location: str, limit: int = 20) -> list[dict]:
     """
-    Fetch Google Maps business listings.
-    Tries SerpAPI local_results first; falls back to returning empty list
-    with a warning so the caller can use manual CSV mode.
+    Fetch Google Maps business listings via Serper.dev /maps endpoint.
+    Returns list of raw business dicts. Falls back to empty list with warning.
     """
-    if not SERPAPI_KEY:
-        logger.warning("SERPAPI_KEY not set. Returning empty list -- use manual CSV mode.")
+    if not SERPER_API_KEY:
+        logger.warning("SERPER_API_KEY not set. Returning empty list -- use manual CSV mode.")
         return []
     try:
-        params = {
-            "engine": "google_maps",
-            "q": f"{query} in {location}",
-            "hl": "en",
-            "api_key": SERPAPI_KEY,
-            "num": limit,
-        }
-        resp = requests.get("https://serpapi.com/search", params=params, timeout=30)
+        resp = requests.post(
+            "https://google.serper.dev/maps",
+            headers={"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"},
+            json={"q": f"{query} in {location}", "num": min(limit, 20)},
+            timeout=20,
+        )
         resp.raise_for_status()
-        data = resp.json()
+        places = resp.json().get("places", [])
         results = []
-        for biz in data.get("local_results", [])[:limit]:
+        for biz in places[:limit]:
+            website = biz.get("website", "") or ""
             results.append({
                 "name": biz.get("title", ""),
-                "phone": biz.get("phone", ""),
-                "website": biz.get("website", ""),
-                "rating": biz.get("rating", 0.0),
-                "review_count": biz.get("reviews", 0),
-                "maps_url": biz.get("place_id_search", biz.get("link", "")),
-                "address": biz.get("address", ""),
+                "phone": biz.get("phoneNumber", ""),
+                "website": website,
+                "has_website": bool(website),
+                "rating": float(biz.get("rating", 0.0) or 0.0),
+                "review_count": int(biz.get("ratingCount", 0) or 0),
+                "maps_url": biz.get("cid", "") or "",
+                "address": biz.get("address", "") or "",
             })
+        logger.info(f"Serper returned {len(results)} results for '{query}' in {location}")
         return results
     except Exception as exc:
-        logger.warning(f"SerpAPI fetch failed: {exc}. Use manual CSV mode.")
+        logger.warning(f"Serper Maps fetch failed: {exc}. Use manual CSV mode.")
         return []
+
+
+def find_email_from_website(website_url: str) -> str:
+    """
+    Scrape a business website with Firecrawl and extract a contact email.
+    Returns the first valid email found, or '' if none found or scrape fails.
+    Skips generic/platform emails (wix, squarespace, etc).
+    """
+    if not website_url or not FIRECRAWL_API_KEY:
+        return ""
+    try:
+        resp = requests.post(
+            "https://api.firecrawl.dev/v1/scrape",
+            headers={
+                "Authorization": f"Bearer {FIRECRAWL_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "url": website_url,
+                "formats": ["markdown"],
+                "onlyMainContent": False,
+                "timeout": 15000,
+            },
+            timeout=25,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        text = data.get("data", {}).get("markdown", "") or ""
+
+        for match in EMAIL_RE.finditer(text):
+            email = match.group(0).lower()
+            domain = email.split("@")[-1]
+            if domain not in SKIP_EMAIL_DOMAINS and not domain.startswith("example"):
+                logger.info(f"Found email {email} on {website_url}")
+                return email
+    except Exception as exc:
+        logger.debug(f"Email extraction failed for {website_url}: {exc}")
+    return ""
 
 
 def scrape_google_maps_leads(
     niche: str,
     city: str,
     min_reviews: int = 20,
-    max_reviews: int = 100,
+    max_reviews: int = 150,
     limit: int = 25,
     save_to_supabase: bool = True,
 ) -> list[dict]:
     """
     Scrape Google Maps for businesses in niche + city matching review criteria.
     Filters: min_reviews <= review_count <= max_reviews.
-    Tags each lead with niche + city for Signal Works.
-    Optionally upserts to Supabase.
+    Attempts to find email via Firecrawl for any lead that has a website_url.
+    Tags each lead with niche + city + lead_type='website_prospect' for Signal Works.
     Returns list of enriched lead dicts.
     """
-    raw = _fetch_maps_results(f"{niche}", city, limit=limit * 2)
+    raw = _fetch_maps_results(niche, city, limit=limit * 2)
     leads = []
     for biz in raw:
-        rc = biz.get("review_count", 0)
+        rc = int(biz.get("review_count", 0))
         if rc < min_reviews or rc > max_reviews:
             continue
+        website = biz.get("website", "") or ""
+        email = find_email_from_website(website) if website else ""
         lead = {
             "name": biz["name"],
-            "email": "",
+            "email": email,
             "phone": biz.get("phone", ""),
-            "website_url": biz.get("website", ""),
+            "website_url": website,
+            "has_website": biz.get("has_website", bool(website)),
             "review_count": rc,
+            "google_rating": biz.get("rating", 0.0),
+            "google_address": biz.get("address", ""),
             "google_maps_url": biz.get("maps_url", ""),
             "niche": niche,
             "city": city,
+            "lead_type": "website_prospect",
             "ai_score": 0,
         }
         leads.append(lead)
-        if save_to_supabase and lead["email"]:
+        if save_to_supabase:
             try:
                 upsert_signal_works_lead(lead)
             except Exception as exc:
@@ -93,30 +143,40 @@ def scrape_google_maps_leads(
     return leads[:limit]
 
 
-def load_leads_from_csv(csv_path: str, niche: str, city: str) -> list[dict]:
+def load_leads_from_csv(csv_path: str, niche: str, city: str, save_to_supabase: bool = True) -> list[dict]:
     """
     Manual fallback: load leads from a CSV file.
     Expected columns: name, email, phone, website_url, review_count
-    Used when SerpAPI key is unavailable or for hand-curated lists.
+    If email is blank and website_url is present, attempts Firecrawl email extraction.
+    Saves all leads to Supabase regardless of whether email was found.
     """
     import csv
     leads = []
     with open(csv_path, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
+            website = row.get("website_url", row.get("website", ""))
+            email = row.get("email", "").strip()
+            if not email and website:
+                logger.info(f"No email in CSV for {row.get('name', '')} -- trying Firecrawl...")
+                email = find_email_from_website(website)
             lead = {
                 "name": row.get("name", ""),
-                "email": row.get("email", ""),
+                "email": email,
                 "phone": row.get("phone", ""),
-                "website_url": row.get("website_url", row.get("website", "")),
-                "review_count": int(row.get("review_count", 0)),
+                "website_url": website,
+                "has_website": bool(website),
+                "review_count": int(row.get("review_count", 0) or 0),
+                "google_rating": float(row.get("google_rating", 0.0) or 0.0),
+                "google_address": row.get("google_address", row.get("address", "")),
                 "google_maps_url": row.get("google_maps_url", ""),
                 "niche": niche,
                 "city": city,
+                "lead_type": "website_prospect",
                 "ai_score": 0,
             }
             leads.append(lead)
-            if lead["email"]:
+            if save_to_supabase:
                 try:
                     upsert_signal_works_lead(lead)
                 except Exception as exc:
