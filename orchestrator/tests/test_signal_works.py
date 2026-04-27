@@ -53,3 +53,23 @@ def test_scraper_returns_valid_lead_shape():
         assert r["review_count"] >= 20
         assert "niche" in r
         assert "city" in r
+
+
+def test_ai_scorer_returns_score_dict():
+    """score_business returns dict with score 0-100 and breakdown."""
+    from signal_works.ai_scorer import score_business
+    from unittest.mock import patch
+    with patch("signal_works.ai_scorer._query_chatgpt") as mock_gpt, \
+         patch("signal_works.ai_scorer._query_perplexity") as mock_perp, \
+         patch("signal_works.ai_scorer._check_robots_txt") as mock_robots, \
+         patch("signal_works.ai_scorer._check_bing_places") as mock_bing:
+        mock_gpt.return_value = False
+        mock_perp.return_value = True
+        mock_robots.return_value = True
+        mock_bing.return_value = False
+        result = score_business("Valley Dental", "Salt Lake City", "pediatric dentist", "https://valleydental.com")
+        assert "score" in result
+        assert 0 <= result["score"] <= 100
+        assert "breakdown" in result
+        assert result["breakdown"]["perplexity"] is True
+        assert result["score"] == 50
