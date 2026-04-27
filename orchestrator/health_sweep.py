@@ -239,15 +239,14 @@ def health_sweep_tick() -> None:
     failed_list = summary["failures"]
 
     if not failed_list:
-        msg = f"Health sweep: {passed}/{total} probes passed. All good."
-        logger.info(f"HEALTH_SWEEP: {msg}")
-    else:
-        lines = [f"Health sweep: {passed}/{total} passed. FAILURES:"]
-        for f in failed_list:
-            lines.append(f"  - {f['label']}: {f['detail']}")
-        msg = "\n".join(lines)
-        logger.error(f"HEALTH_SWEEP: {msg}")
+        logger.info(f"HEALTH_SWEEP: {passed}/{total} probes passed. All good.")
+        return  # silent on success -- only notify on failure
 
+    lines = [f"Health sweep: {passed}/{total} passed. FAILURES:"]
+    for f in failed_list:
+        lines.append(f"  - {f['label']}: {f['detail']}")
+    msg = "\n".join(lines)
+    logger.error(f"HEALTH_SWEEP: {msg}")
     _notify(msg)
 
 
