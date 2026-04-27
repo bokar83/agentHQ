@@ -452,9 +452,11 @@ def upsert_signal_works_lead(lead: dict) -> None:
     google_address = lead.get("google_address", "") or ""
     today = date.today().isoformat()
 
-    def _shared_cols():
+    # 12 mutable non-identity fields: website_url onward.
+    # Phone is always passed explicitly as the first arg before this tuple in UPDATE,
+    # and as position 3 in INSERT (after name, email).
+    def _vals():
         return (
-            lead.get("phone", ""),
             lead.get("website_url", ""),
             has_website,
             review_count,
@@ -469,9 +471,44 @@ def upsert_signal_works_lead(lead: dict) -> None:
             lead.get("ai_quick_wins", ""),
         )
 
+    _UPDATE_COLS = """
+        phone=%s, website_url=%s, has_website=%s,
+        review_count=%s, ai_score=%s, google_rating=%s,
+        google_address=%s, google_maps_url=%s, niche=%s,
+        city=%s, lead_type=%s, ai_breakdown=%s, ai_quick_wins=%s
+    """
+
     try:
         with conn.cursor() as cur:
+            # Dedup: look up by email (if present) or name+city. No ON CONFLICT needed.
             if email:
+                cur.execute(
+                    "SELECT id, baseline_reviews FROM leads WHERE email=%s AND source='signal_works'",
+                    (email,),
+                )
+            else:
+                cur.execute(
+                    "SELECT id, baseline_reviews FROM leads WHERE name=%s AND city=%s AND source='signal_works'",
+                    (name, city),
+                )
+            existing = cur.fetchone()
+
+            if existing:
+                row_id = existing['id']
+                has_baseline = existing['baseline_reviews'] is not None
+                if has_baseline:
+                    cur.execute(
+                        f"UPDATE leads SET email=%s, {_UPDATE_COLS}, updated_at=NOW() WHERE id=%s",
+                        (email, lead.get("phone", ""), *_vals(), row_id),
+                    )
+                else:
+                    cur.execute(
+                        f"""UPDATE leads SET email=%s, {_UPDATE_COLS},
+                            baseline_reviews=%s, baseline_rating=%s, baseline_date=%s,
+                            updated_at=NOW() WHERE id=%s""",
+                        (email, lead.get("phone", ""), *_vals(), review_count, google_rating, today, row_id),
+                    )
+            else:
                 cur.execute(
                     """
                     INSERT INTO leads (
@@ -482,95 +519,21 @@ def upsert_signal_works_lead(lead: dict) -> None:
                         baseline_reviews, baseline_rating, baseline_date,
                         created_at, updated_at
                     )
-                    VALUES (%s,%s,%s,%s,%s,'signal_works','new',
-                            %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                            %s,%s,%s,
-                            NOW(),NOW())
-                    ON CONFLICT (email) DO UPDATE SET
-                        phone           = EXCLUDED.phone,
-                        website_url     = EXCLUDED.website_url,
-                        has_website     = EXCLUDED.has_website,
-                        review_count    = EXCLUDED.review_count,
-                        ai_score        = EXCLUDED.ai_score,
-                        google_rating   = EXCLUDED.google_rating,
-                        google_address  = EXCLUDED.google_address,
-                        google_maps_url = EXCLUDED.google_maps_url,
-                        niche           = EXCLUDED.niche,
-                        city            = EXCLUDED.city,
-                        lead_type       = EXCLUDED.lead_type,
-                        ai_breakdown    = EXCLUDED.ai_breakdown,
-                        ai_quick_wins   = EXCLUDED.ai_quick_wins,
-                        updated_at      = NOW()
-                    WHERE leads.source = 'signal_works'
+                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,NOW(),NOW())
                     """,
                     (
                         name, email, lead.get("phone", ""),
-                        name, city,
-                        *_shared_cols(),
+                        name, city, "signal_works", "new",
+                        *_vals(),
                         review_count, google_rating, today,
                     ),
                 )
-            else:
-                cur.execute(
-                    "SELECT id, baseline_reviews FROM leads WHERE name=%s AND city=%s AND source='signal_works'",
-                    (name, city),
-                )
-                existing = cur.fetchone()
-                if existing:
-                    row_id = existing['id']
-                    has_baseline = existing['baseline_reviews'] is not None
-                    if has_baseline:
-                        cur.execute(
-                            """
-                            UPDATE leads SET
-                                phone=%s, website_url=%s, has_website=%s,
-                                review_count=%s, ai_score=%s, google_rating=%s,
-                                google_address=%s, google_maps_url=%s, niche=%s,
-                                city=%s, lead_type=%s, ai_breakdown=%s, ai_quick_wins=%s,
-                                updated_at=NOW()
-                            WHERE id=%s
-                            """,
-                            (*_shared_cols(), row_id),
-                        )
-                    else:
-                        cur.execute(
-                            """
-                            UPDATE leads SET
-                                phone=%s, website_url=%s, has_website=%s,
-                                review_count=%s, ai_score=%s, google_rating=%s,
-                                google_address=%s, google_maps_url=%s, niche=%s,
-                                city=%s, lead_type=%s, ai_breakdown=%s, ai_quick_wins=%s,
-                                baseline_reviews=%s, baseline_rating=%s, baseline_date=%s,
-                                updated_at=NOW()
-                            WHERE id=%s
-                            """,
-                            (*_shared_cols(), review_count, google_rating, today, row_id),
-                        )
-                else:
-                    cur.execute(
-                        """
-                        INSERT INTO leads (
-                            name, email, phone, company, location, source, status,
-                            website_url, has_website, review_count, ai_score,
-                            google_rating, google_address, google_maps_url,
-                            niche, city, lead_type, ai_breakdown, ai_quick_wins,
-                            baseline_reviews, baseline_rating, baseline_date,
-                            created_at, updated_at
-                        )
-                        VALUES (%s,%s,%s,%s,%s,'signal_works','new',
-                                %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                                %s,%s,%s,
-                                NOW(),NOW())
-                        """,
-                        (
-                            name, "", lead.get("phone", ""),
-                            name, city,
-                            *_shared_cols(),
-                            review_count, google_rating, today,
-                        ),
-                    )
         conn.commit()
     except Exception as exc:
         logger.warning(f"upsert_signal_works_lead failed: {exc}")
+        try:
+            conn.rollback()
+        except Exception:
+            pass
     finally:
         conn.close()
