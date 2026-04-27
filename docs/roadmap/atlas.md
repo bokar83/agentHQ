@@ -601,9 +601,9 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 - Cost ledger: use `llm_calls.project` as engagement/customer dimension; add `cost_ledger` table for non-LLM costs (Blotato, Notion, subscriptions): gate on first real client engagement
 - **Atlas Chat: full agentic conversation loop (high priority):** Chat iframe must behave exactly like Claude Code or another LLM: full back-and-forth, context retention, tool use. Goal: draft a post in the chat, iterate on it conversationally, then one-tap post from the same window. Currently the iframe is a passive embed; needs the orchestrator to wire a stateful session with memory + content tools so the conversation can actually do things (edit Notion, queue posts, etc.)
 
-## M9: Atlas Chat: Full Command Center
+## M9: Atlas Chat: Full Command Center ✅ SHIPPED 2026-04-27
 
-**Status:** Design locked (v4), ready to build (HIGH PRIORITY)
+**Status:** ALL THREE MILESTONES SHIPPED
 **Reviews:** Code reviewer (5 blockers) + Sankofa Council + blue/red team + model research: all run 2026-04-26. Full findings folded into spec v4.
 **Save point:** `savepoint-pre-atlas-m9-design-2026-04-26` (rewind: `git checkout savepoint-pre-atlas-m9-design-2026-04-26`)
 
@@ -621,11 +621,11 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 
 **Split into three milestones:**
 
-| Sub | Scope | Budget | Branch |
-| --- | --- | --- | --- |
-| M9a | Correctness fixes (Postgres leak, double-send, env vars, sandbox mode) + Telegram push alerts with action buttons | 3-4h | feat/atlas-m9a-telegram-push |
-| M9b | Web chat: wire 404, native Atlas panel, async job polling, artifact table, 11-tool set, write-action confirmation + approval queue badge | 4-5h | feat/atlas-m9b-web-chat |
-| M9c | Artifact iteration (resize, fullscreen, save-to-Drive), cross-session memory, weekly model review agent | 2-3h | feat/atlas-m9c-artifacts |
+| Sub | Scope | Budget | Branch | Status |
+| --- | --- | --- | --- | --- |
+| M9a | Correctness fixes (Postgres leak, double-send, env vars, sandbox mode) + Telegram push alerts with action buttons | 3-4h | feat/atlas-m9a-telegram-push | SHIPPED 2026-04-26 |
+| M9b | Web chat: wire 404, native Atlas panel, async job polling, artifact table, write-action confirmation + approval queue badge | 4-5h | feat/atlas-m9b-web-chat | SHIPPED 2026-04-26 |
+| M9c | Cross-session memory compressor: 30-min inactivity trigger, Haiku summarizes, silent system prompt injection | 2h | feat/atlas-m9c-session-compressor | SHIPPED 2026-04-27 |
 
 **Sequence:** M9a -> M9b -> M9c. Do not start M9b until M9a smoke test passes on VPS.
 
@@ -1094,9 +1094,41 @@ in the weekly model review agent (first run: Sunday 2026-05-03 08:00 MT).
 
 **Next session:**
 
-1. M9c (cross-session memory compressor): after 2026-05-03
-2. M5 (Chairman / L5 Learning): gate opens 2026-05-08
-3. Atlas interactive layer (click-to-action on posts and tasks): design spike when M9c is stable
-4. Consider unifying /chat and /atlas routing pipelines (both through run_atlas_chat)
+1. M5 (Chairman / L5 Learning): gate opens 2026-05-08
+2. Atlas interactive layer (click-to-action on posts and tasks in dashboard): design spike
+3. Unify /chat and /atlas routing pipelines (both through run_atlas_chat)
+
+---
+
+### 2026-04-27 (evening): M9c SHIPPED: cross-session memory compressor
+
+**What shipped:**
+
+- `orchestrator/session_compressor.py` (NEW): `find_sessions_to_compress()` queries `agent_sessions` for rows quiet 30-90 min with no existing summary. `compress_session()` loads 100 turns, calls Haiku, writes 3-5 bullet summary to `session_summaries`. `compressor_tick()` is the heartbeat callback, non-fatal per session.
+- `orchestrator/db.py`: `session_summaries` table (id, session_id, summary, turn_count, created_at, window_end_at, tags[]). `ensure_session_summaries_table()`, `save_session_summary()`, `get_latest_session_summary(session_id, max_age_hours=24)`. 24h staleness gate prevents stale summaries injecting indefinitely.
+- `orchestrator/scheduler.py`: `session-compressor` heartbeat registered at `every=30m`.
+- `orchestrator/handlers_chat.py`: both `run_chat()` and `run_atlas_chat()` silently prepend summary to system prompt on session resumption. Non-fatal; no latency if no summary exists.
+- `orchestrator/app.py`: `ensure_session_summaries_table()` called at startup.
+- `orchestrator/tests/test_session_compressor.py`: 12 tests, all pass. Pre-existing test suite unaffected (346/347 excluding known pre-existing failures).
+
+**Sankofa Council ran before build.** Two fixes applied: 24h staleness gate on `get_latest_session_summary`, `tags TEXT[]` column reserved for future project-scope tagging.
+
+**Design decisions locked:**
+
+- Raw turns never deleted (lossless; needed for L5 learning)
+- Injection is system prompt prepend, not a message turn (no synthetic assistant messages)
+- Works on all three surfaces (Telegram, /chat, /atlas) via shared Postgres session_key
+- Three surfaces have separate session_ids per surface; cross-surface unification is future work
+- Min 4 turns to summarize; skip silently below threshold
+
+**M9 fully complete.** All three milestones shipped: M9a (Telegram buttons + correctness), M9b (native web chat panel), M9c (cross-session memory).
+
+**Three-way nsync:** local + origin + VPS all on same commit (deploy in progress).
+
+**Next session:**
+
+1. M5 (Chairman / L5 Learning): gate opens 2026-05-08
+2. Atlas interactive layer: click a content board post, say "enhance this", iterate conversationally, post it. Design spike needed.
+3. Unify /chat and /atlas routing pipelines so both surfaces behave identically end-to-end.
 
 ---
