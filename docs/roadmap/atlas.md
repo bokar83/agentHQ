@@ -674,8 +674,8 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 | --- | --- | --- | --- | --- |
 | M11a | Bug fixes + named model constants | 2h | fix/m10a-model-bugs | SHIPPED 2026-04-26 |
 | M11b | ROLE_CAPABILITY migration: replace ROLE_MODEL with select_by_capability() for crew engine | 3h | feat/m11b-capability-routing | SHIPPED 2026-04-26 |
-| M11c | Research engine rewrite: two-phase Perplexity Sonar Pro + Firecrawl via OpenRouter | 4h | feat/m11c-research-engine | After M11b |
-| M11d | Harvest reviewer migration + weekly model review agent (Sunday 08:00 MT) | 6h | feat/m11d-model-review | After M11b |
+| M11c | Research engine rewrite: two-phase Perplexity Sonar Pro + Firecrawl via OpenRouter | 4h | feat/m11c-research-engine | TRIPLE HOLD: revisit mid-May (2026-05-15). No measured quality gap in prod. Perplexity prospect-email spike deferred to the same date alongside the Hunter.io go/no-go decision (2026-05-06). |
+| M11d | Harvest reviewer migration + weekly model review agent (Sunday 08:00 MT) | 6h | feat/m11d-model-review | IN PROGRESS 2026-04-26 |
 
 **M11a shipped 2026-04-26: what changed:**
 - `crews.py`: malformed `"openai/anthropic/claude-sonnet-4-5"` fixed to `get_llm("claude-sonnet")` (was silently 404ing every content review run)
@@ -833,6 +833,87 @@ Adding any new model to `COUNCIL_MODEL_REGISTRY` automatically makes it availabl
 
 **Future crews:** concierge/chairman/studio must have a signed contract at `orchestrator/contracts/<crew_name>.md` before `set_crew_enabled(True)` or `set_crew_dry_run(False)` will succeed.
 
-**Next:** merge to main + VPS deploy (Boubacar to confirm). Then M9b (web chat native panel) or M5 gate check (2026-05-08).
+**Branch status (2026-04-26):** M10 code merged to main at `83f9e2b`. `feat/atlas-m10-crew-contract` was a stale orphan; both local and remote branches deleted this session.
+
+---
+
+### 2026-04-26: M9b IN PROGRESS: Web Chat Native Panel
+
+**Branch:** `feat/atlas-m9b-web-chat`
+**Save point:** `savepoint-pre-atlas-m9b-20260426` (to create before first commit)
+**Depends on:** M9a live on VPS (confirmed at f5a47c5)
+
+**Scope decision (this session):** M9a smoke test gate lifted. M9a code is fully live; M9b has no structural dependency on Monday's button tap. If Monday tap fails, the bug is isolated to `handlers_approvals.py` callback dispatch with zero overlap with M9b scope.
+
+**M9c scope replan (locked this session):**
+
+- Weekly model review agent pulled forward into M9b session (same branch, ~45 min add-on). Independent of artifacts, no reason to defer.
+- Artifact iteration (resize, fullscreen, save-to-Drive, push-to-GitHub): deferred until after 1 week of M9b usage. Build when friction is felt, not speculatively.
+- Cross-session memory (30-min inactivity compressor, session summary injection): remains M9c, builds after 1 week of M9b usage when real session history patterns are visible.
+
+**What this session will ship:**
+
+Backend:
+
+- `orchestrator/db.py`: `chat_artifacts` table migration (runs on startup)
+- `app.py`: `POST /api/orc/atlas/chat` endpoint calling `run_atlas_chat()` via `run_in_executor`, auth gated
+- `app.py`: `GET /api/orc/atlas/job/{job_id}` endpoint for async task polling
+- `handlers_chat.py`: `run_atlas_chat(messages, session_key, channel="web")`: uses `ATLAS_CHAT_MODEL`, resolves artifact refs, stores artifacts, dispatches `forward_to_crew` via background job
+- `state.py`: `_confirm_store` dict for write-action pending confirmations (5-min TTL, mirrors `_PUBLISH_BRIEF_WINDOWS` pattern)
+
+Frontend:
+
+- `atlas.html`: replace chat iframe with native chat panel (card slot 7)
+- `atlas.js`: `atlasChat` module: localStorage session key, message array, `sendMessage()`, `renderMessage()`, `renderArtifact()` (srcdoc iframe for HTML), `pollJob()` (3s polling)
+- `atlas.js`: inline markdown renderer (~80 lines, no external deps)
+
+Weekly model review agent (M9c partial, pulled forward):
+
+- `CronCreate` weekly routine: fetch OpenRouter model pricing for 3 configured models, compare against current tiers, write `docs/reference/model-review-{date}.md`, Telegram notification with top finding
+- Never auto-changes env var; surfaces recommendation to Boubacar only
+
+---
+
+### 2026-04-26: Option A (leGriot A/B script) + M11d SHIPPED
+
+**Branch:** `feat/m11d-model-review`
+**Save point:** `savepoint-pre-m11d-2026-04-26`
+**Tests:** 341/341 pass (11 new: 6 model_review_agent + 5 legriot_ab_test)
+
+**Scope decisions made before build (Sankofa Council):**
+
+M11c placed on TRIPLE HOLD. No measured quality gap in research engine production output. Reopen 2026-05-15 alongside Hunter.io go/no-go (2026-05-06) and Perplexity prospect-email spike.
+
+**Option A: leGriot A/B blind scoring script**
+
+- `scripts/legriot_ab_test.py`: runs leGriot social crew on 3 seed ideas against 3 models (Grok-4, Claude Sonnet 4.6, Mistral-Large-2)
+- Uses production CrewAI crew path with `select_llm` patched per run; tests real production path, not raw prompts
+- Blind labels A/B/C; model mapping in `.reveal/` subdir (scorer cannot accidentally read before scoring)
+- Scoring sheet pre-populated from rubric; decision threshold stated: challenger must beat incumbent by >= 3 pts total
+- Idempotent re-run skips existing files; `--reveal` flag prints mapping
+
+**M11d Part 1: harvest reviewer migration**
+
+- `orchestrator/harvest_reviewer.py`: `MAPPER_MODEL`/`DECISION_MODEL` constants deleted
+- New `_resolve_model()` calls `select_by_capability("instruction_following", max_cost_tier="low")` and inherits routing improvements automatically
+- Graceful fallback to haiku-4.5 if agents module unavailable
+
+**M11d Part 2: weekly model review agent**
+
+- `orchestrator/model_review_agent.py` (new): Sunday-gated heartbeat (fires daily at 13:00 UTC, gates on weekday == Sunday internally)
+- Loads rubric from file at runtime; Haiku-4.5 scorer; 4 candidate models on 3 Notion seed posts (falls back to 3 hardcoded defaults)
+- Routing change threshold: challenger must beat incumbent by >= 3 pts TOTAL across 3 seeds
+- When threshold crossed: emits proposal to `approval_queue` with Approve/Reject buttons; no separate Telegram-only path
+- No auto-routing-change enforced structurally: zero imports of `agents.py` or `autonomy_guard.py`; enforced by test_no_routing_change_made_automatically
+- `orchestrator/contracts/model_review_agent.md`: signed, ceiling $0.10/run, enable immediately after deploy (no dry-run required)
+- `autonomy_guard.py`: `model_review_agent` added to `KNOWN_CREWS`
+- `scheduler.py`: `model-review-agent` wake registered at 13:00 UTC daily
+
+**What is NOT done (next session):**
+
+- VPS deploy: merge to main + docker compose rebuild (Boubacar to confirm before push)
+- Run Option A against real models + blind score; update routing if gap >= 3 pts
+- M11c: HOLD until 2026-05-15
+- M9b web chat: next priority after deploy
 
 ---

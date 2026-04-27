@@ -528,6 +528,23 @@ def start_scheduler():
     except Exception as e:
         logger.error(f"HEALTH_SWEEP: wake registration failed ({e}); continuing without sweep", exc_info=True)
 
+    # Atlas M11d: weekly leGriot model quality review. Registered as daily at 13:00
+    # UTC (08:00 MT). The callback gates internally on day-of-week == Sunday so it
+    # is a no-op on Mon-Sat. Uses crew_name='model_review_agent' (its own kill
+    # switch, separate from griot/auto_publisher). Default state: disabled until
+    # contract at orchestrator/contracts/model_review_agent.md is signed.
+    try:
+        import heartbeat as _heartbeat
+        from model_review_agent import model_review_tick
+        _heartbeat.register_wake(
+            "model-review-agent",
+            crew_name="model_review_agent",
+            callback=model_review_tick,
+            at="13:00",
+        )
+    except Exception as e:
+        logger.error(f"MODEL_REVIEW: wake registration failed ({e}); continuing without model review", exc_info=True)
+
     sync_thread = threading.Thread(target=_periodic_sync, daemon=True)
     sync_thread.start()
 
