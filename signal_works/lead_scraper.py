@@ -85,7 +85,10 @@ def scrape_google_maps_leads(
         }
         leads.append(lead)
         if save_to_supabase and lead["email"]:
-            upsert_signal_works_lead(lead)
+            try:
+                upsert_signal_works_lead(lead)
+            except Exception as exc:
+                logger.warning(f"Could not save lead to Supabase (continuing): {exc}")
     logger.info(f"scrape_google_maps_leads: {len(leads)} qualifying leads for '{niche}' in {city}")
     return leads[:limit]
 
@@ -114,6 +117,9 @@ def load_leads_from_csv(csv_path: str, niche: str, city: str) -> list[dict]:
             }
             leads.append(lead)
             if lead["email"]:
-                upsert_signal_works_lead(lead)
+                try:
+                    upsert_signal_works_lead(lead)
+                except Exception as exc:
+                    logger.warning(f"Could not save lead to Supabase (continuing): {exc}")
     logger.info(f"load_leads_from_csv: loaded {len(leads)} leads from {csv_path}")
     return leads
