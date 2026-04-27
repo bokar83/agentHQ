@@ -28,31 +28,54 @@ VALID_CONFIDENCE = {"high", "medium", "low"}
 
 REGISTRY_SHEET_ID = os.environ.get("NOTEBOOKLM_REGISTRY_SHEET_ID", "")
 
+# Files matching these extensions or patterns are never routed to any notebook.
+# Code and raw HTML site builds are operational artifacts, not knowledge sources.
+EXCLUDED_EXTENSIONS = {".py", ".js", ".sh", ".ts", ".json"}
+EXCLUDED_FILENAME_PATTERNS = ["index.html", "v2.html", "v3.html"]
+
 ROUTING_MATRIX_SEED = [
+    # P0: skool/harvest learning content -- must beat P2's bare 'harvest' project codename
+    {"priority": 0,  "signal_keywords": ["skool", "harvest-notes", "harvest notes", "lesson notes", "course harvest"],
+     "domain": "LEARNING", "target_folder_path": "05_Learning/", "doc_type_hint": "notes or transcript", "notebook_assignment": "CW_Learning Lab"},
     {"priority": 1,  "signal_keywords": ["agentsHQ", "CrewAI", "n8n", "VPS", "Docker", "orchestrator", "litellm", "workflow node"],
      "domain": "CATALYST", "target_folder_path": "02_Catalyst_Works/03_agentsHQ/", "doc_type_hint": "sop or reference", "notebook_assignment": "CW_Catalyst Works Ops"},
-    {"priority": 2,  "signal_keywords": ["SOP", "checklist", "protocol", "template", "process doc", "system design"],
+    # P2: internal ops docs -- SOPs, roadmaps, session protocols, pricing, methodology references
+    {"priority": 2,  "signal_keywords": ["SOP", "checklist", "protocol", "template", "process doc", "system design",
+                                          "roadmap", "session log", "handoff", "sprint", "milestone", "shutdown",
+                                          "signal session", "discovery call", "pm rigor", "pricing",
+                                          "atlas", "harvest", "studio", "remoat",
+                                          "pm-rigor", "pm rigor", "discovery-call-system"],
      "domain": "CATALYST", "target_folder_path": "02_Catalyst_Works/04_Systems_and_SOPs/", "doc_type_hint": "sop or template", "notebook_assignment": "CW_Catalyst Works Ops"},
     {"priority": 3,  "signal_keywords": ["proposal", "SOW", "contract", "invoice", "engagement", "client brief", "discovery call"],
      "domain": "CLIENT", "target_folder_path": "01_Clients/[Client Name]/", "doc_type_hint": "match to doc type", "notebook_assignment": "CW_Client Work"},
     {"priority": 4,  "signal_keywords": ["constraint", "throughput", "bottleneck", "TOC", "five whys", "drum-buffer-rope", "Goldratt"],
      "domain": "RESEARCH", "target_folder_path": "03_Research/01_TOC_and_Constraints/", "doc_type_hint": "report or reference", "notebook_assignment": "CW_Research"},
-    {"priority": 5,  "signal_keywords": ["AI strategy", "LLM", "language model", "prompt", "agent", "automation", "AI tool", "AI governance", "governance", "compliance", "AI audit", "playbook"],
+    {"priority": 5,  "signal_keywords": ["AI strategy", "LLM", "language model", "prompt", "automation", "AI tool",
+                                          "AI governance", "governance", "compliance", "AI audit", "playbook"],
      "domain": "RESEARCH", "target_folder_path": "03_Research/02_AI_Strategy/", "doc_type_hint": "report or reference", "notebook_assignment": "CW_Research"},
     {"priority": 6,  "signal_keywords": ["SMB", "owner-operator", "professional services", "small business", "business owner"],
      "domain": "RESEARCH", "target_folder_path": "03_Research/03_SMB_and_Operators/", "doc_type_hint": "report or reference", "notebook_assignment": "CW_Research"},
     {"priority": 7,  "signal_keywords": ["behavioral science", "psychology", "decision making", "bias", "motivation"],
      "domain": "RESEARCH", "target_folder_path": "03_Research/04_Behavioral_Science/", "doc_type_hint": "report or reference", "notebook_assignment": "CW_Research"},
-    {"priority": 8,  "signal_keywords": ["LinkedIn", "post", "hook", "caption", "carousel", "social media", "content draft", "content studio", "tweet", "X post", "newsletter"],
+    # P8: published content outputs -- articles, briefs, newsletters, social drafts
+    {"priority": 8,  "signal_keywords": ["LinkedIn", "caption", "carousel", "social media", "content draft", "content studio",
+                                          "tweet", "X post", "newsletter", "brief", "article", "long-form", "published",
+                                          "Human at Work", "weekly brief", "decision-you-made", "first-ai"],
      "domain": "CONTENT", "target_folder_path": "04_Content/01_LinkedIn/", "doc_type_hint": "draft or reference", "notebook_assignment": "CW_Content Studio"},
-    {"priority": 9,  "signal_keywords": ["framework", "IP", "methodology", "flywheel", "offer design", "positioning"],
+    # P9: identity, positioning, offer design, pricing -- the Frameworks and IP layer
+    {"priority": 9,  "signal_keywords": ["framework", "methodology", "flywheel", "offer design", "positioning",
+                                          "profile", "company profile", "bio", "about us", "signal session pricing",
+                                          "AMPLIFY", "Human AI Workflow Matrix"],
      "domain": "CATALYST", "target_folder_path": "02_Catalyst_Works/06_Frameworks_and_IP/", "doc_type_hint": "reference or template", "notebook_assignment": "CW_Frameworks and IP"},
-    {"priority": 10, "signal_keywords": ["book summary", "course notes", "transcript", "learning", "chapter notes"],
+    # P10: learning content -- books, courses, harvested lessons, skool notes
+    # Note: "skool" and "harvest-notes" are listed before "harvest" in P2 so skool content
+    # must be checked via the full slug. The Drive scanner uses extracted text too, so
+    # "skool" in the text will always win over bare "harvest" from P2.
+    {"priority": 10, "signal_keywords": ["book summary", "course notes", "transcript", "learning", "chapter notes",
+                                          "skool", "harvest-notes", "harvest notes", "lesson notes", "course harvest"],
      "domain": "LEARNING", "target_folder_path": "05_Learning/", "doc_type_hint": "match to doc type", "notebook_assignment": "CW_Learning Lab"},
     {"priority": 11, "signal_keywords": ["idea", "hypothesis", "rough thought", "brainstorm", "shower thought", "what if", "early concept", "voice memo"],
      "domain": "IDEAS", "target_folder_path": "06_Ideas/", "doc_type_hint": "notes or reference", "notebook_assignment": "CW_Ideas"},
-    {"priority": 12, "signal_keywords": ["AMPLIFY", "Human AI Workflow Matrix", "proprietary framework", "IP", "methodology", "framework doc"],
-     "domain": "CATALYST", "target_folder_path": "02_Catalyst_Works/06_Frameworks_and_IP/", "doc_type_hint": "reference or template", "notebook_assignment": "CW_Frameworks and IP"},
 ]
 
 
