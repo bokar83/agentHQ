@@ -45,6 +45,21 @@ CREATE INDEX IF NOT EXISTS chat_artifacts_session_turn
 """
 
 
+CREATE_EMAIL_JOBS = """
+CREATE TABLE IF NOT EXISTS email_jobs (
+    id         SERIAL PRIMARY KEY,
+    to_addr    TEXT NOT NULL,
+    subject    TEXT NOT NULL,
+    body_text  TEXT NOT NULL,
+    send_at    TIMESTAMPTZ NOT NULL,
+    status     TEXT NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMPTZ DEFAULT now(),
+    sent_at    TIMESTAMPTZ,
+    error_msg  TEXT
+);
+"""
+
+
 def ensure_chat_artifacts_table() -> None:
     """Create chat_artifacts table if it does not exist (idempotent)."""
     conn = get_local_connection()
@@ -535,5 +550,105 @@ def upsert_signal_works_lead(lead: dict) -> None:
             conn.rollback()
         except Exception:
             pass
+    finally:
+        conn.close()
+
+
+def ensure_email_jobs_table() -> None:
+    """Create email_jobs table if it does not exist (idempotent)."""
+    conn = get_local_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(CREATE_EMAIL_JOBS)
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        logger.warning(f"ensure_email_jobs_table failed: {e}")
+    finally:
+        conn.close()
+
+
+def fetch_pending_email_jobs() -> list[dict]:
+    conn = get_local_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT * FROM email_jobs
+            WHERE status = 'pending' AND send_at <= now()
+            ORDER BY send_at
+            """
+        )
+        rows = cur.fetchall()
+        cur.close()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        logger.warning(f"fetch_pending_email_jobs failed: {e}")
+        return []
+    finally:
+        conn.close()
+
+
+def mark_email_job_sent(job_id: int) -> None:
+    conn = get_local_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            UPDATE email_jobs
+            SET status = 'sent', sent_at = now()
+            WHERE id = %s
+            """,
+            (job_id,),
+        )
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        logger.warning(f"mark_email_job_sent failed for {job_id}: {e}")
+    finally:
+        conn.close()
+
+
+def mark_email_job_failed(job_id: int, error: str) -> None:
+    conn = get_local_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            UPDATE email_jobs
+            SET status = 'failed', error_msg = %s
+            WHERE id = %s
+            """,
+            (error, job_id),
+        )
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        logger.warning(f"mark_email_job_failed failed for {job_id}: {e}")
+    finally:
+        conn.close()
+
+
+def insert_email_job(to_addr, subject, body_text, send_at) -> int | None:
+    conn = get_local_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO email_jobs (to_addr, subject, body_text, send_at)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id
+            """,
+            (to_addr, subject, body_text, send_at),
+        )
+        row = cur.fetchone()
+        conn.commit()
+        cur.close()
+        if not row:
+            return None
+        return int(row["id"])
+    except Exception as e:
+        logger.warning(f"insert_email_job failed: {e}")
+        return None
     finally:
         conn.close()

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>Your AI Visibility Score</title>
+<!--[if mso]>
+<noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+<![endif]-->
+<style>
+  /* Reset */
+  body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+  table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+  img { -ms-interpolation-mode: bicubic; border: 0; display: block; }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f5;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  }
+
+  .email-wrapper {
+    max-width: 600px;
+    margin: 0 auto;
+    background: #ffffff;
+  }
+
+  /* Score badge */
+  .score-badge {
+    display: inline-block;
+    background: #F4600C;
+    color: #ffffff;
+    font-size: 48px;
+    font-weight: 800;
+    padding: 16px 28px;
+    border-radius: 8px;
+    line-height: 1;
+    letter-spacing: -1px;
+  }
+  .score-badge.score-low { background: #dc2626; }
+  .score-badge.score-mid { background: #d97706; }
+  .score-badge.score-high { background: #16a34a; }
+
+  .score-label {
+    font-size: 13px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 6px;
+  }
+
+  /* Video thumbnail */
+  .video-thumb-wrap {
+    position: relative;
+    display: block;
+    text-decoration: none;
+  }
+  .video-thumb-wrap img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 6px;
+  }
+  .play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 64px;
+    height: 64px;
+    background: rgba(255,255,255,0.92);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Body text */
+  .body-text {
+    font-size: 16px;
+    line-height: 1.7;
+    color: #111827;
+  }
+  .body-text p { margin: 0 0 16px 0; }
+
+  /* Quick wins */
+  .quick-wins {
+    background: #f9fafb;
+    border-left: 3px solid #F4600C;
+    border-radius: 0 6px 6px 0;
+    padding: 16px 20px;
+    margin: 20px 0;
+  }
+  .quick-wins p {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    color: #374151;
+  }
+  .quick-wins p:last-child { margin-bottom: 0; }
+  .quick-wins strong {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #F4600C;
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  /* CTA button */
+  .cta-btn {
+    display: inline-block;
+    background: #F4600C;
+    color: #ffffff !important;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 14px 32px;
+    border-radius: 6px;
+    letter-spacing: 0.02em;
+  }
+
+  /* Demo link */
+  .demo-link {
+    display: inline-block;
+    color: #F4600C;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    border-bottom: 1px solid #F4600C;
+    padding-bottom: 1px;
+  }
+
+  /* Divider */
+  .divider {
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    margin: 24px 0;
+  }
+
+  /* Signature */
+  .sig-name {
+    font-weight: 700;
+    font-size: 15px;
+    color: #111827;
+  }
+  .sig-title {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 2px;
+  }
+  .sig-brand {
+    font-size: 12px;
+    color: #9ca3af;
+    margin-top: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* Footer */
+  .footer {
+    background: #f9fafb;
+    padding: 20px 32px;
+    font-size: 12px;
+    color: #9ca3af;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  @media (max-width: 600px) {
+    .email-wrapper { width: 100% !important; }
+    .inner-pad { padding: 24px 20px !important; }
+    .score-badge { font-size: 36px !important; padding: 12px 20px !important; }
+  }
+</style>
+</head>
+<body>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f4f4f5">
+<tr><td align="center" style="padding: 32px 16px;">
+
+<table class="email-wrapper" width="600" cellpadding="0" cellspacing="0" border="0">
+
+  <!-- HEADER BAR -->
+  <tr>
+    <td style="background: #111111; padding: 16px 32px;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td>
+            <span style="color: #ffffff; font-weight: 800; font-size: 16px; letter-spacing: 0.04em;">SIGNAL WORKS</span>
+            <span style="color: #6b7280; font-size: 13px; margin-left: 8px;">AI Visibility Report</span>
+          </td>
+          <td align="right">
+            <span style="color: #F4600C; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;">Salt Lake City, UT</span>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- SCORE HERO -->
+  <tr>
+    <td style="background: #111111; padding: 32px 32px 40px 32px; text-align: center;">
+      <p style="margin: 0 0 8px 0; color: #9ca3af; font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em;">AI Visibility Score</p>
+      <p style="margin: 0 0 4px 0; color: #ffffff; font-size: 64px; font-weight: 900; line-height: 1; letter-spacing: -2px;">{{ai_score}}<span style="font-size: 28px; font-weight: 400; color: #6b7280;">/100</span></p>
+      <p style="margin: 12px 0 0 0; color: #9ca3af; font-size: 14px;">for <strong style="color: #ffffff;">{{business_name}}</strong></p>
+
+      <!-- Score bar -->
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 24px;">
+        <tr>
+          <td style="background: #1f2937; border-radius: 4px; height: 8px; padding: 0;">
+            <table cellpadding="0" cellspacing="0" border="0" style="width: {{ai_score}}%; max-width: 100%;">
+              <tr><td style="background: #F4600C; border-radius: 4px; height: 8px; line-height: 8px; font-size: 1px;">&nbsp;</td></tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Score breakdown -->
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 20px;">
+        <tr>
+          <td width="25%" style="text-align: center; padding: 8px;">
+            <div style="font-size: 20px;">{{chatgpt_icon}}</div>
+            <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">ChatGPT</div>
+          </td>
+          <td width="25%" style="text-align: center; padding: 8px;">
+            <div style="font-size: 20px;">{{perplexity_icon}}</div>
+            <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">Perplexity</div>
+          </td>
+          <td width="25%" style="text-align: center; padding: 8px;">
+            <div style="font-size: 20px;">{{robots_icon}}</div>
+            <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">AI Crawlers</div>
+          </td>
+          <td width="25%" style="text-align: center; padding: 8px;">
+            <div style="font-size: 20px;">{{bing_icon}}</div>
+            <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">Bing Places</div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- BODY -->
+  <tr>
+    <td class="inner-pad" style="padding: 32px 32px 0 32px;">
+      <div class="body-text">
+        <p>Hi {{owner_name}},</p>
+        <p>I ran <strong>{{business_name}}</strong> through an AI visibility scan. When someone asks ChatGPT or Google AI for a <em>{{niche}} in {{city}}</em>, your business is not in the answer.</p>
+        <p>That score above is why. Here is what it means in plain terms:</p>
+      </div>
+
+      <!-- Quick wins -->
+      <div class="quick-wins">
+        <strong>Your 3 fastest fixes</strong>
+        {{quick_wins_html}}
+      </div>
+
+      <div class="body-text">
+        <p>I built a demo showing what <strong>{{business_name}}</strong> could look like with this fixed:</p>
+      </div>
+    </td>
+  </tr>
+
+  <!-- VIDEO THUMBNAIL -->
+  <tr>
+    <td style="padding: 16px 32px;">
+      <a href="{{demo_url}}" class="video-thumb-wrap" style="display: block; text-decoration: none; position: relative;">
+        <!-- Thumbnail image -- replace src with actual pitch reel thumbnail -->
+        <img src="{{thumbnail_url}}" alt="See the {{niche}} demo site" width="536" style="width: 100%; border-radius: 8px; display: block;">
+        <!-- Play button overlay using a simple triangle in a circle -->
+        <table width="64" height="64" cellpadding="0" cellspacing="0" border="0"
+               style="position: absolute; top: 50%; left: 50%; margin-top: -32px; margin-left: -32px;
+                      background: rgba(255,255,255,0.92); border-radius: 50%;">
+          <tr>
+            <td align="center" valign="middle">
+              <div style="width: 0; height: 0; border-top: 12px solid transparent; border-bottom: 12px solid transparent; border-left: 20px solid #111111; margin-left: 4px;"></div>
+            </td>
+          </tr>
+        </table>
+      </a>
+      <p style="margin: 8px 0 0 0; font-size: 12px; color: #9ca3af; text-align: center;">Click to see the full demo site</p>
+    </td>
+  </tr>
+
+  <!-- BODY CONTINUED -->
+  <tr>
+    <td class="inner-pad" style="padding: 0 32px 32px 32px;">
+      <div class="body-text">
+        <p>I help local {{niche}}s in {{city}} become the business AI recommends -- through website optimization, structured data, and content that AI tools actually read and cite.</p>
+        <p>If the gap is real to you, let's talk. 20 minutes, no pitch:</p>
+      </div>
+
+      <!-- CTA -->
+      <table cellpadding="0" cellspacing="0" border="0" style="margin: 8px 0 24px 0;">
+        <tr>
+          <td>
+            <a href="{{calendly_url}}" class="cta-btn"
+               style="display: inline-block; background: #F4600C; color: #ffffff; text-decoration: none;
+                      font-size: 16px; font-weight: 700; padding: 14px 32px; border-radius: 6px;">
+              Book a Free Visibility Check
+            </a>
+          </td>
+        </tr>
+      </table>
+
+      <hr class="divider" style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+
+      <!-- Signature -->
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="padding-right: 16px; vertical-align: top;">
+            <!-- Initials avatar -->
+            <div style="width: 44px; height: 44px; background: #111111; border-radius: 50%;
+                        color: #F4600C; font-weight: 800; font-size: 16px;
+                        text-align: center; line-height: 44px; font-family: sans-serif;">B</div>
+          </td>
+          <td valign="top">
+            <div class="sig-name">Boubacar Barry</div>
+            <div class="sig-title">Founder, Signal Works</div>
+            <div class="sig-brand">We make your business the one AI recommends.</div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- FOOTER -->
+  <tr>
+    <td class="footer">
+      <p style="margin: 0 0 6px 0;">You are receiving this because I ran a public AI visibility scan on local {{niche}} businesses in {{city}}.</p>
+      <p style="margin: 0;">To unsubscribe, reply with "unsubscribe" and I will remove you immediately.</p>
+    </td>
+  </tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>
