@@ -168,3 +168,4 @@ external/
 # Claude Code scheduling skill runtime lock
 .claude/scheduled_tasks.lock
 skills/notebooklm/
+"a-b testing.xlsx"
