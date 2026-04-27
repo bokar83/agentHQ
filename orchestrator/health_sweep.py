@@ -246,6 +246,38 @@ def run_health_sweep() -> dict[str, Any]:
     return {"total": len(results), "passed": len(passed), "failed": len(failed), "failures": failed}
 
 
+_SWEEP_STATE_PATH = os.path.join(
+    os.environ.get("AGENTS_DATA_DIR", "/app/data"), "health_sweep_state.json"
+)
+
+
+def _write_sweep_state(passed: int, total: int, failures: list) -> None:
+    """Persist last sweep result so the Atlas dashboard can display it."""
+    import json as _json
+    state = {
+        "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "passed": passed,
+        "total": total,
+        "ok": len(failures) == 0,
+        "failures": [f["label"] for f in failures],
+    }
+    try:
+        with open(_SWEEP_STATE_PATH, "w") as fh:
+            _json.dump(state, fh)
+    except Exception as e:
+        logger.warning(f"HEALTH_SWEEP: could not write state file: {e}")
+
+
+def read_sweep_state() -> dict:
+    """Read last sweep result. Returns empty dict if not yet run."""
+    import json as _json
+    try:
+        with open(_SWEEP_STATE_PATH) as fh:
+            return _json.load(fh)
+    except Exception:
+        return {}
+
+
 def health_sweep_tick() -> None:
     """Heartbeat callback: run sweep and notify via Telegram."""
     logger.info("HEALTH_SWEEP: starting daily sweep")
@@ -259,6 +291,8 @@ def health_sweep_tick() -> None:
     total = summary["total"]
     passed = summary["passed"]
     failed_list = summary["failures"]
+
+    _write_sweep_state(passed, total, failed_list)
 
     if not failed_list:
         logger.info(f"HEALTH_SWEEP: {passed}/{total} probes passed. All good.")
