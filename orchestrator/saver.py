@@ -160,3 +160,68 @@ def _find_or_create_folder(service, folder_name: str, parent_id: str) -> str:
     }
     folder = service.files().create(body=metadata, fields="id").execute()
     return folder["id"]
+
+
+NOTION_TOKEN = os.environ.get("NOTION_SECRET", "")
+FORGE_CONTENT_DB = os.environ.get("FORGE_CONTENT_DB", "")
+
+
+def save_to_notion_content_board(title: str, task_type: str, drive_url: str, draft: str = "") -> str:
+    """
+    Create a draft entry on the Notion content board with the Drive URL attached.
+    Returns the Notion page URL on success, empty string on failure.
+
+    Maps task_type to Platform:
+      social_content / linkedin_x_campaign / voice_polishing -> LinkedIn
+      general_writing / content_push_to_drive -> LinkedIn (default, editable after)
+    """
+    if not NOTION_TOKEN or not FORGE_CONTENT_DB:
+        logger.warning("Notion config incomplete -- skipping content board save")
+        return ""
+
+    platform_map = {
+        "social_content": "LinkedIn",
+        "linkedin_x_campaign": "LinkedIn",
+        "voice_polishing": "LinkedIn",
+        "general_writing": "LinkedIn",
+        "content_push_to_drive": "LinkedIn",
+    }
+    platform = platform_map.get(task_type, "LinkedIn")
+
+    try:
+        import urllib.request
+        import json as _json
+
+        properties: dict = {
+            "Title": {"title": [{"text": {"content": title[:100]}}]},
+            "Status": {"select": {"name": "Draft"}},
+            "Platform": {"multi_select": [{"name": platform}]},
+        }
+        if drive_url:
+            properties["Drive URL"] = {"url": drive_url}
+        if draft:
+            properties["Draft"] = {"rich_text": [{"text": {"content": draft[:2000]}}]}
+
+        payload = _json.dumps({
+            "parent": {"database_id": FORGE_CONTENT_DB},
+            "properties": properties,
+        }).encode()
+
+        req = urllib.request.Request(
+            "https://api.notion.com/v1/pages",
+            data=payload,
+            headers={
+                "Authorization": f"Bearer {NOTION_TOKEN}",
+                "Content-Type": "application/json",
+                "Notion-Version": "2022-06-28",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = _json.loads(resp.read())
+        page_url = data.get("url", "")
+        logger.info(f"Notion content board: {page_url}")
+        return page_url
+    except Exception as e:
+        logger.error(f"Notion content board save failed: {e}")
+        return ""
