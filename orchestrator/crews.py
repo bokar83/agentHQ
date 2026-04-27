@@ -940,6 +940,9 @@ def build_social_crew(user_request: str) -> Crew:
     planner = build_planner_agent()
     griot = build_social_media_agent()
     qa = build_qa_agent()
+    # QA is a single-pass review -- max_iter=3 (default) causes CrewAI to append
+    # an assistant-prefill message on exhaustion, which Anthropic rejects with 400.
+    qa.max_iter = 1
 
     task_plan = Task(
         description=f"""

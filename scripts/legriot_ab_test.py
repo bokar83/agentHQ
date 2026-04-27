@@ -142,7 +142,19 @@ def _run_legriot_for_model(idea: str, platform: str, model_id: str) -> str:
         crew = build_social_crew(request)
         result = crew.kickoff()
 
-    raw = getattr(result, "raw", None) or str(result)
+    raw = getattr(result, "raw", None)
+    # Grok-4 can return a list of function-call objects instead of a string
+    # when the model uses tool format unexpectedly. Normalize to string.
+    if not isinstance(raw, str):
+        if isinstance(raw, list):
+            parts = []
+            for item in raw:
+                text = getattr(item, "content", None) or getattr(item, "text", None) or str(item)
+                if text:
+                    parts.append(str(text))
+            raw = "\n".join(parts) if parts else str(result)
+        else:
+            raw = str(result) if raw is None else str(raw)
     # Extract DELIVERABLE block if present (QA agent output format)
     if "DELIVERABLE:" in raw:
         raw = raw.split("DELIVERABLE:", 1)[1].strip()
