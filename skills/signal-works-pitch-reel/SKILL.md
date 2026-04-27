@@ -95,6 +95,18 @@ in your working notes so you know which span gets the accent color CSS.
 
 ---
 
+## Accessibility Rule (permanent: do not skip)
+
+Never use color as the sole signal. Always pair color with shape or text.
+
+- Status indicators: use X symbol for fail, checkmark for pass. Never dots or color blocks alone.
+- Red text labels are acceptable when the word itself carries the meaning ("CRITICAL", "NOT FOUND").
+- Score bars must always have a text label (Critical / Below Average / Good): never rely on bar color alone.
+- Applies to all emails, pitch reels, demo site badges, and any visual output with status indicators.
+- Rationale: ~8% of men are red-green colorblind. "Red can't be read, green can't be seen."
+
+---
+
 ## Step 4 - Build HyperFrames composition
 
 Run the `hyperframes` skill. Build a composition with these hard rules - never deviate.

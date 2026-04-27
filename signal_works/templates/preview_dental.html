@@ -9,12 +9,14 @@
   table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
   img { border: 0; display: block; }
   body { margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
-  .body-text { font-size: 15px; line-height: 1.75; color: #111827; }
+  .body-text { font-size: 17px; line-height: 1.8; color: #1a1a1a; }
   .body-text p { margin: 0 0 14px 0; }
   .gaps { background: #f9fafb; border-left: 3px solid #EF4444; border-radius: 0 6px 6px 0; padding: 14px 18px; margin: 18px 0; }
-  .gaps p { margin: 0 0 8px 0; font-size: 14px; color: #374151; line-height: 1.6; }
+  .gaps p { margin: 0 0 8px 0; font-size: 16px; color: #1f2937; line-height: 1.7; }
   .gaps p:last-child { margin-bottom: 0; }
-  .gaps strong { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: #EF4444; display: block; margin-bottom: 9px; }
+  .gaps strong { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; color: #EF4444; display: block; margin-bottom: 10px; }
+  a { color: inherit; }
+  .body-text a { color: #1a1a1a; text-decoration: none; }
   .footer { background: #f9fafb; padding: 14px 28px; font-size: 11px; color: #9ca3af; border-top: 1px solid #e5e7eb; }
 </style>
 </head>
@@ -41,13 +43,13 @@
           <!-- Left: score number -->
           <td style="width: 110px;">
             <div style="line-height: 1;">
-              <span style="color: #FFFFFF; font-size: 40px; font-weight: 900; letter-spacing: -2px;">25</span><span style="color: #475569; font-size: 13px; font-weight: 400;">/100</span>
+              <span style="color: #FFFFFF; font-size: 44px; font-weight: 900; letter-spacing: -2px;">25</span><span style="color: #94A3B8; font-size: 15px; font-weight: 600;">/100</span>
             </div>
-            <div style="color: #64748B; font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 3px;">AI Visibility</div>
+            <div style="color: #CBD5E1; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 3px;">AI Visibility</div>
           </td>
           <!-- Middle: business name + bar -->
           <td style="padding: 0 14px;">
-            <div style="color: #F1F5F9; font-size: 12px; font-weight: 600; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;">Rose Park Pediatric Dentistry</div>
+            <div style="color: #F1F5F9; font-size: 14px; font-weight: 700; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;">Rose Park Pediatric Dentistry</div>
             <table width="100%" cellpadding="0" cellspacing="0" border="0">
               <tr><td style="background: #1E293B; border-radius: 3px; height: 5px; padding: 0;">
                 <!-- Score 25/100 = red bar at 25% width -->
@@ -56,28 +58,28 @@
                 </table>
               </td></tr>
             </table>
-            <div style="color: #EF4444; font-size: 9px; font-weight: 600; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em;">Critical -- not visible to AI</div>
+            <div style="color: #EF4444; font-size: 11px; font-weight: 700; margin-top: 5px; text-transform: uppercase; letter-spacing: 0.06em;">Critical -- not visible to AI</div>
           </td>
           <!-- Right: 4 platform indicators -->
           <td align="right" style="white-space: nowrap; vertical-align: middle;">
             <table cellpadding="0" cellspacing="0" border="0">
               <tr>
                 <td style="text-align: center; padding: 0 6px;">
-                  <div style="width: 8px; height: 8px; background: #EF4444; border-radius: 50%; margin: 0 auto 3px auto;"></div>
-                  <div style="font-size: 9px; color: #64748B;">ChatGPT</div>
+                  <div style="width: 18px; height: 18px; background: #EF4444; border-radius: 50%; margin: 0 auto 3px auto; color: #fff; font-size: 11px; font-weight: 900; line-height: 18px; text-align: center;">&#10005;</div>
+                  <div style="font-size: 10px; color: #CBD5E1; font-weight: 600;">ChatGPT</div>
                 </td>
                 <td style="text-align: center; padding: 0 6px;">
-                  <div style="width: 8px; height: 8px; background: #EF4444; border-radius: 50%; margin: 0 auto 3px auto;"></div>
-                  <div style="font-size: 9px; color: #64748B;">Perplexity</div>
+                  <div style="width: 18px; height: 18px; background: #EF4444; border-radius: 50%; margin: 0 auto 3px auto; color: #fff; font-size: 11px; font-weight: 900; line-height: 18px; text-align: center;">&#10005;</div>
+                  <div style="font-size: 10px; color: #CBD5E1; font-weight: 600;">Perplexity</div>
                 </td>
                 <td style="text-align: center; padding: 0 6px;">
                   <!-- Crawlers = green for dental (scored this point) -->
-                  <div style="width: 8px; height: 8px; background: #22C55E; border-radius: 50%; margin: 0 auto 3px auto;"></div>
-                  <div style="font-size: 9px; color: #64748B;">Crawlers</div>
+                  <div style="width: 18px; height: 18px; background: #22C55E; border-radius: 50%; margin: 0 auto 3px auto; color: #fff; font-size: 11px; font-weight: 900; line-height: 18px; text-align: center;">&#10003;</div>
+                  <div style="font-size: 10px; color: #CBD5E1; font-weight: 600;">Crawlers</div>
                 </td>
                 <td style="text-align: center; padding: 0 6px;">
-                  <div style="width: 8px; height: 8px; background: #EF4444; border-radius: 50%; margin: 0 auto 3px auto;"></div>
-                  <div style="font-size: 9px; color: #64748B;">Bing</div>
+                  <div style="width: 18px; height: 18px; background: #EF4444; border-radius: 50%; margin: 0 auto 3px auto; color: #fff; font-size: 11px; font-weight: 900; line-height: 18px; text-align: center;">&#10005;</div>
+                  <div style="font-size: 10px; color: #CBD5E1; font-weight: 600;">Bing</div>
                 </td>
               </tr>
             </table>
@@ -89,8 +91,8 @@
 
   <!-- BODY -->
   <tr>
-    <td style="padding: 28px 28px 0 28px;">
-      <div class="body-text">
+    <td style="padding: 32px 32px 0 32px;">
+      <div class="body-text" style="color:#1a1a1a;">
         <p>Hi,</p>
         <p>Right now, a parent in Salt Lake City is asking ChatGPT for a pediatric dentist. They are getting a name. It is not yours.</p>
         <p>I ran Rose Park Pediatric Dentistry through an AI visibility scan. You scored 25/100. One thing is working. Three are not:</p>
@@ -103,7 +105,7 @@
         <p>&#9679; Parents ask AI "what should I look for in a pediatric dentist?" Practices that answer that question get cited. Yours does not yet.</p>
       </div>
 
-      <div class="body-text">
+      <div class="body-text" style="color:#1a1a1a;">
         <p>I put together a 20-second video showing what Rose Park Pediatric Dentistry looks like when this is fixed.</p>
       </div>
     </td>
@@ -111,7 +113,7 @@
 
   <!-- VIDEO BLOCK -->
   <tr>
-    <td style="padding: 10px 28px;">
+    <td style="padding: 14px 32px;">
       <!-- Drive URL for dental pitch reel -->
       <a href="https://drive.google.com/file/d/1rtZKnVQJI9XtXcxnocJN8CZX9HhqN3o0/view" style="display: block; text-decoration: none;">
         <table width="100%" cellpadding="0" cellspacing="0" border="0"
@@ -133,8 +135,8 @@
 
   <!-- CLOSE + CTA -->
   <tr>
-    <td style="padding: 6px 28px 28px 28px;">
-      <div class="body-text">
+    <td style="padding: 8px 32px 32px 32px;">
+      <div class="body-text" style="color:#1a1a1a;">
         <p>If you want to see exactly what fixing this looks like for your practice, 20 minutes is enough:</p>
       </div>
 
@@ -142,7 +144,7 @@
         <tr><td>
           <a href="https://calendly.com/boubacarbarry/signal-works-discovery-call"
              style="display: inline-block; background: #EF4444; color: #ffffff; text-decoration: none;
-                    font-size: 15px; font-weight: 700; padding: 12px 28px; border-radius: 6px;">
+                    font-size: 17px; font-weight: 700; padding: 14px 32px; border-radius: 6px;">
             Book a Free Visibility Check
           </a>
         </td></tr>
@@ -151,8 +153,8 @@
       <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
 
       <!-- Clean signature -- no avatar, first name only -->
-      <div style="font-size: 14px; color: #111827; font-weight: 600;">Boubacar</div>
-      <div style="font-size: 12px; color: #9ca3af; margin-top: 3px;">Signal Works &middot; We make your business the one AI recommends.</div>
+      <div style="font-size: 16px; color: #111827; font-weight: 700;">Boubacar</div>
+      <div style="font-size: 13px; color: #9ca3af; margin-top: 4px;">Signal Works &middot; We make your business the one AI recommends.</div>
     </td>
   </tr>
 
