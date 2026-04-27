@@ -84,7 +84,7 @@ def harvest(lesson_url: str, subdir: str | None = None):
         time.sleep(2)
 
         print(f"[harvest] landed at: {page.url}")
-        print(f"[harvest] title: {page.title()}")
+        print(f"[harvest] title: {page.title().encode('ascii', 'replace').decode()}")
 
         # 1. screenshot (full page)
         screenshot_path = out_dir / "screenshot.png"

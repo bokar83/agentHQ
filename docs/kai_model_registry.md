@@ -1,6 +1,6 @@
 # Kai (kie.ai) Model Registry
 
-**Last audit**: 2026-04-21
+**Last audit**: 2026-04-26
 **API base**: `https://api.kie.ai`
 **Auth**: `Authorization: Bearer <KIE_AI_API_KEY>`
 **Rate limit**: 20 new generations per 10 seconds per account
@@ -33,6 +33,21 @@ result URLs in: data.resultJson -> JSON-encoded -> {"resultUrls": ["https://..."
 
 All return a `taskId` and share the same polling flow on `/api/v1/jobs/recordInfo`.
 
+## Direct-Call Models (bypass rank ladder)
+
+Use these by passing `model` explicitly. They do not participate in rank-1/2/3 fallback.
+Call via `task_type="gpt_image_2_text"` or `task_type="gpt_image_2_edit"` in `generate_image()`.
+
+| model param | Kie slug | Modality | When to use |
+|---|---|---|---|
+| `gpt-image-2` (text) | `gpt-image-2-text-to-image` | text-to-image | Typography-accurate generation: signs, chalkboards, menus, social cards, packaging, UI mockups |
+| `gpt-image-2` (edit) | `gpt-image-2-image-to-image` | image-to-image | Edit an existing image with GPT Image 2; pass `input_urls` with the reference image |
+
+**How to call from code:** pass `task_type="gpt_image_2_text"` or `task_type="gpt_image_2_edit"`.
+**How to call from a tool/agent:** `{"prompt": "...", "task_type": "gpt_image_2_text"}` in `kie_generate_image`.
+**Parameters:** `aspect_ratio` (auto|1:1|9:16|16:9|4:3|3:4), `resolution` (1K|2K|4K, default 1K).
+**Confirmed on Kie:** 2026-04-26 via docs.kie.ai.
+
 ## Priority Image Models (ranked)
 
 Quality first, cost second. Budgets: auto-approve ≤ $0.20 per image.
@@ -43,9 +58,9 @@ Quality first, cost second. Budgets: auto-approve ≤ $0.20 per image.
 | 2 | `google/nano-banana-pro-image-to-image` | jobs | image-to-image | Best edit/transform model |
 | 3 | `google/imagen4` | jobs | text-to-image | Multi-variant (fast/ultra); strong for hero shots |
 | 4 | `flux2/pro-text-to-image` | jobs | text-to-image | Photorealistic |
-| 5 | `4o-image` | `/gpt4o-image/generate` | text-to-image | GPT-native; good for text-in-image; cheap |
+| 5 | `4o-image` | `/gpt4o-image/generate` | text-to-image | GPT-4o image (older); good for text-in-image; cheap |
 | 6 | `seedream/5-lite-text-to-image` | jobs | text+image-to-image | Budget tier |
-| 7 | `ideogram/v3-text-to-image` | jobs | text-to-image | Best for typography/text inside images |
+| 7 | `ideogram/v3-text-to-image` | jobs | text-to-image | Typography fallback if GPT Image 2 unavailable |
 | 8 | `topaz/image-upscale` | jobs | upscale | Post-processing only |
 
 ## Priority Video Models (ranked)
@@ -62,6 +77,22 @@ Budgets: auto-approve ≤ $2.00 per video.
 | 6 | `hailuo/2-3-image-to-video-pro` | jobs | image-to-video | Best for animating a still |
 | 7 | `veo3_fast` | `/veo/generate` (model param) | text-to-video | Faster + cheaper Veo variant |
 | 8 | `sora2/sora-2-text-to-video` | jobs | text-to-video | Per-character / non-commercial notes; use with caution |
+
+## Promo Video (reference-to-video) Models
+
+**Entry point:** `generate_promo_video()` / tool `kie_generate_promo_video`
+
+Use when: you have 2-5 app screenshots and want a liquid glass cinematic promo clip (Apple-keynote aesthetic).
+Do NOT use for general video generation (that goes through `generate_video()`).
+
+Budget: ~$1.21 (4s test) to ~$3.03 (10s production). Auto-approve ceiling $3.50.
+Golden rule: 1 reference image per 2 seconds of video. 5 refs + 10s = production sweet spot.
+
+| Rank | Model Slug              | Endpoint | Notes                                                                             |
+|------|-------------------------|----------|-----------------------------------------------------------------------------------|
+| 1    | `bytedance/seedance-2`  | jobs     | Only model with multi-screenshot reference-to-video via Kie; no fallback ladder   |
+
+No fallback ladder. Seedance is the only model with this capability. If it fails, report clearly.
 
 ## Retry & Fallback Behavior
 

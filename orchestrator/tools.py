@@ -47,6 +47,7 @@ try:
     from kie_media import (
         generate_image as _kie_generate_image,
         generate_video as _kie_generate_video,
+        generate_promo_video as _kie_generate_promo_video,
         list_models as _kie_list_models,
         check_credits as _kie_check_credits,
         KieMediaError,
@@ -1744,21 +1745,33 @@ class QueryAudienceEngineTool(BaseTool):
 
 class KieGenerateImageTool(BaseTool):
     """
-    Generate an image via Kai (kie.ai) using the top-ranked text-to-image model.
-    On failure: retry rank-1 once, escalate to rank-2, rank-3. Every attempt logs to Supabase.
+    Generate an image via Kai (kie.ai). Supports ranked-ladder and direct-model routes.
     Stores output in Google Drive 05_Asset_Library/01_Images/<quarter>/ and local cache.
-    Input: JSON with 'prompt' (required), optional 'aspect_ratio' (default '16:9'),
-    'task_type' (text_to_image or image_to_image, default text_to_image),
-    'linked_content_id' (Notion Content Board row ID if this asset supports a specific post).
+    Every attempt logs to Supabase media_generations.
+
+    Input: JSON with:
+      'prompt'           (required)
+      'task_type'        (default 'text_to_image') — one of:
+                           'text_to_image'    rank-ladder, photoreal (Seedream rank-1)
+                           'image_to_image'   rank-ladder, edit/transform (Nano Banana rank-1)
+                           'gpt_image_2_text' DIRECT: GPT Image 2 text-to-image; best for typography,
+                                              signs, chalkboards, menus, social cards, UI mockups
+                           'gpt_image_2_edit' DIRECT: GPT Image 2 image-to-image; pass input_urls
+      'aspect_ratio'     (default '16:9'; ignored for gpt_image_2 routes which use 'auto')
+      'input_urls'       (list of image URLs; required for gpt_image_2_edit)
+      'linked_content_id' (Notion Content Board row ID)
+
     Returns JSON with drive_url, drive_file_id, local_path, model_used, attempts.
     """
     name: str = "kie_generate_image"
     description: str = (
         "Generate an image via Kai (kie.ai), saved to Google Drive 05_Asset_Library/01_Images. "
-        "Uses top-ranked model per task_type with auto-fallback on failure. "
-        "Input: JSON with 'prompt' (required), optional 'aspect_ratio' (default '16:9'), "
-        "'task_type' (text_to_image or image_to_image), 'linked_content_id'. "
-        "Returns JSON with drive_url, drive_file_id, local_path, model_used, attempts."
+        "task_type controls model routing: 'text_to_image' (ranked ladder, default), "
+        "'image_to_image' (ranked ladder), 'gpt_image_2_text' (direct GPT Image 2, best for "
+        "typography/signs/menus/social cards/UI mockups), 'gpt_image_2_edit' (direct GPT Image 2 "
+        "edit, requires input_urls). "
+        "Input: JSON with 'prompt' (required), 'task_type', 'aspect_ratio', 'input_urls', "
+        "'linked_content_id'. Returns JSON with drive_url, drive_file_id, local_path, model_used."
     )
 
     def _run(self, input_data: str) -> str:
@@ -1774,6 +1787,7 @@ class KieGenerateImageTool(BaseTool):
                 aspect_ratio=data.get("aspect_ratio", "16:9"),
                 task_type=data.get("task_type", "text_to_image"),
                 linked_content_id=data.get("linked_content_id"),
+                input_urls=data.get("input_urls"),
             )
             return json.dumps(result)
         except Exception as e:
@@ -1816,6 +1830,51 @@ class KieGenerateVideoTool(BaseTool):
         except Exception as e:
             logger.error(f"KieGenerateVideoTool failed: {type(e).__name__}: {e}")
             return f"kie_generate_video failed: {type(e).__name__}: {e}"
+
+
+class KieGeneratePromoVideoTool(BaseTool):
+    """
+    Generate a liquid glass cinematic promo video from 2-5 reference screenshots using Seedance 2 via Kie.
+    Use this specifically when you want an Apple-keynote-style promo clip from app/site screenshots.
+    NOT for general video generation -- use kie_generate_video for that.
+    Input: JSON with:
+      - 'image_urls' (required): list of 2-5 publicly accessible image URLs
+      - 'subject_descriptions' (optional): one plain-English label per image, e.g. ["a dark SaaS dashboard"]
+      - 'accent_color' (optional): brand accent color for lighting, e.g. "orange"
+      - 'duration_hint' (optional): target duration in seconds as string, default "10"
+      - 'custom_prompt' (optional): override the auto-generated liquid glass prompt entirely
+      - 'linked_content_id' (optional): Notion Content Board row ID
+    Returns JSON with drive_url, drive_file_id, local_path, model_used, attempts.
+    """
+    name: str = "kie_generate_promo_video"
+    description: str = (
+        "Generate a liquid glass cinematic promo video from 2-5 reference screenshots using Seedance 2 via Kie. "
+        "Use for app/site promo clips in the Apple-keynote aesthetic. NOT for general video gen. "
+        "Input: JSON with 'image_urls' (required, list of 2-5 URLs), optional 'subject_descriptions', "
+        "'accent_color', 'duration_hint' (default '10'), 'custom_prompt', 'linked_content_id'. "
+        "Returns JSON with drive_url, drive_file_id, local_path, model_used, attempts."
+    )
+
+    def _run(self, input_data: str) -> str:
+        if not _kie_available:
+            return f"kie_media module not available: {_kie_import_error_msg}"
+        try:
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            image_urls = data.get("image_urls")
+            if not image_urls:
+                return "Error: 'image_urls' is required (list of 2-5 screenshot URLs)."
+            result = _kie_generate_promo_video(
+                image_urls=image_urls,
+                subject_descriptions=data.get("subject_descriptions"),
+                accent_color=data.get("accent_color", ""),
+                duration_hint=data.get("duration_hint", "10"),
+                custom_prompt=data.get("custom_prompt"),
+                linked_content_id=data.get("linked_content_id"),
+            )
+            return json.dumps(result)
+        except Exception as e:
+            logger.error(f"KieGeneratePromoVideoTool failed: {type(e).__name__}: {e}")
+            return f"kie_generate_promo_video failed: {type(e).__name__}: {e}"
 
 
 class KieListModelsTool(BaseTool):
@@ -2067,7 +2126,7 @@ try:
 except Exception as _e:
     logger.warning(f"VIDEO_ANALYZE_TOOLS unavailable: {_e}")
     VIDEO_ANALYZE_TOOLS = []
-MEDIA_TOOLS = [KieGenerateImageTool(), KieGenerateVideoTool(), KieListModelsTool(), KieCheckCreditsTool()]
+MEDIA_TOOLS = [KieGenerateImageTool(), KieGenerateVideoTool(), KieGeneratePromoVideoTool(), KieListModelsTool(), KieCheckCreditsTool()]
 WRITING_TOOLS = [file_writer, SaveOutputTool(), voice_polisher_tool]
 CODE_TOOLS = [t for t in [code_interpreter, file_writer, file_reader, SaveOutputTool(), CLIHubSearchTool(), launch_vercel_tool] if t is not None]
 ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool(), GitHubRepoTool(), GitHubIssueTool(), GitHubFileTool(), NotionSearchTool(), NotionPageTool(), launch_vercel_tool, SpawnJobTool()] + VERCEL_TOOLS + NOTION_STYLING_TOOLS + FORGE_TOOLS + GWS_TOOLS

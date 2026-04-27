@@ -120,6 +120,35 @@ MODEL_REGISTRY = {
             "default_input": {},
         },
     ],
+    # Direct-call routes: bypass rank ladder, always use this specific model.
+    # Trigger via task_type="gpt_image_2_text" or "gpt_image_2_edit" in generate_image().
+    # Best-in-class for typography: signs, menus, chalkboards, social cards, UI mockups.
+    "gpt_image_2_text": [
+        {
+            "slug": "gpt-image-2-text-to-image",
+            "endpoint": "unified",
+            "input_key": "input",
+            "default_input": {"aspect_ratio": "auto", "resolution": "1K"},
+        },
+    ],
+    "gpt_image_2_edit": [
+        {
+            "slug": "gpt-image-2-image-to-image",
+            "endpoint": "unified",
+            "input_key": "input",
+            "default_input": {"aspect_ratio": "auto", "resolution": "1K"},
+        },
+    ],
+    # reference_to_video: Seedance 2 only — multi-screenshot liquid glass promo pipeline.
+    # Not a general-purpose fallback ladder; Seedance is the only model with this capability via Kie.
+    "reference_to_video": [
+        {
+            "slug": "bytedance/seedance-2",
+            "endpoint": "unified",
+            "input_key": "input",
+            "default_input": {"resolution": "720p", "aspect_ratio": "16:9"},
+        },
+    ],
 }
 
 
@@ -453,12 +482,27 @@ def generate_image(
     aspect_ratio: str = "16:9",
     task_type: str = "text_to_image",
     linked_content_id: str | None = None,
+    input_urls: list[str] | None = None,
 ) -> dict:
     """
     Generate an image via the top-ranked Kai model, store on Drive, log metadata.
+
+    task_type options:
+      "text_to_image"    — rank-ladder, photoreal default (Seedream rank-1)
+      "image_to_image"   — rank-ladder, edit/transform default (Nano Banana rank-1)
+      "gpt_image_2_text" — direct call to GPT Image 2 text-to-image; best for typography
+      "gpt_image_2_edit" — direct call to GPT Image 2 image-to-image; pass input_urls
+
     Returns: {drive_url, drive_file_id, local_path, model_used, attempts}
     """
-    extra = {"aspect_ratio": aspect_ratio} if task_type == "text_to_image" else {}
+    if task_type in ("gpt_image_2_text", "gpt_image_2_edit"):
+        extra: dict = {"aspect_ratio": "auto", "resolution": "1K"}
+        if input_urls:
+            extra["input_urls"] = input_urls
+    elif task_type == "text_to_image":
+        extra = {"aspect_ratio": aspect_ratio}
+    else:
+        extra = {}
     gen = _run_with_retries(task_type, prompt, extra)
 
     source_url = gen["result_urls"][0]
@@ -542,6 +586,125 @@ def generate_video(
     return result
 
 
+SEEDANCE_LIQUID_GLASS_TEMPLATE = """\
+Design a motion-graphics style ad using glossy liquid glass design language. \
+Pure black background. {image_descriptions} \
+The elements become translucent glass panels with reflections and refractions. \
+Multiple camera angles: close-ups on glass reflections, pull back to reveal the full scene. \
+No text, no logos, no words. \
+Style: liquid glass morphism, Apple Vision Pro aesthetic, premium 3D depth, \
+self-luminous forms on absolute black{accent}.\
+"""
+
+
+def _build_seedance_prompt(
+    image_urls: list[str],
+    subject_descriptions: list[str],
+    accent_color: str,
+    custom_prompt: str | None,
+) -> tuple[str, dict]:
+    """
+    Build the prompt string and extra_input dict for a Seedance reference-to-video call.
+    Returns (prompt, extra_input).
+    """
+    if custom_prompt:
+        prompt = custom_prompt
+    else:
+        desc_parts = []
+        for i, desc in enumerate(subject_descriptions, start=1):
+            desc_parts.append(f"@Image{i} is {desc}")
+        image_descriptions = ". ".join(desc_parts) + ". " if desc_parts else ""
+        accent = f", {accent_color} accent lighting" if accent_color else ""
+        prompt = SEEDANCE_LIQUID_GLASS_TEMPLATE.format(
+            image_descriptions=image_descriptions,
+            accent=accent,
+        )
+    extra_input = {
+        "imageList": image_urls,
+        "resolution": "720p",
+        "aspect_ratio": "16:9",
+    }
+    return prompt, extra_input
+
+
+def generate_promo_video(
+    image_urls: list[str],
+    subject_descriptions: list[str] | None = None,
+    accent_color: str = "",
+    duration_hint: str = "10",
+    custom_prompt: str | None = None,
+    linked_content_id: str | None = None,
+) -> dict:
+    """
+    Generate a liquid glass promo video from multiple reference screenshots using Seedance 2 via Kie.
+
+    Use this when you want an Apple-keynote-style cinematic promo clip from app screenshots,
+    site captures, or product images -- NOT for general video generation (use generate_video for that).
+
+    Args:
+        image_urls:            2-5 publicly accessible image URLs (Kie CDN, Drive, etc.).
+                               Golden rule: 1 image per 2 seconds of video. 5 refs = 10s sweet spot.
+        subject_descriptions:  One plain-English description per image, e.g. ["a dark SaaS dashboard",
+                               "a mobile onboarding screen"]. Used to build the @Image1/@Image2 prompt.
+                               Skip if passing custom_prompt.
+        accent_color:          Brand accent color for lighting, e.g. "orange", "electric blue".
+        duration_hint:         Desired duration string passed to the model ("4", "6", "10", "15").
+                               Model may deviate slightly. Default "10" (production sweet spot).
+        custom_prompt:         Override the auto-generated liquid glass prompt entirely.
+        linked_content_id:     Notion Content Board row ID to link this asset.
+
+    Returns: {drive_url, drive_file_id, local_path, model_used, attempts, filename}
+    """
+    if not image_urls:
+        raise KieMediaError("generate_promo_video requires at least one image_url")
+    if len(image_urls) > 5:
+        raise KieMediaError(
+            f"Seedance quality degrades above 5 reference images (got {len(image_urls)}). "
+            "Trim to your 5 most representative screenshots."
+        )
+
+    subject_descriptions = subject_descriptions or []
+    prompt, extra_input = _build_seedance_prompt(
+        image_urls, subject_descriptions, accent_color, custom_prompt
+    )
+    extra_input["duration"] = duration_hint
+
+    gen = _run_with_retries("reference_to_video", prompt, extra_input)
+
+    source_url = gen["result_urls"][0]
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M")
+    slug = _slugify(prompt, max_len=40)
+    filename = f"MEDIA_video_{timestamp}_seedance2-promo_{slug}.mp4"
+
+    local_path = LOCAL_CACHE_DIR / "videos" / _current_quarter() / filename
+    _download_asset(source_url, local_path)
+
+    quarter_folder_id = _find_or_create_folder(_current_quarter(), VIDEOS_FOLDER)
+    drive_result = _upload_to_drive(local_path, quarter_folder_id, filename, "video/mp4")
+
+    result = {
+        "drive_url": drive_result["webViewLink"],
+        "drive_file_id": drive_result["id"],
+        "local_path": str(local_path),
+        "model_used": gen["model_used"],
+        "rank_used": gen["rank_used"],
+        "attempts": gen["attempts"],
+        "filename": filename,
+    }
+    log_row = {
+        **result,
+        "task_type": "reference_to_video",
+        "prompt": prompt,
+        "state": "success",
+        "linked_content_id": linked_content_id,
+        "quarter": _current_quarter(),
+        "notes": f"seedance_promo | {len(image_urls)} refs | duration={duration_hint}s",
+    }
+    _log_to_supabase(log_row)
+    _log_to_notion_media_index(log_row)
+    return result
+
+
 def list_models(task_type: str | None = None) -> dict:
     """Return the current priority-ordered model registry."""
     if task_type:
@@ -561,6 +724,7 @@ def check_credits() -> int:
 __all__ = [
     "generate_image",
     "generate_video",
+    "generate_promo_video",
     "list_models",
     "check_credits",
     "MODEL_REGISTRY",
