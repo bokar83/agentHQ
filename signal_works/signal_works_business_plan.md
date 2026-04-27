@@ -236,7 +236,7 @@ All built on agentsHQ (existing). No new major tools required until Month 2-3.
 | Stripe | Payments | 2.9% + $0.30 |
 | Calendly | Call booking | $0 free tier |
 | HelloSign | Contracts | $0 (3/month free) |
-| Loom | Sales videos | $0 free tier |
+| Kie/Seedance | Niche promo videos (one-time per niche, reused forever) | ~$0.50/video |
 | UptimeRobot | Site monitoring | $0 |
 | OtterlyAI | AI visibility monitoring | ~$50-100/month at Month 2+ |
 | BrightLocal | Citation building | $30-80/month at Month 2+ |
