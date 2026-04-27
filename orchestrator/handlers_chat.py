@@ -312,7 +312,7 @@ def run_chat(message: str, session_key: str = "default") -> dict:
     history_messages = []
     try:
         from memory import get_conversation_history
-        history = get_conversation_history(session_key, limit=10)
+        history = get_conversation_history(session_key, limit=100)
         for turn in history:
             role = turn["role"] if turn["role"] in ("user", "assistant") else "user"
             history_messages.append({"role": role, "content": turn["content"]})
@@ -513,9 +513,9 @@ def _evict_expired_confirms() -> None:
 
 def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> dict:
     """
-    M9b web chat handler. Accepts a full messages array from the client,
-    resolves artifact refs, calls the model, stores artifacts, dispatches
-    forward_to_crew via background job (async, non-blocking).
+    Atlas web chat handler. Loads 100 turns from Postgres (same as run_chat),
+    merges with current user message, resolves artifact refs, calls the model,
+    stores artifacts, dispatches forward_to_crew via confirm gate.
 
     Returns M9 schema: {"reply": "...", "actions": [...], "artifact": {...}, "job_id": "..."}
     """
@@ -527,14 +527,31 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
     if messages and messages[-1].get("role") == "user":
         messages[-1]["content"] = _resolve_artifact_refs(messages[-1]["content"])
 
+    # Load Postgres history (100 turns) -- same depth as run_chat
+    history_messages: list = []
+    try:
+        from memory import get_conversation_history
+        history = get_conversation_history(session_key, limit=100)
+        for turn in history:
+            role = turn["role"] if turn["role"] in ("user", "assistant") else "user"
+            history_messages.append({"role": role, "content": turn["content"]})
+        while history_messages and history_messages[-1]["role"] == "assistant":
+            history_messages.pop()
+    except Exception as e:
+        logger.warning(f"Atlas chat history load failed (non-fatal): {e}")
+
     try:
         from prompt_loader import load_system_prompt
         system_prompt = load_system_prompt("chat", fallback=_build_system_prompt())
     except Exception:
         system_prompt = _build_system_prompt()
 
-    full_messages = [{"role": "system", "content": system_prompt}] + messages
-    turn_number = len(messages)
+    # Use postgres history + current user message; ignore client-managed prior turns
+    current_user_msg = messages[-1] if messages and messages[-1].get("role") == "user" else None
+    merged = history_messages + ([current_user_msg] if current_user_msg else messages)
+
+    full_messages = [{"role": "system", "content": system_prompt}] + merged
+    turn_number = len(merged)
 
     actions: list = []
     artifact: dict | None = None
