@@ -28,6 +28,10 @@ _PENDING_FEEDBACK_WINDOWS: dict = {}
 # Evicted on first successful reply, or by publish_brief_tick when older than 24h.
 _PUBLISH_BRIEF_WINDOWS: dict = {}
 
+# Atlas M9b: pending write-action confirmations from web chat.
+# confirm_token -> dict: action, payload, session_key, ts_created (epoch). TTL 5 min.
+_confirm_store: dict = {}
+
 # Serializes git writes when multiple background jobs try to save outputs
 # at the same time. Used by saver.py via the shadow entrypoint.
 _git_lock = threading.Lock()

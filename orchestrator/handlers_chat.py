@@ -475,3 +475,190 @@ def run_chat_with_buttons(
         send_message_with_buttons(chat_id, result["reply"], buttons)
     else:
         send_message(chat_id, result["reply"])
+
+
+# ══════════════════════════════════════════════════════════════
+# ATLAS WEB CHAT (M9b): stateful, artifact-aware, channel="web"
+# ══════════════════════════════════════════════════════════════
+
+import re as _re
+import uuid as _uuid
+import time as _time
+
+
+def _resolve_artifact_refs(text: str) -> str:
+    """Replace [artifact:art_id] placeholders with full artifact content from Postgres."""
+    pattern = _re.compile(r"\[artifact:([a-zA-Z0-9_\-]+)\]")
+    def _replace(m):
+        art_id = m.group(1)
+        try:
+            from db import get_chat_artifact
+            row = get_chat_artifact(art_id)
+            if row:
+                return f"[Artifact {art_id} ({row['artifact_type']})]\n{row['content']}"
+        except Exception:
+            pass
+        return m.group(0)
+    return pattern.sub(_replace, text)
+
+
+def _evict_expired_confirms() -> None:
+    """Remove confirm_store entries older than 5 minutes."""
+    from state import _confirm_store
+    now = _time.time()
+    expired = [k for k, v in _confirm_store.items() if now - v.get("ts_created", 0) > 300]
+    for k in expired:
+        _confirm_store.pop(k, None)
+
+
+def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> dict:
+    """
+    M9b web chat handler. Accepts a full messages array from the client,
+    resolves artifact refs, calls the model, stores artifacts, dispatches
+    forward_to_crew via background job (async, non-blocking).
+
+    Returns M9 schema: {"reply": "...", "actions": [...], "artifact": {...}, "job_id": "..."}
+    """
+    from llm_helpers import ATLAS_CHAT_MODEL, CHAT_TEMPERATURE, CHAT_SANDBOX
+
+    _evict_expired_confirms()
+
+    # Resolve any [artifact:id] placeholders in the latest user message
+    if messages and messages[-1].get("role") == "user":
+        messages[-1]["content"] = _resolve_artifact_refs(messages[-1]["content"])
+
+    try:
+        from prompt_loader import load_system_prompt
+        system_prompt = load_system_prompt("chat", fallback=_build_system_prompt())
+    except Exception:
+        system_prompt = _build_system_prompt()
+
+    full_messages = [{"role": "system", "content": system_prompt}] + messages
+    turn_number = len(messages)
+
+    actions: list = []
+    artifact: dict | None = None
+    job_id: str | None = None
+
+    try:
+        from llm_helpers import call_llm
+
+        response = call_llm(
+            full_messages,
+            model=ATLAS_CHAT_MODEL,
+            tools=_TOOLS,
+            tool_choice="auto",
+            temperature=CHAT_TEMPERATURE,
+        )
+
+        msg = response.choices[0].message
+
+        if msg.tool_calls:
+            full_messages.append(msg)
+            for tool_call in msg.tool_calls:
+                fn_name = tool_call.function.name
+                if fn_name == "query_system":
+                    from utils import _query_system
+                    tool_result = _query_system()
+                elif fn_name == "retrieve_output_file":
+                    args = json.loads(tool_call.function.arguments or "{}")
+                    tool_result = _retrieve_output_file(args.get("filename_hint", ""))
+                elif fn_name == "save_memory":
+                    args = json.loads(tool_call.function.arguments or "{}")
+                    fact = args.get("fact", "")
+                    category = args.get("category", "general")
+                    try:
+                        from memory import save_conversation_turn, save_to_memory
+                        tag = f"[MEMORY:{category.upper()}] {fact}"
+                        save_conversation_turn(session_key, "assistant", tag)
+                        save_to_memory(
+                            task_request=tag,
+                            task_type="memory_capture",
+                            result_summary=fact,
+                            files_created=[],
+                            execution_time=0,
+                            from_number=session_key,
+                        )
+                        tool_result = f"Saved to memory: {fact}"
+                    except Exception as mem_e:
+                        tool_result = f"Memory save failed: {mem_e}"
+                elif fn_name == "forward_to_crew":
+                    args = json.loads(tool_call.function.arguments or "{}")
+                    task_text = args.get("task_text", "")
+                    if CHAT_SANDBOX:
+                        tool_result = f"[SANDBOX] Would have forwarded to crew: {task_text[:120]}"
+                    else:
+                        # Write-action confirmation gate
+                        from state import _confirm_store
+                        confirm_token = f"conf_{_uuid.uuid4().hex[:10]}"
+                        _confirm_store[confirm_token] = {
+                            "action": "forward_to_crew",
+                            "payload": {"task_text": task_text},
+                            "session_key": session_key,
+                            "ts_created": _time.time(),
+                        }
+                        tool_result = (
+                            f"Ready to run: {task_text[:120]}. "
+                            f"Confirm token: {confirm_token}"
+                        )
+                        actions.append({
+                            "label": "Confirm",
+                            "callback_data": f"confirm:{confirm_token}",
+                        })
+                        actions.append({
+                            "label": "Cancel",
+                            "callback_data": f"cancel:{confirm_token}",
+                        })
+                else:
+                    tool_result = "Unknown tool."
+
+                full_messages.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": tool_result,
+                })
+
+            followup = call_llm(full_messages, model=ATLAS_CHAT_MODEL, temperature=CHAT_TEMPERATURE)
+            raw_reply = (followup.choices[0].message.content or "").strip()
+        else:
+            raw_reply = (msg.content or "").strip()
+
+        try:
+            parsed = json.loads(raw_reply)
+            reply = parsed.get("reply", raw_reply)
+            if not actions:
+                actions = parsed.get("actions") or []
+            parsed_artifact = parsed.get("artifact")
+            if parsed_artifact and parsed_artifact.get("content"):
+                art_id = parsed_artifact.get("artifact_id") or f"art_{_uuid.uuid4().hex[:8]}"
+                art_type = parsed_artifact.get("type", "html")
+                try:
+                    from db import save_chat_artifact
+                    save_chat_artifact(art_id, session_key, turn_number, art_type,
+                                       parsed_artifact["content"])
+                except Exception as db_e:
+                    logger.warning(f"artifact save failed: {db_e}")
+                artifact = {"artifact_id": art_id, "type": art_type,
+                            "content": parsed_artifact["content"]}
+        except (json.JSONDecodeError, AttributeError):
+            reply = raw_reply
+
+    except Exception as e:
+        logger.error(f"run_atlas_chat LLM call failed: {e}")
+        reply = "Sorry, I hit an error. Try again in a moment."
+
+    # Save text turns only
+    try:
+        from memory import save_conversation_turn
+        if messages and messages[-1].get("role") == "user":
+            save_conversation_turn(session_key, "user", messages[-1]["content"][:2000])
+        save_conversation_turn(session_key, "assistant", reply)
+    except Exception as e:
+        logger.warning(f"Atlas chat history save failed: {e}")
+
+    result: dict = {"reply": reply, "actions": actions}
+    if artifact:
+        result["artifact"] = artifact
+    if job_id:
+        result["job_id"] = job_id
+    return result

@@ -31,6 +31,68 @@ CREATE TABLE IF NOT EXISTS content_approvals (
 """
 
 
+CREATE_CHAT_ARTIFACTS = """
+CREATE TABLE IF NOT EXISTS chat_artifacts (
+    artifact_id   TEXT PRIMARY KEY,
+    session_id    TEXT NOT NULL,
+    turn_number   INTEGER NOT NULL,
+    artifact_type TEXT NOT NULL,
+    content       TEXT NOT NULL,
+    created_at    TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS chat_artifacts_session_turn
+    ON chat_artifacts (session_id, turn_number);
+"""
+
+
+def ensure_chat_artifacts_table() -> None:
+    """Create chat_artifacts table if it does not exist (idempotent)."""
+    conn = get_local_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(CREATE_CHAT_ARTIFACTS)
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        logger.warning(f"ensure_chat_artifacts_table failed: {e}")
+    finally:
+        conn.close()
+
+
+def save_chat_artifact(artifact_id: str, session_id: str, turn_number: int,
+                       artifact_type: str, content: str) -> None:
+    conn = get_local_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """INSERT INTO chat_artifacts (artifact_id, session_id, turn_number, artifact_type, content)
+               VALUES (%s, %s, %s, %s, %s)
+               ON CONFLICT (artifact_id) DO UPDATE SET content = EXCLUDED.content""",
+            (artifact_id, session_id, turn_number, artifact_type, content),
+        )
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        logger.warning(f"save_chat_artifact failed: {e}")
+    finally:
+        conn.close()
+
+
+def get_chat_artifact(artifact_id: str) -> dict | None:
+    conn = get_local_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM chat_artifacts WHERE artifact_id = %s", (artifact_id,))
+        row = cur.fetchone()
+        cur.close()
+        return dict(row) if row else None
+    except Exception as e:
+        logger.warning(f"get_chat_artifact failed: {e}")
+        return None
+    finally:
+        conn.close()
+
+
 def ensure_content_approvals_table() -> None:
     """Create content_approvals table if it does not exist (idempotent).
 
