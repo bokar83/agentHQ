@@ -934,3 +934,19 @@ M11c placed on TRIPLE HOLD. No measured quality gap in research engine productio
 
 - End-to-end test: trigger real `social_content` task, confirm Drive + Notion entries appear.
 - Google Drive Organizer / Cleanup Agent (Ideas DB, high effort, prerequisite for full-Drive sync at scale).
+
+---
+
+### 2026-04-27: Uncommitted file audit
+
+Five files in `thepopebot/chat-ui/` are intentionally NOT committed. Reason documented here so future sessions do not re-add them.
+
+| File | Reason |
+|---|---|
+| `atlas-chat.js.tmp` | 0-byte temp artifact from M9b build. Delete on sight. |
+| `atlas-preview.html` | M8 design preview mockup (Apr 25). Superseded by live `atlas.html`. Design scratch paper only. |
+| `atlas-font-compare.html` | OpenDyslexic vs Atkinson Hyperlegible comparison (Apr 25). Decision made: Atkinson kept, OpenDyslexic reverted. Dead artifact. |
+| `OpenDyslexic-Bold.otf` | 184 KB binary font file. Experiment tried and reverted per session log 2026-04-26. No place in git. |
+| `OpenDyslexic-Regular.otf` | 176 KB binary font file. Same reason as above. |
+
+These can be deleted from the working directory at any time. They are not referenced by any live code.
