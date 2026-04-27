@@ -953,6 +953,21 @@ These can be deleted from the working directory at any time. They are not refere
 
 ---
 
+### 2026-04-27: Newsletter crew shipped + beehiiv enhancement queued this week
+
+**newsletter_crew SHIPPED** (commit 6a3e9f2). Routes via 'newsletter' task type. leGriot voice: colleague-not-professor standard, story anchor, citation superscripts + Sources section, 8-point QA checklist. Saves to Drive + logs to Notion content board.
+
+**Delivery platform: beehiiv** (not n8n/Mailgun). Current flow: crew drafts -> Drive -> Boubacar pastes into beehiiv manually.
+
+**THIS WEEK (by 2026-05-03):** Wire beehiiv REST API so newsletter_crew auto-creates a draft in beehiiv. ~1h Codex task.
+- New file: orchestrator/beehiiv.py (create_draft via POST /v2/publications/{pub_id}/posts)
+- New tool: BeehiivCreateDraftTool in tools.py, WRITING_TOOLS bundle
+- New env vars: BEEHIIV_API_KEY + BEEHIIV_PUBLICATION_ID (.env + docker-compose.yml)
+- Update build_newsletter_crew() task_write to call create_draft() after save_output
+- Ideas DB entry: 34fbcf1a-3029-815c-b1bc-de7364215adb
+
+---
+
 ### 2026-04-26: M9b SHIPPED: Atlas Web Chat Native Panel
 
 **Branch:** `feat/atlas-m9b-web-chat`
