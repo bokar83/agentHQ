@@ -107,16 +107,50 @@ Always use explicit colors with no blend mode.
 }
 ```
 
-### 5. State the brief before writing code
+### 5. Self-verification before writing any code : mandatory (cannot be skipped)
 
-One paragraph before the first `<` character:
-- Archetype chosen and why
-- Font pairing and color story
-- 3 design constraints
-- Anti-patterns being avoided
+Before the first `<` character, you must produce ALL of the following. Missing any item means the skill has not run. Do not proceed.
 
-This is proof the skill ran. If this paragraph is missing, the skill
-did not run.
+**A. Anti-banned-skeleton check (explicit):**
+Write out your planned section order, e.g.:
+> "My sections: full-viewport blob hero / horizontal scroll reviews / wavy-divider services / stat counters / FAQ accordion / minimal footer"
+
+Then check each against the banned skeleton:
+
+- Does it start with sticky-nav + split-hero? If yes, STOP. Redesign.
+- Does it use alternating-2col-sections? If yes, STOP. Replace with something from the archetype table.
+- Does it use a generic card-grid for services? If yes, STOP. Use depth-reveal, kinetic list, or editorial grid instead.
+
+**B. Build log check (explicit):**
+Read `workspace/demo-sites/build-log.md`. Write out the last 3 archetypes used. Confirm yours is not a repeat.
+> "Last 3 archetypes: [A], [B], [C]. My archetype: [X]. No repeat confirmed."
+
+**C. $50K agency question (explicit):**
+Write one sentence: what would a top-tier agency produce for this specific business category that would make a visitor stop scrolling?
+> "For a [business type], the $50K agency move is: [specific, concrete answer (not 'a premium feel').]"
+
+**D. Volta line count check:**
+`workspace/demo-sites/volta-studio/index.html` is 926 lines. `workspace/demo-sites/thepointpediatricdentistry/index.html` is 923 lines. Your output must be at minimum 800 lines. A site under 800 lines is not at Volta quality. If you are under, you have skipped animations, schema, or sections.
+
+**E. Interaction inventory (explicit):**
+List the 3+ cinematic interactions you will implement before you start:
+> "Interactions: [1], [2], [3]"
+These must be specific (e.g. "GSAP SplitText on H1 with chars stagger 0.04s" not "hero animation"). Vague descriptions mean the skill did not run.
+
+If all five checks are written and pass, proceed. If any are missing or fail, stop and resolve before touching HTML.
+
+---
+
+## FAILURE MODE GALLERY
+
+These are real outputs that failed the Volta standard. Never ship anything that looks like these:
+
+- **The Resume Template**: sticky nav, hero with left text + right image, 3-column card grid for services, testimonials carousel, contact form, footer. BANNED.
+- **The Bootstrap Reskin**: same skeleton as above but with a different font and accent color. Still BANNED. Boubacar can feel the skeleton through any costume.
+- **The Figma Export**: technically correct, visually dead. No motion, no cursor, no life. Looks finished but does not feel alive. BANNED.
+- **The "Clean" Cop-out**: "this business needs something clean and minimal" used as justification for a skeleton site. Clean is a design choice. Skeleton is not clean, it is lazy. BANNED.
+
+If your output could appear in a Wix template gallery, it has failed.
 
 ---
 
