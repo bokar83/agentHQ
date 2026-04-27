@@ -111,19 +111,29 @@ def handle_callback_query(update: dict) -> bool:
     elif cb_data.startswith("enhance_queue_item:"):
         try:
             qid = int(cb_data.split(":", 1)[1])
-            from approval_queue import reject as _aq_reject, get as _aq_get
+            from approval_queue import get as _aq_get, _conn as _aq_conn
             from notifier import answer_callback_query, send_message
             qrow = _aq_get(qid)
             if qrow and qrow.status == "pending":
-                _aq_reject(qid, note="queued-for-enhancement", feedback_tag="enhance")
-                answer_callback_query(cb_id, f"Queued for enhancement #{qid}")
-                title = (qrow.payload or {}).get("title", f"queue #{qid}")
-                send_message(
-                    cb_chat_id,
-                    f"Queue #{qid} ({title}): marked for enhancement.\n"
-                    f"The post body needs work before it can be scheduled. "
-                    f"Update the Draft in Notion and it will re-enter the candidate pool.",
+                # Mark enhancing immediately so griot won't re-pick this candidate
+                conn = _aq_conn()
+                cur = conn.cursor()
+                cur.execute(
+                    "UPDATE approval_queue SET status='enhancing', decision_note='enhance-button-tapped',"
+                    " boubacar_feedback_tag='enhance', ts_decided=now() WHERE id=%s AND status='pending'",
+                    (qid,),
                 )
+                conn.commit()
+                cur.close()
+                answer_callback_query(cb_id, f"Enhancing #{qid}...")
+                title = (qrow.payload or {}).get("title", f"queue #{qid}")
+                send_message(cb_chat_id, f"Enhancing: {title}\nLeGriot is rewriting now (~30s)...")
+                import threading
+                threading.Thread(
+                    target=_run_enhance_crew,
+                    args=(qid, qrow, cb_chat_id),
+                    daemon=True,
+                ).start()
             elif qrow:
                 answer_callback_query(cb_id, f"Already {qrow.status}.")
             else:
@@ -154,7 +164,127 @@ def handle_callback_query(update: dict) -> bool:
         except Exception as e:
             logger.warning(f"callback_query reject_queue_item handling error: {e}")
 
+    elif cb_data.startswith("pick_variation:"):
+        # pick_variation:<queue_id>:<variation_index>  (index 1-based)
+        try:
+            parts = cb_data.split(":", 2)
+            qid = int(parts[1])
+            var_idx = int(parts[2])
+            from approval_queue import get as _aq_get, approve as _aq_approve
+            from notifier import answer_callback_query, send_message
+            qrow = _aq_get(qid)  # noqa: used below in if/elif
+            if qrow and qrow.status == "enhancing":
+                variations = (qrow.payload or {}).get("variations", [])
+                if 1 <= var_idx <= len(variations):
+                    chosen = variations[var_idx - 1]
+                    # Write chosen text back to Notion Draft field then approve
+                    notion_id = (qrow.payload or {}).get("notion_id")
+                    if notion_id:
+                        try:
+                            from notion_client import Client as NotionClient
+                            nc = NotionClient(auth=os.environ.get("NOTION_SECRET", ""))
+                            nc.pages.update(
+                                page_id=notion_id,
+                                properties={"Draft": {"rich_text": [{"text": {"content": chosen}}]}},
+                            )
+                        except Exception as ne:
+                            logger.warning(f"pick_variation: Notion Draft write failed: {ne}")
+                    _aq_approve(qid, note=f"variation {var_idx} chosen via Enhance")
+                    answer_callback_query(cb_id, f"Variation {var_idx} approved!")
+                    send_message(cb_chat_id, f"Queue #{qid}: variation {var_idx} written to Notion and scheduled.")
+                else:
+                    answer_callback_query(cb_id, "Invalid variation index.")
+            elif qrow:
+                answer_callback_query(cb_id, f"Already {qrow.status}.")
+            else:
+                answer_callback_query(cb_id, "Queue item not found.")
+        except Exception as e:
+            logger.warning(f"callback_query pick_variation handling error: {e}")
+
     return True
+
+
+# ══════════════════════════════════════════════════════════════
+# Enhance crew runner (background thread)
+# ══════════════════════════════════════════════════════════════
+
+def _run_enhance_crew(qid: int, qrow, chat_id: str) -> None:
+    """Run social crew on the queued post, send variations back via Telegram.
+
+    Called in a daemon thread from the enhance_queue_item callback so Telegram
+    is not blocked waiting for the crew (~30-45s). On success, sends 2-3
+    variation buttons. On failure, marks row rejected and notifies.
+    """
+    from notifier import send_message, send_message_with_buttons
+    from approval_queue import reject as _aq_reject, get as _aq_get
+    import json as _json
+
+    payload = qrow.payload or {}
+    title = payload.get("title", "")
+    existing_draft = payload.get("text", "")
+    platform = payload.get("platform", "X")
+
+    request = (
+        f"Rewrite and enhance this {platform} post for Boubacar Barry. "
+        f"Title/topic: {title}. "
+        f"Existing draft: {existing_draft if existing_draft else '(none)'}. "
+        f"Produce 2-3 distinct variations. Each must be ready to post verbatim. "
+        f"Label them VARIATION 1:, VARIATION 2:, VARIATION 3: (if applicable)."
+    )
+
+    try:
+        from engine import run_orchestrator
+        result = run_orchestrator(
+            task_request=request,
+            session_key=f"enhance-{qid}",
+            task_type_override="social_content",
+        )
+        raw = (result or {}).get("result", "") if isinstance(result, dict) else str(result or "")
+
+        # Parse out labelled variations
+        import re
+        parts = re.split(r"VARIATION\s+\d+\s*:\s*", raw, flags=re.IGNORECASE)
+        variations = [p.strip() for p in parts if p.strip()][:3]
+
+        if not variations:
+            # Crew returned something but not in expected format -- treat whole response as one variation
+            variations = [raw.strip()] if raw.strip() else []
+
+        if not variations:
+            raise ValueError("social crew returned empty output")
+
+        # Store variations in payload so pick_variation can retrieve them
+        from approval_queue import _conn as _aq_conn
+        import json as _json2
+        conn = _aq_conn()
+        cur = conn.cursor()
+        cur.execute(
+            "UPDATE approval_queue SET payload = payload || %s::jsonb WHERE id = %s",
+            (_json2.dumps({"variations": variations}), qid),
+        )
+        conn.commit()
+        cur.close()
+
+        # Send each variation as a numbered message
+        msg = f"Queue #{qid} enhanced. Pick a variation:\n\n"
+        for i, v in enumerate(variations, 1):
+            msg += f"--- Variation {i} ---\n{v}\n\n"
+        msg = msg.strip()
+
+        # Button row: one button per variation
+        buttons = [[
+            (f"Use #{i}", f"pick_variation:{qid}:{i}")
+            for i in range(1, len(variations) + 1)
+        ]]
+        send_message_with_buttons(chat_id, msg, buttons)
+
+    except Exception as e:
+        logger.error(f"_run_enhance_crew #{qid} failed: {e}")
+        try:
+            _aq_reject(qid, note=f"enhance-crew-failed: {e}", feedback_tag="enhance")
+            send_message(chat_id, f"Queue #{qid}: enhancement failed ({e}). Marked rejected -- fix the draft in Notion and it will re-enter the pool.")
+        except Exception as ne:
+            logger.warning(f"_run_enhance_crew cleanup failed: {ne}")
 
 
 # ══════════════════════════════════════════════════════════════
