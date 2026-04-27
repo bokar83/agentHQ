@@ -184,6 +184,7 @@ Always commit the **adapted** version, never the raw harvested file.
   check `links.json` for a sibling `md=` URL and harvest that too.
 - **Session expires.** Cookies last weeks but not forever. If harvest hits a
   login wall, re-run `skool_login.py`.
+- **Emoji in lesson titles crash on Windows (cp1252).** `page.title()` on Windows raises `UnicodeEncodeError: 'charmap' codec can't encode character` when lesson titles contain emoji (e.g., "🍌 Pro"). Fix already applied in skool_harvest.py line 87: `print(f"[harvest] title: {page.title().encode('ascii', 'replace').decode()}")`. If the script is updated or copied, carry this pattern forward.
 
 ---
 

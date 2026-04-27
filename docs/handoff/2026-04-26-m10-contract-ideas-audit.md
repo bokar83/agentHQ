@@ -126,16 +126,15 @@ corrected n8n framing in memory, locked in the Ideas-as-parking-lot principle.
 
 ## Next session must start here
 
-1. Check VPS orphan archive: `ssh root@72.60.209.109 "ls /root/_archive_20260421/"`
-   Delete if past 2026-04-28 and nothing has broken.
-2. Run M9a smoke test (optional, Boubacar decides): send a test approval via Telegram,
-   verify [Approve] / [Reject] buttons work on a real approval_queue item.
-3. Build the leGriot A/B test script (~45 min):
-   - Run leGriot on 3 seed ideas, each against Grok-4 and Sonnet
-   - Save raw outputs side-by-side, no model labels
-   - Boubacar scores blind using docs/reference/legriot-quality-rubric.md
-4. If A/B test validates Grok-4: proceed to M11d (weekly model review agent)
-5. If A/B test says Sonnet wins: update ROLE_CAPABILITY for writer/social roles
+1. Read docs/handoff/2026-04-27-atlas-m1-verification.md (auto-generated Monday 09:00 MT
+   by scheduled routine trig_015aDdXmiTAowm1HVkwQydnT). Verify Monday 07:00 MT
+   auto-publish fired correctly on X "One constraint nobody has named yet."
+2. Check VPS orphan archive AFTER 2026-04-28:
+   `ssh root@72.60.209.109 "ls /root/_archive_20260421/"` and delete if clean.
+3. Check M9a Telegram approval buttons result (fired Monday morning).
+4. A/B test results: being run by a separate crew. Read results when available,
+   then update ROLE_CAPABILITY if Sonnet beats Grok-4 for writer/social roles.
+5. R57 Blotato MCP connection test: first gate before any build on marketing calendar agent.
 
 ---
 

@@ -190,6 +190,14 @@ async def startup_event():
     except ImportError:
         pass
 
+    # M9b: ensure chat_artifacts table exists (idempotent, non-fatal).
+    try:
+        from db import ensure_chat_artifacts_table
+        ensure_chat_artifacts_table()
+        logger.info("chat_artifacts table ready.")
+    except Exception as e:
+        logger.warning(f"ensure_chat_artifacts_table failed (non-fatal): {e}")
+
     # Telegram polling in the background (hardened loop in handlers.py).
     asyncio.create_task(telegram_polling_loop())
     logger.info("Telegram Polling Loop scheduled.")
@@ -937,6 +945,95 @@ async def atlas_brief_skip(_auth=Depends(verify_chat_token)):
             "directly in Telegram to the per-post brief message."
         ),
     )
+
+
+# ══════════════════════════════════════════════════════════════
+# M9b: Atlas web chat endpoint + job polling
+# ══════════════════════════════════════════════════════════════
+
+class _AtlasChatRequest(_BaseModel):
+    messages: list
+    session_key: str = "atlas:browser:default"
+
+
+class _AtlasChatResponse(_BaseModel):
+    reply: str
+    actions: list = []
+    artifact: Optional[dict] = None
+    job_id: Optional[str] = None
+
+
+@app.post("/atlas/chat", response_model=_AtlasChatResponse)
+async def atlas_chat(body: _AtlasChatRequest, _auth=Depends(verify_chat_token)):
+    """M9b native web chat. Accepts full message array, returns M9 schema."""
+    from handlers_chat import run_atlas_chat
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(
+        None, lambda: run_atlas_chat(body.messages, body.session_key, channel="web")
+    )
+    return _AtlasChatResponse(
+        reply=result.get("reply", ""),
+        actions=result.get("actions") or [],
+        artifact=result.get("artifact"),
+        job_id=result.get("job_id"),
+    )
+
+
+@app.get("/atlas/job/{job_id}", dependencies=[Depends(verify_chat_token)])
+async def atlas_job_status(job_id: str):
+    """Poll background job status. Used by atlas.js pollJob() every 3s."""
+    try:
+        from memory import get_job
+        job = get_job(job_id)
+        if not job:
+            raise HTTPException(status_code=404, detail="Job not found")
+        return {
+            "job_id": job_id,
+            "status": job.get("status", "pending"),
+            "result": job.get("result"),
+            "error": job.get("error"),
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/atlas/confirm/{confirm_token}", dependencies=[Depends(verify_chat_token)])
+async def atlas_confirm_action(confirm_token: str):
+    """Execute a pending write-action that was held for confirmation."""
+    from state import _confirm_store
+    entry = _confirm_store.pop(confirm_token, None)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Confirm token expired or not found")
+
+    action = entry.get("action")
+    payload = entry.get("payload", {})
+    session_key = entry.get("session_key", "atlas:browser:default")
+
+    if action == "forward_to_crew":
+        task_text = payload.get("task_text", "")
+        job_id = str(uuid.uuid4())
+        background_tasks = BackgroundTasks()
+        background_tasks.add_task(
+            _run_background_job,
+            task=task_text,
+            session_key=session_key,
+            from_number=session_key,
+            job_id=job_id,
+        )
+        return {"status": "queued", "job_id": job_id,
+                "message": f"Task queued. Poll /atlas/job/{job_id} for result."}
+
+    raise HTTPException(status_code=400, detail=f"Unknown action: {action}")
+
+
+@app.post("/atlas/confirm/{confirm_token}/cancel", dependencies=[Depends(verify_chat_token)])
+async def atlas_cancel_action(confirm_token: str):
+    """Discard a pending write-action confirmation."""
+    from state import _confirm_store
+    _confirm_store.pop(confirm_token, None)
+    return {"status": "cancelled"}
 
 
 if __name__ == "__main__":

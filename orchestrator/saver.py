@@ -198,7 +198,7 @@ def save_to_notion_content_board(title: str, task_type: str, drive_url: str, dra
             "Platform": {"multi_select": [{"name": platform}]},
         }
         if drive_url:
-            properties["Drive URL"] = {"url": drive_url}
+            properties["Drive Link"] = {"url": drive_url}
         if draft:
             properties["Draft"] = {"rich_text": [{"text": {"content": draft[:2000]}}]}
 

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/atlas/atlas.css?v=20260426e" />
+  <link rel="stylesheet" href="/atlas/atlas.css?v=20260426f" />
 </head>
 <body>
 
@@ -133,19 +133,28 @@
 
     </div>
 
-    <!-- Right: chat card -->
+    <!-- Right: native chat card (M9b) -->
     <section class="card chat-card" data-card="chat" data-color="terracotta">
       <div class="card-header">
         <h2>Atlas <span class="accent-word">Chat</span></h2>
+        <span id="chat-queue-badge" class="badge badge-dim" style="display:none"></span>
       </div>
-      <div class="chat-embed-wrap">
-        <iframe id="chat-iframe" src="/chat" title="Atlas Chat" loading="lazy"></iframe>
+      <div id="chat-panel">
+        <div id="chat-messages" role="log" aria-live="polite"></div>
+        <div id="chat-artifact-wrap" style="display:none">
+          <iframe id="chat-artifact-frame" title="Artifact preview" sandbox="allow-scripts"></iframe>
+        </div>
+        <div id="chat-input-row">
+          <textarea id="chat-input" rows="2" placeholder="Ask Atlas anything..." aria-label="Chat message"></textarea>
+          <button id="chat-send" type="button">Send</button>
+        </div>
       </div>
     </section>
 
   </main>
 </div>
 
-<script src="/atlas/atlas.js?v=20260426e"></script>
+<script src="/atlas/atlas.js?v=20260426f"></script>
+<script src="/atlas/atlas-chat.js?v=20260426f"></script>
 </body>
 </html>
