@@ -20,30 +20,33 @@ CALENDLY_URL = os.environ.get(
     "https://calendly.com/boubacarbarry/signal-works-discovery-call",
 )
 
-# Drive video URLs per niche (share links from Drive upload step)
-DRIVE_VIDEO_URLS = {
+# Video play page URLs -- Vercel-hosted autoplay pages (not Drive links)
+# Click opens a black-background page that autoplays the MP4 immediately
+VIDEO_PLAY_URLS = {
     "roofer": os.environ.get(
         "SIGNAL_WORKS_VIDEO_ROOFER",
-        "https://drive.google.com/file/d/1aancESOfki8e2n7nWX4DwDogt-1ru6Sm/view",
+        "https://signal-works-demo-roofing.vercel.app/play.html",
     ),
     "roofing": os.environ.get(
         "SIGNAL_WORKS_VIDEO_ROOFER",
-        "https://drive.google.com/file/d/1aancESOfki8e2n7nWX4DwDogt-1ru6Sm/view",
+        "https://signal-works-demo-roofing.vercel.app/play.html",
     ),
     "pediatric dentist": os.environ.get(
         "SIGNAL_WORKS_VIDEO_DENTAL",
-        "https://drive.google.com/file/d/1rtZKnVQJI9XtXcxnocJN8CZX9HhqN3o0/view",
+        "https://signal-works-demo-dental.vercel.app/play.html",
     ),
     "dentist": os.environ.get(
         "SIGNAL_WORKS_VIDEO_DENTAL",
-        "https://drive.google.com/file/d/1rtZKnVQJI9XtXcxnocJN8CZX9HhqN3o0/view",
+        "https://signal-works-demo-dental.vercel.app/play.html",
     ),
     "hvac": os.environ.get(
         "SIGNAL_WORKS_VIDEO_HVAC",
-        "https://drive.google.com/file/d/1aancESOfki8e2n7nWX4DwDogt-1ru6Sm/view",  # replace when HVAC reel is uploaded
+        "https://signal-works-demo-roofing.vercel.app/play.html",  # reuse roofing until HVAC site deployed
     ),
 }
-DEFAULT_VIDEO_URL = DRIVE_VIDEO_URLS["roofer"]
+DEFAULT_VIDEO_URL = VIDEO_PLAY_URLS["roofer"]
+# Keep alias for any code still referencing old name
+DRIVE_VIDEO_URLS = VIDEO_PLAY_URLS
 
 # Niche config: accent color + video label text
 NICHE_CONFIG = {
@@ -278,7 +281,7 @@ def render_html(lead: dict) -> str:
     cfg = NICHE_CONFIG.get(niche, DEFAULT_CONFIG)
     score = int(lead.get("ai_score") or 0)
     name = lead.get("name", "your business")
-    video_url = lead.get("video_url") or DRIVE_VIDEO_URLS.get(niche, DEFAULT_VIDEO_URL)
+    video_url = lead.get("video_url") or VIDEO_PLAY_URLS.get(niche, DEFAULT_VIDEO_URL)
     city = lead.get("city", "Salt Lake City")
     no_website = _has_no_website(lead)
 
