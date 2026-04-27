@@ -121,7 +121,7 @@ Use MCP tool: `mcp__claude_ai_Notion__notion-create-pages`
 | Site | URL | MP4 direct | Play page |
 |---|---|---|---|
 | Roofing | https://signal-works-demo-roofing.vercel.app | /pitch-reel.mp4 (live) | /play.html |
-| Dental | https://signal-works-demo-dental.vercel.app | /pitch-reel.mp4 (NOT YET DEPLOYED) | pending |
+| Dental | https://signal-works-demo-dental.vercel.app | /pitch-reel.mp4 (live) | /play.html (live) |
 | HVAC | local only - not deployed | - | - |
 
 ### Deploy a site
@@ -139,8 +139,49 @@ If no remote: `vercel --prod` from the site directory.
 ## Calendly
 
 **Discovery call URL:** `https://calendly.com/boubacarbarry/signal-works-discovery-call`
-**Event type creation:** UI only - no API endpoint. Use Playwright if automation needed.
+**User URI:** `https://api.calendly.com/users/9acb1142-7c25-4cc0-8bac-f03730fe73d8`
 **Webhooks:** agentsHQ receives Calendly webhooks inbound only.
+
+### How to create/manage event types (confirmed working from session logs 2026-04-17 and 2026-04-19)
+
+Use the **claude.ai Calendly MCP tools** - already wired into this Claude Code instance, no separate login needed.
+
+```text
+Step 1: ToolSearch("select:mcp__claude_ai_Calendly__users-get_current_user,mcp__claude_ai_Calendly__event_types-create_event_type,mcp__claude_ai_Calendly__event_types-list_event_types")
+Step 2: mcp__claude_ai_Calendly__users-get_current_user  --> get user URI
+Step 3: mcp__claude_ai_Calendly__event_types-create_event_type with:
+  {
+    "create_event_type_request": {
+      "owner": "https://api.calendly.com/users/9acb1142-7c25-4cc0-8bac-f03730fe73d8",
+      "name": "Event Name",
+      "duration": 30,
+      "description": "...",
+      "color": "#D4872A",
+      "active": true,
+      "locations": [
+        {"kind": "zoom_conference"},
+        {"kind": "google_conference"},
+        {"kind": "ask_invitee"}
+      ]
+    }
+  }
+```
+
+**No authentication step required.** The MCP is authenticated through claude.ai's OAuth integration.
+**CRITICAL: This works. Previous memory incorrectly said event type creation was UI-only. The MCP can do it.**
+
+### Available Calendly MCP tools (load via ToolSearch)
+
+- `mcp__claude_ai_Calendly__users-get_current_user` - get user URI and timezone
+- `mcp__claude_ai_Calendly__event_types-create_event_type` - create new event type
+- `mcp__claude_ai_Calendly__event_types-list_event_types` - list all event types
+- `mcp__claude_ai_Calendly__event_types-get_event_type` - get one event type
+- `mcp__claude_ai_Calendly__event_types-update_event_type` - update event type
+- `mcp__claude_ai_Calendly__event_types-list_event_type_available_times` - check availability
+- `mcp__claude_ai_Calendly__meetings-list_events` - list scheduled meetings
+- `mcp__claude_ai_Calendly__meetings-create_invitee` - book a meeting slot
+- `mcp__claude_ai_Calendly__meetings-cancel_event` - cancel a meeting
+- `mcp__claude_ai_Calendly__scheduling_links-create_single_use_scheduling_link` - one-time booking link
 
 ---
 
