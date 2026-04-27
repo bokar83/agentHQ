@@ -697,3 +697,54 @@ def insert_email_job(to_addr, subject, body_text, send_at) -> int | None:
         return None
     finally:
         conn.close()
+
+
+def get_leads_for_drafting(limit: int = 10) -> list[dict]:
+    """Return up to `limit` Signal Works leads that have an email but no draft yet.
+    Ordered by ai_score ASC (lowest score = most urgent pitch goes first)."""
+    conn = get_crm_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT id, name, email, niche, city, ai_score, ai_breakdown, ai_quick_wins,
+                   website_url, google_rating, review_count
+            FROM leads
+            WHERE lead_type = 'website_prospect'
+              AND email IS NOT NULL AND email != ''
+              AND (email_drafted IS NULL OR email_drafted = FALSE)
+            ORDER BY ai_score ASC NULLS LAST
+            LIMIT %s
+            """,
+            (limit,),
+        )
+        rows = cur.fetchall()
+        return [dict(r) for r in rows]
+    except Exception as e:
+        logger.warning(f"get_leads_for_drafting failed: {e}")
+        return []
+    finally:
+        conn.close()
+
+
+def mark_email_drafted(lead_id: int, draft_id: str = "") -> None:
+    """Mark a lead as having a Gmail draft created."""
+    conn = get_crm_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            UPDATE leads
+            SET email_drafted = TRUE,
+                email_drafted_at = NOW()
+            WHERE id = %s
+            """,
+            (lead_id,),
+        )
+        conn.commit()
+        cur.close()
+    except Exception as e:
+        logger.warning(f"mark_email_drafted failed for lead {lead_id}: {e}")
+        conn.rollback()
+    finally:
+        conn.close()
