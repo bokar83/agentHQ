@@ -1061,3 +1061,42 @@ in the weekly model review agent (first run: Sunday 2026-05-03 08:00 MT).
 3. M5 (Chairman / L5 Learning): gate opens 2026-05-08
 
 ---
+
+### 2026-04-27: M9 chat fixes + health sweep hardening
+
+**Root causes diagnosed and fixed:**
+
+**Bug 1: /atlas/chat was 404:** All `/atlas/*` routes were wiped from `app.py` in the `4227b04` video-crew merge (a prior session's `docker cp` of an older app.py got committed). Restored full route block: `/atlas/chat`, `/atlas/job`, `/atlas/confirm`, `/atlas/state`, `/atlas/queue`, `/atlas/content`, `/atlas/spend`, `/atlas/heartbeats`, `/atlas/errors`, `/atlas/hero`, `/atlas/ideas`, `/atlas/ledger`, toggle/griot, toggle/dry_run, queue approve/reject.
+
+**Bug 2: content_board_fetch returned empty body:** Crew read `props.get("Content", {})` (a Notion property that doesn't exist). Post body lives in the `Draft` rich_text property. Fixed to read `props.get("Draft", {}).get("rich_text", [])`: same pattern used by `auto_publisher`, `publish_brief`, and `content_board_reorder`. Also added single-post detection: user can ask "show me the full post for X" and get the actual Draft text instead of a title list.
+
+**Bug 3: JSON bleed-through:** Both `run_chat()` and `run_atlas_chat()` had a fallback where parse failure set `reply = raw_reply`: user would see the raw `{"reply": "...", "actions": [...]}` JSON string. Added `_extract_reply()` shared helper that always extracts the human-readable string. User never sees JSON wrapper.
+
+**Bug 4: /chat page had no markdown rendering:** `appendMessage()` used `bubble.textContent = text` for all messages including agent replies. Added `_mdFragment()` renderer (identical to atlas-chat.js, safe DOM-only, no innerHTML). Both `/chat` and `/atlas` now render markdown identically.
+
+**Improvements shipped:**
+
+- **History depth:** `run_chat()` history limit raised from 10 to 100 turns (Postgres-backed).
+- **Atlas chat Postgres history:** `run_atlas_chat()` now loads 100 turns from Postgres at start of each request, same as `run_chat()`. Previously used only the client-managed JS array (lost on page refresh).
+- **Health sweep: /atlas/chat probe:** Added `_probe_atlas_chat()` that hits POST /atlas/chat and asserts 401 (route exists) vs 404 (route missing). Catches future route-wipeout regressions the same morning they happen.
+- **Health sweep: Last Health Check tile:** Sweep writes result to `data/health_sweep_state.json` after every run. Atlas dashboard hero strip now shows a 5th tile: "Last Health Check" with pass/fail count + timestamp. Green on pass, red on failures. Silent on success (no Telegram noise).
+- **Health sweep: corrected to daily:** Was labeled "weekly" in comments but the heartbeat registration `at="08:00"` fires every day. Labels corrected.
+
+**Three-way nsync:** local + origin + VPS all on `447eb82`.
+
+**Commits this session:** `133e2d1`, `d5b91dc`, `0e0547c`, `0964320`, `f727c7d`, `eaf571d`.
+
+**End state of chat surfaces:**
+
+- `/chat` and `/atlas` both render markdown, both load 100-turn Postgres history, both use `_extract_reply()` to strip JSON. Still different routing pipelines (router/classifier vs atlas tools): unification is next major chat milestone.
+- End-state vision confirmed: Atlas dashboard becomes the primary workstation. Interactive layer (click post → enhance → post, click task → execute) is the next build target after M9c.
+- Code changes (repo writes, VPS deploys) remain Claude Code / IDE only by design. Safe path to partial automation: "propose code change" crew that opens a GitHub PR for human approval → auto-deploy via GH Actions.
+
+**Next session:**
+
+1. M9c (cross-session memory compressor): after 2026-05-03
+2. M5 (Chairman / L5 Learning): gate opens 2026-05-08
+3. Atlas interactive layer (click-to-action on posts and tasks): design spike when M9c is stable
+4. Consider unifying /chat and /atlas routing pipelines (both through run_atlas_chat)
+
+---
