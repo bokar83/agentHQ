@@ -74,6 +74,18 @@ Changing fonts and colors does NOT make this a different design.
 Boubacar can feel the skeleton through any costume. If you catch yourself
 building this, stop. Change at least 3 structural elements before proceeding.
 
+### 1b. The services section is NEVER a card grid
+
+This is the single most common failure. A services section with 3-6 boxes/cards in a row or grid is the banned skeleton, regardless of how the cards are styled. The word `svc-card`, `service-card`, or `card-grid` in a services section is a red flag. Use one of these instead:
+
++ **Kinetic list**: full-width numbered list items that slide or fan in on scroll, no cards
++ **Editorial grid**: asymmetric layout where service items have wildly different sizes (one large, two small, one full-width)
++ **Depth-reveal**: 3D perspective cards that start face-down and rotate to reveal on scroll (CSS `rotateY` + ScrollTrigger)
++ **Horizontal scroll lane**: services revealed left-to-right in a pinned horizontal scroll section
++ **Feature film**: each service gets its own full-viewport section, stacked vertically, revealed with clip-path
+
+If you are about to write `<div class="service-card">` or `<div class="svc-card">`, stop. Use one of the above patterns instead.
+
 ### 2. No same skeleton twice
 
 Check `workspace/demo-sites/build-log.md` before designing. Avoid
@@ -149,8 +161,32 @@ These are real outputs that failed the Volta standard. Never ship anything that 
 - **The Bootstrap Reskin**: same skeleton as above but with a different font and accent color. Still BANNED. Boubacar can feel the skeleton through any costume.
 - **The Figma Export**: technically correct, visually dead. No motion, no cursor, no life. Looks finished but does not feel alive. BANNED.
 - **The "Clean" Cop-out**: "this business needs something clean and minimal" used as justification for a skeleton site. Clean is a design choice. Skeleton is not clean, it is lazy. BANNED.
+- **The Blob Swap**: took a previous site, changed the blob color from cobalt to teal, added "sky blue accent." Still the same skeleton. Still BANNED.
+- **The Rushed First Pass**: wrote HTML before completing all five self-verification checks. Got called out. Had to rebuild. Wasted time, burned trust. BANNED behavior.
 
 If your output could appear in a Wix template gallery, it has failed.
+
+---
+
+## MANDATORY: Read a reference site before writing code
+
+Before writing the first `<` character, you MUST open and read at minimum the first 150 lines of ONE of these reference sites:
+
+```
+workspace/demo-sites/volta-studio/index.html         (926 lines — cinematic dark, agency)
+workspace/demo-sites/thepointpediatricdentistry/index.html  (923 lines — storybook blob, kids dental)
+```
+
+Choose the one closest in spirit to the business you are building. Read it. Note:
+- How the hero is structured (not a split-hero with left text + right image)
+- How GSAP is initialized and used
+- How ScrollTrigger is wired
+- How the custom cursor is built (no mix-blend-mode)
+- How many CSS variables are defined up front
+- How the noise texture overlay is done (Volta)
+- How section transitions are handled (wavy SVGs, clip-path, marquee)
+
+This is not optional. It is the technical calibration step. The reference sites are the floor, not the ceiling.
 
 ---
 
