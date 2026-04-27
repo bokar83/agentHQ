@@ -287,7 +287,7 @@ class GWSMailSendTool(GWSCliBase, BaseTool):
             send_at_utc = send_at.astimezone(timezone.utc)
 
             message = MIMEMultipart()
-            message["From"] = "me"
+            message["From"] = "monkeybiz@catalystworks.consulting"
             message["To"] = payload.to
             message["Subject"] = payload.subject
             message.attach(MIMEText(payload.body, "plain"))
