@@ -33,12 +33,13 @@ if str(ORCH_DIR) not in sys.path:
 
 # Models to test. Labels are assigned at runtime (shuffled so A/B/C != fixed model).
 # incumbent is the current social/moderate routing target.
-INCUMBENT_MODEL = "xai/grok-4"
+# COUNCIL_MODEL_REGISTRY keys (exact slugs -- verified against agents.py)
+INCUMBENT_MODEL = "x-ai/grok-4"
 
 CANDIDATE_MODELS = [
-    "xai/grok-4",
+    "x-ai/grok-4",
     "anthropic/claude-sonnet-4.6",
-    "mistralai/mistral-large-2407",
+    "mistralai/mistral-large-2512",
 ]
 
 # Label order is always A, B, C. Mapping is written to .reveal/ only.
@@ -117,24 +118,22 @@ def _run_legriot_for_model(idea: str, platform: str, model_id: str) -> str:
 
     Patches agents.select_llm so build_social_media_agent() gets the target model
     without modifying any routing config. The patch is scoped to this call only.
+
+    Uses get_llm() to build the LLM object so the openrouter/ prefix and
+    provider routing (Anthropic lock-in for Claude models) are handled correctly.
     """
-    from crewai import LLM
-    from agents import OPENROUTER_BASE_URL
+    from agents import get_llm
 
-    openrouter_model = _resolve_openrouter_id(model_id)
+    forced_llm = get_llm(model_id, temperature=0.7)
 
-    forced_llm = LLM(
-        model=f"openai/{model_id}",
-        api_key=os.environ.get("OPENROUTER_API_KEY"),
-        base_url=OPENROUTER_BASE_URL,
-        temperature=0.7,
-    )
+    # Capture the real function BEFORE patching so the closure doesn't recurse.
+    import agents as _agents_mod
+    _real_select_llm = _agents_mod.select_llm
 
     def _patched_select_llm(agent_role: str, task_complexity: str = "moderate", temperature: float = None):
         if agent_role == "social":
             return forced_llm
-        from agents import select_llm as _orig
-        return _orig.__wrapped__(agent_role, task_complexity, temperature) if hasattr(_orig, "__wrapped__") else forced_llm
+        return _real_select_llm(agent_role, task_complexity, temperature)
 
     request = f"Write a single {platform} post on this topic for Boubacar's audience: {idea}. One post only, no variations."
 
