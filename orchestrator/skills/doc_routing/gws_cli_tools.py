@@ -19,9 +19,14 @@ import os
 import json
 import subprocess
 import logging
+import base64
+from datetime import datetime, timezone
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from typing import Any
 from crewai.tools import BaseTool
-from pydantic import Field
+from pydantic import BaseModel, Field
+from zoneinfo import ZoneInfo
 
 logger = logging.getLogger(__name__)
 
@@ -255,6 +260,69 @@ class GWSSheetsAppendRowTool(GWSCliBase, BaseTool):
             return json.dumps({"error": f"sheets_append_row failed: {e}"})
 
 
+class GWSMailSendToolInput(BaseModel):
+    to: str = Field(..., description="Recipient email address.")
+    subject: str = Field(..., description="Email subject line.")
+    body: str = Field(..., description="Plain-text email body.")
+    send_at: str = Field(..., description="Scheduled send time as an ISO 8601 string.")
+
+
+class GWSMailSendTool(GWSCliBase, BaseTool):
+    name: str = "gmail_send_mail"
+    description: str = (
+        "Send or schedule a plain-text Gmail message. "
+        "Input JSON: {'to': 'recipient@example.com', 'subject': 'Subject', "
+        "'body': 'Message body', 'send_at': '2026-04-27T09:30:00-06:00'}."
+    )
+    args_schema: type[BaseModel] = GWSMailSendToolInput
+
+    def _run(self, input_data: str = "{}") -> str:
+        try:
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            payload = GWSMailSendToolInput(**data)
+
+            send_at = datetime.fromisoformat(payload.send_at)
+            if send_at.tzinfo is None:
+                send_at = send_at.replace(tzinfo=ZoneInfo("America/Denver"))
+            send_at_utc = send_at.astimezone(timezone.utc)
+
+            message = MIMEMultipart()
+            message["From"] = "me"
+            message["To"] = payload.to
+            message["Subject"] = payload.subject
+            message.attach(MIMEText(payload.body, "plain"))
+
+            encoded = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8").rstrip("=\n")
+
+            now_utc = datetime.now(timezone.utc)
+            if abs((send_at_utc - now_utc).total_seconds()) <= 60:
+                result = self._run_gws([
+                    "gmail", "users", "messages", "send",
+                    "--params", json.dumps({"userId": "me"}),
+                    "--json", json.dumps({"raw": encoded}),
+                ])
+                message_id = result.get("id") if isinstance(result, dict) else ""
+                return json.dumps({
+                    "status": "sent",
+                    "message": f"Email sent immediately to {payload.to}.",
+                    "message_id": message_id,
+                })
+
+            from db import insert_email_job
+
+            job_id = insert_email_job(payload.to, payload.subject, payload.body, send_at_utc)
+            return json.dumps({
+                "status": "scheduled",
+                "message": f"Email scheduled for {send_at_utc.isoformat()} with job id {job_id}.",
+                "job_id": job_id,
+                "send_at": send_at_utc.isoformat(),
+            })
+        except GWSCliError as e:
+            return json.dumps({"error": str(e)})
+        except Exception as e:
+            return json.dumps({"error": f"gmail_send_mail failed: {e}"})
+
+
 # ── Tool bundles ──────────────────────────────────────────────
 GWS_DOC_ROUTING_TOOLS = [
     GWSDriveCreateFolderTool(),
@@ -263,4 +331,5 @@ GWS_DOC_ROUTING_TOOLS = [
     GWSDriveDownloadTool(),
     GWSSheetsReadRangeTool(),
     GWSSheetsAppendRowTool(),
+    GWSMailSendTool(),
 ]
