@@ -198,6 +198,14 @@ async def startup_event():
     except Exception as e:
         logger.warning(f"ensure_chat_artifacts_table failed (non-fatal): {e}")
 
+    # M9c: ensure session_summaries table exists (idempotent, non-fatal).
+    try:
+        from db import ensure_session_summaries_table
+        ensure_session_summaries_table()
+        logger.info("session_summaries table ready.")
+    except Exception as e:
+        logger.warning(f"ensure_session_summaries_table failed (non-fatal): {e}")
+
     # P5: ensure video_jobs table exists (idempotent, non-fatal).
     try:
         from db import ensure_video_jobs_table

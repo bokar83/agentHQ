@@ -330,6 +330,19 @@ def run_chat(message: str, session_key: str = "default") -> dict:
         logger.warning(f"prompt_loader failed, using hardcoded prompt: {_pl_e}")
         _active_prompt = _build_system_prompt()
 
+    # M9c: silently inject prior session summary if one exists (max 24h old)
+    try:
+        from db import get_latest_session_summary
+        _prior = get_latest_session_summary(session_key, max_age_hours=24)
+        if _prior:
+            _active_prompt = (
+                f"PRIOR SESSION CONTEXT (summarized):\n{_prior['summary']}\n\n"
+                f"Refer to this naturally if relevant. Do not repeat it verbatim.\n\n"
+                + _active_prompt
+            )
+    except Exception:
+        pass
+
     messages = [{"role": "system", "content": _active_prompt}]
     messages.extend(history_messages)
     messages.append({"role": "user", "content": message})
@@ -578,6 +591,19 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
         system_prompt = load_system_prompt("chat", fallback=_build_system_prompt())
     except Exception:
         system_prompt = _build_system_prompt()
+
+    # M9c: silently inject prior session summary if one exists (max 24h old)
+    try:
+        from db import get_latest_session_summary
+        _prior = get_latest_session_summary(session_key, max_age_hours=24)
+        if _prior:
+            system_prompt = (
+                f"PRIOR SESSION CONTEXT (summarized):\n{_prior['summary']}\n\n"
+                f"Refer to this naturally if relevant. Do not repeat it verbatim.\n\n"
+                + system_prompt
+            )
+    except Exception:
+        pass
 
     # Use postgres history + current user message; ignore client-managed prior turns
     current_user_msg = messages[-1] if messages and messages[-1].get("role") == "user" else None

@@ -568,6 +568,21 @@ def start_scheduler():
     except Exception as e:
         logger.error(f"STUDIO_TREND_SCOUT: wake registration failed ({e}); continuing without trend scout", exc_info=True)
 
+    # Atlas M9c: cross-session memory compressor. Fires every 30 minutes.
+    # Finds sessions quiet for 30-90 min, summarizes with Haiku, writes to session_summaries.
+    # crew_name=SELF_TEST_CREW (diagnostic, no kill switch needed).
+    try:
+        import heartbeat as _heartbeat
+        from session_compressor import compressor_tick
+        _heartbeat.register_wake(
+            "session-compressor",
+            crew_name=_heartbeat.SELF_TEST_CREW,
+            callback=compressor_tick,
+            every="30m",
+        )
+    except Exception as e:
+        logger.error(f"SESSION_COMPRESSOR: wake registration failed ({e}); continuing", exc_info=True)
+
     # Hardening: daily API health sweep. Fires every day at 08:00 MT.
     # Read-only probes; sends Telegram alert on any failure.
     # crew_name='health-sweep' (no kill switch needed -- it's diagnostic only).
