@@ -45,18 +45,45 @@ Long session that fully wired agentsHQ's knowledge management layer. Installed t
 ## What is NOT done (explicit)
 
 - `NLM_EXPORT_SHEET_ID` not yet set in VPS `.env`: need to create a Google Sheet in the agentsHQ Drive folder, copy its ID, add to VPS `.env`. Script prints a clear reminder when it runs without it.
-- End-to-end pipeline test: trigger a real `social_content` task and confirm Drive + Notion entries appear correctly.
 - Google Drive Organizer / Cleanup Agent: in Ideas DB, high effort, prerequisite for full-Drive automated sync at scale.
 
 ## Open questions
 
-- None blocking. Everything is live and working.
+- None blocking. Everything is live, synced, and verified.
 
 ## Next session must start here
 
 1. Create a Google Sheet in the agentsHQ Drive folder (name it "NLM Registry Mirror"). Copy its ID from the URL. SSH to VPS and add `NLM_EXPORT_SHEET_ID=<id>` to `/root/agentsHQ/.env`. Redeploy.
-2. Trigger an end-to-end test: send a `social_content` task to the orchestrator via Telegram, confirm the result includes a Drive URL and a Notion content board entry appears with `Drive Link` populated and Status = Draft.
-3. After both pass, this entire NotebookLM + pipeline system is fully verified.
+2. Check `/var/log/nlm_registry_export.log` (the 06:00 UTC cron may have already run). If `NLM_EXPORT_SHEET_ID` is missing, the log will say so clearly.
+3. Pick next Atlas milestone from `docs/roadmap/atlas.md`.
+
+## Follow-on session (same day): bug fixes + nsync (2026-04-27)
+
+The original handoff was written before the deliverable pipeline e2e test completed. A second session fixed the remaining bugs and fully synced all three locations.
+
+**Bugs fixed:**
+
+1. `social_content` re-classified as `app_build` by LLM every run. Root cause: `classify_task()` in `router.py` had no way to skip LLM classification. Fix: added `explicit_task_type` param that short-circuits the entire classifier when a valid task type is passed. Threaded through `engine.py` run_orchestrator() -> `router.py` classify_task(). `app.py` and `worker.py` pass `request.task_type` when not empty/unknown.
+
+2. Notion content board step not firing for async (Telegram) jobs. Root cause: the Notion step was added to `app.py` sync path only; async jobs go through `worker.py` `_run_background_job()`. Fix: added the `CONTENT_TASK_TYPES` check + `save_to_notion_content_board()` call to `worker.py`.
+
+3. `TaskRequest` missing `task_type` field on VPS. Root cause: VPS `schemas.py` was behind local. Fix: added `task_type: str = "unknown"` to `TaskRequest`.
+
+4. All five patches were applied directly to VPS working directory (Pyright LSP race condition blocks local Edit -> SCP flow). Nsync at session close pulled VPS files back to local, committed as `9a080ee`, pushed to origin, VPS pulled clean. All three locations confirmed at `9a080ee`.
+
+**E2e test result (job d5042bc6):**
+
+- Classified as `social_content` via explicit_task_type bypass
+- Drive saved: `https://drive.google.com/file/d/1zb5nIwvBXtKcudxnOGUq2AEkHDtGGY3V/view`
+- Notion content board Draft created with Drive Link populated
+
+**Files added to commit `9a080ee`:**
+
+- `orchestrator/router.py`: `explicit_task_type` param in `classify_task()`
+- `orchestrator/engine.py`: `explicit_task_type` threaded through `run_orchestrator()`
+- `orchestrator/app.py`: `task_type` passed from `TaskRequest` on both sync + async paths
+- `orchestrator/worker.py`: Notion content board step added to async job path
+- `orchestrator/schemas.py`: `task_type: str = "unknown"` on `TaskRequest`
 
 ## Files changed this session
 
