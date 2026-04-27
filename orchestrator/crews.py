@@ -2847,8 +2847,9 @@ def build_content_push_to_drive_crew(user_request: str) -> Crew:  # noqa: ARG001
 def build_content_board_fetch_crew(user_request: str) -> Crew:
     """
     Crew for: content_board_fetch
-    Reads posts from the Notion Content Board filtered by status detected from the request.
-    Supports: Queued, Ready, Draft, Idea, In Review, Needs rework, Posted, Archived.
+    Two modes:
+      1. Single-post fetch: user asks "show me / get / full post for X" -> fetches page blocks (real body)
+      2. List mode: lists up to 10 posts filtered by detected status
     Read-only. No status changes. No LLM review pass.
     """
     from skills.forge_cli.notion_client import NotionClient
@@ -2856,66 +2857,145 @@ def build_content_board_fetch_crew(user_request: str) -> Crew:
     CONTENT_DB_ID = os.environ.get("FORGE_CONTENT_DB", "339bcf1a-3029-81d1-8377-dc2f2de13a20")
     NOTION_SECRET = os.environ.get("NOTION_SECRET", "")
 
-    # Detect which status to fetch from the user request
     msg = user_request.lower()
-    STATUS_MAP = {
-        "Idea":         ["idea", "ideas", "brainstorm"],
-        "Draft":        ["draft", "drafts"],
-        "Queued":       ["queue", "queued"],
-        "Ready":        ["ready"],
-        "In Review":    ["in review", "review", "reviewing"],
-        "Needs rework": ["needs rework", "rework", "needs work"],
-        "Posted":       ["posted", "published", "live"],
-        "Archived":     ["archived", "archive"],
-    }
-    target_status = "Queued"  # default
-    for status, keywords in STATUS_MAP.items():
-        if any(kw in msg for kw in keywords):
-            target_status = status
-            break
 
-    notion = NotionClient(secret=NOTION_SECRET)
-    try:
-        posts = notion.query_database(
-            CONTENT_DB_ID,
-            filter_obj={"property": "Status", "select": {"equals": target_status}},
-        )
-    except Exception as e:
-        posts = []
-        logger.error(f"content_board_fetch: Notion query failed: {e}")
+    # Detect single-post intent: "show me / get / full post / content of X"
+    SINGLE_POST_SIGNALS = [
+        "show me the full", "show me post", "show me the post", "show me the content",
+        "get the full", "get the post", "get the content", "pull the full", "pull the post",
+        "full post for", "full text of", "content of post", "text of post",
+        "show post", "retrieve post", "fetch post", "display post",
+    ]
+    wants_single = any(sig in msg for sig in SINGLE_POST_SIGNALS)
 
-    def _get_text(prop, key="rich_text"):
-        parts = prop.get(key, [])
-        return "".join(p.get("plain_text", "") for p in parts) if parts else ""
+    def _extract_title_from_props(props):
+        parts = props.get("Title", {}).get("title", [])
+        return "".join(p.get("plain_text", "") for p in parts)
 
     def _get_select(prop):
         sel = prop.get("select") or {}
         return sel.get("name", "")
 
-    post_data = []
-    for page in (posts or [])[:10]:
-        props = page.get("properties", {})
-        title_parts = props.get("Title", {}).get("title", [])
-        title = "".join(p.get("plain_text", "") for p in title_parts)
-        content = _get_text(props.get("Content", {}))
-        platform = _get_select(props.get("Platform", {}))
-        arc = _get_select(props.get("Arc", {}))
-        post_data.append({
-            "title": title,
-            "platform": platform,
-            "arc": arc,
-            "content": content,
-        })
+    def _get_multi_select(prop):
+        items = prop.get("multi_select") or []
+        return ", ".join(i.get("name", "") for i in items)
 
-    if not post_data:
-        result_text = f"No posts with status '{target_status}' found in the Content Board."
+    notion = NotionClient(secret=NOTION_SECRET)
+
+    if wants_single:
+        # Extract title hint: text after "for", "of", or quotes
+        import re as _re
+        title_hint = ""
+        quoted = _re.findall(r'["“”]([^""“”]+)["“”]', user_request)
+        if quoted:
+            title_hint = quoted[0].strip()
+        else:
+            for marker in ("for ", "of ", "post: ", "post "):
+                idx = msg.find(marker)
+                if idx != -1:
+                    title_hint = user_request[idx + len(marker):].strip().strip('"').strip()
+                    break
+
+        # Search all statuses to find the matching page
+        ALL_STATUSES = ["Queued", "Draft", "Ready", "In Review", "Needs rework", "Posted", "Archived", "Idea"]
+        matched_page = None
+        matched_title = ""
+        hint_lower = title_hint.lower()
+
+        for status in ALL_STATUSES:
+            try:
+                pages = notion.query_database(
+                    CONTENT_DB_ID,
+                    filter_obj={"property": "Status", "select": {"equals": status}},
+                )
+            except Exception:
+                continue
+            for page in (pages or []):
+                t = _extract_title_from_props(page.get("properties", {}))
+                if hint_lower and hint_lower in t.lower():
+                    matched_page = page
+                    matched_title = t
+                    break
+            if matched_page:
+                break
+
+        if not matched_page and hint_lower:
+            # Fallback: search without status filter (title search)
+            try:
+                all_pages = notion.query_database(CONTENT_DB_ID)
+                for page in (all_pages or []):
+                    t = _extract_title_from_props(page.get("properties", {}))
+                    if hint_lower in t.lower():
+                        matched_page = page
+                        matched_title = t
+                        break
+            except Exception as e:
+                logger.error(f"content_board_fetch fallback search failed: {e}")
+
+        if not matched_page:
+            result_text = (
+                f"Could not find a post matching '{title_hint}' in the Content Board. "
+                f"Try listing posts first to confirm the exact title."
+            )
+        else:
+            page_id = matched_page["id"]
+            props = matched_page.get("properties", {})
+            status = _get_select(props.get("Status", {}))
+            platform = _get_multi_select(props.get("Platform", {})) or _get_select(props.get("Platform", {}))
+            try:
+                body = notion.get_page_blocks(page_id)
+            except Exception as e:
+                body = f"[Could not fetch post body: {e}]"
+            if not body.strip():
+                body = "[Post body is empty in Notion]"
+            result_text = (
+                f"TITLE: {matched_title}\n"
+                f"STATUS: {status} | PLATFORM: {platform}\n\n"
+                f"{body}"
+            )
     else:
-        lines = [f"{target_status.upper()} POSTS ({len(post_data)} shown, up to 10)\n"]
-        for i, p in enumerate(post_data, 1):
-            meta = f"[{p['platform']}]" + (f" | Arc: {p['arc']}" if p["arc"] else "")
-            body = p["content"][:400] + ("..." if len(p["content"]) > 400 else "")
-            lines.append(f"POST {i} {meta}\n{p['title']}\n---\n{body}\n")
-        result_text = "\n".join(lines)
+        # List mode: detect status filter
+        STATUS_MAP = {
+            "Idea":         ["idea", "ideas", "brainstorm"],
+            "Draft":        ["draft", "drafts"],
+            "Queued":       ["queue", "queued"],
+            "Ready":        ["ready"],
+            "In Review":    ["in review", "review", "reviewing"],
+            "Needs rework": ["needs rework", "rework", "needs work"],
+            "Posted":       ["posted", "published", "live"],
+            "Archived":     ["archived", "archive"],
+        }
+        target_status = "Queued"
+        for status, keywords in STATUS_MAP.items():
+            if any(kw in msg for kw in keywords):
+                target_status = status
+                break
+
+        try:
+            posts = notion.query_database(
+                CONTENT_DB_ID,
+                filter_obj={"property": "Status", "select": {"equals": target_status}},
+            )
+        except Exception as e:
+            posts = []
+            logger.error(f"content_board_fetch: Notion query failed: {e}")
+
+        post_data = []
+        for page in (posts or [])[:10]:
+            props = page.get("properties", {})
+            title = _extract_title_from_props(props)
+            platform = _get_multi_select(props.get("Platform", {})) or _get_select(props.get("Platform", {}))
+            arc = _get_select(props.get("Arc", {}))
+            post_data.append({"title": title, "platform": platform, "arc": arc})
+
+        if not post_data:
+            result_text = f"No posts with status '{target_status}' found in the Content Board."
+        else:
+            lines = [f"{target_status.upper()} POSTS ({len(post_data)} shown, up to 10)\n"]
+            for i, p in enumerate(post_data, 1):
+                meta = f"[{p['platform']}]" + (f" | Arc: {p['arc']}" if p["arc"] else "")
+                lines.append(f"POST {i} {meta}\n{p['title']}\n")
+            result_text = "\n".join(lines)
 
     reporter = Agent(
         role="Content Board Reporter",
