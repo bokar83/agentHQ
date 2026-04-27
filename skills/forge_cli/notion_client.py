@@ -65,6 +65,20 @@ class NotionClient:
         result = self._request("get", f"databases/{database_id}")
         return result.get("properties", {})
 
+    def get_page_blocks(self, page_id: str) -> str:
+        """Fetch all block children for a page and return them as plain text."""
+        result = self._request("get", f"blocks/{page_id}/children", params={"page_size": 100})
+        blocks = result.get("results", [])
+        lines = []
+        for block in blocks:
+            btype = block.get("type", "")
+            data = block.get(btype, {})
+            rich = data.get("rich_text", [])
+            text = "".join(seg.get("plain_text", "") for seg in rich)
+            if text:
+                lines.append(text)
+        return "\n\n".join(lines)
+
     def append_blocks(self, block_id: str, children: List[Dict]) -> Dict:
         return self._request("patch", f"blocks/{block_id}/children", json={"children": children})
 
