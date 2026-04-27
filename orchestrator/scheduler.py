@@ -275,6 +275,7 @@ def _scheduler_loop():
 
     while True:
         now = datetime.now(tz)
+        _run_pending_email_jobs()
 
         # Check if it's the target time and we haven't run today
         if now.hour == TARGET_HOUR and now.minute == TARGET_MINUTE:
@@ -325,6 +326,55 @@ def _run_notion_sync():
         logger.info(f"NOTION SYNC: {synced} lead(s) synced to Notion CRM.")
     except Exception as e:
         logger.error(f"NOTION SYNC: Failed: {e}")
+
+
+def _run_pending_email_jobs():
+    """Send due email jobs queued in local Postgres."""
+    import base64
+    import json
+    import os
+    import subprocess
+    from email.mime.text import MIMEText
+
+    try:
+        if "/app" not in sys.path:
+            sys.path.insert(0, "/app")
+        import db
+
+        jobs = db.fetch_pending_email_jobs()
+        for job in jobs:
+            try:
+                message = MIMEText(job["body_text"], "plain")
+                message["From"] = "me"
+                message["To"] = job["to_addr"]
+                message["Subject"] = job["subject"]
+                encoded = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8").rstrip("=\n")
+
+                result = subprocess.run(
+                    [
+                        "gws", "gmail", "users", "messages", "send",
+                        "--params", json.dumps({"userId": "me"}),
+                        "--json", json.dumps({"raw": encoded}),
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                    env={**os.environ},
+                )
+                if result.returncode != 0:
+                    error_msg = (result.stderr or result.stdout or "unknown error")[:500]
+                    db.mark_email_job_failed(job["id"], error_msg)
+                    logger.error(f"EMAIL JOB: failed id={job['id']} to={job['to_addr']}: {error_msg}")
+                    continue
+
+                db.mark_email_job_sent(job["id"])
+                logger.info(f"EMAIL JOB: sent id={job['id']} to={job['to_addr']}")
+            except Exception as job_error:
+                error_msg = str(job_error)[:500]
+                db.mark_email_job_failed(job["id"], error_msg)
+                logger.error(f"EMAIL JOB: exception id={job['id']} to={job['to_addr']}: {error_msg}")
+    except Exception as e:
+        logger.error(f"EMAIL JOB: runner failed: {e}")
 
 
 def _run_morning_digest():
@@ -409,6 +459,11 @@ def start_scheduler():
     Launch the scheduler in a daemon thread.
     Also runs Supabase sync on startup and every 30 minutes.
     """
+    if "/app" not in sys.path:
+        sys.path.insert(0, "/app")
+    import db
+    db.ensure_email_jobs_table()
+
     # Run sync immediately on startup
     _run_supabase_sync()
 

@@ -149,7 +149,12 @@ List the 3+ cinematic interactions you will implement before you start:
 > "Interactions: [1], [2], [3]"
 These must be specific (e.g. "GSAP SplitText on H1 with chars stagger 0.04s" not "hero animation"). Vague descriptions mean the skill did not run.
 
-If all five checks are written and pass, proceed. If any are missing or fail, stop and resolve before touching HTML.
+**F. Photo plan (explicit): NEW:**
+Before writing a single `<img>` tag, state every photo slot the site needs and where each image comes from.
+> "Photos: hero (Kie prompt: '...'), team (Kie prompt: '...'), before/after pair (Kie prompts: '...' / '...')"
+Unverified Unsplash hotlinks are banned. See IMAGE RULES below.
+
+If all six checks are written and pass, proceed. If any are missing or fail, stop and resolve before touching HTML.
 
 ---
 
@@ -163,6 +168,8 @@ These are real outputs that failed the Volta standard. Never ship anything that 
 - **The "Clean" Cop-out**: "this business needs something clean and minimal" used as justification for a skeleton site. Clean is a design choice. Skeleton is not clean, it is lazy. BANNED.
 - **The Blob Swap**: took a previous site, changed the blob color from cobalt to teal, added "sky blue accent." Still the same skeleton. Still BANNED.
 - **The Rushed First Pass**: wrote HTML before completing all five self-verification checks. Got called out. Had to rebuild. Wasted time, burned trust. BANNED behavior.
+- **The Emoji Icon**: used emoji characters as decorative service icons instead of CSS shapes, SVG, or generated images. BANNED on any client-facing site.
+- **The Hotlink Gamble**: grabbed an Unsplash URL, tested that it returned HTTP 200, and embedded it without knowing what the photo shows. This produced a Monster Energy drink on a children's dental site, a chef on a roofing site, and a caulk gun in a "crew" section. HTTP 200 is not content verification. BANNED.
 
 If your output could appear in a Wix template gallery, it has failed.
 
@@ -173,8 +180,8 @@ If your output could appear in a Wix template gallery, it has failed.
 Before writing the first `<` character, you MUST open and read at minimum the first 150 lines of ONE of these reference sites:
 
 ```
-workspace/demo-sites/volta-studio/index.html         (926 lines — cinematic dark, agency)
-workspace/demo-sites/thepointpediatricdentistry/index.html  (923 lines — storybook blob, kids dental)
+workspace/demo-sites/volta-studio/index.html         (926 lines :  cinematic dark, agency)
+workspace/demo-sites/thepointpediatricdentistry/index.html  (923 lines :  storybook blob, kids dental)
 ```
 
 Choose the one closest in spirit to the business you are building. Read it. Note:
@@ -190,21 +197,106 @@ This is not optional. It is the technical calibration step. The reference sites 
 
 ---
 
+## MANDATORY: Live competitive research before writing code
+
+After reading the reference site, **before writing any HTML**, research what premium looks like in the wild for the specific business category. This is how you avoid building a pediatric dental site that looks like every other pediatric dental site.
+
+### Step 1: Trigger the website-intelligence skill first
+
+The `website-intelligence` skill already exists in the stack. It scrapes real sites, analyzes them, and produces a design brief. **It should run before frontend-design, not after.** If you are building for a known business category (dental, roofing, HVAC, law, restaurant, etc.), invoke it first:
+
+```
+/website-intelligence [business category] [city]
+```
+
+If the user has provided a client URL, pass that too. The output tells you what the competition looks like and where the opportunity is to be distinctive.
+
+### Step 2: Firecrawl search for premium examples
+
+If website-intelligence has not already run, use Firecrawl search to find 2-3 real premium sites in the category. Extract what makes them distinctive: not what they have in common (that is what to avoid).
+
+```python
+from firecrawl import FirecrawlApp
+app = FirecrawlApp()
+results = app.search("best [category] website design award winning [city]", limit=5)
+```
+
+For each result, extract:
+- Hero structure (what is the first thing you see: image, type, video, illustration?)
+- Color palette (what 2-3 colors dominate?)
+- What trust signals appear above the fold
+- Any interaction or animation that is memorable
+- What they do that generic sites in this category do NOT do
+
+### Step 3: Write a one-paragraph competitive brief
+
+Before touching HTML, write this out:
+> "The best [category] sites I found do [X]. The generic sites all do [Y]. My site will stand out by doing [Z], which none of them do."
+
+This is not optional. It is the research output that feeds the $50K agency question (check C) and the design brief (Step 3). Without it, the $50K question is a guess. With it, it is a specific, informed decision.
+
+### What to look for by category
+
+| Category | What premium sites do | What generic sites do |
+|---|---|---|
+| Pediatric dental | Illustrated hero, mascot characters, warm bright photography of real children, playful font | Stock photo of dentist, blue/white clinical palette, card grid services |
+| Roofing | Aerial photography of completed roofs, before/after proof sections, bold stats | Generic house photo, "call us" hero, list of services in boxes |
+| HVAC | Seasonal mood photography, emergency response urgency, trust badge wall | Same contractor template as roofing |
+| Restaurant | Full-bleed food photography, ambient video, reservation CTA above fold | Grid of menu items, phone number hero |
+| Law firm | Weighty serif typography, monochrome photography, slow dramatic entrances | Smiling lawyer stock photo, blue and gold |
+| Real estate | Immersive property photography, map integration, neighborhood lifestyle shots | Listing grid, generic skyline |
+
+---
+
 ## Cinematic Baseline
 
 Every site gets at least 3 of these. More is better. Pull back if asked.
 
 - [ ] **Custom cursor**: dot + lagging ring, explicit colors, no blend mode
-- [ ] **GSAP SplitText** on hero heading: chars or lines fly in with stagger
+- [ ] **Char-split animation** on hero heading: use DOM splitChars() helper (NOT SplitText CDN :  Club plugin, will 404 and kill all JS)
 - [ ] **ScrollTrigger stagger** on cards, rows, or list items
 - [ ] **Clip-path reveal** OR **scrub parallax** on at least one section
 - [ ] **Magnetic buttons**: GSAP mousemove + elastic.out on leave
 - [ ] **Wavy SVG section dividers**: never hard horizontal lines between sections
 - [ ] **Particle trail** OR **CSS marquee** OR **morphing SVG blob**
 - [ ] **Pinned horizontal scroll** OR **full-bleed cinematic section** (at least one)
+- [ ] **Real photos in every image slot**: no emoji substitutes, no CSS gradient placeholders, no empty boxes
 
-GSAP plugins free as of v3.13: SplitText, ScrambleText, MorphSVG, DrawSVG.
+**GSAP CDN :  FREE plugins only (public cdnjs):**
+`gsap.min.js`, `ScrollTrigger.min.js`, `Draggable.min.js`, `Flip.min.js`, `Observer.min.js`, `TextPlugin.min.js`, `EasePack.min.js`
 CDN: `https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/`
+
+**NEVER load from public CDN :  Club GSAP members only:**
+SplitText, MorphSVG, DrawSVG, ScrambleText, MotionPathHelper, Physics2D
+
+Loading a Club plugin from cdnjs returns 404. The variable is undefined. `gsap.registerPlugin(ScrollTrigger, SplitText)` throws and **kills the entire script block** :  cursor, animations, accordions, everything stops working. CSS still loads so the page looks fine but is fully non-interactive. This is silent and extremely hard to diagnose.
+
+**For char/word animation without SplitText:** use the DOM walker pattern:
+```js
+function splitChars(el) {
+  const chars = [];
+  const walk = (node) => {
+    if (node.nodeType === 3) {
+      const frag = document.createDocumentFragment();
+      for (const ch of node.textContent) {
+        if (ch === ' ' || ch === '\n') { frag.appendChild(document.createTextNode(' ')); }
+        else {
+          const outer = document.createElement('span');
+          outer.style.cssText = 'display:inline-block;overflow:hidden;';
+          const inner = document.createElement('span');
+          inner.style.display = 'inline-block';
+          inner.textContent = ch;
+          outer.appendChild(inner); frag.appendChild(outer); chars.push(inner);
+        }
+      }
+      node.parentNode.replaceChild(frag, node);
+    } else if (node.nodeType === 1) { Array.from(node.childNodes).forEach(walk); }
+  };
+  Array.from(el.childNodes).forEach(walk);
+  return chars;
+}
+// Usage: gsap.from(splitChars(document.querySelector('h1')), { y:80, opacity:0, stagger:0.025 })
+```
 
 ---
 
@@ -233,10 +325,11 @@ Avoid repeating a pairing within 3 builds.
 |---|---|
 | Fredoka + Baloo 2 + Amatic SC | Playful, rounded, kids |
 | DM Serif Display + DM Sans | Editorial, premium, clean |
+| Fraunces + Nunito | Warm serif, boutique, kids-adjacent |
 | Playfair Display + Inter | Classic, trustworthy, CW-adjacent |
 | Space Grotesk + Syne | Modern, geometric, technical |
 | Cormorant Garamond + Source Sans | Luxury, boutique, high-end |
-| Unbounded + DM Sans | Bold, statement, geometric |
+| Unbounded + DM Sans | Bold, statement, geometric: industrial |
 | Syne + DM Sans | Cinematic dark, agency, confident |
 | Amatic SC + Nunito | Hand-drawn, artisan, warm |
 
@@ -250,6 +343,8 @@ Avoid repeating a story within 3 builds.
 |---|---|---|
 | Cobalt + yellow + mint | #1B3F8B + #FFD447 + #B8F0D8 | Playful, bold |
 | Cinematic dark + neon green | #0a0a0a + #7BFF6A | Agency, luxury |
+| Cinematic dark + orange | #0D0D0D + #F4600C | Industrial, trade contractor |
+| Navy + sky blue + coral + gold | #0B1F3A + #5BC8F5 + #FF6B6B + #F5C842 | Kids, bright, warm |
 | Deep forest + gold | #1a2e1f + #c4956a | Premium local |
 | Burnt sienna + ivory | #a0522d + #fdf8f0 | Restaurant, artisan |
 | Plum + blush + cream | #4a1a6b + #f4b8cc | Boutique, spa |
@@ -321,6 +416,7 @@ When building a site and the right image does not exist in the project assets, *
 + Hero background / full-bleed section image
 + Team photo placeholder (client-branded illustration, not a real face)
 + Service illustration or icon set
++ Before/after pairs (matched scene, same angle, condition changes only)
 + OG image (1200x630)
 + Any image the client has not provided
 
@@ -332,7 +428,7 @@ Invoke the `kie_media` skill. Use `generate_image()` from `orchestrator/kie_medi
 from orchestrator.kie_media import generate_image
 
 result = generate_image(
-    prompt="...",          # detailed prompt -- see format below
+    prompt="...",          # detailed prompt: see format below
     aspect_ratio="16:9",   # hero: 16:9 | card: 1:1 | OG: 1.91:1
     task_type="text_to_image",
 )
@@ -342,22 +438,59 @@ result = generate_image(
 
 Kie picks the best model automatically (ranked registry). Budget auto-approved up to $0.20/image.
 
+**If the orchestrator import fails locally** (missing modules), call the API directly:
+
+```python
+from dotenv import load_dotenv
+load_dotenv()
+import os, requests, time
+
+KEY = os.getenv('KIE_AI_API_KEY')
+headers = {'Authorization': f'Bearer {KEY}', 'Content-Type': 'application/json'}
+
+r = requests.post('https://api.kie.ai/api/v1/gpt4o-image/generate',
+    headers=headers,
+    json={'prompt': '...', 'aspect_ratio': '16:9'},
+    timeout=30)
+task_id = r.json()['data']['taskId']
+
+for _ in range(40):
+    time.sleep(8)
+    r2 = requests.get(f'https://api.kie.ai/api/v1/gpt4o-image/record-info?taskId={task_id}',
+        headers={'Authorization': f'Bearer {KEY}'}, timeout=15)
+    d = r2.json()['data']
+    if d.get('status') == 'SUCCESS':
+        url = d['response']['resultUrls'][0]
+        img = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=30)
+        with open('output/websites/<site>/img/<name>.png', 'wb') as f:
+            f.write(img.content)
+        break
+```
+
+Save images to `output/websites/<site>/img/` and reference with relative paths (`src="img/name.png"`).
+Never hotlink the Kie temp URL: it expires.
+
 ### Prompt format for site images
 
 ```
-[Style adjective] [subject], [lighting], [color palette matching site], [composition], [mood]
-No text. No watermarks. Photorealistic / Illustration / etc.
+[Composition/angle], [subject matching the business], [lighting], [color palette matching site], [mood].
+No text. No watermarks. Photorealistic.
 ```
 
 Example for a pediatric dentist hero:
 > "Bright, inviting dental office waiting room with colorful children's toys, warm natural light, soft blues and yellows, wide angle, welcoming and playful mood. No text. No people. Photorealistic."
 
+Example before/after pair for roofing:
+> Before: "Aerial overhead view of old worn asphalt shingle roof, missing shingles, moss stains, weathered, photorealistic, no people"
+> After: "Aerial overhead view of brand new charcoal asphalt shingle roof, clean perfect installation, sharp ridgeline, sunny day, photorealistic, no people"
+
 ### Rules
 
 + Generate images **before** writing the HTML that references them. Never write `src=""` placeholders.
-+ Match the color palette of the site (include accent color in prompt)
-+ OG image: always 1200x630, include site name as text overlay in a second pass if needed
-+ If generation fails after the Kie retry ladder, use a CSS gradient as fallback. Never ship a broken img tag.
++ Match the color palette of the site (include accent color in prompt).
++ Before/after sliders need matched pairs: same scene, same angle, same lighting. Generate both via Kie.
++ **HTTP 200 is NOT content verification.** Before embedding any image, describe what it shows and confirm it matches the business. A 350KB JPEG of a Monster Energy can passes every HTTP check. Describe the content, not the status.
++ If generation fails after the Kie retry ladder, use a CSS gradient as fallback. Never ship a broken `<img>` tag.
 
 ---
 
@@ -368,11 +501,14 @@ Example for a pediatric dentist hero:
 - [ ] sitemap.xml present
 - [ ] robots.txt present
 - [ ] GA4 wired
-- [ ] HTTP 200 verified on every image URL before embed
+- [ ] All images verified for content appropriateness (not just HTTP 200)
+- [ ] All images saved locally in `img/`, referenced with relative paths
 - [ ] No placeholder text or broken links
-- [ ] Schema.org JSON-LD present
+- [ ] Schema.org JSON-LD present (LocalBusiness + FAQPage minimum)
+- [ ] FAQ includes AI visibility question ("Is [business] visible on ChatGPT/Perplexity?")
 - [ ] Forms wired (Formspree for static)
 - [ ] GitHub push in same session as build
+- [ ] Vercel deploy confirmed live
 
 ---
 
@@ -389,3 +525,9 @@ Example for a pediatric dentist hero:
   the same skeleton as every other site. Simple can be a single-scroll
   narrative or a bold editorial with one color. Simple is a design choice,
   not a skeleton choice.
+- "I tested the image URL and it returned 200": HTTP status is not content
+  verification. Describe what the image shows before embedding it.
+- "I'll use emoji as icons for now": no. Generate icons or use CSS shapes.
+  Emoji are never shipped on client-facing sites.
+- "I'll add real photos later": photos are part of the build, not a follow-up
+  task. Plan and generate them in the photo plan (check F) before writing HTML.

@@ -135,7 +135,7 @@ generate_promo_video(
     image_urls: list[str],             # 2-5 publicly accessible screenshot URLs
     subject_descriptions: list[str],   # one plain-English label per image
     accent_color: str = "",            # brand accent, e.g. "orange"
-    duration_hint: str = "10",         # "4" | "6" | "10" | "15" -- 10s is the sweet spot
+    duration_hint: str = "10",         # "4" | "6" | "10" | "15": 10s is the sweet spot
     custom_prompt: str | None = None,  # override the auto-generated liquid glass prompt
     linked_content_id: str | None = None,
 ) -> dict
@@ -153,6 +153,11 @@ check_credits() -> int
 | A standard text-to-video or image-to-video clip          | `generate_video` (Veo3/Kling/Runway ladder)             |
 
 `generate_promo_video` always uses Seedance 2 via Kie. There is no fallback ladder. If Seedance fails, it reports clearly rather than falling back to a different aesthetic.
+
+> **HARD RULE :  Seedance does NOT reproduce actual website content.**
+> Seedance 2 uses reference images as aesthetic/compositional *inspiration*, not as literal content to render. When given real website screenshots it generates new AI footage with different brand graphics, unrelated text, and hallucinated content. **Never use `generate_promo_video` when the goal is "show the prospect their actual site."** Use HyperFrames (`/hyperframes`) instead :  it embeds real screenshots as `<img>` elements so the output is pixel-accurate.
+>
+> Seedance IS appropriate for: abstract mood reels, liquid glass brand aesthetics, cases where you want AI-generated visuals *inspired* by the screenshots, not a reproduction of them.
 
 Each `generate_*` returns:
 ```python
