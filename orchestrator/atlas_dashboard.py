@@ -483,7 +483,7 @@ def _next_scheduled_fire() -> dict:
 
 
 def get_hero() -> dict:
-    """Hero strip: system_status, last_action, next_fire, spend_pacing."""
+    """Hero strip: system_status, last_action, next_fire, spend_pacing, health_check."""
     from autonomy_guard import get_guard
     guard = get_guard()
     snap = guard.snapshot()
@@ -496,6 +496,13 @@ def get_hero() -> dict:
         system_status = "amber"
     else:
         system_status = "green"
+
+    try:
+        from health_sweep import read_sweep_state
+        sweep = read_sweep_state()
+    except Exception:
+        sweep = {}
+
     return {
         "system_status": system_status,
         "killed": killed,
@@ -506,6 +513,7 @@ def get_hero() -> dict:
             "cap_usd": round(snap.cap_usd, 4),
             "pct": round(pct, 1),
         },
+        "health_check": sweep,
     }
 
 

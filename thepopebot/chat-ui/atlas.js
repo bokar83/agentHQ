@@ -129,6 +129,21 @@ async function refreshHero() {
     const sp = d.spend_pacing || {};
     spendEl.textContent = sp.pct != null ? sp.pct.toFixed(1) + '%' : '--';
 
+    const hcVal = document.getElementById('hero-health-val');
+    const hcTs = document.getElementById('hero-health-ts');
+    const hc = d.health_check || {};
+    if (hc.ts) {
+      const ok = hc.ok !== false;
+      hcVal.textContent = ok ? (hc.passed + '/' + hc.total + ' passed') : (hc.passed + '/' + hc.total + ' — FAILURES');
+      hcVal.className = 'hero-value' + (ok ? ' green' : ' red');
+      const d2 = new Date(hc.ts);
+      hcTs.textContent = d2.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + d2.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else {
+      hcVal.textContent = 'Not yet run';
+      hcVal.className = 'hero-value';
+      hcTs.textContent = '';
+    }
+
     badge.textContent = 'Live';
     badge.className = 'badge badge-green';
     const hb = document.getElementById('health-badge');
