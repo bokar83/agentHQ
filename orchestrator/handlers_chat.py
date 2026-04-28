@@ -319,7 +319,7 @@ def run_chat(message: str, session_key: str = "default") -> dict:
     history_messages = []
     try:
         from memory import get_conversation_history
-        history = get_conversation_history(session_key, limit=100)
+        history = get_conversation_history(session_key, limit=50)
         for turn in history:
             role = turn["role"] if turn["role"] in ("user", "assistant") else "user"
             history_messages.append({"role": role, "content": turn["content"]})
@@ -599,7 +599,7 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
     history_messages: list = []
     try:
         from memory import get_conversation_history
-        history = get_conversation_history(session_key, limit=100)
+        history = get_conversation_history(session_key, limit=50)
         for turn in history:
             role = turn["role"] if turn["role"] in ("user", "assistant") else "user"
             history_messages.append({"role": role, "content": turn["content"]})
