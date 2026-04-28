@@ -518,6 +518,12 @@ def _extract_reply(raw: str) -> str:
         return ""
     stripped = raw.strip()
 
+    # Strip markdown code fence if the model wrapped JSON in ```json ... ```
+    if stripped.startswith("```"):
+        inner = _re.sub(r"^```[a-z]*\n?", "", stripped).rstrip("`").strip()
+        if inner.startswith("{"):
+            stripped = inner
+
     # Try standard M9 JSON parse first
     if stripped.startswith("{"):
         try:
@@ -658,7 +664,8 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
             synthesis_messages = full_messages + [{
                 "role": "user",
                 "content": (
-                    f"[SYSTEM DATA — use this to answer the user's question directly]\n\n"
+                    f"[SYSTEM DATA — answer the user's question directly using this data. "
+                    f"Return plain JSON with just a 'reply' key — no artifact, no actions.]\n\n"
                     f"{system_data}"
                 ),
             }]
