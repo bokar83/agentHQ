@@ -17,7 +17,58 @@ SERPER_API_KEY = os.environ.get("SERPER_API_KEY", "")
 FIRECRAWL_API_KEY = os.environ.get("FIRECRAWL_API_KEY", "")
 
 EMAIL_RE = re.compile(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}")
-SKIP_EMAIL_DOMAINS = {"example.com", "sentry.io", "wixpress.com", "squarespace.com"}
+
+# Domains that are never real business contact emails
+SKIP_EMAIL_DOMAINS = {
+    "example.com", "sentry.io", "wixpress.com", "squarespace.com",
+    "godaddy.com", "hostinger.com", "namecheap.com", "bluehost.com",
+    "wordpress.com", "shopify.com", "weebly.com", "jimdo.com",
+    "yoast.com", "elementor.com", "gravatar.com", "mailchimp.com",
+    "constantcontact.com", "hubspot.com", "zendesk.com", "freshdesk.com",
+    "schema.org", "w3.org", "google.com", "googleapis.com", "googlemail.com",
+    "yelp.com", "bbb.org", "angi.com", "houzz.com", "thumbtack.com",
+    "maps.google.com",
+}
+
+# Prefixes that indicate generic/role emails unlikely to reach a real person
+SKIP_EMAIL_PREFIXES = {
+    "noreply", "no-reply", "donotreply", "do-not-reply",
+    "admin", "webmaster", "postmaster", "mailer-daemon",
+    "info@info", "contact@contact", "hello@hello",
+    "support@support", "sales@sales",
+}
+
+# Local parts that are placeholders, not real addresses
+_PLACEHOLDER_RE = re.compile(r"^(your|name|email|address|user|username|test|sample|demo)@", re.I)
+# Addresses with ellipsis prefix are truncated/invalid (e.g. ...@kelso-industries.com)
+_TRUNCATED_RE = re.compile(r"^\.*\.\.\.")
+
+
+def _is_valid_email(email: str) -> bool:
+    """Return True only if email looks like a real, deliverable business address."""
+    if not email or "@" not in email:
+        return False
+    local, domain = email.rsplit("@", 1)
+    # Reject truncated addresses like ...@anything.com
+    if local.startswith("...") or local.startswith(".."):
+        return False
+    # Reject placeholder patterns
+    if _PLACEHOLDER_RE.match(email):
+        return False
+    # Reject known skip domains
+    if domain in SKIP_EMAIL_DOMAINS:
+        return False
+    # Reject generic prefixes
+    if local.lower() in SKIP_EMAIL_PREFIXES:
+        return False
+    # Must have a real TLD (at least 2 chars, not purely numeric)
+    tld = domain.rsplit(".", 1)[-1]
+    if len(tld) < 2 or tld.isdigit():
+        return False
+    # Domain must have at least one dot
+    if "." not in domain:
+        return False
+    return True
 
 
 def _fetch_maps_results(query: str, location: str, limit: int = 20) -> list[dict]:
@@ -86,10 +137,11 @@ def find_email_from_website(website_url: str) -> str:
 
         for match in EMAIL_RE.finditer(text):
             email = match.group(0).lower()
-            domain = email.split("@")[-1]
-            if domain not in SKIP_EMAIL_DOMAINS and not domain.startswith("example"):
+            if _is_valid_email(email):
                 logger.info(f"Found email {email} on {website_url}")
                 return email
+            else:
+                logger.debug(f"Rejected email {email} from {website_url}")
     except Exception as exc:
         logger.debug(f"Email extraction failed for {website_url}: {exc}")
     return ""
@@ -157,6 +209,9 @@ def load_leads_from_csv(csv_path: str, niche: str, city: str, save_to_supabase: 
         for row in reader:
             website = row.get("website_url", row.get("website", ""))
             email = row.get("email", "").strip()
+            if email and not _is_valid_email(email):
+                logger.warning(f"Rejected bad email from CSV: {email} for {row.get('name', '')}")
+                email = ""
             if not email and website:
                 logger.info(f"No email in CSV for {row.get('name', '')} -- trying Firecrawl...")
                 email = find_email_from_website(website)
