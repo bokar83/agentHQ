@@ -63,7 +63,7 @@ def compress_session(session_id: str) -> bool:
     """
     try:
         from memory import get_conversation_history
-        turns = get_conversation_history(session_id, limit=100)
+        turns = get_conversation_history(session_id, limit=50)
     except Exception as e:
         logger.warning(f"compress_session: history load failed for {session_id}: {e}")
         return False

@@ -3,19 +3,17 @@
 // Artifact content goes into srcdoc of a sandboxed iframe only.
 
 var atlasChat = (function() {
-  var SESSION_KEY = 'atlas_chat_session_key';
+  var SESSION_STORAGE_KEY = 'agentsHQ_session_id';
+  var SHARED_SESSION_KEY = 'browser:7792432594';
   var _sessionKey = null;
   var _messages = [];
   var _pollTimer = null;
 
   function _getSessionKey() {
     if (_sessionKey) return _sessionKey;
-    var stored = localStorage.getItem(SESSION_KEY);
-    if (stored) { _sessionKey = stored; return _sessionKey; }
-    var bytes = crypto.getRandomValues(new Uint8Array(16));
-    var hex = Array.from(bytes).map(function(b) { return b.toString(16).padStart(2,'0'); }).join('');
-    _sessionKey = 'atlas:browser:' + hex;
-    localStorage.setItem(SESSION_KEY, _sessionKey);
+    // Always use the shared session key so /atlas and /chat share history.
+    localStorage.setItem(SESSION_STORAGE_KEY, SHARED_SESSION_KEY);
+    _sessionKey = SHARED_SESSION_KEY;
     return _sessionKey;
   }
 
