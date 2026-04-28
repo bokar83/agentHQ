@@ -79,6 +79,26 @@ def _query_system() -> str:
     except Exception as e:
         lines.append(f"  [Could not load task types: {e}]")
 
+    # Approval queue — live pending items
+    try:
+        import approval_queue as aq
+        pending = aq.list_pending()
+        if pending:
+            lines.append(f"\nAPPROVAL QUEUE ({len(pending)} pending):")
+            for item in pending[:10]:
+                crew = item.crew_name if hasattr(item, "crew_name") else item.get("crew_name", "?")
+                ptype = item.proposal_type if hasattr(item, "proposal_type") else item.get("proposal_type", "?")
+                item_id = item.id if hasattr(item, "id") else item.get("id", "?")
+                payload = item.payload if hasattr(item, "payload") else item.get("payload", {})
+                title = ""
+                if isinstance(payload, dict):
+                    title = payload.get("title") or payload.get("subject") or payload.get("task") or ""
+                lines.append(f"  [{item_id}] {crew} / {ptype}" + (f" — {title[:80]}" if title else ""))
+        else:
+            lines.append("\nAPPROVAL QUEUE: empty (no pending items)")
+    except Exception as e:
+        lines.append(f"\nAPPROVAL QUEUE: [could not fetch: {e}]")
+
     # Recent outputs
     try:
         output_dir = os.environ.get("AGENTS_OUTPUT_DIR", "/app/outputs")

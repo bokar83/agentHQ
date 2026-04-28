@@ -101,7 +101,8 @@ def handle_feedback(text: str, chat_id: str) -> bool:
 _SYSTEM_PROMPT_TEMPLATE = """You are Boubacar's agentsHQ command center.
 
 You are a dispatcher and execution surface. You have direct access to the agentsHQ
-system: content board, approval queue, spend, heartbeats, crew execution, Notion, and publishing.
+system via the query_system tool: approval queue (live pending items), spend ledger,
+heartbeats, errors, agent registry, task types, recent output files, and infrastructure state.
 
 RESPONSE FORMAT (required):
 Always return a valid JSON object:
@@ -155,10 +156,13 @@ _TOOLS = [
         "function": {
             "name": "query_system",
             "description": (
-                "Query the live agentsHQ system state. Call this when the user asks about: "
+                "Query the live agentsHQ system state. Call this for ANY question about "
+                "what is currently in the system — approval queue, pending items, queued tasks, "
                 "what agents exist, what task types are available, what the system can do, "
-                "recent output files, infrastructure details, or any question about the "
-                "system's current configuration and capabilities."
+                "recent output files, infrastructure details, spend, heartbeats, errors, "
+                "or any question about the system's current configuration and capabilities. "
+                "Examples: 'what's in my approval queue', 'what's pending', 'show me queued items', "
+                "'what jobs are running', 'system status', 'what can you do'."
             ),
             "parameters": {"type": "object", "properties": {}, "required": []},
         },
@@ -218,9 +222,11 @@ _TOOLS = [
             "name": "forward_to_crew",
             "description": (
                 "Forward a task to the agentsHQ crew for execution. "
-                "Call this for ANY real work: writing, rewriting, researching, building, "
-                "voice matching, tweet polishing, post drafting, email drafting, "
-                "lead queries, ideas capture, or anything requiring agents. "
+                "Call this ONLY for real production work: writing content, rewriting, researching external topics, "
+                "building websites or apps, voice matching, post drafting, email drafting, "
+                "lead generation, or capturing ideas. "
+                "Do NOT call this for system-state questions (queue, pending items, status, capabilities) — "
+                "use query_system for those. "
                 "Pass the user's exact original message as task_text."
             ),
             "parameters": {
@@ -500,11 +506,11 @@ import time as _time
 def _extract_reply(raw: str) -> str:
     """
     Pull the human-readable reply out of whatever the model returned.
-    Handles three cases in priority order:
+    Handles cases in priority order:
       1. Valid M9 JSON with a "reply" key -> extract and return that string
-      2. Raw JSON-looking string (starts with { or [) -> strip the shell,
-         try to pull "reply"/"text"/"content"/"message", else return empty
-      3. Plain text -> return as-is
+      2. Raw JSON-looking string (starts with {) -> try fallback text keys, else empty
+      3. Plain text or markdown -> return as-is
+      4. Raw HTML (starts with <!DOCTYPE or <html) -> return a safe placeholder
     The goal: the user NEVER sees raw JSON, HTML tags, or code wrapper
     unless they explicitly asked for code.
     """
@@ -522,11 +528,20 @@ def _extract_reply(raw: str) -> str:
             # Fallback keys used by some crew outputs
             for key in ("text", "content", "message", "result", "output"):
                 if key in parsed and isinstance(parsed[key], str):
-                    return parsed[key].strip()
+                    val = parsed[key].strip()
+                    # Crew HTML artifact slipped into a text key -- don't show it
+                    if val.lower().startswith("<!doctype") or val.lower().startswith("<html"):
+                        return "The crew produced a visual artifact. Ask me to show you the result."
+                    return val
             # JSON object but no recognisable text key -- return empty rather than dumping JSON
             return ""
         except (json.JSONDecodeError, TypeError):
             pass
+
+    # Raw HTML document returned as plain text (crew bug, old /run-async path)
+    sl = stripped.lower()
+    if sl.startswith("<!doctype") or sl.startswith("<html"):
+        return "The crew produced a visual artifact. Ask me to show you the result or check the Atlas dashboard."
 
     # Not valid JSON -- plain text or markdown, return as-is
     return stripped
@@ -616,6 +631,51 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
     artifact: dict | None = None
     job_id: str | None = None
 
+    # Deterministic READ-intent pre-filter (Karpathy: don't be clever).
+    # If the user is asking about system state, call _query_system() directly
+    # and skip the LLM tool-choice round entirely. This closes the routing
+    # hole structurally — forward_to_crew is never offered for these queries.
+    _user_text = (current_user_msg or {}).get("content", "").lower().strip() if current_user_msg else ""
+    _READ_PATTERNS = (
+        "approval queue", "what's in my queue", "what is in my queue",
+        "what's pending", "what is pending", "what's queued", "what is queued",
+        "pending items", "pending approval", "pending approvals",
+        "what's waiting", "what is waiting", "anything waiting",
+        "anything pending", "anything in the queue", "items in the queue",
+        "show me the queue", "show me pending", "list pending", "list the queue",
+        "queue right now", "queue status", "system status", "system state",
+        "what jobs are running", "running jobs", "what can you do",
+        "what tasks", "show me queued", "queued items",
+    )
+    _is_read_intent = any(p in _user_text for p in _READ_PATTERNS)
+
+    if _is_read_intent:
+        logger.info(f"READ-intent pre-filter matched — calling _query_system() directly for: {_user_text[:80]}")
+        try:
+            from utils import _query_system
+            from llm_helpers import call_llm
+            system_data = _query_system()
+            synthesis_messages = full_messages + [{
+                "role": "user",
+                "content": (
+                    f"[SYSTEM DATA — use this to answer the user's question directly]\n\n"
+                    f"{system_data}"
+                ),
+            }]
+            synthesis = call_llm(synthesis_messages, model=ATLAS_CHAT_MODEL, temperature=CHAT_TEMPERATURE)
+            raw_reply = (synthesis.choices[0].message.content or "").strip()
+            reply = _extract_reply(raw_reply)
+            try:
+                from memory import save_conversation_turn
+                if current_user_msg:
+                    save_conversation_turn(session_key, "user", current_user_msg["content"][:2000])
+                save_conversation_turn(session_key, "assistant", reply)
+            except Exception:
+                pass
+            return {"reply": reply, "actions": []}
+        except Exception as pre_e:
+            logger.warning(f"READ-intent pre-filter failed, falling through to LLM tool-choice: {pre_e}")
+
     try:
         from llm_helpers import call_llm
 
@@ -636,6 +696,7 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
                 if fn_name == "query_system":
                     from utils import _query_system
                     tool_result = _query_system()
+                    logger.info("Atlas chat used query_system tool")
                 elif fn_name == "retrieve_output_file":
                     args = json.loads(tool_call.function.arguments or "{}")
                     tool_result = _retrieve_output_file(args.get("filename_hint", ""))
