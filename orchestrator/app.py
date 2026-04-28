@@ -172,6 +172,10 @@ def verify_chat_token(authorization: Optional[str] = Header(None)):
 @app.on_event("startup")
 async def startup_event():
     """Run at service startup."""
+    # M12: hard-fail if any required env var is absent or empty.
+    from startup_check import assert_required_env_vars
+    assert_required_env_vars()
+
     # Token ledger: register litellm callback BEFORE any crew or council
     # fires. Without this, llm_calls stops receiving rows after the flip.
     try:

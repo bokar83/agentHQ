@@ -282,6 +282,42 @@ That breaks down into 5 closed loops:
 
 ---
 
+### M12: Startup Contract (env var hard-fail) SHIPPED 2026-04-28
+
+**What:** `orchestrator/startup_check.py` with a single function `assert_required_env_vars()`. Reads a manifest of required env var names declared in the same file. For each var, checks it is present AND non-empty in `os.environ`. On any failure: prints the full list of missing vars to stdout and calls `sys.exit(1)` before uvicorn binds. Wired as the first call in `app.py` at startup.
+
+**Why:** The VPS .env crash pattern has caused at least two container restarts where missing vars caused `float("")` ValueError or silent Haiku fallback with no alert. A soft Telegram alert cannot fix this class of bug because: (a) the alert itself may fail if TELEGRAM_BOT_TOKEN is the missing var, (b) the container boots with broken state before the alert fires. Hard-fail is the correct fix. This also scales to every Signal Works client deployment - every new client instance gets the same contract for free.
+
+**Success criterion (verifiable):** Deploy to VPS with one required var temporarily removed from `.env`. Container must exit with code 1 and print the missing var name in docker logs. Restore var, container must boot clean.
+
+**Trigger:** Now. No gate. This is hardening against a known, repeated failure.
+
+**Scope (Karpathy-bounded):**
+
+- NEW `orchestrator/startup_check.py`: `REQUIRED_VARS` list + `assert_required_env_vars()`. Nothing else.
+- MOD `orchestrator/app.py`: one call added inside the FastAPI `lifespan` context manager (NOT at module top-level - module-level runs on import and breaks the test suite). Wire: `assert_required_env_vars()` as first statement inside `async with lifespan(app):` or equivalent startup hook.
+- NEW `orchestrator/tests/test_startup_check.py`: 3 tests (all present passes, missing var exits 1, empty string exits 1).
+- No changes to `.env`, `docker-compose.yml`, or any other file.
+
+**Required vars manifest (no-safe-default vars only):**
+`TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `OPENROUTER_API_KEY`, `NOTION_API_KEY`, `FORGE_CONTENT_DB`, `BLOTATO_API_KEY`, `CHAT_MODEL`
+
+Explicitly excluded (have code-level defaults, hard-failing on these creates new failures where none exist): `CHAT_TEMPERATURE` (default 0.3), `CHAT_SANDBOX` (default false), `ATLAS_CHAT_MODEL` (falls back to CHAT_MODEL).
+
+**What is NOT in scope:**
+
+- Telegram alert on failure (secondary signal; add later if wanted; the hard-fail is the fix)
+- Auto-restart logic
+- Dynamic manifest from a config file (YAGNI; inline list is sufficient and auditable)
+
+**Council verdict:** Sankofa + Karpathy both cleared. Executor: build this before the next VPS deploy (M11d + M9b deploy is the forcing function).
+
+**Branch:** `feat/atlas-m12-startup-contract`
+**ETA:** 30 minutes.
+**Save point:** `savepoint-pre-atlas-m12-startup-contract-YYYYMMDD` (to create before first edit)
+
+---
+
 ## Descoped Items
 
 These are explicit "do not build" decisions with reasons, so we don't relitigate.
@@ -293,6 +329,7 @@ These are explicit "do not build" decisions with reasons, so we don't relitigate
 | **Single "Mark Posted" button** (original kickoff Option A as written) | Sankofa Council 2026-04-25: forgotten-tap failure mode + no escape hatch + no outcome capture. M1 (3-button row) ships richer version in same budget. | 2026-04-25 | Never. M1 supersedes. |
 | **Phase 5 stub** (Chairman skeleton ahead of data) | Stub that does nothing for 2 weeks rots. Build when data is ready. | 2026-04-24 | M5 trigger gate hits. |
 | **Phase 6 Hunter stub** (skeleton ahead of decision) | Hunter.io paused. Writing a stub for paused work is dead code. | 2026-04-24 | M6 trigger gate hits. |
+| **Agent Task Ledger** (general-purpose resumable state for any ad-hoc task) | Premature abstraction. Every pipeline loop already has purpose-built resume state (approval\_queue, Notion Status, \_confirm\_store). A general ledger solves a hypothetical, not a demonstrated failure. Karpathy audit: FAIL on Simplicity First. Sankofa: no trigger, no verifiable success criterion. | 2026-04-28 | A specific non-pipeline ad-hoc task demonstrably fails to resume after a session break. When that happens, build a single-table solution for that task type - not a general ledger. |
 
 ---
 
@@ -1161,6 +1198,64 @@ in the weekly model review agent (first run: Sunday 2026-05-03 08:00 MT).
 2. Atlas interactive layer design spike (click post, iterate conversationally, post it)
 3. Telegram still uses `run_chat()`; web uses `run_atlas_chat()`: backend divergence remains
 4. VPS orphan archive sunset: delete `/root/_archive_20260421/` if no issues (was due 2026-04-28)
+
+---
+
+### 2026-04-28: M12 SHIPPED - Startup Contract (env var hard-fail)
+
+**What shipped:**
+
+- NEW `orchestrator/startup_check.py`: `REQUIRED_VARS` list (7 no-default vars) + `assert_required_env_vars()`. Calls `sys.exit(1)` and prints missing var names before any request is served.
+- MOD `orchestrator/app.py`: `assert_required_env_vars()` wired as first call inside `@app.on_event("startup")` handler. Fires on server start, not on import (test-suite safe).
+- NEW `orchestrator/tests/test_startup_check.py`: 3 tests - all vars present passes, missing var exits 1, empty string exits 1.
+
+**Required vars manifest:** `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `OPENROUTER_API_KEY`, `NOTION_API_KEY`, `FORGE_CONTENT_DB`, `BLOTATO_API_KEY`, `CHAT_MODEL`. Vars with code-level defaults (`CHAT_TEMPERATURE`, `CHAT_SANDBOX`, `ATLAS_CHAT_MODEL`) intentionally excluded.
+
+**Test results:** 3/3 new tests pass. Full suite: 391 pass, 3 pre-existing failures (unchanged). No regressions.
+
+**Save point:** `savepoint-pre-atlas-m12-startup-contract-20260428`
+
+**Council corrections applied before build (second pass):**
+
+- Trimmed manifest from 10 to 7 vars (removed 3 with safe defaults)
+- Wire point clarified to `@app.on_event("startup")` not module top-level
+
+**VPS deploy:** needs `docker compose up -d --build` on next deploy window. No new env vars required - this only checks vars that must already be present.
+
+---
+
+### 2026-04-28: Agent-S competitive analysis - M12 plan created, councils run
+
+**What happened:** Competitive analysis of Agent-S (agent-s.app) - a hosted personal AI agent by Matt Shumer (AI Magic LLC), invite-only alpha. Core pitch: each agent gets a managed persistent computer, 1,000+ integrations, learns the user's patterns over time. Targeting same SMB owner-operator as Signal Works.
+
+**Sankofa Council + Karpathy audit ran on 5 proposed enhancements.** Verdicts:
+
+| Proposal | Verdict | Disposition |
+|---|---|---|
+| Agent Task Ledger (general resumable state) | HOLD - premature abstraction, no demonstrated failure, Karpathy FAIL on Simplicity First | Added to Descoped with trigger condition |
+| Env var hard-fail at startup | SHIP - known repeated failure, clear success criterion | M12 milestone written |
+| "Learns your patterns" narrative | NOT a roadmap item - positioning artifact | Moved to docs/signal-works/pitch-notes.md |
+| Signal Works "gets its own brain" positioning | NOT a roadmap item - pitch copy | Moved to docs/signal-works/pitch-notes.md |
+| Agent Task Ledger deferred post-M9 | MOOT - M9 already shipped | Removed |
+
+**What was added to this roadmap:**
+
+- M12 milestone: `orchestrator/startup_check.py`, `assert_required_env_vars()`, hard `sys.exit(1)` before uvicorn binds. 30-min build. Branch: `feat/atlas-m12-startup-contract`.
+- Descoped table: Agent Task Ledger with trigger condition (re-open on first demonstrated ad-hoc resume failure).
+
+**What was NOT added (intentionally):**
+
+- Signal Works positioning - lives at `docs/signal-works/pitch-notes.md`, not here.
+- Any feature copied from Agent-S without a demonstrated gap in agentsHQ.
+
+**Key finding:** Agent-S validated the Signal Works thesis. Their moat is integration breadth; ours is specificity (content pipeline + outreach loop + client voice). The race is getting Signal Works to first paying client before Agent-S exits alpha.
+
+**Next session:**
+
+1. Build M12 (30 min) before the next VPS deploy
+2. M5 (Chairman / L5 Learning): gate opens 2026-05-08
+3. M10 (Topic Scout Phase 2): gate 2026-05-12 (two Monday runs with 5+ picks needed)
+4. Signal Works first client: use pitch notes at docs/signal-works/pitch-notes.md
 
 ---
 
