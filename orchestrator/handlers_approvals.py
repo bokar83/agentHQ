@@ -275,6 +275,44 @@ def handle_callback_query(update: dict) -> bool:
         except Exception as e:
             logger.warning(f"callback_query enhance_variation handling error: {e}")
 
+    elif cb_data.startswith("scout_approve:"):
+        # scout_approve:<notion_page_id>  -- flip Content Board Status Draft -> Ready
+        try:
+            notion_page_id = cb_data.split(":", 1)[1]
+            from notifier import answer_callback_query, send_message
+            notion = _open_notion()
+            notion.update_page(notion_page_id, properties={
+                "Status": {"select": {"name": "Ready"}}
+            })
+            answer_callback_query(cb_id, "Approved -- Status set to Ready.")
+            send_message(cb_chat_id, f"Content Scout: approved. Notion page {notion_page_id[:8]}... is now Ready.")
+        except Exception as e:
+            logger.warning(f"callback_query scout_approve handling error: {e}")
+            try:
+                from notifier import answer_callback_query
+                answer_callback_query(cb_id, f"Error: {e}")
+            except Exception:
+                pass
+
+    elif cb_data.startswith("scout_reject:"):
+        # scout_reject:<notion_page_id>  -- flip Content Board Status Draft -> Archived
+        try:
+            notion_page_id = cb_data.split(":", 1)[1]
+            from notifier import answer_callback_query, send_message
+            notion = _open_notion()
+            notion.update_page(notion_page_id, properties={
+                "Status": {"select": {"name": "Archived"}}
+            })
+            answer_callback_query(cb_id, "Rejected -- Status set to Archived.")
+            send_message(cb_chat_id, f"Content Scout: rejected. Notion page {notion_page_id[:8]}... archived.")
+        except Exception as e:
+            logger.warning(f"callback_query scout_reject handling error: {e}")
+            try:
+                from notifier import answer_callback_query
+                answer_callback_query(cb_id, f"Error: {e}")
+            except Exception:
+                pass
+
     return True
 
 
