@@ -41,7 +41,7 @@ VIDEO_PLAY_URLS = {
     ),
     "hvac": os.environ.get(
         "SIGNAL_WORKS_VIDEO_HVAC",
-        "https://signal-works-demo-roofing.vercel.app/play.html",  # reuse roofing until HVAC site deployed
+        "https://signal-works-demo-hvac.vercel.app/play.html",
     ),
 }
 DEFAULT_VIDEO_URL = VIDEO_PLAY_URLS["roofer"]
