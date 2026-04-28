@@ -222,10 +222,11 @@ _TOOLS = [
             "name": "forward_to_crew",
             "description": (
                 "Forward a task to the agentsHQ crew for execution. "
-                "Call this ONLY for real production work: writing content, rewriting, researching external topics, "
+                "Call this for: writing content, rewriting, researching external topics, "
                 "building websites or apps, voice matching, post drafting, email drafting, "
-                "lead generation, or capturing ideas. "
-                "Do NOT call this for system-state questions (queue, pending items, status, capabilities) — "
+                "lead generation, capturing ideas, AND fetching or showing posts from the "
+                "Notion Content Board (past due, queued, ready, draft, by status, by platform, etc.). "
+                "Do NOT call this for approval queue, system status, spend, heartbeats, or capabilities — "
                 "use query_system for those. "
                 "Pass the user's exact original message as task_text."
             ),
