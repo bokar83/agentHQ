@@ -1132,3 +1132,34 @@ in the weekly model review agent (first run: Sunday 2026-05-03 08:00 MT).
 3. Unify /chat and /atlas routing pipelines so both surfaces behave identically end-to-end.
 
 ---
+
+### 2026-04-28: Content Intelligence Scout Phase 1 SHIPPED
+
+**What shipped:**
+
+- `orchestrator/studio_trend_scout.py` (major rewrite): Monday-only gate (weekday != 0 returns immediately), 6 Catalyst Works niches via Serper news search (`_serper_search()`: direct httpx POST to `google.serper.dev/news`, no CrewAI abstraction), 3 Studio niches via YouTube unchanged. Single Haiku classifier call per pick (`_classify_pick()`): returns fit 1-5, medium, first_line, unique_add, destination. Picks with fit <= FIT_THRESHOLD (3) dropped silently. Two separate Notion write functions: `_write_to_content_board()` writes to Content Board as Status=Draft, `_write_to_studio_pipeline()` writes to Studio Pipeline as Status=scouted. Routing logic in `studio_trend_scout_tick()`, not inside write functions. Per-pick Telegram messages with Approve/Reject inline buttons via `_send_pick_with_buttons()`. Summary message sent after all picks via `_send_summary()`.
+- `orchestrator/studio_trend_seeds.default.json` (NEW): 9 niche seeds: 6 CW (serper source, Content Board dest): ai-governance-regulation, ai-adoption-what-works, ai-tools-smb, hidden-costs-margin-erosion, workforce-change-management, operational-systems-process; 3 Studio (youtube source, Studio Pipeline dest): african-folktales, ai-displacement-first-gen, first-gen-money.
+- `orchestrator/handlers_approvals.py`: `scout_approve:<page_id>` callback flips Notion Status from Draft to Ready. `scout_reject:<page_id>` callback flips to Archived. Both use `_open_notion()` (existing pattern). Non-fatal error handling with `answer_callback_query` on failure.
+- `orchestrator/tests/test_studio_trend_scout.py` (full rewrite): 13 tests, all passing. Old tests for removed functions (`_format_brief`, `_send_brief`) deleted. 10 spec tests: Monday gate (skip/fire), `_serper_search` (results/degrade), Haiku classifier (low/high fit), routing (Content Board/Studio Pipeline), approve/reject callbacks. 3 regression guards: seeds fallback, YouTube key absent, idempotency set.
+- `docs/superpowers/specs/2026-04-28-content-scout-phase1-design.md`: approved spec (post-Sankofa Council + code review).
+
+**Deploy:** commit `3b1f4b3`, VPS at `3b1f4b3`, 8/8 health probes passing.
+
+**Design decisions locked:**
+
+- Haiku classifier replaces full Sankofa Council per pick (correct tool for triage: Council is for decisions, not 100-pick loops)
+- Serper direct HTTP (not SerperDevTool: CrewAI abstraction unsafe outside crew context)
+- Monday gate is internal weekday check (not scheduler change: same pattern as model_review_agent.py)
+- `_open_notion()` reused in handlers_approvals for scout callbacks (no new Notion client pattern)
+- Content Board Status field is `select` type (not `status`): confirmed from schema memory
+
+**Phase 2 gate (2026-05-12):** Two Monday runs must produce 5+ picks with fit >= 3. Phase 2 adds niches 7-10, Content Board dedup check, leGriot auto-draft on approval.
+
+**Next session:**
+
+1. M5 (Chairman / L5 Learning): gate opens 2026-05-08
+2. Atlas interactive layer design spike (click post, iterate conversationally, post it)
+3. Telegram still uses `run_chat()`; web uses `run_atlas_chat()`: backend divergence remains
+4. VPS orphan archive sunset: delete `/root/_archive_20260421/` if no issues (was due 2026-04-28)
+
+---
