@@ -1116,6 +1116,45 @@ def build_newsletter_crew(user_request: str) -> Crew:
         context=[task_write]
     )
 
+    # Conditionally add beehiiv draft task when env vars are configured.
+    # Non-fatal: if env vars are absent or the API call fails, the task
+    # logs and returns None. The newsletter is already saved to Drive
+    # by the write task regardless of beehiiv availability.
+    _beehiiv_enabled = bool(
+        os.environ.get("BEEHIIV_API_KEY", "").strip()
+        and os.environ.get("BEEHIIV_PUBLICATION_ID", "").strip()
+    )
+
+    if _beehiiv_enabled:
+        task_beehiiv = Task(
+            description=f"""
+            The newsletter has been written and QA'd. Now create a beehiiv draft.
+
+            From the final newsletter in the QA output, extract:
+            - title: the Subject line
+            - content: wrap the full newsletter body in a minimal HTML structure
+              (<html><body><p> paragraphs with line breaks </p></body></html>)
+            - subtitle: the Preview text line (if present)
+
+            Call beehiiv_create_draft with JSON:
+            {{"title": "<subject line>", "content": "<html body>", "subtitle": "<preview text>"}}
+
+            If the tool returns a post URL, report it. If it returns None or an error,
+            log it and report that beehiiv was skipped -- do not fail the crew.
+
+            Original request: {user_request}
+            """,
+            expected_output="beehiiv post URL or confirmation that the step was skipped",
+            agent=griot,
+            context=[task_qa]
+        )
+        return Crew(
+            agents=[planner, griot, qa],
+            tasks=[task_plan, task_write, task_qa, task_beehiiv],
+            process=Process.sequential,
+            verbose=False
+        )
+
     return Crew(
         agents=[planner, griot, qa],
         tasks=[task_plan, task_write, task_qa],

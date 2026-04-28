@@ -2188,6 +2188,41 @@ class SpawnJobTool(BaseTool):
         return json.dumps({"job_id": job_id, "status": "queued"})
 
 
+class BeehiivCreateDraftTool(BaseTool):
+    """Create a draft newsletter post in beehiiv via POST /v2/publications/{pub_id}/posts.
+
+    Non-fatal: returns None (and logs) on any failure so the newsletter
+    still saves to Drive even if beehiiv is unavailable.
+
+    Input format JSON:
+      {"title": "Subject line", "content": "<html>...", "subtitle": "optional preview"}
+    Optional: subtitle.
+    """
+    name: str = "beehiiv_create_draft"
+    description: str = (
+        "Create a draft post in beehiiv. "
+        'Input JSON: {"title": "Subject line", "content": "<html>...", "subtitle": "optional"}. '
+        "Requires BEEHIIV_API_KEY and BEEHIIV_PUBLICATION_ID env vars. "
+        "Returns the post URL or ID on success, or None if env vars are missing or the call fails."
+    )
+
+    def _run(self, _input_data: str = "") -> str:
+        try:
+            from beehiiv import create_draft
+            payload = json.loads(_input_data) if _input_data else {}
+            title = payload.get("title", "").strip()
+            content = payload.get("content", "").strip()
+            subtitle = payload.get("subtitle")
+            if not title or not content:
+                return "beehiiv_create_draft: missing required field (title, content)"
+            result = create_draft(title=title, content=content, subtitle=subtitle)
+            if result is None:
+                return "beehiiv_create_draft: skipped (env vars missing) or failed (see logs)"
+            return json.dumps({"post_url": result})
+        except Exception as e:
+            return f"beehiiv_create_draft failed: {e}"
+
+
 RESEARCH_TOOLS = [search_tool, file_reader, QueryMemoryTool(), QueryAudienceEngineTool()]
 MEMORY_TOOLS = [QueryMemoryTool(), SaveLearningTool()]
 SCRAPING_TOOLS = [FirecrawlScrapeTool(), FirecrawlCrawlTool(), FirecrawlSearchTool()]
@@ -2275,7 +2310,7 @@ MEDIA_TOOLS = [
     KieCheckCreditsTool(),
 ]
 VALIDATION_TOOLS = [ValidateOutputTool()]
-WRITING_TOOLS = [file_writer, SaveOutputTool(), voice_polisher_tool]
+WRITING_TOOLS = [file_writer, SaveOutputTool(), voice_polisher_tool, BeehiivCreateDraftTool()]
 CODE_TOOLS = [t for t in [code_interpreter, file_writer, file_reader, SaveOutputTool(), CLIHubSearchTool(), launch_vercel_tool] if t is not None]
 ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool(), GitHubRepoTool(), GitHubIssueTool(), GitHubFileTool(), NotionSearchTool(), NotionPageTool(), launch_vercel_tool, SpawnJobTool()] + VERCEL_TOOLS + NOTION_STYLING_TOOLS + FORGE_TOOLS + GWS_TOOLS
 HUNTER_TOOLS = [prospecting_tool, crm_add_tool, crm_log_tool, crm_reveal_tool, enrich_leads_tool, scoreboard_tool, QueryMemoryTool(), NotionPageTool(), forge_pipeline_tool, forge_log_tool]
