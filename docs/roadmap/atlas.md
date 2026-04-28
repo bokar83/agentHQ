@@ -1163,3 +1163,69 @@ in the weekly model review agent (first run: Sunday 2026-05-03 08:00 MT).
 4. VPS orphan archive sunset: delete `/root/_archive_20260421/` if no issues (was due 2026-04-28)
 
 ---
+
+### 2026-04-27: Repo Architecture Day - Platform-With-Satellites Rule Locked
+
+**Session type:** Architecture planning + Priority 1 execution. No new features. No VPS changes.
+
+**What happened:**
+
+This session was originally scoped as "continue the agentsHQ structure cleanup scheduled 2026-04-25." It grew into a full architecture review covering token efficiency, LLM navigability, client scalability, and saleability. Three tools ran in sequence: Sankofa Council (3 passes), Karpathy Principles audit, and deep code impact analysis via subagent.
+
+**Key decisions made and locked:**
+
+1. **Platform-with-satellites architecture confirmed.** agentsHQ is the AI operations platform. Anything with its own URL, customer, or revenue stream gets its own GitHub repo. This is now written into `AGENTS.md` (root) and `docs/reference/repo-structure.md` as a permanent rule.
+
+2. **Dashboards4Sale is a satellite.** Will get its own repo (`bokar83/dashboards4sale`). Submodule removed from agentsHQ when that repo is created. Deferred - not blocking.
+
+3. **signal_works/ stays at root for now.** Has active Python imports in orchestrator. Future satellite once import boundaries are clean.
+
+4. **Token efficiency finding:** The skills/ folder is INVISIBLE to the Python runtime. Zero token cost at runtime. The real fat points are: chat history 100-turn limit in `handlers_chat.py` (fat point #1), styleguide injection in `design_context.py` (fat point #2), history duplication across crew agents in `engine.py` (fat point #3). These are Python code fixes, not folder fixes. Tracked for a future session.
+
+5. **Karpathy Principles:** Four principles from AGENT_SOP.md formalized into a standalone `/karpathy` skill (`skills/karpathy/SKILL.md`). Also baked as Step 5 into `superpowers:verification-before-completion` - fires automatically before every ship. Both files live in `skills/` and `~/.claude/skills/`.
+
+6. **Client work governance rule:** New clients go in `workspace/clients/[slug]/` with `AGENTS.md` + `BRIEF.md` from `docs/reference/client-template/`. No orchestrator code changes for a new client. Catalyst Works own brand work lives in `workspace/catalyst-works/`.
+
+**What was built (Priority 1 - all additive, zero file moves, zero VPS impact):**
+
+| File created | Purpose |
+| --- | --- |
+| `orchestrator/AGENTS.md` | Context scoping table for LLMs - which files to load per task type |
+| `skills/AGENTS.md` | Skill creation rules |
+| `skills/_index.md` | 71-skill machine-readable routing table (replaces reading 71 SKILL.md files) |
+| `docs/AGENTS.md` | SOP navigation |
+| `workspace/AGENTS.md` | Scratch space rules + structure |
+| `workspace/internal/AGENTS.md` | Platform dev scratch |
+| `workspace/clients/AGENTS.md` | Client onboarding instructions |
+| `workspace/catalyst-works/AGENTS.md` | CW brand work context |
+| `n8n/AGENTS.md` | n8n rules (no docker touch) |
+| `signal_works/AGENTS.md` | Pipeline context + future satellite note |
+| `scripts/AGENTS.md` | Pre-commit hook path warning |
+| `docs/reference/client-template/AGENTS.md` | Template for new client folders |
+| `docs/reference/client-template/BRIEF.md` | Template for new client briefs |
+| `docs/reference/repo-structure.md` | Full folder taxonomy with owner/routing/status per folder |
+| `skills/karpathy/SKILL.md` | Karpathy 4-principle audit skill |
+| Root `AGENTS.md` updated | Platform-with-satellites rule + workspace structure + client governance |
+
+**What was NOT done (intentionally deferred):**
+
+- Archive moves (remote-access-auditor, codex_ssh, sandbox, scratch, tmp) - weekend task, needs savepoint tag first
+- thepopebot/chat-ui/ -> ui/atlas/ - needs coordinated GitHub Actions + docker-compose update, its own window
+- n8n-workflows/ merge into n8n/ - weekend
+- Dashboards4Sale repo creation - separate task
+- Token efficiency Python fixes (chat history limit, styleguide caching) - separate task
+- zzzArchive/ -> archive/ rename - weekend
+
+**VPS impact of this session:** ZERO. All changes are additive documentation files and new skills. No Python code touched. No docker-compose changed. No VPS coordination needed.
+
+**Next session priorities (in order):**
+
+1. Weekend archive cleanup: savepoint tag, then archive dead folders (safe moves confirmed by code scan)
+2. Token efficiency: change `handlers_chat.py` limit from 100 to 20, cache `design_context.py` styleguide reads
+3. thepopebot/chat-ui/ -> ui/atlas/: coordinate GitHub Actions + docker-compose + VPS in one window
+4. Dashboards4Sale: create own repo, remove submodule
+5. M5 (Chairman / L5 Learning): gate opens 2026-05-08
+
+**State at session end:** local uncommitted changes. Committing and pushing to GitHub now (this session entry is part of that commit). VPS does NOT need a pull - no runtime code changed.
+
+---
