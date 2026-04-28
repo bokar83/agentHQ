@@ -62,6 +62,11 @@ _INDUSTRY_PATTERNS = [
     "%consult%", "%legal%", "%account%", "%engineer%", "%health%",
     "%market%", "%agenc%", "%logistic%", "%trade%", "%service%",
     "%hvac%", "%roofing%", "%plumbing%", "%electrical%", "%construction%",
+    # Apollo-sourced industries (pre-qualified by ICP, include all)
+    "%research%", "%staffing%", "%recruit%", "%insurance%", "%financial%",
+    "%medical%", "%dental%", "%publishing%", "%retail%", "%real estate%",
+    "%fitness%", "%beauty%", "%restaurant%", "%food%", "%beverage%",
+    "%wellness%", "%education%", "%technology%", "%software%", "%media%",
 ]
 
 
@@ -81,7 +86,7 @@ def _get_eligible_leads(limit: int) -> list:
         FROM leads
         WHERE email IS NOT NULL
           AND email != ''
-          AND status = 'new'
+          AND LOWER(status) = 'new'
           AND email_drafted_at IS NULL
           AND last_contacted_at IS NULL
           AND ({title_clause})
@@ -102,9 +107,12 @@ def _get_eligible_leads(limit: int) -> list:
 
 def _get_access_token() -> str:
     import httpx
-    creds_path = os.environ.get(
-        "GOOGLE_OAUTH_CREDENTIALS_JSON_CW",
-        "/app/secrets/gws-oauth-credentials-cw.json"
+    from pathlib import Path
+    env_path = os.environ.get("GOOGLE_OAUTH_CREDENTIALS_JSON_CW", "")
+    local_path = Path(__file__).resolve().parents[2] / "secrets" / "gws-oauth-credentials-cw.json"
+    docker_path = "/app/secrets/gws-oauth-credentials-cw.json"
+    creds_path = env_path if (env_path and Path(env_path).exists()) else (
+        str(local_path) if local_path.exists() else docker_path
     )
     with open(creds_path) as f:
         creds = json.load(f)
@@ -242,7 +250,7 @@ def run_outreach(contact_all: bool = False) -> dict:
     if not leads:
         conn = _get_conn()
         cur = conn.cursor()
-        cur.execute("SELECT COUNT(*) as n FROM leads WHERE status = 'new' AND (email IS NULL OR email = '')")
+        cur.execute("SELECT COUNT(*) as n FROM leads WHERE LOWER(status) = 'new' AND (email IS NULL OR email = '')")
         no_email_count = cur.fetchone()["n"]
         cur.execute("SELECT COUNT(*) as n FROM leads WHERE email_drafted_at IS NOT NULL")
         drafted_count = cur.fetchone()["n"]

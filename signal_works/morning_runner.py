@@ -5,9 +5,10 @@ Runs at 07:00 MT via Windows Task Scheduler (see register_task_admin.ps1).
 
 Sequence:
   1. Bounce scan (2-day lookback on boubacar@catalystworks.consulting)
-  2. Signal Works topup -- harvest until 10 email leads exist
+  2. Signal Works topup -- harvest until 10 email leads exist (Serper/Firecrawl)
   3. Signal Works drafts -- 10 emails to boubacar@catalystworks.consulting Drafts
-  4. Catalyst Works outreach -- 10 CRM lead drafts to same Drafts folder
+  4. Catalyst Works topup -- harvest via Apollo.io (credit-efficient ICP scoring)
+  5. Catalyst Works outreach -- 10 CRM lead drafts to same Drafts folder
 
 Total: up to 20 drafts per day in boubacar@catalystworks.consulting.
 You review, personalise if needed, hit Send. That's it.
@@ -77,8 +78,17 @@ def main():
     except Exception as e:
         logger.error(f"  Signal Works drafts failed: {e}")
 
-    # ── Step 4: Catalyst Works -- cold outreach drafts ────────────
-    logger.info("STEP 4: Catalyst Works cold outreach drafts (10 leads)...")
+    # ── Step 4: Catalyst Works -- Apollo lead topup ───────────────
+    logger.info("STEP 4: Catalyst Works lead topup via Apollo (target: 10 leads)...")
+    try:
+        from signal_works.topup_cw_leads import topup_cw_leads
+        cw_leads = topup_cw_leads(minimum=10)
+        logger.info(f"  Done. {cw_leads} CW email leads ready.")
+    except Exception as e:
+        logger.error(f"  CW Apollo topup failed: {e}")
+
+    # ── Step 5: Catalyst Works -- cold outreach drafts ────────────
+    logger.info("STEP 5: Catalyst Works cold outreach drafts (10 leads)...")
     try:
         from signal_works.outreach_runner import run as cw_send
         cw_drafted = cw_send()

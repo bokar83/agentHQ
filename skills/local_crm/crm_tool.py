@@ -337,7 +337,7 @@ def get_uncontacted_leads(limit: int = 50) -> list:
             SELECT id, name, company, title, location, email, phone,
                    linkedin_url, industry, source, status, created_at
             FROM leads
-            WHERE status = 'new' AND last_contacted_at IS NULL
+            WHERE LOWER(status) = 'new' AND last_contacted_at IS NULL
             ORDER BY priority ASC NULLS LAST, created_at ASC
             LIMIT %s
         """, (limit,))
@@ -371,7 +371,7 @@ def mark_outreach_sent() -> dict:
             FROM leads
             WHERE email_drafted_at IS NOT NULL
               AND last_contacted_at IS NULL
-              AND status = 'new'
+              AND LOWER(status) = 'new'
             ORDER BY email_drafted_at ASC
         """)
         rows = [dict(r) for r in cur.fetchall()]
