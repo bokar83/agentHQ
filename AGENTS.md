@@ -1,7 +1,7 @@
-# agentsHQ — Agent System Identity & Operating Rules
+# agentsHQ : Agent System Identity & Operating Rules
 
 **Owner:** Boubacar Barry  
-**System:** Catalyst Works Consulting — AI-Augmented Practice  
+**System:** Catalyst Works Consulting : AI-Augmented Practice  
 **Version:** 2.0  
 **Last Updated:** 2026-03-20
 
@@ -9,7 +9,7 @@
 
 ## Who We Are
 
-agentsHQ is a self-hosted, self-expanding multi-agent intelligence system running on a private VPS. It is not a chatbot. It is not an automation tool. It is an autonomous operating system for knowledge work — capable of building, researching, writing, coding, consulting, and teaching itself new skills.
+agentsHQ is a self-hosted, self-expanding multi-agent intelligence system running on a private VPS. It is not a chatbot. It is not an automation tool. It is an autonomous operating system for knowledge work : capable of building, researching, writing, coding, consulting, and teaching itself new skills.
 
 Every agent in this system operates under a shared identity: we are **Catalyst Works agents**. We work for Boubacar. We deliver real outputs. We do not simulate work.
 
@@ -17,13 +17,13 @@ Every agent in this system operates under a shared identity: we are **Catalyst W
 
 ## Core Operating Principles
 
-1. **Agentic, not automatic** — Agents reason, decide, and act. They do not follow rigid scripts.
-2. **Output-first** — Every task ends with a real deliverable. No summaries of summaries.
-3. **Self-expanding** — When no agent fits a task, the system proposes a new one. When no skill fits, it builds one.
-4. **Self-evolving** — The system uses **OpenSpace** to analyze task performance and automatically fix broken skills or optimize prompts in the background.
-5. **Memory-aware** — Agents use Qdrant vector memory to learn from past tasks and improve over time.
-6. **Honest about limits** — Agents escalate when uncertain rather than hallucinate.
-7. **Secure by default** — No agent exposes credentials, internal paths, or system architecture externally.
+1. **Agentic, not automatic** : Agents reason, decide, and act. They do not follow rigid scripts.
+2. **Output-first** : Every task ends with a real deliverable. No summaries of summaries.
+3. **Self-expanding** : When no agent fits a task, the system proposes a new one. When no skill fits, it builds one.
+4. **Self-evolving** : The system uses **OpenSpace** to analyze task performance and automatically fix broken skills or optimize prompts in the background.
+5. **Memory-aware** : Agents use Qdrant vector memory to learn from past tasks and improve over time.
+6. **Honest about limits** : Agents escalate when uncertain rather than hallucinate.
+7. **Secure by default** : No agent exposes credentials, internal paths, or system architecture externally.
 
 ---
 
@@ -65,7 +65,7 @@ Telegram / HTTP / n8n
 
 A multi-voice strategic review layer that activates on `consulting_deliverable` tasks and any task flagged `high_stakes: true`.
 
-**Named after:** The West African Akan concept — look backward to move forward wisely.
+**Named after:** The West African Akan concept : look backward to move forward wisely.
 
 **Five Voices:**
 
@@ -84,11 +84,11 @@ A multi-voice strategic review layer that activates on `consulting_deliverable` 
 
 
 **Outputs:**
-- `outputs/council/TIMESTAMP.json` — full run log
-- `outputs/council/TIMESTAMP.html` — shareable client report
-- `council_runs` PostgreSQL table — one row per run
+- `outputs/council/TIMESTAMP.json` : full run log
+- `outputs/council/TIMESTAMP.html` : shareable client report
+- `council_runs` PostgreSQL table : one row per run
 
-**Trigger from CLI:** "council this [question]" — see `skills/council/council.md`
+**Trigger from CLI:** "council this [question]" : see `skills/council/council.md`
 **Trigger from Telegram:** Any `consulting_deliverable` task automatically uses the Council.
 **Force trigger:** Include "council this", "high stakes", or "sankofa" in any request.
 
@@ -144,7 +144,7 @@ agentsHQ/
 │       ├── AGENT.md           ← Agent soul file (role, goal, backstory, tools)
 │       └── agent.py           ← Agent definition (if standalone)
 ├── memory/
-│   └── (Qdrant data — do not edit manually)
+│   └── (Qdrant data : do not edit manually)
 ├── outputs/
 │   └── (all agent-generated files)
 ├── logs/
@@ -172,7 +172,7 @@ This is how the system teaches itself.
 
 | Skill | Purpose | Status |
 | :--- | :--- | :--- |
-| hyperframes | Video production -- generates Hyperframes HTML compositions for MP4/WebM rendering via headless Chrome + FFmpeg. Sibling to website_build, not an extension of it. | Phase 1 (phase-gated, inactive in Phase 0) |
+| hyperframes | Video production - generates Hyperframes HTML compositions for MP4/WebM rendering via headless Chrome + FFmpeg. Sibling to website_build, not an extension of it. | Phase 1 (phase-gated, inactive in Phase 0) |
 
 ## Adding New Skills
 
@@ -196,8 +196,8 @@ The system also evolves existing skills automatically. After each background job
 
 All tasks are stored in two places:
 
-- **Qdrant** (vector DB) — semantic memory for similarity search across past tasks
-- **PostgreSQL** — structured archive of every execution (input, output, agent, timing, status)
+- **Qdrant** (vector DB) : semantic memory for similarity search across past tasks
+- **PostgreSQL** : structured archive of every execution (input, output, agent, timing, status)
 
 Agents query memory at the start of each task to surface relevant past work.
 
@@ -214,9 +214,64 @@ If any agent is uncertain, blocked, or encounters an unknown task type:
 
 ---
 
+## Repository Architecture: Platform With Satellites
+
+**agentsHQ is the AI operations platform. It is not a monorepo.**
+
+### The Rule (agents follow this without asking)
+
+> If the thing being built has its own URL, its own customer, or its own revenue stream - it gets its own GitHub repo.
+> If it is infrastructure, tooling, or an AI capability that powers agentsHQ - it lives here.
+
+### What lives IN agentsHQ
+
+- `orchestrator/` - the Python runtime brain
+- `skills/` - all Claude Code skills (canonical location)
+- `ui/` - platform UI (Atlas chat, dashboards)
+- `docs/` - platform documentation, roadmaps, SOPs
+- `scripts/` - operational scripts
+- `n8n/` - automation workflows
+- `workspace/` - working scratch space (internal + clients)
+- `data/`, `secrets/`, `logs/`, `agent_outputs/` - runtime artifacts
+
+### What gets its own repo (satellites)
+
+- Any product Boubacar owns and sells (Dashboards4Sale, future SaaS tools)
+- Any client-facing deployment with its own domain
+- Any codebase that could be handed to someone else as a standalone product
+
+Satellites are referenced in `docs/roadmap/` and via skill triggers. Their code never lives inside agentsHQ.
+
+### Workspace structure for client work
+
+```text
+workspace/
+├── internal/          - agentsHQ platform development work
+├── clients/           - one subfolder per client engagement
+│   └── [client-slug]/
+│       ├── AGENTS.md  - client context for LLMs
+│       ├── BRIEF.md   - who they are, what they need
+│       ├── engagements/
+│       └── deliverables/
+└── catalyst-works/    - Boubacar's own brand work
+```
+
+### When a new client is added
+
+1. Create `workspace/clients/[client-slug]/`
+2. Copy `AGENTS.md` and `BRIEF.md` from `docs/reference/client-template/`
+3. Fill in BRIEF.md (name, industry, contact, goal, constraint)
+4. Create `engagements/` and `deliverables/` subfolders
+5. Run `engagement-ops` skill to start first engagement
+
+No other files or folders need to change. No orchestrator code changes for a new client.
+
+---
+
 ## What This System Is NOT
 
 - Not a customer-facing chatbot
 - Not a public API
 - Not a replacement for human judgment on high-stakes decisions
 - Not connected to external services without explicit .env configuration
+- Not a monorepo - products with their own deployment live in their own repos
