@@ -1,0 +1,101 @@
+{
+  "ai-governance-regulation": {
+    "channel": "Catalyst Works",
+    "source": "serper",
+    "destination": "Content Board",
+    "serper_search_terms": [
+      "EU AI Act enforcement 2026",
+      "AI regulation business compliance",
+      "state AI laws SMB impact",
+      "AI governance framework companies"
+    ]
+  },
+  "ai-adoption-what-works": {
+    "channel": "Catalyst Works",
+    "source": "serper",
+    "destination": "Content Board",
+    "serper_search_terms": [
+      "AI ROI enterprise failure 2026",
+      "AI project success case study SMB",
+      "generative AI disappointment business",
+      "AI adoption what actually works"
+    ]
+  },
+  "ai-tools-smb": {
+    "channel": "Catalyst Works",
+    "source": "serper",
+    "destination": "Content Board",
+    "serper_search_terms": [
+      "AI tools small business 2026",
+      "affordable AI tools SMB owner",
+      "AI automation small business results",
+      "ChatGPT small business use case"
+    ]
+  },
+  "hidden-costs-margin-erosion": {
+    "channel": "Catalyst Works",
+    "source": "serper",
+    "destination": "Content Board",
+    "serper_search_terms": [
+      "AI hidden costs implementation business",
+      "profit margin erosion operational costs",
+      "business cost creep AI tools",
+      "hidden factory operational waste"
+    ]
+  },
+  "workforce-change-management": {
+    "channel": "Catalyst Works",
+    "source": "serper",
+    "destination": "Content Board",
+    "serper_search_terms": [
+      "AI workforce transition management 2026",
+      "managing team through AI change",
+      "employee resistance AI adoption",
+      "AI layoffs workforce strategy business"
+    ]
+  },
+  "operational-systems-process": {
+    "channel": "Catalyst Works",
+    "source": "serper",
+    "destination": "Content Board",
+    "serper_search_terms": [
+      "business process failure before AI",
+      "operational system broken AI reveals",
+      "process improvement before automation",
+      "business systems scaling problems"
+    ]
+  },
+  "african-folktales": {
+    "channel": "Under the Baobab",
+    "source": "youtube",
+    "destination": "Studio Pipeline",
+    "youtube_seed_search_terms": [
+      "african folktales kids animation",
+      "african bedtime story children",
+      "african children animated story",
+      "anansi spider story animation"
+    ]
+  },
+  "ai-displacement-first-gen": {
+    "channel": "AI Catalyst",
+    "source": "youtube",
+    "destination": "Studio Pipeline",
+    "youtube_seed_search_terms": [
+      "AI taking jobs what to do",
+      "first generation wealth AI era",
+      "AI proof your career 2026",
+      "immigrant family money AI economy"
+    ]
+  },
+  "first-gen-money": {
+    "channel": "First Generation Money",
+    "source": "youtube",
+    "destination": "Studio Pipeline",
+    "youtube_seed_search_terms": [
+      "first generation wealth building",
+      "no inheritance build wealth",
+      "immigrant entrepreneur money mindset",
+      "first gen money advice 2026"
+    ]
+  }
+}
