@@ -195,6 +195,14 @@ COUNCIL_MODEL_REGISTRY = {
         "output_per_mtok": 1.50,
         "notes": "European training distribution. Default Executor voice.",
     },
+    # ── Moonshot ──────────────────────────────────────────────
+    "moonshotai/kimi-k2-0905": {
+        "capabilities": ["deep_reasoning", "long_context", "fresh_perspective"],
+        "cost_tier": "low",
+        "input_per_mtok": 0.40,
+        "output_per_mtok": 2.00,
+        "notes": "Kimi K2 MoE. 262K context. Near-Sonnet reasoning at low cost. Added 2026-04-27.",
+    },
     # ── Qwen ──────────────────────────────────────────────────
     "qwen/qwen3-235b-a22b-2507": {
         "capabilities": ["deep_reasoning", "cost_efficient", "fresh_perspective"],
