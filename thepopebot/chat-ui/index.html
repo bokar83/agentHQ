@@ -504,10 +504,14 @@
     const typing = appendTyping();
 
     try {
-      const jobId = await postTask(text || 'Please review and summarize the attached file.', fileId);
-      const result = await pollStatus(jobId);
+      const r = await postTask(text || 'Please review and summarize the attached file.', fileId);
       typing.remove();
-      appendMessage('agent', result);
+      appendMessage('agent', r.reply || '(no response)');
+      // If the crew returned a job_id, poll for the crew result and append it
+      if (r.job_id) {
+        appendMessage('agent', 'Running\u2026 I will update you when done.');
+        pollJob(r.job_id);
+      }
     } catch (ex) {
       typing.remove();
       if (ex.message === 'TOKEN_EXPIRED') {
@@ -524,39 +528,38 @@
     }
   }
 
+  // Send through /atlas/chat -- same handler as the Atlas panel
   async function postTask(text, fileId) {
-    const body = { task: text, session_key: SESSION_KEY, source: 'browser' };
-    if (fileId) body.file_id = fileId;
-    const res = await fetch(ORC_BASE + '/run-async', {
+    var userMsg = { role: 'user', content: text };
+    if (fileId) userMsg.content = '[Attached file: ' + fileId + ']\n' + text;
+    const res = await fetch(ORC_BASE + '/atlas/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + _token,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ messages: [userMsg], session_key: SESSION_KEY }),
     });
     if (res.status === 401) throw new Error('TOKEN_EXPIRED');
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
       throw new Error(d.detail || 'HTTP ' + res.status);
     }
-    const data = await res.json();
-    return data.job_id;
+    return res.json();
   }
 
-  async function pollStatus(jobId) {
-    const MAX_POLLS = 180;
-    for (let i = 0; i < MAX_POLLS; i++) {
-      await sleep(2000);
-      const res = await fetch(ORC_BASE + '/status/' + jobId, {
+  function pollJob(jobId) {
+    var timer = setInterval(function() {
+      fetch(ORC_BASE + '/atlas/job/' + jobId, {
         headers: { 'Authorization': 'Bearer ' + _token },
-      });
-      if (res.status === 401) throw new Error('TOKEN_EXPIRED');
-      const data = await res.json();
-      if (data.status === 'completed') return data.result || data.summary || '(no output)';
-      if (data.status === 'failed') throw new Error(data.error || 'Task failed.');
-    }
-    throw new Error('Timed out (>6 min). The task may still be running \u2014 check Telegram.');
+      }).then(function(r) { return r.json(); }).then(function(d) {
+        if (d.status === 'completed' || d.status === 'failed') {
+          clearInterval(timer);
+          var msg = d.status === 'completed' ? (d.result || 'Done.') : ('Failed: ' + (d.error || 'unknown'));
+          appendMessage('agent', msg);
+        }
+      }).catch(function() {});
+    }, 3000);
   }
 
   // Markdown renderer identical to atlas-chat.js -- safe DOM only, no innerHTML
@@ -653,7 +656,6 @@
     return wrap;
   }
 
-  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 </script>
 </body>
 </html>
