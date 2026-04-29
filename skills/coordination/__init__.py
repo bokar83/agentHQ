@@ -196,6 +196,27 @@ def claim_next(kind: str, holder: str, ttl_seconds: int) -> Optional[dict]:
         return dict(row) if row else None
 
 
+def renew(task_id: str, ttl_seconds: int) -> bool:
+    """Extend the lease on an in-flight task. Heartbeat for long jobs.
+
+    Returns True if the task is still 'running' and was extended.
+    Returns False if the task has been reclaimed by someone else (lease
+    expired) or already completed/failed. A False return means the caller
+    has lost ownership and should abort cleanly.
+    """
+    with _connect() as c, c.cursor() as cur:
+        cur.execute(
+            """
+            UPDATE tasks
+            SET lease_expires_at = now() + make_interval(secs => %s)
+            WHERE id = %s AND status = 'running'
+            """,
+            (ttl_seconds, task_id),
+        )
+        c.commit()
+        return cur.rowcount == 1
+
+
 def fail(task_id: str, error: str) -> None:
     """Mark a task failed. Won't be re-queued by claim_next."""
     with _connect() as c, c.cursor() as cur:
