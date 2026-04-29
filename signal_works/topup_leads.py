@@ -28,7 +28,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from signal_works.lead_scraper import scrape_google_maps_leads
 from signal_works.ai_scorer import score_leads_batch
-from orchestrator.db import upsert_signal_works_lead, get_crm_connection
+try:
+    from orchestrator.db import upsert_signal_works_lead, get_crm_connection
+except ModuleNotFoundError:
+    sys.path.insert(0, "/app")
+    from db import upsert_signal_works_lead, get_crm_connection
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
