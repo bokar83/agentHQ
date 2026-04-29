@@ -827,3 +827,74 @@ def mark_email_drafted(lead_id: int, draft_id: str = "") -> None:
         conn.rollback()
     finally:
         conn.close()
+
+
+# ---------------------------------------------------------------------------
+# CW lead helpers — added for 10+10 daily floor (Tasks 1 + 2)
+# ---------------------------------------------------------------------------
+
+def ensure_leads_columns(conn) -> None:
+    """Add columns required by the CW topup flow if they don't exist yet.
+
+    Safe to call repeatedly; each ALTER is wrapped in its own try/except so
+    one missing column doesn't block the others.
+    """
+    columns = [
+        ("email_source", "TEXT"),
+        ("last_contacted_at", "TIMESTAMPTZ"),
+        ("email_drafted_at", "TIMESTAMPTZ"),
+    ]
+    cur = conn.cursor()
+    for col, col_type in columns:
+        try:
+            cur.execute(
+                f"ALTER TABLE leads ADD COLUMN IF NOT EXISTS {col} {col_type}"
+            )
+        except Exception as e:
+            logger.warning(f"ensure_leads_columns: {col} alter failed: {e}")
+    try:
+        conn.commit()
+    except Exception as e:
+        logger.warning(f"ensure_leads_columns: commit failed: {e}")
+
+
+def get_resend_queue(limit: int = 5, days_back: int = 60) -> list[dict]:
+    """Return CW leads that received an email and can be re-contacted.
+
+    Criteria:
+    - Has an email
+    - Was last contacted more than `days_back` days ago (or never)
+    - Status is 'new' or 'contacted'
+
+    Returns a list of dicts with keys: apollo_id, email, name, revealed_at.
+    """
+    conn = get_crm_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT
+                apollo_id,
+                email,
+                name,
+                revealed_at
+            FROM leads
+            WHERE email IS NOT NULL AND email != ''
+              AND source IS DISTINCT FROM 'signal_works'
+              AND LOWER(status) IN ('new', 'contacted')
+              AND (
+                    last_contacted_at IS NULL
+                    OR last_contacted_at < NOW() - INTERVAL '%s days'
+              )
+            ORDER BY last_contacted_at ASC NULLS FIRST
+            LIMIT %s
+            """,
+            (days_back, limit),
+        )
+        rows = cur.fetchall()
+        return [dict(r) for r in rows]
+    except Exception as e:
+        logger.warning(f"get_resend_queue failed: {e}")
+        return []
+    finally:
+        conn.close()

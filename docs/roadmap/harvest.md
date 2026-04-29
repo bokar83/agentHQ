@@ -131,6 +131,52 @@ Target: $5K MRR by June 2026. Possible framings to choose from:
 
 ---
 
+### Quality follow-ups (small, opportunistic)
+
+These are paper cuts surfaced during 2026-04-29 work. None block the cash path. Pull when a session has a 15-30 min gap.
+
+- **email_builder.py pre-existing em-dashes (~15-20 instances).** Diff-aware em-dash hook (`scripts/check_no_em_dashes.py`) now ignores them, but they will fire if anyone passes `--full`. Run `python scripts/check_no_em_dashes.py --full signal_works/email_builder.py`, scrub each prose `--` to `:` or `,`, commit as one cleanup.
+- **scan_line `{name}` injection bug for CW leads.** In `_opening()` template branches (lines ~285, 296, 318+ on `feature/style-dna-wirein`), scan_line uses `{name}` which for CW leads is a person's name, producing "a quick demo showing what Adam Ingersoll could look like with a site built for AI visibility." The voice-line short-circuit at line 255 already de-personalized; the template branches still have the bug. SW leads are unaffected because `name` is the business there. Fix: detect when lead is CW (source contains "apollo") and use generic phrasing, OR add `business_name` field that maps to lead.company for CW and lead.name for SW.
+
+---
+
+### R7: transcript-style-dna lift-test verdict (KEEP or DELETE)
+
+**Status:** ⏰ Active, eval date 2026-06-01.
+**Trigger date:** 2026-06-01. Surface in any session that starts on or after that date. **If the trigger date has passed, this is the FIRST item to action this session.**
+
+**What this is:** Wired into Signal Works CW outreach 2026-04-29. Per-lead voice opener via transcript-style-dna + find_company_website + BeautifulSoup. Smoke-tested on 3 real CW leads (Adam @ Shasta Dental, Ben @ MMI, Galen @ ShareMy.Health), all produced personalized openers. 30-day clock started 2026-04-29.
+
+**Eval procedure (run on 2026-06-01):**
+
+1. Query local CRM Postgres:
+   ```sql
+   SELECT
+     COUNT(*) FILTER (WHERE voice_personalization_line IS NOT NULL) AS personalized,
+     COUNT(*) FILTER (WHERE voice_personalization_line IS NULL) AS baseline,
+     COUNT(*) FILTER (WHERE voice_personalization_line IS NOT NULL AND replied_at IS NOT NULL) AS personalized_replied,
+     COUNT(*) FILTER (WHERE voice_personalization_line IS NULL AND replied_at IS NOT NULL) AS baseline_replied
+   FROM leads
+   WHERE source = 'apollo_catalyst_works'
+     AND created_at >= '2026-04-29';
+   ```
+2. Compute reply rate per cohort: `replied / total`. Then relative lift: `(p_rate - b_rate) / b_rate`.
+3. **KEEP** if relative lift ≥ +20%. **DELETE** if not. No EXTEND, no qualitative override.
+4. Also pull diagnostic instrumentation from `logs/signal_works_morning.log`: count "voice_personalizer: skip ... reason=..." vs "voice_personalizer: ok ..." entries since 2026-04-29. Skip-reason distribution distinguishes bad-skill from bad-input.
+
+**If DELETE, the cleanup PR:**
+- Drop column: `ALTER TABLE leads DROP COLUMN voice_personalization_line;`
+- Remove file: `signal_works/voice_personalizer.py`
+- Revert `email_builder._opening()` short-circuit (the voice_line block, currently lines 255-272 on `feature/style-dna-wirein`)
+- Remove `morning_runner.py` Step 4.5 (currently lines 133-144 on `feature/style-dna-wirein`)
+- Remove `find_company_website` from `lead_scraper.py` if no other consumer (it was added solely for this wire-in)
+
+**If KEEP:** wire transcript-style-dna into Catalyst Works pre-discovery prep next (the next-after-A bite from the 2026-04-29 Sankofa Council).
+
+**Reference:** `skills/transcript-style-dna/SKILL.md` (single-criterion success measure, post-Sankofa 2026-04-29). Memory: `project_channel_style_dna_audit.md`, `reference_firecrawl_pricing_2026.md`. Plan: `docs/superpowers/plans/2026-04-29-style-dna-wirein-and-channel-branding-kit.md`.
+
+---
+
 ## Cross-References
 
 - Pipeline playbook: `docs/playbooks/pipeline-building-playbook.md`
@@ -141,6 +187,24 @@ Target: $5K MRR by June 2026. Possible framings to choose from:
 ---
 
 ## Session Log
+
+### 2026-04-29 (afternoon): transcript-style-dna wired into CW outreach (R7 active)
+
+`voice_personalizer.py` shipped. Every CW lead now gets a personalized opener via Serper company-website lookup + BeautifulSoup scrape + transcript-style-dna extract. `_opening()` short-circuits to the voice line when present. `morning_runner.py` Step 4.5 personalizes the day's CW leads between Apollo topup and CW sequence.
+
+Smoke test on 3 real CW leads succeeded. Galen Murdock's opener referenced his BBC interview. Ben Teerlink's named his domain. Adam Ingersoll's referenced Lehi.
+
+Three structural fixes were forced by the smoke test:
+
+1. CW Apollo leads have no `website_url`. Added `find_company_website` (Serper search by company name + city, skips aggregators) so personalizer can derive one.
+2. Firecrawl free tier exhausted (HTTP 402). Swapped `fetch_site_text` to plain `requests + BeautifulSoup`. Decision: don't pay $16-20/mo Hobby until lift test KEEP verdict. Memory: `reference_firecrawl_pricing_2026.md`.
+3. scan_line in voice short-circuit was injecting lead name into "what {name} could look like": read as AI slop when {name} was a person. Made generic.
+
+Em-dash hook also updated to scan staged diff only, not whole file (Karpathy + Sankofa both rejected bundling pre-existing dirt).
+
+R7 milestone added with full eval procedure for 2026-06-01. Calendar reminder also set.
+
+Branch: `feature/style-dna-wirein` (11 commits). Not pushed to remote yet. VPS deploy gate held until Boubacar approves.
 
 ### 2026-04-29: Email sequences + GeoListed site launch
 

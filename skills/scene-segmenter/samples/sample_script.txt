@@ -1,0 +1,29 @@
+In 1989, a fifteen-year-old boy in a basement in suburban Maryland did what nine American intelligence agencies could not. He walked into the Pentagon. Not the building. The network.
+
+His name was Jonathan James. He went by the handle c0mrade.
+
+The Pentagon thought it was secure. They had firewalls. They had encryption. They had the smartest people in the world. What they did not have was an answer for a fifteen-year-old who taught himself to code on a hand-me-down PC and saw the network the way a locksmith sees a door.
+
+For three months, c0mrade roamed inside the network of the Defense Threat Reduction Agency. He read emails. He stole code. He copied source files for the International Space Station, the actual flight software that kept astronauts alive. NASA had to shut down its computers for twenty-one days. The damage was estimated at forty-one thousand dollars in lost productivity. The real damage was that nobody knew it had happened until c0mrade did it again.
+
+Then he made the mistake every fifteen-year-old hacker eventually makes. He bragged.
+
+A friend turned him in. The Secret Service raided the house. They found a kid in a t-shirt, sitting at a beige desktop computer, surrounded by Star Wars figurines. He was the youngest person ever convicted of cybercrime in the United States. He spent six months in juvenile detention.
+
+But the story does not end in 1989, and it does not end in juvenile detention.
+
+In 2007, a massive hacking ring stole forty-five million credit card numbers from TJX Corporation. The Secret Service came for c0mrade again. They believed he was involved. He was not. They did not know that yet.
+
+Jonathan James, twenty-four years old, sat in his bedroom and wrote a suicide note. He said he had lost faith in the justice system. He said he could not face being blamed again for something he did not do.
+
+He died on May 18, 2008.
+
+The Secret Service later confirmed he had no involvement in the TJX breach. The kid who broke into the Pentagon, who breached NASA, who became a legend in the hacking underground, ended his own life because he was afraid the system would punish him for the wrong crime.
+
+History remembers the genius. It forgets the cost.
+
+c0mrade was not a villain. He was not a hero either. He was a fifteen-year-old who saw a door nobody else thought to lock, opened it, and lived the rest of his life paying for the moment of curiosity that defined him.
+
+The Pentagon got its locks fixed. The world moved on.
+
+Jonathan James never got to grow up.
