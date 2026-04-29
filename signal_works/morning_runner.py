@@ -111,6 +111,19 @@ def main():
     except Exception as e:
         logger.error(f"  CW Apollo topup failed: {e}")
 
+    # ── Step 4.5: CW voice personalization (transcript-style-dna) ─
+    voice_personalized = 0
+    logger.info("STEP 4.5: Voice-personalize today's CW leads (transcript-style-dna)...")
+    try:
+        from signal_works.voice_personalizer import personalize_pending_leads
+        # Match daily_limit of CW sequence so we never over-personalize
+        voice_personalized = personalize_pending_leads(limit=10)
+        logger.info(f"  Done. {voice_personalized} leads personalized.")
+    except Exception as e:
+        # Best-effort: a failure here must not block CW sequence from running
+        # with template-only opens.
+        logger.error(f"  Voice personalization failed (non-fatal): {e}")
+
     # ── Step 5: Catalyst Works -- 4-touch sequence (auto-send) ───
     logger.info("STEP 5: Catalyst Works sequence T1-T4 (auto-send)...")
     try:
@@ -128,6 +141,7 @@ def main():
     logger.info(f"  Bounces cleared:        {bounce_nulled}")
     logger.info(f"  SW leads harvested:     {sw_leads}")
     logger.info(f"  SW drafts created:      {sw_drafted}")
+    logger.info(f"  CW leads personalized:  {voice_personalized}")
     logger.info(f"  CW outreach drafts:     {cw_drafted}")
     logger.info(f"  TOTAL drafts in inbox:  {total}")
     if total > 0:
