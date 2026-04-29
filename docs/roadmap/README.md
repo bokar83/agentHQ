@@ -42,6 +42,7 @@ Every roadmap gets a one or two word lowercase codename. Codenames are claimed f
 | Codename | Status | Lifespan | One-line | File |
 |---|---|---|---|---|
 | atlas | active | open-ended | the autonomy layer that runs the content pipeline while the laptop is off | [atlas.md](atlas.md) |
+| echo | active | open-ended | async partnership substrate: agent proposes commits and acks, human responds asynchronously, neither blocks on the other | [echo.md](echo.md) |
 | harvest | active | open-ended | Catalyst Works revenue pipeline (stub until first revenue session) | [harvest.md](harvest.md) |
 | studio | active | open-ended | faceless agency running multiple branded channels on agentsHQ as adjacent revenue to Catalyst Works | [studio.md](studio.md) |
 
