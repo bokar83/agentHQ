@@ -21,8 +21,8 @@ logger = logging.getLogger("agentsHQ.llm_helpers")
 CHAT_MODEL: str = os.environ.get("CHAT_MODEL", "anthropic/claude-haiku-4.5")
 HELPER_MODEL: str = os.environ.get("HELPER_MODEL", "anthropic/claude-haiku-4.5")
 ATLAS_CHAT_MODEL: str = os.environ.get("ATLAS_CHAT_MODEL", "anthropic/claude-haiku-4.5")
-CHAT_TEMPERATURE: float = float(os.environ.get("CHAT_TEMPERATURE", "0.7"))
-CHAT_SANDBOX: bool = os.environ.get("CHAT_SANDBOX", "false").lower() == "true"
+CHAT_TEMPERATURE: float = float(os.environ.get("CHAT_TEMPERATURE") or "0.7")
+CHAT_SANDBOX: bool = (os.environ.get("CHAT_SANDBOX") or "false").lower() == "true"
 
 
 def get_openrouter_client():
