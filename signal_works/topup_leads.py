@@ -126,6 +126,7 @@ def topup(minimum: int = DAILY_MINIMUM, dry_run: bool = False) -> int:
             biz["niche"] = niche
             biz["city"] = city
             biz["tier"] = tier
+            biz["business_name"] = biz.get("business_name") or biz.get("name", "")
 
             try:
                 email, source = _resolve_email(biz, hunter_disabled)

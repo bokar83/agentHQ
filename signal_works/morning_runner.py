@@ -18,6 +18,7 @@ On any unhandled exception or zero-draft run, fires a Telegram alert.
 """
 import logging
 import os
+import socket
 import sys
 import traceback
 import urllib.parse
@@ -65,6 +66,24 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "orchestrator"))
 
 
 def main():
+    from skills.coordination import claim, complete
+
+    holder = f"{socket.gethostname()}/pid={os.getpid()}"
+    task = claim(resource="task:morning-runner", holder=holder, ttl_seconds=1800)
+    if task is None:
+        logger.warning(
+            "Another morning_runner is already running. Exiting cleanly. "
+            "Resource 'task:morning-runner' is held; check skills.coordination.list_running()."
+        )
+        return 0
+
+    try:
+        return _main_body()
+    finally:
+        complete(task["id"])
+
+
+def _main_body():
     logger.info("=" * 60)
     logger.info(f"Daily outreach run: {datetime.now().strftime('%Y-%m-%d %H:%M MT')}")
     logger.info("=" * 60)
