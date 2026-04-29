@@ -10,8 +10,9 @@ Touch schedule:
   T4 = Day 12
 
 Rules:
-  - CW: auto-send (Gmail draft created + immediately sent via API)
-  - SW: Gmail draft only -- Boubacar reviews before sending
+  - AUTO_SEND_CW / AUTO_SEND_SW env vars control send vs draft
+  - Default: BOTH are draft-only until Boubacar flips the switch
+  - Set AUTO_SEND_CW=true or AUTO_SEND_SW=true in .env to enable
   - Opted-out leads (opt_out = TRUE) are never contacted
   - A lead with no sequence_touch is eligible for T1
   - Touches advance only when the gap since last_contacted_at is met
@@ -92,7 +93,7 @@ def _ensure_sequence_columns(conn) -> None:
     cur.close()
 
 
-def _get_due_leads(conn, pipeline: str, touch: int) -> list[dict]:
+def _get_due_leads(conn, pipeline: str, touch: int, limit: int = 10) -> list[dict]:
     """
     Fetch leads due for a specific touch.
     T1: sequence_touch IS NULL or 0, last_contacted_at IS NULL
@@ -116,8 +117,8 @@ def _get_due_leads(conn, pipeline: str, touch: int) -> list[dict]:
               AND last_contacted_at IS NULL
               AND source {source_op} %s
             ORDER BY created_at ASC
-            LIMIT 20
-        """, (source_filter,))
+            LIMIT %s
+        """, (source_filter, limit))
     else:
         cur.execute(f"""
             SELECT id, name, email, title, company, industry, city,
@@ -130,8 +131,8 @@ def _get_due_leads(conn, pipeline: str, touch: int) -> list[dict]:
               AND last_contacted_at <= %s
               AND source {source_op} %s
             ORDER BY last_contacted_at ASC
-            LIMIT 20
-        """, (touch - 1, pipeline, cutoff, source_filter))
+            LIMIT %s
+        """, (touch - 1, pipeline, cutoff, source_filter, limit))
 
     rows = [dict(r) for r in cur.fetchall()]
     cur.close()
@@ -240,13 +241,15 @@ def _render(body: str, lead: dict) -> str:
 
 # ── Main runner ───────────────────────────────────────────────────────────────
 
-def run_sequence(pipeline: str, dry_run: bool = False) -> dict:
+def run_sequence(pipeline: str, dry_run: bool = False, daily_limit: int = 10) -> dict:
     """
-    Process all due touches for a pipeline.
-    CW: auto-send. SW: draft only.
+    Process all due touches for a pipeline up to daily_limit total emails.
+    Auto-send controlled by AUTO_SEND_CW / AUTO_SEND_SW env vars (default: draft).
     Returns summary dict.
     """
-    auto_send = (pipeline == "cw")
+    auto_send_cw = os.environ.get("AUTO_SEND_CW", "false").lower() == "true"
+    auto_send_sw = os.environ.get("AUTO_SEND_SW", "false").lower() == "true"
+    auto_send = auto_send_cw if pipeline == "cw" else auto_send_sw
     conn = _get_conn()
     _ensure_sequence_columns(conn)
 
@@ -256,7 +259,9 @@ def run_sequence(pipeline: str, dry_run: bool = False) -> dict:
 
     max_touch = 5 if pipeline == "cw" else 4
     for touch in range(1, max_touch + 1):
-        leads = _get_due_leads(conn, pipeline, touch)
+        if total_sent + total_failed >= daily_limit:
+            break
+        leads = _get_due_leads(conn, pipeline, touch, limit=daily_limit - total_sent - total_failed)
         if not leads:
             logger.info(f"[{pipeline.upper()}] T{touch}: no leads due")
             continue

@@ -73,7 +73,7 @@ def main():
     logger.info("STEP 3: Signal Works sequence T1-T4 (drafts, manual review)...")
     try:
         from skills.outreach.sequence_engine import run_sequence
-        sw_result = run_sequence("sw", dry_run=False)
+        sw_result = run_sequence("sw", dry_run=False, daily_limit=10)
         sw_drafted = sw_result.get("drafted", 0)
         logger.info(f"  Done. {sw_drafted} SW sequence drafts created.")
     except Exception as e:
@@ -92,7 +92,7 @@ def main():
     logger.info("STEP 5: Catalyst Works sequence T1-T4 (auto-send)...")
     try:
         from skills.outreach.sequence_engine import run_sequence
-        cw_result = run_sequence("cw", dry_run=False)
+        cw_result = run_sequence("cw", dry_run=False, daily_limit=10)
         cw_drafted = cw_result.get("sent", 0)
         logger.info(f"  Done. {cw_drafted} CW emails sent.")
     except Exception as e:
