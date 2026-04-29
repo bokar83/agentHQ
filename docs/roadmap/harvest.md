@@ -142,6 +142,16 @@ Target: $5K MRR by June 2026. Possible framings to choose from:
 
 ## Session Log
 
+### 2026-04-29: Email sequences + GeoListed site launch
+
+Full CW + SW email sequence engine built (`skills/outreach/sequence_engine.py`). CW = 5-touch (Day 0/6/9/14/19), SW = 4-touch (Day 0/3/7/12). SaaS audit PDF wired into CW T2. All legacy one-shot senders disabled. Both pipelines verified dry-run clean on VPS.
+
+Signal Works landing page launched at geolisted.co (Hostinger, bokar83/geolisted-site). LLM chat preloader + particle network hero. Nav, favicon, gold cursor. "You were not in the answer." gut-punch subhead.
+
+Auto-send is OFF. Both pipelines are draft-only. To enable: `AUTO_SEND_CW=true` / `AUTO_SEND_SW=true` in VPS `.env`.
+
+Next: review first batch of drafts, flip auto-send, wire Studio into runner, confirm geolisted.co Hostinger connection.
+
 ### 2026-04-28: First revenue session. YC RFS S26 strategy analysis
 
 YC RFS Summer 2026 fetched and analyzed through Sankofa Council + Karpathy Audit. Key finding: YC has published enterprise names for what agentsHQ is already building at SMB scale (Company Brain, AI OS, AI-Native Service Companies). Direction validated. Constraint is the sales story, not capability.

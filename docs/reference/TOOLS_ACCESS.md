@@ -434,6 +434,26 @@ result = pub.poll_until_terminal(post_id)
 `X` → `twitter`, `LinkedIn` → `linkedin`, `YouTube` → `youtube`, `Instagram` → `instagram`,
 `TikTok` → `tiktok`, `Threads` → `threads`, `Facebook` → `facebook`, `Pinterest` → `pinterest`
 
+### Account IDs (from Blotato dashboard → Accounts tab)
+
+| Account                       | Platform  | Blotato Account ID      |
+| ----------------------------- | --------- | ----------------------- |
+| boubacarbarry (personal)      | X/Twitter | `17065`                 |
+| boubacarbarry (personal)      | LinkedIn  | `19365`                 |
+| Catalyst Works (company page) | LinkedIn  | `114214027` (page ID)   |
+| Baobab YouTube                | YouTube   | `34864`                 |
+| Catalyst Works YouTube        | YouTube   | `34865`                 |
+
+**To post to X:** `account_id = os.environ["BLOTATO_X_ACCOUNT_ID"]` (= `17065`)
+**To post to LinkedIn (personal):** `account_id = "19365"`
+**To post to LinkedIn (company page):** `account_id = os.environ["BLOTATO_LINKEDIN_PAGE_ID"]` (= `114214027`)
+
+**NEVER leave BLOTATO_API_KEY as the string `EMPTY` in .env.** Always sync local `.env` to VPS via:
+
+```bash
+scp "d:/Ai_Sandbox/agentsHQ/.env" root@72.60.209.109:/root/agentsHQ/.env
+```
+
 ### Key gotchas (verified 2026-04-25)
 
 - POST returns 201, not 200: use `status_code not in (200, 201)` for error checks

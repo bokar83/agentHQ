@@ -36,6 +36,20 @@ Do NOT trigger for:
 
 ---
 
+## HARD RULES (learned 2026-04-28)
+
+**Text-heavy images (thumbnails, covers, posters):** ALWAYS use `task_type="gpt_image_2_text"` (slug: `gpt-image-2-text-to-image`). GPT Image 2 is the only model that renders text accurately. Seedream scrambles words on anything longer than 3-4 words. Confirmed live: Weekly Signal Issue 2 thumbnail.
+
+**Nano-banana (`google/nano-banana-pro-image-to-image`):** Our registry has this wired as image-to-image only. Kie supports text-to-image with a different slug. Do not attempt to use it for text-to-image until the registry is updated.
+
+**GPT-4o-image VIP (`gpt-4o-image-vip` endpoint `/api/v1/gpt4o-image/generate`):** Job submission works but model frequently sits in blank queue state for 6+ minutes with no state field returned. Use GPT Image 2 (`gpt_image_2_text`) instead - faster (30 sec) and higher quality for typography.
+
+**Image result URL field:** The success response uses `resultJson` as a JSON string (not an object). Parse it: `json.loads(d.get('resultJson','{}'))` then get `resultUrls[0]`. The `works` array is empty for image tasks.
+
+**Poll field:** Image tasks return `state` (not `status`). Check `d.get('state')` not `d.get('status')`.
+
+---
+
 ## What the Skill Does
 
 1. Classify the task into one of four types:
