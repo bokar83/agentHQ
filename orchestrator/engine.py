@@ -85,30 +85,28 @@ def run_orchestrator(task_request: str, from_number: str = "unknown", session_ke
             logger.warning(f"Memory recall failed (non-fatal): {e}")
 
     # Step 3: Direct dispatch for crm_outreach
+    # NOTE: outreach_tool.py (one-shot drafter) is DISABLED.
+    # All email sending now goes through sequence_engine.py (4/5-touch sequences).
+    # sequence_engine respects AUTO_SEND_CW / AUTO_SEND_SW env flags (default: draft only).
     if task_type == "crm_outreach":
         try:
-            from skills.outreach.outreach_tool import run_outreach
-            contact_all = "contact all" in task_request.lower() or "all leads" in task_request.lower()
-            outreach_result = run_outreach(contact_all=contact_all)
-            drafted = outreach_result.get("drafted", 0)
-            skipped = outreach_result.get("skipped", 0)
-            results = outreach_result.get("results", [])
-            error = outreach_result.get("error")
+            from skills.outreach.sequence_engine import run_sequence
+            pipeline = "sw" if "signal" in task_request.lower() else "cw"
+            result = run_sequence(pipeline, dry_run=False, daily_limit=10)
+            action_key = "sent" if pipeline == "cw" else "drafted"
+            count = result.get(action_key, 0)
+            results = result.get("results", [])
 
-            if error:
-                deliverable = f"Outreach failed: {error}"
-            elif drafted == 0:
+            if count == 0:
                 deliverable = (
-                    "No drafts created. Either no leads have confirmed emails yet, "
-                    "or all eligible leads have already been contacted."
+                    f"Sequence engine ran for {pipeline.upper()} -- no leads due right now. "
+                    "Either all eligible leads have been contacted recently, or the lead pool needs a topup."
                 )
             else:
-                lines = [f"Cold outreach drafts created in boubacar@catalystworks.consulting ({drafted} drafts):\n"]
+                action_word = "sent" if pipeline == "cw" else "drafted"
+                lines = [f"{pipeline.upper()} sequence: {count} email(s) {action_word}:\n"]
                 for r in results:
-                    if r.get("status") == "drafted":
-                        lines.append(f"- {r['name']} | {r['company']} | {r['email']} | {r['subject']}")
-                if skipped:
-                    lines.append(f"\n{skipped} lead(s) failed (Gmail API error).")
+                    lines.append(f"- T{r['touch']} | {r['name']} | {r['email']} | {r['status']}")
                 deliverable = "\n".join(lines)
 
             return {
@@ -118,7 +116,7 @@ def run_orchestrator(task_request: str, from_number: str = "unknown", session_ke
                 "execution_time": (datetime.now() - start_time).total_seconds(),
             }
         except Exception as e:
-            logger.error(f"crm_outreach direct dispatch failed: {e}")
+            logger.error(f"crm_outreach sequence dispatch failed: {e}")
             return {"success": False, "task_type": task_type, "deliverable": f"Outreach error: {e}", "execution_time": 0}
 
     # Step 3a: Direct dispatch for research_report: bypass CrewAI entirely.
