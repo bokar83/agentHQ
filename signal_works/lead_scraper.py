@@ -7,9 +7,18 @@ Falls back to manual CSV input mode if keys unavailable.
 """
 import os
 import re
+import sys
 import logging
 import requests
-from orchestrator.db import upsert_signal_works_lead
+
+# Container vs dev import compatibility. The orc-crewai container flattens
+# orchestrator/* to /app, so "from orchestrator.db" fails there; the bare
+# module name does. Local dev keeps the orchestrator package layout.
+try:
+    from orchestrator.db import upsert_signal_works_lead
+except ModuleNotFoundError:
+    sys.path.insert(0, "/app")
+    from db import upsert_signal_works_lead
 
 logger = logging.getLogger(__name__)
 
@@ -207,34 +216,64 @@ def find_company_website(company_name: str, city: str = "") -> str:
 
 def fetch_site_text(url: str) -> str:
     """
-    Fetch readable markdown content from a website URL via Firecrawl.
-    Returns markdown body, or empty string on any failure.
+    Fetch readable text content from a website URL using requests + BeautifulSoup.
 
-    Used by the voice personalizer to build a reference corpus for transcript-style-dna.
-    Best-effort. Never raises; logs and returns empty on any error.
+    Strips script and style tags. Collapses runs of whitespace. Returns plain
+    text suitable as reference material for transcript-style-dna.extract.
+
+    Best-effort. Never raises; logs and returns empty on any error including
+    non-200, non-HTML content type, network failure, parse failure.
+
+    Decision 2026-04-29: chose this over Firecrawl for the lift test. See
+    memory/reference_firecrawl_pricing_2026.md.
     """
-    if not url or not FIRECRAWL_API_KEY:
+    if not url:
         return ""
     try:
-        response = requests.post(
-            "https://api.firecrawl.dev/v1/scrape",
-            headers={
-                "Authorization": f"Bearer {FIRECRAWL_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={"url": url, "formats": ["markdown"]},
-            timeout=30,
-        )
-        if response.status_code != 200:
-            logger.debug(f"fetch_site_text non-200 for {url}: {response.status_code}")
-            return ""
-        data = response.json() or {}
-        if not data.get("success"):
-            return ""
-        return (data.get("data") or {}).get("markdown") or ""
-    except Exception as exc:
-        logger.debug(f"fetch_site_text failed for {url}: {exc}")
+        from bs4 import BeautifulSoup  # local import to keep startup cheap
+    except ImportError:
+        logger.error("fetch_site_text: beautifulsoup4 not installed")
         return ""
+    try:
+        response = requests.get(
+            url,
+            headers={
+                # Some sites 403 the python-requests UA. A plain modern UA
+                # is enough for most small-business marketing sites.
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/120.0.0.0 Safari/537.36"
+                ),
+                "Accept": "text/html,application/xhtml+xml",
+                "Accept-Language": "en-US,en;q=0.9",
+            },
+            timeout=15,
+            allow_redirects=True,
+        )
+    except Exception as exc:
+        logger.debug(f"fetch_site_text request failed for {url}: {exc}")
+        return ""
+    if response.status_code != 200:
+        logger.debug(f"fetch_site_text non-200 for {url}: {response.status_code}")
+        return ""
+    content_type = (response.headers.get("Content-Type") or "").lower()
+    if "html" not in content_type:
+        logger.debug(f"fetch_site_text non-HTML content_type={content_type} for {url}")
+        return ""
+    try:
+        soup = BeautifulSoup(response.text, "html.parser")
+    except Exception as exc:
+        logger.debug(f"fetch_site_text parse failed for {url}: {exc}")
+        return ""
+    # Strip noise: scripts, styles, hidden elements, nav clutter
+    for tag in soup(["script", "style", "noscript", "template", "iframe", "svg"]):
+        tag.decompose()
+    text = soup.get_text(separator="\n")
+    # Collapse runs of blank lines and trim per-line whitespace
+    lines = [ln.strip() for ln in text.splitlines()]
+    lines = [ln for ln in lines if ln]
+    return "\n".join(lines)
 
 
 def scrape_google_maps_leads(
@@ -262,12 +301,10 @@ def scrape_google_maps_leads(
         email = find_email_from_website(website) if website else ""
         lead = {
             "name": biz["name"],
-            "business_name": biz["name"],
             "email": email,
             "phone": biz.get("phone", ""),
             "website_url": website,
             "has_website": biz.get("has_website", bool(website)),
-            "no_website": not website,
             "review_count": rc,
             "google_rating": biz.get("rating", 0.0),
             "google_address": biz.get("address", ""),

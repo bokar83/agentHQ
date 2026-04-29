@@ -108,8 +108,8 @@ def _get_due_leads(conn, pipeline: str, touch: int, limit: int = 10) -> list[dic
     min_gap = timedelta(days=_touch_days(pipeline)[touch])
     cutoff = datetime.now(timezone.utc) - min_gap
 
-    source_filter = "apollo_catalyst_works" if pipeline == "cw" else "apollo_signal_works%"
-    source_op = "=" if pipeline == "cw" else "LIKE"
+    source_filter = "apollo_catalyst_works%" if pipeline == "cw" else "signal_works%"
+    source_op = "LIKE"
 
     if touch == 1:
         cur.execute(f"""
@@ -249,7 +249,6 @@ def _load_template(pipeline: str, touch: int):
 def _render(body_or_builder, lead: dict) -> str:
     """Render email body from either a build_body callable or a legacy format string."""
     if callable(body_or_builder):
-        # Merge name-derived fields into lead for the builder
         enriched = dict(lead)
         if "first_name" not in enriched:
             enriched["first_name"] = (lead.get("name") or "there").split()[0]
@@ -260,7 +259,6 @@ def _render(body_or_builder, lead: dict) -> str:
         if "business_name" not in enriched:
             enriched["business_name"] = lead.get("name") or "your business"
         return body_or_builder(enriched)
-    # Legacy format string
     first_name = (lead.get("name") or "there").split()[0]
     niche = (lead.get("industry") or "business").lower()
     city = lead.get("city") or "your city"
