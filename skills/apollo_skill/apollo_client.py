@@ -73,6 +73,26 @@ CW_ICP = {
     "score_titles": ["owner", "founder", "ceo", "president", "managing partner", "principal"],
 }
 
+CW_ICP_WIDENED = {
+    "name": "catalyst_works_widened",
+    "person_locations": [
+        "Salt Lake City, Utah", "Provo, Utah", "Ogden, Utah",
+        "Sandy, Utah", "Lehi, Utah", "St. George, Utah",
+        "West Jordan, Utah", "Murray, Utah", "Draper, Utah",
+        "Park City, Utah", "Heber, Utah", "Bountiful, Utah",
+        "Logan, Utah", "Cedar City, Utah",
+    ],
+    "person_titles": [
+        "Owner", "Founder", "CEO", "President", "Managing Partner",
+        "Principal", "Partner", "Managing Director",
+        "Managing Member", "Director of Operations", "VP of Sales",
+    ],
+    "person_seniorities": _DECISION_MAKER_SENIORITIES + ["vp"],
+    "organization_num_employees_ranges": ["1,200"],
+    "score_industries": CW_ICP["score_industries"],
+    "score_titles": CW_ICP["score_titles"] + ["vp", "managing member", "director of operations"],
+}
+
 SW_ICP = {
     "name": "signal_works",
     "person_locations": [
@@ -319,3 +339,73 @@ def harvest_leads(icp: dict, target: int = 10, max_pages: int = 5) -> list[dict]
 
     logger.info(f"harvest_leads({icp['name']}): {len(leads)}/{target} leads with email")
     return leads
+
+
+# Owner titles used for SW company match. Tighter than CW search.
+_SW_OWNER_TITLES = ["Owner", "Founder", "CEO", "President", "Operator"]
+
+
+def find_owner_by_company(name: str, city: str) -> dict | None:
+    """Look up a small business by name+city, then resolve owner email.
+
+    Two API calls:
+      1. organizations/enrich, find domain (FREE, no credits)
+      2. people/match, find owner email at that domain (~1 credit per attempted title)
+
+    Returns:
+      None if Apollo doesn't index this company at all (caller skips).
+      {"domain": str, "email": None, "name": None} if domain found but no owner
+        (caller can pass domain to Hunter).
+      {"domain": str, "email": str, "name": str} on full success.
+    """
+    headers = _headers()
+    if not headers:
+        logger.warning("find_owner_by_company: no Apollo key, returning None")
+        return None
+
+    # Step 1: organizations/enrich
+    try:
+        resp = httpx.post(
+            f"{APOLLO_API_URL}/organizations/enrich",
+            headers=headers,
+            json={"organization_name": name},
+            timeout=15,
+        )
+        resp.raise_for_status()
+        org = resp.json().get("organization")
+    except Exception as e:
+        logger.warning(f"find_owner_by_company: enrich failed for {name}: {e}")
+        return None
+
+    if not org:
+        logger.info(f"find_owner_by_company: no org match for {name} in {city}")
+        return None
+
+    domain = org.get("primary_domain")
+    if not domain:
+        return None
+
+    # Step 2: people/match for owner-level title at that domain
+    for title in _SW_OWNER_TITLES:
+        try:
+            resp = httpx.post(
+                f"{APOLLO_API_URL}/people/match",
+                headers=headers,
+                json={"organization_domain": domain, "title": title, "reveal_personal_emails": False},
+                timeout=15,
+            )
+            resp.raise_for_status()
+            person = resp.json().get("person")
+        except Exception as e:
+            logger.warning(f"find_owner_by_company: match failed at {domain} for {title}: {e}")
+            continue
+
+        if person and person.get("email"):
+            return {
+                "domain": domain,
+                "email": person["email"],
+                "name": person.get("name", ""),
+            }
+
+    # Domain found, no owner. Caller can fall through to Hunter.
+    return {"domain": domain, "email": None, "name": None}
