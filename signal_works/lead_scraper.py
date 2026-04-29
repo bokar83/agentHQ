@@ -7,9 +7,18 @@ Falls back to manual CSV input mode if keys unavailable.
 """
 import os
 import re
+import sys
 import logging
 import requests
-from orchestrator.db import upsert_signal_works_lead
+
+# Container vs dev import compatibility. The orc-crewai container flattens
+# orchestrator/* to /app, so "from orchestrator.db" fails there; the bare
+# module name does. Local dev keeps the orchestrator package layout.
+try:
+    from orchestrator.db import upsert_signal_works_lead
+except ModuleNotFoundError:
+    sys.path.insert(0, "/app")
+    from db import upsert_signal_works_lead
 
 logger = logging.getLogger(__name__)
 
