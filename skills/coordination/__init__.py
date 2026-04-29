@@ -1,13 +1,20 @@
 """Agent coordination layer.
 
-One table, claim/lease semantics. Solves the agentsHQ collision problems:
-two agents pushing the same branch, restarting the same container, editing
-the same file, or picking up the same task.
+One table, two operating modes:
 
-Resource = stringly-typed key like 'git:main', 'container:orc-crewai',
-'file:signal_works/foo.py', 'task:enrich-lead-jane'.
+1. Resource locks. claim()/complete() with a stringly-typed `resource` key
+   like 'git:main' or 'task:morning-runner'. Race-free via partial unique
+   index. One holder at a time per resource.
 
-DSN: TEST_COORD_DSN or POSTGRES_DSN.
+2. Work-item queue (no-checkout fix). enqueue(kind, payload) writes a row
+   in status='queued'. claim_next(kind, holder, ttl) atomically pops the
+   oldest queued row of that kind and marks it running. fail(task_id) marks
+   it failed (won't be re-queued). complete(task_id, result) marks it done.
+
+The same table holds both. Resource locks always have status in
+{'running','done','failed'}. Queued work items go through 'queued' first.
+
+DSN: TEST_COORD_DSN, POSTGRES_DSN, or POSTGRES_HOST/USER/PASSWORD/DB.
 """
 
 from __future__ import annotations
@@ -42,7 +49,7 @@ def _connect():
 
 
 def init_schema() -> None:
-    """Create the tasks table if missing. Idempotent."""
+    """Create the tasks table if missing, then add queue columns. Idempotent."""
     with _connect() as c, c.cursor() as cur:
         cur.execute(
             """
@@ -61,6 +68,13 @@ def init_schema() -> None:
         cur.execute(
             "CREATE UNIQUE INDEX IF NOT EXISTS tasks_resource_running_uniq "
             "ON tasks (resource) WHERE status = 'running'"
+        )
+        cur.execute("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS kind text")
+        cur.execute("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS payload jsonb")
+        cur.execute("ALTER TABLE tasks ADD COLUMN IF NOT EXISTS error text")
+        cur.execute(
+            "CREATE INDEX IF NOT EXISTS tasks_kind_queued_idx "
+            "ON tasks (kind, created_at) WHERE status = 'queued'"
         )
         c.commit()
 
@@ -117,11 +131,94 @@ def list_running() -> list[dict]:
     with _connect() as c, c.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
         cur.execute(
             """
-            SELECT id, resource, claimed_by, claimed_at, lease_expires_at
+            SELECT id, kind, resource, claimed_by, claimed_at, lease_expires_at
             FROM tasks
             WHERE status = 'running' AND lease_expires_at > now()
             ORDER BY claimed_at
             """
+        )
+        return [dict(r) for r in cur.fetchall()]
+
+
+def enqueue(kind: str, payload: dict) -> str:
+    """Queue a work item. Returns the task id. Status starts as 'queued'."""
+    task_id = uuid.uuid4().hex
+    with _connect() as c, c.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO tasks (id, resource, status, kind, payload)
+            VALUES (%s, %s, 'queued', %s, %s)
+            """,
+            (task_id, f"work:{task_id}", kind, psycopg2.extras.Json(payload)),
+        )
+        c.commit()
+    return task_id
+
+
+def claim_next(kind: str, holder: str, ttl_seconds: int) -> Optional[dict]:
+    """Atomically claim the oldest queued work item of this kind. None if empty.
+
+    Race-free across concurrent workers via FOR UPDATE SKIP LOCKED. Also
+    revives stale-running rows of this kind whose lease has expired.
+    """
+    with _connect() as c, c.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute(
+            """
+            UPDATE tasks SET status = 'queued', claimed_by = NULL,
+                             claimed_at = NULL, lease_expires_at = NULL
+            WHERE kind = %s AND status = 'running' AND lease_expires_at < now()
+            """,
+            (kind,),
+        )
+        cur.execute(
+            """
+            WITH next AS (
+                SELECT id FROM tasks
+                WHERE kind = %s AND status = 'queued'
+                ORDER BY created_at
+                FOR UPDATE SKIP LOCKED
+                LIMIT 1
+            )
+            UPDATE tasks t
+            SET status = 'running',
+                claimed_by = %s,
+                claimed_at = now(),
+                lease_expires_at = now() + make_interval(secs => %s)
+            FROM next
+            WHERE t.id = next.id
+            RETURNING t.id, t.kind, t.resource, t.payload,
+                      t.claimed_by, t.claimed_at, t.lease_expires_at
+            """,
+            (kind, holder, ttl_seconds),
+        )
+        row = cur.fetchone()
+        c.commit()
+        return dict(row) if row else None
+
+
+def fail(task_id: str, error: str) -> None:
+    """Mark a task failed. Won't be re-queued by claim_next."""
+    with _connect() as c, c.cursor() as cur:
+        cur.execute(
+            "UPDATE tasks SET status = 'failed', error = %s WHERE id = %s",
+            (error, task_id),
+        )
+        c.commit()
+
+
+def recent_completed(kind: str, since_seconds: int = 3600, limit: int = 50) -> list[dict]:
+    """Recent finished work items of this kind. Lets agents pick up handoffs."""
+    with _connect() as c, c.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute(
+            """
+            SELECT id, kind, status, payload, result, claimed_by, claimed_at
+            FROM tasks
+            WHERE kind = %s AND status IN ('done', 'failed')
+              AND claimed_at > now() - make_interval(secs => %s)
+            ORDER BY claimed_at DESC
+            LIMIT %s
+            """,
+            (kind, since_seconds, limit),
         )
         return [dict(r) for r in cur.fetchall()]
 
