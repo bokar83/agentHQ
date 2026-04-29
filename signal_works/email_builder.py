@@ -261,13 +261,13 @@ def _opening(lead: dict) -> str:
         voice_line = voice_line.replace("\u2014", ", ").replace("\u2013", ", ")
         if _has_no_website(lead):
             scan_line = (
-                f"That gap is fixable. I put together a quick demo showing "
-                f"what {name} could look like with a site built for AI visibility."
+                "That gap is fixable. I put together a quick demo showing "
+                "what a site built for AI visibility could look like for you."
             )
         else:
             scan_line = (
-                f"I ran {name} through an AI visibility scan. You scored {score}/100. "
-                f"Here is what it looks like:"
+                "I put together a quick demo showing what a site built for "
+                "AI visibility could look like. Here is what that means:"
             )
         return f"{greeting}\n{voice_line}\n{scan_line}"
 
