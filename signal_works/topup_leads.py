@@ -108,6 +108,7 @@ def topup(minimum: int = DAILY_MINIMUM, dry_run: bool = False) -> int:
     consecutive_double_fails = 0
     hunter_disabled = False
     cap_alert_sent = False
+    breaker_alert_sent = False
 
     for niche, city, tier, default_target in PAIRS:
         if saved >= minimum:
@@ -141,7 +142,7 @@ def topup(minimum: int = DAILY_MINIMUM, dry_run: bool = False) -> int:
             if not email:
                 # Track consecutive double-failures (Firecrawl AND Apollo both failed)
                 consecutive_double_fails += 1
-                if consecutive_double_fails >= CIRCUIT_BREAKER_THRESHOLD and not hunter_disabled:
+                if consecutive_double_fails >= CIRCUIT_BREAKER_THRESHOLD and not breaker_alert_sent:
                     logger.warning(
                         "topup: circuit breaker tripped (5 consecutive Firecrawl+Apollo failures), "
                         "disabling Hunter to protect budget"
@@ -151,6 +152,7 @@ def topup(minimum: int = DAILY_MINIMUM, dry_run: bool = False) -> int:
                         "Disabling Hunter to protect budget. Investigate upstream APIs."
                     )
                     hunter_disabled = True
+                    breaker_alert_sent = True
                 continue
 
             consecutive_double_fails = 0
