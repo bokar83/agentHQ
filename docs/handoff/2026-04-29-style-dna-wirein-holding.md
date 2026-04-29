@@ -49,9 +49,9 @@ Boubacar chose to wait for parallel sessions to finish, then merge all branches 
    ```
 2. **Conflict-shape pre-check** (do this BEFORE any merge):
    ```bash
-   git diff main...feature/style-dna-wirein: signal_works/morning_runner.py signal_works/lead_scraper.py signal_works/email_builder.py
-   git diff main...feature/10-10-daily-floor: signal_works/morning_runner.py signal_works/lead_scraper.py signal_works/email_builder.py
-   git diff main...feature/coordination-layer: signal_works/morning_runner.py
+   git diff "main...feature/style-dna-wirein" signal_works/morning_runner.py signal_works/lead_scraper.py signal_works/email_builder.py
+   git diff "main...feature/10-10-daily-floor" signal_works/morning_runner.py signal_works/lead_scraper.py signal_works/email_builder.py
+   git diff "main...feature/coordination-layer" signal_works/morning_runner.py
    ```
    Specifically check:
    - **morning_runner.py:** does `feature/coordination-layer`'s `claim/complete` wrap `_main_body()` such that my Step 4.5 lives correctly inside the wrapped body? It should: the collision-control commit refactored `main()` into `main()` + `_main_body()` and Step 4.5 is in `_main_body()`. But verify before merge.
