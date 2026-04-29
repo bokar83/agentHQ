@@ -147,6 +147,64 @@ def find_email_from_website(website_url: str) -> str:
     return ""
 
 
+# Domains that are not the company's own website. If the top organic result
+# is from one of these, skip and try the next. If everything is aggregators,
+# return empty (we'd rather fail closed than scrape a Yelp page as if it were
+# the prospect's voice).
+_AGGREGATOR_DOMAINS = (
+    "linkedin.com", "facebook.com", "instagram.com", "twitter.com", "x.com",
+    "yelp.com", "crunchbase.com", "glassdoor.com", "indeed.com", "zoominfo.com",
+    "bbb.org", "yellowpages.com", "manta.com", "bizjournals.com", "owler.com",
+    "tiktok.com", "youtube.com", "pinterest.com", "reddit.com",
+    "google.com", "bing.com", "wikipedia.org",
+    "apollo.io", "rocketreach.co", "lusha.com", "signalhire.com",
+)
+
+
+def find_company_website(company_name: str, city: str = "") -> str:
+    """
+    Find the company's own website URL by Serper search on the company name.
+
+    Skips known aggregator/social domains. Returns the first organic result
+    that is plausibly the company's own site. Returns empty string on any
+    failure (no API key, no results, all results are aggregators, network
+    error). Best-effort: never raises.
+
+    Used to derive a website_url for CW (Apollo) leads, which only have
+    company name + linkedin_url out of the box.
+    """
+    if not company_name:
+        return ""
+    if not SERPER_API_KEY:
+        return ""
+    query = f"{company_name} {city}".strip() if city else company_name
+    try:
+        response = requests.post(
+            "https://google.serper.dev/search",
+            headers={"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"},
+            json={"q": query, "num": 5, "gl": "us", "hl": "en"},
+            timeout=15,
+        )
+        if response.status_code != 200:
+            logger.debug(f"find_company_website non-200 for {query!r}: {response.status_code}")
+            return ""
+        data = response.json() or {}
+        organic = data.get("organic") or []
+        for item in organic:
+            link = (item.get("link") or "").strip()
+            if not link:
+                continue
+            # Cheap aggregator filter: substring match on host portion
+            lower = link.lower()
+            if any(agg in lower for agg in _AGGREGATOR_DOMAINS):
+                continue
+            return link
+        return ""
+    except Exception as exc:
+        logger.debug(f"find_company_website failed for {company_name!r}: {exc}")
+        return ""
+
+
 def fetch_site_text(url: str) -> str:
     """
     Fetch readable markdown content from a website URL via Firecrawl.
@@ -204,10 +262,12 @@ def scrape_google_maps_leads(
         email = find_email_from_website(website) if website else ""
         lead = {
             "name": biz["name"],
+            "business_name": biz["name"],
             "email": email,
             "phone": biz.get("phone", ""),
             "website_url": website,
             "has_website": biz.get("has_website", bool(website)),
+            "no_website": not website,
             "review_count": rc,
             "google_rating": biz.get("rating", 0.0),
             "google_address": biz.get("address", ""),
