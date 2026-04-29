@@ -131,6 +131,15 @@ Target: $5K MRR by June 2026. Possible framings to choose from:
 
 ---
 
+### Quality follow-ups (small, opportunistic)
+
+These are paper cuts surfaced during 2026-04-29 work. None block the cash path. Pull when a session has a 15-30 min gap.
+
+- **email_builder.py pre-existing em-dashes (~15-20 instances).** Diff-aware em-dash hook (`scripts/check_no_em_dashes.py`) now ignores them, but they will fire if anyone passes `--full`. Run `python scripts/check_no_em_dashes.py --full signal_works/email_builder.py`, scrub each prose `--` to `:` or `,`, commit as one cleanup.
+- **scan_line `{name}` injection bug for CW leads.** In `_opening()` template branches (lines ~285, 296, 318+ on `feature/style-dna-wirein`), scan_line uses `{name}` which for CW leads is a person's name, producing "a quick demo showing what Adam Ingersoll could look like with a site built for AI visibility." The voice-line short-circuit at line 255 already de-personalized; the template branches still have the bug. SW leads are unaffected because `name` is the business there. Fix: detect when lead is CW (source contains "apollo") and use generic phrasing, OR add `business_name` field that maps to lead.company for CW and lead.name for SW.
+
+---
+
 ### R7: transcript-style-dna lift-test verdict (KEEP or DELETE)
 
 **Status:** ⏰ Active, eval date 2026-06-01.
