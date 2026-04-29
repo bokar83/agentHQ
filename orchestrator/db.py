@@ -621,6 +621,35 @@ def ensure_leads_columns(conn) -> None:
         logger.warning(f"ensure_leads_columns: commit failed: {e}")
 
 
+def get_resend_queue(limit: int = 5, days_back: int = 60) -> list[dict]:
+    """Return oldest-revealed Apollo contacts NOT touched in `days_back` days.
+
+    Used by CW topup as the resend pool. Pairs with the apollo_revealed dedup
+    table (apollo_id, revealed_at, email, name).
+    """
+    conn = get_crm_connection_with_fallback()[0]
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT apollo_id, email, name, revealed_at
+        FROM apollo_revealed
+        WHERE email IS NOT NULL
+          AND revealed_at < NOW() - (%s || ' days')::interval
+          AND apollo_id NOT IN (
+              SELECT apollo_id FROM leads
+              WHERE last_drafted_at > NOW() - (%s || ' days')::interval
+                AND apollo_id IS NOT NULL
+          )
+        ORDER BY revealed_at ASC
+        LIMIT %s
+        """,
+        (str(days_back), str(days_back), limit),
+    )
+    rows = [dict(r) for r in cur.fetchall()]
+    conn.close()
+    return rows
+
+
 def ensure_email_jobs_table() -> None:
     """Create email_jobs table if it does not exist (idempotent)."""
     conn = get_local_connection()
