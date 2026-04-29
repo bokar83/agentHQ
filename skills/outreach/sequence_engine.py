@@ -71,7 +71,12 @@ TEMPLATES = {
 # ── DB ────────────────────────────────────────────────────────────────────────
 
 def _get_conn():
-    from orchestrator.db import get_crm_connection_with_fallback
+    try:
+        from orchestrator.db import get_crm_connection_with_fallback
+    except ModuleNotFoundError:
+        # VPS container: orchestrator/ is mounted as /app directly
+        sys.path.insert(0, "/app")
+        from db import get_crm_connection_with_fallback
     conn, is_fallback = get_crm_connection_with_fallback()
     if is_fallback:
         logger.warning("sequence_engine: using local Postgres fallback.")
