@@ -66,8 +66,7 @@ Target: $5K MRR by June 2026. Possible framings to choose from:
 
 **Actions before this milestone closes:**
 
-- **A/B TEST LIVE (2026-04-28):** Odd-ID leads get Variant B ("Your competitors just got a 20-person AI team"). Even-ID leads get Variant A (original score framing). Routing: `signal_works/email_builder.py:_ab_variant()`.
-- **Revert criterion:** If Variant B does not outperform Variant A in reply rate by 2026-05-03, delete the variant-B branches in `_subject()` and `_opening()`. Check replies that day.
+- **A/B TEST PAUSED (2026-04-28):** All leads get Variant A (original score framing). Variant B code preserved in `email_builder.py` with `AB_TEST_ACTIVE = False`. Re-enable after 2026-05-12 once SW sequence performance data exists. To activate: flip `AB_TEST_ACTIVE = True` and define reply-rate criterion before sending.
 - Follow up on any inbox reply within 24 hours
 - Close at Signal Works Tier 1 pricing ($500 setup + $497/month)
 
