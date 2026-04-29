@@ -123,7 +123,12 @@ def personalize_pending_leads(limit: int = 10) -> int:
 
     Called by morning_runner Step 4.5.
     """
-    from orchestrator.db import get_crm_connection
+    # Container vs dev: orchestrator/* is flattened to /app in orc-crewai.
+    try:
+        from orchestrator.db import get_crm_connection
+    except ModuleNotFoundError:
+        sys.path.insert(0, "/app")
+        from db import get_crm_connection
 
     conn = get_crm_connection()
     populated = 0
