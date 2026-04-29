@@ -39,8 +39,14 @@ def test_get_resend_queue_returns_oldest_uncontacted():
     """)
     conn.commit()
     conn.close()
-
-    queue = get_resend_queue(limit=5, days_back=60)
-    emails = [r["email"] for r in queue]
-    assert "old@example.com" in emails
-    assert "recent@example.com" not in emails
+    try:
+        queue = get_resend_queue(limit=5, days_back=60)
+        emails = [r["email"] for r in queue]
+        assert "old@example.com" in emails
+        assert "recent@example.com" not in emails
+    finally:
+        conn2 = get_local_connection()
+        cur2 = conn2.cursor()
+        cur2.execute("DELETE FROM apollo_revealed WHERE apollo_id LIKE 'test_%'")
+        conn2.commit()
+        conn2.close()
