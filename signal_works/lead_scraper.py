@@ -147,6 +147,38 @@ def find_email_from_website(website_url: str) -> str:
     return ""
 
 
+def fetch_site_text(url: str) -> str:
+    """
+    Fetch readable markdown content from a website URL via Firecrawl.
+    Returns markdown body, or empty string on any failure.
+
+    Used by the voice personalizer to build a reference corpus for transcript-style-dna.
+    Best-effort. Never raises; logs and returns empty on any error.
+    """
+    if not url or not FIRECRAWL_API_KEY:
+        return ""
+    try:
+        response = requests.post(
+            "https://api.firecrawl.dev/v1/scrape",
+            headers={
+                "Authorization": f"Bearer {FIRECRAWL_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={"url": url, "formats": ["markdown"]},
+            timeout=30,
+        )
+        if response.status_code != 200:
+            logger.debug(f"fetch_site_text non-200 for {url}: {response.status_code}")
+            return ""
+        data = response.json() or {}
+        if not data.get("success"):
+            return ""
+        return (data.get("data") or {}).get("markdown") or ""
+    except Exception as exc:
+        logger.debug(f"fetch_site_text failed for {url}: {exc}")
+        return ""
+
+
 def scrape_google_maps_leads(
     niche: str,
     city: str,
