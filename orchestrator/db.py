@@ -599,6 +599,25 @@ def upsert_signal_works_lead(lead: dict) -> None:
         conn.close()
 
 
+def ensure_leads_columns(conn) -> None:
+    """Add no_website, email_source, last_drafted_at columns if not present.
+
+    Idempotent. Safe to call from morning_runner each run.
+    """
+    cur = conn.cursor()
+    for col, definition in [
+        ("no_website", "BOOLEAN DEFAULT FALSE"),
+        ("email_source", "TEXT"),
+        ("last_drafted_at", "TIMESTAMPTZ"),
+        ("apollo_id", "TEXT"),
+    ]:
+        try:
+            cur.execute(f"ALTER TABLE leads ADD COLUMN IF NOT EXISTS {col} {definition}")
+        except Exception as e:
+            logger.warning(f"ensure_leads_columns: {col} alter failed: {e}")
+    conn.commit()
+
+
 def ensure_email_jobs_table() -> None:
     """Create email_jobs table if it does not exist (idempotent)."""
     conn = get_local_connection()
