@@ -76,15 +76,20 @@ def _has_no_website(lead: dict) -> bool:
 
 # ── Subject line by niche ─────────────────────────────────────────────────────
 #
-# A/B TEST (started 2026-04-28):
+# A/B TEST (PAUSED 2026-04-28):
 #   Variant A (original): score-based -- "ChatGPT doesn't know you exist"
 #   Variant B (new):      team-power framing -- "your competitors just got a 20-person AI team"
-# Routing: odd lead IDs get B, even get A. No lead-ID = A.
-# Criterion: if B does not outperform A in reply rate within 5 business days
-#            on a 20-email batch, revert by deleting the variant-B branches.
+# Paused to avoid conflicting with the new SW T1-T4 sequence engine launch.
+# Re-enable after 2026-05-12: flip AB_TEST_ACTIVE to True and define a
+# measurable criterion (reply rate over a 20-email batch, 5 business days).
+
+AB_TEST_ACTIVE = False
+
 
 def _ab_variant(lead: dict) -> str:
-    """Returns 'B' for odd-ID leads, 'A' for even or unknown."""
+    """Returns 'B' for odd-ID leads when A/B test is active, else always 'A'."""
+    if not AB_TEST_ACTIVE:
+        return "A"
     lead_id = lead.get("id") or lead.get("lead_id") or 0
     try:
         return "B" if int(lead_id) % 2 == 1 else "A"
