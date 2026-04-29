@@ -108,8 +108,8 @@ def _get_due_leads(conn, pipeline: str, touch: int, limit: int = 10) -> list[dic
     min_gap = timedelta(days=_touch_days(pipeline)[touch])
     cutoff = datetime.now(timezone.utc) - min_gap
 
-    source_filter = "apollo_catalyst_works" if pipeline == "cw" else "apollo_signal_works%"
-    source_op = "=" if pipeline == "cw" else "LIKE"
+    source_filter = "apollo_catalyst_works%" if pipeline == "cw" else "signal_works%"
+    source_op = "LIKE"
 
     if touch == 1:
         cur.execute(f"""
@@ -232,16 +232,37 @@ def _create_draft(to_email: str, subject: str, body: str,
 # ── Template loading ──────────────────────────────────────────────────────────
 
 def _load_template(pipeline: str, touch: int):
+    """Return (subject, body_or_builder) for the given pipeline/touch.
+
+    body_or_builder is either:
+      - a callable build_body(lead) if the template defines it, or
+      - a format-string BODY (legacy templates).
+    """
     module_path = TEMPLATES[pipeline][touch]
     mod = importlib.import_module(module_path)
-    return mod.SUBJECT, mod.BODY
+    subject = mod.SUBJECT
+    if hasattr(mod, "build_body"):
+        return subject, mod.build_body
+    return subject, mod.BODY
 
 
-def _render(body: str, lead: dict) -> str:
+def _render(body_or_builder, lead: dict) -> str:
+    """Render email body from either a build_body callable or a legacy format string."""
+    if callable(body_or_builder):
+        enriched = dict(lead)
+        if "first_name" not in enriched:
+            enriched["first_name"] = (lead.get("name") or "there").split()[0]
+        if "niche" not in enriched:
+            enriched["niche"] = (lead.get("industry") or "business").lower()
+        if "city" not in enriched:
+            enriched["city"] = lead.get("city") or "your city"
+        if "business_name" not in enriched:
+            enriched["business_name"] = lead.get("name") or "your business"
+        return body_or_builder(enriched)
     first_name = (lead.get("name") or "there").split()[0]
     niche = (lead.get("industry") or "business").lower()
     city = lead.get("city") or "your city"
-    return body.format(first_name=first_name, niche=niche, city=city)
+    return body_or_builder.format(first_name=first_name, niche=niche, city=city)
 
 
 # ── Main runner ───────────────────────────────────────────────────────────────

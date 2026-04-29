@@ -19,6 +19,7 @@ Pipelines:
 """
 
 import os
+import sys
 import logging
 import time
 import httpx
@@ -113,10 +114,23 @@ STUDIO_ICP = {
 
 # ── Dedup: track revealed Apollo IDs in Supabase ─────────────────────────────
 
+def _import_get_crm_connection():
+    """Dual-import for orchestrator.db. Host has orchestrator/ as a package;
+    container has orchestrator code flat in /app."""
+    try:
+        from orchestrator.db import get_crm_connection
+        return get_crm_connection
+    except ModuleNotFoundError:
+        if "/app" not in sys.path:
+            sys.path.insert(0, "/app")
+        from db import get_crm_connection  # type: ignore[no-redef]
+        return get_crm_connection
+
+
 def _ensure_revealed_table() -> None:
     """Create apollo_revealed table if it doesn't exist."""
     try:
-        from orchestrator.db import get_crm_connection
+        get_crm_connection = _import_get_crm_connection()
         conn = get_crm_connection()
         cur = conn.cursor()
         cur.execute("""
@@ -138,7 +152,7 @@ def _get_already_revealed(apollo_ids: list[str]) -> set[str]:
     if not apollo_ids:
         return set()
     try:
-        from orchestrator.db import get_crm_connection
+        get_crm_connection = _import_get_crm_connection()
         conn = get_crm_connection()
         cur = conn.cursor()
         cur.execute(
@@ -156,7 +170,7 @@ def _get_already_revealed(apollo_ids: list[str]) -> set[str]:
 def _mark_revealed(apollo_id: str, email: str, name: str) -> None:
     """Record a revealed contact so we never spend credits on them again."""
     try:
-        from orchestrator.db import get_crm_connection
+        get_crm_connection = _import_get_crm_connection()
         conn = get_crm_connection()
         cur = conn.cursor()
         cur.execute(
