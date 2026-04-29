@@ -199,6 +199,114 @@ def test_queue_failed_items_stay_failed():
     assert next_t is None, "failed items must not be re-issued"
 
 
+def test_renew_extends_lease_and_blocks_competing_claim():
+    """renew() pushes lease_expires_at out so the original claimer keeps the lock."""
+    from skills.coordination import claim, renew
+
+    first = claim(resource="long:render", holder="A", ttl_seconds=2)
+    assert first is not None
+
+    # Before TTL would expire, renew with a long extension
+    time.sleep(1)
+    assert renew(first["id"], ttl_seconds=60) is True
+
+    # After original 2s TTL would have expired, second claim is still denied
+    time.sleep(2)
+    competing = claim(resource="long:render", holder="B", ttl_seconds=60)
+    assert competing is None, "renew should have kept A's lock alive"
+
+
+def test_renew_returns_false_after_reclaim():
+    """If the lease did expire and someone else claimed, renew returns False."""
+    from skills.coordination import claim, renew
+
+    first = claim(resource="lost:lock", holder="A", ttl_seconds=1)
+    assert first is not None
+
+    time.sleep(2)
+    second = claim(resource="lost:lock", holder="B", ttl_seconds=60)
+    assert second is not None, "B should grab the stale lease"
+
+    # A's task was DELETEd by B's claim - the row no longer exists, so renew is False
+    assert renew(first["id"], ttl_seconds=60) is False, \
+        "A's renew on a reclaimed/deleted task must return False"
+
+
+def test_morning_runner_lock_serializes_concurrent_invocations(monkeypatch):
+    """Two morning_runner.main() calls at once: only one runs the body.
+
+    Proves the lock wired into signal_works/morning_runner.py at line 67-83
+    actually does what the commit message claimed. Stubs _main_body so we
+    don't fire Apollo/Firecrawl/Gmail.
+    """
+    from signal_works import morning_runner
+
+    body_runs: list[str] = []
+    body_runs_lock = threading.Lock()
+
+    def fake_body():
+        with body_runs_lock:
+            body_runs.append("ran")
+        time.sleep(2)
+        return 0
+
+    monkeypatch.setattr(morning_runner, "_main_body", fake_body)
+
+    barrier = threading.Barrier(2)
+    results: list[int] = []
+    results_lock = threading.Lock()
+
+    def invoke():
+        barrier.wait()
+        rc = morning_runner.main()
+        with results_lock:
+            results.append(rc)
+
+    threads = [threading.Thread(target=invoke) for _ in range(2)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert len(body_runs) == 1, f"body must run exactly once, ran {len(body_runs)}"
+    assert sorted(results) == [0, 0], f"both invocations exit clean rc=0, got {results}"
+
+
+def test_outreach_runner_lock_serializes_concurrent_invocations(monkeypatch):
+    """Same proof for outreach_runner: only one of two parallel runs executes."""
+    from signal_works import outreach_runner
+
+    runs: list[str] = []
+    runs_lock = threading.Lock()
+
+    def fake_run_outreach(**kwargs):
+        with runs_lock:
+            runs.append("ran")
+        time.sleep(2)
+        return {"drafted": 1, "skipped": 0}
+
+    import skills.outreach.outreach_tool as outreach_tool
+    monkeypatch.setattr(outreach_tool, "run_outreach", fake_run_outreach)
+
+    barrier = threading.Barrier(2)
+    results: list[int] = []
+    results_lock = threading.Lock()
+
+    def invoke():
+        barrier.wait()
+        rc = outreach_runner.run()
+        with results_lock:
+            results.append(rc)
+
+    threads = [threading.Thread(target=invoke) for _ in range(2)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert len(runs) == 1, f"outreach body must run exactly once, ran {len(runs)}"
+
+
 def test_recent_completed_returns_results():
     """recent_completed() lets agents read each other's output."""
     from skills.coordination import enqueue, claim_next, complete, recent_completed
