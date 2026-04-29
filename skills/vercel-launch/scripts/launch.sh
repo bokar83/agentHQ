@@ -4,6 +4,10 @@ set -e
 # vercel-launch/scripts/launch.sh
 # Usage: bash launch.sh <base-name> [--prod]
 # Outputs JSON to stdout. Progress to stderr.
+#
+# Self-locks per app name so two parallel launches of the same app cannot
+# stomp on each other's Vercel project state. Different app names launch in
+# parallel freely. Losing invocation exits 75.
 
 # ── Args ────────────────────────────────────────────────────────────────────
 BASE_NAME="${1:-}"
@@ -13,6 +17,15 @@ if [[ -z "$BASE_NAME" ]]; then
   echo '{"error":"Missing app name. Usage: launch.sh <base-name> [--prod]"}' >&1
   exit 1
 fi
+
+# ── Per-app mutex (mkdir is atomic across platforms) ────────────────────────
+LOCK_KEY=$(echo "$BASE_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g')
+LOCK_DIR="${TMPDIR:-/tmp}/vercel-launch-${LOCK_KEY}.lock"
+if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+  echo "{\"error\":\"another launch in flight for '$BASE_NAME' (lock $LOCK_DIR)\"}" >&1
+  exit 75
+fi
+trap 'rmdir "$LOCK_DIR" 2>/dev/null || true' EXIT
 
 shift
 for arg in "$@"; do

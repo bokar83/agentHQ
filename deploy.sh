@@ -2,8 +2,19 @@
 # deploy.sh — One-command VPS deploy for agentsHQ orchestrator
 # Usage: bash deploy.sh
 # Runs from local machine. Pulls latest, rebuilds, force-recreates orchestrator container.
+#
+# Self-locks via flock so two parallel `bash deploy.sh` invocations cannot stomp
+# on the same git push / VPS rebuild. The losing invocation exits 75.
 
 set -e
+
+LOCK_DIR="${TMPDIR:-/tmp}/agentshq-deploy.lock"
+if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+  echo "deploy.sh: another deploy is in flight (lock $LOCK_DIR)." >&2
+  echo "  If you are sure none is running, remove the lockdir and retry." >&2
+  exit 75
+fi
+trap 'rmdir "$LOCK_DIR" 2>/dev/null || true' EXIT
 
 VPS="root@72.60.209.109"
 REPO="/root/agentsHQ"

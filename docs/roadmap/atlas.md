@@ -330,6 +330,7 @@ These are explicit "do not build" decisions with reasons, so we don't relitigate
 | **Phase 5 stub** (Chairman skeleton ahead of data) | Stub that does nothing for 2 weeks rots. Build when data is ready. | 2026-04-24 | M5 trigger gate hits. |
 | **Phase 6 Hunter stub** (skeleton ahead of decision) | Hunter.io paused. Writing a stub for paused work is dead code. | 2026-04-24 | M6 trigger gate hits. |
 | **Agent Task Ledger** (general-purpose resumable state for any ad-hoc task) | Premature abstraction. Every pipeline loop already has purpose-built resume state (approval\_queue, Notion Status, \_confirm\_store). A general ledger solves a hypothetical, not a demonstrated failure. Karpathy audit: FAIL on Simplicity First. Sankofa: no trigger, no verifiable success criterion. | 2026-04-28 | A specific non-pipeline ad-hoc task demonstrably fails to resume after a session break. When that happens, build a single-table solution for that task type - not a general ledger. |
+| ~~Agent Task Ledger~~ | **RE-OPENED 2026-04-29.** Boubacar named it a proactive priority. Override based on user-stated risk + new memory rule `feedback_now_means_proactive_not_broken.md` (the Karpathy "no demonstrated failure" gate applies to speculative agent abstractions, not to user-named risks). Shipped: `skills/coordination/__init__.py` ledger with `claim/complete/lock` (resource locks) plus `enqueue/claim_next/fail/recent_completed` (work queue) on a single `tasks` table. `claim_next` uses FOR UPDATE SKIP LOCKED for race-free concurrent workers. Tests: `tests/test_agent_collision.py` (10/10 green). Wire-ins: morning_runner, outreach_runner, deploy.sh (mkdir mutex), vercel-launch (mkdir mutex per app). | 2026-04-29 | n/a (shipped) |
 
 ---
 
@@ -996,12 +997,11 @@ These can be deleted from the working directory at any time. They are not refere
 
 **Delivery platform: beehiiv** (not n8n/Mailgun). Current flow: crew drafts -> Drive -> Boubacar pastes into beehiiv manually.
 
-**THIS WEEK (by 2026-05-03):** Wire beehiiv REST API so newsletter_crew auto-creates a draft in beehiiv. ~1h Codex task.
-- New file: orchestrator/beehiiv.py (create_draft via POST /v2/publications/{pub_id}/posts)
-- New tool: BeehiivCreateDraftTool in tools.py, WRITING_TOOLS bundle
-- New env vars: BEEHIIV_API_KEY + BEEHIIV_PUBLICATION_ID (.env + docker-compose.yml)
-- Update build_newsletter_crew() task_write to call create_draft() after save_output
-- Ideas DB entry: 34fbcf1a-3029-815c-b1bc-de7364215adb
+**DROPPED 2026-04-29:** beehiiv REST API auto-draft task is not feasible. `POST /v2/publications/{pub_id}/posts` is Enterprise-only (verified). No workaround on Scale or Max tier; Zapier/Make/n8n hit the same gated endpoint. See `project_newsletter_beehiiv.md` for full API tier reality.
+
+**Locked workflow:** newsletter_crew drafts → Drive → Notion Content Board record updated → thumbnail generated → Boubacar pastes into beehiiv UI and hits Send. Manual UI step is the right call given the API gate; trade-off is ~2 min of human time per issue.
+
+**Replaces this task:** Friday-by-EOB cadence (next issue ready 4 days before Tuesday send) + beehiiv branded template (separate backlog item).
 
 ---
 
@@ -1322,5 +1322,69 @@ This session was originally scoped as "continue the agentsHQ structure cleanup s
 5. M5 (Chairman / L5 Learning): gate opens 2026-05-08
 
 **State at session end:** local uncommitted changes. Committing and pushing to GitHub now (this session entry is part of that commit). VPS does NOT need a pull - no runtime code changed.
+
+---
+
+## Session Log: 2026-04-29 (Wednesday) — autoresearch loop pattern validated as L5 substrate
+
+**Entry type:** Research + proof-of-mechanism. No code shipped. Two gates passed.
+
+**Trigger:** Reviewed Karpathy's `karpathy/autoresearch` repo (single-GPU LLM training agent that hacks `train.py`, runs 5-min experiment, keeps via git commit if `val_bpb` improved, resets if not, loops forever). Question: does the underlying mechanism translate to anything Boubacar's stack needs?
+
+**Initial verdict (pre-Council):** FORK. Top-ranked Monday move was "build generic loop_runner, deploy on cold outreach copy first."
+
+**Sankofa Council ran (with /karpathy lens) and rejected the ranking.** Cold outreach reply-rate at n=10 has a confidence interval of roughly [0%, 30%] on a 5% baseline — the loop would optimize toward false positives. The Council reframed: the only metric in Boubacar's stack with `val_bpb`-grade properties (deterministic, fast, evidence-grounded) is the **design-audit 5-dimension rubric**. That's the right target for the loop, and the right Monday step is a 30-min determinism test, not a 4-week framework build.
+
+**Determinism test (executed):** Same artifact (`workspace/demo-sites/volta-studio/index.html`), same rubric, scored 4 times (3 fresh runs in this session + 1 historical run from 2026-04-28).
+
+| Run | A11y | Perf | Theme | Resp | Anti | Total |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 2 | 4 | 4 | 3 | 3 | 16 |
+| 2 | 2 | 4 | 4 | 3 | 3 | 16 |
+| 3 | 2 | 4 | 4 | 3 | 3 | 16 |
+| 2026-04-28 prior | 2 | 4 | 4 | 3 | 3 | 16 |
+
+**Variance: 0 across all dimensions, all runs.** design-audit is deterministic enough to be a `val_bpb`. ✅ Gate 1 passed.
+
+**Loop iteration test (executed):** Pattern proof-of-mechanism on a copy of the catalystworks-consulting homepage (production source untouched).
+
+- Copied `output/websites/catalystworks-site/index.html` to `workspace/loop-test/cw-index-{baseline,mutated}.html`
+- Mutation: single targeted change — Inter font (P1 reflex-reject) → Spectral (heading) + Public Sans (body) per styleguide v1.1
+- Baseline score: 14/20 (dims: 3/3/4/3/1)
+- Mutated score: 15/20 (dims: 3/3/4/3/**2**)
+- Δ: **+1 on Anti-Patterns, no regression on other dimensions**
+
+✅ Gate 2 passed: targeted mutation produces measurable lift on the targeted dimension without collateral regressions. The mechanism transfers from `val_bpb` to design-audit.
+
+**Anomaly caught:** the prior catalystworks-consulting__index-audit.md recorded total **11/20** but its dimensions sum to 14/20. Tally arithmetic was wrong in the audit file. **Implication for the runner:** totals must be computed from dimension scores, not free-typed by the agent.
+
+**Why this matters for atlas L5:** L5 (Learn) is currently scoped as "Chairman crew reads outcomes weekly, proposes scoring/prompt mutations." That description was vague. autoresearch gives it a concrete shape: L5 is a bounded autonomous improvement loop that takes one editable artifact (a skill prompt, an agent backstory, a styleguide) + one fixed metric (design-audit score, post-Sankofa decision-change rate, reply rate at sufficient n) + one time budget, mutates, scores, git-keeps-or-reverts, logs to Postgres, runs unattended. Today's work confirms the **substrate** (deterministic metric + reproducible mutation + git as memory) before L5's data gate opens 2026-05-08.
+
+**Decisions made:**
+
+1. **autoresearch verdict: FORK.** Extract the loop pattern, do not clone the repo. Pattern is ~100 lines of glue (artifact + metric + mutator + git memory + Postgres log).
+2. **First production target: design-audit on Catalyst Works deliverables**, NOT cold outreach copy (Council was right; outreach metric is too noisy at n=10).
+3. **Cold outreach iterator descoped** until volume reaches 30+ sends/batch with statistical power.
+4. **Always work on copies in `workspace/loop-test/`**, never mutate real source. Saved as feedback memory: `feedback_always_copy_for_experiments.md`.
+5. **Runner build deferred** ("Let's stop and build later" — Boubacar). Substrate proven; build happens in a future session.
+
+**Files created this session:**
+
+- `workspace/loop-test/cw-index-baseline.html` (proof artifact, untouched copy of CW homepage)
+- `workspace/loop-test/cw-index-mutated.html` (proof artifact, font-swapped copy)
+- `~/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/feedback_always_copy_for_experiments.md` + MEMORY.md index entry
+
+**No production state changed:** No VPS touch. No Vercel deploy. No git commit on this session's findings yet. CW homepage source file at `output/websites/catalystworks-site/index.html` is byte-identical to baseline.
+
+**Open work (next session):**
+
+1. Build `agentsHQ/loops/loop_runner.py` — generic pattern (artifact + metric_fn + mutator + git memory + Postgres log)
+2. First deployment target: pick one in-flight Catalyst Works deliverable, baseline-audit, run loop overnight, wake up to git log of N attempts
+3. After 5+ successful runs, evaluate whether to register as a 6th heartbeat wake on VPS for autonomous overnight iteration
+4. Tally-from-dimensions enforcement in the runner (do not let agent free-type totals)
+
+**Atlas roadmap impact:** L5 substrate is now de-risked. When L5's 14-day data gate opens 2026-05-08, the loop infrastructure can be built against a proven mechanism rather than a hypothetical one. This shaves weeks off L5 build time.
+
+**State at session end:** clean working tree on production source. Two new files in `workspace/loop-test/` (test artifacts, .gitignore'd by workspace/ rules). Atlas roadmap updated (this entry). Memory updated (new feedback file + MEMORY.md). VPS unchanged.
 
 ---
