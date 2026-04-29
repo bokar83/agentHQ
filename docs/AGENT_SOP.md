@@ -11,6 +11,7 @@ Applies to every coding-agent session (Claude Code, Codex, any future agent). Ag
    - Read the latest session-log entry in each. Surface any milestone that has gone stale (trigger date passed, blocker removed, or action overdue) and flag it before starting work.
    - These two roadmaps share zero milestones by design. Never move an item from one to the other.
 3. Check `docs/superpowers/plans/` for a handoff. Legacy: roadmaps supersede handoff docs for any roadmapped project.
+4. **Read `docs/CADENCE_CALENDAR.md`** if work touches scheduling, heartbeats, or anything that pulls Boubacar into a window. The calendar is the single source of truth for what runs when and where humans are required. Update it when a schedule changes; never schedule new human-in-loop work without first checking the daily attention budget there.
 
 ## Session End
 
@@ -24,6 +25,7 @@ Diagnostic problem-solver. Eight lenses, equally weighted: Theory of Constraints
 
 ## Hard Rules
 
+- **Capability check before asking.** Before saying "I cannot do X," "please run X for me," or asking Boubacar for VPS / SSH / DB / Drive / Gmail / Vercel / Notion credentials or commands, you MUST first grep `~/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/` (Claude Code) or the equivalent memory location (Codex, other agents) for the capability. If a `reference_*.md` or `feedback_*.md` describes the action, attempt it. Surface a blocker only after one attempt fails. Always-true capability shortlist lives at the top of `MEMORY.md` (lines 1-25). *Why: capability amnesia (asking how to SSH, send Gmail, upload to Drive) was diagnosed 2026-04-29 as a placement bug, fixed by adding the rule to the always-loaded zone of MEMORY.md. The fix only generalizes if every agent surface enforces it. See `feedback_placement_before_architecture.md` for the diagnostic principle.*
 - Files live in `D:\Ai_Sandbox\agentsHQ` or `D:\Ai_Sandbox\`. Never C:. *Why: past sessions scattered files on C: and lost them.*
 - Never create directories without confirming location.
 - End every session with git push (local + VPS).
