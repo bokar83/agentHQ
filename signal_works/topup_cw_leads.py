@@ -20,12 +20,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
-from skills.apollo_skill.apollo_client import harvest_leads, CW_ICP
+from skills.apollo_skill.apollo_client import harvest_leads, CW_ICP_WIDENED
 try:
-    from orchestrator.db import get_crm_connection
+    from orchestrator.db import get_crm_connection, ensure_leads_columns, get_resend_queue
 except ModuleNotFoundError:
     sys.path.insert(0, "/app")
-    from db import get_crm_connection
+    from db import get_crm_connection, ensure_leads_columns, get_resend_queue
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -82,48 +82,64 @@ def _save_cw_lead(conn, lead: dict) -> bool:
 
 
 def topup_cw_leads(minimum: int = DAILY_MINIMUM, dry_run: bool = False) -> int:
+    """Hybrid CW lead topup: 5 fresh from Apollo (widened ICP) + 5 resends.
+
+    If resend queue returns fewer than 5, top up the gap from Apollo so we
+    always hit `minimum`.
+    """
     conn = get_crm_connection()
-    current = _count_ready_cw_leads(conn)
-    logger.info(f"CW topup: {current} ready leads (target: {minimum})")
+    try:
+        ensure_leads_columns(conn)
+    except Exception as e:
+        logger.warning(f"topup_cw_leads: ensure_leads_columns failed: {e}")
+    ready = _count_ready_cw_leads(conn)
+    logger.info(f"CW topup: {ready} ready leads (target: {minimum})")
+    if ready >= minimum:
+        return ready
 
-    if current >= minimum:
-        logger.info("Already at target. Nothing to do.")
-        conn.close()
-        return current
-
-    needed = minimum - current
-    logger.info(f"Need {needed} more leads. Harvesting via Apollo...")
-
-    if dry_run:
-        logger.info("[DRY-RUN] Would call Apollo harvest. Skipping.")
-        conn.close()
-        return current
-
-    # Harvest from Apollo -- only spends credits on ICP matches with emails
-    new_leads = harvest_leads(CW_ICP, target=needed + 5, max_pages=5)
-
+    target_fresh = 5
+    target_resend = 5
     saved = 0
-    for lead in new_leads:
+
+    # Slot 1-5: fresh Apollo
+    fresh = harvest_leads(CW_ICP_WIDENED, target=target_fresh, max_pages=6)
+    for lead in fresh:
         if not lead.get("email"):
             continue
         if _is_duplicate(conn, lead["email"]):
-            logger.info(f"  Skip duplicate: {lead['email']}")
             continue
-        ok = _save_cw_lead(conn, lead)
-        if ok:
+        lead["email_source"] = "apollo_fresh"
+        if dry_run or _save_cw_lead(conn, lead):
             saved += 1
-            logger.info(f"  Saved: {lead['name']} <{lead['email']}> | {lead['company']}")
-        if current + saved >= minimum:
-            break
 
-    total = current + saved
-    if total < minimum:
-        logger.warning(f"Topup finished with only {total}/{minimum} leads. Apollo returned fewer than expected.")
-    else:
-        logger.info(f"Topup complete: {total} CW leads ready.")
+    # Slot 6-10: resend queue
+    resends = get_resend_queue(limit=target_resend, days_back=60)
+    for r in resends:
+        if _is_duplicate(conn, r["email"]):
+            continue
+        lead = {
+            "apollo_id": r["apollo_id"], "email": r["email"], "name": r["name"],
+            "email_source": "cw_resend",
+        }
+        if dry_run or _save_cw_lead(conn, lead):
+            saved += 1
+
+    # Top up the gap: if saved < minimum, pull more fresh
+    gap = minimum - saved
+    if gap > 0:
+        topup_extra = harvest_leads(CW_ICP_WIDENED, target=gap, max_pages=6)
+        for lead in topup_extra:
+            if not lead.get("email"):
+                continue
+            if _is_duplicate(conn, lead["email"]):
+                continue
+            lead["email_source"] = "apollo_fresh"
+            if dry_run or _save_cw_lead(conn, lead):
+                saved += 1
 
     conn.close()
-    return total
+    logger.info(f"CW topup complete: {saved} new leads ready.")
+    return saved
 
 
 if __name__ == "__main__":

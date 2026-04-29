@@ -50,6 +50,7 @@ Last updated: 2026-04-27 | Total skills: 71
 | remote-access-auditor | remote access audit, Windows audit, unauthorized access | ops | no | skills/remote-access-auditor/ |
 | roadmap | roadmap, milestone, next, log, archive, session log | ops | no | skills/roadmap/ |
 | sankofa | decision, stress-test, council review, strategy | council | no | skills/sankofa/ |
+| scene-segmenter | segment script, scene split, beat segmentation, image and video prompts | media | no | skills/scene-segmenter/ |
 | seo-strategy | SEO, audit, article optimization, GEO | content | no | skills/seo-strategy/ |
 | serper_skill | Serper, web search, Google search | research | no | skills/serper_skill/ |
 | signal-works-pitch-reel | Signal Works, pitch reel, demo video | media | no | skills/signal-works-pitch-reel/ |
@@ -57,6 +58,7 @@ Last updated: 2026-04-27 | Total skills: 71
 | slides | presentation, HTML slides, Chart.js, pitch deck | design | no | skills/slides/ |
 | tab-shutdown | session end, shutdown, close session, memory | ops | no | skills/tab-shutdown/ |
 | transcribe | transcribe, audio, speech to text | media | no | skills/transcribe/ |
+| transcript-style-dna | style dna, voice fingerprint, personalize opener, prep for discovery | revenue | no | skills/transcript-style-dna/ |
 | ui-styling | shadcn, Radix UI, Tailwind, component | design | no | skills/ui-styling/ |
 | ui-ux-pro-max | UI/UX, design intelligence, color palette, font | design | no | skills/ui-ux-pro-max/ |
 | vercel-cli-with-tokens | Vercel CLI, token auth, Vercel manage | engineering | no | skills/vercel-cli-with-tokens/ |

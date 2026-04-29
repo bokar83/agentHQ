@@ -166,6 +166,62 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 
 ---
 
+### M3.5: Channel Cloner Pipeline ⏳ QUEUED (post-M3)
+
+**What:** Reverse-engineer a successful YouTube channel's full surface (voice, scripts, visuals, thumbnails) and produce new content modeled after it. Same M3 production engine, different input shape: instead of trend-scout candidate → original script, the cloner takes 3-5 reference channels → style profile → script in that style → visuals matching the channel's aesthetic → thumbnails matching their grammar.
+
+**Source:** YouTube video MJmoSxSPeRY analysis 2026-04-29 + Sankofa Council recommendation to keep this internal.
+
+**Why M3.5 not its own milestone:** the production engine (script generator → kie_media stills → kling video → hyperframes composition → render) is M3. The cloner is a different *front end* on the same pipeline: it swaps "trend-scout original idea" for "model-after-existing-channel idea." Building it as M3.5 reuses M3 infrastructure instead of forking a parallel pipeline.
+
+**Pipeline shape:**
+
+1. Operator gives N reference channel URLs + niche description
+2. Pull 3-5 viral transcripts per channel (YouTube transcript API, already used in `youtube-10k-lens`)
+3. Run `transcript-style-dna` extractor on combined transcripts → style profile JSON ✅ (shipped 2026-04-29)
+4. Generate channel branding: name candidates, description, logo prompt, banner prompt (single LLM call)
+5. Generate 15 video idea titles in the channel's style (single LLM call against style profile)
+6. Operator picks 1 idea
+7. Generate full script (~2000 words = 10 min video) in channel's voice
+8. **Scene segmenter** breaks script into ~167 scenes at 200 wpm, emits paired image+video prompts per beat (NEW SUB-SKILL)
+9. kie_media generates images per scene with reference-image consistency (style profile drives prompt enforcement)
+10. kie_media generates video per image (image-to-video, kling v2.1 master)
+11. hyperframes composes voiceover + scenes + captions + branded intro/outro
+12. Render → Drive → Pipeline DB → M4 publish
+
+**Sub-skills to build (in order):**
+
+| Sub-skill | Status | Effort | Notes |
+|---|---|---|---|
+| transcript-style-dna | ✅ shipped 2026-04-29 | done | N texts → style profile JSON + opener line |
+| scene-segmenter | ❌ to build | ~3-4 hr | Script → ~167 paired image+video prompts at 200 wpm. Single Python module + LLM call. NEXT BUILD. |
+| channel-branding-kit | ❌ to build | ~2 hr | Style profile + niche → name/description/logo/banner prompts. Single LLM call. |
+| video-idea-generator | ❌ to build | ~1 hr | Style profile + niche → 15 ranked video titles in voice. Single LLM call. |
+| reference-image-consistency in kie_media | ❌ to enhance existing | ~2 hr | Set reference once, reuse across N scene generations. Existing skill upgrade. |
+| thumbnail reverse-engineer | ❌ to build | ~3 hr | 5 reference thumbnails → thumbnail style profile + new thumbnail prompts. Vision call. |
+
+**Total new effort beyond what's already shipped:** ~12 hr across multiple sessions.
+
+**Why:** Once Studio has its own production engine working on original ideas (M3), the cloner becomes a force multiplier: any time a channel finds traction in a niche, Studio can spin up a model-after-it variant in hours, not weeks. Increases portfolio velocity toward G6 (≥2 active channels) and G4 ($1K/mo net floor).
+
+**Trigger:** M3 complete (production pipeline rendering original ideas end-to-end on at least one channel). Do NOT start M3.5 until M3 produces a working video.
+
+**Blockers:** M3.
+
+**Risk flag (named honestly):** Channel cloning has YouTube originality / IP exposure. Mitigation: clone *style* not *content*; never copy a competitor's specific video idea verbatim; treat cloned channels as "style-modeled" not "replicated." If YouTube demonetizes a cloned channel, that is market signal: pivot to original-only on that niche.
+
+**Branch:** `feat/studio-m3.5-cloner`
+
+**ETA:** 12-15 hr build across 3-4 sessions, post-M3.
+
+**Leverages:** M3 production engine, `transcript-style-dna` ✅, `kie_media`, `hyperframes`, `youtube-10k-lens` (transcript pull).
+
+**Source:** Strategy session 2026-04-29 + Sankofa Council overrule of external $497 audit packaging.
+
+**Started today (2026-04-29):** scene-segmenter sub-skill scaffolding. See `skills/scene-segmenter/`.
+
+---
+
 ### M4: Multi-Channel Publish Pipeline ⏳ DECISION-GATED
 
 **What:** Auto-publish from Studio Pipeline DB to the platform on Scheduled Date. Default path: Blotato Creator at $97/mo (verified live 2026-04-25), supports YouTube + IG + TikTok + Threads + LinkedIn + X + FB + Pinterest, 5,000 AI credits/mo, 40 social accounts (covers all M1+M7+M8 channels). Atlas's M7a Blotato spike outcome determines whether studio rides Blotato or pivots to OAuth.
