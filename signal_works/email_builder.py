@@ -252,6 +252,25 @@ def _opening(lead: dict) -> str:
             owner = first_word
     greeting = f"Hi {owner}," if owner else "Hi,"
 
+    # Voice personalization short-circuit: if upstream populated a voice line
+    # via skills.transcript-style-dna, use it. Falls through to templates if absent.
+    voice_line = (lead.get("voice_personalization_line") or "").strip()
+    if voice_line:
+        # Belt-and-suspenders em/en-dash scrub. extract.py and voice_personalizer.py
+        # already strip these, but the line could have been hand-edited or imported.
+        voice_line = voice_line.replace("\u2014", ", ").replace("\u2013", ", ")
+        if _has_no_website(lead):
+            scan_line = (
+                f"That gap is fixable. I put together a quick demo showing "
+                f"what {name} could look like with a site built for AI visibility."
+            )
+        else:
+            scan_line = (
+                f"I ran {name} through an AI visibility scan. You scored {score}/100. "
+                f"Here is what it looks like:"
+            )
+        return f"{greeting}\n{voice_line}\n{scan_line}"
+
     if _has_no_website(lead):
         if _ab_variant(lead) == "B":
             # Variant B: team-power framing for no-website leads
