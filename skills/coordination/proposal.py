@@ -12,6 +12,8 @@ suggested message. Reject(N) drops the proposal without committing.
 Reference shape: orchestrator/approval_queue.py - same pending /
 approved / rejected lifecycle, same Telegram preview pattern. Echo M3
 will unify the two ack queues.
+
+Shipped 2026-04-29.
 """
 
 from __future__ import annotations
