@@ -39,6 +39,7 @@ COPY orchestrator/prompts/ prompts/
 COPY skills/ skills/
 COPY templates/ templates/
 COPY docs/ docs/
+COPY signal_works/ signal_works/
 
 # Create required directories
 RUN mkdir -p /app/outputs /app/logs /app/outputs/proposals /app/outputs/council

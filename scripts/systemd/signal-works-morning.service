@@ -1,0 +1,16 @@
+[Unit]
+Description=agentsHQ Signal Works + Catalyst Works morning runner
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/root/agentsHQ
+EnvironmentFile=/root/agentsHQ/.env
+ExecStart=/usr/bin/python3 -m signal_works.morning_runner
+StandardOutput=append:/var/log/signal_works_morning.log
+StandardError=append:/var/log/signal_works_morning.log
+TimeoutStartSec=30min
+
+[Install]
+WantedBy=multi-user.target

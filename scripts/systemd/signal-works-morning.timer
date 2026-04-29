@@ -1,0 +1,10 @@
+[Unit]
+Description=Fire signal-works-morning.service at 07:00 America/Denver (DST-aware)
+
+[Timer]
+OnCalendar=*-*-* 07:00:00 America/Denver
+Persistent=true
+Unit=signal-works-morning.service
+
+[Install]
+WantedBy=timers.target
