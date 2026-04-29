@@ -77,3 +77,31 @@ def test_hunter_used_when_apollo_finds_domain_but_no_owner():
         mock_scrape.return_value = [_fake_lead("OneBiz")]
         topup(minimum=1, dry_run=True)
     assert mock_hunter.call_count == 1
+
+
+def test_circuit_breaker_alert_fires_even_when_hunter_already_disabled():
+    """If Hunter cap was already hit (call 1), then 5 subsequent leads fail
+    Firecrawl+Apollo: the circuit breaker alert MUST still fire."""
+    from signal_works.hunter_client import HunterCapReached
+    alerts = []
+    apollo_calls = {"n": 0}
+
+    def fake_apollo(name, city):
+        apollo_calls["n"] += 1
+        if apollo_calls["n"] == 1:
+            # First lead: Apollo returns domain-only -> Hunter is called and hits cap
+            return {"domain": "first.com", "email": None, "name": None}
+        # Subsequent leads: Apollo returns None -> double-fail
+        return None
+
+    with patch("signal_works.topup_leads.scrape_google_maps_leads") as mock_scrape, \
+         patch("signal_works.topup_leads.find_email_from_website", return_value=""), \
+         patch("signal_works.topup_leads.find_owner_by_company", side_effect=fake_apollo), \
+         patch("signal_works.topup_leads.domain_search", side_effect=HunterCapReached("test")), \
+         patch("signal_works.topup_leads._save_lead"), \
+         patch("signal_works.topup_leads._telegram_alert", side_effect=lambda m: alerts.append(m)):
+        mock_scrape.return_value = [_fake_lead(f"Biz{i}") for i in range(20)]
+        topup(minimum=10, dry_run=True)
+    # Lead 1 trips Hunter cap (alert 1). Leads 2-6 trip the breaker (alert 2). Run continues.
+    assert any("Hunter daily cap hit" in a for a in alerts), f"cap alert missing: {alerts}"
+    assert any("5 consecutive businesses failed BOTH" in a for a in alerts), f"breaker alert missing: {alerts}"

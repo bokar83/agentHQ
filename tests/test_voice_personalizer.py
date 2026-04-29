@@ -2,9 +2,26 @@
 from unittest.mock import patch
 
 
-def test_personalize_one_returns_none_when_no_website():
+def test_personalize_one_returns_none_when_no_website_and_finder_fails():
+    """No website_url + Serper finds nothing -> skip with reason=no_website."""
     from signal_works.voice_personalizer import _personalize_one
-    assert _personalize_one({"id": 1, "name": "Foo", "website_url": None}) is None
+    with patch("signal_works.voice_personalizer.find_company_website", return_value=""):
+        assert _personalize_one({
+            "id": 1, "name": "Foo", "company": "Foo Inc", "website_url": None
+        }) is None
+
+
+def test_personalize_one_derives_website_from_company():
+    """No website_url -> Serper finds one -> happy path proceeds."""
+    from signal_works.voice_personalizer import _personalize_one
+    with patch("signal_works.voice_personalizer.find_company_website", return_value="https://foo.example"), \
+         patch("signal_works.voice_personalizer.fetch_site_text", return_value="Foo voice " * 30), \
+         patch("signal_works.voice_personalizer.extract", return_value={"opener_line": "Foo line.", "confidence": "medium"}):
+        out = _personalize_one({
+            "id": 1, "name": "Foo", "company": "Foo Inc", "city": "SLC",
+            "niche": "consulting", "website_url": None,
+        })
+    assert out == "Foo line."
 
 
 def test_personalize_one_returns_none_when_empty_site_text():
