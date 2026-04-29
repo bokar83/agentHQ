@@ -232,16 +232,39 @@ def _create_draft(to_email: str, subject: str, body: str,
 # ── Template loading ──────────────────────────────────────────────────────────
 
 def _load_template(pipeline: str, touch: int):
+    """Return (subject, body_or_builder) for the given pipeline/touch.
+
+    body_or_builder is either:
+      - a callable build_body(lead) if the template defines it, or
+      - a format-string BODY (legacy templates).
+    """
     module_path = TEMPLATES[pipeline][touch]
     mod = importlib.import_module(module_path)
-    return mod.SUBJECT, mod.BODY
+    subject = mod.SUBJECT
+    if hasattr(mod, "build_body"):
+        return subject, mod.build_body
+    return subject, mod.BODY
 
 
-def _render(body: str, lead: dict) -> str:
+def _render(body_or_builder, lead: dict) -> str:
+    """Render email body from either a build_body callable or a legacy format string."""
+    if callable(body_or_builder):
+        # Merge name-derived fields into lead for the builder
+        enriched = dict(lead)
+        if "first_name" not in enriched:
+            enriched["first_name"] = (lead.get("name") or "there").split()[0]
+        if "niche" not in enriched:
+            enriched["niche"] = (lead.get("industry") or "business").lower()
+        if "city" not in enriched:
+            enriched["city"] = lead.get("city") or "your city"
+        if "business_name" not in enriched:
+            enriched["business_name"] = lead.get("name") or "your business"
+        return body_or_builder(enriched)
+    # Legacy format string
     first_name = (lead.get("name") or "there").split()[0]
     niche = (lead.get("industry") or "business").lower()
     city = lead.get("city") or "your city"
-    return body.format(first_name=first_name, niche=niche, city=city)
+    return body_or_builder.format(first_name=first_name, niche=niche, city=city)
 
 
 # ── Main runner ───────────────────────────────────────────────────────────────
