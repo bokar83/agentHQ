@@ -23,7 +23,11 @@ import httpx
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from signal_works.gmail_draft import _get_access_token
-from orchestrator.db import get_crm_connection
+try:
+    from orchestrator.db import get_crm_connection
+except ModuleNotFoundError:
+    sys.path.insert(0, "/app")
+    from db import get_crm_connection
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)

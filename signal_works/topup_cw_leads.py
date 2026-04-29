@@ -21,7 +21,11 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 from skills.apollo_skill.apollo_client import harvest_leads, CW_ICP
-from orchestrator.db import get_crm_connection
+try:
+    from orchestrator.db import get_crm_connection
+except ModuleNotFoundError:
+    sys.path.insert(0, "/app")
+    from db import get_crm_connection
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
