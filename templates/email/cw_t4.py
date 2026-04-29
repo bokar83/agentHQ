@@ -1,22 +1,25 @@
 """
 templates/email/cw_t4.py
 ========================
-Catalyst Works cold outreach -- Touch 4 (Day 12). Breakup email.
+Catalyst Works cold outreach -- Touch 4 (Day 14).
+Pattern recognition / social proof angle.
 SINGLE SOURCE OF TRUTH. Edit this file only.
 
 Import:
   from templates.email.cw_t4 import SUBJECT, BODY
 """
 
-SUBJECT = "Last note from me"
+SUBJECT = "What I find in most businesses"
 
 BODY = """Hi {first_name},
 
-I won't follow up after this.
+Most businesses I work with have the same pattern: one decision point, one approval loop, or one pricing gap that quietly costs more than anyone realizes.
 
-If the timing isn't right, completely understood.
+It's rarely where people are looking.
 
-If it ever is, the diagnostic is still available: 90 minutes, one named constraint, one clear path forward.
+If that sounds familiar, I'm happy to run the diagnostic. You leave with a specific answer and a 90-day plan.
+
+Worth 20 minutes to find out?
 
 Boubacar
 catalystworks.consulting

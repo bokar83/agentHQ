@@ -39,7 +39,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 logger = logging.getLogger(__name__)
 
-TOUCH_DAYS = {1: 0, 2: 3, 3: 7, 4: 12}
+# SW: 4 touches at Day 0/3/7/12
+# CW: 5 touches at Day 0/6/9/14/19 (T2 = SaaS PDF value-add)
+TOUCH_DAYS_SW = {1: 0, 2: 3, 3: 7, 4: 12}
+TOUCH_DAYS_CW = {1: 0, 2: 6, 3: 9, 4: 14, 5: 19}
+
+def _touch_days(pipeline: str) -> dict:
+    return TOUCH_DAYS_CW if pipeline == "cw" else TOUCH_DAYS_SW
 
 CW_ACCOUNT = "catalystworks.ai@gmail.com"
 SW_ACCOUNT = "catalystworks.ai@gmail.com"
@@ -50,6 +56,7 @@ TEMPLATES = {
         2: "templates.email.cw_t2",
         3: "templates.email.cw_t3",
         4: "templates.email.cw_t4",
+        5: "templates.email.cw_t5",
     },
     "sw": {
         1: "templates.email.sw_t1",
@@ -92,7 +99,7 @@ def _get_due_leads(conn, pipeline: str, touch: int) -> list[dict]:
     T2-T4: sequence_touch = touch-1, last_contacted_at <= now - required_days
     """
     cur = conn.cursor()
-    min_gap = timedelta(days=TOUCH_DAYS[touch])
+    min_gap = timedelta(days=_touch_days(pipeline)[touch])
     cutoff = datetime.now(timezone.utc) - min_gap
 
     source_filter = "apollo_catalyst_works" if pipeline == "cw" else "apollo_signal_works%"
@@ -224,7 +231,7 @@ def _load_template(pipeline: str, touch: int):
     return mod.SUBJECT, mod.BODY
 
 
-def _render(body: str, lead: dict, pipeline: str) -> str:
+def _render(body: str, lead: dict) -> str:
     first_name = (lead.get("name") or "there").split()[0]
     niche = (lead.get("industry") or "business").lower()
     city = lead.get("city") or "your city"
@@ -247,7 +254,8 @@ def run_sequence(pipeline: str, dry_run: bool = False) -> dict:
     total_failed = 0
     results = []
 
-    for touch in [1, 2, 3, 4]:
+    max_touch = 5 if pipeline == "cw" else 4
+    for touch in range(1, max_touch + 1):
         leads = _get_due_leads(conn, pipeline, touch)
         if not leads:
             logger.info(f"[{pipeline.upper()}] T{touch}: no leads due")
@@ -260,7 +268,7 @@ def run_sequence(pipeline: str, dry_run: bool = False) -> dict:
             name = lead.get("name", "")
             email = lead.get("email", "")
             subject = subject_tpl
-            body = _render(body_tpl, lead, pipeline)
+            body = _render(body_tpl, lead)
 
             if dry_run:
                 logger.info(f"  [DRY-RUN] Would {'send' if auto_send else 'draft'}: {name} <{email}> | {subject}")
