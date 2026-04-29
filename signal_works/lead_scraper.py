@@ -147,36 +147,124 @@ def find_email_from_website(website_url: str) -> str:
     return ""
 
 
-def fetch_site_text(url: str) -> str:
-    """
-    Fetch readable markdown content from a website URL via Firecrawl.
-    Returns markdown body, or empty string on any failure.
+# Domains that are not the company's own website. If the top organic result
+# is from one of these, skip and try the next. If everything is aggregators,
+# return empty (we'd rather fail closed than scrape a Yelp page as if it were
+# the prospect's voice).
+_AGGREGATOR_DOMAINS = (
+    "linkedin.com", "facebook.com", "instagram.com", "twitter.com", "x.com",
+    "yelp.com", "crunchbase.com", "glassdoor.com", "indeed.com", "zoominfo.com",
+    "bbb.org", "yellowpages.com", "manta.com", "bizjournals.com", "owler.com",
+    "tiktok.com", "youtube.com", "pinterest.com", "reddit.com",
+    "google.com", "bing.com", "wikipedia.org",
+    "apollo.io", "rocketreach.co", "lusha.com", "signalhire.com",
+)
 
-    Used by the voice personalizer to build a reference corpus for transcript-style-dna.
-    Best-effort. Never raises; logs and returns empty on any error.
+
+def find_company_website(company_name: str, city: str = "") -> str:
     """
-    if not url or not FIRECRAWL_API_KEY:
+    Find the company's own website URL by Serper search on the company name.
+
+    Skips known aggregator/social domains. Returns the first organic result
+    that is plausibly the company's own site. Returns empty string on any
+    failure (no API key, no results, all results are aggregators, network
+    error). Best-effort: never raises.
+
+    Used to derive a website_url for CW (Apollo) leads, which only have
+    company name + linkedin_url out of the box.
+    """
+    if not company_name:
         return ""
+    if not SERPER_API_KEY:
+        return ""
+    query = f"{company_name} {city}".strip() if city else company_name
     try:
         response = requests.post(
-            "https://api.firecrawl.dev/v1/scrape",
-            headers={
-                "Authorization": f"Bearer {FIRECRAWL_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={"url": url, "formats": ["markdown"]},
-            timeout=30,
+            "https://google.serper.dev/search",
+            headers={"X-API-KEY": SERPER_API_KEY, "Content-Type": "application/json"},
+            json={"q": query, "num": 5, "gl": "us", "hl": "en"},
+            timeout=15,
         )
         if response.status_code != 200:
-            logger.debug(f"fetch_site_text non-200 for {url}: {response.status_code}")
+            logger.debug(f"find_company_website non-200 for {query!r}: {response.status_code}")
             return ""
         data = response.json() or {}
-        if not data.get("success"):
-            return ""
-        return (data.get("data") or {}).get("markdown") or ""
-    except Exception as exc:
-        logger.debug(f"fetch_site_text failed for {url}: {exc}")
+        organic = data.get("organic") or []
+        for item in organic:
+            link = (item.get("link") or "").strip()
+            if not link:
+                continue
+            # Cheap aggregator filter: substring match on host portion
+            lower = link.lower()
+            if any(agg in lower for agg in _AGGREGATOR_DOMAINS):
+                continue
+            return link
         return ""
+    except Exception as exc:
+        logger.debug(f"find_company_website failed for {company_name!r}: {exc}")
+        return ""
+
+
+def fetch_site_text(url: str) -> str:
+    """
+    Fetch readable text content from a website URL using requests + BeautifulSoup.
+
+    Strips script and style tags. Collapses runs of whitespace. Returns plain
+    text suitable as reference material for transcript-style-dna.extract.
+
+    Best-effort. Never raises; logs and returns empty on any error including
+    non-200, non-HTML content type, network failure, parse failure.
+
+    Decision 2026-04-29: chose this over Firecrawl for the lift test. See
+    memory/reference_firecrawl_pricing_2026.md.
+    """
+    if not url:
+        return ""
+    try:
+        from bs4 import BeautifulSoup  # local import to keep startup cheap
+    except ImportError:
+        logger.error("fetch_site_text: beautifulsoup4 not installed")
+        return ""
+    try:
+        response = requests.get(
+            url,
+            headers={
+                # Some sites 403 the python-requests UA. A plain modern UA
+                # is enough for most small-business marketing sites.
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/120.0.0.0 Safari/537.36"
+                ),
+                "Accept": "text/html,application/xhtml+xml",
+                "Accept-Language": "en-US,en;q=0.9",
+            },
+            timeout=15,
+            allow_redirects=True,
+        )
+    except Exception as exc:
+        logger.debug(f"fetch_site_text request failed for {url}: {exc}")
+        return ""
+    if response.status_code != 200:
+        logger.debug(f"fetch_site_text non-200 for {url}: {response.status_code}")
+        return ""
+    content_type = (response.headers.get("Content-Type") or "").lower()
+    if "html" not in content_type:
+        logger.debug(f"fetch_site_text non-HTML content_type={content_type} for {url}")
+        return ""
+    try:
+        soup = BeautifulSoup(response.text, "html.parser")
+    except Exception as exc:
+        logger.debug(f"fetch_site_text parse failed for {url}: {exc}")
+        return ""
+    # Strip noise: scripts, styles, hidden elements, nav clutter
+    for tag in soup(["script", "style", "noscript", "template", "iframe", "svg"]):
+        tag.decompose()
+    text = soup.get_text(separator="\n")
+    # Collapse runs of blank lines and trim per-line whitespace
+    lines = [ln.strip() for ln in text.splitlines()]
+    lines = [ln for ln in lines if ln]
+    return "\n".join(lines)
 
 
 def scrape_google_maps_leads(

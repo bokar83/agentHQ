@@ -18,7 +18,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from signal_works.lead_scraper import fetch_site_text  # noqa: E402
+from signal_works.lead_scraper import fetch_site_text, find_company_website  # noqa: E402
 
 # transcript-style-dna lives in a hyphenated dir, which Python cannot
 # import normally. Load via importlib.
@@ -59,7 +59,19 @@ def _personalize_one(lead: dict) -> Optional[str]:
     """
     url = (lead.get("website_url") or "").strip()
     if not url:
-        return None
+        # CW Apollo leads ship without website_url; derive from company name + city
+        company = (lead.get("company") or lead.get("name") or "").strip()
+        city = (lead.get("city") or "").strip()
+        url = find_company_website(company, city)
+        if not url:
+            logger.info(
+                f"voice_personalizer: skip lead={lead.get('id')} name={lead.get('name')!r} "
+                f"reason=no_website company={company!r}"
+            )
+            return None
+        logger.info(
+            f"voice_personalizer: derived website lead={lead.get('id')} url={url}"
+        )
 
     text = fetch_site_text(url)
     text_len = len(text or "")
@@ -119,15 +131,13 @@ def personalize_pending_leads(limit: int = 10) -> int:
         with conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT id, name, niche, city, website_url
+                SELECT id, name, company, niche, city, website_url
                 FROM leads
-                WHERE website_url IS NOT NULL
-                  AND website_url <> ''
-                  AND voice_personalization_line IS NULL
+                WHERE voice_personalization_line IS NULL
                   AND COALESCE(email, '') <> ''
-                  AND email_drafted = FALSE
-                  AND lead_type = 'consulting'
-                ORDER BY ai_score DESC NULLS LAST, created_at DESC NULLS LAST
+                  AND (sequence_touch IS NULL OR sequence_touch = 0)
+                  AND source = 'apollo_catalyst_works'
+                ORDER BY created_at DESC
                 LIMIT %s
                 """,
                 (limit,),
