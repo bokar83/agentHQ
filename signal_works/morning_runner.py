@@ -148,8 +148,8 @@ def _main_body():
     try:
         from skills.outreach.sequence_engine import run_sequence
         cw_result = run_sequence("cw", dry_run=False, daily_limit=10)
-        cw_drafted = cw_result.get("sent", 0)
-        logger.info(f"  Done. {cw_drafted} CW emails sent.")
+        cw_drafted = cw_result.get("drafted", 0)
+        logger.info(f"  Done. {cw_drafted} CW emails drafted.")
     except Exception as e:
         logger.error(f"  CW sequence failed: {e}")
 

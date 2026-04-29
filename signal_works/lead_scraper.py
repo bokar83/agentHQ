@@ -7,9 +7,14 @@ Falls back to manual CSV input mode if keys unavailable.
 """
 import os
 import re
+import sys
 import logging
 import requests
-from orchestrator.db import upsert_signal_works_lead
+try:
+    from orchestrator.db import upsert_signal_works_lead
+except ModuleNotFoundError:
+    sys.path.insert(0, "/app")
+    from db import upsert_signal_works_lead  # type: ignore[no-redef]
 
 logger = logging.getLogger(__name__)
 
