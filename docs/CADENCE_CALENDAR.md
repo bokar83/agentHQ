@@ -21,6 +21,9 @@ Last updated: 2026-04-29
 | 06:00 | Notion lead sync (Supabase -> Notion CRM, ~960 leads) | Background | No | scheduler.py daily cron |
 | 06:00 | Daily Lead Harvest (hunter_crew, Utah SMB sweep) | Background | No | scheduler.py daily cron |
 | 06:00 | NLM registry export (Postgres -> Sheets) | Background | No | VPS crontab |
+| 07:00 | heartbeat-morning self-test ping | Background | No | scheduler.py |
+| 13:00 | heartbeat-midday self-test ping | Background | No | scheduler.py |
+| 19:00 | heartbeat-evening self-test ping | Background | No | scheduler.py |
 | 07:00 | Griot morning tick (proposes daily content) Mon-Fri | Background -> Telegram nudge | YES if proposal arrives | griot.py |
 | 07:30 | Publish brief Telegram digest | Background -> Telegram nudge | YES if there is content to confirm | publish_brief.py |
 | 08:00 | Health sweep (probes all live endpoints) | Background | No (silent unless red) | health_sweep.py |
