@@ -75,6 +75,22 @@ def _has_no_website(lead: dict) -> bool:
 
 
 # ── Subject line by niche ─────────────────────────────────────────────────────
+#
+# A/B TEST (started 2026-04-28):
+#   Variant A (original): score-based -- "ChatGPT doesn't know you exist"
+#   Variant B (new):      team-power framing -- "your competitors just got a 20-person AI team"
+# Routing: odd lead IDs get B, even get A. No lead-ID = A.
+# Criterion: if B does not outperform A in reply rate within 5 business days
+#            on a 20-email batch, revert by deleting the variant-B branches.
+
+def _ab_variant(lead: dict) -> str:
+    """Returns 'B' for odd-ID leads, 'A' for even or unknown."""
+    lead_id = lead.get("id") or lead.get("lead_id") or 0
+    try:
+        return "B" if int(lead_id) % 2 == 1 else "A"
+    except (TypeError, ValueError):
+        return "A"
+
 
 def _subject(lead: dict) -> str:
     name = lead.get("name", "your business")
@@ -82,8 +98,21 @@ def _subject(lead: dict) -> str:
     niche = (lead.get("niche") or "").lower()
 
     if _has_no_website(lead):
+        if _ab_variant(lead) == "B":
+            return f"Your competitors just got a 20-person AI team. {name} hasn't."
         return f"{name} has no website -- and AI can't find you at all"
 
+    if _ab_variant(lead) == "B":
+        # Variant B: team-power framing, niche-specific
+        if "dentist" in niche:
+            return f"Competing dental practices just got a 20-person AI team. Here's what that means for {name}."
+        elif "roofer" in niche or "roofing" in niche:
+            return f"Your competitors just got a 20-person AI team. {name} is still invisible on ChatGPT."
+        elif "hvac" in niche:
+            return f"Other HVAC companies just got a 20-person AI team. Homeowners can't find {name} yet."
+        return f"Your competitors just got a 20-person AI team. {name} scored {score}/100 on AI visibility."
+
+    # Variant A (original)
     if "dentist" in niche:
         return f"ChatGPT doesn't know {name} exists (AI score: {score}/100)"
     elif "roofer" in niche or "roofing" in niche:
@@ -219,18 +248,47 @@ def _opening(lead: dict) -> str:
     greeting = f"Hi {owner}," if owner else "Hi,"
 
     if _has_no_website(lead):
-        # No-website variant: different angle entirely
-        if "dentist" in niche_raw:
-            problem = f"I tried to find {name} online. I couldn't. No website, no AI presence -- parents asking ChatGPT for a pediatric dentist in {city} will never land on you."
-        elif "roofer" in niche_raw or "roofing" in niche_raw:
-            problem = f"I tried to find {name} online. I couldn't. No website, no AI presence -- homeowners asking ChatGPT for a roofer in {city} will never find you."
-        elif "hvac" in niche_raw:
-            problem = f"I tried to find {name} online. I couldn't. No website, no AI presence -- homeowners asking ChatGPT for emergency HVAC help in {city} will never call you."
+        if _ab_variant(lead) == "B":
+            # Variant B: team-power framing for no-website leads
+            if "dentist" in niche_raw:
+                problem = f"Competing pediatric practices in {city} are using AI tools to show up every time a parent asks ChatGPT for a dentist. {name} has no website -- so there is nothing for AI to find."
+            elif "roofer" in niche_raw or "roofing" in niche_raw:
+                problem = f"Competing roofers in {city} are using AI tools to capture every homeowner searching on ChatGPT. {name} has no website -- so there is nothing for AI to find."
+            elif "hvac" in niche_raw:
+                problem = f"Competing HVAC companies in {city} are using AI tools to be the first call when a homeowner needs help. {name} has no website -- so there is nothing for AI to find."
+            else:
+                problem = f"Your competitors in {city} are using AI tools to get found first. {name} has no web presence -- so AI has nothing to cite."
+            scan_line = f"That is fixable. I put together a quick demo showing what {name} could look like with a site built for AI visibility from day one."
         else:
-            problem = f"I tried to find {name} online. I couldn't. Without a web presence, AI tools have nothing to cite -- and you stay invisible."
-        scan_line = f"That is fixable. I put together a quick demo showing what {name} could look like with a site built for AI visibility from day one."
+            # Variant A (original): no-website angle
+            if "dentist" in niche_raw:
+                problem = f"I tried to find {name} online. I couldn't. No website, no AI presence -- parents asking ChatGPT for a pediatric dentist in {city} will never land on you."
+            elif "roofer" in niche_raw or "roofing" in niche_raw:
+                problem = f"I tried to find {name} online. I couldn't. No website, no AI presence -- homeowners asking ChatGPT for a roofer in {city} will never find you."
+            elif "hvac" in niche_raw:
+                problem = f"I tried to find {name} online. I couldn't. No website, no AI presence -- homeowners asking ChatGPT for emergency HVAC help in {city} will never call you."
+            else:
+                problem = f"I tried to find {name} online. I couldn't. Without a web presence, AI tools have nothing to cite -- and you stay invisible."
+            scan_line = f"That is fixable. I put together a quick demo showing what {name} could look like with a site built for AI visibility from day one."
         return f"{greeting}\n{problem}\n{scan_line}"
 
+    if _ab_variant(lead) == "B":
+        # Variant B: competitors-got-a-team framing
+        if "dentist" in niche_raw:
+            problem = f"Competing pediatric practices in {city} are already using AI tools to be the name ChatGPT recommends to parents. I ran {name} through an AI visibility scan. You scored {score}/100."
+            scan_line = f"That gap is closable. Here is what it looks like:"
+        elif "roofer" in niche_raw or "roofing" in niche_raw:
+            problem = f"Competing roofers in {city} are already using AI tools to capture homeowners searching on ChatGPT. I ran {name} through a scan. You scored {score}/100."
+            scan_line = f"That gap is closable. Here is what it looks like:"
+        elif "hvac" in niche_raw:
+            problem = f"Competing HVAC companies in {city} are already using AI tools to be the first call when homeowners need help. I ran {name} through a scan. You scored {score}/100."
+            scan_line = f"That gap is closable. Here is what it looks like:"
+        else:
+            problem = f"Your competitors in {city} are already using AI tools to get found first. I ran {name} through an AI visibility scan. You scored {score}/100."
+            scan_line = f"That gap is closable. Here is what it looks like:"
+        return f"{greeting}\n{problem}\n{scan_line}"
+
+    # Variant A (original)
     if "dentist" in niche_raw:
         problem = f"Right now, a parent in {city} is asking ChatGPT for a pediatric dentist. They are getting a name. It is not yours."
         scan_line = f"I ran {name} through an AI visibility scan. You scored {score}/100."
