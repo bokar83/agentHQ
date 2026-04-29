@@ -1,24 +1,23 @@
 """
 templates/email/cw_t3.py
 ========================
-Catalyst Works cold outreach -- Touch 3 (Day 7).
+Catalyst Works cold outreach -- Touch 3 (Day 9).
+Friction/bottleneck angle. Short bump after PDF.
 SINGLE SOURCE OF TRUTH. Edit this file only.
 
 Import:
   from templates.email.cw_t3 import SUBJECT, BODY
 """
 
-SUBJECT = "What I find in most businesses"
+SUBJECT = "The thing slowing your business down"
 
 BODY = """Hi {first_name},
 
-Most businesses I work with have the same pattern: one decision point, one approval loop, or one pricing gap that quietly costs more than anyone realizes.
+Most owners I talk to already know where the friction is. They just haven't had time to name it precisely or build a path around it.
 
-It's rarely where people are looking.
+That's the 90 minutes. Nothing more.
 
-If that sounds familiar, I'm happy to run the diagnostic. You leave with a specific answer and a 90-day plan.
-
-Worth 20 minutes to find out?
+Still worth it?
 
 Boubacar
 catalystworks.consulting
