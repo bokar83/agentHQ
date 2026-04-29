@@ -27,9 +27,26 @@ import urllib.parse
 from datetime import date, datetime
 from typing import Optional
 
+import pathlib
+import tempfile
+
 import pytz
 
 logger = logging.getLogger("agentsHQ.publish_brief")
+
+# ─── per-day dedup sentinel (survives container restarts via /tmp) ────────────
+_SENTINEL_DIR = pathlib.Path(tempfile.gettempdir())
+
+
+def _brief_already_sent(today_iso: str) -> bool:
+    return (_SENTINEL_DIR / f"publish_brief_sent_{today_iso}.flag").exists()
+
+
+def _mark_brief_sent(today_iso: str) -> None:
+    try:
+        (_SENTINEL_DIR / f"publish_brief_sent_{today_iso}.flag").touch()
+    except OSError:
+        pass
 
 TIMEZONE = os.environ.get("HEARTBEAT_TIMEZONE", "America/Denver")
 CONTENT_DB_ID = os.environ.get("FORGE_CONTENT_DB", "339bcf1a-3029-81d1-8377-dc2f2de13a20")
@@ -216,8 +233,16 @@ def publish_brief_tick() -> None:
         return
 
     if not posts:
+        if _brief_already_sent(today_iso):
+            logger.info("publish_brief_tick: empty brief already sent today, skip")
+            return
         send_message(str(chat_id), _format_empty_brief(today_iso, day_name))
+        _mark_brief_sent(today_iso)
         logger.info(f"publish_brief_tick: sent empty brief")
+        return
+
+    if _brief_already_sent(today_iso):
+        logger.info("publish_brief_tick: full brief already sent today, skip")
         return
 
     # Atlas M1: evict stale dict entries (24h+) before populating new ones.
@@ -256,6 +281,7 @@ def publish_brief_tick() -> None:
             }
             populated += 1
 
+    _mark_brief_sent(today_iso)
     logger.info(
         f"publish_brief_tick: sent {len(messages)} messages "
         f"({len(posts)} posts, {populated} reply windows opened)"

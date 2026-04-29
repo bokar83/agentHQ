@@ -153,6 +153,11 @@ def mock_pub(monkeypatch):
     _PUBLISH_BRIEF_WINDOWS.clear()
 
     monkeypatch.setenv("TELEGRAM_CHAT_ID", "7792432594")
+
+    # Isolate sentinel so tests never see real flag files from prior runs.
+    monkeypatch.setattr(pb, "_brief_already_sent", lambda _: False)
+    monkeypatch.setattr(pb, "_mark_brief_sent", lambda _: None)
+
     return mocks
 
 
