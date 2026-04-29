@@ -22,7 +22,14 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from orchestrator.llm_helpers import call_llm
+# Container vs dev import compatibility. The orc-crewai container flattens
+# orchestrator/* to /app, so "from orchestrator.llm_helpers" fails there;
+# the bare module name does. Local dev keeps the orchestrator package layout.
+try:
+    from orchestrator.llm_helpers import call_llm
+except ModuleNotFoundError:
+    sys.path.insert(0, "/app")
+    from llm_helpers import call_llm
 
 EXTRACTOR_MODEL = "anthropic/claude-sonnet-4.6"
 
