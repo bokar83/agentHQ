@@ -1,7 +1,7 @@
 """
 signal_works/morning_runner.py
 Unified daily runner -- Signal Works + Catalyst Works outreach.
-Runs at 07:00 MT via Windows Task Scheduler (see register_task_admin.ps1).
+Runs at 07:00 MT via VPS systemd timer (see scripts/systemd/signal-works-morning.*).
 
 Sequence:
   1. Bounce scan (2-day lookback on boubacar@catalystworks.consulting)
@@ -14,14 +14,37 @@ Total: up to 20 touches per day across both pipelines.
 CW emails auto-send. SW emails land in Drafts for review.
 
 Logs to: logs/signal_works_morning.log
+On any unhandled exception or zero-draft run, fires a Telegram alert.
 """
 import logging
+import os
 import sys
+import traceback
+import urllib.parse
+import urllib.request
 from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+
+
+def _telegram_alert(msg: str) -> None:
+    """Best-effort Telegram alert. Never raises -- failure here must not crash the runner."""
+    token = os.getenv("ORCHESTRATOR_TELEGRAM_BOT_TOKEN")
+    chat_id = os.getenv("TELEGRAM_CHAT_ID")
+    if not token or not chat_id:
+        return
+    try:
+        data = urllib.parse.urlencode({"chat_id": chat_id, "text": msg[:4000]}).encode()
+        req = urllib.request.Request(
+            f"https://api.telegram.org/bot{token}/sendMessage",
+            data=data,
+            method="POST",
+        )
+        urllib.request.urlopen(req, timeout=15).read()
+    except Exception:
+        pass
 
 LOG_DIR = Path(__file__).resolve().parents[1] / "logs"
 LOG_DIR.mkdir(exist_ok=True)
@@ -114,4 +137,18 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        rc = main()
+        if rc != 0:
+            _telegram_alert(
+                "agentsHQ morning runner: 0 drafts created today. "
+                "Check /var/log/signal_works_morning.log."
+            )
+        sys.exit(rc)
+    except Exception as e:
+        _telegram_alert(
+            f"agentsHQ morning runner CRASHED: {type(e).__name__}: {e}\n"
+            f"Check /var/log/signal_works_morning.log."
+        )
+        logger.error("Unhandled exception:\n%s", traceback.format_exc())
+        raise
