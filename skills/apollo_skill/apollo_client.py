@@ -73,24 +73,35 @@ CW_ICP = {
     "score_titles": ["owner", "founder", "ceo", "president", "managing partner", "principal"],
 }
 
+# Widened variant used for the daily 5-fresh Apollo slot.
+# Expands geography to include neighbouring metro areas and raises
+# the employee ceiling so we always have enough candidates.
 CW_ICP_WIDENED = {
     "name": "catalyst_works_widened",
     "person_locations": [
         "Salt Lake City, Utah", "Provo, Utah", "Ogden, Utah",
         "Sandy, Utah", "Lehi, Utah", "St. George, Utah",
         "West Jordan, Utah", "Murray, Utah", "Draper, Utah",
-        "Park City, Utah", "Heber, Utah", "Bountiful, Utah",
-        "Logan, Utah", "Cedar City, Utah",
+        "American Fork, Utah", "Orem, Utah", "Layton, Utah",
+        "Bountiful, Utah", "Logan, Utah",
+        "Denver, Colorado", "Phoenix, Arizona", "Las Vegas, Nevada",
+        "Boise, Idaho",
     ],
     "person_titles": [
         "Owner", "Founder", "CEO", "President", "Managing Partner",
         "Principal", "Partner", "Managing Director",
-        "Managing Member", "Director of Operations", "VP of Sales",
+        "Director", "VP", "Vice President", "General Manager",
     ],
-    "person_seniorities": _DECISION_MAKER_SENIORITIES + ["vp"],
+    "person_seniorities": _DECISION_MAKER_SENIORITIES,
     "organization_num_employees_ranges": ["1,200"],
-    "score_industries": CW_ICP["score_industries"],
-    "score_titles": CW_ICP["score_titles"] + ["vp", "managing member", "director of operations"],
+    "score_industries": [
+        "legal", "accounting", "marketing", "financial", "insurance",
+        "real estate", "consulting", "dental", "chiropractic", "hvac",
+        "plumbing", "roofing", "construction", "landscaping", "staffing",
+        "recruiting", "medical", "health", "publishing", "retail",
+        "technology", "software", "education", "research",
+    ],
+    "score_titles": ["owner", "founder", "ceo", "president", "managing partner", "principal"],
 }
 
 SW_ICP = {
@@ -341,71 +352,65 @@ def harvest_leads(icp: dict, target: int = 10, max_pages: int = 5) -> list[dict]
     return leads
 
 
-# Owner titles used for SW company match. Tighter than CW search.
+# Owner titles used for SW company match
 _SW_OWNER_TITLES = ["Owner", "Founder", "CEO", "President", "Operator"]
 
 
 def find_owner_by_company(name: str, city: str) -> dict | None:
-    """Look up a small business by name+city, then resolve owner email.
+    """Find an owner-tier email at a small business by company name + city.
 
-    Two API calls:
-      1. organizations/enrich, find domain (FREE, no credits)
-      2. people/match, find owner email at that domain (~1 credit per attempted title)
+    Uses mixed_people/api_search filtered by q_organization_name +
+    organization_locations + owner-tier titles, then reveal_emails on the
+    top match. Same shape as harvest_leads, scoped to one company.
 
     Returns:
-      None if Apollo doesn't index this company at all (caller skips).
-      {"domain": str, "email": None, "name": None} if domain found but no owner
-        (caller can pass domain to Hunter).
+      None if Apollo returns no candidates for this company at all.
+      {"domain": str, "email": None, "name": None} if a person was found
+        but reveal returned no email (caller can fall back to Hunter).
       {"domain": str, "email": str, "name": str} on full success.
+
+    Cost: 0 credits if no match, ~1 credit per reveal on match.
     """
-    headers = _headers()
-    if not headers:
-        logger.warning("find_owner_by_company: no Apollo key, returning None")
-        return None
-
-    # Step 1: organizations/enrich
     try:
-        resp = httpx.post(
-            f"{APOLLO_API_URL}/organizations/enrich",
-            headers=headers,
-            json={"organization_name": name},
-            timeout=15,
+        headers = _headers()
+    except RuntimeError as e:
+        logger.warning(f"find_owner_by_company: {e}")
+        return None
+
+    payload = {
+        "q_organization_name": name,
+        "organization_locations": [city] if city else [],
+        "person_titles": _SW_OWNER_TITLES,
+        "person_seniorities": _DECISION_MAKER_SENIORITIES,
+        "contact_email_status": ["verified"],
+        "page": 1,
+        "per_page": 5,
+    }
+    try:
+        r = httpx.post(
+            f"{APOLLO_API_URL}/mixed_people/api_search",
+            json=payload, headers=headers, timeout=20,
         )
-        resp.raise_for_status()
-        org = resp.json().get("organization")
+        r.raise_for_status()
+        people = r.json().get("people", [])
     except Exception as e:
-        logger.warning(f"find_owner_by_company: enrich failed for {name}: {e}")
+        logger.warning(f"find_owner_by_company: search failed for {name}: {e}")
         return None
 
-    if not org:
-        logger.info(f"find_owner_by_company: no org match for {name} in {city}")
+    if not people:
+        logger.info(f"find_owner_by_company: no people match at {name} in {city}")
         return None
 
-    domain = org.get("primary_domain")
-    if not domain:
-        return None
+    candidate = people[0]
+    domain = (candidate.get("organization") or {}).get("primary_domain") or ""
 
-    # Step 2: people/match for owner-level title at that domain
-    for title in _SW_OWNER_TITLES:
-        try:
-            resp = httpx.post(
-                f"{APOLLO_API_URL}/people/match",
-                headers=headers,
-                json={"organization_domain": domain, "title": title, "reveal_personal_emails": False},
-                timeout=15,
-            )
-            resp.raise_for_status()
-            person = resp.json().get("person")
-        except Exception as e:
-            logger.warning(f"find_owner_by_company: match failed at {domain} for {title}: {e}")
-            continue
+    revealed = reveal_emails([candidate["id"]])
+    if revealed and revealed[0].get("email"):
+        person = revealed[0]
+        return {
+            "domain": domain or person.get("organization", {}).get("primary_domain", ""),
+            "email": person["email"],
+            "name": person.get("name", ""),
+        }
 
-        if person and person.get("email"):
-            return {
-                "domain": domain,
-                "email": person["email"],
-                "name": person.get("name", ""),
-            }
-
-    # Domain found, no owner. Caller can fall through to Hunter.
     return {"domain": domain, "email": None, "name": None}
