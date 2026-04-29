@@ -5,7 +5,11 @@ Applies to every coding-agent session (Claude Code, Codex, any future agent). Ag
 ## Session Start
 
 1. Read `D:\Ai_Sandbox\agentsHQ\docs\memory\MEMORY.md` and every linked file.
-2. Check `docs/roadmap/` for active roadmaps. If any roadmap covers the work being asked about, read that roadmap and the latest session-log entry FIRST. The roadmap's next milestone is the default next move unless explicitly redirected.
+2. **Read both active roadmaps every session, regardless of what Boubacar asks for:**
+   - `docs/roadmap/atlas.md` (THE ENGINE ROOM): Autonomy infrastructure: content pipeline, heartbeats, approval queues, publish loops, learning crews, VPS hardening. If it makes agentsHQ operate without Boubacar, it lives here.
+   - `docs/roadmap/harvest.md` (THE SALES FLOOR): Revenue work: offers, outreach, contracts, client milestones, Signal Works pipeline. If it puts money in the door, it lives here.
+   - Read the latest session-log entry in each. Surface any milestone that has gone stale (trigger date passed, blocker removed, or action overdue) and flag it before starting work.
+   - These two roadmaps share zero milestones by design. Never move an item from one to the other.
 3. Check `docs/superpowers/plans/` for a handoff. Legacy: roadmaps supersede handoff docs for any roadmapped project.
 
 ## Session End
@@ -26,6 +30,7 @@ Diagnostic problem-solver. Eight lenses, equally weighted: Theory of Constraints
 - No em dashes anywhere. Not `--`, not `—`. Rewrite the sentence. *Why: Boubacar edits every one out by hand when they slip through. A pre-commit hook also blocks them.*
 - WebFetch: blanket permission. Never ask before fetching a URL.
 - **`orchestrator.py` no longer exists.** Sunset 2026-04-25 in commit `4d1aeb3`. The 2800-line monolith was split into modular files (`engine.py`, `constants.py`, `handlers_chat.py`, `state.py`, `handlers.py`, etc.) and `app.py` is the canonical entrypoint. **Never recreate `orchestrator.py`.** All imports use the modular stack. See `project_orchestrator_sunset.md` in memory for the full import map. *Why: agents kept "fixing" missing-orchestrator.py errors by recreating the file, undoing the refactor.*
+- **Google Drive uploads: always use gws CLI. Never ask Boubacar to upload manually. Never.** Command: `gws drive files create --params "{\"fields\":\"id,webViewLink\"}" --json "{\"name\":\"FILENAME\",\"parents\":[\"FOLDER_ID\"]}" --upload "d:/path/to/file" --upload-content-type "mime/type"`. CW OAuth credentials = Gmail scope only, not Drive. Service account = no storage quota. gws CLI is the only local path that works. If gws fails, route through agentsHQ orchestrator. Only surface a blocker to Boubacar after both paths fail. *Why: Boubacar has been explicit. Stop telling him to do things the system can do.*
 - **Container deploy: rebuild, do not docker-cp.** The orc-crewai container's `/app` is baked from the Dockerfile, not mounted. `docker cp file.py orc-crewai:/app/` works for one restart, then gets wiped on the next container recreation. Correct deploy: `ssh root@72.60.209.109 "cd /root/agentsHQ && git pull && docker compose up -d --build orchestrator"`. **NEW env vars must ALSO be added to `docker-compose.yml` `orchestrator:` service `environment:` block** or they silently don't reach the container even though they are in `.env`. Full procedure + checklist in `feedback_container_deploy_protocol_v2.md` memory entry. *Why: M7b deploy was silently broken because BLOTATO_API_KEY was in .env but not in docker-compose.yml's allowlist; auto-publisher would have failed at first fire.*
 
 ## Coding Principles (Karpathy)
