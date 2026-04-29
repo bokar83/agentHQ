@@ -73,6 +73,37 @@ CW_ICP = {
     "score_titles": ["owner", "founder", "ceo", "president", "managing partner", "principal"],
 }
 
+# Widened variant used for the daily 5-fresh Apollo slot.
+# Expands geography to include neighbouring metro areas and raises
+# the employee ceiling so we always have enough candidates.
+CW_ICP_WIDENED = {
+    "name": "catalyst_works_widened",
+    "person_locations": [
+        "Salt Lake City, Utah", "Provo, Utah", "Ogden, Utah",
+        "Sandy, Utah", "Lehi, Utah", "St. George, Utah",
+        "West Jordan, Utah", "Murray, Utah", "Draper, Utah",
+        "American Fork, Utah", "Orem, Utah", "Layton, Utah",
+        "Bountiful, Utah", "Logan, Utah",
+        "Denver, Colorado", "Phoenix, Arizona", "Las Vegas, Nevada",
+        "Boise, Idaho",
+    ],
+    "person_titles": [
+        "Owner", "Founder", "CEO", "President", "Managing Partner",
+        "Principal", "Partner", "Managing Director",
+        "Director", "VP", "Vice President", "General Manager",
+    ],
+    "person_seniorities": _DECISION_MAKER_SENIORITIES,
+    "organization_num_employees_ranges": ["1,200"],
+    "score_industries": [
+        "legal", "accounting", "marketing", "financial", "insurance",
+        "real estate", "consulting", "dental", "chiropractic", "hvac",
+        "plumbing", "roofing", "construction", "landscaping", "staffing",
+        "recruiting", "medical", "health", "publishing", "retail",
+        "technology", "software", "education", "research",
+    ],
+    "score_titles": ["owner", "founder", "ceo", "president", "managing partner", "principal"],
+}
+
 SW_ICP = {
     "name": "signal_works",
     "person_locations": [
