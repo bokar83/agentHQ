@@ -28,7 +28,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from signal_works.email_builder import render_html, _subject
 from signal_works.gmail_draft import create_draft
-from orchestrator.db import get_leads_for_drafting, get_crm_connection
+
+# Container vs dev import compatibility. orc-crewai flattens orchestrator/* to /app.
+try:
+    from orchestrator.db import get_leads_for_drafting, get_crm_connection
+except ModuleNotFoundError:
+    sys.path.insert(0, "/app")
+    from db import get_leads_for_drafting, get_crm_connection
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)

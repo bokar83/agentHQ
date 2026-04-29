@@ -10,12 +10,19 @@ from __future__ import annotations
 import json
 import logging
 import re
+import sys
 from typing import Optional
 from urllib.parse import urlparse
 
 from pydantic import ValidationError
 from skills.inbound_lead.schema import ResearchBrief
-from orchestrator.research_engine import run_research
+
+# Container vs dev import compatibility. orc-crewai flattens orchestrator/* to /app.
+try:
+    from orchestrator.research_engine import run_research
+except ModuleNotFoundError:
+    sys.path.insert(0, "/app")
+    from research_engine import run_research
 
 logger = logging.getLogger("agentsHQ.inbound_lead.researcher")
 
