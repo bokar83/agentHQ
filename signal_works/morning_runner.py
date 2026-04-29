@@ -6,12 +6,12 @@ Runs at 07:00 MT via Windows Task Scheduler (see register_task_admin.ps1).
 Sequence:
   1. Bounce scan (2-day lookback on boubacar@catalystworks.consulting)
   2. Signal Works topup -- harvest until 10 email leads exist (Serper/Firecrawl)
-  3. Signal Works drafts -- 10 emails to boubacar@catalystworks.consulting Drafts
+  3. Signal Works sequence -- T1-T4 drafts (manual review, SW pipeline)
   4. Catalyst Works topup -- harvest via Apollo.io (credit-efficient ICP scoring)
-  5. Catalyst Works outreach -- 10 CRM lead drafts to same Drafts folder
+  5. Catalyst Works sequence -- T1-T4 auto-send (CW pipeline)
 
-Total: up to 20 drafts per day in boubacar@catalystworks.consulting.
-You review, personalise if needed, hit Send. That's it.
+Total: up to 20 touches per day across both pipelines.
+CW emails auto-send. SW emails land in Drafts for review.
 
 Logs to: logs/signal_works_morning.log
 """
@@ -69,14 +69,15 @@ def main():
     except Exception as e:
         logger.error(f"  Signal Works topup failed: {e}")
 
-    # ── Step 3: Signal Works -- create drafts ─────────────────────
-    logger.info("STEP 3: Signal Works drafts (10 emails)...")
+    # ── Step 3: Signal Works -- 4-touch sequence (draft, manual review) ──
+    logger.info("STEP 3: Signal Works sequence T1-T4 (drafts, manual review)...")
     try:
-        from signal_works.send_drafts import run as sw_send
-        sw_drafted = sw_send(limit=10, test_mode=False)
-        logger.info(f"  Done. {sw_drafted} Signal Works drafts created.")
+        from skills.outreach.sequence_engine import run_sequence
+        sw_result = run_sequence("sw", dry_run=False)
+        sw_drafted = sw_result.get("drafted", 0)
+        logger.info(f"  Done. {sw_drafted} SW sequence drafts created.")
     except Exception as e:
-        logger.error(f"  Signal Works drafts failed: {e}")
+        logger.error(f"  Signal Works sequence failed: {e}")
 
     # ── Step 4: Catalyst Works -- Apollo lead topup ───────────────
     logger.info("STEP 4: Catalyst Works lead topup via Apollo (target: 10 leads)...")
@@ -87,14 +88,15 @@ def main():
     except Exception as e:
         logger.error(f"  CW Apollo topup failed: {e}")
 
-    # ── Step 5: Catalyst Works -- cold outreach drafts ────────────
-    logger.info("STEP 5: Catalyst Works cold outreach drafts (10 leads)...")
+    # ── Step 5: Catalyst Works -- 4-touch sequence (auto-send) ───
+    logger.info("STEP 5: Catalyst Works sequence T1-T4 (auto-send)...")
     try:
-        from signal_works.outreach_runner import run as cw_send
-        cw_drafted = cw_send()
-        logger.info(f"  Done. {cw_drafted} CW outreach drafts created.")
+        from skills.outreach.sequence_engine import run_sequence
+        cw_result = run_sequence("cw", dry_run=False)
+        cw_drafted = cw_result.get("sent", 0)
+        logger.info(f"  Done. {cw_drafted} CW emails sent.")
     except Exception as e:
-        logger.error(f"  CW outreach failed: {e}")
+        logger.error(f"  CW sequence failed: {e}")
 
     # ── Summary ───────────────────────────────────────────────────
     total = sw_drafted + cw_drafted
