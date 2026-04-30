@@ -25,8 +25,15 @@ def get_queue() -> dict:
     items = []
     for r in rows:
         preview = ""
+        notion_url = ""
         if isinstance(r.payload, dict):
             preview = str(r.payload.get("title") or r.payload.get("hook") or r.payload.get("content") or "")[:120]
+            # Lift Notion link: prefer explicit notion_url, then notion_id (page UUID).
+            notion_url = str(r.payload.get("notion_url") or "")
+            if not notion_url:
+                pid = r.payload.get("notion_id") or r.payload.get("page_id")
+                if pid:
+                    notion_url = f"https://www.notion.so/{str(pid).replace('-', '')}"
         items.append({
             "id": r.id,
             "ts_created": r.ts_created.isoformat() if r.ts_created else None,
@@ -34,6 +41,7 @@ def get_queue() -> dict:
             "proposal_type": r.proposal_type,
             "preview": preview,
             "status": r.status,
+            "notion_url": notion_url,
         })
     return {"items": items, "count": len(items)}
 
@@ -73,6 +81,8 @@ def _fetch_content_board() -> dict:
                 "status": status,
                 "scheduled_date": sched_prop.get("start"),
                 "platform": platform,
+                "notion_url": page.get("url") or "",
+                "page_id": page.get("id") or "",
             }
 
         # 1. Upcoming: today through +7 days, exclude done/archived
@@ -603,6 +613,7 @@ def _fetch_ideas(limit: int = 10) -> list:
                 "category": category,
                 "status": status,
                 "score": score,
+                "notion_url": page.get("url") or "",
             })
         items.sort(key=lambda x: x["score"], reverse=True)
         return items[:limit]

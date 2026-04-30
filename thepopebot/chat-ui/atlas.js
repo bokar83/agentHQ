@@ -10,6 +10,24 @@ const TOKEN_TS_KEY = 'atlas_token_ts';
 
 let _token = null;
 
+// Wrap an inline element in a Notion-link <a> if url is present, else return as-is.
+// Adds an external-link glyph after the inline element so users know it opens off-domain.
+function maybeLink(inlineEl, url) {
+  if (!url) return inlineEl;
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  a.className = 'notion-link';
+  a.title = 'Open in Notion';
+  a.appendChild(inlineEl);
+  const glyph = document.createElement('span');
+  glyph.className = 'ext-glyph';
+  glyph.textContent = ' ↗';
+  a.appendChild(glyph);
+  return a;
+}
+
 // Safe DOM element builder
 function el(tag, attrs, ...children) {
   const node = document.createElement(tag);
@@ -266,8 +284,9 @@ function renderQueue(d) {
   items.forEach(function(item) {
     const crew = el('div', { class: 'queue-crew' });
     crew.textContent = item.crew_name || '';
-    const preview = el('div', { class: 'queue-preview' });
-    preview.textContent = item.preview || '';
+    const previewSpan = el('span');
+    previewSpan.textContent = item.preview || '';
+    const previewWrap = el('div', { class: 'queue-preview' }, maybeLink(previewSpan, item.notion_url));
 
     const approveBtn = el('button', { class: 'btn btn-approve' }, 'Approve');
     const rejectBtn = el('button', { class: 'btn btn-reject' }, 'Reject');
@@ -275,7 +294,7 @@ function renderQueue(d) {
     rejectBtn.addEventListener('click', function() { actionQueueReject(item.id, approveBtn, rejectBtn); });
 
     body.appendChild(el('div', { class: 'queue-item' },
-      crew, preview,
+      crew, previewWrap,
       el('div', { class: 'queue-actions' }, approveBtn, rejectBtn)
     ));
   });
@@ -313,7 +332,7 @@ function renderContent(d) {
                : 'content-status';
     const statusEl = el('span', { class: sCls });
     statusEl.textContent = forceCls === 'content-status past-due' ? 'Past Due' : (item.status || '');
-    return el('div', { class: 'content-item' }, platform, title, dateLabel, statusEl);
+    return el('div', { class: 'content-item' }, platform, maybeLink(title, item.notion_url), dateLabel, statusEl);
   }
 
   function sectionLabel(text) {
@@ -524,7 +543,7 @@ function renderIdeas(d) {
     title.textContent = item.title || '';
     const impact = el('span', { class: 'data-label' });
     impact.textContent = (item.impact || '') + ' / ' + (item.effort || '');
-    body.appendChild(el('div', { class: 'content-item' }, rank, title, impact));
+    body.appendChild(el('div', { class: 'content-item' }, rank, maybeLink(title, item.notion_url), impact));
   });
 }
 
