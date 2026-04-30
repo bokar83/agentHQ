@@ -355,6 +355,7 @@ These are explicit "do not build" decisions with reasons, so we don't relitigate
 | **Phase 6 Hunter stub** (skeleton ahead of decision) | Hunter.io paused. Writing a stub for paused work is dead code. | 2026-04-24 | M6 trigger gate hits. |
 | **Agent Task Ledger** (general-purpose resumable state for any ad-hoc task) | Premature abstraction. Every pipeline loop already has purpose-built resume state (approval\_queue, Notion Status, \_confirm\_store). A general ledger solves a hypothetical, not a demonstrated failure. Karpathy audit: FAIL on Simplicity First. Sankofa: no trigger, no verifiable success criterion. | 2026-04-28 | A specific non-pipeline ad-hoc task demonstrably fails to resume after a session break. When that happens, build a single-table solution for that task type - not a general ledger. |
 | ~~Agent Task Ledger~~ | **RE-OPENED 2026-04-29.** Boubacar named it a proactive priority. Override based on user-stated risk + new memory rule `feedback_now_means_proactive_not_broken.md` (the Karpathy "no demonstrated failure" gate applies to speculative agent abstractions, not to user-named risks). Shipped: `skills/coordination/__init__.py` ledger with `claim/complete/lock` (resource locks) plus `enqueue/claim_next/fail/recent_completed` (work queue) on a single `tasks` table. `claim_next` uses FOR UPDATE SKIP LOCKED for race-free concurrent workers. Tests: `tests/test_agent_collision.py` (10/10 green). Wire-ins: morning_runner, outreach_runner, deploy.sh (mkdir mutex), vercel-launch (mkdir mutex per app). | 2026-04-29 | n/a (shipped) |
+| **NLM registry export cron** (daily Postgres-to-Sheets mirror of `notebooklm_pending_docs`) | Built 2026-04-27 as a backup audit trail for NotebookLM ingestion. Never wired up: `NLM_EXPORT_SHEET_ID` was never set, so the cron logged a warning and exited. Source table has 6 total rows, last write 2026-04-13, zero activity in 14+ days, no active producer or consumer. Script preserved at `scripts/nlm_registry_export.py`; cron line removed from VPS crontab 2026-04-30. | 2026-04-30 | NotebookLM ingestion pipeline starts producing rows again. Then: create the Sheet, add `NLM_EXPORT_SHEET_ID` to `.env`, restore cron line piping the script into `docker exec -i orc-crewai python3 -`. |
 
 ---
 
@@ -1446,5 +1447,15 @@ This session was originally scoped as "continue the agentsHQ structure cleanup s
 - `signal-works-morning.service` 30-min `TimeoutStartSec` is too short for the full multi-city scrape; service registers Failed but writes persist. Either bump timeout or accept the misleading status.
 
 **State at session end:** clean working tree (only unrelated WIP unstaged: TOOLS_ACCESS.md, output, untracked playbooks/skills). VPS at commit `7985974`. orc-crewai rebuilt and healthy. Dashboard live with new fields. Cron rewired. Memory + roadmap updated.
+
+---
+
+### 2026-04-30 (Thursday late afternoon): blockers triage follow-up
+
+Two of three blockers from earlier session resolved.
+
+- **SW service timeout:** `TimeoutStartSec=30min` -> `TimeoutStartSec=90min` on `/etc/systemd/system/signal-works-morning.service`, `daemon-reload` applied. Tomorrows 13:00 UTC run will register `Started` cleanly instead of `Failed: timeout`. Drafts already landed in-container under the old timeout; this just restores the systemd signal as a real status indicator.
+- **NLM registry export cron:** removed from VPS crontab. Reason: `notebooklm_pending_docs` table has 6 total rows, last write 2026-04-13, zero activity in 14+ days. Sheet ID was never set, so the cron warned-and-exited daily. No active producer or consumer. Script preserved at `scripts/nlm_registry_export.py` for resurrection; full restore recipe in the Descoped table above.
+- **`.env` SMTP_PASS bash-parse issue:** skipped per Boubacar. docker-compose handles it; only `scripts/orc_rebuild.sh` chokes, and the bypass (direct `docker compose build && up`) is documented in this session log.
 
 ---
