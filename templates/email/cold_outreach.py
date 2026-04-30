@@ -30,6 +30,5 @@ Is there a place in your operation right now where work slows down or disappears
 
 If yes, worth a reply.
 
-Boubacar Barry
-Founder, Catalyst Works
+Boubacar
 catalystworks.consulting"""

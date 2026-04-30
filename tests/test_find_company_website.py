@@ -21,6 +21,7 @@ def test_find_company_website_returns_top_organic_url():
 
 
 def test_find_company_website_skips_aggregators():
+    """LinkedIn, Yelp, Facebook, etc. are not the company's own site."""
     from signal_works.lead_scraper import find_company_website
     fake = _serper_response([
         {"link": "https://linkedin.com/company/acme", "title": "Acme on LinkedIn"},

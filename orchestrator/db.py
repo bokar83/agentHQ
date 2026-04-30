@@ -599,6 +599,62 @@ def upsert_signal_works_lead(lead: dict) -> None:
         conn.close()
 
 
+def ensure_leads_columns(conn) -> None:
+    """Add no_website, email_source, last_drafted_at, apollo_id columns if not present.
+
+    Idempotent. Safe to call from morning_runner each run.
+    """
+    cur = conn.cursor()
+    for col, definition in [
+        ("no_website", "BOOLEAN DEFAULT FALSE"),
+        ("email_source", "TEXT"),
+        ("last_drafted_at", "TIMESTAMPTZ"),
+        ("apollo_id", "TEXT"),
+    ]:
+        try:
+            cur.execute(f"ALTER TABLE leads ADD COLUMN IF NOT EXISTS {col} {definition}")
+        except Exception as e:
+            logger.warning(f"ensure_leads_columns: {col} alter failed: {e}")
+    try:
+        conn.commit()
+    except Exception as e:
+        logger.warning(f"ensure_leads_columns: commit failed: {e}")
+
+
+def get_resend_queue(limit: int = 5, days_back: int = 60) -> list[dict]:
+    """Return oldest-revealed Apollo contacts NOT touched in `days_back` days.
+
+    Used by CW topup as the resend pool. Pairs with the apollo_revealed dedup
+    table (apollo_id, revealed_at, email, name). Returns [] on any DB error
+    so callers can degrade gracefully.
+    """
+    conn = get_crm_connection_with_fallback()[0]
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT apollo_id, email, name, revealed_at
+            FROM apollo_revealed
+            WHERE email IS NOT NULL
+              AND revealed_at < NOW() - (%s || ' days')::interval
+              AND apollo_id NOT IN (
+                  SELECT apollo_id FROM leads
+                  WHERE last_drafted_at > NOW() - (%s || ' days')::interval
+                    AND apollo_id IS NOT NULL
+              )
+            ORDER BY revealed_at ASC
+            LIMIT %s
+            """,
+            (str(days_back), str(days_back), limit),
+        )
+        return [dict(r) for r in cur.fetchall()]
+    except Exception as e:
+        logger.warning(f"get_resend_queue failed: {e}")
+        return []
+    finally:
+        conn.close()
+
+
 def ensure_email_jobs_table() -> None:
     """Create email_jobs table if it does not exist (idempotent)."""
     conn = get_local_connection()
