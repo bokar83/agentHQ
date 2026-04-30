@@ -570,6 +570,48 @@ def _resolve_artifact_refs(text: str) -> str:
     return pattern.sub(_replace, text)
 
 
+def _extract_text_content(content) -> str:
+    """
+    Return the user-typed text from a message's content.
+
+    Atlas chat now accepts attachments: the client sends content as either a
+    plain string (no attachments) or a list of OpenRouter content blocks
+    (text + image_url + file). This helper extracts just the text for code
+    paths that need a string (artifact-ref resolution, READ-intent matching,
+    Postgres history save, attachment-stripped persistence).
+    """
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for block in content:
+            if not isinstance(block, dict):
+                continue
+            if block.get("type") == "text":
+                parts.append(block.get("text") or "")
+        return "\n".join(p for p in parts if p)
+    return ""
+
+
+def _summarize_attachments(content) -> str:
+    """Return '[attached: foo.png, bar.pdf]' or '' if no attachments. For history."""
+    if not isinstance(content, list):
+        return ""
+    names = []
+    for block in content:
+        if not isinstance(block, dict):
+            continue
+        t = block.get("type")
+        if t == "image_url":
+            names.append("image")
+        elif t == "file":
+            f = block.get("file") or {}
+            names.append(f.get("filename") or "file")
+    if not names:
+        return ""
+    return f" [attached: {', '.join(names)}]"
+
+
 def _evict_expired_confirms() -> None:
     """Remove confirm_store entries older than 5 minutes."""
     from state import _confirm_store
@@ -591,9 +633,17 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
 
     _evict_expired_confirms()
 
-    # Resolve any [artifact:id] placeholders in the latest user message
+    # Resolve any [artifact:id] placeholders in the latest user message.
+    # When content is a list of blocks (attachments present), only the text
+    # block gets the substitution; non-text blocks pass through untouched.
     if messages and messages[-1].get("role") == "user":
-        messages[-1]["content"] = _resolve_artifact_refs(messages[-1]["content"])
+        _c = messages[-1].get("content")
+        if isinstance(_c, str):
+            messages[-1]["content"] = _resolve_artifact_refs(_c)
+        elif isinstance(_c, list):
+            for block in _c:
+                if isinstance(block, dict) and block.get("type") == "text":
+                    block["text"] = _resolve_artifact_refs(block.get("text", ""))
 
     # Load Postgres history (100 turns) -- same depth as run_chat
     history_messages: list = []
@@ -642,7 +692,7 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
     # If the user is asking about system state, call _query_system() directly
     # and skip the LLM tool-choice round entirely. This closes the routing
     # hole structurally — forward_to_crew is never offered for these queries.
-    _user_text = (current_user_msg or {}).get("content", "").lower().strip() if current_user_msg else ""
+    _user_text = _extract_text_content((current_user_msg or {}).get("content", "")).lower().strip() if current_user_msg else ""
     _READ_PATTERNS = (
         "approval queue", "what's in my queue", "what is in my queue",
         "what's pending", "what is pending", "what's queued", "what is queued",
@@ -793,11 +843,17 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
         logger.error(f"run_atlas_chat LLM call failed: {e}")
         reply = "Sorry, I hit an error. Try again in a moment."
 
-    # Save text turns only
+    # Save text-only turns. Attachments (image_url, file blocks) are deliberately
+    # NOT persisted — keeps history table small and respects the "no persistence"
+    # rule for ephemeral screenshots. We do log a short marker so the assistant
+    # can see "user attached an image" in past turns.
     try:
         from memory import save_conversation_turn
         if messages and messages[-1].get("role") == "user":
-            save_conversation_turn(session_key, "user", messages[-1]["content"][:2000])
+            _user_content = messages[-1].get("content", "")
+            _text = _extract_text_content(_user_content)
+            _marker = _summarize_attachments(_user_content)
+            save_conversation_turn(session_key, "user", (_text + _marker)[:2000])
         save_conversation_turn(session_key, "assistant", reply)
     except Exception as e:
         logger.warning(f"Atlas chat history save failed: {e}")
