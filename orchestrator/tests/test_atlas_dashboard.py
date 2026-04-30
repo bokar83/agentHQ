@@ -82,6 +82,65 @@ def test_get_spend_returns_shape():
     assert len(result["by_day"]) == 1
 
 
+def test_get_spend_includes_token_totals_and_ledger_ts():
+    """Token totals and ledger_last_ts must surface from _spend_aggregates."""
+    mock_snap = MagicMock()
+    mock_snap.spent_today_usd = 0.0
+    mock_snap.cap_usd = 1.0
+    mock_snap.remaining_usd = 1.0
+    mock_snap.per_crew = {}
+
+    agg = {
+        "today_usd": 0.0, "last_day_usd": 0.0, "last_day_date": None,
+        "show_last_day": False, "week_usd": 0.5, "month_usd": 1.25,
+        "today_tokens": 0, "week_tokens": 12_345, "month_tokens": 98_765,
+        "ledger_last_ts": "2026-04-23T23:58:27+00:00",
+    }
+    with patch("autonomy_guard.get_guard") as mock_guard, \
+         patch("atlas_dashboard._spend_aggregates", return_value=agg), \
+         patch("atlas_dashboard._spend_7d_by_day", return_value=[]):
+        mock_guard.return_value.snapshot.return_value = mock_snap
+        result = atlas_dashboard.get_spend()
+
+    assert result["today_tokens"] == 0
+    assert result["week_tokens"] == 12_345
+    assert result["month_tokens"] == 98_765
+    assert result["ledger_last_ts"] == "2026-04-23T23:58:27+00:00"
+
+
+def test_last_autonomous_action_ignores_heartbeat_self_test():
+    """heartbeat-self-test fires every minute -- must be filtered out so the
+    Hero strip surfaces real autonomous work (auto_publisher, griot, etc.)."""
+    from datetime import datetime, timezone
+    import importlib
+    import memory
+
+    # Ensure attribute exists for patch's get_original() lookup. Test ordering
+    # in the full suite can leave `memory` partially imported on Windows where
+    # psycopg2 isn't available; reimporting guarantees _pg_conn is on the module.
+    if not hasattr(memory, "_pg_conn"):
+        importlib.reload(memory)
+
+    real_action_ts = datetime(2026, 4, 30, 13, 2, 15, tzinfo=timezone.utc)
+    fake_row = (real_action_ts, "auto_publisher", None, "success")
+
+    fake_cur = MagicMock()
+    fake_cur.fetchone.return_value = fake_row
+    fake_conn = MagicMock()
+    fake_conn.cursor.return_value = fake_cur
+
+    with patch.object(memory, "_pg_conn", return_value=fake_conn):
+        result = atlas_dashboard._last_autonomous_action()
+
+    sql_arg = fake_cur.execute.call_args.args[0]
+    assert "heartbeat-self-test" in sql_arg
+    assert "<>" in sql_arg or "!=" in sql_arg or "NOT IN" in sql_arg.upper()
+
+    assert result["task_type"] == "auto_publisher"
+    assert result["description"] == "success"
+    assert result["ts"] == real_action_ts.isoformat()
+
+
 def test_get_heartbeats_returns_wakes():
     mock_wake = MagicMock()
     mock_wake.name = "griot_daily"

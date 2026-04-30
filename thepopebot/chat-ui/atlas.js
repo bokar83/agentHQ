@@ -415,13 +415,13 @@ function renderSpend(d) {
     ));
   }
 
-  // Ledger staleness signal -- only litellm/Anthropic-SDK calls reach llm_calls
-  // today; CrewAI calls bypass it (see usage_logger.py). When the last write is
-  // older than 24h, surface it so a stale dashboard doesn't read as "system idle".
+  // Ledger staleness signal. M11 (2026-05-07) wires provider-billing APIs in
+  // and removes the "lower bound" framing.
+  const LEDGER_STALE_HOURS = 24;
   if (d.ledger_last_ts) {
     const last = new Date(d.ledger_last_ts);
     const ageHours = (Date.now() - last.getTime()) / 3_600_000;
-    const stale = ageHours > 24;
+    const stale = ageHours > LEDGER_STALE_HOURS;
     const wrap = el('div', { class: 'data-row' });
     wrap.style.marginTop = '6px';
     const lbl = el('span', { class: 'data-label' }, 'Ledger last write');
@@ -430,8 +430,7 @@ function renderSpend(d) {
                      + (stale ? '  (stale)' : '');
     if (stale) {
       val.style.color = '#d97706';
-      val.title = 'No llm_calls rows in 24h+. CrewAI calls bypass usage_logger by '
-                + 'design; only council and direct Anthropic SDK calls are logged.';
+      val.title = 'Last write to llm_calls (lower bound, CrewAI calls not logged here yet).';
     }
     wrap.appendChild(lbl);
     wrap.appendChild(val);
