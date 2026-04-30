@@ -90,3 +90,51 @@ VPS-side changes (no git commit):
 - `c8852eb` docs(atlas): blocker triage follow-up + NLM cron descoped
 
 All on `origin/main`. Local + origin in sync. VPS at `7985974` (deployed code; 2 docs commits behind, no impact).
+
+---
+
+## Follow-on session same day (2026-04-30 afternoon/evening): M14 + LinkedIn unblock + layout reorg
+
+### What shipped (additional)
+
+- **LinkedIn post landed** via auto_publisher at 17:41 UTC: https://linkedin.com/feed/update/urn:li:share:7455672693158305792 (commit chain N/A; Notion record `341bcf1a-3029-81b6-9ca0-c478501a0b7f` reconciled to Status=Posted).
+- **`BLOTATO_LINKEDIN_ACCOUNT_ID=19365`** appended to VPS `.env` (backup at `.env.bak.linkedinaccount.<ts>`). Root cause: env var existed only in a commented line, never as a real assignment. Same empty-string-defeats-default pattern as the 2026-04-29 CHAT_MODEL bug.
+- **M14 (click-to-Notion) shipped** in commits `8c33e3f` + `349dccf` (merge). New `maybeLink()` helper in atlas.js wraps content/queue/ideas titles in `<a target="_blank">`. `notion_url` lifted from Notion `page.url` for content + ideas; built from `payload.notion_id` for queue. CSS `.notion-link` with subtle hover underline + `↗` glyph. 12/12 atlas_dashboard tests pass.
+- **Layout reorg** in commit `627799e`: Daily Quote moved out of cards grid into hero strip row 2, spanning columns 2-4 next to "Last Health Check". Font 15px → 28px. Cards reordered: State → Queue → Content → Spend → **Ideas (promoted)** → Heartbeats → Errors.
+- **Quote first-paint fix** in commit `befb37f`: `showQuote()` previously set `.fading` (opacity:0) on empty text and waited 600ms to populate, leading to perpetual blank slot under race conditions. Now first call populates immediately; rotations keep crossfade. Cache-buster bumped `v=20260430b → v=20260430c`.
+
+### Decisions (additional)
+
+- **Dashboard locked for 3 days (until 2026-05-03).** No more dashboard changes unless Boubacar reports errors or glitches.
+- **Per-feature branch rule deviation acknowledged.** First two commits (`7985974` + `befb37f`) went straight to main; M14 went through a feature branch (`feature/atlas-clickable-notion-links`) properly. Document the deviation in the session log; resume per-feature flow next session.
+- **Pre-existing VPS-local WIP preserved in `git stash@{0}`** (slug `vps-local-WIP-2026-04-30-pre-M14-pull`): `handlers_chat.py` + `atlas-chat.js` had merge conflicts with the `feat/chat-attachments` commit (`ade94bc`). Reset to origin/main during M14 deploy. Owner of that WIP needs to retrieve via `git stash apply stash@{0}` before any further chat-attachments work.
+
+### What is NOT done (explicit, additional)
+
+- **`scripts/orc_rebuild.sh` still chokes on `.env` line 121 (SMTP_PASS).** Boubacar said skip. Workaround: `docker compose build orchestrator && docker compose up -d orchestrator` direct.
+- **VPS-local WIP in stash is unresolved.** Whoever was editing `handlers_chat.py` and `atlas-chat.js` needs to apply, resolve conflicts, recommit.
+- **Click-to-Notion does not link Hero strip "Last Action".** That data comes from `task_outcomes` (Postgres), no Notion URL column. Possible follow-on if needed.
+
+### New memory files written this turn
+
+- `feedback_env_var_empty_string_vs_unset.md`: `os.environ.get(K) or default` pattern + diagnostic shortcut. Documents the bug class that bit twice in 2 days.
+- `feedback_github_http2_sideband_disconnect.md`: `git -c http.version=HTTP/1.1 push` workaround. 3 disconnects this session; HTTP/1.1 retry reliably succeeds.
+
+Both pointers added to `MEMORY.md` (now 198 lines, under 200 cap).
+
+### Next session must start here (revised)
+
+1. **Verify Boubacar's hard-refresh confirmed the quote rendering.** If still blank, open browser DevTools console while loading https://agentshq.boubacarbarry.com/atlas; the JS error will be the next clue.
+2. **Verify SW timer fired clean overnight at 13:00 UTC.** `ssh root@72.60.209.109 "journalctl -u signal-works-morning.service --since '2026-05-01 12:00:00' --no-pager | tail -5"`. With `TimeoutStartSec=90min` we expect `Started ... Finished ...` not `Failed: timeout`.
+3. **DO NOT change the dashboard for 3 days** unless errors/glitches surface (lockdown until 2026-05-03 per Boubacar).
+4. **VPS tidiness when convenient:** `ssh root@72.60.209.109 "cd /root/agentsHQ && git pull origin main"`. VPS may be a few docs-only commits behind.
+5. **If inside the M13 build window (2026-05-04 onward):** start M13 (provider billing API) per the scope in `docs/roadmap/atlas.md`.
+
+### Final commits this turn (chronological)
+
+- `8c33e3f` feat(atlas): M14 click-to-open-Notion links on Content / Queue / Ideas cards
+- `349dccf` merge: M14 click-to-Notion links
+- `627799e` feat(atlas): promote Daily Quote to hero strip + reorder cards
+- `befb37f` fix(atlas): quote shows on first paint + bust cache to v20260430c
+
+All on `origin/main`. Local + origin in sync. VPS pulled and rebuilt.
