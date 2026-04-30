@@ -18,7 +18,7 @@ try:
     from orchestrator.db import upsert_signal_works_lead
 except ModuleNotFoundError:
     sys.path.insert(0, "/app")
-    from db import upsert_signal_works_lead
+    from db import upsert_signal_works_lead  # type: ignore[no-redef]
 
 logger = logging.getLogger(__name__)
 
