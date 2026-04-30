@@ -128,8 +128,13 @@ def get_content() -> dict:
 def _spend_aggregates() -> dict:
     """
     Today's spend, most-recent-day spend (last 7 days before today),
-    week-to-date, and month-to-date totals.
+    week-to-date, and month-to-date totals -- plus token totals (prompt +
+    completion + cache read + cache write) for the same windows.
     When today=0, the UI shows the most recent day that had actual spend.
+
+    Also returns ledger_last_ts (UTC ISO) so the UI can flag a stale ledger
+    when no rows have been inserted recently. Today, only council + direct
+    Anthropic SDK calls hit llm_calls; CrewAI calls bypass it (see usage_logger.py).
     """
     try:
         from memory import _pg_conn
@@ -144,9 +149,23 @@ def _spend_aggregates() -> dict:
                   SUM(CASE WHEN ts >= date_trunc('week',  NOW() AT TIME ZONE 'America/Denver')
                            THEN cost_usd ELSE 0 END)                              AS week_usd,
                   SUM(CASE WHEN ts >= date_trunc('month', NOW() AT TIME ZONE 'America/Denver')
-                           THEN cost_usd ELSE 0 END)                              AS month_usd
+                           THEN cost_usd ELSE 0 END)                              AS month_usd,
+                  SUM(CASE WHEN ts >= date_trunc('day', NOW() AT TIME ZONE 'America/Denver')
+                           THEN COALESCE(tokens_prompt,0) + COALESCE(tokens_completion,0)
+                              + COALESCE(tokens_cached_read,0) + COALESCE(tokens_cached_write,0)
+                           ELSE 0 END)                                            AS today_tokens,
+                  SUM(CASE WHEN ts >= date_trunc('week', NOW() AT TIME ZONE 'America/Denver')
+                           THEN COALESCE(tokens_prompt,0) + COALESCE(tokens_completion,0)
+                              + COALESCE(tokens_cached_read,0) + COALESCE(tokens_cached_write,0)
+                           ELSE 0 END)                                            AS week_tokens,
+                  SUM(CASE WHEN ts >= date_trunc('month', NOW() AT TIME ZONE 'America/Denver')
+                           THEN COALESCE(tokens_prompt,0) + COALESCE(tokens_completion,0)
+                              + COALESCE(tokens_cached_read,0) + COALESCE(tokens_cached_write,0)
+                           ELSE 0 END)                                            AS month_tokens,
+                  MAX(ts)                                                         AS last_ts
                 FROM llm_calls
                 WHERE ts >= date_trunc('month', NOW() AT TIME ZONE 'America/Denver')
+                                 - INTERVAL '60 days'
                 """
             )
             row = cur.fetchone()
@@ -170,6 +189,7 @@ def _spend_aggregates() -> dict:
 
             last_day_usd = round(float(last_row[1] or 0), 4) if last_row else 0.0
             last_day_date = str(last_row[0]) if last_row else None
+            ledger_last_ts = row[6].isoformat() if row[6] else None
 
             return {
                 "today_usd":    today_usd,
@@ -178,13 +198,19 @@ def _spend_aggregates() -> dict:
                 "show_last_day": today_usd == 0.0 and last_day_usd > 0.0,
                 "week_usd":  round(float(row[1] or 0), 4),
                 "month_usd": round(float(row[2] or 0), 4),
+                "today_tokens": int(row[3] or 0),
+                "week_tokens":  int(row[4] or 0),
+                "month_tokens": int(row[5] or 0),
+                "ledger_last_ts": ledger_last_ts,
             }
         finally:
             conn.close()
     except Exception as e:
         logger.warning(f"_spend_aggregates: {e}")
         return {"today_usd": 0.0, "last_day_usd": 0.0, "last_day_date": None,
-                "show_last_day": False, "week_usd": 0.0, "month_usd": 0.0}
+                "show_last_day": False, "week_usd": 0.0, "month_usd": 0.0,
+                "today_tokens": 0, "week_tokens": 0, "month_tokens": 0,
+                "ledger_last_ts": None}
 
 
 def _spend_7d_by_day() -> list:
@@ -214,7 +240,11 @@ def _spend_7d_by_day() -> list:
 
 
 def get_spend() -> dict:
-    """Spend card: today (or most recent day with spend)/week/month totals + cap."""
+    """Spend card: today (or most recent day with spend)/week/month totals + cap.
+
+    Also returns token totals (prompt + completion + cache) for the same windows
+    and ledger_last_ts so the UI can flag a stale llm_calls ledger.
+    """
     from autonomy_guard import get_guard
     snap = get_guard().snapshot()
     agg = _spend_aggregates()
@@ -232,6 +262,10 @@ def get_spend() -> dict:
         "show_last_day": agg["show_last_day"],
         "week_usd":  agg["week_usd"],
         "month_usd": agg["month_usd"],
+        "today_tokens": agg.get("today_tokens", 0),
+        "week_tokens":  agg.get("week_tokens", 0),
+        "month_tokens": agg.get("month_tokens", 0),
+        "ledger_last_ts": agg.get("ledger_last_ts"),
         "by_day":    by_day,
     }
 
@@ -415,7 +449,11 @@ def get_errors() -> dict:
 
 
 def _last_autonomous_action() -> dict:
-    """Latest task_outcomes row from an autonomous crew."""
+    """Latest task_outcomes row from an autonomous crew, excluding heartbeat probes.
+
+    heartbeat-self-test fires every minute as a liveness check and would otherwise
+    dominate LIMIT 1 forever, hiding real autonomous work (auto_publisher, griot, etc.).
+    """
     try:
         from memory import _pg_conn
         conn = _pg_conn()
@@ -425,6 +463,7 @@ def _last_autonomous_action() -> dict:
                 """
                 SELECT ts_started, crew_name, success, result_summary
                   FROM task_outcomes
+                 WHERE crew_name <> 'heartbeat-self-test'
                  ORDER BY ts_started DESC
                  LIMIT 1
                 """
