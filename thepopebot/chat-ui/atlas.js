@@ -644,6 +644,13 @@ function showQuote(idx) {
   var textEl = document.getElementById('quote-text');
   var authEl = document.getElementById('quote-author');
   if (!textEl || !authEl) return;
+  // First paint: populate immediately without fade-out from an empty state.
+  // Subsequent rotations: fade out the existing text, then swap, then fade in.
+  if (!textEl.textContent) {
+    textEl.textContent = '“' + q.text + '”';
+    authEl.textContent = q.author;
+    return;
+  }
   textEl.classList.add('fading');
   authEl.classList.add('fading');
   setTimeout(function() {
