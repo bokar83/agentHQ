@@ -364,3 +364,67 @@ def harvest_leads(icp: dict, target: int = 10, max_pages: int = 5) -> list[dict]
 
     logger.info(f"harvest_leads({icp['name']}): {len(leads)}/{target} leads with email")
     return leads
+
+
+# Owner titles used for SW company match
+_SW_OWNER_TITLES = ["Owner", "Founder", "CEO", "President", "Operator"]
+
+
+def find_owner_by_company(name: str, city: str) -> dict | None:
+    """Find an owner-tier email at a small business by company name + city.
+
+    Uses mixed_people/api_search filtered by q_organization_name +
+    organization_locations + owner-tier titles, then reveal_emails on the
+    top match. Same shape as harvest_leads, scoped to one company.
+
+    Returns:
+      None if Apollo returns no candidates for this company at all.
+      {"domain": str, "email": None, "name": None} if a person was found
+        but reveal returned no email (caller can fall back to Hunter).
+      {"domain": str, "email": str, "name": str} on full success.
+
+    Cost: 0 credits if no match, ~1 credit per reveal on match.
+    """
+    try:
+        headers = _headers()
+    except RuntimeError as e:
+        logger.warning(f"find_owner_by_company: {e}")
+        return None
+
+    payload = {
+        "q_organization_name": name,
+        "organization_locations": [city] if city else [],
+        "person_titles": _SW_OWNER_TITLES,
+        "person_seniorities": _DECISION_MAKER_SENIORITIES,
+        "contact_email_status": ["verified"],
+        "page": 1,
+        "per_page": 5,
+    }
+    try:
+        r = httpx.post(
+            f"{APOLLO_API_URL}/mixed_people/api_search",
+            json=payload, headers=headers, timeout=20,
+        )
+        r.raise_for_status()
+        people = r.json().get("people", [])
+    except Exception as e:
+        logger.warning(f"find_owner_by_company: search failed for {name}: {e}")
+        return None
+
+    if not people:
+        logger.info(f"find_owner_by_company: no people match at {name} in {city}")
+        return None
+
+    candidate = people[0]
+    domain = (candidate.get("organization") or {}).get("primary_domain") or ""
+
+    revealed = reveal_emails([candidate["id"]])
+    if revealed and revealed[0].get("email"):
+        person = revealed[0]
+        return {
+            "domain": domain or person.get("organization", {}).get("primary_domain", ""),
+            "email": person["email"],
+            "name": person.get("name", ""),
+        }
+
+    return {"domain": domain, "email": None, "name": None}
