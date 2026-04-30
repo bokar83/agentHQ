@@ -49,6 +49,36 @@ def test_get_queue_returns_pending_rows():
     assert item["crew_name"] == "griot"
     assert item["proposal_type"] == "linkedin_post"
     assert "ts_created" in item
+    assert item["notion_url"] == ""  # no notion_id in payload, no url
+
+
+def test_get_queue_builds_notion_url_from_notion_id():
+    from datetime import datetime
+    mock_row = MagicMock()
+    mock_row.id = 7
+    mock_row.ts_created = datetime(2026, 4, 30, 10, 0, 0)
+    mock_row.crew_name = "griot"
+    mock_row.proposal_type = "post_candidate"
+    mock_row.payload = {"title": "x", "notion_id": "341bcf1a-3029-8175-9710-e42c46133e08"}
+    mock_row.status = "pending"
+    with patch("approval_queue.list_pending", return_value=[mock_row]):
+        item = atlas_dashboard.get_queue()["items"][0]
+    assert item["notion_url"] == "https://www.notion.so/341bcf1a302981759710e42c46133e08"
+
+
+def test_get_queue_prefers_explicit_notion_url():
+    from datetime import datetime
+    mock_row = MagicMock()
+    mock_row.id = 8
+    mock_row.ts_created = datetime(2026, 4, 30, 10, 0, 0)
+    mock_row.crew_name = "griot"
+    mock_row.proposal_type = "post_candidate"
+    explicit = "https://app.notion.com/p/something-abc123"
+    mock_row.payload = {"title": "x", "notion_url": explicit, "notion_id": "ignore"}
+    mock_row.status = "pending"
+    with patch("approval_queue.list_pending", return_value=[mock_row]):
+        item = atlas_dashboard.get_queue()["items"][0]
+    assert item["notion_url"] == explicit
 
 
 def test_get_content_returns_items():
