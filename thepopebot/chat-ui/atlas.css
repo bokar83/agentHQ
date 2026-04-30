@@ -616,7 +616,33 @@ html, body {
 .spend-bar-fill.amber { background: var(--amber); }
 .spend-bar-fill.red   { background: var(--red); }
 
-/* Quote card */
+/* Quote: now lives in the hero strip, spanning row 2 columns 2-4 next to Last Health Check */
+#hero-quote {
+  grid-column: 2 / -1;
+}
+
+#hero-quote .quote-text {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--ink);
+  line-height: 1.35;
+  font-style: italic;
+  margin-bottom: 14px;
+  transition: opacity 0.6s ease;
+}
+
+#hero-quote .quote-author {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--verdigris);
+  transition: opacity 0.6s ease;
+}
+
+/* Legacy card-body fallback styling kept for safety if quote ever renders elsewhere */
 .quote-text {
   font-family: var(--font-display);
   font-size: 15px;
@@ -647,6 +673,8 @@ html, body {
   #main-grid  { grid-template-columns: 1fr; }
   .chat-card  { position: static; height: 480px; }
   #cards-col  { grid-template-columns: 1fr 1fr; }
+  #hero-quote { grid-column: 1 / -1; }
+  #hero-quote .quote-text { font-size: 22px; }
 }
 
 @media (max-width: 720px) {
@@ -655,6 +683,7 @@ html, body {
   #cards-col  { grid-template-columns: 1fr; }
   .hero-value { font-size: 28px; }
   #topbar h1  { font-size: 20px; }
+  #hero-quote .quote-text { font-size: 18px; }
 }
 
 /* ═══════════════════════════════════════
