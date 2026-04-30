@@ -17,10 +17,14 @@ import os
 
 logger = logging.getLogger("agentsHQ.llm_helpers")
 
-# Model env vars - override per-call via the model= param
-CHAT_MODEL: str = os.environ.get("CHAT_MODEL", "anthropic/claude-haiku-4.5")
-HELPER_MODEL: str = os.environ.get("HELPER_MODEL", "anthropic/claude-haiku-4.5")
-ATLAS_CHAT_MODEL: str = os.environ.get("ATLAS_CHAT_MODEL", "anthropic/claude-haiku-4.5")
+# Model env vars - override per-call via the model= param.
+# `os.environ.get(KEY) or DEFAULT` (not `os.environ.get(KEY, DEFAULT)`) so that
+# empty strings from docker-compose `${VAR}` substitution fall back to the
+# default instead of being passed through as model="".
+_DEFAULT_MODEL = "anthropic/claude-haiku-4.5"
+CHAT_MODEL: str = os.environ.get("CHAT_MODEL") or _DEFAULT_MODEL
+HELPER_MODEL: str = os.environ.get("HELPER_MODEL") or _DEFAULT_MODEL
+ATLAS_CHAT_MODEL: str = os.environ.get("ATLAS_CHAT_MODEL") or _DEFAULT_MODEL
 CHAT_TEMPERATURE: float = float(os.environ.get("CHAT_TEMPERATURE") or "0.7")
 CHAT_SANDBOX: bool = (os.environ.get("CHAT_SANDBOX") or "false").lower() == "true"
 
