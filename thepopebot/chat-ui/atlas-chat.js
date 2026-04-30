@@ -191,16 +191,181 @@ var atlasChat = (function() {
     } else { btn.disabled = false; }
   }
 
+  // Attachment state — per-message, cleared after each send.
+  // Each entry: { name, size, mime, kind: 'image'|'pdf'|'text'|'unsupported',
+  //               dataUrl?, text?, errorMsg? }
+  var _attachments = [];
+  var MAX_FILES = 4;
+  var MAX_FILE_BYTES = 10 * 1024 * 1024;  // 10 MB
+  var TEXT_LIKE_MIMES = /^(text\/|application\/(json|xml|x-yaml|toml))/i;
+  var TEXT_LIKE_EXT = /\.(txt|md|markdown|csv|tsv|json|log|py|js|ts|tsx|jsx|html|css|yml|yaml|toml|sh|sql|env|conf|ini|xml)$/i;
+
+  function _classifyFile(file) {
+    var mime = (file.type || '').toLowerCase();
+    var name = file.name || '';
+    if (mime.indexOf('image/') === 0) return 'image';
+    if (mime === 'application/pdf') return 'pdf';
+    if (TEXT_LIKE_MIMES.test(mime) || TEXT_LIKE_EXT.test(name)) return 'text';
+    return 'unsupported';
+  }
+
+  function _formatBytes(n) {
+    if (n < 1024) return n + ' B';
+    if (n < 1024 * 1024) return Math.round(n / 1024) + ' KB';
+    return (n / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  function _readFileAsDataURL(file) {
+    return new Promise(function(resolve, reject) {
+      var r = new FileReader();
+      r.onload = function() { resolve(r.result); };
+      r.onerror = function() { reject(r.error || new Error('read failed')); };
+      r.readAsDataURL(file);
+    });
+  }
+
+  function _readFileAsText(file) {
+    return new Promise(function(resolve, reject) {
+      var r = new FileReader();
+      r.onload = function() { resolve(r.result); };
+      r.onerror = function() { reject(r.error || new Error('read failed')); };
+      r.readAsText(file);
+    });
+  }
+
+  function _renderChips() {
+    var strip = document.getElementById('chat-attachment-strip');
+    if (!strip) return;
+    while (strip.firstChild) strip.removeChild(strip.firstChild);
+    _attachments.forEach(function(att, idx) {
+      var chip = document.createElement('span');
+      chip.className = 'chat-chip' + (att.errorMsg ? ' chat-chip-error' : '');
+      if (att.kind === 'image' && att.dataUrl) {
+        var img = document.createElement('img');
+        img.className = 'chat-chip-thumb';
+        img.src = att.dataUrl;
+        img.alt = '';
+        chip.appendChild(img);
+      }
+      var name = document.createElement('span');
+      name.className = 'chat-chip-name';
+      name.textContent = att.name;
+      chip.appendChild(name);
+      var size = document.createElement('span');
+      size.className = 'chat-chip-size';
+      size.textContent = att.errorMsg ? att.errorMsg : _formatBytes(att.size);
+      chip.appendChild(size);
+      var rm = document.createElement('button');
+      rm.type = 'button';
+      rm.className = 'chat-chip-remove';
+      rm.setAttribute('aria-label', 'Remove ' + att.name);
+      rm.textContent = '×';
+      rm.addEventListener('click', function() {
+        _attachments.splice(idx, 1);
+        _renderChips();
+      });
+      chip.appendChild(rm);
+      strip.appendChild(chip);
+    });
+  }
+
+  function _addFiles(fileList) {
+    if (!fileList || !fileList.length) return;
+    var files = Array.prototype.slice.call(fileList);
+    var pending = [];
+    files.forEach(function(file) {
+      if (_attachments.length + pending.length >= MAX_FILES) {
+        pending.push({
+          name: file.name || 'file', size: file.size, mime: file.type, kind: 'unsupported',
+          errorMsg: 'max ' + MAX_FILES + ' attachments',
+        });
+        return;
+      }
+      var kind = _classifyFile(file);
+      if (file.size > MAX_FILE_BYTES) {
+        pending.push({
+          name: file.name || 'file', size: file.size, mime: file.type, kind: kind,
+          errorMsg: 'too large (' + _formatBytes(file.size) + ' > 10MB)',
+        });
+        return;
+      }
+      if (kind === 'unsupported') {
+        pending.push({
+          name: file.name || 'file', size: file.size, mime: file.type, kind: kind,
+          errorMsg: 'unsupported type',
+        });
+        return;
+      }
+      pending.push({ name: file.name || 'file', size: file.size, mime: file.type, kind: kind, _file: file });
+    });
+    _attachments = _attachments.concat(pending);
+    _renderChips();
+    pending.forEach(function(att) {
+      if (!att._file) return;
+      var promise = (att.kind === 'text') ? _readFileAsText(att._file) : _readFileAsDataURL(att._file);
+      promise.then(function(value) {
+        if (att.kind === 'text') att.text = value;
+        else att.dataUrl = value;
+        delete att._file;
+        _renderChips();
+      }).catch(function(e) {
+        att.errorMsg = 'read failed';
+        _renderChips();
+      });
+    });
+  }
+
+  function _buildContent(text) {
+    // Returns either a plain string (no attachments) or an OpenRouter
+    // structured-content array (text + image_url + file blocks, plus inlined
+    // text for text-like files).
+    var valid = _attachments.filter(function(a) { return !a.errorMsg && (a.dataUrl || a.text); });
+    if (!valid.length) return text;
+    var blocks = [];
+    var textBody = text;
+    valid.forEach(function(a) {
+      if (a.kind === 'text' && a.text) {
+        var snippet = a.text.length > 50000 ? a.text.slice(0, 50000) + '\n[...truncated]' : a.text;
+        textBody = textBody + '\n\n[file: ' + a.name + ']\n```\n' + snippet + '\n```';
+      }
+    });
+    blocks.push({ type: 'text', text: textBody });
+    valid.forEach(function(a) {
+      if (a.kind === 'image' && a.dataUrl) {
+        blocks.push({ type: 'image_url', image_url: { url: a.dataUrl } });
+      } else if (a.kind === 'pdf' && a.dataUrl) {
+        blocks.push({ type: 'file', file: { filename: a.name, file_data: a.dataUrl } });
+      }
+    });
+    return blocks;
+  }
+
   function sendMessage(text) {
-    if (!text || !text.trim()) return;
-    text = text.trim();
+    text = (text || '').trim();
+    var hasAttachments = _attachments.some(function(a) { return !a.errorMsg && (a.dataUrl || a.text); });
+    if (!text && !hasAttachments) return;
     var sendBtn = document.getElementById('chat-send');
     var inputEl = document.getElementById('chat-input');
+    var attachBtn = document.getElementById('chat-attach');
     if (sendBtn) sendBtn.disabled = true;
+    if (attachBtn) attachBtn.disabled = true;
     if (inputEl) inputEl.disabled = true;
-    _messages.push({ role: 'user', content: text });
-    _appendMessage('user', text, [], null);
+
+    var content = _buildContent(text);
+    var displayText = text || '(attachment only)';
+    var attachedNames = _attachments
+      .filter(function(a) { return !a.errorMsg; })
+      .map(function(a) { return a.name; });
+    if (attachedNames.length) displayText += '\n\n[attached: ' + attachedNames.join(', ') + ']';
+
+    _messages.push({ role: 'user', content: content });
+    _appendMessage('user', displayText, [], null);
     _typing(true);
+
+    // Clear attachments + chips immediately — they're now in-flight on the request
+    _attachments = [];
+    _renderChips();
+
     apiFetch('/atlas/chat', {
       method: 'POST',
       body: JSON.stringify({ messages: _messages, session_key: _getSessionKey() }),
@@ -216,6 +381,7 @@ var atlasChat = (function() {
       _messages.pop();
     }).finally(function() {
       if (sendBtn) sendBtn.disabled = false;
+      if (attachBtn) attachBtn.disabled = false;
       if (inputEl) { inputEl.disabled = false; inputEl.focus(); }
     });
   }
@@ -223,6 +389,8 @@ var atlasChat = (function() {
   function init() {
     var sendBtn = document.getElementById('chat-send');
     var inputEl = document.getElementById('chat-input');
+    var attachBtn = document.getElementById('chat-attach');
+    var fileInput = document.getElementById('chat-file-input');
     if (!sendBtn || !inputEl) return;
     sendBtn.addEventListener('click', function() { var t = inputEl.value; inputEl.value = ''; sendMessage(t); });
     inputEl.addEventListener('keydown', function(e) {
@@ -230,6 +398,28 @@ var atlasChat = (function() {
         e.preventDefault();
         var t = inputEl.value; inputEl.value = '';
         sendMessage(t);
+      }
+    });
+    if (attachBtn && fileInput) {
+      attachBtn.addEventListener('click', function() { fileInput.click(); });
+      fileInput.addEventListener('change', function() {
+        _addFiles(fileInput.files);
+        fileInput.value = '';  // allow re-selecting the same file
+      });
+    }
+    inputEl.addEventListener('paste', function(e) {
+      var items = e.clipboardData && e.clipboardData.items;
+      if (!items) return;
+      var files = [];
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].kind === 'file') {
+          var f = items[i].getAsFile();
+          if (f) files.push(f);
+        }
+      }
+      if (files.length) {
+        e.preventDefault();
+        _addFiles(files);
       }
     });
     _appendMessage('assistant', 'Atlas ready. Ask me anything about your content pipeline, agents, or spend.', [], null);
