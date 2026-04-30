@@ -312,6 +312,30 @@ Explicitly excluded (have code-level defaults, hard-failing on these creates new
 
 **Council verdict:** Sankofa + Karpathy both cleared. Executor: build this before the next VPS deploy (M11d + M9b deploy is the forcing function).
 
+---
+
+### M13: True spend visibility (provider billing API integration)
+
+**Target:** 2026-05-07 (Wednesday)
+
+**Trigger:** Now. Atlas dashboard's `llm_calls` ledger is a lower bound (council + direct Anthropic SDK only; CrewAI calls bypass it by design, see `usage_logger.py:366-368`). Today's tooltip says "lower bound, CrewAI calls not logged here yet". That string goes away when this ships.
+
+**Scope:**
+
+- **(a)** Daily cron pulls `GET https://openrouter.ai/api/v1/credits` and writes one row per day to a new `provider_billing` table (provider, day, amount_usd, tokens, raw_json).
+- **(b)** Daily cron pulls Anthropic Console usage endpoint (`/v1/organizations/usage` or successor; verify auth method during build) and writes one row per day to the same table.
+- **(c)** `atlas_dashboard.get_spend()` joins `llm_calls` aggregates with `provider_billing` totals so the Spend card shows: ledger total (per-crew attributable) + provider total (ground truth) + delta.
+- **(d)** Once (a)+(b) ship and the delta is visible, remove the "lower bound" tooltip from atlas.js.
+- **(e)** Per-crew attribution for CrewAI calls is a follow-on. Only build if (a)+(b)+(c) reveal a delta large enough to matter for cost-allocation decisions. The killed plan to subclass `crewai.LLM` and intercept `set_callbacks` stays killed unless this trigger fires.
+
+**Success criterion (verifiable):** Spend card on `https://agentshq.boubacarbarry.com/atlas` shows a non-zero "Provider total (today)" alongside today's `llm_calls` total, with the delta labelled. Manual cross-check: numbers within 5% of `openrouter.ai/activity` dashboard and `console.anthropic.com` usage page.
+
+**Out of scope:** Per-call attribution beyond what providers expose. Per-token cost normalization across providers (provider-given USD totals are the unit).
+
+**Why now (Sankofa First Principles):** "True spend" is the user's actual ask. The dashboard fix shipped 2026-04-30 surfaces the gap; this milestone closes it.
+
+---
+
 **Branch:** `feat/atlas-m12-startup-contract`
 **ETA:** 30 minutes.
 **Save point:** `savepoint-pre-atlas-m12-startup-contract-YYYYMMDD` (to create before first edit)
@@ -1386,5 +1410,41 @@ This session was originally scoped as "continue the agentsHQ structure cleanup s
 **Atlas roadmap impact:** L5 substrate is now de-risked. When L5's 14-day data gate opens 2026-05-08, the loop infrastructure can be built against a proven mechanism rather than a hypothetical one. This shaves weeks off L5 build time.
 
 **State at session end:** clean working tree on production source. Two new files in `workspace/loop-test/` (test artifacts, .gitignore'd by workspace/ rules). Atlas roadmap updated (this entry). Memory updated (new feedback file + MEMORY.md). VPS unchanged.
+
+---
+
+## Session Log: 2026-04-30 (Thursday afternoon): Atlas Mission Control staleness fix shipped, NLM cron rewired, M13 added
+
+**What:** Three problems surfaced by Boubacar:
+
+1. Atlas Spend card "spending pace" stuck at 2026-04-23.
+2. Hero "Last autonomous action" perpetually showed `self-test ok`.
+3. NLM export cron (06:00 UTC daily) had not produced its log file.
+
+**Diagnosis (after one false retraction):**
+
+- Stale spending: `llm_calls` only logs council + direct Anthropic SDK; CrewAI calls bypass `usage_logger` by design (`usage_logger.py:366-368`). Active autonomous work today (auto_publisher, griot, sequence_engine) used CrewAI, so 0 rows landed since last research_engine run on 04-23. Dashboard was honest, system was the unreliable narrator.
+- Stale "self-test ok": `_last_autonomous_action()` had no filter; `heartbeat-self-test` fires every minute and dominates `LIMIT 1`.
+- NLM cron: registered correctly but ran on host `/usr/bin/python3` which lacks `psycopg2` (`pip install psycopg2-binary` was never run on the host).
+- **False retraction:** I read systemd `signal-works-morning.service` "Failed: timeout" status on 04-30 and called it an "Apollo zero match crisis." Wrong. Boubacar received 10 SW + 8 CW T1 drafts the same day. Verified via Supabase `lead_interactions` query: drafts persist in-container before SIGKILL. Memory written: `feedback_systemd_failed_status_misleading.md`.
+
+**Plan v3.2 (locked through 3 rounds of /sankofa + /karpathy):**
+
+- A: read-only verify SW timer + journalctl + Supabase cross-check. Status: timer fails by `TimeoutStartSec=30min` SIGKILL but drafts land (10 SW T1 / 8 CW T1 on 04-30; 10 SW / 29 CW on 04-29).
+- A1.5: VPS does not import `build_email`; the broken local pytest is against a renamed function (`render_html`). Drift is in the test, not prod.
+- B: shipped 152-line dashboard fix (commit `7985974`, deployed to VPS, `orc-crewai` rebuilt at 15:34 UTC). Hero "Last action" now shows real autonomous work (`auto_publisher | success @ 13:02`). Spend card adds Today/Week/Month token totals (304,354 MTD verified) and "Ledger last write" amber row with stale tooltip pointing to M13.
+- C: NLM cron swapped from host `python3 scripts/...` to `cat scripts/nlm_registry_export.py | docker exec -i -e NLM_EXPORT_SHEET_ID -e DATABASE_URL orc-crewai python3 -`. Manual test ran clean (exit 0); script now correctly surfaces `NLM_EXPORT_SHEET_ID not set` as the next blocker.
+- D: M13 added to this roadmap with target 2026-05-07. Scope: OpenRouter `/api/v1/credits` + Anthropic Console usage daily cron writes to `provider_billing` table; Spend card shows ledger + provider + delta; tooltip removed when delta visible.
+- E: 2 memory files added (`reference_atlas_llm_calls_ledger_scope.md`, `feedback_systemd_failed_status_misleading.md`); MEMORY.md index updated.
+
+**Side fix:** VPS `.env` had Windows CRLF line endings; `scripts/orc_rebuild.sh` choked on `set -a; . .env`. Fixed via `sed -i s/r$//` (backup at `.env.bak.<ts>`). Bypassed orc_rebuild.sh for this rebuild, ran `docker compose build orchestrator && docker compose up -d` directly.
+
+**Surfaced blockers, not addressed this session:**
+
+- `NLM_EXPORT_SHEET_ID` not in VPS `.env`. NLM cron will succeed-no-op tomorrow at 06:00 UTC until this is set.
+- VPS `.env` line 121 (`SMTP_PASS`) parses badly under bash `set -a; . .env` due to special chars in the value. Other `.env` consumers (docker-compose) handle it. Worth quoting later but not a current blocker.
+- `signal-works-morning.service` 30-min `TimeoutStartSec` is too short for the full multi-city scrape; service registers Failed but writes persist. Either bump timeout or accept the misleading status.
+
+**State at session end:** clean working tree (only unrelated WIP unstaged: TOOLS_ACCESS.md, output, untracked playbooks/skills). VPS at commit `7985974`. orc-crewai rebuilt and healthy. Dashboard live with new fields. Cron rewired. Memory + roadmap updated.
 
 ---
