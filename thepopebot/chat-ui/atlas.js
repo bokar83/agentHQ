@@ -80,22 +80,78 @@ function showDashboard() {
   startPolling();
 }
 
-// Fetch helper
-async function apiFetch(path, opts) {
-  opts = opts || {};
-  const res = await fetch(ORC_BASE + path, {
-    method: opts.method || 'GET',
-    headers: Object.assign(
-      { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _token },
-      opts.headers || {}
-    ),
-    body: opts.body || undefined,
-  });
-  if (res.status === 401) {
+// Fetch helper.
+// On 401 we re-show the PIN screen WITHOUT reloading the page, then retry
+// the request with the fresh token. Preserves any text the user has typed
+// in #chat-input. Concurrent 401s coalesce onto one re-PIN promise so the
+// 30-second polling burst doesn't pop multiple modals.
+let _reauthPromise = null;
+
+function _showPinForReauth() {
+  if (_reauthPromise) return _reauthPromise;
+  _reauthPromise = new Promise((resolve, reject) => {
     sessionStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(TOKEN_TS_KEY);
-    location.reload();
-    throw new Error('TOKEN_EXPIRED');
+    _token = null;
+    const pinScreen = document.getElementById('pin-screen');
+    const pinInput = document.getElementById('pin-input');
+    const errEl = document.getElementById('pin-error');
+    pinScreen.style.display = '';
+    if (errEl) errEl.textContent = 'Session expired. Re-enter PIN to continue. Your message is saved.';
+    if (pinInput) { pinInput.value = ''; pinInput.focus(); }
+    function onSubmit(e) {
+      e.preventDefault();
+      const pin = pinInput.value.trim();
+      if (!pin) return;
+      const btn = document.getElementById('pin-submit');
+      btn.disabled = true; btn.textContent = 'Connecting...';
+      fetch(ORC_BASE + '/chat-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin }),
+      }).then(r => r.json().then(d => ({ ok: r.ok, d })))
+        .then(({ ok, d }) => {
+          if (!ok) {
+            if (errEl) errEl.textContent = d.detail || 'Connection failed.';
+            btn.disabled = false; btn.textContent = 'Connect';
+            return;
+          }
+          _token = d.token;
+          sessionStorage.setItem(TOKEN_KEY, _token);
+          sessionStorage.setItem(TOKEN_TS_KEY, String(Date.now()));
+          document.getElementById('pin-form').removeEventListener('submit', onSubmit);
+          pinScreen.style.display = 'none';
+          if (errEl) errEl.textContent = '';
+          btn.disabled = false; btn.textContent = 'Connect';
+          _reauthPromise = null;
+          resolve();
+        })
+        .catch(() => {
+          if (errEl) errEl.textContent = 'Network error. Is the VPS reachable?';
+          btn.disabled = false; btn.textContent = 'Connect';
+        });
+    }
+    document.getElementById('pin-form').addEventListener('submit', onSubmit);
+  });
+  return _reauthPromise;
+}
+
+async function apiFetch(path, opts) {
+  opts = opts || {};
+  async function doFetch() {
+    return fetch(ORC_BASE + path, {
+      method: opts.method || 'GET',
+      headers: Object.assign(
+        { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _token },
+        opts.headers || {}
+      ),
+      body: opts.body || undefined,
+    });
+  }
+  let res = await doFetch();
+  if (res.status === 401) {
+    await _showPinForReauth();
+    res = await doFetch();
   }
   if (!res.ok) {
     const body = await res.text().catch(() => '');
@@ -331,6 +387,55 @@ function renderSpend(d) {
       el('span', { class: 'data-label' }, 'Month to Date'),
       el('span', { class: 'data-value' }, '$' + (d.month_usd || 0).toFixed(4)),
     ));
+  }
+
+  // Token totals -- prompt + completion + cache (read & write) summed
+  const fmtTokens = function(n) {
+    n = n || 0;
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + 'M';
+    if (n >= 1_000)     return (n / 1_000).toFixed(1)     + 'K';
+    return String(n);
+  };
+  if (d.today_tokens != null || d.week_tokens != null || d.month_tokens != null) {
+    const tokDivider = el('div', { class: 'data-label' });
+    tokDivider.textContent = 'Tokens';
+    tokDivider.style.marginTop = '8px';
+    body.appendChild(tokDivider);
+    body.appendChild(el('div', { class: 'data-row' },
+      el('span', { class: 'data-label' }, 'Today'),
+      el('span', { class: 'data-value' }, fmtTokens(d.today_tokens)),
+    ));
+    body.appendChild(el('div', { class: 'data-row' },
+      el('span', { class: 'data-label' }, 'This Week'),
+      el('span', { class: 'data-value' }, fmtTokens(d.week_tokens)),
+    ));
+    body.appendChild(el('div', { class: 'data-row' },
+      el('span', { class: 'data-label' }, 'Month to Date'),
+      el('span', { class: 'data-value' }, fmtTokens(d.month_tokens)),
+    ));
+  }
+
+  // Ledger staleness signal -- only litellm/Anthropic-SDK calls reach llm_calls
+  // today; CrewAI calls bypass it (see usage_logger.py). When the last write is
+  // older than 24h, surface it so a stale dashboard doesn't read as "system idle".
+  if (d.ledger_last_ts) {
+    const last = new Date(d.ledger_last_ts);
+    const ageHours = (Date.now() - last.getTime()) / 3_600_000;
+    const stale = ageHours > 24;
+    const wrap = el('div', { class: 'data-row' });
+    wrap.style.marginTop = '6px';
+    const lbl = el('span', { class: 'data-label' }, 'Ledger last write');
+    const val = el('span', { class: 'data-value' });
+    val.textContent = last.toISOString().slice(0, 16).replace('T', ' ') + 'Z'
+                     + (stale ? '  (stale)' : '');
+    if (stale) {
+      val.style.color = '#d97706';
+      val.title = 'No llm_calls rows in 24h+. CrewAI calls bypass usage_logger by '
+                + 'design; only council and direct Anthropic SDK calls are logged.';
+    }
+    wrap.appendChild(lbl);
+    wrap.appendChild(val);
+    body.appendChild(wrap);
   }
 
   const perCrew = today.per_crew || {};
