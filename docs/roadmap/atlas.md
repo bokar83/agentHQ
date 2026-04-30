@@ -342,6 +342,34 @@ Explicitly excluded (have code-level defaults, hard-failing on these creates new
 
 ---
 
+### M14: Click-to-open-Notion links on Atlas dashboard
+
+**Target:** 2026-04-30 (this session, sub-1h work).
+
+**Trigger:** Now. Boubacar wants to click any item in the Content Board card, Approval Queue card, or Top Ideas card and have it open the underlying Notion page in a new tab. Today these render as plain text and require him to switch to Notion and search for the title manually.
+
+**Scope:**
+
+- **Backend:** `orchestrator/atlas_dashboard.py`
+  - `_fetch_content_board()`: include `notion_url` (from Notion API's `page.url` field) in each parsed dict for `recent`, `upcoming`, `past_due`.
+  - `_fetch_ideas()`: same. Add `notion_url`.
+  - `get_queue()`: queue items reference Notion pages via `payload.notion_url` or similar; gracefully render plain text when payload has no URL (ad-hoc proposals).
+- **Frontend:** `thepopebot/chat-ui/atlas.js`
+  - `renderContent`: title becomes `<a target="_blank" rel="noopener">` when item has `notion_url`. Add small external-link glyph (↗) next to linked titles.
+  - `renderIdeas`: same.
+  - `renderQueue`: same, with the gate for items without URLs.
+  - DOM-builder pattern (`createElement` + `textContent`) preserved. No `innerHTML`.
+- **Tests:** add 1 test per data fetcher to assert `notion_url` is present in the output dict when the source page has it. Total ~3 new tests.
+
+**Success criterion (verifiable):** On `https://agentshq.boubacarbarry.com/atlas`, click any past-due / upcoming / queue / ideas title and the matching Notion page opens in a new tab. Items without a Notion URL render as plain text (no broken links).
+
+**Out of scope:**
+
+- Hero strip "Last action" linking. That data comes from `task_outcomes` (Postgres), which has no Notion URL column. Possible follow-on if needed.
+- Inline preview / hover cards. Click-through is the ask; previews are scope creep.
+
+---
+
 ## Descoped Items
 
 These are explicit "do not build" decisions with reasons, so we don't relitigate.
