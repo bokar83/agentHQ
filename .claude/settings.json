@@ -15,5 +15,17 @@
       "Bash(ssh root@* psql * -c \"DROP:*)",
       "Bash(ssh root@* psql * -c \"TRUNCATE:*)"
     ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PROJECT_DIR/.claude/hooks/echo-nag.py\""
+          }
+        ]
+      }
+    ]
   }
 }
