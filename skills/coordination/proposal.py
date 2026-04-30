@@ -39,9 +39,10 @@ PROPOSAL_KIND = "commit-proposal"
 
 # ---- git helpers (run from cwd unless repo_path is set) ----
 
-def _git(args: list[str], cwd: Optional[str] = None) -> tuple[int, str, str]:
+def _git(args: list[str], cwd: Optional[str] = None, stdin: Optional[str] = None) -> tuple[int, str, str]:
     proc = subprocess.run(
-        ["git", *args], cwd=cwd, capture_output=True, text=True, check=False
+        ["git", *args], cwd=cwd, capture_output=True, text=True, check=False,
+        input=stdin,
     )
     return proc.returncode, proc.stdout, proc.stderr
 
@@ -286,7 +287,10 @@ def ack(proposal_id: str, message_override: Optional[str] = None) -> dict:
     if rc_add != 0:
         return {"ok": False, "error": f"git add failed: {err_add.strip()}"}
 
-    rc_commit, out_commit, err_commit = _git(["commit", "-m", msg], cwd=cwd)
+    # Use -F- with stdin so multi-line messages keep their subject/body split
+    # intact. -m collapses newlines on Windows and turns the body into the
+    # subject. Argv has length limits too; stdin sidesteps both.
+    rc_commit, out_commit, err_commit = _git(["commit", "-F", "-"], cwd=cwd, stdin=msg)
     if rc_commit != 0:
         # Pre-commit hook may have rewritten files; user must rerun.
         return {"ok": False, "error": f"git commit failed: {err_commit.strip() or out_commit.strip()}"}

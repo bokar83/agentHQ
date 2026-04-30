@@ -172,3 +172,62 @@ After shipping the coordination substrate (claim/lease + queue + heartbeat) on `
 - M1 has not started yet. Boubacar approved start "right now" at end of session.
 
 **Next session:** start M1 build at step 1 above.
+
+### 2026-04-29 (later): Echo M1 SHIPPED end-to-end
+
+**What happened:**
+
+Same session as the design above. Boubacar approved continuing instead of waiting. Build took roughly 45 minutes once moving (most of the council-time was the design that landed in this same doc). Worktree at `d:/Ai_Sandbox/agentsHQ-echo` on branch `feature/echo-m1` to escape cross-session branch mutation.
+
+**What shipped:**
+
+- `skills/coordination/proposal.py` (341 lines): `propose()`, `ack()`, `reject()`, `list_pending()`. Synthesizes Conventional Commits messages from working-tree diff. Sends Telegram via existing urllib pattern. Marks rows in the existing `tasks` table with `kind='commit-proposal'`.
+- `.claude/commands/propose.md`, `ack.md`, `reject.md`, `list-proposals.md`: project-level slash commands that wrap the Python module.
+- `CLAUDE.md` updated: convention for when to call `/propose` (logical unit complete + tests green or N/A; do NOT block on user). Added `echo` to active-roadmaps table.
+
+**E2E smoke test (real, observed):**
+
+1. Edited `proposal.py` (added "Shipped 2026-04-29." line in module docstring).
+2. Called `proposal.propose()` from worktree -> proposal `0b417e46` queued in prod Postgres, Telegram message arrived.
+3. Called `proposal.ack('0b417e46')` -> staged the file, ran `git commit`, real commit `40372e9` landed on `feature/echo-m1`. Suggested message used. `list_pending()` confirms zero pending after ack.
+4. Branch pushed to origin.
+
+**Known cosmetic issue (not blocking ship):**
+
+- `_suggest_commit_message()` produces multi-line strings; git collapses them into the subject line under `-m`. Subject reads "feat(coordination): proposal.py Branch: feature/echo-m1" instead of "feat(coordination): proposal.py" with branch in body. Fix: use `git commit -F-` with a temp file, or split subject and body explicitly. Defer to next session.
+
+**Cross-session interference fix:**
+
+Echo work runs from `d:/Ai_Sandbox/agentsHQ-echo` worktree on `feature/echo-m1`. Main checkout `d:/Ai_Sandbox/agentsHQ` keeps doing what other sessions need. Worktrees prevent the "branch flips underneath me" pattern that cost ~30 min today.
+
+**M2 trigger:**
+
+7 days of real `/propose` use starting 2026-04-30. If interruption count drops 50%+, build the second proposal kind (publish/deploy/draft).
+
+### 2026-04-30: Day 1 of M2 7-day clock + cosmetic fix shipped
+
+**What happened:**
+
+Resumed in `d:/Ai_Sandbox/agentsHQ-echo` worktree. Popped the `echo-m1-session-log-pending` stash cleanly (orphan deletion was gone in fresh shell). Fixed the cosmetic commit-message issue in `skills/coordination/proposal.py`: `_git()` now accepts an optional `stdin` arg, and `ack()` calls `git commit -F -` with the message piped in instead of `-m '<multi-line>'`. Verified with a `--dry-run` smoke test that git accepts the stdin path on Windows.
+
+Ran 2 `/propose` calls this session:
+
+- `fb18ddba` (queued): docs (handoff + echo session log).
+- `a4581326` (queued): docs + proposal.py -F- fix.
+
+Both pending Boubacar's ack.
+
+**Tasks ledger baseline (start of M2 7-day clock):**
+
+```text
+Today (2026-04-30): 3 commit-proposals, 0 acked, 2 queued, 1 failed.
+All-time: 5 total | done=1, queued=2, failed=2.
+```
+
+**M2 friction observation #1: bundle creep.**
+
+`propose()` snapshots ALL unstaged + untracked files in the working tree, not just the unit just finished. If I propose unit A, then start unit B and propose B before Boubacar acks A, the B snapshot includes A's files. After Boubacar acks A, B's queued row is stale (those files are already committed). Today this was visible: `fb18ddba` had 2 files; `a4581326` included those same 2 files plus the new one. Fix candidates for M2: (a) `propose()` stages-then-snapshots so each row is scoped to one unit; (b) `ack()` GC's superseded queued rows on the same paths. Defer until day 7.
+
+**No nag fires observed today.** Stop-hook ran after each turn; nothing nagged because every coherent unit had a fresh `/propose` call.
+
+**MEMORY.md cleanup:** 198 lines down to 197 by collapsing duplicate Newsletter Voice pointers into one bullet. Buffer back to 3 lines under cap.
