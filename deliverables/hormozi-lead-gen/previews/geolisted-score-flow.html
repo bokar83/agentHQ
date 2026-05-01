@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>geolisted.co AI Visibility Score: flow preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:        #0B0F1A;
+    --ink-soft:   #141927;
+    --surface:    #1A2035;
+    --border:     rgba(255,255,255,.07);
+    --white:      #F0EEE8;
+    --muted:      rgba(240,238,232,.82);
+    --signal:     #00E5FF;
+    --signal-d:   #00B8CC;
+    --gold:       #FFB830;
+    --green:      #34D399;
+    --red:        #F87171;
+    --f-head:     'Syne', sans-serif;
+    --f-body:     'Inter', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--f-body);
+    background: var(--ink);
+    color: var(--white);
+    padding: 48px 5% 96px;
+    min-height: 100vh;
+  }
+
+  h1 { font-family: var(--f-head); font-size: 2.2rem; font-weight: 800; letter-spacing: -.02em; margin-bottom: 8px; }
+  h1 span { color: var(--signal); }
+  .lead { color: var(--muted); font-size: 1rem; max-width: 760px; line-height: 1.6; margin-bottom: 12px; }
+  .lead strong { color: var(--white); }
+  .eyebrow {
+    font-family: var(--f-body); font-size: .68rem; font-weight: 600;
+    color: var(--signal); letter-spacing: .22em; text-transform: uppercase;
+    margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .eyebrow span { display: block; width: 16px; height: 1px; background: var(--signal); }
+
+  .grid {
+    display: grid; grid-template-columns: 1.05fr .95fr; gap: 36px;
+    margin-top: 48px;
+  }
+  @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+
+  /* LEFT SIDE: Visitor experience as a 5-state mockup */
+  .visitor h2 {
+    font-family: var(--f-head); font-size: 1.1rem; font-weight: 700;
+    letter-spacing: .04em; text-transform: uppercase;
+    color: var(--white); margin-bottom: 16px;
+    padding-bottom: 8px; border-bottom: 2px solid var(--signal);
+  }
+  .state {
+    background: var(--ink-soft); border: 1px solid var(--border); border-radius: 4px;
+    padding: 24px 22px; margin-bottom: 16px;
+    position: relative;
+  }
+  .state-num {
+    position: absolute; top: -12px; left: 18px;
+    font-family: var(--f-head); font-size: .7rem; font-weight: 700;
+    color: var(--ink); background: var(--signal); padding: 4px 10px;
+    border-radius: 2px; letter-spacing: .08em; text-transform: uppercase;
+  }
+  .state h3 {
+    font-family: var(--f-head); font-size: 1.05rem; font-weight: 700;
+    margin-bottom: 14px; margin-top: 4px;
+  }
+  .state p { font-size: .88rem; color: var(--muted); line-height: 1.65; margin-bottom: 8px; }
+  .state .meta { font-size: .72rem; color: rgba(240,238,232,.5); font-style: italic; margin-top: 10px; }
+
+  /* Form mockup */
+  .form-mock {
+    background: rgba(255,255,255,.03); border-radius: 4px; padding: 20px;
+    border: 1px dashed var(--border); margin-top: 12px;
+  }
+  .form-mock .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .form-mock .input {
+    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+    border-radius: 2px; padding: 10px 12px; font-family: var(--f-body);
+    font-size: .82rem; color: var(--muted);
+  }
+  .form-mock .btn {
+    background: var(--signal); color: var(--ink); font-family: var(--f-head);
+    font-weight: 700; font-size: .78rem; letter-spacing: .06em; text-transform: uppercase;
+    text-align: center; padding: 12px 20px; border-radius: 2px; margin-top: 4px;
+  }
+
+  /* Loading state with the 4 scanner lines */
+  .scanner-line {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; font-size: .85rem; color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .scanner-line:last-child { border-bottom: none; }
+  .scanner-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--signal);
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  .scanner-line.done .scanner-dot { background: var(--green); animation: none; }
+  @keyframes pulse {
+    0%, 100% { opacity: .3; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.4); }
+  }
+  .scanner-line .label { flex: 1; }
+  .scanner-line .check { color: var(--green); font-weight: 700; }
+
+  /* Score result mockup */
+  .score-result {
+    background: linear-gradient(135deg, var(--ink-soft), var(--surface));
+    border: 1px solid var(--signal); border-radius: 4px;
+    padding: 28px 24px; margin-top: 12px;
+    box-shadow: 0 0 60px rgba(0,229,255,.08);
+  }
+  .score-display {
+    display: flex; align-items: baseline; gap: 8px;
+    margin-bottom: 14px;
+  }
+  .score-num {
+    font-family: var(--f-head); font-size: 4.2rem; font-weight: 800;
+    line-height: 1; color: var(--signal); letter-spacing: -.04em;
+  }
+  .score-suffix { font-family: var(--f-body); font-size: 1.2rem; color: var(--muted); }
+  .score-bar { background: rgba(255,255,255,.06); height: 6px; border-radius: 3px; overflow: hidden; margin-bottom: 18px; }
+  .score-bar-fill { background: var(--signal); height: 100%; width: 25%; }
+  .breakdown { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 16px; margin-bottom: 14px; }
+  .breakdown-item { display: flex; align-items: center; gap: 8px; font-size: .82rem; color: var(--muted); }
+  .breakdown-item .dot { width: 9px; height: 9px; border-radius: 50%; }
+  .breakdown-item .dot.fail { background: var(--red); }
+  .breakdown-item .dot.pass { background: var(--green); }
+  .gated-cta {
+    background: rgba(0,229,255,.06); border: 1px solid rgba(0,229,255,.2);
+    border-radius: 4px; padding: 14px 16px; margin-top: 12px;
+    font-size: .82rem; color: var(--white); line-height: 1.6;
+  }
+  .gated-cta strong { color: var(--signal); }
+
+  /* RIGHT SIDE: Architecture and data flow */
+  .arch h2 {
+    font-family: var(--f-head); font-size: 1.1rem; font-weight: 700;
+    letter-spacing: .04em; text-transform: uppercase;
+    color: var(--white); margin-bottom: 16px;
+    padding-bottom: 8px; border-bottom: 2px solid var(--gold);
+  }
+  .arch h3 {
+    font-family: var(--f-head); font-size: .95rem; font-weight: 700;
+    margin-top: 28px; margin-bottom: 10px; color: var(--white);
+  }
+  .arch p { font-size: .86rem; color: var(--muted); line-height: 1.65; margin-bottom: 10px; }
+  .arch ul, .arch ol { padding-left: 20px; margin-bottom: 14px; }
+  .arch li { font-size: .86rem; color: var(--muted); margin-bottom: 6px; line-height: 1.55; }
+  .arch code {
+    background: rgba(0,229,255,.08); color: var(--signal);
+    padding: 2px 6px; border-radius: 2px; font-size: .82rem;
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+
+  .flow {
+    background: var(--ink-soft); border: 1px solid var(--border); border-radius: 4px;
+    padding: 22px 20px; margin-top: 12px;
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: .78rem; color: var(--muted); line-height: 1.85;
+  }
+  .flow .step { display: flex; align-items: flex-start; gap: 10px; }
+  .flow .step .arrow { color: var(--signal); flex-shrink: 0; }
+  .flow .step .body { flex: 1; }
+  .flow .step .body strong { color: var(--white); font-weight: 600; }
+  .flow .step .body em { color: var(--gold); font-style: normal; }
+
+  .compare {
+    width: 100%; border-collapse: collapse; margin-top: 12px;
+    font-size: .82rem;
+  }
+  .compare th, .compare td {
+    padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border);
+    color: var(--muted); vertical-align: top;
+  }
+  .compare th {
+    font-family: var(--f-head); font-size: .68rem; font-weight: 700;
+    color: var(--white); letter-spacing: .08em; text-transform: uppercase;
+  }
+  .compare .yes { color: var(--green); font-weight: 600; }
+  .compare .no { color: var(--red); font-weight: 600; }
+
+  .verdict {
+    background: var(--ink); border: 1px solid var(--gold); border-radius: 4px;
+    padding: 22px 20px; margin-top: 24px;
+  }
+  .verdict h3 { color: var(--gold); margin-top: 0; }
+  .verdict p { color: var(--white); font-size: .9rem; }
+
+  .ask {
+    background: var(--ink-soft); border-left: 3px solid var(--signal);
+    padding: 16px 18px; margin-top: 32px; border-radius: 0 4px 4px 0;
+  }
+  .ask h3 { font-family: var(--f-head); font-size: .9rem; color: var(--signal); margin-bottom: 8px; }
+  .ask ol { padding-left: 22px; }
+  .ask li { color: var(--white); font-size: .88rem; margin-bottom: 6px; }
+</style>
+</head>
+<body>
+
+  <p class="eyebrow"><span></span>geolisted.co + AI Visibility Score: end-to-end flow</p>
+  <h1>What the visitor sees. <span>And where their data goes.</span></h1>
+  <p class="lead">Left: the 5 states a visitor experiences, in order. Right: the architecture beneath them, why the data path matters, and the verdict on Formspree vs n8n. <strong>Nothing here is built yet.</strong> This preview is the proposal.</p>
+
+  <div class="grid">
+
+    <!-- LEFT: VISITOR EXPERIENCE -->
+    <div class="visitor">
+      <h2>Visitor experience: 5 states</h2>
+
+      <div class="state">
+        <div class="state-num">State 1</div>
+        <h3>Lands on geolisted.co, scrolls to #capture</h3>
+        <p>Same site they see today. Hero, How It Works, Before/After, Demo reels. The form section already exists.</p>
+        <p class="meta">Zero visual change to the existing landing page.</p>
+      </div>
+
+      <div class="state">
+        <div class="state-num">State 2</div>
+        <h3>Submits the form: name, business, email, city, niche</h3>
+        <div class="form-mock">
+          <div class="row">
+            <div class="input">Your name</div>
+            <div class="input">Business name</div>
+          </div>
+          <div class="input" style="margin-bottom:8px;">Email address</div>
+          <div class="input" style="margin-bottom:8px;">City and state (e.g. Sandy, UT)</div>
+          <div class="input" style="margin-bottom:12px;">Industry (e.g. Roofing, HVAC, Dental)</div>
+          <div class="btn">Get My Free AI Visibility Score</div>
+        </div>
+        <p class="meta">Button text changes from "Build My Free Demo" to "Get My Free AI Visibility Score." Same fields. Same styling.</p>
+      </div>
+
+      <div class="state">
+        <div class="state-num">State 3</div>
+        <h3>Watches the scan happen (30 to 60 seconds)</h3>
+        <p>Form fades out, scanner card fades in. Hormozi pattern: turn the wait into the experience.</p>
+        <div class="form-mock" style="border-style: solid;">
+          <div class="scanner-line done"><div class="scanner-dot"></div><div class="label">Scanning ChatGPT for "best roofer in Sandy, UT"...</div><div class="check">found</div></div>
+          <div class="scanner-line done"><div class="scanner-dot"></div><div class="label">Scanning Perplexity Sonar...</div><div class="check">not found</div></div>
+          <div class="scanner-line"><div class="scanner-dot"></div><div class="label">Reading your robots.txt...</div></div>
+          <div class="scanner-line" style="opacity:.4"><div class="scanner-dot" style="animation:none;background:#444;"></div><div class="label">Checking Google Maps presence...</div></div>
+        </div>
+        <p class="meta">Live progress, not a generic spinner. Each line animates in as the corresponding API call returns. Mirrors the existing site's preloader chat-window aesthetic.</p>
+      </div>
+
+      <div class="state">
+        <div class="state-num">State 4</div>
+        <h3>Score appears on-screen, instantly</h3>
+        <div class="score-result">
+          <div class="score-display">
+            <div class="score-num">25</div>
+            <div class="score-suffix">/ 100</div>
+          </div>
+          <div class="score-bar"><div class="score-bar-fill"></div></div>
+          <div class="breakdown">
+            <div class="breakdown-item"><div class="dot fail"></div> Not in ChatGPT answers</div>
+            <div class="breakdown-item"><div class="dot fail"></div> Not in Perplexity answers</div>
+            <div class="breakdown-item"><div class="dot pass"></div> robots.txt is clean</div>
+            <div class="breakdown-item"><div class="dot fail"></div> Not in Google Maps top 10</div>
+          </div>
+          <div class="gated-cta">
+            <strong>Your full report is on its way.</strong> 3 quick wins, your competitor comparison, and one 1-week experiment to lift your score, in your inbox in 60 seconds.
+          </div>
+        </div>
+        <p class="meta">Hormozi's "instant gratification, then gate the full report." The score is the hook; the report is the magnet.</p>
+      </div>
+
+      <div class="state">
+        <div class="state-num">State 5</div>
+        <h3>Receives the full report by email</h3>
+        <p>From <code style="background:rgba(0,229,255,.08);color:#00E5FF;padding:2px 6px;border-radius:2px;font-size:.78rem;">boubacar@catalystworks.consulting</code> within 60 seconds. Subject: <em>"Your AI visibility score: 25 / 100 (and the 3 things keeping you invisible)"</em></p>
+        <ul style="padding-left: 20px; margin-top: 10px;">
+          <li style="color: var(--muted); font-size: .85rem; margin-bottom: 6px;">The score and breakdown (same as on-screen)</li>
+          <li style="color: var(--muted); font-size: .85rem; margin-bottom: 6px;">3 quick wins specific to their gaps</li>
+          <li style="color: var(--muted); font-size: .85rem; margin-bottom: 6px;">A 1-week experiment they can run themselves</li>
+          <li style="color: var(--muted); font-size: .85rem; margin-bottom: 6px;">Calendly link: book a 20-min Signal Works call</li>
+        </ul>
+        <p class="meta">Lead is now in Supabase. CW follow-up sequence kicks in if they don't book within 7 days.</p>
+      </div>
+    </div>
+
+    <!-- RIGHT: ARCHITECTURE -->
+    <div class="arch">
+      <h2>Architecture: where the data actually goes</h2>
+
+      <h3>Today (live on geolisted.co right now)</h3>
+      <p>Form posts to <code>https://formspree.io/f/boubacar</code>. Lead lives on Formspree's servers until you fetch it. No score is computed. No Supabase write. No Notion mirror.</p>
+      <p style="color: var(--red); font-size: .82rem;"><strong style="color: var(--red);">This is inconsistent</strong> with how your other two sites handle forms. boubacarbarry.com and catalystworks.consulting both post to n8n webhooks → Supabase.</p>
+
+      <h3>Proposed (revised after pre-stage 2026-04-30)</h3>
+      <div class="flow">
+        <div class="step"><div class="arrow">▶</div><div class="body"><strong>Visitor</strong> submits form on geolisted.co</div></div>
+        <div class="step"><div class="arrow">▼</div><div class="body">POST to <code>n8n /webhook/geolisted-score</code> (sync mode, holds connection)</div></div>
+        <div class="step"><div class="arrow">▼</div><div class="body">n8n shapes payload, POSTs to agentsHQ <code>/score-request</code> (X-API-Key auth)</div></div>
+        <div class="step"><div class="arrow">▼</div><div class="body">VPS route runs <em>signal_works.ai_scorer.score_business()</em></div></div>
+        <div class="step"><div class="arrow">◀</div><div class="body">Returns <strong>{score, breakdown, quick_wins}</strong> in 30-60s</div></div>
+        <div class="step"><div class="arrow">▼</div><div class="body">VPS writes lead to Supabase <code>leads</code> (source: 'geolisted.co - Score Request')</div></div>
+        <div class="step"><div class="arrow">▼</div><div class="body">VPS calls <em>email_builder.render_inbound_report_html()</em> + sends via <em>gmail_draft.send_message()</em> (env-gated)</div></div>
+        <div class="step"><div class="arrow">▼</div><div class="body">n8n returns score JSON back to browser <em>through</em> the open connection</div></div>
+        <div class="step"><div class="arrow">▼</div><div class="body">Browser renders score on screen. Full report lands in inbox in parallel.</div></div>
+      </div>
+      <p style="font-size: .78rem; color: var(--muted); margin-top: 12px; font-style: italic;">Note on architecture: NEW agentsHQ route <code>/score-request</code> (NOT a reuse of <code>/inbound-lead</code>; that route's contract is for booked-call leads with a <code>booking_id</code>, different shape). Email send is gated behind <code>SCORE_AUTO_SEND</code> env var; defaults to drafts mode for first 5 inbound scores, flip to send after manual verification.</p>
+
+      <h3>Formspree vs n8n: the comparison</h3>
+      <table class="compare">
+        <thead><tr><th></th><th>Formspree (today)</th><th>n8n + Supabase (proposed)</th></tr></thead>
+        <tbody>
+          <tr><td>Stack consistency</td><td class="no">Site #3 of 3 inconsistent</td><td class="yes">Same as 2 other domains</td></tr>
+          <tr><td>Data ownership</td><td class="no">Lives on Formspree</td><td class="yes">Your Supabase + Notion</td></tr>
+          <tr><td>Can run the scorer</td><td class="no">No backend</td><td class="yes">VPS API call</td></tr>
+          <tr><td>CW follow-up sequence</td><td class="no">Manual import needed</td><td class="yes">Automatic from leads table</td></tr>
+          <tr><td>Cost</td><td>$10/mo Formspree</td><td class="yes">$0 (already running)</td></tr>
+          <tr><td>Maintenance</td><td>3rd-party service</td><td>You own it</td></tr>
+        </tbody>
+      </table>
+
+      <div class="verdict">
+        <h3>Verdict</h3>
+        <p>Move geolisted.co to <code>n8n /webhook/geolisted-score</code> like the other two domains. <strong>This is the same change for the same reason as the boubacarbarry.com migration on 2026-04-06.</strong> The Formspree URL on geolisted today was a marathon-day shortcut, not a strategic choice.</p>
+      </div>
+
+      <h3>Will it stay consistent this time?</h3>
+      <p>Yes. Three lock-ins:</p>
+      <ol>
+        <li>The webhook URL gets added to <code>reference_website_registry.md</code> so the next session inherits it.</li>
+        <li>The endpoint name does not get renamed. v2 of the scoring adds a new endpoint and migrates; never rewrites in place.</li>
+        <li>The CW Gmail sender (<code>boubacar@catalystworks.consulting</code>) is locked in <code>signal_works/email_builder.py</code> and stays.</li>
+      </ol>
+
+      <div class="ask">
+        <h3>What I need from you to start the build</h3>
+        <ol>
+          <li>Confirm: move geolisted.co form from Formspree → n8n webhook (same as your other 2 sites).</li>
+          <li>Confirm: scorer runs on the agentsHQ VPS as a new <code>/api/score</code> endpoint.</li>
+          <li>Confirm: CW Gmail sender for the full-report email.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
