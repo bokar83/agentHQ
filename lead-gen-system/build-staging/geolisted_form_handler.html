@@ -1,0 +1,213 @@
+<!--
+  DRAFT JS for bokar83/geolisted-site/index.html
+
+  Pre-staged 2026-04-30 (rev 2 after security hook flagged innerHTML).
+  This snippet REPLACES the form section's existing JS handler. The form
+  action attribute changes; the submit handler is rewritten to:
+    1. Show the scanner card (replace the form visually)
+    2. POST to the new n8n endpoint with a 90s timeout
+    3. On success, render the score result on screen using safe DOM
+       methods (textContent + createElement, never innerHTML on untrusted)
+    4. On failure (network / timeout / 5xx), fall back to the Formspree
+       endpoint preserved in data-fallback-url so the lead is not lost
+    5. Show the elapsed-time counter and skip-to-email button at 45s
+
+  Three Outsider guardrails baked in:
+    - Timeout + skip option (Guardrail 1)
+    - Formspree fallback (Guardrail 2)
+    - X-API-Key is server-side only (browser never holds it; Guardrail 3)
+-->
+
+<form id="capture-form"
+      action="https://n8n.srv1040886.hstgr.cloud/webhook/geolisted-score"
+      data-fallback-url="https://formspree.io/f/boubacar"
+      method="POST">
+  <input type="text" name="name" placeholder="Your name" required>
+  <input type="text" name="business" placeholder="Business name" required>
+  <input type="email" name="email" placeholder="Email address" required>
+  <input type="text" name="city" placeholder="City and state (e.g. Sandy, UT)" required>
+  <input type="text" name="niche" placeholder="Your industry (e.g. Roofing, HVAC, Dental)" required>
+
+  <button type="submit" id="form-submit">
+    <span id="submit-text">Get My Free AI Visibility Score</span>
+  </button>
+
+  <p>Score in your inbox within 60 seconds. No spam. No sales call.</p>
+</form>
+
+<!-- Hidden by default; shown when form submits. Only static markup; no innerHTML calls touch this. -->
+<div id="form-scanner" style="display:none;">
+  <div class="scanner-title">Scanning your AI presence</div>
+  <div id="scanner-line-1" class="scanner-line active">
+    <span class="dot">●</span> Querying ChatGPT...
+  </div>
+  <div id="scanner-line-2" class="scanner-line dim">
+    <span class="dot">●</span> Querying Perplexity Sonar...
+  </div>
+  <div id="scanner-line-3" class="scanner-line dim">
+    <span class="dot">●</span> Reading your robots.txt...
+  </div>
+  <div id="scanner-line-4" class="scanner-line dim">
+    <span class="dot">●</span> Checking Google Maps presence...
+  </div>
+  <div id="scanner-elapsed" class="elapsed">Elapsed: 0s</div>
+  <button id="scanner-skip" type="button" style="display:none;">Email Me The Result Instead</button>
+</div>
+
+<!-- Hidden by default; populated via safe DOM methods (createElement, textContent) -->
+<div id="form-result" style="display:none;"></div>
+<div id="form-error" style="display:none;">
+  Something went wrong. We received your details and will email you the score within an hour.
+</div>
+
+<script>
+(function() {
+  const form = document.getElementById('capture-form');
+  const scanner = document.getElementById('form-scanner');
+  const result = document.getElementById('form-result');
+  const errorBox = document.getElementById('form-error');
+  const elapsed = document.getElementById('scanner-elapsed');
+  const skipBtn = document.getElementById('scanner-skip');
+
+  let elapsedSec = 0;
+  let elapsedTimer = null;
+  let lineTimers = [];
+  let abortController = null;
+
+  function showLine(n) {
+    const line = document.getElementById('scanner-line-' + n);
+    if (line) line.classList.replace('dim', 'active');
+  }
+
+  function startScanner() {
+    form.style.display = 'none';
+    scanner.style.display = 'block';
+    elapsedSec = 0;
+    elapsedTimer = setInterval(() => {
+      elapsedSec++;
+      elapsed.textContent = 'Elapsed: ' + elapsedSec + 's';
+      if (elapsedSec === 45) skipBtn.style.display = 'inline-block';
+      if (elapsedSec >= 90) {
+        clearInterval(elapsedTimer);
+        if (abortController) abortController.abort();
+      }
+    }, 1000);
+    lineTimers = [
+      setTimeout(() => showLine(2), 8000),
+      setTimeout(() => showLine(3), 18000),
+      setTimeout(() => showLine(4), 28000),
+    ];
+  }
+
+  function stopScanner() {
+    clearInterval(elapsedTimer);
+    lineTimers.forEach(t => clearTimeout(t));
+    scanner.style.display = 'none';
+  }
+
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
+  function renderResult(data) {
+    stopScanner();
+    while (result.firstChild) result.removeChild(result.firstChild);
+
+    const card = el('div', 'score-card');
+    const numberLine = el('div', 'score-number-line');
+    const numText = el('span', 'score-num');
+    numText.textContent = String(parseInt(data.score, 10) || 0);
+    const numSuffix = el('span', 'score-suffix', '/100');
+    numberLine.appendChild(numText);
+    numberLine.appendChild(numSuffix);
+    card.appendChild(numberLine);
+
+    const bar = el('div', 'score-bar');
+    const fill = el('div', 'score-bar-fill');
+    const pct = Math.max(2, Math.min(100, parseInt(data.score, 10) || 0));
+    fill.style.width = pct + '%';
+    bar.appendChild(fill);
+    card.appendChild(bar);
+
+    const breakdown = data.breakdown || {};
+    const labels = {chatgpt: 'ChatGPT', perplexity: 'Perplexity', robots_ok: 'Crawlers', maps_present: 'Google Maps'};
+    const grid = el('div', 'breakdown-grid');
+    ['chatgpt', 'perplexity', 'robots_ok', 'maps_present'].forEach(k => {
+      const row = el('div', 'breakdown-item');
+      const dot = el('span', breakdown[k] ? 'dot pass' : 'dot fail');
+      const lbl = el('span', null, labels[k]);
+      row.appendChild(dot);
+      row.appendChild(lbl);
+      grid.appendChild(row);
+    });
+    card.appendChild(grid);
+
+    const cta = el('div', 'gated-cta');
+    const ctaStrong = el('strong', null, 'Your full report is on its way.');
+    cta.appendChild(ctaStrong);
+    cta.appendChild(document.createTextNode(' The 3 quick wins, your competitor comparison, and a 1-week experiment to lift your score, in your inbox in 60 seconds.'));
+    card.appendChild(cta);
+
+    result.appendChild(card);
+    result.style.display = 'block';
+  }
+
+  function renderFallbackMessage() {
+    while (result.firstChild) result.removeChild(result.firstChild);
+    const note = el('div', 'fallback-note', 'Got it. We will email your score within the hour.');
+    result.appendChild(note);
+    result.style.display = 'block';
+  }
+
+  async function submitForm(e) {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(form).entries());
+    startScanner();
+    abortController = new AbortController();
+
+    try {
+      const resp = await fetch(form.action, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data),
+        signal: abortController.signal,
+      });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const json = await resp.json();
+      renderResult(json);
+    } catch (err) {
+      console.warn('Primary endpoint failed, falling back:', err);
+      try {
+        await fetch(form.dataset.fallbackUrl, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(data),
+        });
+        renderFallbackMessage();
+      } catch (fallbackErr) {
+        stopScanner();
+        errorBox.style.display = 'block';
+      }
+    }
+  }
+
+  skipBtn.addEventListener('click', async () => {
+    if (abortController) abortController.abort();
+    const data = Object.fromEntries(new FormData(form).entries());
+    data.skipped = 'true';
+    try {
+      await fetch(form.dataset.fallbackUrl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data),
+      });
+    } catch (e) {}
+    renderFallbackMessage();
+  });
+
+  form.addEventListener('submit', submitForm);
+})();
+</script>

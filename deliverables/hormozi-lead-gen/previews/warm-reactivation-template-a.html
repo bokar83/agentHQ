@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warm Reactivation: Template A Preview</title>
+<style>
+  :root {
+    --ink: #0F1115;
+    --ink-soft: #2A2D33;
+    --paper: #FAF8F4;
+    --rule: #E5E1D8;
+    --accent: #C2410C;
+    --accent-soft: #FED7AA;
+    --muted: #6B6F76;
+    --green: #15803D;
+    --amber: #B45309;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .wrap {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin: 0 0 12px;
+  }
+  h1 {
+    font-size: 36px;
+    font-weight: 800;
+    margin: 0 0 8px;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  .sub {
+    font-size: 16px;
+    color: var(--muted);
+    margin: 0 0 40px;
+    max-width: 640px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 40px;
+  }
+  @media (max-width: 880px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  /* Email card: recipient view */
+  .email {
+    background: #FFF;
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04);
+    overflow: hidden;
+  }
+  .email-bar {
+    background: #F5F2EC;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .dot { width: 11px; height: 11px; border-radius: 50%; background: #DDD; }
+  .dot.r { background: #FF5F57; }
+  .dot.y { background: #FEBC2E; }
+  .dot.g { background: #28C840; }
+  .email-meta {
+    margin-left: 12px;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+  .email-head {
+    padding: 22px 28px 16px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .from {
+    font-size: 14px;
+    color: var(--ink);
+    margin: 0 0 4px;
+  }
+  .from b { font-weight: 700; }
+  .from span { color: var(--muted); }
+  .to {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0;
+  }
+  .subj {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 14px 0 0;
+    color: var(--ink);
+  }
+  .email-body {
+    padding: 28px;
+    font-size: 16px;
+    color: var(--ink-soft);
+    line-height: 1.7;
+  }
+  .email-body p { margin: 0 0 16px; }
+  .email-body p:last-child { margin-bottom: 0; }
+  .placeholder {
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 14px;
+  }
+  .signoff { font-weight: 600; color: var(--ink); }
+
+  /* Side rail: explainer */
+  .rail h2 {
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink);
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .rail h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 24px 0 6px;
+    color: var(--ink);
+  }
+  .rail p {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin: 0 0 12px;
+    line-height: 1.55;
+  }
+  .rail ol, .rail ul {
+    font-size: 14px;
+    color: var(--ink-soft);
+    padding-left: 18px;
+    margin: 0 0 16px;
+  }
+  .rail li { margin-bottom: 6px; }
+
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+  .badge.purpose { background: #DBEAFE; color: #1E40AF; }
+  .badge.test { background: #FEF3C7; color: var(--amber); }
+
+  .stat {
+    background: #FFF;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 12px 0;
+  }
+  .stat .num { font-size: 22px; font-weight: 800; color: var(--accent); line-height: 1; }
+  .stat .lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .why {
+    background: #FFF;
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--green);
+    padding: 16px 18px;
+    border-radius: 6px;
+    margin: 32px 0;
+  }
+  .why h3 { margin-top: 0; }
+  .why ul { margin-bottom: 0; }
+
+  .action {
+    background: #0F1115;
+    color: #FAF8F4;
+    border-radius: 12px;
+    padding: 28px;
+    margin: 32px 0 0;
+  }
+  .action h3 {
+    color: #FAF8F4;
+    margin: 0 0 12px;
+    font-size: 18px;
+  }
+  .action p { color: #C9CCD3; margin: 0 0 12px; font-size: 15px; line-height: 1.6; }
+  .action ol { color: #C9CCD3; }
+  .action ol li { margin-bottom: 8px; }
+
+  .outcomes {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 0;
+    font-size: 14px;
+  }
+  .outcomes th, .outcomes td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--rule);
+  }
+  .outcomes th {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-weight: 700;
+  }
+  .outcomes td:first-child { font-weight: 600; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Phase 5 deliverable preview · Localhost</p>
+  <h1>Template A: Warm Reach-Out</h1>
+  <p class="sub">This is the actual message your recipient would see. Two things to read at once: the email on the left (what they see), and the explainer on the right (why each part is shaped the way it is).</p>
+
+  <div class="grid">
+
+    <!-- LEFT side: the email -->
+    <div class="email">
+      <div class="email-bar">
+        <span class="dot r"></span>
+        <span class="dot y"></span>
+        <span class="dot g"></span>
+        <span class="email-meta">Gmail · Inbox</span>
+      </div>
+      <div class="email-head">
+        <p class="from"><b>Boubacar Barry</b> <span>&lt;boubacar@catalystworks.consulting&gt;</span></p>
+        <p class="to">to <span class="placeholder">[First name]</span> &lt;recipient@example.com&gt;</p>
+        <p class="subj">Catching up + a quick reason I'm reaching out</p>
+      </div>
+
+      <div class="email-body">
+        <p>Hi <span class="placeholder">[First name]</span>,</p>
+
+        <p><span class="placeholder">[Personalization hook, one specific detail. Not "hope you're well." Something real. e.g.: "Saw the photo of [their kid] on LinkedIn. Last time I saw [them] was at [event]." OR "Still think about that conversation we had at [GE / project / event] about [specific topic]." OR "Caught your post about [thing]. The point about [specific detail] landed."]</span></p>
+
+        <p>Quick reason I'm reaching out: I started Catalyst Works last year. We diagnose the operational bottleneck slowing services firms down. Most of what we find: one approval loop, one handoff, one pricing decision that costs 6-8% margin nobody is looking at.</p>
+
+        <p>I'm building a small group of people I trust to send this to before it's polished. You're one of them.</p>
+
+        <p>If you know anyone running a services firm who'd benefit from a 90-minute diagnostic, I'd love an intro. If not, no worries, and I'd love to catch up regardless.</p>
+
+        <p class="signoff">Boubacar</p>
+      </div>
+    </div>
+
+    <!-- RIGHT side: the explainer -->
+    <aside class="rail">
+      <h2>What this is</h2>
+
+      <span class="badge purpose">Purpose</span>
+      <p><b>A warm reach-out to people you already know.</b> Past colleagues, alumni, mutuals, ex-vendors, prior clients. Anyone with a real prior relationship, even if dormant for years.</p>
+
+      <p>You are <b>not</b> selling. You are surfacing a soft referral ask wrapped in a real catch-up. The Hormozi rule: warm activation comes <i>before</i> cold. You have 15 years of contacts unmined.</p>
+
+      <h3>Send it the way you would normally talk to them</h3>
+      <p>"By hand" just means: <b>you are the one typing each message, one at a time</b>. No automation, no merge tags, no bulk send. The channel itself is whatever fits the relationship:</p>
+      <ul>
+        <li><b>Gmail</b> if you used to email them.</li>
+        <li><b>LinkedIn DM</b> if that was the medium.</li>
+        <li><b>iMessage / WhatsApp</b> if you used to text them.</li>
+      </ul>
+      <p>Match the prior channel. Do not switch unprovoked. The point of "by hand" is the personalization, not the delivery method.</p>
+
+      <h3>Why each block is shaped this way</h3>
+      <ol>
+        <li><b>Personalization hook.</b> Must be REAL. "Hope you're well" gets deleted. A specific shared memory gets a reply.</li>
+        <li><b>The reason line.</b> Direct, no preamble. Names what Catalyst Works does in concrete terms (one approval loop / one handoff / 6-8% margin).</li>
+        <li><b>"People I trust" framing.</b> Flips the script. They're not a target; they're chosen. Lowers defenses.</li>
+        <li><b>The ask.</b> Referral or catch-up. Either is a yes. Hormozi: low-friction, low-pressure, two-path close.</li>
+      </ol>
+
+      <div class="stat">
+        <div class="num">1 in 100</div>
+        <div class="lbl">Hormozi benchmark: paying customers per 100 warm reach-outs</div>
+      </div>
+
+      <h3>Hormozi rules embedded</h3>
+      <ul>
+        <li><b>Big Fast Value first</b> (the catch-up energy + concrete pattern naming)</li>
+        <li><b>ACA when they reply</b> (Acknowledge / Compliment / Ask)</li>
+        <li><b>One ask only</b> (intro OR catch-up, never both as separate asks)</li>
+        <li><b>No "circle back" / "leverage" / sales sludge</b></li>
+        <li><b>Activation order</b>: warm before cold, every time</li>
+      </ul>
+    </aside>
+  </div>
+
+  <!-- Why -->
+  <div class="why">
+    <span class="badge purpose">Why this matters</span>
+    <h3>Why you specifically should send this template</h3>
+    <ul>
+      <li>You have 15 years of contacts (GE, Apex, three continents of services-firm work). That list is worth more than any cold email pipeline.</li>
+      <li>Catalyst Works has 0 paying clients. Hormozi's first activation channel is warm. You're skipping it.</li>
+      <li>The audit (Phase 2) flagged "no warm outreach system" as Severity 5: load-bearing failure.</li>
+      <li>Sending 3 messages by hand in the next 24 hours is the falsifier the Sankofa Council locked in. It tells us whether the lead-gen problem is system design (the skill helps) or volume of execution (the skill does not).</li>
+    </ul>
+  </div>
+
+  <!-- Action -->
+  <div class="action">
+    <h3>What you do with it (24-hour test)</h3>
+    <p>Pick <b>3 names</b> from your 1st-degree LinkedIn network. People you have an actual prior relationship with, even if dormant. Personalize each opener for real. Send via Gmail or LinkedIn DM (match whichever channel you used last with them).</p>
+    <ol>
+      <li>Open the file: <code>lead-gen-system/templates/warm-reactivation-v1.md</code></li>
+      <li>Pick 3 names. (Not 100. Don't list-build. Just 3.)</li>
+      <li>For each: rewrite the personalization hook with a real shared memory.</li>
+      <li>Send. By hand. No automation.</li>
+      <li>Wait 24 hours. Report what happened.</li>
+    </ol>
+
+    <h3 style="margin-top: 24px;">What the outcome tells us</h3>
+    <table class="outcomes">
+      <thead><tr><th>Result (24h)</th><th>What it means</th><th>Next session</th></tr></thead>
+      <tbody>
+        <tr><td>0 sent</td><td>Volume hypothesis unfalsified</td><td>Execution-only until a client closes</td></tr>
+        <tr><td>3 sent / 0 replies</td><td>Warm channel weaker than expected</td><td>Pivot to cold-email lift test</td></tr>
+        <tr><td>3 sent / 1+ reply</td><td>Warm is real and high-leverage</td><td>Scale to 100 + build CW lead magnet</td></tr>
+        <tr><td>3 sent / 1+ books</td><td>Warm closes faster than cold</td><td>Run Discovery Call OS, close the deal</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+</body>
+</html>
