@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elevate Roofing - Website Audit | Catalyst Works · Signal Works</title>
+<meta name="description" content="A one-page website audit for Elevate Roofing & Construction. What's hurting your lead flow, what we'd fix, and why it matters for SEO and local search.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --ink:#0a0a0a;
+  --paper:#f6f4f0;
+  --paper-warm:#ede9e0;
+  --card:#fffefa;
+  --accent:#c45d3e;
+  --accent-deep:#8e3f25;
+  --accent-soft:#e8a48e;
+  --signal:#3f7d4f;
+  --warn:#a44030;
+  --muted:#8a8580;
+  --steel:#3a3530;
+  --divider:#d6d2cc;
+}
+
+html{scroll-behavior:smooth}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  font-feature-settings:"ss01","cv11";
+  font-size:14.5px;
+}
+body::after{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;
+}
+
+.page{
+  max-width:980px;
+  margin:0 auto;
+  padding:3.5rem 2.5rem 3rem;
+}
+
+/* ====== Top header strip ====== */
+.top-bar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding-bottom:1.5rem;
+  margin-bottom:2.5rem;
+  border-bottom:1px solid var(--divider);
+  font-size:.74rem;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--muted);
+  font-weight:500;
+}
+.top-bar .right{ text-align:right }
+.top-bar strong{ color:var(--ink); font-weight:500 }
+
+/* ====== Hero ====== */
+.hero{
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:3rem;
+  align-items:start;
+  margin-bottom:3rem;
+  padding-bottom:2.5rem;
+  border-bottom:1px solid var(--divider);
+}
+.hero-left{ padding-top:.4rem }
+.eyebrow{
+  display:inline-flex;
+  align-items:center;
+  gap:.6rem;
+  font-size:.68rem;
+  letter-spacing:.25em;
+  text-transform:uppercase;
+  color:var(--accent);
+  font-weight:500;
+  margin-bottom:1rem;
+}
+.eyebrow::before{
+  content:'';
+  width:24px;height:1px;
+  background:currentColor;
+}
+h1.report-title{
+  font-family:'Instrument Serif',serif;
+  font-size:clamp(2.4rem,2rem+2.4vw,3.6rem);
+  font-weight:400;
+  line-height:1;
+  letter-spacing:-.02em;
+  color:var(--ink);
+  margin-bottom:1rem;
+}
+h1.report-title em{ color:var(--accent); font-style:italic }
+.hero-sub{
+  font-family:'Instrument Serif',serif;
+  font-style:italic;
+  font-size:1.2rem;
+  color:var(--muted);
+  max-width:42ch;
+}
+
+/* ====== The verdict block ====== */
+.verdict{
+  background:var(--ink);
+  color:var(--paper);
+  padding:2rem 2.25rem;
+  margin-bottom:3rem;
+  position:relative;
+  overflow:hidden;
+}
+.verdict::before{
+  content:'';
+  position:absolute;
+  top:0;right:0;
+  width:200px;height:200px;
+  background:radial-gradient(circle at 100% 0%,rgba(196,93,62,.4),transparent 60%);
+}
+.verdict-label{
+  font-size:.68rem;
+  letter-spacing:.25em;
+  text-transform:uppercase;
+  color:var(--accent-soft);
+  font-weight:500;
+  margin-bottom:.6rem;
+}
+.verdict h2{
+  font-family:'Instrument Serif',serif;
+  font-size:clamp(1.5rem,1.2rem+1.2vw,2.1rem);
+  font-weight:400;
+  line-height:1.15;
+  letter-spacing:-.015em;
+  color:var(--paper);
+  position:relative;
+  z-index:1;
+}
+.verdict h2 em{ color:var(--accent-soft); font-style:italic }
+.verdict-foot{
+  margin-top:1.25rem;
+  font-size:.85rem;
+  color:rgba(246,244,240,.65);
+  position:relative;z-index:1;
+}
+
+/* ====== Section heads ====== */
+.section{ margin-bottom:3rem }
+.section-head{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  gap:1rem;
+  align-items:baseline;
+  margin-bottom:1.5rem;
+  padding-bottom:.85rem;
+  border-bottom:1px solid var(--divider);
+}
+.section-num{
+  font-family:'Instrument Serif',serif;
+  font-style:italic;
+  font-size:1.65rem;
+  color:var(--accent);
+  line-height:1;
+}
+.section-title{
+  font-family:'Instrument Serif',serif;
+  font-size:1.65rem;
+  font-weight:400;
+  letter-spacing:-.015em;
+  line-height:1;
+}
+.section-title em{ color:var(--accent); font-style:italic }
+.section-meta{
+  font-size:.7rem;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+
+/* ====== Issue cards ====== */
+.issues{ display:flex; flex-direction:column; gap:1rem }
+.issue{
+  background:var(--card);
+  border:1px solid var(--divider);
+  border-left:3px solid var(--accent);
+  padding:1.4rem 1.6rem;
+  display:grid;
+  grid-template-columns:42px 1fr 110px;
+  gap:1.25rem;
+  align-items:start;
+}
+.issue-rank{
+  font-family:'Instrument Serif',serif;
+  font-style:italic;
+  font-size:2rem;
+  color:var(--accent);
+  line-height:1;
+  opacity:.7;
+}
+.issue-body h3{
+  font-family:'Instrument Serif',serif;
+  font-size:1.25rem;
+  font-weight:400;
+  letter-spacing:-.01em;
+  margin-bottom:.4rem;
+}
+.issue-body h3 em{ color:var(--accent); font-style:italic }
+.issue-body .what{ color:var(--steel); margin-bottom:.6rem; font-size:.93rem }
+.issue-body .why{
+  font-size:.86rem;
+  color:var(--muted);
+  font-style:italic;
+}
+.issue-body .why strong{ color:var(--steel); font-style:normal; font-weight:500 }
+.issue-impact{
+  text-align:right;
+}
+.issue-impact .label{
+  display:block;
+  font-size:.6rem;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:.3rem;
+}
+.issue-impact .lift{
+  font-family:'Instrument Serif',serif;
+  font-style:italic;
+  color:var(--signal);
+  font-size:1.4rem;
+  line-height:1;
+}
+.issue-impact .effort{
+  font-size:.7rem;
+  color:var(--muted);
+  margin-top:.4rem;
+  letter-spacing:.05em;
+}
+
+/* ====== SEO/GEO grid ====== */
+.seo-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:1rem;
+}
+.seo-card{
+  background:var(--card);
+  border:1px solid var(--divider);
+  padding:1.25rem 1.4rem;
+  display:flex;
+  flex-direction:column;
+  gap:.5rem;
+}
+.seo-card .label{
+  font-size:.65rem;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--muted);
+  font-weight:500;
+}
+.seo-card .now{
+  font-family:'Instrument Serif',serif;
+  font-style:italic;
+  font-size:1.5rem;
+  line-height:1;
+  color:var(--warn);
+}
+.seo-card .now.good{ color:var(--signal) }
+.seo-card .now.warn{ color:#b8732e }
+.seo-card .desc{
+  font-size:.83rem;
+  color:var(--steel);
+  line-height:1.5;
+}
+.seo-card.fixed{ border-left:3px solid var(--signal) }
+.seo-card.fixed .now{ color:var(--signal) }
+
+/* ====== Competitor strip ====== */
+.competitors{
+  background:var(--paper-warm);
+  border:1px solid var(--divider);
+  padding:1.5rem 1.75rem;
+}
+.comp-row{
+  display:grid;
+  grid-template-columns:140px 1fr 1fr;
+  gap:1.5rem;
+  padding:.9rem 0;
+  border-bottom:1px solid var(--divider);
+  font-size:.88rem;
+}
+.comp-row:last-child{ border-bottom:0 }
+.comp-row:first-child{ padding-top:0 }
+.comp-name{
+  font-family:'Instrument Serif',serif;
+  font-style:italic;
+  font-size:1.15rem;
+  color:var(--ink);
+}
+.comp-name small{
+  display:block;
+  font-family:'DM Sans',sans-serif;
+  font-style:normal;
+  font-size:.66rem;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-top:.15rem;
+}
+.comp-they{ color:var(--steel) }
+.comp-they::before{ content:'+ '; color:var(--signal); font-weight:600 }
+.comp-you{ color:var(--steel) }
+.comp-you::before{ content:'− '; color:var(--warn); font-weight:600 }
+
+/* ====== 90-day plan ====== */
+.plan{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1rem;
+}
+.month{
+  background:var(--card);
+  border:1px solid var(--divider);
+  padding:1.4rem 1.5rem;
+  position:relative;
+}
+.month::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;
+  width:40%;
+  height:3px;
+  background:var(--accent);
+}
+.month .label{
+  font-family:'Instrument Serif',serif;
+  font-style:italic;
+  font-size:1.5rem;
+  color:var(--accent);
+  margin-bottom:.4rem;
+  line-height:1;
+}
+.month h4{
+  font-family:'Instrument Serif',serif;
+  font-size:1.15rem;
+  font-weight:400;
+  letter-spacing:-.01em;
+  color:var(--ink);
+  margin-bottom:.85rem;
+  line-height:1.15;
+}
+.month ul{ list-style:none; font-size:.85rem; color:var(--steel) }
+.month li{
+  padding:.35rem 0;
+  padding-left:.95rem;
+  position:relative;
+  border-bottom:1px dashed var(--divider);
+}
+.month li:last-child{ border-bottom:0 }
+.month li::before{
+  content:'';
+  position:absolute;
+  left:0;top:.85em;
+  width:6px;height:1px;
+  background:var(--accent);
+}
+
+/* ====== CTA card ====== */
+.cta-card{
+  background:var(--ink);
+  color:var(--paper);
+  padding:2.25rem 2.5rem;
+  margin-top:3rem;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.cta-card::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:radial-gradient(circle at center,rgba(196,93,62,.18),transparent 65%);
+}
+.cta-card > *{ position:relative; z-index:1 }
+.cta-card h3{
+  font-family:'Instrument Serif',serif;
+  font-size:clamp(1.5rem,1.2rem+1.2vw,2.1rem);
+  font-weight:400;
+  line-height:1.15;
+  letter-spacing:-.015em;
+  margin-bottom:.6rem;
+  color:var(--paper);
+}
+.cta-card h3 em{ color:var(--accent-soft); font-style:italic }
+.cta-card p{
+  font-size:.95rem;
+  color:rgba(246,244,240,.78);
+  max-width:46ch;
+  margin:0 auto 1.5rem;
+}
+.cta-card .actions{
+  display:flex;
+  gap:1rem;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+.btn{
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  padding:.85rem 1.4rem;
+  font-size:.78rem;
+  font-weight:500;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  border:1px solid currentColor;
+  text-decoration:none;
+  color:inherit;
+  transition:background .25s ease,color .25s ease;
+}
+.btn.primary{ background:var(--accent); border-color:var(--accent); color:var(--paper) }
+.btn.primary:hover{ background:var(--accent-deep); border-color:var(--accent-deep) }
+.btn.ghost{ background:transparent; color:var(--paper) }
+.btn.ghost:hover{ background:var(--paper); color:var(--ink) }
+
+/* ====== Footer ====== */
+.foot{
+  margin-top:3rem;
+  padding-top:1.75rem;
+  border-top:1px solid var(--divider);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:1rem;
+  font-size:.74rem;
+  letter-spacing:.08em;
+  color:var(--muted);
+}
+.foot strong{ color:var(--ink); font-weight:500 }
+.foot .mark{
+  font-family:'Instrument Serif',serif;
+  font-size:1.25rem;
+  font-style:italic;
+  color:var(--ink);
+}
+
+/* ====== Responsive ====== */
+@media (max-width:760px){
+  .page{ padding:2.25rem 1.5rem 2rem }
+  .hero{ grid-template-columns:1fr; gap:1.5rem; padding-bottom:2rem; margin-bottom:2rem }
+  .issue{ grid-template-columns:1fr; gap:.85rem }
+  .issue-rank{ font-size:1.4rem }
+  .issue-impact{ text-align:left; display:flex; gap:1rem; align-items:baseline }
+  .seo-grid, .plan{ grid-template-columns:1fr }
+  .comp-row{ grid-template-columns:1fr; gap:.5rem; padding:1rem 0 }
+  .top-bar{ flex-direction:column; align-items:flex-start; gap:.5rem }
+  .top-bar .right{ text-align:left }
+}
+
+/* ====== Print (single-page A4 PDF when possible) ====== */
+@media print{
+  body{ background:#fff; color:#000; font-size:10.5pt }
+  body::after{ display:none }
+  @page{ size:A4; margin:14mm 12mm }
+  .page{ max-width:none; padding:0 }
+  .verdict, .cta-card, .competitors, .month, .issue, .seo-card{
+    page-break-inside:avoid;
+    box-shadow:none;
+  }
+  .verdict, .cta-card{ background:#1a1a1a !important; color:#fff !important; -webkit-print-color-adjust:exact; print-color-adjust:exact }
+  .verdict h2, .cta-card h3{ color:#fff !important }
+  a{ color:#000; text-decoration:none }
+  .hero{ margin-bottom:1.5rem; padding-bottom:1.25rem }
+  .section{ margin-bottom:1.5rem; page-break-inside:avoid }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ========== TOP BAR ========== -->
+<div class="top-bar">
+  <div class="left"><strong>Website Audit</strong> · One-Page Brief</div>
+  <div class="right">Prepared by <strong>Catalyst Works</strong> · Signal Works · 30 Apr 2026</div>
+</div>
+
+<!-- ========== HERO ========== -->
+<header class="hero">
+  <div class="hero-left">
+    <div class="eyebrow">For Rod, founder · Elevate Roofing &amp; Construction</div>
+    <h1 class="report-title">Your website is<br><em>leaking leads.</em></h1>
+    <p class="hero-sub">Here's what's costing you calls, what we'd fix, and why it matters for Google &amp; local search.</p>
+  </div>
+</header>
+
+<!-- ========== VERDICT ========== -->
+<div class="verdict">
+  <div class="verdict-label">The verdict, in one line</div>
+  <h2>Five of nine pages on elevatebuiltoregon.com say <em>"Coming soon"</em>  including About, Gallery, and every service page. Visitors who land bounce before reading a word.</h2>
+  <div class="verdict-foot">elevatebuiltoregon.com  ·  scored against the top 5 Southern Oregon roofers (JAM, Pressure Point, Rogue Valley, Renaissance, Eric Preston)</div>
+</div>
+
+<!-- ========== TOP 5 ISSUES ========== -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-num">01</div>
+    <div class="section-title">The five issues <em>costing you leads</em>, ranked.</div>
+    <div class="section-meta">Highest impact first</div>
+  </div>
+
+  <div class="issues">
+
+    <div class="issue">
+      <div class="issue-rank">01</div>
+      <div class="issue-body">
+        <h3>Half your site is <em>"Coming soon"</em></h3>
+        <p class="what">About, Gallery, and every individual service page show a placeholder. A homeowner who clicks "About Rod" or "See past projects" hits a dead end.</p>
+        <p class="why"><strong>Why it costs leads:</strong> 80% of contractor buyers check About + portfolio before calling. Empty pages signal "not real" and they leave for JAM or Pressure Point.</p>
+      </div>
+      <div class="issue-impact">
+        <span class="label">Lead lift</span>
+        <span class="lift">+30-50%</span>
+        <div class="effort">Fix: 2 weeks</div>
+      </div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-rank">02</div>
+      <div class="issue-body">
+        <h3>Google can't see your <em>page titles</em></h3>
+        <p class="what">Your homepage `&lt;title&gt;` tag is empty. Meta description is missing. No Open Graph tags. No schema markup. Google has no idea you're a roofer in Medford.</p>
+        <p class="why"><strong>Why it matters for SEO/GEO:</strong> Title + meta + LocalBusiness schema are the three things Google reads first. Without them you're invisible in Maps, in local 3-pack, and in "roofer near me" searches.</p>
+      </div>
+      <div class="issue-impact">
+        <span class="label">Lead lift</span>
+        <span class="lift">+20-40%</span>
+        <div class="effort">Fix: 1 day</div>
+      </div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-rank">03</div>
+      <div class="issue-body">
+        <h3>No city pages, no <em>local SEO</em></h3>
+        <p class="what">Every winning Southern Oregon roofer has a dedicated page per city: /service-areas/medford/, /ashland/, /grants-pass/, etc. You have one Service Area list buried in the footer.</p>
+        <p class="why"><strong>Why it matters for GEO:</strong> Google ranks city + service queries (e.g. "roofer Ashland OR") by city-page relevance. No page = no rank = no call. Klamath Falls is wide open  nobody owns it.</p>
+      </div>
+      <div class="issue-impact">
+        <span class="label">Lead lift</span>
+        <span class="lift">+25-35%</span>
+        <div class="effort">Fix: 1 week</div>
+      </div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-rank">04</div>
+      <div class="issue-body">
+        <h3>You're <em>invisible</em> in the hero</h3>
+        <p class="what">Your drone video is great  the only one in the market. But your face isn't above the fold. Every top-5 competitor is faceless too. Putting Rod's portrait + signed pledge in the hero would make you the only owner-led face in Southern Oregon roofing.</p>
+        <p class="why"><strong>Why it converts:</strong> Owner-operator trust beats brand-style trust 2:1 in residential trades. A homeowner choosing between "Elevate (Rod, with face)" and "Pressure Point (logo)" picks Rod  every time.</p>
+      </div>
+      <div class="issue-impact">
+        <span class="label">Lead lift</span>
+        <span class="lift">+15-25%</span>
+        <div class="effort">Fix: 1 photo</div>
+      </div>
+    </div>
+
+    <div class="issue">
+      <div class="issue-rank">05</div>
+      <div class="issue-body">
+        <h3>One CTA, <em>no friction-reducer</em></h3>
+        <p class="what">Your only conversion path is a contact form. No published cost ranges. No calendar booking. No callback request. No "what to ask any roofer" lead magnet.</p>
+        <p class="why"><strong>Why it converts:</strong> Sunday-night homeowners aren't ready to call yet  but they'll book a Tuesday slot or grab a cost guide. Every micro-conversion is a future booked job.</p>
+      </div>
+      <div class="issue-impact">
+        <span class="label">Lead lift</span>
+        <span class="lift">+10-20%</span>
+        <div class="effort">Fix: 3 days</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== SEO/GEO SCORECARD ========== -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-num">02</div>
+    <div class="section-title">The <em>SEO &amp; GEO</em> scorecard.</div>
+    <div class="section-meta">What Google sees right now</div>
+  </div>
+
+  <div class="seo-grid">
+    <div class="seo-card">
+      <span class="label">Page title (`&lt;title&gt;`)</span>
+      <span class="now">Empty</span>
+      <p class="desc">Google shows this as the blue link in search results. An empty title = nobody clicks.</p>
+    </div>
+    <div class="seo-card">
+      <span class="label">Meta description</span>
+      <span class="now">Missing</span>
+      <p class="desc">The grey text under the blue link. Without it, Google guesses  often badly.</p>
+    </div>
+    <div class="seo-card">
+      <span class="label">LocalBusiness schema (JSON-LD)</span>
+      <span class="now">Missing</span>
+      <p class="desc">The structured data Google reads to build your Maps card and Knowledge Panel. Without it, you don't get rich results.</p>
+    </div>
+    <div class="seo-card">
+      <span class="label">Service-area pages</span>
+      <span class="now warn">1 (should be 6)</span>
+      <p class="desc">JAM has 8. Pressure Point has 18. Each city page is a separate ranking opportunity.</p>
+    </div>
+    <div class="seo-card">
+      <span class="label">Open Graph tags (link previews)</span>
+      <span class="now">Missing</span>
+      <p class="desc">When someone shares your site on Facebook, LinkedIn, or text, no preview image. Looks broken.</p>
+    </div>
+    <div class="seo-card">
+      <span class="label">Sitemap.xml &amp; robots.txt</span>
+      <span class="now warn">Unverified</span>
+      <p class="desc">How Google finds and indexes your pages. Should be auto-generated and submitted to Search Console.</p>
+    </div>
+    <div class="seo-card">
+      <span class="label">Mobile page speed</span>
+      <span class="now warn">Unmeasured</span>
+      <p class="desc">Google ranks mobile-first. Slow load = lower rank + lower booking rate.</p>
+    </div>
+    <div class="seo-card">
+      <span class="label">Google Business Profile (GBP)</span>
+      <span class="now warn">Linked? Verify</span>
+      <p class="desc">The single biggest local-SEO lever  more important than the website itself for "near me" searches. We'd verify and optimize.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ========== COMPETITORS ========== -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-num">03</div>
+    <div class="section-title">Where you sit vs. the <em>top 3 in your market</em>.</div>
+    <div class="section-meta">Southern Oregon</div>
+  </div>
+
+  <div class="competitors">
+    <div class="comp-row">
+      <div class="comp-name">JAM Roofing<small>30 yrs · 157 reviews</small></div>
+      <div class="comp-they">20+ pages, GAF Master Elite cert, JCHBA member, slate certified</div>
+      <div class="comp-you">Faceless brand · no founder visible · dated WordPress design</div>
+    </div>
+    <div class="comp-row">
+      <div class="comp-name">Pressure Point<small>35 yrs · Webflow build</small></div>
+      <div class="comp-they">Online estimate tool, 18 city pages, Owens Corning Platinum, 5-source review proof</div>
+      <div class="comp-you">No founder · stock-feeling photography · no video · B- BBB</div>
+    </div>
+    <div class="comp-row">
+      <div class="comp-name">Rogue Valley Roofing<small>20+ yrs · BBB-accredited</small></div>
+      <div class="comp-they">5 manufacturer certs, 50-yr non-prorated warranty named in hero, active blog</div>
+      <div class="comp-you">Only 19-23 reviews · 4.0 rating (vs your 5.0) · interchangeable look</div>
+    </div>
+  </div>
+
+  <p style="margin-top:1.25rem;font-size:.88rem;color:var(--steel);font-style:italic;text-align:center">
+    Your edge: <strong>you do all four trades under one CCB</strong>  none of the top 5 roofers do remodels, ADUs, or custom homes. Nobody owns "roof to ADU to custom home, one builder." It's yours to take.
+  </p>
+</div>
+
+<!-- ========== 90-DAY PLAN ========== -->
+<div class="section">
+  <div class="section-head">
+    <div class="section-num">04</div>
+    <div class="section-title">What we'd do in <em>90 days</em>.</div>
+    <div class="section-meta">Concrete deliverables</div>
+  </div>
+
+  <div class="plan">
+    <div class="month">
+      <div class="label">Month 1</div>
+      <h4>Stop the leak.</h4>
+      <ul>
+        <li>Replace placeholder pages with real content</li>
+        <li>Add page titles, meta descriptions, schema</li>
+        <li>Build 6 city service-area pages</li>
+        <li>Wire Google Business Profile + Search Console</li>
+        <li>Launch new homepage with hero video kept</li>
+      </ul>
+    </div>
+    <div class="month">
+      <div class="label">Month 2</div>
+      <h4>Convert harder.</h4>
+      <ul>
+        <li>Add Rod's photo + founder pledge above fold</li>
+        <li>Publish cost-band tool with 2026 ranges</li>
+        <li>Add calendar booking widget</li>
+        <li>Launch "what to ask any contractor" lead magnet</li>
+        <li>Real project photo gallery with drone shots</li>
+      </ul>
+    </div>
+    <div class="month">
+      <div class="label">Month 3</div>
+      <h4>Compound the gains.</h4>
+      <ul>
+        <li>Pursue GAF Master Elite or Owens Corning cert</li>
+        <li>Live Google Reviews integration</li>
+        <li>Monthly blog post (storm damage, ADU rules, costs)</li>
+        <li>Backlinks from JCHBA, Chamber, BBB</li>
+        <li>Track + report on lead source attribution</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ========== CTA ========== -->
+<div class="cta-card">
+  <h3>Want a 15-minute walk-through<br>of <em>your specific scorecard?</em></h3>
+  <p>We've already done the audit. The fixes above aren't theory  they're a punch-list. Book a call and we'll walk you through what we'd ship in week one, what's deferred, and what it'd take to land at #1 in Medford for "roofing contractor."</p>
+  <div class="actions">
+    <a href="https://catalystworks.com/" class="btn primary">Book the call →</a>
+    <a href="mailto:hello@catalystworks.com" class="btn ghost">or email us</a>
+  </div>
+</div>
+
+<!-- ========== FOOT ========== -->
+<div class="foot">
+  <div>
+    <span class="mark">Catalyst Works</span><br>
+    <span style="font-size:.74rem">Signal Works · website intelligence for trades + service businesses</span>
+  </div>
+  <div style="text-align:right">
+    <strong>Boubacar Barry</strong><br>
+    <span style="font-size:.74rem">Founder · prepared 30 April 2026</span>
+  </div>
+</div>
+
+</div>
+</body>
+</html>
