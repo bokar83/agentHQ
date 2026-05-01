@@ -27,7 +27,9 @@ per the PR #11 P2 connection-hygiene fix.
 import logging
 import os
 import time
+from datetime import date, datetime, timedelta
 
+from newsletter_editorial_input import upsert_reply
 from state import _PENDING_FEEDBACK_WINDOWS, _PUBLISH_BRIEF_WINDOWS
 
 # Atlas M1: imports at module level so tests can patch
@@ -52,6 +54,21 @@ def _build_button(label: str, callback_data: str) -> dict:
 # Emoji prefixes that belong to the doc-routing handler. Used to make sure
 # the 5-min tag window does not swallow an emoji command.
 _DOC_EMOJI_PREFIXES = ("✅", "✏️", "🆕", "❌", "➕")
+_TIMEZONE = os.environ.get("GENERIC_TIMEZONE", "America/Denver")
+_EDITORIAL_MIN_LEN = 8
+_EDITORIAL_BLOCKED_FIRST_WORDS = APPROVE_ALIASES | REJECT_ALIASES | {
+    "posted",
+    "skip",
+    "edited",
+    "yes",
+    "no",
+    "confirm",
+    "approve",
+    "reject",
+    "edit",
+    "flag",
+    "discard",
+}
 
 
 # ══════════════════════════════════════════════════════════════
@@ -215,7 +232,7 @@ def handle_callback_query(update: dict) -> bool:
                 if 1 <= var_idx <= len(variations):
                     variations.pop(var_idx - 1)
                     if variations:
-                        # Still have other variations -- just update the list
+                        # Still have other variations, so just update the list.
                         conn = _aq_conn()
                         cur = conn.cursor()
                         cur.execute(
@@ -227,7 +244,7 @@ def handle_callback_query(update: dict) -> bool:
                         answer_callback_query(cb_id, f"Variation {var_idx} removed.")
                         send_message(cb_chat_id, f"Variation {var_idx} removed. {len(variations)} remaining.")
                     else:
-                        # No variations left -- reject the row so griot can try again
+                        # No variations left, so reject the row so griot can try again.
                         _aq_reject(qid, note="all variations dismissed", feedback_tag="enhance")
                         answer_callback_query(cb_id, "All variations dismissed.")
                         send_message(cb_chat_id, f"Queue #{qid}: all variations dismissed. Griot will propose a new candidate tomorrow.")
@@ -241,7 +258,7 @@ def handle_callback_query(update: dict) -> bool:
             logger.warning(f"callback_query reject_variation handling error: {e}")
 
     elif cb_data.startswith("enhance_variation:"):
-        # enhance_variation:<queue_id>:<variation_index>  -- re-run crew on this specific variation
+        # enhance_variation:<queue_id>:<variation_index> re-runs the crew on this variation.
         try:
             parts = cb_data.split(":", 2)
             qid, var_idx = int(parts[1]), int(parts[2])
@@ -276,7 +293,7 @@ def handle_callback_query(update: dict) -> bool:
             logger.warning(f"callback_query enhance_variation handling error: {e}")
 
     elif cb_data.startswith("scout_approve:"):
-        # scout_approve:<notion_page_id>  -- flip Content Board Status Draft -> Ready
+        # scout_approve:<notion_page_id> flips Content Board Status from Draft to Ready.
         try:
             notion_page_id = cb_data.split(":", 1)[1]
             from notifier import answer_callback_query, send_message
@@ -284,7 +301,7 @@ def handle_callback_query(update: dict) -> bool:
             notion.update_page(notion_page_id, properties={
                 "Status": {"select": {"name": "Ready"}}
             })
-            answer_callback_query(cb_id, "Approved -- Status set to Ready.")
+            answer_callback_query(cb_id, "Approved. Status set to Ready.")
             send_message(cb_chat_id, f"Content Scout: approved. Notion page {notion_page_id[:8]}... is now Ready.")
         except Exception as e:
             logger.warning(f"callback_query scout_approve handling error: {e}")
@@ -295,7 +312,7 @@ def handle_callback_query(update: dict) -> bool:
                 pass
 
     elif cb_data.startswith("scout_reject:"):
-        # scout_reject:<notion_page_id>  -- flip Content Board Status Draft -> Archived
+        # scout_reject:<notion_page_id> flips Content Board Status from Draft to Archived.
         try:
             notion_page_id = cb_data.split(":", 1)[1]
             from notifier import answer_callback_query, send_message
@@ -303,7 +320,7 @@ def handle_callback_query(update: dict) -> bool:
             notion.update_page(notion_page_id, properties={
                 "Status": {"select": {"name": "Archived"}}
             })
-            answer_callback_query(cb_id, "Rejected -- Status set to Archived.")
+            answer_callback_query(cb_id, "Rejected. Status set to Archived.")
             send_message(cb_chat_id, f"Content Scout: rejected. Notion page {notion_page_id[:8]}... archived.")
         except Exception as e:
             logger.warning(f"callback_query scout_reject handling error: {e}")
@@ -675,4 +692,75 @@ def handle_publish_reply(text: str, chat_id: str, first_word: str,
 
     short_title = (title[:60] + "...") if len(title) > 60 else title
     send_message(chat_id, f"Marked {target_status}: {short_title}")
+    return True
+
+
+# ══════════════════════════════════════════════════════════════
+# Newsletter editorial input capture
+# ══════════════════════════════════════════════════════════════
+
+def _now_local() -> datetime:
+    import pytz
+
+    return datetime.now(pytz.timezone(_TIMEZONE))
+
+
+def _operator_chat_id() -> str | None:
+    return os.environ.get("OWNER_TELEGRAM_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID")
+
+
+def _editorial_window_active(now: datetime) -> bool:
+    """True when the Sunday evening editorial capture window is open."""
+    weekday = now.weekday()
+    if weekday == 6 and now.hour >= 18:
+        return True
+    if weekday == 0 and now.hour < 6:
+        return True
+    return False
+
+
+def _next_monday_date(now: datetime) -> date:
+    """Return the Monday date this editorial reply should attach to."""
+    if now.weekday() == 0:
+        return now.date()
+    return (now + timedelta(days=1)).date()
+
+
+def handle_newsletter_editorial_reply(
+    text: str, chat_id: str, first_word: str, reply_to_msg_id
+) -> bool:
+    """Capture free-text editorial input during the Sunday evening window."""
+    if reply_to_msg_id:
+        return False
+
+    operator_chat_id = _operator_chat_id()
+    if not operator_chat_id or chat_id != operator_chat_id:
+        return False
+
+    if first_word in _EDITORIAL_BLOCKED_FIRST_WORDS:
+        return False
+
+    if text.startswith("/"):
+        return False
+
+    cleaned_text = text.strip()
+    if len(cleaned_text) < _EDITORIAL_MIN_LEN:
+        return False
+
+    now = _now_local()
+    if not _editorial_window_active(now):
+        return False
+
+    target_monday = _next_monday_date(now)
+    try:
+        upsert_reply(target_monday, cleaned_text, chat_id)
+    except Exception as e:
+        logger.warning(f"handle_newsletter_editorial_reply: upsert failed: {e}")
+        return False
+
+    send_message(
+        chat_id,
+        f"Newsletter input captured for Monday {target_monday.isoformat()}. "
+        f"Drafting Mon 12:00 MT.",
+    )
     return True
