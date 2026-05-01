@@ -1,19 +1,34 @@
-# Website Style Guide — Catalyst Works Consulting
+# Website Style Guide - Catalyst Works Consulting
 
-**Version:** 1.0
-**Last updated:** 2026-03-29
-**For:** Boubacar Barry, Founder — Catalyst Works Consulting
+**Version:** 1.1
+**Last updated:** 2026-04-29
+**For:** Boubacar Barry, Founder - Catalyst Works Consulting
+
+---
+
+## ⚠️ TYPOGRAPHY OVERRIDE - READ FIRST (v1.1, 2026-04-29)
+
+**All v1.0 references to `Inter` and `Source Serif 4` in this file are RETIRED.** Load `docs/styleguides/CURRENT_TYPOGRAPHY.md` FIRST for the current stack.
+
+Substitution rule:
+- `Inter` (display, weights 700/800) → **Spectral** (weight 700)
+- `Inter` (body, UI labels) → **Public Sans** (same weight)
+- `Source Serif 4` (long-form / italic) → **Spectral italic 400**
+
+The Coastal Clarity color palette, spacing system, component standards, button rules, layout principles, and section structures in this file are RETAINED at v1.0. Only font names change. The deployed catalystworks.consulting site is already on the v1.1 typography (commit 0c72897 in `bokar83/catalystworks-site`, deployed via Hostinger 2026-04-29). Reference `/output/websites/catalystworks-site/index.html` for the canonical v1.1 implementation.
+
+---
 
 ---
 
 ## 1. Design Philosophy
 
-A Catalyst Works website should feel like walking into a well-prepared briefing room — not a startup's landing page, not a Big Four consulting firm's institutional website. It combines the visual authority of the Coastal Clarity palette with copy that sounds like a person, not a product.
+A Catalyst Works website should feel like walking into a well-prepared briefing room - not a startup's landing page, not a Big Four consulting firm's institutional website. It combines the visual authority of the Coastal Clarity palette with copy that sounds like a person, not a product.
 
 The target visitor is a VP, Director, or C-suite executive who is either actively searching for a solution to an organizational problem, or has been referred. They make fast judgments. The site earns credibility in the first 5 seconds or loses it.
 
 **Three visual principles:**
-1. Space communicates confidence. Use generous whitespace — crowding looks like desperation.
+1. Space communicates confidence. Use generous whitespace - crowding looks like desperation.
 2. Clarity before beauty. If the user doesn't know what Catalyst Works does within 10 seconds, the design failed.
 3. Warmth inside the structure. The color system (Clay, warm golds) prevents the site from reading as cold or institutional.
 
@@ -43,10 +58,10 @@ Primary palette for all web contexts: **Coastal Clarity**
 | `--color-divider` | `#DDE2EA` | Horizontal rules, borders, table dividers |
 
 ### Color Usage Rules
-- **Never** use `--color-accent` (`#FF7A00`) as a background for large sections — accent only on buttons, tags, and small UI elements (≤10% of the colored surface area on any page)
-- **No red tones** anywhere in the interface — not for errors, warnings, or any UI state
+- **Never** use `--color-accent` (`#FF7A00`) as a background for large sections - accent only on buttons, tags, and small UI elements (≤10% of the colored surface area on any page)
+- **No red tones** anywhere in the interface - not for errors, warnings, or any UI state
 - Error states: use `#CC6600` (deep amber) instead of red
-- Clay (`#B47C57`) is decorative — never use it as a primary text color or primary button color
+- Clay (`#B47C57`) is decorative - never use it as a primary text color or primary button color
 - Dark sections (hero, footer, feature bands): use `--color-base` (`#071A2E`)
 - Light sections (content areas, cards): use `--color-mist` (`#F3F6F9`) or `--color-white`
 
@@ -75,26 +90,26 @@ Primary palette for all web contexts: **Coastal Clarity**
 
 | Token | Size | Weight | Line Height | Letter Spacing | Font | Usage |
 | --- | --- | --- | --- | --- | --- | --- |
-| `--text-display` | 56–64px | 800 | 1.1 | -1.5px | Inter | Hero main headline |
-| `--text-h1` | 40–48px | 800 | 1.2 | -1.5px | Inter | Page titles |
-| `--text-h2` | 30–36px | 700 | 1.25 | -0.5px | Inter | Section headers |
-| `--text-h3` | 22–26px | 600 | 1.3 | -0.5px | Inter | Subsection headers |
+| `--text-display` | 56-64px | 800 | 1.1 | -1.5px | Inter | Hero main headline |
+| `--text-h1` | 40-48px | 800 | 1.2 | -1.5px | Inter | Page titles |
+| `--text-h2` | 30-36px | 700 | 1.25 | -0.5px | Inter | Section headers |
+| `--text-h3` | 22-26px | 600 | 1.3 | -0.5px | Inter | Subsection headers |
 | `--text-h4` | 18px | 600 | 1.4 | 0 | Inter | Card titles, feature names |
 | `--text-body-lg` | 18px | 400 | 1.65 | 0 | Source Serif 4 | Long-form body, about page |
 | `--text-body` | 16px | 400 | 1.6 | 0 | Inter | Standard body, card content |
 | `--text-body-sm` | 14px | 400 | 1.5 | 0 | Inter | Secondary copy, captions |
-| `--text-label` | 12px | 500 | 1.4 | +1.2px (uppercase) | Inter | Eyebrow tags, section labels — ALWAYS uppercase |
+| `--text-label` | 12px | 500 | 1.4 | +1.2px (uppercase) | Inter | Eyebrow tags, section labels - ALWAYS uppercase |
 | `--text-caption` | 11px | 400 | 1.4 | 0 | Inter | Fine print, timestamps |
 
 **Letter-spacing rules (critical for premium feel):**
 
-- Display + H1: `letter-spacing: -0.03em` (−1.5px at 48px) — tight tracking signals confidence
-- H2 + H3: `letter-spacing: -0.015em` — slightly tighter than default
-- Labels/eyebrows: `letter-spacing: 0.1em` — wide-spaced uppercase only
-- Body text: always `letter-spacing: 0` — never touch body tracking
+- Display + H1: `letter-spacing: -0.03em` (−1.5px at 48px) - tight tracking signals confidence
+- H2 + H3: `letter-spacing: -0.015em` - slightly tighter than default
+- Labels/eyebrows: `letter-spacing: 0.1em` - wide-spaced uppercase only
+- Body text: always `letter-spacing: 0` - never touch body tracking
 
 ### Mobile Type Scale
-Scale down display and h1 proportionally: display → 36–40px, h1 → 28–32px. H2 and below remain the same. Letter-spacing values stay the same — do NOT adjust for mobile.
+Scale down display and h1 proportionally: display → 36-40px, h1 → 28-32px. H2 and below remain the same. Letter-spacing values stay the same - do NOT adjust for mobile.
 
 ---
 
@@ -139,7 +154,7 @@ Border-radius: 4px
 Hover: background #E06900, subtle box-shadow
 Focus: 2px outline #00B7C2, 2px offset
 ```
-Use for: one primary action per page — "Book a call", "Start the conversation", "Download"
+Use for: one primary action per page - "Book a call", "Start the conversation", "Download"
 
 **Secondary button:**
 ```
@@ -151,7 +166,7 @@ Padding: 13px 27px
 Border-radius: 4px
 Hover: background #E6F9FA
 ```
-Use for: secondary actions — "Learn more", "View services", "Read case study"
+Use for: secondary actions - "Learn more", "View services", "Read case study"
 
 **Ghost button (dark background version):**
 ```
@@ -163,9 +178,9 @@ Hover: border-color #FFFFFF, background rgba(255,255,255,0.08)
 Use on: hero sections, dark feature bands
 
 **Button rules:**
-- One primary (accent) button per section — never two orange buttons side by side
+- One primary (accent) button per section - never two orange buttons side by side
 - CTAs should say what happens, not what the user should do: "Book a call" not "Click here"
-- No rounded-pill buttons (border-radius stays at 4px) — pill buttons feel like SaaS, not consulting
+- No rounded-pill buttons (border-radius stays at 4px) - pill buttons feel like SaaS, not consulting
 
 ---
 
@@ -185,7 +200,7 @@ Header: Inter 600, 20px, `#1E222A`
 Body: Inter 400, 15px, `#5A6272`
 Accent detail: 3px left border in `#00B7C2`
 
-**Feature card (dark section — preferred for landing pages):**
+**Feature card (dark section - preferred for landing pages):**
 ```
 Background: rgba(0,183,194,0.06)
 Border: 1px solid rgba(0,183,194,0.15)
@@ -234,7 +249,7 @@ Label: Inter 500, 14px, rgba(255,255,255,0.7)
 ### Navigation
 
 **Desktop nav:**
-- Background: `#071A2E` (always dark — not transparent, not white)
+- Background: `#071A2E` (always dark - not transparent, not white)
 - Logo: left-aligned
 - Nav links: Inter 500, 15px, `rgba(255,255,255,0.8)`, hover → `#FFFFFF`
 - Active: `#00B7C2` underline (2px, offset 4px)
@@ -262,9 +277,9 @@ Layout: 2-column grid (text left 55%, visual right 45%) on desktop
 
 **Hero text hierarchy:**
 
-1. Eyebrow tag: Inter 500, 12px, `#00B7C2`, `letter-spacing: 0.1em`, uppercase — "AI STRATEGY CONSULTING"
-2. Headline: Inter 800, 56px, `#FFFFFF`, `letter-spacing: -0.03em` — the diagnosis or the promise
-3. Subhead: Inter 400, 20px, `rgba(255,255,255,0.7)`, `letter-spacing: 0` — one sentence of proof or context
+1. Eyebrow tag: Inter 500, 12px, `#00B7C2`, `letter-spacing: 0.1em`, uppercase - "AI STRATEGY CONSULTING"
+2. Headline: Inter 800, 56px, `#FFFFFF`, `letter-spacing: -0.03em` - the diagnosis or the promise
+3. Subhead: Inter 400, 20px, `rgba(255,255,255,0.7)`, `letter-spacing: 0` - one sentence of proof or context
 4. CTA group: Primary accent button + ghost secondary button, side by side (stacked on mobile)
 
 **Hero visual options:**
@@ -288,7 +303,7 @@ Button: accent primary (on dark bg) or ghost white (on primary bg)
 
 ## 6. Animation & Interaction Standards
 
-Source: UI/UX Pro Max — validated for executive consulting landing pages
+Source: UI/UX Pro Max - validated for executive consulting landing pages
 
 ### Timing
 
@@ -301,11 +316,11 @@ Source: UI/UX Pro Max — validated for executive consulting landing pages
 
 **Rules:**
 
-- Enter animations: `ease-out` — fast start, soft landing (feels responsive)
-- Exit animations: `ease-in` — soft start, fast end (feels dismissive, not laggy)
-- Exit duration ≈ 60–70% of enter duration
-- Never animate `width`, `height`, `top`, `left` — use `transform` and `opacity` only
-- Always include `@media (prefers-reduced-motion: reduce)` — disable all transitions
+- Enter animations: `ease-out` - fast start, soft landing (feels responsive)
+- Exit animations: `ease-in` - soft start, fast end (feels dismissive, not laggy)
+- Exit duration ≈ 60-70% of enter duration
+- Never animate `width`, `height`, `top`, `left` - use `transform` and `opacity` only
+- Always include `@media (prefers-reduced-motion: reduce)` - disable all transitions
 
 ### Scroll Fade-In (Intersection Observer)
 
@@ -327,9 +342,9 @@ Stagger cards/items by 60ms per item. Max stagger delay: 300ms total.
 
 ### Hover States
 
-- Cards: `translateY(-2px)` + border-color brightens — never shift layout bounds
-- Buttons: background darkens 10–15% — no size change
-- Links: color shifts to `#FFFFFF` or `#00B7C2` depending on background — no underline in nav
+- Cards: `translateY(-2px)` + border-color brightens - never shift layout bounds
+- Buttons: background darkens 10-15% - no size change
+- Links: color shifts to `#FFFFFF` or `#00B7C2` depending on background - no underline in nav
 
 ---
 
@@ -337,11 +352,11 @@ Stagger cards/items by 60ms per item. Max stagger delay: 300ms total.
 
 | Name | Breakpoint | Target |
 |---|---|---|
-| `xs` (base) | 0–479px | Small phones |
-| `sm` | 480–767px | Large phones |
-| `md` | 768–1023px | Tablets |
-| `lg` | 1024–1279px | Small laptops |
-| `xl` | 1280–1535px | Standard desktop |
+| `xs` (base) | 0-479px | Small phones |
+| `sm` | 480-767px | Large phones |
+| `md` | 768-1023px | Tablets |
+| `lg` | 1024-1279px | Small laptops |
+| `xl` | 1280-1535px | Standard desktop |
 | `2xl` | 1536px+ | Large screens |
 
 **Development order:** Write all styles mobile-first (min-width queries, not max-width). Design review at 375px, 768px, 1280px.
@@ -350,7 +365,7 @@ Stagger cards/items by 60ms per item. Max stagger delay: 300ms total.
 - No horizontal scrolling at any breakpoint
 - Touch targets: minimum 44px × 44px
 - Font-size: minimum 16px on mobile (prevents browser zoom)
-- Navigation always accessible via mobile menu — never hidden
+- Navigation always accessible via mobile menu - never hidden
 
 ---
 
@@ -379,8 +394,8 @@ All photography for Catalyst Works should pass this test: "Does this look like a
 
 ### Icons
 - **Icon set:** Phosphor Icons (MIT license, 6 weights available) or Lucide Icons
-- **Style:** Line weight — "Regular" (1.5px stroke equivalent)
-- **Size:** 20px (inline UI), 24px (feature callout), 32–40px (hero/section icons)
+- **Style:** Line weight - "Regular" (1.5px stroke equivalent)
+- **Size:** 20px (inline UI), 24px (feature callout), 32-40px (hero/section icons)
 - **Color:** `#00B7C2` on dark backgrounds, `#1E222A` on light backgrounds, `#B47C57` for warmth-context icons
 - **Never:** Filled/solid icon sets, emoji icons, multi-color illustrative icons
 
@@ -389,12 +404,12 @@ All photography for Catalyst Works should pass this test: "Does this look like a
 ## 8. Voice and Copy Standards for Web
 
 ### Headlines
-The job of a headline is to make the next sentence necessary. It should state the benefit, the diagnosis, or the claim — not describe the page.
+The job of a headline is to make the next sentence necessary. It should state the benefit, the diagnosis, or the claim - not describe the page.
 
 **Headline formulas that work:**
 - The Diagnosis: "Your org chart changed. Your decision rights didn't."
 - The Direct Claim: "Organizational clarity, built to last past the consultant's exit."
-- The Specific Outcome: "Teams that know exactly who decides what — and why."
+- The Specific Outcome: "Teams that know exactly who decides what - and why."
 - The Contrast: "Not strategy frameworks. Working systems."
 
 **Avoid:**
@@ -407,9 +422,9 @@ One sentence. What the section delivers or what the visitor should understand af
 
 ### CTAs (Buttons and Links)
 Match the action to the verb:
-- Booking a call: "Book a discovery call" — not "Get started" or "Contact us"
-- Learning more: "See how it works" — not "Click here" or "Read more"
-- Downloading something: "Download the framework" — not "Submit"
+- Booking a call: "Book a discovery call" - not "Get started" or "Contact us"
+- Learning more: "See how it works" - not "Click here" or "Read more"
+- Downloading something: "Download the framework" - not "Submit"
 
 ### Microcopy (Form labels, error messages, helper text)
 - Form labels: short, direct, no colons. "Your email" not "Email address:"
@@ -460,12 +475,12 @@ Write at 9th-grade reading level. Short sentences. No jargon without a same-sent
    - Narrative format, not bullets
 4. The approach
    - How Catalyst Works does this differently (specific, not generic)
-   - 3–4 step process or phases
+   - 3-4 step process or phases
 5. What's included
-   - Card grid or detailed list — specific deliverables
+   - Card grid or detailed list - specific deliverables
 6. Case study or example outcome
 7. Pricing or engagement model (if public)
-8. FAQ section (4–6 questions)
+8. FAQ section (4-6 questions)
 9. CTA: "Start the conversation"
 10. Footer
 ```
@@ -480,7 +495,7 @@ Write at 9th-grade reading level. Short sentences. No jargon without a same-sent
    - Portrait photo (left or center)
    - Name, title, one-sentence professional identity
 3. Origin / story section
-   - Where Boubacar comes from — professional and personal
+   - Where Boubacar comes from - professional and personal
    - Specific, not generic: what shaped the lens he brings to the work
 4. The philosophy
    - What Catalyst Works believes about organizational change
@@ -505,14 +520,14 @@ A Catalyst Works site is not like a Big Four firm (institutional, impersonal, ge
 
 **The navy base:** Dark backgrounds in hero, nav, and footer sections. This immediately separates the site from the white-background-with-blue-accents template look. The darkness communicates depth and seriousness.
 
-**Specificity in the copy:** Every headline and subhead should contain a specific word that a generic competitor couldn't use without lying. "12 countries" — not "global." "Decision rights" — not "accountability." This is the single most important factor.
+**Specificity in the copy:** Every headline and subhead should contain a specific word that a generic competitor couldn't use without lying. "12 countries" - not "global." "Decision rights" - not "accountability." This is the single most important factor.
 
 **Clay as humanity:** The `#B47C57` clay color appears as the border on testimonials, as the warmth accent in icon sets, in personal story sections. It signals that there's a real human behind the brand. It should appear on every page in at least one place.
 
-**Photography with presence:** One real portrait of Boubacar, present on multiple pages (about, homepage, footer). Not a headshot — a working photo. Looking at camera or looking at something with focus. Full presence.
+**Photography with presence:** One real portrait of Boubacar, present on multiple pages (about, homepage, footer). Not a headshot - a working photo. Looking at camera or looking at something with focus. Full presence.
 
-**CTAs that sound like invitations, not funnels:** "Start the conversation" and "Book a discovery call" — not "Get your free audit now" or "Transform your organization today."
+**CTAs that sound like invitations, not funnels:** "Start the conversation" and "Book a discovery call" - not "Get your free audit now" or "Transform your organization today."
 
 ### The test
 
-If a designer swapped the Catalyst Works logo for a generic Big Four logo and the page still made sense — the design failed. The copy, color, and specificity should be inseparable from the brand.
+If a designer swapped the Catalyst Works logo for a generic Big Four logo and the page still made sense - the design failed. The copy, color, and specificity should be inseparable from the brand.

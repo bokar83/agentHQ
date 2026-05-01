@@ -1,17 +1,45 @@
-# PDF Document Design System — Catalyst Works Consulting
+# PDF Document Design System - Catalyst Works Consulting
 
-**Version:** 2.1
-**Last updated:** 2026-04-16
+**Version:** 2.2
+**Last updated:** 2026-04-29
 **Palette:** Coastal Clarity
-**For:** Boubacar Barry, Founder — Catalyst Works Consulting
+**For:** Boubacar Barry, Founder - Catalyst Works Consulting
 
 ---
 
-## PART 1 — COVER PAGE SPECIFICATION
+## ⚠️ TYPOGRAPHY OVERRIDE - READ FIRST (v2.2, 2026-04-29)
+
+**Typography in this file is OBSOLETE.** All references to "Inter" and "Source Serif 4" below are v2.1 legacy and MUST be substituted per the current source of truth:
+
+> **Load `docs/styleguides/CURRENT_TYPOGRAPHY.md` first. Use the stack defined there.**
+
+Substitution rule for v2.1 → v2.2 transition (until full rewrite in v2.3):
+
+| Where v2.1 says... | Use instead (per CURRENT_TYPOGRAPHY.md v1.1) |
+|---|---|
+| `Inter` (display, weights 700, 800) | `Spectral` (700) |
+| `Inter` (body, weights 400, 500, 600) | `Public Sans` (same weight) |
+| `Source Serif 4` (italic pull-quotes) | `Spectral italic` (400 or 700) |
+| `font-family: 'Inter'` | `font-family: var(--font-body)` (Public Sans via CURRENT_TYPOGRAPHY.md tokens) |
+| Heading `font-family: 'Inter'` | `font-family: var(--font-display)` (Spectral) |
+
+**Cover page typography (gold bar, category tag, document title, subtitle, etc):**
+- Category tag: ~~Inter 600 11pt~~ → **Public Sans 600 11pt**
+- Document title: ~~Inter 700 44pt~~ → **Spectral 700 44pt**
+- Subtitle: ~~Inter 400 17pt~~ → **Public Sans 400 17pt**
+- "Prepared for" line + Date + Version: ~~Inter~~ → **Public Sans** (same weights/sizes)
+
+**Hero italic in body:** ~~Source Serif 4 italic 400~~ → **Spectral italic 400**
+
+The layout, color, spacing, gold bar, dimensions, cover page geometry - all v2.1 spec is RETAINED. Only the font names change. When generating PDFs after 2026-04-29, apply the substitution rule above and verify with `/design-audit <path-to-html>` before converting to PDF (target ≥17/20 for CW client-facing PDFs).
+
+---
+
+## PART 1 - COVER PAGE SPECIFICATION
 
 The cover page is the first claim the document makes. It must communicate authority before the reader processes a single word. Build it exactly to this spec.
 
-### Cover Page Layout (top to bottom, A4 — 210 × 297mm)
+### Cover Page Layout (top to bottom, A4 - 210 × 297mm)
 
 ```text
 ┌─────────────────────────────────────────────────────────┐
@@ -23,7 +51,7 @@ The cover page is the first claim the document makes. It must communicate author
 │  ─────────────────────────────────────────────         │
 │  [CATEGORY TAG]                                         │
 │   Inter 600, 11pt, #C49A2E, letter-spacing 0.12em      │
-│   uppercase — e.g. "DIAGNOSTIC REPORT"                  │
+│   uppercase - e.g. "DIAGNOSTIC REPORT"                  │
 │   36mm from top                                         │
 │                                                         │
 │  [DOCUMENT TITLE]                                       │
@@ -59,21 +87,21 @@ The cover page is the first claim the document makes. It must communicate author
 
 | Element | Font | Size | Weight | Color | Position |
 | --- | --- | --- | --- | --- | --- |
-| Logo placeholder | — | 28mm wide max | — | White version | 20mm top, 20mm left |
+| Logo placeholder | - | 28mm wide max | - | White version | 20mm top, 20mm left |
 | Category tag | Inter | 11pt | 600 | `#C49A2E` | 36mm from top, 20mm left |
 | Document title | Inter | 44pt | 700 | `#FFFFFF` | 44mm from top, 20mm left |
-| Gold accent bar | — | 4px tall, full column | — | `#C49A2E` | Below title, 8mm gap |
+| Gold accent bar | - | 4px tall, full column | - | `#C49A2E` | Below title, 8mm gap |
 | Subtitle | Inter | 17pt | 400 | `rgba(255,255,255,0.75)` | 8mm below gold bar |
 | "Prepared for" line | Inter | 12pt | 500 | `rgba(255,255,255,0.60)` | 16mm below subtitle |
-| Thin divider | — | 0.5pt | — | `#E5E7EB` at 30% | 12mm below "prepared for" |
+| Thin divider | - | 0.5pt | - | `#E5E7EB` at 30% | 12mm below "prepared for" |
 | Date (left) | Inter | 10pt | 400 | `rgba(255,255,255,0.50)` | 8mm below divider |
 | Version (right) | Inter | 10pt | 400 | `rgba(255,255,255,0.50)` | Same line as date |
 
 ### Cover Page Rules
 
 - Background: full-bleed `#1B2A4A`, no white margins visible
-- Title: the diagnosis or deliverable name — never a project code or number
-- No tagline ("Transforming organizations through...") — the title carries the message
+- Title: the diagnosis or deliverable name - never a project code or number
+- No tagline ("Transforming organizations through...") - the title carries the message
 - No more than one image on the cover
 - No logo watermarked across the background at any opacity
 - No stock photo of handshakes, diverse teams around laptops, or arrows pointing up
@@ -81,17 +109,17 @@ The cover page is the first claim the document makes. It must communicate author
 
 ---
 
-## PART 2 — TYPOGRAPHY HIERARCHY
+## PART 2 - TYPOGRAPHY HIERARCHY
 
 All measurements given for screen rendering (px) and print (pt). Use pt for print PDFs; px for web-rendered or HTML-to-PDF.
 
 ### Font Stack
 
 ```text
-Headings:     Inter (Google Fonts) — weights 700, 600
-Body:         Inter — weights 400, 500
-Pull quotes:  Source Serif 4 (Google Fonts) — italic, weight 400
-Monospace:    JetBrains Mono (Google Fonts) — weight 400
+Headings:     Inter (Google Fonts) - weights 700, 600
+Body:         Inter - weights 400, 500
+Pull quotes:  Source Serif 4 (Google Fonts) - italic, weight 400
+Monospace:    JetBrains Mono (Google Fonts) - weight 400
 Fallbacks:    Inter → Outfit → -apple-system → sans-serif
               Source Serif 4 → Lora → Georgia → serif
               JetBrains Mono → Courier New → monospace
@@ -116,7 +144,7 @@ Fallbacks:    Inter → Outfit → -apple-system → sans-serif
 
 ### H2 Decoration Rule
 
-H2 always carries a 2px solid `#C49A2E` border-bottom. Padding-bottom: 8px. Margin-bottom: 16px. This is non-negotiable — it is the primary visual anchor for section structure.
+H2 always carries a 2px solid `#C49A2E` border-bottom. Padding-bottom: 8px. Margin-bottom: 16px. This is non-negotiable - it is the primary visual anchor for section structure.
 
 ```css
 h2 {
@@ -153,17 +181,17 @@ h4 {
 ### Typography Rules (Non-Negotiable)
 
 - Never mix more than 2 typefaces in one document
-- Never use italic for emphasis — use bold. Italic is reserved for pull quotes, titles of works, and formal definitions
+- Never use italic for emphasis - use bold. Italic is reserved for pull quotes, titles of works, and formal definitions
 - Tracking: 0 for all body text; +0.05em for H4 uppercase labels only
 - H1 color: always `#1B2A4A`
 - H2 color: always `#1B2A4A` with gold underbar
 - H3 color: always `#2D4A7A`
-- Body text color: always `#2C2C2C` — never primary color for running text
+- Body text color: always `#2C2C2C` - never primary color for running text
 - Paragraph spacing: 10px below each paragraph; 0 first-line indent
 
 ---
 
-## PART 3 — PAGE LAYOUT
+## PART 3 - PAGE LAYOUT
 
 ### Page Setup
 
@@ -186,7 +214,7 @@ h4 {
 | Two-column wide+narrow | 1+1 | 110mm + 52mm | Body text + sidebar, annotation layout |
 | Three-column | 3 | 51mm each | Icon callouts, 3-way comparisons |
 
-### Spacing Scale — Print (base unit = 4mm)
+### Spacing Scale - Print (base unit = 4mm)
 
 | Token | Value | Use |
 | --- | --- | --- |
@@ -196,7 +224,7 @@ h4 {
 | `lg` | 16mm | Major section separation |
 | `xl` | 24mm | Page section break (visual white space) |
 
-### Section Spacing — Screen Pixels (for HTML-to-PDF)
+### Section Spacing - Screen Pixels (for HTML-to-PDF)
 
 | Token | Value | Use |
 | --- | --- | --- |
@@ -209,7 +237,7 @@ h4 {
 
 ---
 
-## PART 4 — COMPONENTS
+## PART 4 - COMPONENTS
 
 ### 4.1 Callout Box (General / Note)
 
@@ -321,7 +349,7 @@ Width:      100% of column
 
 ### 4.10 Data / KPI Callout Box
 
-For single metrics that require visual emphasis — use in groups of 2–4.
+For single metrics that require visual emphasis - use in groups of 2-4.
 
 ```text
 Background:    #1B2A4A
@@ -342,18 +370,18 @@ Used when starting a major new chapter/section (optional, formal reports only).
 Background:     #1B2A4A (full page or half-page band)
 H1 text:        Inter 700, 32pt, #FFFFFF
 Framing line:   Inter 400, 14pt, #C49A2E, max 1 sentence
-Chapter number: Inter 700, 80pt, rgba(196,154,46,0.15) — top-right, decorative
+Chapter number: Inter 700, 80pt, rgba(196,154,46,0.15) - top-right, decorative
 ```
 
 ---
 
-## PART 5 — RUNNING HEADER AND FOOTER
+## PART 5 - RUNNING HEADER AND FOOTER
 
 ### Running Header (all pages except cover and chapter openers)
 
 ```text
-Left text:      "Catalyst Works Consulting" — Inter 400, 10pt, #6B7280
-Right text:     Document title — Inter 400, 10pt, #6B7280
+Left text:      "Catalyst Works Consulting" - Inter 400, 10pt, #6B7280
+Right text:     Document title - Inter 400, 10pt, #6B7280
 Separator:      1px solid #E5E7EB, below header, full margin width
 Padding-bottom: 10px above separator
 Position:       16mm from top of page
@@ -362,16 +390,16 @@ Position:       16mm from top of page
 ### Running Footer
 
 ```text
-Left text:    "Catalyst Works Consulting" — Inter 400, 9pt, #6B7280
-Center text:  Page number — Inter 600, 9pt, #C49A2E
-Right text:   Document date (YYYY-MM-DD) — Inter 400, 9pt, #6B7280
+Left text:    "Catalyst Works Consulting" - Inter 400, 9pt, #6B7280
+Center text:  Page number - Inter 600, 9pt, #C49A2E
+Right text:   Document date (YYYY-MM-DD) - Inter 400, 9pt, #6B7280
 Separator:    1px solid #E5E7EB, above footer, full margin width
 Position:     16mm from bottom of page
 ```
 
 ---
 
-## PART 6 — FILE NAMING CONVENTION
+## PART 6 - FILE NAMING CONVENTION
 
 ### Format
 
@@ -400,14 +428,14 @@ YYYYMMDD_DocumentType_ClientOrProject_v1.pdf
 
 ### Rules
 
-- No spaces — use underscores
+- No spaces - use underscores
 - Version number is mandatory on every file sent externally
 - Date is the date of the version being sent, not the project start date
 - Internal Catalyst Works documents use `Internal` as the client/project field
 
 ---
 
-## PART 7 — PALETTE SELECTION BY DOCUMENT TYPE
+## PART 7 - PALETTE SELECTION BY DOCUMENT TYPE
 
 This guide uses Coastal Clarity as default. For other document types, use the following palettes from the Catalyst Works brand system:
 
@@ -422,7 +450,7 @@ This guide uses Coastal Clarity as default. For other document types, use the fo
 
 ---
 
-## PART 8 — XHTML2PDF LAYOUT RULES (PISA ENGINE)
+## PART 8 - XHTML2PDF LAYOUT RULES (PISA ENGINE)
 
 These rules apply to all PDFs generated via xhtml2pdf (pisa). They override general CSS assumptions where xhtml2pdf behavior differs from browsers.
 
@@ -478,7 +506,7 @@ If a cover page, section header, or callout box is the only content on a page wi
 
 ---
 
-## PART 9 — PRODUCTION CHECKLIST
+## PART 9 - PRODUCTION CHECKLIST
 
 Before exporting or sending any PDF, verify every item:
 
@@ -494,4 +522,4 @@ Before exporting or sending any PDF, verify every item:
 - [ ] File name follows `YYYYMMDD_DocumentType_ClientOrProject_v1.pdf` format
 - [ ] Version number present in filename
 - [ ] No generic stock imagery (handshakes, diverse teams around laptops)
-- [ ] Fonts embedded in PDF export (not outlined — embedded for accessibility)
+- [ ] Fonts embedded in PDF export (not outlined - embedded for accessibility)

@@ -1,14 +1,30 @@
-# Master Style Guide — Catalyst Works Consulting
+# Master Style Guide - Catalyst Works Consulting
 
-**Version:** 1.0
-**Last updated:** 2026-03-29
-**For:** Boubacar Barry, Founder — Catalyst Works Consulting
+**Version:** 1.1
+**Last updated:** 2026-04-29
+**For:** Boubacar Barry, Founder - Catalyst Works Consulting
 
 ---
 
-## AGENT USAGE — Read This First
+## ⚠️ TYPOGRAPHY OVERRIDE - READ FIRST (v1.1, 2026-04-29)
 
-**Version check:** State "Loaded Catalyst Works Styleguide v1.0 — 2026-03-29" in your output before producing any branded artifact. This confirms the correct file was loaded.
+**All v1.0 references to `Inter`, `Plus Jakarta Sans`, and `Source Serif 4` in this file are RETIRED.** They were reflex-reject fonts that scored CW artifacts as AI-generated within 5 seconds of viewing. The current locked stack lives in:
+
+> **`docs/styleguides/CURRENT_TYPOGRAPHY.md` v1.1+ - load this file FIRST for any CW-branded output.**
+
+Substitution rule until v2.0 full rewrite:
+- `Plus Jakarta Sans` (display) → **Spectral** (weight 700, with letter-spacing -0.02em)
+- `Inter` (body, UI) → **Public Sans** (same weight)
+- `Source Serif 4` (italic pull-quotes) → **Spectral italic 400**
+- `JetBrains Mono` (data) → unchanged
+
+The 5 voice rules, anti-patterns list, color system, and structural specs in this file are RETAINED at v1.0. Only the font names change. Verify any CW artifact with `/design-audit <path>` before shipping (target ≥17/20 for client-facing).
+
+---
+
+## AGENT USAGE - Read This First
+
+**Version check:** State "Loaded Catalyst Works Styleguide v1.1 - 2026-04-29 + CURRENT_TYPOGRAPHY.md v1.1" in your output before producing any branded artifact. This confirms both files were loaded.
 
 **Which files to load by output type:**
 - Website / App: this file + `styleguide_websites.md`
@@ -23,14 +39,14 @@ Output is Catalyst Works branded if the request contains any of: "catalyst works
 **Self-scoring checklist (run before returning any visual output):**
 - [ ] Clay (#B47C57) appears somewhere in this artifact (border, icon, accent element)
 - [ ] Midnight Navy (#071A2E) is used as the structural dark anchor (hero, nav, or footer)
-- [ ] No red tones anywhere — not for errors, warnings, or any UI state
+- [ ] No red tones anywhere - not for errors, warnings, or any UI state
 - [ ] Plus Jakarta Sans is used for headings/display text (not Inter for headlines)
-- [ ] Inter is used for body text and UI labels only — never as a display or headline font
+- [ ] Inter is used for body text and UI labels only - never as a display or headline font
 - [ ] JetBrains Mono is used for any data, code, or numeric callouts
 - [ ] First visible element leads with a specific claim, not a category description
 - [ ] No purple gradients, no three rounded boxes in a row, no stock illustration faces
 
-**Anti-patterns — never repeat these in any Catalyst Works output:**
+**Anti-patterns - never repeat these in any Catalyst Works output:**
 1. Purple gradients as primary or accent color
 2. Three rounded boxes in a row as a "features" or "services" section
 3. Generic centered hero on white background with stock illustration
@@ -58,7 +74,7 @@ Output is Catalyst Works branded if the request contains any of: "catalyst works
 
 *Precise:* Every claim is specific. Every recommendation has an owner, a timeline, and a reason. Catalyst Works does not deal in generalities.
 
-*Grounded:* The ideas come from lived experience — from organizations that didn't work, from systems that produced the wrong results, from clients who'd heard the right words and seen nothing change. Not theory. Evidence.
+*Grounded:* The ideas come from lived experience - from organizations that didn't work, from systems that produced the wrong results, from clients who'd heard the right words and seen nothing change. Not theory. Evidence.
 
 *Earned:* The credibility behind Catalyst Works was not purchased or performed. It was built across countries, sectors, and difficult conversations. The brand wears that history without announcing it.
 
@@ -84,9 +100,9 @@ Generic claims signal that the speaker hasn't been in the room. Specificity sign
 
 **Not:** "Many organizations struggle with change management."
 
-**Yes:** "Most change programs don't fail at launch. They fail the first time a senior leader is asked to change their own behavior — and doesn't."
+**Yes:** "Most change programs don't fail at launch. They fail the first time a senior leader is asked to change their own behavior - and doesn't."
 
-Details are credibility. Countries, numbers, roles, named dynamics, precise descriptions of what actually happens — these are what separate Boubacar's voice from every other consultant's content.
+Details are credibility. Countries, numbers, roles, named dynamics, precise descriptions of what actually happens - these are what separate Boubacar's voice from every other consultant's content.
 
 ---
 
@@ -94,7 +110,7 @@ Details are credibility. Countries, numbers, roles, named dynamics, precise desc
 
 The sharpest insights arrive through juxtaposition. What looks one way but works another way. What everyone believes versus what actually produces results.
 
-Structure: "[What most people think/do] — [what's actually true/effective]"
+Structure: "[What most people think/do] - [what's actually true/effective]"
 
 Examples in practice:
 - "Not the org chart. The decision architecture."
@@ -107,19 +123,19 @@ This applies across all platforms, all formats, all document types. When in doub
 
 ### Rule 4: No buzzword without a specific referent
 
-Words like "transformation," "innovation," "alignment," "culture change," and "synergy" are allowed — but only if followed immediately by what specifically is being transformed, innovated, aligned, or changed.
+Words like "transformation," "innovation," "alignment," "culture change," and "synergy" are allowed - but only if followed immediately by what specifically is being transformed, innovated, aligned, or changed.
 
 The test: Could a competitor use this sentence without changing a word? If yes, it's not specific enough.
 
 **Not:** "We help organizations drive transformation and achieve sustainable results."
 
-**Yes:** "We redesign how decisions get made — which roles decide what, at what speed, with what information."
+**Yes:** "We redesign how decisions get made - which roles decide what, at what speed, with what information."
 
 ---
 
 ### Rule 5: Teach through contrast and lived experience. Never preach.
 
-Boubacar doesn't tell people what they should do or be. He shows them what he's seen, what the data says, what happened when organizations did or didn't act. The prescription is implied by the diagnosis — the reader draws the conclusion.
+Boubacar doesn't tell people what they should do or be. He shows them what he's seen, what the data says, what happened when organizations did or didn't act. The prescription is implied by the diagnosis - the reader draws the conclusion.
 
 **Preach:** "Leaders must be willing to change their behavior for transformation to succeed."
 
@@ -137,7 +153,7 @@ These rules hold regardless of format, platform, or audience.
 
 1. **Clay (`#B47C57`) appears on every major format.** In documents: callout borders. On web: testimonial borders, warmth icons. In presentations: the human-element slide. It is the brand's signature of humanity. Never drop it entirely from any format.
 
-2. **Specificity in the first 10 seconds.** Whether a web hero section, a LinkedIn post, a PDF executive summary, or an X post — the first interaction must contain a specific claim. Not a category description. Not a tagline. A claim.
+2. **Specificity in the first 10 seconds.** Whether a web hero section, a LinkedIn post, a PDF executive summary, or an X post - the first interaction must contain a specific claim. Not a category description. Not a tagline. A claim.
 
 3. **The dark anchor.** Every primary branded surface uses Midnight Navy (`#071A2E`) or its palette equivalent as the structural foundation. This creates visual continuity across all output types and signals premium positioning.
 
@@ -150,9 +166,9 @@ These rules hold regardless of format, platform, or audience.
 | Element | X | LinkedIn | PDF | Website |
 |---|---|---|---|---|
 | Formality level | Lowest | Medium | Medium-High | Medium |
-| Post/section length | 280 chars → 7 posts | 300–1000 chars standard | As long as required | Short copy, long structure |
+| Post/section length | 280 chars → 7 posts | 300-1000 chars standard | As long as required | Short copy, long structure |
 | CTA approach | None or embedded | Soft, one per post | Explicit (next steps) | Direct ("Book a call") |
-| Hashtag use | 0–2 | 0–3 | Never | Never |
+| Hashtag use | 0-2 | 0-3 | Never | Never |
 | Personal story frequency | Occasional | Weekly max | Rare | About page only |
 | Font usage | N/A | N/A | Inter + Source Serif 4 | Inter + Source Serif 4 |
 | Primary palette | N/A | N/A | Palette by doc type | Coastal Clarity |
@@ -166,15 +182,15 @@ These rules hold regardless of format, platform, or audience.
 - Prefer the specific word over the general word
 - Use contrast structures to deliver insight
 - Let Clay appear somewhere in every major branded artifact
-- Make the next step obvious — if someone is ready to engage, they should know immediately what to do
+- Make the next step obvious - if someone is ready to engage, they should know immediately what to do
 - Write like Boubacar would say it in a room, not like a brand committee wrote it
 
 **Never:**
-- Use red tones anywhere — not for errors, warnings, accents, or any UI state
-- Use old teal (`#005E60`) or lime (`#C8FF08`) — retired colors
-- Use Orange (`#FF7A00`) as a background for large sections — accent only, ≤10%
+- Use red tones anywhere - not for errors, warnings, accents, or any UI state
+- Use old teal (`#005E60`) or lime (`#C8FF08`) - retired colors
+- Use Orange (`#FF7A00`) as a background for large sections - accent only, ≤10%
 - Start content with excited preambles ("I'm thrilled to share..." / "Hot take:")
-- Use nested bullets — they signal PowerPoint thinking, not clear reasoning
+- Use nested bullets - they signal PowerPoint thinking, not clear reasoning
 - Use buzzwords without a specific referent in the same sentence
 - End a piece of content with a generic sign-off or a weak CTA that sounds desperate
 
@@ -207,17 +223,17 @@ These rules hold regardless of format, platform, or audience.
 
 | Color | Hex | When to use |
 |---|---|---|
-| Ocean Cyan | `#00B7C2` | Primary — links, active states, H1/H2 color in documents |
-| Midnight Navy | `#071A2E` | Base dark — nav, hero, footer, dark section backgrounds |
-| Orange | `#FF7A00` | Accent CTA — primary buttons, max 10% of colored elements |
-| Clay | `#B47C57` | Human warmth — testimonial borders, warmth icons, every format |
-| Mist | `#F3F6F9` | Light backgrounds — card backgrounds, section alternation |
-| Carbon | `#1E222A` | Body text — all running text on light backgrounds |
-| Carbon Muted | `#5A6272` | Secondary text — captions, supporting copy |
-| Deep Indigo | `#1F2A60` | Formal docs — proposals, investor briefs |
-| Saffron | `#F2A900` | Formal accent — used in Indigo Olive Saffron palette |
-| Cobalt | `#1E5AA6` | Training — workshops, playbooks, course materials |
-| Night Indigo | `#14213D` | Story/keynote base — presentations, personal narratives |
+| Ocean Cyan | `#00B7C2` | Primary - links, active states, H1/H2 color in documents |
+| Midnight Navy | `#071A2E` | Base dark - nav, hero, footer, dark section backgrounds |
+| Orange | `#FF7A00` | Accent CTA - primary buttons, max 10% of colored elements |
+| Clay | `#B47C57` | Human warmth - testimonial borders, warmth icons, every format |
+| Mist | `#F3F6F9` | Light backgrounds - card backgrounds, section alternation |
+| Carbon | `#1E222A` | Body text - all running text on light backgrounds |
+| Carbon Muted | `#5A6272` | Secondary text - captions, supporting copy |
+| Deep Indigo | `#1F2A60` | Formal docs - proposals, investor briefs |
+| Saffron | `#F2A900` | Formal accent - used in Indigo Olive Saffron palette |
+| Cobalt | `#1E5AA6` | Training - workshops, playbooks, course materials |
+| Night Indigo | `#14213D` | Story/keynote base - presentations, personal narratives |
 
 ---
 
@@ -255,12 +271,12 @@ These rules hold regardless of format, platform, or audience.
 ### For a writer drafting content
 1. Read the 5 Voice Rules in this file first
 2. Open the platform-specific guide (X or LinkedIn)
-3. Draft the hook first — test it against the "See More" cutoff rules for LinkedIn, the 280-character test for X
+3. Draft the hook first - test it against the "See More" cutoff rules for LinkedIn, the 280-character test for X
 4. Run the draft against the Anti-Patterns checklist at the end of the relevant guide
-5. The final line should be the sharpest line in the piece — if it isn't, reorder
+5. The final line should be the sharpest line in the piece - if it isn't, reorder
 
 ### For an agent or assistant generating content on Boubacar's behalf
-- Never fabricate stories — signal hypotheticals with "Imagine if..."
+- Never fabricate stories - signal hypotheticals with "Imagine if..."
 - Apply the 5 Voice Rules as filters: does this conclusion lead? Is it specific? Is there a contrast?
 - No excited preambles. No "I'm thrilled to share." No "Hot take:"
 - The post should sound like someone who's been in the room, not like someone describing a room they read about.
