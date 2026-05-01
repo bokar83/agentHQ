@@ -27,6 +27,7 @@ per the PR #11 P2 connection-hygiene fix.
 import logging
 import os
 import time
+from html import escape as _html_escape
 from datetime import date, datetime, timedelta
 
 from newsletter_editorial_input import upsert_reply
@@ -126,6 +127,107 @@ def _handle_scout_newsletter(notion_page_id: str, cb_id: str, cb_chat_id: str) -
         displaced_list = ", ".join(displaced_ids)
         message += f" Cleared previous anchor(s): {displaced_list}."
     send_message(cb_chat_id, message)
+
+
+def _escape(text: str) -> str:
+    return _html_escape(text or "", quote=True)
+
+
+def _render_beehiiv_html(draft_text: str) -> str:
+    lines = [line.strip() for line in (draft_text or "").splitlines()]
+    body_lines: list[str] = []
+    for line in lines:
+        lowered = line.lower()
+        if lowered.startswith("subject:") or lowered.startswith("preview text:") or lowered.startswith("preview:"):
+            continue
+        body_lines.append(line)
+
+    paragraphs: list[str] = []
+    current: list[str] = []
+    for line in body_lines:
+        if not line:
+            if current:
+                paragraphs.append("<p>%s</p>" % "<br>".join(_escape(part) for part in current))
+                current = []
+            continue
+        current.append(line)
+    if current:
+        paragraphs.append("<p>%s</p>" % "<br>".join(_escape(part) for part in current))
+
+    return "<html><body>%s</body></html>" % "".join(paragraphs or [f"<p>{_escape(draft_text or '')}</p>"])
+
+
+def _handle_newsletter_approve(notion_page_id: str, cb_id: str, cb_chat_id: str, once: bool = False) -> None:
+    from notifier import answer_callback_query, send_message
+    from signal_works.gmail_draft import create_draft
+
+    notion = _open_notion()
+    page = notion.get_page(notion_page_id)
+    page_props = page.get("properties", {}) or {}
+    title = "".join(
+        seg.get("plain_text") or ((seg.get("text") or {}).get("content")) or ""
+        for seg in (page_props.get("Title", {}) or {}).get("title", [])
+    ).strip()
+    draft_text = "".join(
+        seg.get("plain_text") or ((seg.get("text") or {}).get("content")) or ""
+        for seg in (page_props.get("Draft", {}) or {}).get("rich_text", [])
+    ).strip()
+    if not draft_text:
+        answer_callback_query(cb_id, "No Draft field content found.")
+        send_message(cb_chat_id, f"Newsletter approve failed for {notion_page_id[:8]}... because Draft is empty.")
+        return
+
+    subject = title or "Weekly newsletter draft"
+    for line in draft_text.splitlines():
+        lowered = line.strip().lower()
+        if lowered.startswith("subject:"):
+            candidate = line.split(":", 1)[1].strip()
+            if candidate:
+                subject = candidate
+            break
+    if once:
+        subject = f"[TEST] {subject}"
+
+    review_email = os.environ.get("NEWSLETTER_REVIEW_EMAIL", "boubacar@catalystworks.consulting")
+    gmail_draft_id = create_draft(review_email, subject, _render_beehiiv_html(draft_text))
+
+    existing_source_note = "".join(
+        seg.get("plain_text") or ((seg.get("text") or {}).get("content")) or ""
+        for seg in (page_props.get("Source Note", {}) or {}).get("rich_text", [])
+    ).strip()
+    stamp = _now_local().strftime("%Y-%m-%d %H:%M %Z")
+    audit_line = f"Approved {stamp}; Gmail draft {gmail_draft_id}"
+    source_note_text = f"{existing_source_note}\n\n{audit_line}".strip() if existing_source_note else audit_line
+    notion.update_page(
+        notion_page_id,
+        properties={
+            "Source Note": {
+                "rich_text": [{"text": {"content": source_note_text[i:i + 2000]}} for i in range(0, len(source_note_text), 2000)]
+            }
+        },
+    )
+
+    answer_callback_query(cb_id, "Newsletter Gmail draft created.")
+    send_message(
+        cb_chat_id,
+        f"Newsletter approved: Gmail draft {gmail_draft_id} created to {review_email} with subject '{subject}'.",
+    )
+
+
+def _handle_newsletter_revise(notion_page_id: str, cb_id: str, cb_chat_id: str, once: bool = False) -> None:
+    from notifier import answer_callback_query, send_message
+
+    notion = _open_notion()
+    notion.update_page(
+        notion_page_id,
+        properties={"Status": {"select": {"name": "Needs rework"}}},
+    )
+    answer_callback_query(cb_id, "Marked Needs rework.")
+    prefix = "[TEST] " if once else ""
+    send_message(
+        cb_chat_id,
+        f"{prefix}Newsletter revision requested for {notion_page_id[:8]}... Edit the Draft in Notion, then rerun the tick.",
+    )
 
 
 # ══════════════════════════════════════════════════════════════
@@ -393,6 +495,34 @@ def handle_callback_query(update: dict) -> bool:
             _handle_scout_newsletter(notion_page_id, cb_id, cb_chat_id)
         except Exception as e:
             logger.warning(f"callback_query scout_newsletter handling error: {e}")
+            try:
+                from notifier import answer_callback_query
+                answer_callback_query(cb_id, f"Error: {e}")
+            except Exception:
+                pass
+
+    elif cb_data.startswith("newsletter_approve:"):
+        try:
+            parts = cb_data.split(":", 2)
+            notion_page_id = parts[1]
+            once = len(parts) > 2 and parts[2] == "test"
+            _handle_newsletter_approve(notion_page_id, cb_id, cb_chat_id, once=once)
+        except Exception as e:
+            logger.warning(f"callback_query newsletter_approve handling error: {e}")
+            try:
+                from notifier import answer_callback_query
+                answer_callback_query(cb_id, f"Error: {e}")
+            except Exception:
+                pass
+
+    elif cb_data.startswith("newsletter_revise:"):
+        try:
+            parts = cb_data.split(":", 2)
+            notion_page_id = parts[1]
+            once = len(parts) > 2 and parts[2] == "test"
+            _handle_newsletter_revise(notion_page_id, cb_id, cb_chat_id, once=once)
+        except Exception as e:
+            logger.warning(f"callback_query newsletter_revise handling error: {e}")
             try:
                 from notifier import answer_callback_query
                 answer_callback_query(cb_id, f"Error: {e}")
