@@ -62,7 +62,7 @@ Target: $5K MRR by June 2026. Possible framings to choose from:
 
 ### R1: First Signal Works contract (trigger: email reply converts)
 
-**Status:** In progress. Email pipeline live. First contract target 2026-05-02.
+**Status:** In progress. Email pipeline live. First contract target 2026-05-02. **Elevate Roofing & Construction (Rod, Medford OR) is the live R1 conversion attempt.**
 
 **Actions before this milestone closes:**
 
@@ -71,6 +71,226 @@ Target: $5K MRR by June 2026. Possible framings to choose from:
 - Close at Signal Works Tier 1 pricing ($500 setup + $497/month)
 
 **Success criterion:** Signed contract + first payment received.
+
+#### R1a: Score-report conversion methodology (NEW . added 2026-05-01 mid-session)
+
+**Why this exists:** First conversion attempt (Rod / Elevate) surfaced a gap in the SW pitch . the v1 "Before/After scorecard" report was internally proof-strong but cold-read weak. Sankofa Council 2026-05-01 verdict: judgment-call scores torch trust, "GEO" jargon gates comprehension, no money line, no real CTA, project-plan masquerading as a call-to-action. The fix is a repeatable 8-step playbook every SW prospect now goes through.
+
+**Operator framing (locked 2026-05-01):** "Removing pain that's worth paying me to remove." Every Rod-facing artifact must read as *I see a problem costing you money, I already started fixing it, here's the easiest way to look at it.* Not *here's an audit of what you got wrong.*
+
+**Status:** In flight. Live artifacts at `projects/elevate-built-oregon/_build/` + localhost:8771.
+
+**The 8-step playbook (becomes the SW conversion standard):**
+
+1. **Soften the verdict . acknowledge the business the prospect actually built before naming what's missing.** *(Done for Rod 2026-05-01.)*
+2. **Drop industry jargon . "GEO" → "AI search visibility (ChatGPT, Perplexity, Gemini)" . speak the prospect's vocabulary.** *(Done for Rod 2026-05-01.)*
+3. **Replace the project-plan CTA with a single ask . "Text 'site' to [number]" . phone + name + verb.** *(Done for Rod 2026-05-01; needs real number, currently `[YOUR PHONE NUMBER]` placeholder.)*
+4. **Reframe the lead-loss section around pain-removal + revenue compounding, not score gaps.** *(Done for Rod 2026-05-01.)*
+5. **Replace judgment-call scorecard numbers with third-party validator screenshots . PageSpeed Insights, Schema validator, Lighthouse SEO, WAVE, Rich Results Test.** *(Pending . runs against live + rebuild URL.)*
+6. **Add the money line . "~$X-$Y/month in missed jobs" . derived from public keyword volumes × industry CTR × close rate × avg job value.** Methodology in collapsed section so skeptics can audit.
+7. **Draft cover note in 3 variants . email, SMS, DM . each leads with one undeniable observation Rod can verify in 30 seconds, links to the report only if he asks for it.** Report becomes proof, not lead.
+8. **Add competitor scoring . third column on every scorecard showing top-3 Medford competitors' scores. Reframes pitch from "fix your site" to "claim Medford before someone else does."** *(Pending; ~2 hours; pull via Firecrawl.)*
+
+**Tier floors locked 2026-05-01:**
+
+| Tier | SEO | AI search | UX | Frame |
+| --- | --- | --- | --- | --- |
+| Signal Works baseline ($500 setup + $497/mo) | ≥80 | ≥75 | ≥80 | "Indexable, citable, converting." |
+| Signal Works Pro | ≥90 | ≥85 | ≥90 | "Above your competition." |
+| Catalyst Works custom | ≥95 | ≥90 | ≥95 | "Category leader." |
+
+**Build target rule:** every SW deploy must clear baseline floors on third-party validators before cut-over. Floors are the QA gate, not the goal.
+
+**Success criterion for R1a (separate from R1):** the 8-step playbook is captured in `skills/signal-works-conversion/SKILL.md` (sibling to `signal-works-pitch-reel`), runs end-to-end on Rod, and either (a) Rod converts using it OR (b) we surface why he didn't and the playbook is updated for SW prospect #2.
+
+#### R1a-v3: Hook-and-deliverable architecture (locked 2026-05-01 mid-session, post-v2 Sankofa)
+
+**Why this is here:** v2 stress-test verdict on 2026-05-01: "v2 is shaped like a deliverable. It needs to be shaped like a fishing lure." Council disagreement resolved by operator: skill scales to thousands of contractors, conversion math favors the lure-and-deliverable split.
+
+**The locked architecture:**
+
+| Layer | File | Job | Length |
+| --- | --- | --- | --- |
+| Cover note | `rod-cover-note.md` (3 variants) | Open the hook page | 3-4 lines, leads with empty `<title>` finding |
+| **Hook page (LEAD)** | `rod-hook.html` | Convert opener to "text site" | 1 page, ~3 phone scrolls |
+| Deep-dive (deliverable) | `rod-validators-before-after.html` | Close prospect after they ask for more | 5 sections, real Lighthouse data |
+| Rebuild preview | `site/` served on Vercel | Final close | The actual product |
+
+**Hook page formula (locked, do not deviate without re-running Sankofa):**
+
+1. H1 = the most damning verifiable observation (one sentence, two clauses)
+2. Lede = how to verify it in under 30 seconds (right-click view-source instructions, validator URL, etc.)
+3. Side-by-side phone screenshots (393×852 viewport, iPhone-shaped frames)
+4. One-line caption under screenshots: "Same business. Same domain. Two weeks of work between them."
+5. Verify-yourself proof block: 3 rows, each with explicit timing (10s / 2min / 90s)
+6. Cost line: "$500 setup + $497/month ... pays for itself within 90 days at the conservative case"
+7. Single-ask CTA: "Text 'site' to [PHONE]" (NOT a project plan, NOT a calendar link)
+8. Tap-to-call link below the CTA for mobile readers
+9. Deep-dive link at the bottom for prospects who need more proof
+10. Footer with reproducibility instructions ("anyone with Chrome in three clicks")
+
+**Three pre-baked observation hooks (productized):**
+
+- `empty_title` . fires when view-source shows `<title></title>`. Most visceral. Used for Rod.
+- `missing_schema` . fires when zero JSON-LD blocks on homepage. Best AI-search wedge.
+- `broken_mobile_speed` . fires when Lighthouse mobile Performance < 50 or LCP > 5s. Most measurable.
+
+Selection priority when multiple apply: `empty_title` > `missing_schema` > `broken_mobile_speed`. Most visceral wins.
+
+**Skill location (live as of 2026-05-01):**
+
+```text
+skills/signal-works-conversion/
+├── SKILL.md                              ← invocation contract
+├── templates/
+│   ├── hook.html.template                ← master HTML with {{VAR}} placeholders
+│   └── hooks.json                        ← 3 pre-baked hooks + selection rule
+├── prospects/
+│   └── rod-elevate.json                  ← worked example (Rod, hook=empty_title)
+└── builder/
+    └── build_hook.py                     ← dependency-free renderer (~140 lines)
+```
+
+**Workflow per prospect (~30 min once audit is done):**
+
+1. Audit live site (Lighthouse + view-source + schema validator) → pick which hook fires
+2. Take phone screenshots via Playwright (393×852 mobile emulation, before-phone.png + after-phone.png)
+3. Copy `prospects/rod-elevate.json` → fill in variables for new prospect
+4. Run `python builder/build_hook.py --prospect prospects/[name].json --out [project]/_build/[name]-hook.html`
+5. Verify on localhost in phone viewport via Playwright
+6. Deploy hook + screenshots + deep-dive to Vercel preview URL
+7. Update cover note URLs to match Vercel URLs
+8. Send cover note → wait for reply → text rebuild preview link
+
+**Open work that did NOT make it into v3 (deferred, not dropped):**
+
+- **Competitor scoring** (Sankofa Expansionist's biggest insight) . adds a third column to the deep-dive showing top-3 Medford competitors' Lighthouse scores. Reframes pitch from "fix your site" to "claim Medford before someone else does." Pull next week if Rod converts or as v3.1 enhancement.
+- ~~**Vercel preview deploy** . currently on localhost.~~ ✅ **DONE 2026-05-01:** rebuild at <https://elevate-rebuild-app.vercel.app/>, hook + deep-dive at <https://signal-works-rod-app.vercel.app/>. Both noindex. Cover note URLs updated.
+- **The skill self-extracting after 5 prospects** . review which hook converted highest, lock as default. SKILL.md has the audit checklist.
+
+**Updated cross-references:**
+
+- Cover note (3 variants): `projects/elevate-built-oregon/_build/rod-cover-note.md`
+- Hook page (Rod, hand-built): `projects/elevate-built-oregon/_build/rod-hook.html`
+- Hook page (Rod, from template): `projects/elevate-built-oregon/_build/rod-hook-from-template.html`
+- Deep-dive (now second-touch role): `projects/elevate-built-oregon/_build/rod-validators-before-after.html`
+- Phone screenshots: `projects/elevate-built-oregon/_build/validator-screenshots/{before,after}-phone.png`
+- Lighthouse raw data: `projects/elevate-built-oregon/_build/validator-data/`
+- Skill (live): `skills/signal-works-conversion/`
+- Sankofa Council v1 verdict: 2026-05-01 chat (re v1 report)
+- Sankofa Council v2 verdict: 2026-05-01 chat (re v2 report → produced v3 architecture)
+
+---
+
+### R1c: website-teardown skill (one-trigger master diagnostic)
+
+**Status:** Skill scaffolded 2026-05-01. Ready to test on next prospect.
+**Trigger:** Any teardown request now uses `/website-teardown` instead of manually invoking 4-5 separate skills.
+
+**What it is:** A thin orchestrator skill at `skills/website-teardown/SKILL.md` that chains `website-intelligence` (Phase 1 brand + Phase 2 competitors), `web-design-guidelines` (UX/accessibility audit), `seo-strategy` Mode 2 (full SEO/GEO audit), `kie_media` (before/after hero mockups), and `signal-works-conversion` (slider component) in a single 6-phase pipeline. No logic duplication. Every analytical step calls an existing skill.
+
+**Inputs accepted:** URL (default), local repo path (for internal builds not yet shipped), single .html file path (for auth-blocked or one-off pages).
+
+**Outputs (TWO reports, same research):**
+1. `internal-viability-report.html` . internal-only. Verdict (PURSUE / DROP), fit signals, scope estimate, price band, red flags, weighted score. Answers: do we pursue this lead?
+2. `client-teardown-report.html` . client-facing. Brand snapshot, craft gap, market gap, SEO audit, before/after mockup, single CTA. The sales/diagnostic asset.
+
+**Why two reports:** internal viability framing must never leak into client output. Same data, different audiences, different framing.
+
+**Why this skill exists:** Boubacar's manual workflow was "run website-intelligence, then web-design-guidelines, then seo-strategy, then kie_media, then signal-works-conversion." Five skills, four trigger words to remember. One trigger now (`/website-teardown` or "teardown <domain>"). Built on Sankofa Council + Karpathy audit on 2026-05-01 that rejected the original "build a new monolith skill" plan in favor of a thin orchestrator.
+
+**Verification next move:** run the skill end-to-end against the next SW prospect (after Elevate). Confirm both report files generate, no internal leakage into client report, em-dash sweep passes, before/after mockup renders.
+
+**Files:**
+- Skill: `skills/website-teardown/SKILL.md`
+- Source skills it orchestrates: `skills/website-intelligence/`, `skills/web-design-guidelines/`, `skills/seo-strategy/`, `~/.claude/skills/kie_media/`, `skills/signal-works-conversion/`
+
+---
+
+### R1d: catalystworks.consulting v1 self-teardown (eat our own food)
+
+**Status:** Teardown completed 2026-05-01 against the live CW site. Verdict: ITERATE. Patches applying on `dev` branch as of 2026-05-01.
+**Trigger:** First end-to-end run of the website-teardown skill (R1c). Self-applied to validate the pipeline before pointing it at prospects.
+
+**What it surfaced:** voice, offer architecture, and structured data are already at v2 quality. The site bleeds on visual craft (real logo not used, em-dashes in body + JSON-LD, broken nav anchor, contrast fail), two orphan interior pages (governance.html and ai-data-audit.html with no homepage links and bare meta/schema), and zero local-SEO signal despite footer naming five cities.
+
+**Closest competitor:** smbstrategyconsultants.com. Same diagnosis-before-prescription frame, same constraint vocabulary, lighter theme + premium photography. Catalyst Works wins on offer specificity ($497 productized first-touch with 24-hour written deliverable), loses on first-impression craft.
+
+**Patch list (dev branch, ~3 hours focused):**
+
+1. Real CW logo in header + footer (replace text logotype). Inherits website-intelligence HARD RULE #2.
+2. Fix broken `#offers` nav anchor. Either rename or add the id.
+3. Em-dash scrub site-wide + JSON-LD FAQ answers (em-dashes leak into Google rich snippets).
+4. Wrap booking modal in `<form>`, add `required` + `name` attrs to all inputs, add label for newsletter email.
+5. `color-scheme: dark` on `<html>` + raise `--text-dim` to 50%+ opacity + `<meta name="theme-color">`.
+6. Link homepage to governance.html and ai-data-audit.html (un-orphan).
+7. Add meta description + canonical + JSON-LD to governance.html.
+8. Add meta description + canonical + JSON-LD to ai-data-audit.html (+ scrub em-dash in H1).
+9. Upgrade Organization schema `areaServed` from country names to City entities. Add Service Areas section to homepage.
+
+**Deferred (v2.1):** hero photograph swap. The kie_media render is good directionally but a real founder portrait shot in similar lighting is the right v2.1 task. v2.0 ships with the existing dark-grid hero retained.
+
+**Workflow rule for this run:** all changes happen on `dev` branch in `output/websites/catalystworks-site/`. Localhost preview and sign-off BEFORE any push to GitHub. `main` stays untouched until Boubacar approves.
+
+**Success criterion:**
+- All 9 patches land on `dev`
+- Local preview at `http://127.0.0.1:<port>/` shows the v2 site rendering correctly across desktop and mobile
+- Em-dash sweep clean (`grep` for em-dash returns nothing)
+- After sign-off: dev pushed to GitHub, then optionally PR to main
+
+**Deliverable artifacts (already produced 2026-05-01):**
+- `deliverables/teardowns/catalystworks-consulting/internal-viability-report.html` (verdict + score + patch list)
+- `deliverables/teardowns/catalystworks-consulting/client-teardown-report.html` (sanitized for prospect viewing)
+- 4 research files (brand / design audit / competitors / SEO audit)
+- Before/after hero mockup with drag slider (`mockups/before-after.html`)
+
+---
+
+### R1e: catalystworks.consulting v3-WOW (cinematic + Constraints AI live demo)
+
+**Status:** Tier 1 shipped 2026-05-01 to `dev-v3-WOW` branch. Sankofa Council + design+SEO audit run. Tier 2 + Tier 3 planned below, not yet built.
+
+**What shipped (Tier 1, 2026-05-01):**
+- Single-page cinematic dark theme (deep navy + amber + cyan accents)
+- Three.js constellation hero with glow-circle particles
+- Custom amber cursor (dot + lerp ring)
+- Live Constraints AI demo (sandboxed system prompt with 3 modes: diagnostic / redirect / refuse-with-wit, locked banned-phrase regex, OpenRouter via Cloudflare Worker, simulated keyword-rule fallback)
+- Email capture below diagnosis output (cyan "Want this as PDF?" form, posts to Worker `/capture` route + Supabase `diagnostic_captures` table)
+- Risk-reversal "Protocol Guarantee" on offer card ("If I cannot name a constraint specific enough to act on Friday, you do not pay")
+- Calendly popup CTA replacing `mailto:` (free 45-min discovery call → invoice $497 if proceeds)
+- Person + FAQPage + ProfessionalService JSON-LD schemas
+- A11y trio: WCAG-passing lens-tag contrast, brand-coherent `:focus-visible`, explicit img dimensions, logo alt text
+- Real Boubacar.JPG portrait (magazine-cover AI portrait archived for later)
+
+**Tier 2 (target: within 2 weeks of 2026-05-01, due 2026-05-15):**
+
+| # | Task | Time | Why |
+|---|---|---|---|
+| T2.1 | Anonymized 30-day-outcome strip below offer (3 rows: industry / what was stuck / what changed). Use real informal Signal Sessions Boubacar has run; composite if needed (clearly labeled). | 90 min | Closes the "no social proof" cold-read gap (Sankofa Outsider) |
+| T2.2 | Programmatic SEO: 5 lens-explainer pages (`/lens/throughput`, `/lens/friction`, `/lens/decision`, `/lens/information`, `/lens/inference`) | 3 hr | Site has 3 ranking pages today. 8 pages rank for ~8x more long-tail. |
+| T2.3 | Programmatic SEO: 3 industry-specific pages (`/for/professional-services`, `/for/hvac`, `/for/healthcare-smb`) | 2 hr | Adds vertical entry points |
+| T2.4 | Migrate Three.js off deprecated UMD build (`build/three.min.js` → ES module or pin `three@0.149`) | 10 min | Prevents silent breakage on next CDN update (audit #11) |
+| T2.5 | Title + meta rewrite with "Salt Lake City", "Utah", "fractional advisor" keywords | 4 min | Closes local-SEO gap (audit #8) |
+| T2.6 | Footer link tap targets to 44x44 min height on mobile | 4 min | Mobile a11y standard (audit #12) |
+| T2.7 | Create paid `Executive Signal Session` Calendly event type (90-min, $497, Stripe-wired) and switch CTA from discovery-call URL to direct booking | 30 min on Calendly side | Removes one funnel step. Currently using free discovery as stepping stone. |
+| T2.8 | Deploy `_worker.js` to Cloudflare Workers; set OPENROUTER_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_KEY, HASH_SALT secrets; paste deployed URL into `WORKER_URL` constant in `index.html` | 20 min | Activates real Claude/GPT diagnoses + Supabase capture (currently simulated mode) |
+
+**Tier 3 (target: within 30 days of 2026-05-01, due 2026-05-31):**
+
+| # | Task | Why |
+|---|---|---|
+| T3.1 | First "Diagnostic Patterns Q2 2026" post mining Supabase `diagnostic_submissions` for the 5-7 most-common constraints visitors are typing in. Becomes a McKinsey-quality insights piece you publish from your own funnel. | Sankofa Expansionist: aggregate the diagnoses |
+| T3.2 | Internal anchor-text variation on secondary cards ("AI consulting" / "constraint coaching" instead of bare titles) | SEO ranking (audit #9) |
+| T3.3 | Mobile H1 size drop to 34px on `<480px` viewports + tighter line-height | Polish (audit #14) |
+| T3.4 | Email follow-up sequence wired (3 emails over 14 days after capture: PDF → 30-day framework → "ready for Signal Session?") | Converts the email list into bookings |
+| T3.5 | Add Stripe direct-payment to Signal Session offer card (skip Calendly discovery, sell straight to $497) once first 3 paid sessions happen via T2.7 path | Tightens funnel |
+
+**Live URLs:**
+- Branch: https://github.com/bokar83/catalystworks-site/tree/dev-v3-WOW
+- Live (after deploy): https://catalystworks.consulting/
+- Localhost preview: `cd output/websites/catalystworks-site && python -m http.server 8745`
+
+**Sankofa Council verdict (2026-05-01):** the site is a $100k positioning piece. Tier 1 added the conversion mechanics (capture, risk reversal, Calendly). Tier 2 + 3 turn it into a $100k revenue piece.
 
 ---
 
