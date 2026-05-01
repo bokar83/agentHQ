@@ -64,24 +64,24 @@ None blocking. Boubacar said "I'll monitor for a few days". The SW timer fix and
 
 ## Files changed this session
 
-```text
+``text
 orchestrator/atlas_dashboard.py                                   : heartbeat filter + token totals + ledger_last_ts
 orchestrator/tests/test_atlas_dashboard.py                        : 2 new tests
 thepopebot/chat-ui/atlas.js                                       : Tokens block + Ledger row + LEDGER_STALE_HOURS const
 docs/roadmap/atlas.md                                             : M13 + NLM-descoped + 2 session log entries
 docs/handoff/2026-04-30-atlas-dashboard-fix-and-blocker-triage.md : this file (NEW)
-~/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/reference_atlas_llm_calls_ledger_scope.md   : NEW
-~/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/feedback_systemd_failed_status_misleading.md : NEW
-~/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/MEMORY.md        : 2 pointers added, 4 lines compressed
-```
+`~/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/reference_atlas_llm_calls_ledger_scope.md`   : NEW
+`~/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/feedback_systemd_failed_status_misleading.md` : NEW
+`~/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/MEMORY.md`        : 2 pointers added, 4 lines compressed
+``
 
 VPS-side changes (no git commit):
 
-```text
+``text
 /etc/systemd/system/signal-works-morning.service : TimeoutStartSec=90min (was 30min)
 /var/spool/cron/crontabs/root                    : NLM cron line removed
 /root/agentsHQ/.env                              : CRLF -> LF (backup at .env.bak.<ts>)
-```
+``
 
 ## Commits
 
