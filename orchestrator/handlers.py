@@ -26,6 +26,7 @@ from handlers_approvals import (
     handle_callback_query,
     evict_expired_windows,
     handle_pending_feedback_tag,
+    handle_newsletter_editorial_reply,
     handle_approval_reply,
     handle_publish_reply,
     handle_naked_approval,
@@ -78,7 +79,7 @@ async def process_telegram_update(update: dict) -> None:
     """
     Unified processor for Telegram updates (webhook or polling).
 
-    Dispatch order matters -- reordering risks regressing feedback-window precedence rules:
+    Dispatch order matters. Reordering risks regressing feedback-window precedence rules:
       1. callback_query (Phase 1 inline-button feedback tag)
       2. sender auth
       3. evict expired feedback windows, then 5-min free-text tag window
@@ -125,6 +126,10 @@ async def process_telegram_update(update: dict) -> None:
     # 3b. 5-minute free-text tag window. Must run BEFORE approval logic so
     #     a short "stale" is treated as a tag, not a new command.
     if handle_pending_feedback_tag(text, chat_id, first_word, reply_to_msg_id):
+        return
+
+    # 3c. Sunday editorial input capture window.
+    if handle_newsletter_editorial_reply(text, chat_id, first_word, reply_to_msg_id):
         return
 
     # 4. Reply-to-message approve/reject/edit
