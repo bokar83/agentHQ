@@ -93,6 +93,13 @@ def _main_body():
     sw_drafted = 0
     cw_drafted = 0
 
+    # Weekday gate: harvest every day, but only send Mon-Fri.
+    # Saturday=5, Sunday=6. Uses local time of the runner (orc-crewai container).
+    is_weekend = datetime.now().weekday() >= 5
+    if is_weekend:
+        day_name = datetime.now().strftime("%A")
+        logger.info("Weekend detected (" + day_name + "). Will harvest leads but SKIP email send steps.")
+
     # ── Step 1: Bounce scan ───────────────────────────────────────
     logger.info("STEP 1: Bounce scan (boubacar@catalystworks.consulting, last 2 days)...")
     try:
@@ -112,14 +119,17 @@ def _main_body():
         logger.error(f"  Signal Works topup failed: {e}")
 
     # ── Step 3: Signal Works -- 4-touch sequence (draft, manual review) ──
-    logger.info("STEP 3: Signal Works sequence T1-T4 (drafts, manual review)...")
-    try:
-        from skills.outreach.sequence_engine import run_sequence
-        sw_result = run_sequence("sw", dry_run=False, daily_limit=10)
-        sw_drafted = sw_result.get("drafted", 0)
-        logger.info(f"  Done. {sw_drafted} SW sequence drafts created.")
-    except Exception as e:
-        logger.error(f"  Signal Works sequence failed: {e}")
+    if is_weekend:
+        logger.info("STEP 3: SKIPPED on weekend (no SW sends Sat/Sun).")
+    else:
+        logger.info("STEP 3: Signal Works sequence T1-T4 (drafts, manual review)...")
+        try:
+            from skills.outreach.sequence_engine import run_sequence
+            sw_result = run_sequence("sw", dry_run=False, daily_limit=10)
+            sw_drafted = sw_result.get("drafted", 0)
+            logger.info(f"  Done. {sw_drafted} SW sequence drafts created.")
+        except Exception as e:
+            logger.error(f"  Signal Works sequence failed: {e}")
 
     # ── Step 4: Catalyst Works -- Apollo lead topup ───────────────
     logger.info("STEP 4: Catalyst Works lead topup via Apollo (target: 10 leads)...")
@@ -144,14 +154,17 @@ def _main_body():
         logger.error(f"  Voice personalization failed (non-fatal): {e}")
 
     # ── Step 5: Catalyst Works -- 4-touch sequence (auto-send) ───
-    logger.info("STEP 5: Catalyst Works sequence T1-T4 (auto-send)...")
-    try:
-        from skills.outreach.sequence_engine import run_sequence
-        cw_result = run_sequence("cw", dry_run=False, daily_limit=10)
-        cw_drafted = cw_result.get("drafted", 0)
-        logger.info(f"  Done. {cw_drafted} CW emails drafted.")
-    except Exception as e:
-        logger.error(f"  CW sequence failed: {e}")
+    if is_weekend:
+        logger.info("STEP 5: SKIPPED on weekend (no CW sends Sat/Sun).")
+    else:
+        logger.info("STEP 5: Catalyst Works sequence T1-T4 (auto-send)...")
+        try:
+            from skills.outreach.sequence_engine import run_sequence
+            cw_result = run_sequence("cw", dry_run=False, daily_limit=10)
+            cw_drafted = cw_result.get("drafted", 0)
+            logger.info(f"  Done. {cw_drafted} CW emails drafted.")
+        except Exception as e:
+            logger.error(f"  CW sequence failed: {e}")
 
     # ── Summary ───────────────────────────────────────────────────
     total = sw_drafted + cw_drafted
