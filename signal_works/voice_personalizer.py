@@ -141,7 +141,7 @@ def personalize_pending_leads(limit: int = 10) -> int:
                 WHERE voice_personalization_line IS NULL
                   AND COALESCE(email, '') <> ''
                   AND (sequence_touch IS NULL OR sequence_touch = 0)
-                  AND source = 'apollo_catalyst_works'
+                  AND source LIKE 'apollo_catalyst_works%%'
                 ORDER BY created_at DESC
                 LIMIT %s
                 """,
