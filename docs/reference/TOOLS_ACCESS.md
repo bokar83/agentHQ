@@ -176,15 +176,35 @@ Use MCP tool: `mcp__claude_ai_Notion__notion-create-pages` (load via ToolSearch)
 **User URI:** `https://api.calendly.com/users/9acb1142-7c25-4cc0-8bac-f03730fe73d8`
 **Webhooks:** agentsHQ receives Calendly webhooks inbound via n8n → `/inbound-lead` endpoint.
 
-### How to create/manage event types (confirmed working 2026-04-17 and 2026-04-19)
+### CANONICAL METHOD: Personal Access Token (PAT)
 
-Use the **claude.ai Calendly MCP tools** - already wired into Claude Code, no separate login needed.
+**Env var:** `CALENDLY_PERSONAL_ACCESS_TOKEN` (VPS .env). PAT does not expire on normal cycle.
 
-```text
-Step 1: ToolSearch("select:mcp__claude_ai_Calendly__users-get_current_user,mcp__claude_ai_Calendly__event_types-create_event_type,mcp__claude_ai_Calendly__event_types-list_event_types")
-Step 2: mcp__claude_ai_Calendly__users-get_current_user : verify user URI
-Step 3: mcp__claude_ai_Calendly__event_types-create_event_type
+To create/manage event types, list bookings, fetch invitees:
+
+```python
+import os, httpx
+token = os.environ['CALENDLY_PERSONAL_ACCESS_TOKEN']
+headers = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
+# Create event type
+r = httpx.post('https://api.calendly.com/event_types',
+    headers=headers,
+    json={
+        'name': 'AI Governance Assessment Call',
+        'duration': 20,
+        'description': '...',
+        'host': 'https://api.calendly.com/users/9acb1142-7c25-4cc0-8bac-f03730fe73d8',
+        ...
+    })
 ```
+
+To regenerate the PAT: user logs into Calendly UI -> Integrations & Apps -> API and Webhooks -> Generate new token -> copy -> update VPS .env.
+
+### Fallback: claude.ai Calendly MCP (DO NOT USE if PAT exists)
+
+The MCP works only when freshly OAuth-authed via `/mcp` UI in Claude Code. Token expires ~every 30 days. Re-auth cannot be done from terminal/VPS. Use only as a fallback if PAT is unavailable.
+
+OAuth client_credentials grant DOES NOT work (tested 2026-04-30, 400 invalid_scope on every scope variant). Do not retry this path.
 
 ```json
 {
