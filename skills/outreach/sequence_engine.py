@@ -287,57 +287,85 @@ def _looks_like_business(token: str) -> bool:
     return low in _BUSINESS_TOKENS or low in _LOCATION_TOKENS
 
 
-def _first_name_from_email(email: str) -> str:
+def _first_name_from_email(email: str) -> tuple[str, str]:
     """Parse a plausible first name from the local-part of an email.
 
-    scott@commroof.com -> Scott
-    john.smith@x.com   -> John
-    j.smith@x.com      -> "" (single letter unreliable)
-    info@x.com         -> "" (role inbox)
+    Returns (name, confidence) where confidence is "high" or "low":
+      scott@commroof.com    -> ("Scott", "high")  -- short, clean, no separator needed
+      john.smith@x.com      -> ("John", "high")   -- dotted = clearly first.last
+      jeff-campbell@x.com   -> ("Jeff", "high")   -- dashed = clearly first-last
+      drmarcus@x.com        -> ("Marcus", "high") -- prefix stripped
+      robsnow@x.com         -> ("Robsnow", "low") -- no separator, > 6 chars = mashed handle
+      lgrow@x.com           -> ("Lgrow", "low")   -- no separator, looks like initial+last
+      j.smith@x.com         -> ("", "low")        -- single letter unreliable
+      info@x.com            -> ("", "low")        -- role inbox
+      ""                    -> ("", "low")
     """
     if not email or "@" not in email:
-        return ""
+        return "", "low"
     local = email.split("@", 1)[0].lower()
     # Reject role inboxes outright
     if local in {"info", "contact", "hello", "hi", "support", "sales", "admin",
                  "office", "team", "service", "help", "owner", "ceo", "founder"}:
-        return ""
+        return "", "low"
+    # Detect explicit separator (dot or dash) which signals firstname.lastname
+    has_separator = "." in local or "-" in local
     # Take the first dot/dash-separated token
     first = local.replace("-", ".").split(".")[0]
     # Strip digits
     first = "".join(c for c in first if c.isalpha())
     # Strip common professional prefixes (drmarcus -> marcus, drsmith -> smith)
+    prefix_stripped = False
     for prefix in ("dr", "mr", "mrs", "ms"):
         if first.startswith(prefix) and len(first) >= len(prefix) + 3:
             first = first[len(prefix):]
+            prefix_stripped = True
             break
     if len(first) < 2:
-        return ""
-    return first.capitalize()
+        return "", "low"
+    name = first.capitalize()
+    # Confidence rules:
+    # - HIGH if the local-part had a separator (john.smith, jeff-campbell)
+    # - HIGH if a prefix was stripped (drmarcus -> Marcus is intentional)
+    # - HIGH if the local-part is short and looks like just a first name (scott, paul)
+    # - LOW if the local-part is long (>6 chars) with no separator, suggesting
+    #   firstinitial+lastname mash (lgrow, robsnow, mjohnson)
+    if has_separator or prefix_stripped:
+        return name, "high"
+    # No-separator locals: a short local (<=6 chars) is usually a clean first
+    # name (paul, scott, brian, andrew, jordan, jodd). A longer local is
+    # usually firstinitial+lastname mashed together (lgrow, robsnow, mhall)
+    # which renders awkwardly in a greeting -- so flag LOW and skip greeting.
+    if len(local) <= 6:
+        return name, "high"
+    return name, "low"
 
 
-def _extract_first_name(lead: dict) -> str:
+def _extract_first_name(lead: dict) -> tuple[str, str]:
     """Best-effort first-name extraction from a lead dict.
 
+    Returns (name, confidence) where confidence is "high" or "low".
+    Templates use confidence to decide whether to render a greeting line:
+      - confidence == "high": render "Hi {first_name},"
+      - confidence == "low":  skip the greeting; body opens with the hook
+
     Strategy uses lead.source to decide whether lead.name is reliable:
-      - source="apollo_*" (CW + Studio): lead.name comes from Apollo and
-        is "Firstname Lastname". Trust it.
-      - source="signal_works*" (SW): lead.name is the business name from
-        Google Maps. Never trust it. Always parse from email instead.
-      - Source unknown / not set: try lead.name first (with 2+ token gate),
-        fall back to email.
+      - source starts with "apollo_" or "cw_": lead.name is a real Apollo
+        person ("Firstname Lastname"). Trust it (HIGH confidence).
+      - source starts with "signal_works": lead.name is the business name
+        from Google Maps. Never trust it. Parse from email; confidence
+        depends on how clean the email parse is.
 
     Order of preference:
-      1. lead["first_name"] if explicitly set
+      1. lead["first_name"] if explicitly set (HIGH)
       2. For CW/apollo sources: first token of lead.name if 2+ tokens
-         and not a business/location word
-      3. Email local-part if it parses cleanly
-      4. For unknown sources only: lead.name first token as last resort
-      5. Fallback: "there"
+         and not a business/location word (HIGH)
+      3. Email local-part with confidence per _first_name_from_email
+      4. Fallback: ("there", "low")
     """
     explicit = (lead.get("first_name") or "").strip()
     if explicit:
-        return explicit
+        return explicit, "high"
 
     source = (lead.get("source") or "").lower()
     is_sw = source.startswith("signal_works")
@@ -351,12 +379,12 @@ def _extract_first_name(lead: dict) -> str:
         if (len(tokens) >= 2
             and not _looks_like_business(first_token)
             and len(first_token) >= 2):
-            return first_token
+            return first_token, "high"
 
-    # SW path OR CW name unusable: parse from email.
-    from_email = _first_name_from_email(lead.get("email", ""))
+    # SW path OR CW name unusable: parse from email with confidence.
+    from_email, email_conf = _first_name_from_email(lead.get("email", ""))
     if from_email:
-        return from_email
+        return from_email, email_conf
 
     # Unknown-source last resort: try the name even if single-token.
     if not is_sw and raw_name:
@@ -364,18 +392,26 @@ def _extract_first_name(lead: dict) -> str:
         first_token = tokens[0].rstrip(",.;:'\"")
         if (not _looks_like_business(first_token)
             and len(first_token) >= 2):
-            return first_token
+            return first_token, "low"
 
-    return "there"
+    return "there", "low"
 
 
 def _render(body_or_builder, lead: dict) -> str:
-    """Render email body from either a build_body callable or a legacy format string."""
-    first_name = _extract_first_name(lead)
+    """Render email body from either a build_body callable or a legacy format string.
+
+    Adds first_name + first_name_confidence to the enriched lead so templates
+    can decide whether to render a greeting line. See feedback_no_greeting_when_unknown.md
+    for the rationale (cold email best-practice: drop greeting > use generic
+    "Hi there").
+    """
+    first_name, confidence = _extract_first_name(lead)
     if callable(body_or_builder):
         enriched = dict(lead)
         if "first_name" not in enriched:
             enriched["first_name"] = first_name
+        if "first_name_confidence" not in enriched:
+            enriched["first_name_confidence"] = confidence
         if "niche" not in enriched:
             enriched["niche"] = (lead.get("industry") or "business").lower()
         if "city" not in enriched:
