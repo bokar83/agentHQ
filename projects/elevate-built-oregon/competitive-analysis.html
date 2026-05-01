@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elevate Roofing &amp; Construction - Competitive Analysis Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --ink:#0a0a0a;
+  --paper:#f6f4f0;
+  --accent:#c45d3e;
+  --accent-light:#e8a48e;
+  --muted:#8a8580;
+  --divider:#d6d2cc;
+  --card:#fffefa;
+  --shadow:rgba(10,10,10,0.06);
+  --shadow-lg:rgba(10,10,10,0.10);
+  --pos:#3f7d4f;
+  --neg:#a44030;
+  --neutral:#7a7570;
+}
+
+html{scroll-behavior:smooth}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  font-feature-settings:"ss01","cv11";
+}
+
+/* Grain overlay */
+body::after{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:9999;
+}
+
+.container{max-width:920px;margin:0 auto;padding:0 2rem}
+
+/* ============ COVER ============ */
+.cover{
+  min-height:100vh;
+  padding:6rem 0 5rem;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  position:relative;
+  text-align:center;
+}
+.cover::before{
+  content:'';
+  position:absolute;top:0;left:50%;
+  transform:translateX(-50%);
+  width:1px;height:120px;
+  background:linear-gradient(to bottom,transparent,var(--accent));
+}
+.badge{
+  display:inline-block;
+  font-size:.7rem;letter-spacing:.28em;text-transform:uppercase;
+  color:var(--accent);font-weight:500;
+  border:1px solid var(--accent);
+  border-radius:999px;
+  padding:.45rem 1.2rem;
+  margin-bottom:2rem;
+}
+h1.cover-title{
+  font-family:'Instrument Serif',serif;
+  font-size:clamp(3.2rem,7vw,5.6rem);
+  font-weight:400;line-height:1.05;letter-spacing:-.02em;
+  margin-bottom:1.4rem;
+}
+h1.cover-title em{color:var(--accent);font-style:italic}
+.cover-sub{
+  font-family:'Instrument Serif',serif;
+  font-size:clamp(1.3rem,2.6vw,1.85rem);
+  font-style:italic;color:var(--muted);
+  margin-bottom:3rem;
+}
+.cover-meta{
+  display:flex;justify-content:center;gap:2.5rem;
+  font-size:.85rem;color:var(--muted);
+  letter-spacing:.04em;
+  flex-wrap:wrap;
+}
+.cover-meta strong{color:var(--ink);font-weight:500}
+
+/* ============ SECTION FRAME ============ */
+section{padding:5rem 0;border-top:1px solid var(--divider)}
+section:first-of-type{border-top:none}
+.eyebrow{
+  font-size:.7rem;letter-spacing:.25em;text-transform:uppercase;
+  color:var(--accent);font-weight:500;margin-bottom:1rem;
+}
+h2{
+  font-family:'Instrument Serif',serif;
+  font-size:clamp(2rem,4.5vw,3rem);
+  font-weight:400;line-height:1.15;letter-spacing:-.015em;
+  margin-bottom:1.5rem;
+}
+h2 em{color:var(--accent);font-style:italic}
+h3{
+  font-family:'Instrument Serif',serif;
+  font-size:1.65rem;font-weight:400;letter-spacing:-.01em;
+  margin-bottom:.6rem;
+}
+h4{
+  font-size:.78rem;font-weight:600;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--muted);
+  margin-bottom:.5rem;
+}
+.lede{font-size:1.1rem;color:var(--ink);max-width:680px;line-height:1.7}
+p{margin-bottom:1rem}
+strong{font-weight:500}
+
+/* ============ EXEC SUMMARY ============ */
+.summary-card{
+  background:var(--card);
+  border-left:4px solid var(--accent);
+  padding:2.5rem 2.5rem 2rem;
+  margin-top:2rem;
+  box-shadow:0 2px 12px var(--shadow);
+}
+.summary-card p{font-size:1.02rem}
+.summary-card p:last-child{margin-bottom:0}
+
+/* ============ COMPETITOR PROFILES ============ */
+.profiles{display:flex;flex-direction:column;gap:2rem;margin-top:2.5rem}
+.profile{
+  background:var(--card);
+  border-left:4px solid var(--accent);
+  padding:2rem 2rem 1.75rem;
+  box-shadow:0 2px 12px var(--shadow);
+  transition:box-shadow .25s ease,transform .25s ease;
+}
+.profile:hover{box-shadow:0 6px 24px var(--shadow-lg);transform:translateY(-2px)}
+.profile-head{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:1.5rem;margin-bottom:1rem;flex-wrap:wrap;
+}
+.profile-rank{
+  font-family:'Instrument Serif',serif;
+  font-size:3.2rem;font-weight:400;line-height:1;
+  color:var(--accent);opacity:.6;
+}
+.profile-name{flex:1;min-width:220px}
+.profile-name h3{margin-bottom:.25rem}
+.profile-url{
+  font-size:.82rem;color:var(--muted);
+  font-family:'DM Sans',sans-serif;
+}
+.profile-score{
+  font-family:'Instrument Serif',serif;
+  font-size:2rem;line-height:1;color:var(--ink);
+  text-align:right;
+}
+.profile-score small{
+  display:block;font-size:.65rem;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--muted);
+  font-family:'DM Sans',sans-serif;margin-top:.35rem;
+}
+.profile-tags{
+  display:flex;gap:.4rem;flex-wrap:wrap;
+  margin:1rem 0 1.25rem;
+}
+.tag{
+  font-size:.7rem;letter-spacing:.06em;
+  padding:.3rem .7rem;border-radius:999px;
+  background:var(--paper);color:var(--ink);
+  border:1px solid var(--divider);
+}
+.tag.accent{background:var(--accent);color:#fff;border-color:var(--accent)}
+.profile p{font-size:.95rem;color:var(--ink);margin-bottom:.7rem}
+.swatches{display:flex;gap:.5rem;margin:.5rem 0 1rem}
+.swatch{
+  width:40px;height:40px;border-radius:6px;
+  border:1px solid var(--divider);
+  position:relative;
+}
+.swatch::after{
+  content:attr(data-hex);
+  position:absolute;top:46px;left:50%;transform:translateX(-50%);
+  font-size:.65rem;color:var(--muted);
+  letter-spacing:.05em;white-space:nowrap;
+}
+.sw-row{margin-bottom:1.5rem}
+.strengths-weaknesses{
+  display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;
+  margin-top:1rem;
+}
+.sw-block h4{margin-bottom:.5rem}
+.sw-block ul{list-style:none;padding:0;font-size:.9rem;color:var(--ink)}
+.sw-block li{
+  padding:.25rem 0;
+  position:relative;padding-left:1rem;
+}
+.sw-block.pos li::before{
+  content:'+';position:absolute;left:0;
+  color:var(--pos);font-weight:600;
+}
+.sw-block.neg li::before{
+  content:'−';position:absolute;left:0;
+  color:var(--neg);font-weight:600;
+}
+
+/* ============ COMPARISON TABLE ============ */
+.table-wrap{
+  margin-top:2rem;background:var(--card);
+  border:1px solid var(--divider);
+  overflow-x:auto;
+  box-shadow:0 2px 12px var(--shadow);
+}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th,td{padding:.85rem 1rem;text-align:left;border-bottom:1px solid var(--divider)}
+th{
+  background:var(--paper);
+  font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);font-weight:500;
+  position:sticky;top:0;
+}
+tr:last-child td{border-bottom:none}
+td.score{text-align:center;font-variant-numeric:tabular-nums}
+td.total{
+  text-align:center;font-weight:600;
+  background:rgba(196,93,62,.06);
+  color:var(--accent);
+}
+tr.is-elevate td{background:rgba(196,93,62,.04);font-weight:500}
+.score-cell{
+  display:inline-block;width:28px;height:28px;line-height:28px;
+  border-radius:50%;font-size:.78rem;
+}
+.s-high{background:rgba(63,125,79,.15);color:var(--pos)}
+.s-mid{background:rgba(122,117,112,.12);color:var(--neutral)}
+.s-low{background:rgba(164,64,48,.15);color:var(--neg)}
+
+/* ============ PATTERNS ============ */
+.patterns{display:flex;flex-direction:column;gap:1.25rem;margin-top:2rem}
+.pattern{
+  background:var(--card);
+  padding:1.5rem 1.75rem;
+  border-left:4px solid var(--accent);
+  box-shadow:0 2px 12px var(--shadow);
+  display:grid;grid-template-columns:60px 1fr;gap:1.25rem;align-items:start;
+}
+.pattern-num{
+  font-family:'Instrument Serif',serif;
+  font-size:2.5rem;line-height:1;color:var(--accent);opacity:.5;
+}
+.pattern h3{font-size:1.2rem;margin-bottom:.4rem}
+.pattern p{font-size:.93rem;margin-bottom:0;color:var(--ink)}
+
+/* ============ SEO / KEYWORDS ============ */
+.keyword-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;
+  margin-top:2rem;
+}
+.kw-card{
+  background:var(--card);
+  border-left:4px solid var(--accent);
+  padding:1.5rem 1.75rem;
+  box-shadow:0 2px 12px var(--shadow);
+}
+.kw-card.whitespace{border-left-color:var(--pos)}
+.kw-card h3{font-size:1.25rem;margin-bottom:.75rem}
+.kw-list{list-style:none;font-size:.9rem;color:var(--ink)}
+.kw-list li{
+  padding:.3rem 0;border-bottom:1px dashed var(--divider);
+  font-family:'DM Sans',sans-serif;
+}
+.kw-list li:last-child{border-bottom:none}
+
+/* ============ DESIGN DIRECTION ============ */
+.recs{display:grid;grid-template-columns:repeat(2,1fr);gap:1.25rem;margin-top:2rem}
+.rec{
+  background:var(--card);padding:1.5rem 1.75rem;
+  border-left:4px solid var(--accent);
+  box-shadow:0 2px 12px var(--shadow);
+}
+.rec h3{font-size:1.2rem;margin-bottom:.5rem}
+.rec p{font-size:.92rem;margin-bottom:0}
+
+/* ============ FOOTER ============ */
+footer{
+  padding:4rem 0 5rem;
+  text-align:center;color:var(--muted);
+  font-size:.85rem;border-top:1px solid var(--divider);
+}
+footer .mark{
+  font-family:'Instrument Serif',serif;
+  font-size:1.4rem;color:var(--ink);
+  margin-bottom:.6rem;
+}
+
+/* ============ MOBILE ============ */
+@media (max-width:640px){
+  .container{padding:0 1.25rem}
+  section{padding:3.5rem 0}
+  .cover{min-height:auto;padding:5rem 0 3.5rem}
+  .strengths-weaknesses,.keyword-grid,.recs{grid-template-columns:1fr}
+  .profile-head{flex-direction:column}
+  .profile-score{text-align:left}
+  .pattern{grid-template-columns:1fr}
+  .pattern-num{font-size:2rem}
+  table{font-size:.75rem}
+  th,td{padding:.6rem .5rem}
+}
+
+/* ============ PRINT ============ */
+@media print{
+  body{background:#fff;color:#000;font-size:11pt}
+  body::after{display:none}
+  @page{size:A4;margin:18mm 14mm}
+  .container{max-width:none;padding:0}
+  section{page-break-inside:avoid;padding:1.5rem 0;border-top:1px solid #ccc}
+  .cover{min-height:auto;padding:1rem 0 2rem;page-break-after:always}
+  .profile,.pattern,.kw-card,.rec,.summary-card{
+    box-shadow:none;border:1px solid #ddd;border-left:3px solid var(--accent);
+    page-break-inside:avoid;
+  }
+  .table-wrap{box-shadow:none;border:1px solid #ccc}
+  th{background:#f2f2f2}
+  a{color:#000;text-decoration:none}
+  h2{page-break-after:avoid}
+  .profile{page-break-after:auto}
+  .pattern{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ COVER ============ -->
+<div class="container">
+<header class="cover">
+  <span class="badge">Competitive Analysis</span>
+  <h1 class="cover-title">Elevate Roofing<br>&amp; <em>Construction</em></h1>
+  <div class="cover-sub">Southern Oregon market intelligence</div>
+  <div class="cover-meta">
+    <div><strong>Client:</strong> Elevate Built Oregon</div>
+    <div><strong>Market:</strong> Medford · Ashland · Grants Pass</div>
+    <div><strong>Date:</strong> 30 April 2026</div>
+  </div>
+</header>
+</div>
+
+<!-- ============ EXECUTIVE SUMMARY ============ -->
+<section>
+<div class="container">
+  <div class="eyebrow">01 - Executive summary</div>
+  <h2>The market is <em>winnable</em>, but your<br>front door is currently empty.</h2>
+  <div class="summary-card">
+    <p>Five of the nine pages on elevatebuiltoregon.com currently show <strong>"Coming soon..."</strong> - including About, Gallery, and every individual service page. The site reads as a placeholder, while the founder (Rod, 20+ years experience, CCB# 257092) is genuinely competitive on craft and reputation.</p>
+    <p>Across the top 5 Southern Oregon roofers (JAM, Pressure Point, Rogue Valley, Renaissance, Eric Preston), the visual ceiling is low: every site is faceless, no hero uses drone photography, no one has the founder above the fold, and only one (Pressure Point) has a modern Webflow build. The rest are 2010-era WordPress refreshes leaning on a navy-blue palette and a 30-year founding date.</p>
+    <p>Three plays open the whitespace: <strong>(1)</strong> put Rod in the hero with a real drone shot - Elevate becomes the only owner-operator face above the fold in the entire market. <strong>(2)</strong> Anchor the unified positioning <em>"Roof to ADU to custom home, one builder"</em> - no roofer in the top 5 does the full stack, no GC does roofing. <strong>(3)</strong> Publish a real cost-band tool - nobody in the market shows numbers, everyone hides behind "Get a Free Quote."</p>
+  </div>
+</div>
+</section>
+
+<!-- ============ COMPARISON TABLE ============ -->
+<section>
+<div class="container">
+  <div class="eyebrow">02 - The field</div>
+  <h2>Ten competitors,<br><em>scored.</em></h2>
+  <p class="lede">Each site evaluated 1-10 across eight criteria. Top five marked. Adair Homes and DaBella included as visual ceiling reference (they're multi-state corporates, not direct peers).</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>Company</th>
+          <th class="score">Search</th><th class="score">Reviews</th>
+          <th class="score">Visual</th><th class="score">Mobile</th>
+          <th class="score">Content</th><th class="score">Proof</th>
+          <th class="score">CTA</th><th class="score">Build</th>
+          <th class="total">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>1★</td><td><strong>JAM Roofing</strong></td>
+          <td class="score"><span class="score-cell s-high">9</span></td>
+          <td class="score"><span class="score-cell s-high">9</span></td>
+          <td class="score"><span class="score-cell s-mid">6</span></td>
+          <td class="score"><span class="score-cell s-mid">7</span></td>
+          <td class="score"><span class="score-cell s-high">8</span></td>
+          <td class="score"><span class="score-cell s-high">9</span></td>
+          <td class="score"><span class="score-cell s-mid">7</span></td>
+          <td class="score"><span class="score-cell s-mid">6</span></td>
+          <td class="total">61</td></tr>
+        <tr><td>2★</td><td><strong>Pressure Point</strong></td>
+          <td class="score"><span class="score-cell s-high">9</span></td>
+          <td class="score"><span class="score-cell s-high">8</span></td>
+          <td class="score"><span class="score-cell s-high">8</span></td>
+          <td class="score"><span class="score-cell s-high">8</span></td>
+          <td class="score"><span class="score-cell s-high">9</span></td>
+          <td class="score"><span class="score-cell s-high">8</span></td>
+          <td class="score"><span class="score-cell s-high">9</span></td>
+          <td class="score"><span class="score-cell s-high">8</span></td>
+          <td class="total">67</td></tr>
+        <tr><td>3★</td><td><strong>Rogue Valley Roofing</strong></td>
+          <td class="score"><span class="score-cell s-high">8</span></td>
+          <td class="score"><span class="score-cell s-mid">6</span></td>
+          <td class="score"><span class="score-cell s-mid">6</span></td>
+          <td class="score"><span class="score-cell s-mid">6</span></td>
+          <td class="score"><span class="score-cell s-high">8</span></td>
+          <td class="score"><span class="score-cell s-mid">7</span></td>
+          <td class="score"><span class="score-cell s-mid">7</span></td>
+          <td class="score"><span class="score-cell s-low">5</span></td>
+          <td class="total">53</td></tr>
+        <tr><td>4★</td><td><strong>Renaissance Roofing SO</strong></td>
+          <td class="score"><span class="score-cell s-mid">7</span></td>
+          <td class="score"><span class="score-cell s-mid">7</span></td>
+          <td class="score"><span class="score-cell s-low">4</span></td>
+          <td class="score"><span class="score-cell s-low">4</span></td>
+          <td class="score"><span class="score-cell s-mid">6</span></td>
+          <td class="score"><span class="score-cell s-high">8</span></td>
+          <td class="score"><span class="score-cell s-mid">6</span></td>
+          <td class="score"><span class="score-cell s-low">2</span></td>
+          <td class="total">44</td></tr>
+        <tr><td>5★</td><td><strong>Eric Preston Roofing</strong></td>
+          <td class="score"><span class="score-cell s-mid">7</span></td>
+          <td class="score"><span class="score-cell s-mid">6</span></td>
+          <td class="score"><span class="score-cell s-mid">6</span></td>
+          <td class="score"><span class="score-cell s-mid">6</span></td>
+          <td class="score"><span class="score-cell s-mid">7</span></td>
+          <td class="score"><span class="score-cell s-mid">7</span></td>
+          <td class="score"><span class="score-cell s-mid">7</span></td>
+          <td class="score"><span class="score-cell s-mid">6</span></td>
+          <td class="total">52</td></tr>
+        <tr><td>6</td><td>Hadley Roofing</td>
+          <td class="score">7</td><td class="score">7</td><td class="score">5</td><td class="score">5</td>
+          <td class="score">5</td><td class="score">8</td><td class="score">6</td><td class="score">5</td>
+          <td class="total">48</td></tr>
+        <tr><td>7</td><td>Dillard's Roofing</td>
+          <td class="score">6</td><td class="score">5</td><td class="score">5</td><td class="score">5</td>
+          <td class="score">5</td><td class="score">6</td><td class="score">7</td><td class="score">4</td>
+          <td class="total">43</td></tr>
+        <tr><td>8</td><td>South Valley Construction</td>
+          <td class="score">7</td><td class="score">6</td><td class="score">5</td><td class="score">5</td>
+          <td class="score">6</td><td class="score">6</td><td class="score">6</td><td class="score">5</td>
+          <td class="total">46</td></tr>
+        <tr><td>9</td><td>Adair Homes (Medford)</td>
+          <td class="score">8</td><td class="score">7</td><td class="score">8</td><td class="score">8</td>
+          <td class="score">9</td><td class="score">8</td><td class="score">8</td><td class="score">8</td>
+          <td class="total">64</td></tr>
+        <tr><td>10</td><td>DaBella (Medford)</td>
+          <td class="score">9</td><td class="score">6</td><td class="score">7</td><td class="score">7</td>
+          <td class="score">7</td><td class="score">8</td><td class="score">8</td><td class="score">7</td>
+          <td class="total">59</td></tr>
+        <tr class="is-elevate"><td>, </td><td><strong>Elevate (current)</strong></td>
+          <td class="score">2</td><td class="score">3</td><td class="score">4</td><td class="score">4</td>
+          <td class="score">2</td><td class="score">3</td><td class="score">3</td><td class="score">5</td>
+          <td class="total">26</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</section>
+
+<!-- ============ TOP 5 PROFILES ============ -->
+<section>
+<div class="container">
+  <div class="eyebrow">03 - The top five</div>
+  <h2>Who you're <em>actually</em><br>up against.</h2>
+
+  <div class="profiles">
+
+    <!-- JAM -->
+    <article class="profile">
+      <div class="profile-head">
+        <div class="profile-rank">01</div>
+        <div class="profile-name">
+          <h3>JAM Roofing</h3>
+          <div class="profile-url">jamroofing.com · Medford OR · founded 1996</div>
+        </div>
+        <div class="profile-score">61<small>/ 80 score</small></div>
+      </div>
+      <div class="sw-row">
+        <h4>Brand palette</h4>
+        <div class="swatches">
+          <div class="swatch" style="background:#1F3A5F" data-hex="#1F3A5F"></div>
+          <div class="swatch" style="background:#5A6471" data-hex="#5A6471"></div>
+          <div class="swatch" style="background:#C8B989" data-hex="#C8B989"></div>
+          <div class="swatch" style="background:#F4F1EC" data-hex="#F4F1EC"></div>
+        </div>
+        <div style="height:14px"></div>
+      </div>
+      <div class="profile-tags">
+        <span class="tag accent">GAF Master Elite</span>
+        <span class="tag">Slate-certified</span>
+        <span class="tag">JCHBA member</span>
+        <span class="tag">~157 Google reviews · 4.8★</span>
+        <span class="tag">20+ pages</span>
+      </div>
+      <p><strong>Aesthetic:</strong> established-trade-credible. Looks like a 2018 WordPress refresh of a 2010 site. Brochure-formal hero, navy banner with white serif tagline, phone number top-right. No drone, no founder, no video.</p>
+      <div class="strengths-weaknesses">
+        <div class="sw-block pos">
+          <h4>Strengths</h4>
+          <ul>
+            <li>Most architecturally complete site in the market - every roofing material gets its own page</li>
+            <li>Highest review count by a wide margin</li>
+            <li>JCHBA membership reads as community-rooted</li>
+          </ul>
+        </div>
+        <div class="sw-block neg">
+          <h4>Weaknesses</h4>
+          <ul>
+            <li>Visual design is dated - no animation, no hierarchy beyond "navy banner + photo"</li>
+            <li>No instant estimate, no scheduling widget</li>
+            <li>Hero photography reads stock</li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <!-- Pressure Point -->
+    <article class="profile">
+      <div class="profile-head">
+        <div class="profile-rank">02</div>
+        <div class="profile-name">
+          <h3>Pressure Point Roofing</h3>
+          <div class="profile-url">pressurepointroofing.com · Central Point OR · founded 1989</div>
+        </div>
+        <div class="profile-score">67<small>/ 80 score</small></div>
+      </div>
+      <div class="sw-row">
+        <h4>Brand palette</h4>
+        <div class="swatches">
+          <div class="swatch" style="background:#0E2A4D" data-hex="#0E2A4D"></div>
+          <div class="swatch" style="background:#0070BA" data-hex="#0070BA"></div>
+          <div class="swatch" style="background:#F5F7FA" data-hex="#F5F7FA"></div>
+          <div class="swatch" style="background:#1A1A1A" data-hex="#1A1A1A"></div>
+        </div>
+        <div style="height:14px"></div>
+      </div>
+      <div class="profile-tags">
+        <span class="tag accent">Owens Corning Platinum</span>
+        <span class="tag">Webflow-built</span>
+        <span class="tag">Online estimate tool</span>
+        <span class="tag">3-state license</span>
+        <span class="tag">35+ years</span>
+      </div>
+      <p><strong>Aesthetic:</strong> polished-corporate-with-warmth. Only Webflow site in the set - layout, animation, and load behavior feel a generation newer than the WordPress crowd. Confident headline, dual-CTA stack, 5.0 rating with cross-platform proof strip (Google, Facebook, Houzz, Angi, YouTube). The bar to beat.</p>
+      <div class="strengths-weaknesses">
+        <div class="sw-block pos">
+          <h4>Strengths</h4>
+          <ul>
+            <li>Only true online-estimate flow in the market - qualifies leads before the call</li>
+            <li>Five-channel review proof strip - reads as scale</li>
+            <li>Modern build, fast load, clean interactions</li>
+            <li>18 named service-area pages - strongest local-SEO footprint</li>
+          </ul>
+        </div>
+        <div class="sw-block neg">
+          <h4>Weaknesses</h4>
+          <ul>
+            <li>Faceless - no founder, no team in the hero</li>
+            <li>No drone or distinctive photography - still relies on stock-feeling roof shots</li>
+            <li>BBB rating only B- (off-brand for the polish elsewhere)</li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <!-- Rogue Valley -->
+    <article class="profile">
+      <div class="profile-head">
+        <div class="profile-rank">03</div>
+        <div class="profile-name">
+          <h3>Rogue Valley Roofing</h3>
+          <div class="profile-url">roguevalleyroofingco.com · Medford OR · 20+ years</div>
+        </div>
+        <div class="profile-score">53<small>/ 80 score</small></div>
+      </div>
+      <div class="sw-row">
+        <h4>Brand palette</h4>
+        <div class="swatches">
+          <div class="swatch" style="background:#1B3A6B" data-hex="#1B3A6B"></div>
+          <div class="swatch" style="background:#D62828" data-hex="#D62828"></div>
+          <div class="swatch" style="background:#FFFFFF" data-hex="#FFFFFF"></div>
+          <div class="swatch" style="background:#2C2C2C" data-hex="#2C2C2C"></div>
+        </div>
+        <div style="height:14px"></div>
+      </div>
+      <div class="profile-tags">
+        <span class="tag accent">5 manufacturer certs</span>
+        <span class="tag">50-yr non-prorated warranty</span>
+        <span class="tag">8 portfolio categories</span>
+        <span class="tag">Active blog 2025-26</span>
+        <span class="tag">Community sponsorships</span>
+      </div>
+      <p><strong>Aesthetic:</strong> workhorse-template. Standard professional blue, photo-heavy, competent but uninspired. Headline = service + geo ("Licensed Roofing Contractors in Medford, Ashland &amp; Grants Pass!") - reads as "we cover everywhere" rather than "we're the best."</p>
+      <div class="strengths-weaknesses">
+        <div class="sw-block pos">
+          <h4>Strengths</h4>
+          <ul>
+            <li>50-year non-prorated warranty named in hero - strongest single trust claim</li>
+            <li>Per-city service area pages</li>
+            <li>Active blog signals SEO investment</li>
+          </ul>
+        </div>
+        <div class="sw-block neg">
+          <h4>Weaknesses</h4>
+          <ul>
+            <li>Only 19-23 reviews - well below JAM's 157</li>
+            <li>4.0-4.2 rating - visibly below the 4.8 cohort</li>
+            <li>Visual identity is interchangeable with any other WordPress roofer</li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <!-- Renaissance -->
+    <article class="profile">
+      <div class="profile-head">
+        <div class="profile-rank">04</div>
+        <div class="profile-name">
+          <h3>Renaissance Roofing SO</h3>
+          <div class="profile-url">renaissanceroofingso.com · Medford OR · ~30 years</div>
+        </div>
+        <div class="profile-score">44<small>/ 80 score</small></div>
+      </div>
+      <div class="sw-row">
+        <h4>Brand palette</h4>
+        <div class="swatches">
+          <div class="swatch" style="background:#2A2A2A" data-hex="#2A2A2A"></div>
+          <div class="swatch" style="background:#A12B2B" data-hex="#A12B2B"></div>
+          <div class="swatch" style="background:#E8E4DC" data-hex="#E8E4DC"></div>
+          <div class="swatch" style="background:#7A6E5D" data-hex="#7A6E5D"></div>
+        </div>
+        <div style="height:14px"></div>
+      </div>
+      <div class="profile-tags">
+        <span class="tag accent">GAF Master Elite</span>
+        <span class="tag">A+ BBB</span>
+        <span class="tag">Owner-operator (Greg &amp; Laura Evans)</span>
+        <span class="tag">50-yr non-prorated</span>
+        <span class="tag">⚠ TLS cert error</span>
+      </div>
+      <p><strong>Aesthetic:</strong> homespun-trade. Strong credentials, weak digital execution. Site has a TLS certificate altname mismatch - a buyer who clicks from Google sees "Not Secure / Your connection is not private" before reaching the hero. Free SEO/conversion gift to anyone who fixes it.</p>
+      <div class="strengths-weaknesses">
+        <div class="sw-block pos">
+          <h4>Strengths</h4>
+          <ul>
+            <li>GAF Master Elite + A+ BBB is the strongest credential pairing in the market</li>
+            <li>Real owner-operator narrative</li>
+          </ul>
+        </div>
+        <div class="sw-block neg">
+          <h4>Weaknesses</h4>
+          <ul>
+            <li>Site fails HTTPS handshake - bleeds leads at the click</li>
+            <li>Smallest page count of the top 5</li>
+            <li>No portfolio infrastructure</li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <!-- Eric Preston -->
+    <article class="profile">
+      <div class="profile-head">
+        <div class="profile-rank">05</div>
+        <div class="profile-name">
+          <h3>Eric Preston Roofing</h3>
+          <div class="profile-url">ericprestonroofing.com · Grants Pass OR · est. 1992</div>
+        </div>
+        <div class="profile-score">52<small>/ 80 score</small></div>
+      </div>
+      <div class="sw-row">
+        <h4>Brand palette</h4>
+        <div class="swatches">
+          <div class="swatch" style="background:#3F4B5C" data-hex="#3F4B5C"></div>
+          <div class="swatch" style="background:#6B8AAD" data-hex="#6B8AAD"></div>
+          <div class="swatch" style="background:#FFFFFF" data-hex="#FFFFFF"></div>
+          <div class="swatch" style="background:#2C2C2C" data-hex="#2C2C2C"></div>
+        </div>
+        <div style="height:14px"></div>
+      </div>
+      <div class="profile-tags">
+        <span class="tag accent">Owens Corning Preferred</span>
+        <span class="tag">GAF / IKO / ELK</span>
+        <span class="tag">11 cities served</span>
+        <span class="tag">30+ years</span>
+        <span class="tag">Pain-question headline</span>
+      </div>
+      <p><strong>Aesthetic:</strong> craftsman-narrative. Leans on personality more than visuals. Headline opens with a pain question ("Have a leaky roof? Want to redo your roof completely?") - direct-response voice, "FREE Quote" repeated 5+ times. Converts on copy, not visuals.</p>
+      <div class="strengths-weaknesses">
+        <div class="sw-block pos">
+          <h4>Strengths</h4>
+          <ul>
+            <li>Plain-spoken voice - reads as the actual owner talking</li>
+            <li>Strong manufacturer partner stack</li>
+            <li>Owns the Grants Pass anchor position</li>
+          </ul>
+        </div>
+        <div class="sw-block neg">
+          <h4>Weaknesses</h4>
+          <ul>
+            <li>Visual design is below the cohort average</li>
+            <li>Only 3 testimonials, no review-source linkage</li>
+            <li>No portfolio depth, no calculator</li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+  </div>
+</div>
+</section>
+
+<!-- ============ PATTERNS OF THE TOP 10% ============ -->
+<section>
+<div class="container">
+  <div class="eyebrow">04 - What the winners share</div>
+  <h2>Patterns of the<br><em>top 10%</em>.</h2>
+  <p class="lede">Five moves every winning site makes that the bottom of the market doesn't.</p>
+
+  <div class="patterns">
+    <div class="pattern">
+      <div class="pattern-num">01</div>
+      <div>
+        <h3>A 25-50 year credibility anchor in the hero.</h3>
+        <p>JAM ("since 1996"), Pressure Point ("35+ years"), Renaissance ("nearly 30 years"), Hadley ("since 1974"), Eric Preston ("30+ years"). The bottom of the market hides the founding year in About. Winners put it in the H1 or first subhead. <strong>Elevate's "20+ years" claim belongs above the fold.</strong></p>
+      </div>
+    </div>
+
+    <div class="pattern">
+      <div class="pattern-num">02</div>
+      <div>
+        <h3>Manufacturer-certification badge as the primary trust signal.</h3>
+        <p>Not BBB. Not stars. GAF Master Elite or Owens Corning Platinum/Preferred (top ~3% callout). It's the only third-party badge that actually moves price. Star ratings are secondary. <strong>If Elevate doesn't yet hold one of these, getting it should be the single biggest non-website investment of 2026.</strong></p>
+      </div>
+    </div>
+
+    <div class="pattern">
+      <div class="pattern-num">03</div>
+      <div>
+        <h3>A multi-page service-area architecture - one city per page.</h3>
+        <p>JAM, Pressure Point, and Rogue Valley each run dedicated /service-areas/medford, /ashland, /grants-pass, /central-point pages. This is the single biggest local-SEO lever in the trade. The bottom of the market lists cities once on the contact page.</p>
+      </div>
+    </div>
+
+    <div class="pattern">
+      <div class="pattern-num">04</div>
+      <div>
+        <h3>A 50-year non-prorated warranty named in the hero.</h3>
+        <p>Rogue Valley and Renaissance both anchor on this exact phrase. The warranty is unlocked by GAF Master Elite (Golden Pledge) - so the cert is the gateway to the warranty is the gateway to the close. Three claims, one chain, all visible above the fold.</p>
+      </div>
+    </div>
+
+    <div class="pattern">
+      <div class="pattern-num">05</div>
+      <div>
+        <h3>Multiple parallel proof channels from the homepage.</h3>
+        <p>Pressure Point links to Google, Facebook, Houzz, Angi, and YouTube reviews from a single trust strip. Single-source proof reads small-shop. Five-source proof reads scale.</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:2.5rem">
+    <h3 style="font-size:1.4rem;margin-bottom:.6rem">Where the visual ceiling is low</h3>
+    <p style="font-size:.95rem">No top-5 site uses drone-shot project photography in the hero. None show a founder portrait above the fold. No video. No before/after slider in the hero - only buried in Gallery. Only Pressure Point has a scheduling/estimate widget. <strong>Every one of these is a free differentiation lever.</strong></p>
+  </div>
+</div>
+</section>
+
+<!-- ============ SEO LANDSCAPE ============ -->
+<section>
+<div class="container">
+  <div class="eyebrow">05 - SEO landscape</div>
+  <h2>What the<br>top sites <em>target</em>.</h2>
+
+  <div class="keyword-grid">
+    <div class="kw-card">
+      <h3>Money keywords (everyone fights for)</h3>
+      <ul class="kw-list">
+        <li>roofing contractor Medford OR</li>
+        <li>roofer Ashland OR</li>
+        <li>roofing Grants Pass</li>
+        <li>Southern Oregon roofing</li>
+        <li>commercial roofing Medford</li>
+        <li>metal roofing Southern Oregon</li>
+      </ul>
+    </div>
+
+    <div class="kw-card">
+      <h3>Service modifiers</h3>
+      <ul class="kw-list">
+        <li>roof repair Medford / leak repair</li>
+        <li>re-roof Medford</li>
+        <li>roof replacement Central Point</li>
+        <li>gutter installation Ashland</li>
+        <li>skylight installation</li>
+      </ul>
+    </div>
+
+    <div class="kw-card">
+      <h3>Trust / credential queries</h3>
+      <ul class="kw-list">
+        <li>GAF Master Elite Medford</li>
+        <li>Owens Corning Preferred Oregon</li>
+        <li>50-year roof warranty Oregon</li>
+        <li>BBB roofing contractor Medford</li>
+      </ul>
+    </div>
+
+    <div class="kw-card whitespace">
+      <h3>Whitespace nobody is winning</h3>
+      <ul class="kw-list">
+        <li>ADU builder Medford</li>
+        <li>custom home builder Jackson County</li>
+        <li>design-build remodel Southern Oregon</li>
+        <li>storm damage roof Medford</li>
+        <li>wildfire-resistant roof Southern Oregon</li>
+        <li>roof inspection Klamath Falls</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ============ DESIGN DIRECTION ============ -->
+<section>
+<div class="container">
+  <div class="eyebrow">06 - Recommended direction</div>
+  <h2>Design moves<br>backed by <em>data</em>.</h2>
+  <p class="lede">Each recommendation references a specific gap in the competitive set.</p>
+
+  <div class="recs">
+    <div class="rec">
+      <h3>Palette: deep navy + warm copper, not blue + yellow + orange + tan.</h3>
+      <p>Current site loads five accent colors. Tighten to deep navy <span style="font-family:monospace">#0E2238</span> primary (matches market expectation) + warm copper <span style="font-family:monospace">#B8632B</span> accent (stands apart from JAM's gray and Pressure Point's bright blue) + warm off-white paper. The copper signals craft + warmth; competitors are all cool-blue corporate.</p>
+    </div>
+
+    <div class="rec">
+      <h3>Typography: Instrument Serif + Inter, not Montserrat.</h3>
+      <p>Every competitor uses sans-serif headings (Montserrat, Open Sans, Roboto). A serif display face reads premium and immediately separates Elevate from the WordPress cohort. Pair with Inter for body - readable, modern, neutral.</p>
+    </div>
+
+    <div class="rec">
+      <h3>Hero: founder + drone, not stock + banner.</h3>
+      <p>Rod's portrait + a 4K drone shot of a finished local home + a one-line personal pledge. Becomes the only owner-operator face above the fold in the entire Southern Oregon roofing market.</p>
+    </div>
+
+    <div class="rec">
+      <h3>Positioning: "Roof to ADU to custom home, one builder."</h3>
+      <p>No top-5 roofer offers the full stack. No GC offers roofing. Elevate is the only shop legitimately doing all four under one CCB - the headline writes itself, and competitors can't copy it without acquiring crews.</p>
+    </div>
+
+    <div class="rec">
+      <h3>Animation: scroll-triggered reveals + parallax depth, no autoplay video.</h3>
+      <p>GSAP-driven section reveals, parallax on hero drone shot, hover micro-interactions on service cards. Apple/Stripe-class restraint. No carousels, no auto-rotating sliders - competitors rely on these and it reads dated.</p>
+    </div>
+
+    <div class="rec">
+      <h3>Conversion: cost-band tool + scheduling widget.</h3>
+      <p>Two-step "What's your project? → Here's the typical Medford 2026 range, book a 15-min walkthrough" tool. Pressure Point has the only estimate flow in the market - Elevate adds published price ranges (which nobody else dares show) and direct calendar booking.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="container">
+    <div class="mark">Elevate Roofing &amp; Construction</div>
+    <div>Competitive Analysis · 30 April 2026</div>
+    <div style="margin-top:.4rem;font-size:.8rem">Prepared for Rod &amp; the Elevate team · Medford, Oregon</div>
+  </div>
+</footer>
+
+</body>
+</html>
