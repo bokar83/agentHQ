@@ -306,6 +306,11 @@ def _first_name_from_email(email: str) -> str:
     first = local.replace("-", ".").split(".")[0]
     # Strip digits
     first = "".join(c for c in first if c.isalpha())
+    # Strip common professional prefixes (drmarcus -> marcus, drsmith -> smith)
+    for prefix in ("dr", "mr", "mrs", "ms"):
+        if first.startswith(prefix) and len(first) >= len(prefix) + 3:
+            first = first[len(prefix):]
+            break
     if len(first) < 2:
         return ""
     return first.capitalize()
@@ -314,25 +319,52 @@ def _first_name_from_email(email: str) -> str:
 def _extract_first_name(lead: dict) -> str:
     """Best-effort first-name extraction from a lead dict.
 
+    Strategy uses lead.source to decide whether lead.name is reliable:
+      - source="apollo_*" (CW + Studio): lead.name comes from Apollo and
+        is "Firstname Lastname". Trust it.
+      - source="signal_works*" (SW): lead.name is the business name from
+        Google Maps. Never trust it. Always parse from email instead.
+      - Source unknown / not set: try lead.name first (with 2+ token gate),
+        fall back to email.
+
     Order of preference:
       1. lead["first_name"] if explicitly set
-      2. First token of lead["name"] if it does NOT look like a business token
-      3. Parsed from local-part of lead["email"]
-      4. Fallback: "there"
+      2. For CW/apollo sources: first token of lead.name if 2+ tokens
+         and not a business/location word
+      3. Email local-part if it parses cleanly
+      4. For unknown sources only: lead.name first token as last resort
+      5. Fallback: "there"
     """
     explicit = (lead.get("first_name") or "").strip()
     if explicit:
         return explicit
 
+    source = (lead.get("source") or "").lower()
+    is_sw = source.startswith("signal_works")
+    is_cw = source.startswith("apollo_") or source.startswith("cw_")
     raw_name = (lead.get("name") or "").strip()
-    if raw_name:
-        first_token = raw_name.split()[0].rstrip(",.;:'\"")
-        if not _looks_like_business(first_token) and len(first_token) >= 2:
+
+    # CW path: Apollo gives us real person names. Trust lead.name first.
+    if is_cw and raw_name:
+        tokens = raw_name.split()
+        first_token = tokens[0].rstrip(",.;:'\"")
+        if (len(tokens) >= 2
+            and not _looks_like_business(first_token)
+            and len(first_token) >= 2):
             return first_token
 
+    # SW path OR CW name unusable: parse from email.
     from_email = _first_name_from_email(lead.get("email", ""))
     if from_email:
         return from_email
+
+    # Unknown-source last resort: try the name even if single-token.
+    if not is_sw and raw_name:
+        tokens = raw_name.split()
+        first_token = tokens[0].rstrip(",.;:'\"")
+        if (not _looks_like_business(first_token)
+            and len(first_token) >= 2):
+            return first_token
 
     return "there"
 
