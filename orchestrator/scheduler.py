@@ -13,6 +13,8 @@ import threading
 import logging
 from datetime import datetime
 import pytz
+from newsletter_anchor_tick import newsletter_anchor_tick
+from newsletter_editorial_prompt import newsletter_editorial_prompt_tick
 
 logger = logging.getLogger("agentsHQ.scheduler")
 
@@ -614,6 +616,28 @@ def start_scheduler():
         )
     except Exception as e:
         logger.error(f"MODEL_REVIEW: wake registration failed ({e}); continuing without model review", exc_info=True)
+
+    try:
+        import heartbeat as _heartbeat
+        _heartbeat.register_wake(
+            "newsletter-editorial-prompt",
+            crew_name="newsletter_crew",
+            callback=newsletter_editorial_prompt_tick,
+            at="18:00",
+        )
+    except Exception as e:
+        logger.error(f"NEWSLETTER_EDITORIAL_PROMPT: wake registration failed ({e}); continuing", exc_info=True)
+
+    try:
+        import heartbeat as _heartbeat
+        _heartbeat.register_wake(
+            "newsletter-anchor",
+            crew_name="newsletter_crew",
+            callback=newsletter_anchor_tick,
+            at="12:00",
+        )
+    except Exception as e:
+        logger.error(f"NEWSLETTER_ANCHOR: wake registration failed ({e}); continuing", exc_info=True)
 
     sync_thread = threading.Thread(target=_periodic_sync, daemon=True)
     sync_thread.start()
