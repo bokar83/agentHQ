@@ -1001,14 +1001,17 @@ def build_social_crew(user_request: str) -> Crew:
     )
 
 
-def build_newsletter_crew(user_request: str) -> Crew:
+def build_newsletter_crew(user_request: str, metadata: dict = None) -> Crew:
     """
     Crew for: newsletter
     Drafts newsletter content in Boubacar's voice using leGriot.
     Voice standard: colleague walking alongside the reader, not professor lecturing.
     Personal stories from Boubacar's real experience. Citations with superscripts.
     """
+    metadata = metadata or {}
+
     planner = build_planner_agent()
+    researcher = build_researcher_agent()
     griot = build_social_media_agent()
     qa = build_qa_agent()
 
@@ -1082,6 +1085,29 @@ def build_newsletter_crew(user_request: str) -> Crew:
         context=[task_plan]
     )
 
+    task_verify_sources = Task(
+        description=f"""
+        Verify the newsletter draft for:
+        REQUEST: {user_request}
+
+        Review the newsletter draft and identify every external fact, stat, quote,
+        framework, or named source that needs validation.
+
+        For each cited claim:
+        - confirm whether it is supported by the draft's Sources section
+        - check that every inline citation number has a matching source entry
+        - note any missing source, weak source, or unsupported claim
+        - flag any statement that should be removed or rewritten because it cannot be verified
+
+        Return a concise source verification report that the QA reviewer can use.
+        If the draft contains no external claims, state that no source verification
+        issues were found.
+        """,
+        expected_output="Source verification report covering citation coverage, source quality, and unsupported claims",
+        agent=researcher,
+        context=[task_write]
+    )
+
     task_qa = Task(
         description=f"""
         Review the newsletter against Boubacar's voice standard.
@@ -1113,7 +1139,7 @@ def build_newsletter_crew(user_request: str) -> Crew:
         """,
         expected_output="QA report against all 8 checks, then the full final newsletter",
         agent=qa,
-        context=[task_write]
+        context=[task_verify_sources]
     )
 
     # Conditionally add beehiiv draft task when env vars are configured.
@@ -1149,15 +1175,15 @@ def build_newsletter_crew(user_request: str) -> Crew:
             context=[task_qa]
         )
         return Crew(
-            agents=[planner, griot, qa],
-            tasks=[task_plan, task_write, task_qa, task_beehiiv],
+            agents=[planner, researcher, griot, qa],
+            tasks=[task_plan, task_write, task_verify_sources, task_qa, task_beehiiv],
             process=Process.sequential,
             verbose=False
         )
 
     return Crew(
-        agents=[planner, griot, qa],
-        tasks=[task_plan, task_write, task_qa],
+        agents=[planner, researcher, griot, qa],
+        tasks=[task_plan, task_write, task_verify_sources, task_qa],
         process=Process.sequential,
         verbose=False
     )
