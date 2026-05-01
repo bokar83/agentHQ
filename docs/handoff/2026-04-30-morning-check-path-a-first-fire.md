@@ -10,13 +10,13 @@
 
 ### 1. Confirm the 07:00 MT run actually fired
 
-```bash
+``bash
 ssh root@agentshq.boubacarbarry.com "tail -100 /var/log/signal_works_morning.log"
-```
+``
 
 Look for the most recent run (today's date in the log lines). The summary block at the bottom of a healthy run looks like:
 
-```
+``
 ==================================================
 Run complete:
   Bounces cleared:        N
@@ -26,17 +26,17 @@ Run complete:
   CW outreach drafts:     N
   TOTAL drafts in inbox:  N
 ==================================================
-```
+``
 
 ### 2. Count personalized CW leads from the last 24 hours
 
-```bash
+``bash
 ssh root@agentshq.boubacarbarry.com "docker exec orc-crewai bash -c 'cd /app && python -c \"
 from db import get_crm_connection
 c = get_crm_connection()
 cur = c.cursor()
 cur.execute(chr(83)+chr(69)+chr(76)+chr(69)+chr(67)+chr(84)+chr(32)+\\\"id, name, company, voice_personalization_line FROM leads WHERE source = '+chr(39)+'apollo_catalyst_works'+chr(39)+' AND voice_personalization_line IS NOT NULL ORDER BY id DESC LIMIT 10\\\"); rows=cur.fetchall(); print(len(rows), chr(108)+chr(101)+chr(97)+chr(100)+chr(115)+chr(58)); [print(r) for r in rows]; c.close()\"'"
-```
+``
 
 (Yes the `chr()` quoting is ugly: SSH + docker + python + nested quotes is hell. Just paste it.)
 
@@ -56,9 +56,9 @@ Open `boubacar@catalystworks.consulting` Drafts folder. Look at the most recent 
 
 **Optional action:** flip auto-send on for tomorrow.
 
-```bash
+``bash
 ssh root@agentshq.boubacarbarry.com "echo 'AUTO_SEND_CW=true' >> /root/agentsHQ/.env && cd /root/agentsHQ && ./scripts/orc_rebuild.sh"
-```
+``
 
 Or hold and check again tomorrow morning. Default safe.
 
