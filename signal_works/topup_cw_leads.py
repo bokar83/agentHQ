@@ -58,10 +58,10 @@ def _save_cw_lead(conn, lead: dict) -> bool:
         cur.execute("""
             INSERT INTO leads
               (name, company, title, industry, email, linkedin_url, city,
-               status, source, created_at, updated_at)
+               website_url, status, source, created_at, updated_at)
             VALUES
               (%s, %s, %s, %s, %s, %s, %s,
-               'new', %s, NOW(), NOW())
+               %s, 'new', %s, NOW(), NOW())
             ON CONFLICT DO NOTHING
         """, (
             lead.get("name"),
@@ -71,6 +71,7 @@ def _save_cw_lead(conn, lead: dict) -> bool:
             lead.get("email"),
             lead.get("linkedin_url"),
             lead.get("city"),
+            lead.get("website_url"),
             lead.get("source", "apollo_cw"),
         ))
         conn.commit()
