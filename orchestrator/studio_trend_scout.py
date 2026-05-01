@@ -24,7 +24,7 @@ import logging
 import os
 import pathlib
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Optional
 
 import pytz
@@ -130,6 +130,7 @@ class TrendCandidate:
     unique_add: str = ""
     destination: str = "Studio Pipeline"  # "Content Board" or "Studio Pipeline"
     snippet: str = ""
+    notion_page_id: str = ""
 
 
 def _yt_api_key() -> Optional[str]:
@@ -559,6 +560,149 @@ def _send_summary(total: int, today_iso: str) -> None:
         logger.warning(f"studio_trend_scout: summary send failed: {e}")
 
 
+def get_reply_for_week(week_start_date: date) -> Optional[str]:
+    """Lazy import wrapper for the Sunday editorial reply lookup."""
+    from newsletter_editorial_input import get_reply_for_week as _get_reply_for_week
+
+    return _get_reply_for_week(week_start_date)
+
+
+def _send_anchor_alert(text: str) -> None:
+    """Send a one-off Telegram alert for anchor selection outcomes."""
+    chat_id = _telegram_chat_id()
+    if not chat_id:
+        return
+    try:
+        from notifier import send_message
+
+        send_message(str(chat_id), text)
+    except Exception as e:
+        logger.warning(f"studio_trend_scout: anchor alert send failed: {e}")
+
+
+def _anchor_date_newsletter_filter(week_iso: str) -> dict:
+    return {
+        "and": [
+            {"property": "Anchor Date", "date": {"equals": week_iso}},
+            {"property": "Type", "select": {"equals": "Newsletter"}},
+        ]
+    }
+
+
+def _find_existing_newsletter_anchor(notion, week_iso: str) -> Optional[dict]:
+    """Return an existing Content Board row already tagged as this week's anchor."""
+    if not CONTENT_BOARD_DB_ID:
+        return None
+    try:
+        rows = notion.query_database(
+            CONTENT_BOARD_DB_ID,
+            filter_obj=_anchor_date_newsletter_filter(week_iso),
+        )
+    except Exception as e:
+        logger.warning(f"studio_trend_scout: existing anchor lookup failed: {e}")
+        return None
+    return rows[0] if rows else None
+
+
+def _page_type_name(page: Optional[dict]) -> Optional[str]:
+    props = (page or {}).get("properties", {})
+    type_select = props.get("Type", {}).get("select")
+    if not type_select:
+        return None
+    return type_select.get("name")
+
+
+def _newsletter_rank_key(cand: TrendCandidate) -> tuple:
+    return (-int(cand.fit_score or 0), -float(cand.velocity_per_hour or 0.0), cand.source_url)
+
+
+def _build_sunday_reply_anchor_properties(reply_text: str, week_iso: str) -> dict:
+    title = reply_text.strip()[:120] or "Weekly newsletter anchor"
+    return {
+        "Title": {"title": [{"text": {"content": title}}]},
+        "Status": {"select": {"name": "Ready"}},
+        "Type": {"select": {"name": "Newsletter"}},
+        "Source Note": {"rich_text": [{"text": {"content": reply_text[:2000]}}]},
+        "Anchor Date": {"date": {"start": week_iso}},
+    }
+
+
+def _newsletter_anchor_update_properties(week_iso: str) -> dict:
+    return {
+        "Status": {"select": {"name": "Ready"}},
+        "Type": {"select": {"name": "Newsletter"}},
+        "Anchor Date": {"date": {"start": week_iso}},
+    }
+
+
+def _select_and_tag_anchor(
+    notion,
+    cw_picks_written: list[TrendCandidate],
+    week_monday: date,
+) -> Optional[str]:
+    """Choose the weekly newsletter anchor with idempotent, tag-aware writes."""
+    week_iso = week_monday.isoformat()
+    existing_anchor = _find_existing_newsletter_anchor(notion, week_iso)
+    if existing_anchor:
+        page_id = existing_anchor.get("id")
+        logger.info(f"studio_trend_scout: anchor=reused page={page_id}")
+        return page_id
+
+    sunday_reply = get_reply_for_week(week_monday)
+    if sunday_reply:
+        try:
+            page = notion.create_page(
+                database_id=CONTENT_BOARD_DB_ID,
+                properties=_build_sunday_reply_anchor_properties(sunday_reply.strip(), week_iso),
+            )
+        except Exception as e:
+            logger.error(f"studio_trend_scout: synthetic anchor create failed: {e}")
+            _send_anchor_alert("newsletter anchor failed to write")
+            return None
+        page_id = page.get("id") if page else None
+        logger.info(f"studio_trend_scout: anchor=synthetic page={page_id}")
+        return page_id
+
+    for cand in sorted(cw_picks_written, key=_newsletter_rank_key):
+        if not cand.notion_page_id:
+            continue
+        try:
+            page = notion.get_page(cand.notion_page_id)
+        except Exception as e:
+            logger.warning(
+                f"studio_trend_scout: anchor page read failed for {cand.notion_page_id}: {e}"
+            )
+            continue
+
+        if _page_type_name(page):
+            continue
+
+        try:
+            notion.update_page(
+                cand.notion_page_id,
+                properties=_newsletter_anchor_update_properties(week_iso),
+            )
+        except Exception as e:
+            logger.error(
+                f"studio_trend_scout: anchor tag update failed for {cand.notion_page_id}: {e}"
+            )
+            _send_anchor_alert("newsletter anchor tag update failed")
+            return None
+
+        logger.info(
+            f"studio_trend_scout: anchor=scout-pick page={cand.notion_page_id} "
+            f"title={cand.title[:60]}"
+        )
+        return cand.notion_page_id
+
+    if cw_picks_written:
+        _send_anchor_alert("all top picks already typed; tag manually")
+        return None
+
+    _send_anchor_alert(f"no anchor today for {week_iso}")
+    return None
+
+
 # ═════════════════════════════════════════════════════════════════════════════
 # Main wake callback
 # ═════════════════════════════════════════════════════════════════════════════
@@ -601,6 +745,7 @@ def studio_trend_scout_tick() -> None:
 
     written_count = 0
     skipped_count = 0
+    cw_picks_written: list[TrendCandidate] = []
 
     for niche_tag, niche_config in seeds.items():
         try:
@@ -617,6 +762,9 @@ def studio_trend_scout_tick() -> None:
             # Route to correct Notion DB based on destination
             if p.destination == "Content Board":
                 page_id = _write_to_content_board(notion, p)
+                if page_id:
+                    p.notion_page_id = page_id
+                    cw_picks_written.append(p)
             else:
                 page_id = _write_to_studio_pipeline(notion, p)
 
@@ -629,6 +777,11 @@ def studio_trend_scout_tick() -> None:
             f"studio_trend_scout: niche '{niche_tag}': {len(new_picks)} new picks "
             f"({len(picks) - len(new_picks)} dupes skipped)"
         )
+
+    try:
+        _select_and_tag_anchor(notion, cw_picks_written, now.date())
+    except Exception as e:
+        logger.error(f"studio_trend_scout: anchor selection raised: {e}", exc_info=True)
 
     _send_summary(written_count, today)
     logger.info(
