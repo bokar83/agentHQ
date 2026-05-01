@@ -215,7 +215,7 @@ def _yt_video_stats(video_ids: list) -> dict:
 def _serper_search(query: str, max_results: int = 5) -> list:
     """Search Serper news API. Returns list of {title, link, snippet, source, date}.
     Graceful degrade: returns [] if SERPER_API_KEY not set.
-    Direct HTTP call -- do NOT use SerperDevTool (CrewAI-only abstraction).
+    Direct HTTP call. Do NOT use SerperDevTool (CrewAI-only abstraction).
     """
     api_key = os.environ.get("SERPER_API_KEY", "")
     if not api_key:
@@ -249,7 +249,7 @@ def _serper_search(query: str, max_results: int = 5) -> list:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-# Haiku classifier (replaces full Council -- correct tool for triage)
+# Haiku classifier (replaces full Council, correct tool for triage)
 # ═════════════════════════════════════════════════════════════════════════════
 
 _CLASSIFIER_PROMPT = """You are a content triage assistant for Boubacar Barry, a consulting strategist and founder of Catalyst Works.
@@ -418,7 +418,7 @@ def scout_niche(niche_tag: str, niche_config: dict) -> list:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-# Notion writes -- two separate functions, one per destination schema
+# Notion writes. Two separate functions, one per destination schema
 # ═════════════════════════════════════════════════════════════════════════════
 
 def _write_to_studio_pipeline(notion, cand: TrendCandidate) -> Optional[str]:
@@ -540,6 +540,8 @@ def _send_pick_with_buttons(cand: TrendCandidate, notion_page_id: str) -> None:
             (f"Approve", f"scout_approve:{notion_page_id}"),
             (f"Reject", f"scout_reject:{notion_page_id}"),
         ]]
+        if cand.destination == "Content Board":
+            buttons[0].append((f"Newsletter", f"scout_newsletter:{notion_page_id}"))
         send_message_with_buttons(str(chat_id), text, buttons)
     except Exception as e:
         logger.warning(f"studio_trend_scout: per-pick Telegram send failed: {e}")

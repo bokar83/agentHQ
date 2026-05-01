@@ -71,6 +71,63 @@ _EDITORIAL_BLOCKED_FIRST_WORDS = APPROVE_ALIASES | REJECT_ALIASES | {
 }
 
 
+def _handle_scout_newsletter(notion_page_id: str, cb_id: str, cb_chat_id: str) -> None:
+    from notifier import answer_callback_query, send_message
+
+    notion = _open_notion()
+    page = notion.get_page(notion_page_id)
+    page_props = page.get("properties", {}) or {}
+    current_type = ((page_props.get("Type", {}) or {}).get("select") or {}).get("name")
+    if current_type and current_type != "Newsletter":
+        answer_callback_query(cb_id, f"Already typed as {current_type}.")
+        send_message(
+            cb_chat_id,
+            f"Content Scout: cannot set Newsletter anchor because this pick is already typed as {current_type}.",
+        )
+        return
+
+    today_iso = _now_local().date().isoformat()
+    notion.update_page(
+        notion_page_id,
+        properties={
+            "Type": {"select": {"name": "Newsletter"}},
+            "Platform": {"multi_select": [{"name": "Beehiiv"}]},
+            "Anchor Date": {"date": {"start": today_iso}},
+        },
+    )
+
+    content_db_id = os.environ.get("FORGE_CONTENT_DB", "339bcf1a-3029-81d1-8377-dc2f2de13a20")
+    previous_anchors = notion.query_database(
+        content_db_id,
+        filter_obj={
+            "and": [
+                {"property": "Anchor Date", "date": {"equals": today_iso}},
+                {"property": "Type", "select": {"equals": "Newsletter"}},
+            ]
+        },
+    )
+
+    displaced_ids = []
+    clear_props = {
+        "Type": {"select": None},
+        "Platform": {"multi_select": []},
+        "Anchor Date": {"date": None},
+    }
+    for prev in previous_anchors or []:
+        prev_id = prev.get("id")
+        if not prev_id or prev_id == notion_page_id:
+            continue
+        notion.update_page(prev_id, properties=clear_props)
+        displaced_ids.append(prev_id)
+
+    answer_callback_query(cb_id, "Newsletter anchor updated.")
+    message = f"Content Scout: Newsletter anchor set on {notion_page_id[:8]}... for {today_iso}."
+    if displaced_ids:
+        displaced_list = ", ".join(displaced_ids)
+        message += f" Cleared previous anchor(s): {displaced_list}."
+    send_message(cb_chat_id, message)
+
+
 # ══════════════════════════════════════════════════════════════
 # callback_query (inline-button feedback tag tap)
 # ══════════════════════════════════════════════════════════════
@@ -324,6 +381,18 @@ def handle_callback_query(update: dict) -> bool:
             send_message(cb_chat_id, f"Content Scout: rejected. Notion page {notion_page_id[:8]}... archived.")
         except Exception as e:
             logger.warning(f"callback_query scout_reject handling error: {e}")
+            try:
+                from notifier import answer_callback_query
+                answer_callback_query(cb_id, f"Error: {e}")
+            except Exception:
+                pass
+
+    elif cb_data.startswith("scout_newsletter:"):
+        try:
+            notion_page_id = cb_data.split(":", 1)[1]
+            _handle_scout_newsletter(notion_page_id, cb_id, cb_chat_id)
+        except Exception as e:
+            logger.warning(f"callback_query scout_newsletter handling error: {e}")
             try:
                 from notifier import answer_callback_query
                 answer_callback_query(cb_id, f"Error: {e}")
