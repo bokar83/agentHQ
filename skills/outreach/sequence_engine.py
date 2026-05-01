@@ -246,20 +246,111 @@ def _load_template(pipeline: str, touch: int):
     return subject, mod.BODY
 
 
+# Tokens that indicate "name" is actually a business name, not a person.
+_BUSINESS_TOKENS = {
+    # Niches we target
+    "plumbing", "roofing", "hvac", "dental", "chiropractic", "construction",
+    "landscaping", "electric", "electrical", "heating", "cooling", "air",
+    "pediatric", "medical", "clinic", "wellness", "health", "therapy",
+    "automotive", "auto", "law", "legal", "accounting", "insurance",
+    # Common business descriptors
+    "commercial", "residential", "professional", "premier", "premium",
+    "quality", "reliable", "trusted", "expert", "experts", "advanced",
+    "complete", "total", "all", "first", "best", "top",
+    "family", "local", "national", "american", "emergency",
+    # Suffixes / generic words
+    "solutions", "services", "service", "company", "co", "llc",
+    "inc", "corp", "corporation", "group", "associates", "partners",
+    "industries", "enterprises", "systems", "specialists", "specialist",
+    "design", "build", "builders", "contractors", "contracting",
+    # Articles / connectors
+    "the", "and", "of", "for", "&", "a", "an",
+    # Generic location/direction words
+    "north", "south", "east", "west", "valley", "mountain",
+    "hill", "hills", "creek", "river", "lake", "sky", "sun",
+}
+
+_LOCATION_TOKENS = {
+    "utah", "ut", "salt", "lake", "city", "provo", "ogden", "sandy",
+    "lehi", "park", "draper", "murray", "west", "jordan", "saint",
+    "george", "logan", "cedar", "bountiful", "heber", "denver", "phoenix",
+    "vegas", "boise", "albuquerque", "seattle", "portland", "diego",
+    "reno", "tucson",
+}
+
+
+def _looks_like_business(token: str) -> bool:
+    """Return True if the token looks like a business word, not a person first name."""
+    if not token:
+        return True
+    low = token.lower().rstrip(",.;:'\"")
+    return low in _BUSINESS_TOKENS or low in _LOCATION_TOKENS
+
+
+def _first_name_from_email(email: str) -> str:
+    """Parse a plausible first name from the local-part of an email.
+
+    scott@commroof.com -> Scott
+    john.smith@x.com   -> John
+    j.smith@x.com      -> "" (single letter unreliable)
+    info@x.com         -> "" (role inbox)
+    """
+    if not email or "@" not in email:
+        return ""
+    local = email.split("@", 1)[0].lower()
+    # Reject role inboxes outright
+    if local in {"info", "contact", "hello", "hi", "support", "sales", "admin",
+                 "office", "team", "service", "help", "owner", "ceo", "founder"}:
+        return ""
+    # Take the first dot/dash-separated token
+    first = local.replace("-", ".").split(".")[0]
+    # Strip digits
+    first = "".join(c for c in first if c.isalpha())
+    if len(first) < 2:
+        return ""
+    return first.capitalize()
+
+
+def _extract_first_name(lead: dict) -> str:
+    """Best-effort first-name extraction from a lead dict.
+
+    Order of preference:
+      1. lead["first_name"] if explicitly set
+      2. First token of lead["name"] if it does NOT look like a business token
+      3. Parsed from local-part of lead["email"]
+      4. Fallback: "there"
+    """
+    explicit = (lead.get("first_name") or "").strip()
+    if explicit:
+        return explicit
+
+    raw_name = (lead.get("name") or "").strip()
+    if raw_name:
+        first_token = raw_name.split()[0].rstrip(",.;:'\"")
+        if not _looks_like_business(first_token) and len(first_token) >= 2:
+            return first_token
+
+    from_email = _first_name_from_email(lead.get("email", ""))
+    if from_email:
+        return from_email
+
+    return "there"
+
+
 def _render(body_or_builder, lead: dict) -> str:
     """Render email body from either a build_body callable or a legacy format string."""
+    first_name = _extract_first_name(lead)
     if callable(body_or_builder):
         enriched = dict(lead)
         if "first_name" not in enriched:
-            enriched["first_name"] = (lead.get("name") or "there").split()[0]
+            enriched["first_name"] = first_name
         if "niche" not in enriched:
             enriched["niche"] = (lead.get("industry") or "business").lower()
         if "city" not in enriched:
             enriched["city"] = lead.get("city") or "your city"
         if "business_name" not in enriched:
-            enriched["business_name"] = lead.get("name") or "your business"
+            enriched["business_name"] = lead.get("business_display_name") or lead.get("name") or "your business"
         return body_or_builder(enriched)
-    first_name = (lead.get("name") or "there").split()[0]
     niche = (lead.get("industry") or "business").lower()
     city = lead.get("city") or "your city"
     return body_or_builder.format(first_name=first_name, niche=niche, city=city)
