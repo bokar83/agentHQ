@@ -82,6 +82,25 @@ def _parse_frontmatter(skill_file: Path) -> dict[str, str]:
     return data
 
 
+def _load_submodule_paths(repo_root) -> set[str]:
+    """Read .gitmodules and return submodule paths relative to repo root."""
+    gm = repo_root / ".gitmodules"
+    if not gm.is_file():
+        return set()
+    paths: set[str] = set()
+    try:
+        for line in gm.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = line.strip()
+            if line.startswith("path"):
+                _, _, val = line.partition("=")
+                val = val.strip()
+                if val:
+                    paths.add(val.replace("\\", "/"))
+    except OSError:
+        pass
+    return paths
+
+
 def load_skills() -> tuple[list[Skill], list[str]]:
     skills: list[Skill] = []
     errors: list[str] = []
@@ -89,7 +108,20 @@ def load_skills() -> tuple[list[Skill], list[str]]:
     if not SKILLS_DIR.is_dir():
         return skills, [f"{SKILLS_DIR}: skills directory does not exist"]
 
+    submodule_paths = _load_submodule_paths(REPO_ROOT)
+
     for skill_dir in sorted((path for path in SKILLS_DIR.iterdir() if path.is_dir()), key=lambda path: path.name.lower()):
+        # Skip git submodules. Community skill collections like skills/community
+        # follow their own internal structure (plugins/<x>/skills/<y>/SKILL.md)
+        # and are linted by their upstream repo, not this one.
+        rel = skill_dir.relative_to(REPO_ROOT).as_posix()
+        if rel in submodule_paths:
+            continue
+        # Also skip nested clones (.git directory) and non-worktree submodule
+        # checkouts (.git file pointing at gitdir).
+        git_marker = skill_dir / ".git"
+        if git_marker.is_file() or git_marker.is_dir():
+            continue
         skill_file = skill_dir / "SKILL.md"
         if not skill_file.is_file():
             errors.append(f"{skill_dir.relative_to(REPO_ROOT)}: missing SKILL.md")
