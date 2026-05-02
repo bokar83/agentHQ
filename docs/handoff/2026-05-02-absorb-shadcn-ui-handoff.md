@@ -4,6 +4,7 @@
 **From session:** /agentshq-absorb https://github.com/shadcn-ui/ui
 **Verdict:** PROCEED. Placement: enhance skills/ui-styling. Leverage: continuous-improvement.
 **Target follow-up date:** 2026-05-09
+**Commit:** `56df740` on `main`. Pushed to GitHub. VPS `/root/agentsHQ` fast-forwarded. Three-way sync verified.
 
 ## What was decided in the prior session
 
@@ -19,17 +20,29 @@ Re-shaped integration plan (Sankofa flagged the original priority was inverted; 
 
 Falsifiable metric: by 2026-05-15, `git log skills/ui-styling/` shows the cache script committed + at least one shadcn block named in a `vercel-launch` deploy log. Cache-script commit alone counts if no client build happens in window.
 
-## What shipped in this session (already on disk, not committed)
+## What shipped in this session (committed `56df740`, pushed, VPS in sync)
 
-- New file: `skills/ui-styling/scripts/refresh-shadcn-cache.sh`
-- New file: `skills/ui-styling/references/shadcn-blocks.md`
-- New folder: `skills/ui-styling/cache/` containing `llms-2026-05-02.txt` (12 KB) + `registry-schema-2026-05-02.json` (487 B)
-- Modified: `skills/ui-styling/references/shadcn-components.md` (banner only; v4 content sweep still pending 2026-05-09)
-- Modified: `skills/ui-styling/references/shadcn-theming.md` (banner only; same)
-- Modified: `skills/ui-styling/references/shadcn-accessibility.md` (banner only; same)
+11 files changed, 202 insertions, 4 deletions:
+
+- New: `skills/ui-styling/scripts/refresh-shadcn-cache.sh` (10 lines bash, Karpathy WARN-compliant)
+- New: `skills/ui-styling/references/shadcn-blocks.md` (27-block starter index)
+- New: `skills/ui-styling/cache/.gitkeep` (cache contents gitignored, regenerable via script)
+- New: `docs/handoff/2026-05-02-absorb-shadcn-ui-handoff.md` (this file)
 - Modified: `skills/ui-styling/SKILL.md` (canonical-home line)
+- Modified: `skills/ui-styling/references/shadcn-components.md` (scaffolding banner only; v4.6.0 content sweep still pending 2026-05-09)
+- Modified: `skills/ui-styling/references/shadcn-theming.md` (scaffolding banner only; same)
+- Modified: `skills/ui-styling/references/shadcn-accessibility.md` (scaffolding banner only; same)
 - Modified: `docs/reviews/absorb-log.md` (verdict appended)
 - Modified: `docs/reviews/absorb-followups.md` (followup appended)
+- Modified: `.gitignore` (excludes `skills/ui-styling/cache/*` except `.gitkeep`)
+
+Sync state at handoff:
+
+| Surface | HEAD |
+| --- | --- |
+| Local | `56df740` |
+| GitHub `origin/main` | `56df740` |
+| VPS `/root/agentsHQ` | `56df740` |
 
 ## Skills now claimed in the design space (after this absorb)
 
