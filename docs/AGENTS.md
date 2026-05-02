@@ -34,3 +34,8 @@ All system documentation: SOPs, roadmaps, playbooks, reference, handoffs.
 - **Read the relevant roadmap** before working on any roadmapped project (atlas, harvest, studio).
 - **Append session logs** to the roadmap at session end - do not create new handoff docs for roadmapped projects.
 - **Never put client-specific content here** - docs/ is platform-level documentation only.
+
+## Cross-references
+
+- Constitution: [`docs/GOVERNANCE.md`](../docs/GOVERNANCE.md)
+- Folder Governance: [`docs/AGENT_SOP.md`](../docs/AGENT_SOP.md)

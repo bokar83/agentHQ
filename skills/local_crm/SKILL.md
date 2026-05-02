@@ -1,3 +1,8 @@
+---
+name: local-crm
+description: Agent-driven pipeline management for tracking Catalyst Growth Engine leads in a local PostgreSQL CRM.
+---
+
 # Local CRM Skill
 
 **Description:** Agent-driven pipeline management for Catalyst Growth Engine.

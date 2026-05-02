@@ -1,3 +1,8 @@
+---
+name: cold-outreach
+description: Single cold email template and reply-first outreach rules for Catalyst Works Consulting.
+---
+
 # Cold Outreach for Catalyst Works Consulting
 
 **Name:** Cold Outreach

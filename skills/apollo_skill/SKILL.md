@@ -1,3 +1,8 @@
+---
+name: apollo-skill
+description: Agent-driven Apollo.io lead discovery for Catalyst Works Consulting, including Utah lead search, email reveal workflows, and owner lookup by company name.
+---
+
 # Apollo.io Lead Discovery Skill
 
 **Description:** Agent-driven lead discovery for Catalyst Growth Engine.

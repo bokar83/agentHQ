@@ -22,3 +22,16 @@ repos:
         files: \.md$
         exclude: ^zzzArchive/
         types: [file]
+      - id: lint-and-index-skills
+        name: Lint and Index Skills
+        entry: python scripts/lint_and_index_skills.py
+        language: python
+        pass_filenames: false
+        always_run: true
+      - id: check-folder-purpose
+        name: Folder Governance (every top-level folder needs AGENTS.md or README.md)
+        description: Compass M0 governance enforcement. See docs/GOVERNANCE.md.
+        entry: python scripts/check_folder_purpose.py
+        language: python
+        pass_filenames: false
+        always_run: true

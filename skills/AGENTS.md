@@ -32,3 +32,8 @@ Read `skills/_index.md` first. It is a one-file routing table for all 71 skills.
 ## Categories (for _index.md routing)
 
 `quality` | `council` | `revenue` | `media` | `research` | `ops` | `engineering` | `content` | `design` | `data`
+
+## Cross-references
+
+- Constitution: [`docs/GOVERNANCE.md`](../docs/GOVERNANCE.md)
+- Folder Governance: [`docs/AGENT_SOP.md`](../docs/AGENT_SOP.md)
