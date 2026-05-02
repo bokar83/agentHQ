@@ -370,11 +370,12 @@ def run_chat(message: str, session_key: str = "default") -> dict:
     actions: list = []
 
     try:
-        from llm_helpers import call_llm, CHAT_MODEL, CHAT_TEMPERATURE, CHAT_SANDBOX
+        from llm_helpers import call_llm, CHAT_TEMPERATURE, CHAT_SANDBOX
 
         response = call_llm(
             messages,
-            model=CHAT_MODEL,
+            model=None,
+            model_key="CHAT_MODEL",
             tools=_TOOLS,
             tool_choice="auto",
             temperature=CHAT_TEMPERATURE,
@@ -444,7 +445,7 @@ def run_chat(message: str, session_key: str = "default") -> dict:
                     "tool_call_id": tool_call.id,
                     "content": tool_result,
                 })
-            followup = call_llm(messages, model=CHAT_MODEL, temperature=CHAT_TEMPERATURE)
+            followup = call_llm(messages, model=None, model_key="CHAT_MODEL", temperature=CHAT_TEMPERATURE)
             raw_reply = (followup.choices[0].message.content or "").strip()
         else:
             raw_reply = (msg.content or "").strip()
@@ -691,7 +692,7 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
 
     Returns M9 schema: {"reply": "...", "actions": [...], "artifact": {...}, "job_id": "..."}
     """
-    from llm_helpers import ATLAS_CHAT_MODEL, CHAT_TEMPERATURE, CHAT_SANDBOX
+    from llm_helpers import CHAT_TEMPERATURE, CHAT_SANDBOX
 
     _evict_expired_confirms()
 
@@ -752,6 +753,10 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
     actions: list = []
     artifact: dict | None = None
     job_id: str | None = None
+    # Track the resolved model of the LAST call_llm in this turn so the UI
+    # footer can show "Atlas is using <model>". Sankofa guardrail from the
+    # 2026-05-02 silent-haiku incident: observability prevents recurrence.
+    resolved_model: str | None = None
 
     # Deterministic READ-intent pre-filter (Karpathy: don't be clever).
     # If the user is asking about system state, call _query_system() directly
@@ -785,7 +790,8 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
                     f"{system_data}"
                 ),
             }]
-            synthesis = call_llm(synthesis_messages, model=ATLAS_CHAT_MODEL, temperature=CHAT_TEMPERATURE)
+            synthesis = call_llm(synthesis_messages, model=None, model_key="ATLAS_CHAT_MODEL", temperature=CHAT_TEMPERATURE)
+            resolved_model = getattr(synthesis, "_resolved_model", None)
             raw_reply = (synthesis.choices[0].message.content or "").strip()
             reply = _extract_reply(raw_reply)
             try:
@@ -795,7 +801,10 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
                 save_conversation_turn(session_key, "assistant", reply)
             except Exception:
                 pass
-            return {"reply": reply, "actions": []}
+            _result: dict = {"reply": reply, "actions": []}
+            if resolved_model:
+                _result["model"] = resolved_model
+            return _result
         except Exception as pre_e:
             logger.warning(f"READ-intent pre-filter failed, falling through to LLM tool-choice: {pre_e}")
 
@@ -804,11 +813,13 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
 
         response = call_llm(
             full_messages,
-            model=ATLAS_CHAT_MODEL,
+            model=None,
+            model_key="ATLAS_CHAT_MODEL",
             tools=_TOOLS,
             tool_choice="auto",
             temperature=CHAT_TEMPERATURE,
         )
+        resolved_model = getattr(response, "_resolved_model", None)
 
         msg = response.choices[0].message
 
@@ -881,7 +892,8 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
                     "content": tool_result,
                 })
 
-            followup = call_llm(full_messages, model=ATLAS_CHAT_MODEL, temperature=CHAT_TEMPERATURE)
+            followup = call_llm(full_messages, model=None, model_key="ATLAS_CHAT_MODEL", temperature=CHAT_TEMPERATURE)
+            resolved_model = getattr(followup, "_resolved_model", resolved_model)
             raw_reply = (followup.choices[0].message.content or "").strip()
         else:
             raw_reply = (msg.content or "").strip()
@@ -931,4 +943,6 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
         result["artifact"] = artifact
     if job_id:
         result["job_id"] = job_id
+    if resolved_model:
+        result["model"] = resolved_model
     return result
