@@ -180,3 +180,6 @@ download.html
 pytest_tmp/
 pytest_tmp_work/
 .pytest-tmp/
+
+# Codex sandbox progress fallback artifact
+task_progress/
