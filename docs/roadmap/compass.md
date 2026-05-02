@@ -59,9 +59,9 @@ Done = all five true at the same time.
 
 ---
 
-### M1: AGENTS.md compliance audit + backfill ⏳ IN PROGRESS 2026-05-02
+### M1: AGENTS.md compliance audit + backfill ✅ SHIPPED 2026-05-02
 
-**What:** Every top-level folder must have an AGENTS.md (or README.md where the rule allows it). Today's audit caught 17 folders missing it. M1 = audit existing 8 to ensure they meet the standard, write the missing 17.
+**What:** Every top-level folder must have an AGENTS.md (or README.md where the rule allows it). 11 missing AGENTS.md written (config, data, deliverables, migrations, projects, research, sql, templates, tests, thepopebot, zzzArchive). 8 existing audited; n8n/AGENTS.md fixed for stale workflows/ subfolder reference. GOVERNANCE.md cross-refs added to all 8 existing. 100% folder-governance coverage; was 32%. Notion task created and marked Done.
 
 **Each AGENTS.md must contain:**
 
@@ -98,17 +98,26 @@ Done = all five true at the same time.
 
 ---
 
-### M3: Quarterly purge cadence ⏳ QUEUED
+### M3: Quarterly purge cadence ⏳ ARMED 2026-05-02 (first run 2026-08-02)
 
 **What:** Every 90 days, run a governance review pass. Surface rules untouched 90+ days that have no commits/hooks/memory referencing them. Decide retire vs keep, with manifest entries for any retirement.
 
-**First scheduled run:** 2026-08-02 (90 days after M0 ships).
+**First scheduled run:** 2026-08-02 09:00 MT (15:00 UTC).
 
-**Trigger:** date-gated.
+**Routine:** `trig_01YX1FKubUPD2JXTsAPbxhEo` (one-time remote agent, claude-sonnet-4-6). View at https://claude.ai/code/routines/trig_01YX1FKubUPD2JXTsAPbxhEo
 
-**Mechanism:** scheduled remote agent (Claude Code routine) writes `docs/audits/governance-purge-<date>.md` with the candidates, posts to Telegram for Boubacar's review.
+**What the agent will do:**
 
-**Success criterion:** first run produces a non-empty candidate list AND ≥1 rule actually retires.
+1. Read GOVERNANCE.md, AGENT_SOP.md, compass.md M3 to understand rules.
+2. `git log --since='90 days ago'` against each governance surface (AGENT_SOP, GOVERNANCE, repo-structure.md, all folder AGENTS.md, .pre-commit-config.yaml, all roadmap files).
+3. For each potentially-stale rule, grep codebase for active references (excluding zzzArchive/, node_modules/, .venv/, external/).
+4. Write `docs/audits/governance-purge-2026-08-02.md` with retirement candidates + stale-but-referenced + active surfaces sections. NO automatic retirement.
+5. Commit + push (note: SecureWatch hook is slow; agent has been instructed to be patient).
+6. Final stdout reports candidate count + audit path.
+
+**Recurrence:** this is a one-time routine; quarterly recurrence to be re-armed in the next session if Boubacar wants the cadence to continue. (Re-arming pattern: update the routine with a new `run_once_at` 90 days out, or convert to a cron expression.)
+
+**Success criterion:** first run produces a non-empty candidate list AND ≥1 rule actually retires (Boubacar's review).
 
 ---
 
