@@ -65,7 +65,7 @@ These paths are mounted by `docker-compose.yml` or referenced by skills/workflow
 
 | Folder | Owner | Routing | Status |
 |--------|-------|---------|--------|
-| `output/` | submodule + nested submodules | Git submodule. Holds 14 live websites + 5 nested app submodules (~996 MB). NOT an agent output folder: the name is coincidental. **Full anatomy + critical "two repos do not merge" warning at [`output-folder-anatomy.md`](output-folder-anatomy.md).** Do not write agent output here. | submodule |
+| `output/` | submodule + nested submodules | Git submodule pointing at `bokar83/signal-works-demo-hvac` (canonicalized 2026-05-02 in Compass M5). Holds websites under `websites/` + apps under `apps/` (~996 MB). NOT an agent output folder: the name is coincidental. **Full anatomy at [`output-folder-anatomy.md`](output-folder-anatomy.md).** Simple rule: apps in `apps/`, websites in `websites/`. The original attire-inspo-app code that used to sit at `output/` root has been relocated to `output/apps/attire-inspo-app/`. Do not write agent output here. | submodule |
 | `skills/community/` | submodule | Git submodule: `sickn33/antigravity-awesome-skills`. Community skill library. | submodule |
 | `external/` | external | Third-party repos cloned for reference. Not imported by production. Gitignored. | active / gitignored |
 | `tools/` | external | External CLI tools (autocli binary). Gitignored. | active / gitignored |

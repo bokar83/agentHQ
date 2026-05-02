@@ -9,18 +9,15 @@ status: active / submodule + nested-submodules
 
 > **Confusing folder name, important contents.** Despite the folder name, `output/` (singular) is NOT the agent task output sink (that's `outputs/` plural, becoming `agent_outputs/`). It is a registered git submodule that holds 14 live websites + 5 nested git submodules pointing at separate Next.js app repos. Total: ~996 MB on disk, 14 client/personal websites, 5 satellite app repos.
 
-## CRITICAL: TWO DIFFERENT REPOS, DO NOT MERGE
+## RESOLVED 2026-05-02 (Compass M5): canonical repo + relocation
 
-The agentsHQ `.gitmodules` registers `output/` as pointing at `bokar83/attire-inspo-app`. The local working tree's `output/.git/config` currently points at `bokar83/signal-works-demo-hvac.git` (commit `283f7eba`). **These are two separate repositories. They must NEVER be merged or treated as the same thing.** They share no history. They serve different purposes (attire-inspo-app is a Next.js app for Aminöa; signal-works-demo-hvac is a demo prospect site for the Signal Works pipeline).
+**`output/` canonical repo:** `bokar83/signal-works-demo-hvac`. `.gitmodules` updated 2026-05-02 to match the live checkout (Option B from the prior anatomy doc). The original confusion (`.gitmodules` said `attire-inspo-app`, on-disk said `signal-works-demo-hvac`) is fixed.
 
-The inconsistency means the local `output/` checkout is currently a clone of a different repo than what agentsHQ thinks it is. Resolution requires a careful decision in a dedicated future session:
+**The original attire-inspo-app code that lived at `output/` root has been relocated** to `output/apps/attire-inspo-app/`. Apps go in `output/apps/`, websites go in `output/websites/`: the simplest possible rule. The code was unrelated to signal-works-demo-hvac and was the source of the "what is `output/` actually?" confusion. The GitHub satellite repo `bokar83/attire-inspo-app` continues to exist independently for any production deploy needs.
 
-- Option A: re-clone `output/` from the correct `bokar83/attire-inspo-app` remote (matching `.gitmodules`). The current `signal-works-demo-hvac` checkout would need to be saved elsewhere first.
-- Option B: update agentsHQ `.gitmodules` to point at `signal-works-demo-hvac` (matching the live checkout). Re-establish a separate path for `attire-inspo-app` if it is also needed locally.
+**The two repos stay distinct.** `bokar83/attire-inspo-app` and `bokar83/signal-works-demo-hvac` are still separate GitHub satellites; they share no history; they must never be merged. This rule remains locked.
 
-**Either way: the two repos stay distinct. No merge. No history rewrite that combines them.** Pick which repo `output/` should canonically be, and create a separate path for the other if both are needed locally.
-
-This is tracked as a **dedicated future session** (Compass M5 or its own roadmap). Today's session only documents what was found; nothing is changed in `output/` itself.
+**Note:** the `output/` submodule's working tree may still contain the old attire-inspo files at its root because they were tracked by the previous repo state. Cleaning the submodule's working tree (a commit on `signal-works-demo-hvac` removing those files) is its own follow-up; the agentsHQ-side relocation is done.
 
 ## Live mount references (DO NOT MOVE this folder without coordinating)
 

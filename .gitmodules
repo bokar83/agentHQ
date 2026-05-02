@@ -1,6 +1,6 @@
 [submodule "output"]
 	path = output
-	url = https://github.com/bokar83/attire-inspo-app.git
+	url = https://github.com/bokar83/signal-works-demo-hvac.git
 [submodule "skills/community"]
 	path = skills/community
 	url = https://github.com/sickn33/antigravity-awesome-skills.git

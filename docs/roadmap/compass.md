@@ -34,7 +34,7 @@ Done = all five true at the same time.
 - M2 SHIPPED 2026-05-02 (evening): 5 enforcement hooks live (memory-frontmatter, session-log, redundancy, doc-size, retirement-candidates manual stage). 31 tests passing. Surfaced + fixed one pre-existing violation (`docs/memory/brand_catalyst_works.md` was missing frontmatter).
 - M3 ARMED for 2026-08-02: quarterly purge agent.
 - M4 SHIPPED 2026-05-02 (evening): `docs/governance.manifest.json` (LLM-readable routing table) + `scripts/validate_governance_manifest.py` drift check + 7 tests. Wired to fire on edits to GOVERNANCE.md or the manifest.
-- M5: queued (output/ submodule reconciliation).
+- M5 SHIPPED 2026-05-02 (evening, late): `.gitmodules` canonicalized to `signal-works-demo-hvac`; original attire-inspo-app code relocated from `output/` root to `output/apps/attire-inspo-app/`; reference docs updated. Original 3-4 hour spec collapsed to 10 min once Boubacar reframed: GitHub repos already separate, no merge needed, just local hygiene. Placement rule: apps live in `output/apps/`, websites in `output/websites/`.
 
 **Coverage today:**
 
@@ -128,7 +128,26 @@ Done = all five true at the same time.
 
 ---
 
-### M5: output/ submodule reconciliation + websites/apps restructure ⏳ QUEUED
+### M5: output/ submodule reconciliation + attire-inspo relocation ✅ SHIPPED 2026-05-02 (evening, late)
+
+**What shipped (collapsed scope):** Boubacar reframed the original spec on 2026-05-02 evening: both `bokar83/attire-inspo-app` and `bokar83/signal-works-demo-hvac` already exist as separate GitHub repos and stay separate. The only real work is local hygiene. Three tasks, ~10 min total.
+
+1. **`.gitmodules` canonicalized.** Updated `output/` submodule URL from `bokar83/attire-inspo-app.git` to `bokar83/signal-works-demo-hvac.git` to match the live working-tree checkout. Resolves the long-standing inconsistency where `.gitmodules` and `output/.git/config` disagreed.
+2. **attire-inspo-app code relocated.** Copied the original Next.js code (`app/`, `components/`, `lib/`, `public/`, `package.json`, etc., 13 files + 4 dirs) from `output/` root to `output/apps/attire-inspo-app/`. The placement rule: apps in `output/apps/`, websites in `output/websites/`. Boubacar's words: "Just keep it as simple as that for now. If we have to adjust later on, we do so." The `bokar83/attire-inspo-app` GitHub repo is unchanged (this is local-only hygiene). Note: because `output/` is a submodule, this new app sits inside the submodule's working tree (currently checked out as `signal-works-demo-hvac`); cleaning up that submodule's tracked files is a separate follow-up commit on the submodule itself.
+3. **Reference docs updated.** `docs/reference/output-folder-anatomy.md` rewritten "CRITICAL: TWO DIFFERENT REPOS" section as "RESOLVED 2026-05-02" with the new state. `docs/reference/repo-structure.md` updated `output/` row to note canonical repo + relocation.
+
+**Descoped from original M5 spec (correctly, per Boubacar's reframe):**
+
+- ❌ "Promote websites/apps to top-level": premature, no business need.
+- ❌ "Test all 14 websites resolve": no moves, no test needed.
+- ❌ "Test vercel-launch lands at right path": `output/apps/` unchanged.
+- ❌ "Decide repo canonicalization": Boubacar decided signal-works-demo-hvac.
+
+**Known follow-up (not blocking M5 close):** the `output/` submodule's working tree may still contain the old attire-inspo files at its root because they were tracked by the previous repo state. Cleaning the submodule's working tree is a commit on `signal-works-demo-hvac` that removes those files. Separate task; submodule-internal; not agentsHQ-side.
+
+---
+
+### M5 (original spec, descoped): output/ submodule restructure
 
 **Why:** Phase 3 of the 2026-05-02 structural cleanup surfaced two real issues that need a dedicated session:
 
@@ -236,3 +255,11 @@ Built the LLM-readable governance manifest per the M4 spec. Files: `docs/governa
 Two new hard rules locked into AGENT_SOP this session (and indexed in MEMORY.md for cross-agent inheritance): (1) auto-update the roadmap + Notion task after every shipped task with no prompting; (2) propose codification (memory / skill / hook / hookify rule) when patterns repeat using the two-strikes rule. The rule additions were demonstrated immediately: M2 + M4 Notion tasks created (M2 backfilled to Done, M4 In Progress → Done in the next push), compass.md updated in the same turn for both shipments.
 
 Compass status as of this entry: M0 + M1 + M2 + M4 SHIPPED. M3 ARMED for 2026-08-02. M5 the only QUEUED milestone. The governance scaffolding is complete; the long-tail work is M5's output/ reconciliation and the open MEMORY.md cap question.
+
+### 2026-05-02 (evening, late): M5 SHIPPED in 10 minutes after scope collapse
+
+Boubacar reframed M5 immediately after M4 closed: both attire-inspo-app and signal-works-demo-hvac already exist as separate GitHub repos. No merge work. The only thing local-side that matters is moving attire-inspo out of `output/` root so the folder stops being a confusion zone. Original 3-4 hour spec → 10 min execution.
+
+Three tasks, all done: (1) `.gitmodules` URL flipped from `attire-inspo-app.git` to `signal-works-demo-hvac.git` to match the live checkout. (2) attire-inspo-app code (`app/`, `components/`, `lib/`, `public/`, package files, configs, dotfiles) copied from `output/` root to `output/apps/attire-inspo-app/` (initial plan was `workspace/aminoa/` but `workspace/` is gitignored; Boubacar reframed to keep it simple: apps in `output/apps/`, websites in `output/websites/`). (3) `output-folder-anatomy.md` and `repo-structure.md` updated to reflect resolved state.
+
+**Compass status post-M5: M0 + M1 + M2 + M4 + M5 SHIPPED. M3 ARMED for 2026-08-02. No queued milestones. Compass scaffolding + enforcement layer + LLM-readable mirror + structural reconciliation all complete.** What remains long-term: the M3 quarterly purge will fire on its own; future Compass work (renaming `output/` to disambiguate from `outputs/`/`agent_outputs/`, raising MEMORY.md cap, etc.) becomes a fresh milestone if/when needed.
