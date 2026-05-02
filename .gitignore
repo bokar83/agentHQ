@@ -161,6 +161,10 @@ workspace/memory-index/*
 # Sandbox throwaway corner (sandbox/ itself IS tracked for in-flight work)
 sandbox/.tmp/
 
+# shadcn cache snapshots (regenerable via skills/ui-styling/scripts/refresh-shadcn-cache.sh)
+skills/ui-styling/cache/*
+!skills/ui-styling/cache/.gitkeep
+
 # Machine-local tooling config (tmux, etc.)
 config/
 

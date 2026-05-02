@@ -9,3 +9,4 @@ Leverage types: `producing-motion` | `founder-time-reduction` | `continuous-impr
 ---
 2026-05-02 | https://github.com/firecrawl/firecrawl-mcp-server | ARCHIVE-AND-NOTE | archive | none
 2026-05-02 | https://github.com/microsoft/markitdown | PROCEED | new tool | continuous-improvement
+2026-05-02 | https://github.com/shadcn-ui/ui | PROCEED | enhance skills/ui-styling | continuous-improvement

@@ -1,4 +1,8 @@
-# shadcn/ui Theming & Customization
+# shadcn/ui Theming & Customization (scaffolding)
+
+> **STATUS: scaffolding, not authoritative.** Authoritative source: `cache/llms-<date>.txt`. Refresh via `scripts/refresh-shadcn-cache.sh`. Last refreshed: 2026-05-02 (cache only; in-file v3-era patterns pending v4.6.0 sweep, target 2026-05-09).
+>
+> Use this file for orientation. For exact current API, read the cache. If the two disagree, the cache wins.
 
 Theme configuration, CSS variables, dark mode, and component customization.
 
