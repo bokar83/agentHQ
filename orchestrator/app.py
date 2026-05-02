@@ -995,6 +995,7 @@ class _AtlasChatResponse(_BaseModel):
     actions: list = []
     artifact: Optional[dict] = None
     job_id: Optional[str] = None
+    model: Optional[str] = None
 
 
 @app.post("/atlas/chat", response_model=_AtlasChatResponse)
@@ -1010,6 +1011,7 @@ async def atlas_chat(body: _AtlasChatRequest, _auth=Depends(verify_chat_token)):
         actions=result.get("actions") or [],
         artifact=result.get("artifact"),
         job_id=result.get("job_id"),
+        model=result.get("model"),
     )
 
 
