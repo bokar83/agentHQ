@@ -84,7 +84,7 @@ Target: $5K MRR by June 2026. Possible framings to choose from:
 
 1. **Soften the verdict . acknowledge the business the prospect actually built before naming what's missing.** *(Done for Rod 2026-05-01.)*
 2. **Drop industry jargon . "GEO" → "AI search visibility (ChatGPT, Perplexity, Gemini)" . speak the prospect's vocabulary.** *(Done for Rod 2026-05-01.)*
-3. **Replace the project-plan CTA with a single ask . "Text 'site' to [number]" . phone + name + verb.** *(Done for Rod 2026-05-01; needs real number, currently `[YOUR PHONE NUMBER]` placeholder.)*
+3. **Replace the project-plan CTA with a single ask . "Text 'site' to [number]" . phone + name + verb.** *(SUPERSEDED 2026-05-02. Current Rod outreach in `projects/elevate-built-oregon/MESSAGE_TO_ROD.md` uses a demo-link CTA, not a phone CTA. The "text site to phone" approach was replaced when the demo became the lure. No phone placeholder remains in active files.)*
 4. **Reframe the lead-loss section around pain-removal + revenue compounding, not score gaps.** *(Done for Rod 2026-05-01.)*
 5. **Replace judgment-call scorecard numbers with third-party validator screenshots . PageSpeed Insights, Schema validator, Lighthouse SEO, WAVE, Rich Results Test.** *(Pending . runs against live + rebuild URL.)*
 6. **Add the money line . "~$X-$Y/month in missed jobs" . derived from public keyword volumes × industry CTR × close rate × avg job value.** Methodology in collapsed section so skeptics can audit.
