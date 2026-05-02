@@ -1,0 +1,37 @@
+{
+  "valueInputOption": "USER_ENTERED",
+  "data": [
+    {"range": "Weekly Summary!A1", "values": [["WEEKLY SUMMARY"]]},
+    {"range": "Weekly Summary!A2", "values": [["How many habits did you complete each week? Use this to spot your strong and weak weeks."]]},
+    {"range": "Weekly Summary!A4:F4", "values": [["Habit", "Week 1 (Days 1-7)", "Week 2 (Days 8-14)", "Week 3 (Days 15-21)", "Week 4 (Days 22-28)", "Week 5 (Days 29-31)"]]},
+    {"range": "Weekly Summary!A5:A14", "values": [
+      ["Morning Meditation"],
+      ["Drink 8 Glasses of Water"],
+      ["Exercise / Move Body"],
+      ["Read 10+ Pages"],
+      ["No Social Media Before 9am"],
+      ["Eat a Healthy Meal"],
+      ["Journal / Gratitude"],
+      ["Sleep Before 11pm"],
+      ["Take Vitamins"],
+      ["Practice a New Skill"]
+    ]},
+    {"range": "Weekly Summary!B5:F5", "values": [["=COUNTIF('Habit Tracker'!B6:H6,\"=1\")", "=COUNTIF('Habit Tracker'!I6:O6,\"=1\")", "=COUNTIF('Habit Tracker'!P6:V6,\"=1\")", "=COUNTIF('Habit Tracker'!W6:AC6,\"=1\")", "=COUNTIF('Habit Tracker'!AD6:AF6,\"=1\")"]]},
+    {"range": "Weekly Summary!B6:F6", "values": [["=COUNTIF('Habit Tracker'!B7:H7,\"=1\")", "=COUNTIF('Habit Tracker'!I7:O7,\"=1\")", "=COUNTIF('Habit Tracker'!P7:V7,\"=1\")", "=COUNTIF('Habit Tracker'!W7:AC7,\"=1\")", "=COUNTIF('Habit Tracker'!AD7:AF7,\"=1\")"]]},
+    {"range": "Weekly Summary!B7:F7", "values": [["=COUNTIF('Habit Tracker'!B8:H8,\"=1\")", "=COUNTIF('Habit Tracker'!I8:O8,\"=1\")", "=COUNTIF('Habit Tracker'!P8:V8,\"=1\")", "=COUNTIF('Habit Tracker'!W8:AC8,\"=1\")", "=COUNTIF('Habit Tracker'!AD8:AF8,\"=1\")"]]},
+    {"range": "Weekly Summary!B8:F8", "values": [["=COUNTIF('Habit Tracker'!B9:H9,\"=1\")", "=COUNTIF('Habit Tracker'!I9:O9,\"=1\")", "=COUNTIF('Habit Tracker'!P9:V9,\"=1\")", "=COUNTIF('Habit Tracker'!W9:AC9,\"=1\")", "=COUNTIF('Habit Tracker'!AD9:AF9,\"=1\")"]]},
+    {"range": "Weekly Summary!B9:F9", "values": [["=COUNTIF('Habit Tracker'!B10:H10,\"=1\")", "=COUNTIF('Habit Tracker'!I10:O10,\"=1\")", "=COUNTIF('Habit Tracker'!P10:V10,\"=1\")", "=COUNTIF('Habit Tracker'!W10:AC10,\"=1\")", "=COUNTIF('Habit Tracker'!AD10:AF10,\"=1\")"]]},
+    {"range": "Weekly Summary!B10:F10", "values": [["=COUNTIF('Habit Tracker'!B11:H11,\"=1\")", "=COUNTIF('Habit Tracker'!I11:O11,\"=1\")", "=COUNTIF('Habit Tracker'!P11:V11,\"=1\")", "=COUNTIF('Habit Tracker'!W11:AC11,\"=1\")", "=COUNTIF('Habit Tracker'!AD11:AF11,\"=1\")"]]},
+    {"range": "Weekly Summary!B11:F11", "values": [["=COUNTIF('Habit Tracker'!B12:H12,\"=1\")", "=COUNTIF('Habit Tracker'!I12:O12,\"=1\")", "=COUNTIF('Habit Tracker'!P12:V12,\"=1\")", "=COUNTIF('Habit Tracker'!W12:AC12,\"=1\")", "=COUNTIF('Habit Tracker'!AD12:AF12,\"=1\")"]]},
+    {"range": "Weekly Summary!B12:F12", "values": [["=COUNTIF('Habit Tracker'!B13:H13,\"=1\")", "=COUNTIF('Habit Tracker'!I13:O13,\"=1\")", "=COUNTIF('Habit Tracker'!P13:V13,\"=1\")", "=COUNTIF('Habit Tracker'!W13:AC13,\"=1\")", "=COUNTIF('Habit Tracker'!AD13:AF13,\"=1\")"]]},
+    {"range": "Weekly Summary!B13:F13", "values": [["=COUNTIF('Habit Tracker'!B14:H14,\"=1\")", "=COUNTIF('Habit Tracker'!I14:O14,\"=1\")", "=COUNTIF('Habit Tracker'!P14:V14,\"=1\")", "=COUNTIF('Habit Tracker'!W14:AC14,\"=1\")", "=COUNTIF('Habit Tracker'!AD14:AF14,\"=1\")"]]},
+    {"range": "Weekly Summary!B14:F14", "values": [["=COUNTIF('Habit Tracker'!B15:H15,\"=1\")", "=COUNTIF('Habit Tracker'!I15:O15,\"=1\")", "=COUNTIF('Habit Tracker'!P15:V15,\"=1\")", "=COUNTIF('Habit Tracker'!W15:AC15,\"=1\")", "=COUNTIF('Habit Tracker'!AD15:AF15,\"=1\")"]]},
+    {"range": "Weekly Summary!A16:F16", "values": [["WEEKLY HABIT TOTALS", "=SUM(B5:B14)", "=SUM(C5:C14)", "=SUM(D5:D14)", "=SUM(E5:E14)", "=SUM(F5:F14)"]]},
+    {"range": "Weekly Summary!A18", "values": [["Best Week: =INDEX(B4:F4,MATCH(MAX(B16:F16),B16:F16,0))"]]},
+    {"range": "Weekly Summary!A20", "values": [["NOTES / REFLECTIONS"]]},
+    {"range": "Weekly Summary!A21", "values": [["Week 1:"]]},
+    {"range": "Weekly Summary!A22", "values": [["Week 2:"]]},
+    {"range": "Weekly Summary!A23", "values": [["Week 3:"]]},
+    {"range": "Weekly Summary!A24", "values": [["Week 4:"]]}
+  ]
+}
