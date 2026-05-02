@@ -165,8 +165,8 @@ sandbox/.tmp/
 config/
 
 # Vendored external tool clones (CLI-Anything, OpenSpace, etc.)
-# Were accidentally committed as orphan gitlinks in 5af0592; deregistered 2026-04-22.
-external/
+# Moved 2026-05-02 from `external/` to `docs/research/external-references/` per Compass governance: research artifacts belong in docs/.
+docs/research/external-references/
 
 # Claude Code scheduling skill runtime lock
 .claude/scheduled_tasks.lock
@@ -185,4 +185,5 @@ pytest_tmp_work/
 .pytest-tmp/
 
 # Codex sandbox progress fallback artifact
-task_progress/
+# Moved 2026-05-02 from root `task_progress/` to `data/codex/` per Compass governance: runtime ephemera belongs under data/.
+data/codex/
