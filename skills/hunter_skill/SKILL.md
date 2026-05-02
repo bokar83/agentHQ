@@ -1,3 +1,8 @@
+---
+name: hunter-skill
+description: Automates discovery, logging, and reporting of high-intent Utah leads for Catalyst Works Consulting.
+---
+
 # Hunter Skill — Catalyst Daily Prospecting
 
 **Name:** Hunter Skill

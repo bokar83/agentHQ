@@ -1,3 +1,8 @@
+---
+name: notion-stylist
+description: Applies premium Catalyst Works visual styling to Notion pages and databases.
+---
+
 # Notion Stylist Skill — agentsHQ Premium Branding
 
 **Description:** Provides agents with the ability to apply high-end visual styling to Notion pages and databases. This includes setting branded covers, high-resolution icons, and creating complex multi-column layouts using the Catalyst Works color palette.

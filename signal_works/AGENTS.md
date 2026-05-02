@@ -26,3 +26,8 @@ Future plan: extract to its own repo (`bokar83/signal-works`) once import bounda
 - Email sends from `boubacar@catalystworks.consulting`.
 - Week 1: human review mode. Week 2+: auto-send mode.
 - Do not move this folder until orchestrator imports are refactored - it will break the container build.
+
+## Cross-references
+
+- Constitution: [`docs/GOVERNANCE.md`](../docs/GOVERNANCE.md)
+- Folder Governance: [`docs/AGENT_SOP.md`](../docs/AGENT_SOP.md)

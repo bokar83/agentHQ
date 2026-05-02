@@ -1,5 +1,7 @@
 # agentsHQ: Shared Agent SOP
 
+> **This is the agentsHQ rules library.** The constitution that routes between rule sources is at [`docs/GOVERNANCE.md`](GOVERNANCE.md). When in doubt about where a rule belongs or which rule wins in a conflict, read GOVERNANCE.md first. This file is the rules themselves.
+
 Applies to every coding-agent session (Claude Code, Codex, any future agent). Agent-specific addenda live in `CLAUDE.md` and `CODEX.md` at the repo root.
 
 ## Session Start
@@ -84,6 +86,8 @@ Always `python -m py_compile` every touched file after Codex finishes. Read the 
 ## Automatic Skill Triggers
 
 Fire without being asked. Check each trigger on every user message.
+
+If you need to discover available capabilities, read `docs/SKILLS_INDEX.md`.
 
 | # | Trigger | Action |
 | --- | --- | --- |

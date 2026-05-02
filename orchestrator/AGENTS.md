@@ -44,3 +44,8 @@ All Python application code: FastAPI app, router, crews, agents, tools, handlers
 ## Entrypoint
 
 `app.py` is the sole entrypoint. `uvicorn app:app` starts the service.
+
+## Cross-references
+
+- Constitution: [`docs/GOVERNANCE.md`](../docs/GOVERNANCE.md)
+- Folder Governance: [`docs/AGENT_SOP.md`](../docs/AGENT_SOP.md)

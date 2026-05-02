@@ -1,3 +1,8 @@
+---
+name: notion-cli
+description: Project-specific CLI for direct interaction with Notion databases in agentsHQ.
+---
+
 # Notion CLI Skill
 
 **Name:** notion_cli-rs

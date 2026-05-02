@@ -1,3 +1,8 @@
+---
+name: boub-voice-mastery
+description: Ensures AI-generated content sounds human, earned, direct, and specifically aligned with Boubacar Barry's voice.
+---
+
 # Skill: BouB Voice Mastery
 **Goal**: Ensuring all AI-generated content sounds human, earned, and specifically like Boubacar Barry.
 

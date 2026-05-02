@@ -1,3 +1,8 @@
+---
+name: linkedin-mvm
+description: Operational tooling for the LinkedIn AI Governance motion, including personalized DMs, prospect ingestion, and morning nudges.
+---
+
 # LinkedIn MVM Skill
 
 **Name:** LinkedIn MVM

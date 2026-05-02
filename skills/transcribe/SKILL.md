@@ -1,3 +1,8 @@
+---
+name: transcribe
+description: Transcribes audio files, video files, folders, and YouTube URLs using the OpenAI Whisper API with optional Google Drive and NotebookLM routing.
+---
+
 # Transcribe Skill
 
 Transcribe audio files, video files, or YouTube URLs using OpenAI Whisper API.
