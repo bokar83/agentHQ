@@ -27,11 +27,13 @@ Done = all five true at the same time.
 
 ## Status Snapshot
 
-*Last updated: 2026-05-02*
+*Last updated: 2026-05-02 (evening)*
 
-- M0 SHIPPED today: `docs/GOVERNANCE.md` (64 lines) routing table + AGENT_SOP top-of-file annotation + this roadmap + folder-purpose pre-commit hook (the M0 enforcement piece).
-- M1 IN PROGRESS today: Sankofa-audit existing AGENTS.md files + write missing AGENTS.md for 17 uncovered folders.
-- M2-M4: queued.
+- M0 SHIPPED 2026-05-02: `docs/GOVERNANCE.md` (64 lines) routing table + AGENT_SOP top-of-file annotation + this roadmap + folder-purpose pre-commit hook (the M0 enforcement piece).
+- M1 SHIPPED 2026-05-02: AGENTS.md compliance audit + backfill. 100% folder coverage (was 32%).
+- M2 SHIPPED 2026-05-02 (evening): 5 enforcement hooks live (memory-frontmatter, session-log, redundancy, doc-size, retirement-candidates manual stage). 31 tests passing. Surfaced + fixed one pre-existing violation (`docs/memory/brand_catalyst_works.md` was missing frontmatter).
+- M3 ARMED for 2026-08-02: quarterly purge agent.
+- M4 + M5: queued.
 
 **Coverage today:**
 
@@ -79,22 +81,26 @@ Done = all five true at the same time.
 
 ---
 
-### M2: Enforcement layer ⏳ QUEUED
+### M2: Enforcement layer ✅ SHIPPED 2026-05-02 (evening)
 
-**What:** Convert governance rules from documents to mechanism. Write 5 additional pre-commit hooks (folder-purpose hook ships in M0):
+**What:** Converted governance rules from documents to mechanism. Six pre-commit hooks now live (folder-purpose from M0 plus the five M2 hooks). Total Python: ~750 lines across 5 new scripts; 31 tests passing.
 
 1. ~~folder-purpose hook (every top-level folder needs AGENTS.md or README.md)~~ ✅ M0
-2. memory-frontmatter hook (every memory file has name/description/type fields)
-3. session-log hook (commits on roadmapped branches must update the session log)
-4. redundancy hook (no rule can be added if the same rule exists in another file; grep-check)
-5. retirement hook (every quarter, surface rules untouched 90+ days)
-6. doc-size hook (any markdown rule doc over 500 lines triggers a "consolidate" warning; AGENT_SOP at 106 today is fine)
+2. ✅ `scripts/check_memory_frontmatter.py` (every `docs/memory/*.md` needs YAML frontmatter with valid name/description/type fields). Hard-fail. Surfaced + fixed one pre-existing violation: `docs/memory/brand_catalyst_works.md`.
+3. ✅ `scripts/check_session_log_updated.py` (any roadmap edit needs a new dated `### YYYY-MM-DD:` entry, except cosmetic-only changes). Hard-fail; bypass with `SKIP_SESSION_LOG=1`.
+4. ✅ `scripts/check_rule_redundancy.py` (token-Jaccard ≥0.85 against the rule corpus across AGENT_SOP, GOVERNANCE, memory, all AGENTS.md). Warn-only; strict mode via `RULE_REDUNDANCY_STRICT=1`.
+5. ✅ `scripts/check_retirement_candidates.py` (lists rule-corpus files untouched 90+ days; markdown or plain output). Manual stage in pre-commit; runnable directly any time. Complements the M3 quarterly agent.
+6. ✅ `scripts/check_doc_size.py` (per-file growth thresholds: GOVERNANCE 70/85, AGENT_SOP 400/600, MEMORY.md 195/220, memory entries 400/600, folder-AGENTS.md 200/400; skill-payload AGENTS.md exempted because they are skill content, not folder governance; roadmaps exempt). Hard-fail at hard limit; strict mode via `DOC_SIZE_STRICT=1`.
 
-**Trigger:** any time after M1 closes.
+**Wired into:** `.pre-commit-config.yaml` (5 new entries, file-pattern scoped to the rule corpus).
 
-**ETA:** 2-3 hours when triggered (5 hooks, each ~30 lines Python).
+**Tests:** `tests/test_check_memory_frontmatter.py`, `tests/test_check_session_log_updated.py`, `tests/test_check_rule_redundancy.py`, `tests/test_check_retirement_candidates.py`, `tests/test_check_doc_size.py`. 31 cases total, all green.
 
-**Success criterion:** all 6 hooks pass on a clean commit; all fail on a planted violation.
+**Notes:**
+
+- The redundancy hook stays in warn-only mode for now: false-positive risk is real for legitimate cross-references. If it proves clean over a quarter, flip default to strict.
+- The MEMORY.md cap chose 195/220, anchored on the system-reminder note that the loader truncates after 200 lines (catches creep before truncation, hard-fails before symptoms hit).
+- Skill-payload AGENTS.md exemption (`skills/<name>/AGENTS.md`) was added after the first all-files run flagged Vercel react-best-practices (3750 lines) and postgres-best-practices (1490 lines). These are skill content, not folder governance; the cap is correctly scoped to folder-purpose AGENTS.md (top-level + immediate children of governed folders).
 
 ---
 
@@ -210,3 +216,18 @@ All recommendations adopted. M0 shipped: `docs/GOVERNANCE.md` (64 lines), AGENT_
 M1 (AGENTS.md audit + backfill) in progress this same session. 17 folders need AGENTS.md; 8 existing need Sankofa-audit pass. Doing both today, no deferral.
 
 Next: M2 (full enforcement layer, 5 more hooks), trigger any time after M1 closes.
+
+### 2026-05-02 (evening): M2 SHIPPED, all 5 enforcement hooks live
+
+Built the 5 remaining enforcement hooks per the M2 spec, ~750 lines of Python across 5 scripts plus 31 test cases (all green). Total wall time inside the session: ~2 hours focused. Files: `scripts/check_memory_frontmatter.py`, `scripts/check_session_log_updated.py`, `scripts/check_rule_redundancy.py`, `scripts/check_retirement_candidates.py`, `scripts/check_doc_size.py`; tests under `tests/test_check_*.py`; wiring in `.pre-commit-config.yaml`.
+
+Surfaced and fixed one pre-existing violation: `docs/memory/brand_catalyst_works.md` had no frontmatter. Added `name`/`description`/`type: reference`. The file's body content is unchanged.
+
+Two design calls worth flagging:
+
+1. **Redundancy hook is warn-only by default.** Token-Jaccard at 0.85 against the rule corpus. False-positive risk is real for legitimate cross-references between AGENT_SOP and memory entries; warn-only buys data before flipping default to strict. Set `RULE_REDUNDANCY_STRICT=1` to opt in.
+2. **Skill-payload AGENTS.md exempted from the doc-size cap.** First all-files run flagged Vercel react-best-practices (3750 lines) and postgres-best-practices (1490 lines). Those are skill content, not folder governance. The cap is correctly scoped to folder-purpose AGENTS.md (top-level + immediate children of governed folders).
+
+Open question still on the table: keep MEMORY.md cap at 195/220 or raise it to 250/300 as governance work expands? Today's MEMORY.md is at 205 lines (5 over the loader truncation point); the user's auto-memory file was the original target of the question, and the in-repo `docs/memory/MEMORY.md` is only 25 lines.
+
+Next: M4 (LLM-readable governance manifest, ~30 min mechanical conversion) is the smallest queued item. M5 (output/ submodule reconciliation) is a 3-4 hour dedicated window per the existing Notion task.

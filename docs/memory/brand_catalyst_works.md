@@ -1,3 +1,9 @@
+---
+name: Catalyst Works brand colors and palette discipline
+description: Four palettes (Coastal Clarity default; others purposeful). No red. Old teal and lime retired. Orange accent only.
+type: reference
+---
+
 # Catalyst Works Brand Colors
 
 ## System Overview

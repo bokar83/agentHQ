@@ -35,3 +35,43 @@ repos:
         language: python
         pass_filenames: false
         always_run: true
+      - id: check-memory-frontmatter
+        name: Memory Frontmatter (name/description/type required)
+        description: Compass M2. See docs/roadmap/compass.md.
+        entry: python scripts/check_memory_frontmatter.py
+        language: python
+        files: ^docs/memory/.*\.md$
+        exclude: ^docs/memory/(MEMORY\.md|MEMORY_ARCHIVE\.md)$
+        types: [file]
+      - id: check-session-log-updated
+        name: Roadmap Session Log (touched roadmap requires dated entry)
+        description: Compass M2. Bypass with SKIP_SESSION_LOG=1. See docs/AGENT_SOP.md Session End.
+        entry: python scripts/check_session_log_updated.py
+        language: python
+        files: ^docs/roadmap/[^/]+\.md$
+        exclude: ^docs/roadmap/(README|future-enhancements)\.md$
+        types: [file]
+      - id: check-rule-redundancy
+        name: Rule Redundancy (warn on duplicate rules across surfaces)
+        description: Compass M2 warn-only. Set RULE_REDUNDANCY_STRICT=1 to fail.
+        entry: python scripts/check_rule_redundancy.py
+        language: python
+        files: ^(docs/(AGENT_SOP|GOVERNANCE)\.md|docs/memory/.*\.md|.*AGENTS\.md)$
+        exclude: ^(zzzArchive/|docs/memory/(MEMORY\.md|MEMORY_ARCHIVE\.md))
+        types: [file]
+      - id: check-doc-size
+        name: Doc Size (rule docs have growth ceilings; roadmaps exempt)
+        description: Compass M2. Set DOC_SIZE_STRICT=1 to fail on warnings too.
+        entry: python scripts/check_doc_size.py
+        language: python
+        files: ^(docs/(AGENT_SOP|GOVERNANCE)\.md|docs/memory/.*\.md|.*AGENTS\.md)$
+        exclude: ^zzzArchive/
+        types: [file]
+      - id: check-retirement-candidates
+        name: Retirement Candidates (manual; surface 90+ day-stale rule files)
+        description: Compass M2 + M3. Run with `pre-commit run --hook-stage manual check-retirement-candidates --all-files`.
+        entry: python scripts/check_retirement_candidates.py
+        language: python
+        pass_filenames: false
+        always_run: true
+        stages: [manual]
