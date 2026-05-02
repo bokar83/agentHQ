@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Catalyst Works . Palette Swatch Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,500;0,700;1,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; }
+  body { font-family: "Public Sans", -apple-system, system-ui, sans-serif; background: #0a0a0a; color: #fff; line-height: 1.55; }
+  .nav-board { position: sticky; top: 0; z-index: 100; background: rgba(10,10,10,0.94); backdrop-filter: blur(8px); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; }
+  .nav-board strong { font-size: 15px; letter-spacing: -0.01em; }
+  .nav-board nav a { color: rgba(255,255,255,0.7); margin-left: 24px; font-size: 13.5px; text-decoration: none; }
+  .nav-board nav a:hover { color: #fff; }
+  .intro { padding: 56px 32px 24px; max-width: 1200px; margin: 0 auto; }
+  .intro h1 { font-family: "Spectral", serif; font-size: 36px; font-weight: 700; letter-spacing: -0.015em; margin-bottom: 8px; }
+  .intro p { font-size: 15.5px; color: rgba(255,255,255,0.7); max-width: 720px; }
+
+  .option { padding: 64px 32px 56px; }
+  .option-tag { padding: 0 32px 12px; max-width: 1200px; margin: 0 auto; display: flex; align-items: baseline; gap: 18px; }
+  .option-tag .num { font-family: ui-monospace, monospace; font-size: 14px; color: rgba(255,255,255,0.5); letter-spacing: 0.06em; }
+  .option-tag .name { font-family: "Spectral", serif; font-size: 26px; font-weight: 700; letter-spacing: -0.015em; }
+  .option-tag .read { font-size: 13.5px; color: rgba(255,255,255,0.55); }
+  .frame-wrap { max-width: 1200px; margin: 0 auto; }
+  .frame { width: 100%; aspect-ratio: 16 / 10; position: relative; overflow: hidden; border-radius: 12px; box-shadow: 0 24px 64px rgba(0,0,0,0.5); }
+  .frame .bg-img { position: absolute; inset: 0; background: url('../mockups/hero-v2-concept-a.png') center / cover no-repeat; }
+  .frame .grad { position: absolute; inset: 0; }
+  .frame header { position: absolute; top: 0; left: 0; right: 0; padding: 18px 40px; display: flex; align-items: center; justify-content: space-between; z-index: 5; }
+  .frame .brand { display: inline-flex; align-items: center; gap: 10px; }
+  .frame .brand img { width: 30px; height: 30px; border-radius: 50%; }
+  .frame .brand-name { font-size: 16px; font-weight: 800; letter-spacing: -0.01em; }
+  .frame nav.topnav { display: flex; gap: 24px; font-size: 13px; }
+  .frame nav.topnav a { text-decoration: none; }
+  .frame .cta-top { padding: 9px 18px; border-radius: 6px; font-size: 13px; font-weight: 700; text-decoration: none; }
+  .frame .hero-pad { position: absolute; inset: 0; padding: 110px 40px 40px; display: flex; align-items: center; z-index: 4; }
+  .frame .hero { max-width: 480px; }
+  .frame .badge { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; font-size: 11px; letter-spacing: 0.06em; font-weight: 700; text-transform: uppercase; margin-bottom: 18px; }
+  .frame .badge::before { content: ""; width: 5px; height: 5px; border-radius: 50%; }
+  .frame h1 { font-family: "Spectral", serif; font-size: 44px; line-height: 1.07; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 20px; }
+  .frame h1 .em { font-style: italic; font-weight: 600; }
+  .frame .sub { font-size: 14.5px; line-height: 1.55; margin-bottom: 22px; }
+  .frame .sub strong { font-weight: 600; }
+  .frame .offer { padding: 14px 18px; border-radius: 10px; max-width: 380px; }
+  .frame .start { font-size: 10.5px; letter-spacing: 0.12em; font-weight: 800; margin-bottom: 4px; }
+  .frame .line { font-size: 12.5px; font-weight: 700; margin-bottom: 2px; }
+  .frame .meta { font-size: 11.5px; margin-bottom: 12px; }
+  .frame .cta-main { padding: 10px 18px; border-radius: 8px; font-weight: 700; font-size: 12.5px; text-decoration: none; display: inline-block; }
+  .frame .scarcity { display: flex; align-items: center; gap: 8px; margin-top: 16px; font-size: 11.5px; }
+  .frame .scarcity::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
+
+  /* Token swatches under each frame */
+  .swatches { max-width: 1200px; margin: 18px auto 0; padding: 0 32px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
+  .sw { padding: 10px 12px; border-radius: 6px; font-size: 11px; font-family: ui-monospace, monospace; }
+  .sw .label { font-size: 10px; opacity: 0.7; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .sw .hex { font-weight: 700; }
+
+  /* === OPTION 1: Editorial Warm === */
+  #opt1 .frame .bg-img { filter: brightness(0.6) sepia(0.15); }
+  #opt1 .frame .grad { background: linear-gradient(90deg, rgba(244,239,230,0.96) 0%, rgba(244,239,230,0.85) 30%, rgba(244,239,230,0.30) 60%, rgba(244,239,230,0.00) 90%); }
+  #opt1 .frame header { color: #1A1410; border-bottom: 1px solid rgba(26,20,16,0.08); }
+  #opt1 .frame nav.topnav a { color: rgba(26,20,16,0.7); }
+  #opt1 .frame nav.topnav a:hover { color: #A04A2A; }
+  #opt1 .frame .cta-top { background: #1A1410; color: #F4EFE6; }
+  #opt1 .frame .hero { color: #1A1410; }
+  #opt1 .frame .badge { background: rgba(160,74,42,0.12); color: #A04A2A; border: 1px solid rgba(160,74,42,0.25); }
+  #opt1 .frame .badge::before { background: #A04A2A; }
+  #opt1 .frame h1 .em { color: #A04A2A; }
+  #opt1 .frame .sub { color: rgba(26,20,16,0.78); }
+  #opt1 .frame .offer { background: #FFFFFF; border: 1px solid rgba(26,20,16,0.10); }
+  #opt1 .frame .start { color: #A04A2A; }
+  #opt1 .frame .meta { color: rgba(26,20,16,0.55); }
+  #opt1 .frame .cta-main { background: #1A1410; color: #F4EFE6; }
+  #opt1 .frame .scarcity { color: rgba(26,20,16,0.6); }
+  #opt1 .frame .scarcity::before { background: #A04A2A; }
+
+  /* === OPTION 2: Diagnostic Slate (warm dark) === */
+  #opt2 .frame .bg-img { filter: brightness(0.85); }
+  #opt2 .frame .grad { background: linear-gradient(90deg, rgba(31,27,22,0.92) 0%, rgba(31,27,22,0.78) 35%, rgba(31,27,22,0.10) 70%, rgba(31,27,22,0.00) 100%); }
+  #opt2 .frame header { color: #F4EFE6; }
+  #opt2 .frame nav.topnav a { color: rgba(244,239,230,0.78); }
+  #opt2 .frame nav.topnav a:hover { color: #D4A574; }
+  #opt2 .frame .cta-top { background: #D4A574; color: #1F1B16; }
+  #opt2 .frame .hero { color: #F4EFE6; }
+  #opt2 .frame .badge { background: rgba(212,165,116,0.12); color: #D4A574; border: 1px solid rgba(212,165,116,0.30); }
+  #opt2 .frame .badge::before { background: #D4A574; }
+  #opt2 .frame h1 .em { color: #C95F4D; }
+  #opt2 .frame .sub { color: rgba(244,239,230,0.82); }
+  #opt2 .frame .offer { background: rgba(31,27,22,0.7); border: 1px solid rgba(244,239,230,0.10); backdrop-filter: blur(6px); }
+  #opt2 .frame .start { color: #D4A574; }
+  #opt2 .frame .meta { color: rgba(244,239,230,0.55); }
+  #opt2 .frame .cta-main { background: #D4A574; color: #1F1B16; }
+  #opt2 .frame .scarcity { color: rgba(244,239,230,0.7); }
+  #opt2 .frame .scarcity::before { background: #C95F4D; }
+
+  /* === OPTION 3: Notebook (light cream) === */
+  #opt3 .frame .bg-img { filter: brightness(0.65) sepia(0.10); }
+  #opt3 .frame .grad { background: linear-gradient(90deg, rgba(248,244,236,0.97) 0%, rgba(248,244,236,0.88) 32%, rgba(248,244,236,0.30) 62%, rgba(248,244,236,0.00) 92%); }
+  #opt3 .frame header { color: #0F1419; border-bottom: 1px solid rgba(15,20,25,0.06); }
+  #opt3 .frame nav.topnav a { color: rgba(15,20,25,0.72); }
+  #opt3 .frame nav.topnav a:hover { color: #B45309; }
+  #opt3 .frame .cta-top { background: #0F1419; color: #F8F4EC; }
+  #opt3 .frame .hero { color: #0F1419; }
+  #opt3 .frame .badge { background: rgba(180,83,9,0.10); color: #B45309; border: 1px solid rgba(180,83,9,0.22); }
+  #opt3 .frame .badge::before { background: #B45309; }
+  #opt3 .frame h1 .em { color: #B45309; }
+  #opt3 .frame .sub { color: rgba(15,20,25,0.74); }
+  #opt3 .frame .offer { background: #FFFFFF; border: 1px solid rgba(15,20,25,0.08); }
+  #opt3 .frame .start { color: #B45309; }
+  #opt3 .frame .meta { color: rgba(15,20,25,0.55); }
+  #opt3 .frame .cta-main { background: #0F1419; color: #F8F4EC; }
+  #opt3 .frame .scarcity { color: rgba(15,20,25,0.6); }
+  #opt3 .frame .scarcity::before { background: #B45309; }
+
+  /* === OPTION 4: Diagnostic duotone (refined dark) === */
+  #opt4 .frame .bg-img { filter: brightness(0.78); }
+  #opt4 .frame .grad { background: linear-gradient(90deg, rgba(14,18,22,0.92) 0%, rgba(14,18,22,0.78) 38%, rgba(14,18,22,0.10) 70%, rgba(14,18,22,0.00) 100%); }
+  #opt4 .frame header { color: #F4EFE6; }
+  #opt4 .frame nav.topnav a { color: rgba(244,239,230,0.78); }
+  #opt4 .frame nav.topnav a:hover { color: #9C8B6E; }
+  #opt4 .frame .cta-top { background: #D4A574; color: #0E1216; }
+  #opt4 .frame .hero { color: #F4EFE6; }
+  #opt4 .frame .badge { background: rgba(156,139,110,0.12); color: #9C8B6E; border: 1px solid rgba(156,139,110,0.30); }
+  #opt4 .frame .badge::before { background: #9C8B6E; }
+  #opt4 .frame h1 .em { color: #B47C57; }
+  #opt4 .frame .sub { color: rgba(244,239,230,0.82); }
+  #opt4 .frame .offer { background: rgba(14,18,22,0.72); border: 1px solid rgba(244,239,230,0.10); backdrop-filter: blur(6px); }
+  #opt4 .frame .start { color: #D4A574; }
+  #opt4 .frame .meta { color: rgba(244,239,230,0.55); }
+  #opt4 .frame .cta-main { background: #D4A574; color: #0E1216; }
+  #opt4 .frame .scarcity { color: rgba(244,239,230,0.7); }
+  #opt4 .frame .scarcity::before { background: #B47C57; }
+
+  /* per-option swatch backgrounds */
+  #opt1 { background: #1a1410; }
+  #opt2 { background: #14110d; }
+  #opt3 { background: #1a1610; }
+  #opt4 { background: #0a0c0e; }
+  #opt1 .swatches .sw { background: rgba(244,239,230,0.06); color: #F4EFE6; }
+  #opt2 .swatches .sw { background: rgba(244,239,230,0.06); color: #F4EFE6; }
+  #opt3 .swatches .sw { background: rgba(248,244,236,0.06); color: #F8F4EC; }
+  #opt4 .swatches .sw { background: rgba(244,239,230,0.06); color: #F4EFE6; }
+</style>
+</head>
+<body>
+
+<div class="nav-board">
+  <strong>Catalyst Works . Palette swatch board</strong>
+  <nav>
+    <a href="#opt1">1 Editorial Warm</a>
+    <a href="#opt2">2 Diagnostic Slate</a>
+    <a href="#opt3">3 Notebook</a>
+    <a href="#opt4">4 Refined Dark</a>
+  </nav>
+</div>
+
+<div class="intro">
+  <h1>Pick the palette that reads as <em style="font-style:italic;color:#D4A574">"diagnostic consulting in 2026"</em></h1>
+  <p>Each option below applies the same H1, sub, offer card, and CTA over the same hero image. Same content, different brand bet. Scroll, compare, pick.</p>
+</div>
+
+<!-- ============== OPTION 1: Editorial Warm ============== -->
+<section id="opt1" class="option">
+  <div class="option-tag"><span class="num">01</span><span class="name">Editorial Warm</span><span class="read">Reads: McKinsey Quarterly . The Atlantic Ideas . premium magazine</span></div>
+  <div class="frame-wrap">
+    <div class="frame">
+      <div class="bg-img"></div>
+      <div class="grad"></div>
+      <header>
+        <a href="#" class="brand"><img src="../mockups/source-media/logo.jpg" alt="">Catalyst<span style="color:#A04A2A">Works</span></a>
+        <nav class="topnav"><a href="#">Friction Audit</a><a href="#">How It Works</a><a href="#">Signal Session</a><a href="#">About</a></nav>
+        <a href="#" class="cta-top">Book a Signal Session</a>
+      </header>
+      <div class="hero-pad">
+        <div class="hero">
+          <div class="badge">Diagnostic Consulting. AI Governance.</div>
+          <h1>You know something is wrong.<br>You just can't <span class="em">name it.</span></h1>
+          <p class="sub">Growth has stalled. The same problems keep recurring. <strong>There is something specific causing all of it.</strong></p>
+          <div class="offer">
+            <div class="start">START HERE</div>
+            <div class="line">Executive Signal Session, 90 min</div>
+            <div class="meta">$497 . 3 sessions per month</div>
+            <a href="#" class="cta-main">Book a Session</a>
+          </div>
+          <div class="scarcity">3 Signal Session slots available this month</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="swatches">
+    <div class="sw"><div class="label">bg</div><div class="hex">#F4EFE6</div></div>
+    <div class="sw"><div class="label">ink</div><div class="hex">#1A1410</div></div>
+    <div class="sw"><div class="label">accent</div><div class="hex">#A04A2A</div></div>
+    <div class="sw"><div class="label">cta</div><div class="hex">#1A1410</div></div>
+    <div class="sw"><div class="label">surface</div><div class="hex">#FFFFFF</div></div>
+    <div class="sw"><div class="label">rule</div><div class="hex">#D4C5A8</div></div>
+    <div class="sw" style="font-style:italic">light bg, deep ink, single warm accent (rust)</div>
+  </div>
+</section>
+
+<!-- ============== OPTION 2: Diagnostic Slate ============== -->
+<section id="opt2" class="option">
+  <div class="option-tag"><span class="num">02</span><span class="name">Diagnostic Slate</span><span class="read">Reads: Pretium Partners . Means of Production . old library, modern thinker</span></div>
+  <div class="frame-wrap">
+    <div class="frame">
+      <div class="bg-img"></div>
+      <div class="grad"></div>
+      <header>
+        <a href="#" class="brand"><img src="../mockups/source-media/logo.jpg" alt="">Catalyst<span style="color:#D4A574">Works</span></a>
+        <nav class="topnav"><a href="#">Friction Audit</a><a href="#">How It Works</a><a href="#">Signal Session</a><a href="#">About</a></nav>
+        <a href="#" class="cta-top">Book a Signal Session</a>
+      </header>
+      <div class="hero-pad">
+        <div class="hero">
+          <div class="badge">Diagnostic Consulting. AI Governance.</div>
+          <h1>You know something is wrong.<br>You just can't <span class="em">name it.</span></h1>
+          <p class="sub">Growth has stalled. The same problems keep recurring. <strong>There is something specific causing all of it.</strong></p>
+          <div class="offer">
+            <div class="start">START HERE</div>
+            <div class="line">Executive Signal Session, 90 min</div>
+            <div class="meta">$497 . 3 sessions per month</div>
+            <a href="#" class="cta-main">Book a Session</a>
+          </div>
+          <div class="scarcity">3 Signal Session slots available this month</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="swatches">
+    <div class="sw"><div class="label">bg</div><div class="hex">#1F1B16</div></div>
+    <div class="sw"><div class="label">cream</div><div class="hex">#F4EFE6</div></div>
+    <div class="sw"><div class="label">brass</div><div class="hex">#D4A574</div></div>
+    <div class="sw"><div class="label">terracotta</div><div class="hex">#C95F4D</div></div>
+    <div class="sw"><div class="label">cta</div><div class="hex">#D4A574</div></div>
+    <div class="sw"><div class="label">on-cta</div><div class="hex">#1F1B16</div></div>
+    <div class="sw" style="font-style:italic">warm dark instead of cold dark, brass + terracotta</div>
+  </div>
+</section>
+
+<!-- ============== OPTION 3: Notebook ============== -->
+<section id="opt3" class="option">
+  <div class="option-tag"><span class="num">03</span><span class="name">Notebook</span><span class="read">Reads: paper + ink . the metaphor matches the hero . editorial precision</span></div>
+  <div class="frame-wrap">
+    <div class="frame">
+      <div class="bg-img"></div>
+      <div class="grad"></div>
+      <header>
+        <a href="#" class="brand"><img src="../mockups/source-media/logo.jpg" alt="">Catalyst<span style="color:#B45309">Works</span></a>
+        <nav class="topnav"><a href="#">Friction Audit</a><a href="#">How It Works</a><a href="#">Signal Session</a><a href="#">About</a></nav>
+        <a href="#" class="cta-top">Book a Signal Session</a>
+      </header>
+      <div class="hero-pad">
+        <div class="hero">
+          <div class="badge">Diagnostic Consulting. AI Governance.</div>
+          <h1>You know something is wrong.<br>You just can't <span class="em">name it.</span></h1>
+          <p class="sub">Growth has stalled. The same problems keep recurring. <strong>There is something specific causing all of it.</strong></p>
+          <div class="offer">
+            <div class="start">START HERE</div>
+            <div class="line">Executive Signal Session, 90 min</div>
+            <div class="meta">$497 . 3 sessions per month</div>
+            <a href="#" class="cta-main">Book a Session</a>
+          </div>
+          <div class="scarcity">3 Signal Session slots available this month</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="swatches">
+    <div class="sw"><div class="label">paper</div><div class="hex">#F8F4EC</div></div>
+    <div class="sw"><div class="label">ink</div><div class="hex">#0F1419</div></div>
+    <div class="sw"><div class="label">amber</div><div class="hex">#B45309</div></div>
+    <div class="sw"><div class="label">clay</div><div class="hex">#B47C57</div></div>
+    <div class="sw"><div class="label">surface</div><div class="hex">#FFFFFF</div></div>
+    <div class="sw"><div class="label">cta</div><div class="hex">#0F1419</div></div>
+    <div class="sw" style="font-style:italic">the site IS a notebook . hero metaphor matches</div>
+  </div>
+</section>
+
+<!-- ============== OPTION 4: Refined Dark ============== -->
+<section id="opt4" class="option">
+  <div class="option-tag"><span class="num">04</span><span class="name">Refined Dark</span><span class="read">Reads: distinctive dark . kills generic-tech-blue . lowest risk patch</span></div>
+  <div class="frame-wrap">
+    <div class="frame">
+      <div class="bg-img"></div>
+      <div class="grad"></div>
+      <header>
+        <a href="#" class="brand"><img src="../mockups/source-media/logo.jpg" alt="">Catalyst<span style="color:#9C8B6E">Works</span></a>
+        <nav class="topnav"><a href="#">Friction Audit</a><a href="#">How It Works</a><a href="#">Signal Session</a><a href="#">About</a></nav>
+        <a href="#" class="cta-top">Book a Signal Session</a>
+      </header>
+      <div class="hero-pad">
+        <div class="hero">
+          <div class="badge">Diagnostic Consulting. AI Governance.</div>
+          <h1>You know something is wrong.<br>You just can't <span class="em">name it.</span></h1>
+          <p class="sub">Growth has stalled. The same problems keep recurring. <strong>There is something specific causing all of it.</strong></p>
+          <div class="offer">
+            <div class="start">START HERE</div>
+            <div class="line">Executive Signal Session, 90 min</div>
+            <div class="meta">$497 . 3 sessions per month</div>
+            <a href="#" class="cta-main">Book a Session</a>
+          </div>
+          <div class="scarcity">3 Signal Session slots available this month</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="swatches">
+    <div class="sw"><div class="label">bg</div><div class="hex">#0E1216</div></div>
+    <div class="sw"><div class="label">cream</div><div class="hex">#F4EFE6</div></div>
+    <div class="sw"><div class="label">sand</div><div class="hex">#9C8B6E</div></div>
+    <div class="sw"><div class="label">brass</div><div class="hex">#D4A574</div></div>
+    <div class="sw"><div class="label">clay</div><div class="hex">#B47C57</div></div>
+    <div class="sw"><div class="label">cta</div><div class="hex">#D4A574</div></div>
+    <div class="sw" style="font-style:italic">surgical recolor . same architecture, no cyan, no orange</div>
+  </div>
+</section>
+
+</body>
+</html>

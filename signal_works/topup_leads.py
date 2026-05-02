@@ -61,11 +61,12 @@ def _save_lead(lead: dict, dry_run: bool) -> bool:
         return False
 
 
-def _resolve_email(business: dict, hunter_disabled: bool) -> tuple[str, str]:
+def _resolve_email(business: dict, hunter_disabled: bool) -> tuple[str, str, str]:
     """Walk the 4-layer resolution chain.
 
-    Returns (email, source). source in {"firecrawl", "apollo_strict", "hunter_domain", ""}.
-    Empty source means no email found.
+    Returns (email, source, owner_name). source in {"firecrawl", "apollo_strict",
+    "hunter_domain", ""}. owner_name is the resolved person name from Apollo when
+    available, otherwise empty string. Empty source means no email found.
     Raises HunterCapReached if Hunter cap hits during this call.
     """
     website = business.get("website_url") or ""
@@ -73,29 +74,29 @@ def _resolve_email(business: dict, hunter_disabled: bool) -> tuple[str, str]:
         try:
             email = find_email_from_website(website)
             if email:
-                return email, "firecrawl"
+                return email, "firecrawl", ""
         except Exception as e:
             logger.warning(f"_resolve_email: Firecrawl error on {website}: {e}")
 
     apollo = find_owner_by_company(business["business_name"], business.get("city", ""))
     if not apollo:
-        return "", ""
+        return "", "", ""
     if apollo.get("email"):
-        return apollo["email"], "apollo_strict"
+        return apollo["email"], "apollo_strict", apollo.get("name") or ""
 
     if hunter_disabled or not apollo.get("domain"):
-        return "", ""
+        return "", "", ""
 
     try:
         email = domain_search(apollo["domain"])
         if email:
-            return email, "hunter_domain"
+            return email, "hunter_domain", apollo.get("name") or ""
     except HunterCapReached:
         logger.warning("_resolve_email: Hunter cap reached, skipping for rest of run")
         raise
     except Exception as e:
         logger.warning(f"_resolve_email: Hunter error on {apollo['domain']}: {e}")
-    return "", ""
+    return "", "", ""
 
 
 def topup(minimum: int = DAILY_MINIMUM, dry_run: bool = False) -> int:
@@ -129,7 +130,7 @@ def topup(minimum: int = DAILY_MINIMUM, dry_run: bool = False) -> int:
             biz["business_name"] = biz.get("business_name") or biz.get("name", "")
 
             try:
-                email, source = _resolve_email(biz, hunter_disabled)
+                email, source, owner_name = _resolve_email(biz, hunter_disabled)
             except HunterCapReached:
                 hunter_disabled = True
                 if not cap_alert_sent:
@@ -138,7 +139,7 @@ def topup(minimum: int = DAILY_MINIMUM, dry_run: bool = False) -> int:
                         "remaining leads. Run continues."
                     )
                     cap_alert_sent = True
-                email, source = "", ""
+                email, source, owner_name = "", "", ""
 
             if not email:
                 # Track consecutive double-failures (Firecrawl AND Apollo both failed)
@@ -159,6 +160,11 @@ def topup(minimum: int = DAILY_MINIMUM, dry_run: bool = False) -> int:
             consecutive_double_fails = 0
             biz["email"] = email
             biz["email_source"] = source
+            # Owner name from Apollo overrides business-name-as-name placeholder so
+            # the email greeting reads "Hi Amanda" not "Hi Utah Plumbing".
+            biz["business_display_name"] = biz.get("name", "")
+            if owner_name:
+                biz["name"] = owner_name
             if _save_lead(biz, dry_run):
                 saved += 1
                 logger.info(f"topup: [{saved}/{minimum}] {source} -> {biz['business_name']} ({email})")

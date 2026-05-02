@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Catalyst Works . Hero: Before vs After</title>
+<style>
+  :root { --ink: #0f172a; --muted: #475569; --accent: #00B7C2; --line: #e2e8f0; }
+  * { box-sizing: border-box; }
+  body { font-family: "Public Sans", -apple-system, system-ui, sans-serif; color: var(--ink); margin: 0; background: #f8fafc; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 32px 20px 48px; }
+  h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.01em; margin: 0 0 4px; }
+  .lead { color: var(--muted); margin: 0 0 24px; font-size: 14.5px; }
+  .compare { position: relative; width: 100%; aspect-ratio: 1440 / 900; background: #000; overflow: hidden; border-radius: 12px; box-shadow: 0 20px 50px rgba(15,23,42,0.18); user-select: none; touch-action: none; }
+  .compare img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+  .compare .after-wrap { position: absolute; top: 0; right: 0; bottom: 0; left: 50%; overflow: hidden; }
+  .compare .after-wrap img { position: absolute; top: 0; right: 0; height: 100%; width: auto; max-width: none; aspect-ratio: 1440 / 900; }
+  .handle { position: absolute; top: 0; bottom: 0; left: 50%; width: 4px; background: #fff; transform: translateX(-50%); pointer-events: none; box-shadow: 0 0 0 1px rgba(0,0,0,0.15); }
+  .knob { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 48px; height: 48px; border-radius: 50%; background: #fff; box-shadow: 0 4px 16px rgba(0,0,0,0.25); display: grid; place-items: center; pointer-events: none; }
+  .knob::before, .knob::after { content: ""; width: 0; height: 0; border-top: 6px solid transparent; border-bottom: 6px solid transparent; }
+  .knob::before { border-right: 8px solid var(--ink); margin-right: 4px; }
+  .knob::after { border-left: 8px solid var(--ink); margin-left: 4px; }
+  .label { position: absolute; top: 16px; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #fff; background: rgba(15,23,42,0.78); backdrop-filter: blur(6px); pointer-events: none; }
+  .label.before { left: 16px; }
+  .label.after { right: 16px; }
+  .meta { display: flex; gap: 16px; margin-top: 16px; font-size: 13.5px; color: var(--muted); flex-wrap: wrap; }
+  .meta strong { color: var(--ink); font-weight: 700; }
+  .legend { margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 720px) { .legend { grid-template-columns: 1fr; } }
+  .col { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; }
+  .col h3 { margin: 0 0 6px; font-size: 14px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+  .col ul { margin: 0; padding-left: 20px; font-size: 14.5px; line-height: 1.55; }
+  .col li { margin: 4px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Hero: before vs after</h1>
+  <p class="lead">Drag the divider to compare the current homepage hero with a proposed v2 direction. Same voice, same offer, real logo, photographic hero, sharper visual hierarchy.</p>
+
+  <div class="compare" id="compare">
+    <img class="before" src="./hero-current.png" alt="Current Catalyst Works hero">
+    <div class="after-wrap" id="after-wrap">
+      <img class="after" src="./hero-proposed-final.png" alt="Proposed Catalyst Works hero">
+    </div>
+    <div class="handle" id="handle"></div>
+    <div class="knob" id="knob"></div>
+    <div class="label before">Current</div>
+    <div class="label after">Proposed</div>
+  </div>
+
+  <div class="meta">
+    <span><strong>Same voice retained:</strong> H1, italic emphasis on "name it", $497 offer, "3 slots" scarcity</span>
+    <span><strong>What changed:</strong> real CW logo in header, photographic hero, contrast fix, broken nav anchor removed</span>
+  </div>
+
+  <div class="legend">
+    <div class="col">
+      <h3>What stays the same</h3>
+      <ul>
+        <li>H1 voice and italic clay accent on "name it"</li>
+        <li>$497 Signal Session offer card above the fold</li>
+        <li>"3 slots available this month" scarcity tag</li>
+        <li>Navy + cyan + orange + clay palette</li>
+        <li>Spectral display + Public Sans body type pairing</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3>What gets upgraded</h3>
+      <ul>
+        <li>Real CW logo in the header (favicon-only -> full brand mark)</li>
+        <li>Photographic hero replaces text-on-grid background</li>
+        <li>Broken "How It Works" nav anchor renamed to working target</li>
+        <li>Em-dashes scrubbed from H1 area (and the rest of the site)</li>
+        <li>Higher-contrast body text passes WCAG AA</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const compare = document.getElementById('compare');
+  const afterWrap = document.getElementById('after-wrap');
+  const handle = document.getElementById('handle');
+  const knob = document.getElementById('knob');
+  const afterImg = afterWrap.querySelector('img');
+
+  const sizeAfterImg = () => {
+    const rect = compare.getBoundingClientRect();
+    afterImg.style.width = rect.width + 'px';
+    afterImg.style.height = rect.height + 'px';
+  };
+  const setSplit = (pct) => {
+    pct = Math.max(0, Math.min(100, pct));
+    afterWrap.style.left = pct + '%';
+    handle.style.left = pct + '%';
+    knob.style.left = pct + '%';
+  };
+  sizeAfterImg();
+  window.addEventListener('resize', sizeAfterImg);
+  setSplit(50);
+
+  const move = (clientX) => {
+    const rect = compare.getBoundingClientRect();
+    const pct = ((clientX - rect.left) / rect.width) * 100;
+    setSplit(pct);
+  };
+
+  let dragging = false;
+  compare.addEventListener('mousedown', e => { dragging = true; move(e.clientX); });
+  window.addEventListener('mousemove', e => { if (dragging) move(e.clientX); });
+  window.addEventListener('mouseup', () => dragging = false);
+  compare.addEventListener('touchstart', e => { dragging = true; move(e.touches[0].clientX); }, { passive: true });
+  window.addEventListener('touchmove', e => { if (dragging) move(e.touches[0].clientX); }, { passive: true });
+  window.addEventListener('touchend', () => dragging = false);
+})();
+</script>
+</body>
+</html>
