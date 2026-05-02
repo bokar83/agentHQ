@@ -232,3 +232,6 @@ Below that, four collapsed `<details>` sections: **What it is** (Phase 2 dossier
 | Sankofa output is vague | Pass the exact framing block above (with leverage type and motion filled in). |
 | PROCEED logged without follow-up | Refuse to finalize. Ask Boubacar for next-action + target-date if unknown. |
 | Bare URL triggered an install | Hard rule violated. Absorb is read-only. Install needs explicit phrasing. |
+| Capability looks "missing" but is already wired via an existing MCP | In Phase 2, also check MCP connections + descriptions of all 75 skills. Example: `firecrawl-mcp-server` looked like a PROCEED candidate but was ARCHIVE-AND-NOTE because Firecrawl MCP is already used by skills/website-intelligence. Verdict: ARCHIVE-AND-NOTE = correct; accept it. |
+| Sankofa shifts the placement mid-review | Accept the shift. Write the original proposal in "Placement reasoning" details, then the revised placement in the verdict. Example: markitdown started as "enhance skills/agentshq-absorb"; Sankofa First Principles correctly downgraded to "shared helper" because binding a general utility to one consumer was suboptimal. |
+| target_date forgotten on ARCHIVE-AND-NOTE / DON'T PROCEED | Field is still required for harness compatibility. Use literal `n/a`. PROCEED requires real YYYY-MM-DD. |
