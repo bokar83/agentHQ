@@ -1,0 +1,9 @@
+input	expected_type
+https://github.com/anthropics/claude-code	repo
+https://github.com/modelcontextprotocol/servers	mcp-server
+https://example.com/workflow.json	n8n-workflow
+https://arxiv.org/pdf/2305.10601.pdf	pdf
+https://raw.githubusercontent.com/foo/bar/main/README.md	raw-doc
+https://www.signalworks.com	live-site
+skills/clone-builder	skill
+xyz	unknown
