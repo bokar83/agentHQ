@@ -19,7 +19,15 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+# Resolve REPO_ROOT robustly. In the orc-crewai container, this file is at
+# /app/notion_state_poller.py (flattened), so parent.parent would resolve to /.
+# Detect that case and fall back to /app explicitly so cache + changelog land
+# on the mounted /app/data and /app/docs/audits paths that survive rebuilds.
+_module_dir = Path(__file__).resolve().parent
+if _module_dir == Path("/app"):
+    REPO_ROOT = Path("/app")
+else:
+    REPO_ROOT = _module_dir.parent
 DEFAULT_CACHE_PATH = REPO_ROOT / "data" / "notion_state_cache.json"
 DEFAULT_CHANGELOG_PATH = REPO_ROOT / "docs" / "audits" / "changelog.md"
 DEFAULT_NOTION_TASK_DB_ID = "249bcf1a302980739c26c61cad212477"
