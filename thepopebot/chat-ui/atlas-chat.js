@@ -143,6 +143,23 @@ var atlasChat = (function() {
     wrap.style.display = 'block';
   }
 
+  // Sankofa guardrail (2026-05-02 silent-haiku incident): show which model
+  // handled the most recent turn so a wrong route is visible immediately.
+  // Strips the "anthropic/" prefix to keep the footer compact.
+  function _updateModelFooter(modelSlug) {
+    var footer = document.getElementById('chat-model-footer');
+    if (!footer) {
+      footer = document.createElement('div');
+      footer.id = 'chat-model-footer';
+      footer.className = 'chat-model-footer';
+      var input = document.getElementById('chat-input');
+      var parent = input ? input.parentElement : document.body;
+      if (parent) parent.appendChild(footer);
+    }
+    var pretty = String(modelSlug || '').replace(/^anthropic\//, '');
+    footer.textContent = pretty ? ('Atlas is using ' + pretty) : '';
+  }
+
   function _typing(show) {
     if (show) {
       var panel = document.getElementById('chat-messages');
@@ -374,6 +391,7 @@ var atlasChat = (function() {
       _messages.push({ role: 'assistant', content: r.reply || '' });
       _appendMessage('assistant', r.reply || '', r.actions || [], r.artifact || null);
       if (r.job_id) { _pollJob(r.job_id); }
+      if (r.model) { _updateModelFooter(r.model); }
       try { refreshQueue(); } catch (_) {}
     }).catch(function(e) {
       _typing(false);

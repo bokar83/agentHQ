@@ -87,12 +87,13 @@ def compress_session(session_id: str) -> bool:
     window_end_at = last_ts or datetime.now(timezone.utc).isoformat()
 
     try:
-        from llm_helpers import call_llm, HELPER_MODEL
+        from llm_helpers import call_llm
         response = call_llm(
             messages=[
                 {"role": "user", "content": f"{_SUMMARY_PROMPT}\n\n---\n\n{conversation_text}"}
             ],
-            model=HELPER_MODEL,
+            model=None,
+            model_key="HELPER_MODEL",
             temperature=0.3,
         )
         summary = (response.choices[0].message.content or "").strip()
