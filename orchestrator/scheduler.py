@@ -579,7 +579,7 @@ def start_scheduler():
         from notion_state_poller import tick as _notion_state_poller_tick
         _heartbeat.register_wake(
             "notion-state-poller",
-            crew_name="atlas",
+            crew_name=_heartbeat.SELF_TEST_CREW,
             callback=_notion_state_poller_tick,
             every="5m",
         )
