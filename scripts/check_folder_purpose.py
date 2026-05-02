@@ -47,11 +47,9 @@ EXEMPT_DIRS = {
     ".pytest_tmp",          # pytest temp variant
     ".tmp",                 # pytest cache + antivirus quarantine
     "node_modules",         # JS deps
-    "external",             # vendored reference repos
     "skills",               # has its own AGENTS.md and skills/_index.md (governance via _index)
     "pytest_tmp",           # pytest temp at root
     "pytest_tmp_work",      # pytest temp work
-    "task_progress",        # Codex sandbox progress (will fold into data/codex/)
     "tools",                # external CLI binaries (autocli)
     "codex_ssh",            # Codex SSH working dir (gitignored, active tool)
     ".codex_ssh",           # hidden duplicate
