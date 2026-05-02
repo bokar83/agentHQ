@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Catalyst Works . Full SEO &amp; GEO Audit</title>
+<style>
+  :root {
+    --bg: #fff;
+    --ink: #0f172a;
+    --muted: #475569;
+    --accent: #00b7c2;
+    --good: #16a34a;
+    --warn: #d97706;
+    --bad: #dc2626;
+    --line: #e2e8f0;
+    --code-bg: #f1f5f9;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Public Sans", system-ui, sans-serif; color: var(--ink); background: var(--bg); margin: 0; line-height: 1.55; }
+  main { max-width: 980px; margin: 0 auto; padding: 48px 24px 96px; }
+  h1 { font-size: 36px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 8px; }
+  h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; margin: 40px 0 12px; padding-top: 24px; border-top: 1px solid var(--line); }
+  h3 { font-size: 18px; font-weight: 700; margin: 24px 0 8px; }
+  h4 { font-size: 15px; font-weight: 700; margin: 16px 0 6px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  p, li { font-size: 15.5px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 12px 0; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: #f8fafc; font-weight: 600; }
+  code { background: var(--code-bg); padding: 1px 6px; border-radius: 4px; font-size: 13px; }
+  .pass { color: var(--good); font-weight: 700; }
+  .warn { color: var(--warn); font-weight: 700; }
+  .fail { color: var(--bad); font-weight: 700; }
+  .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; }
+  .pill.pass { background: #dcfce7; color: #166534; }
+  .pill.warn { background: #fef3c7; color: #92400e; }
+  .pill.fail { background: #fee2e2; color: #991b1b; }
+  .verdict { background: #f8fafc; border: 1px solid var(--line); border-left: 4px solid var(--accent); padding: 16px 20px; border-radius: 6px; margin: 24px 0; }
+  .verdict h2 { border-top: none; padding-top: 0; margin-top: 0; }
+  .score { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 48px; font-weight: 700; line-height: 1; color: var(--accent); }
+  .meta { color: var(--muted); font-size: 13px; }
+  ul, ol { padding-left: 22px; }
+  li { margin: 4px 0; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Catalyst Works . Full SEO &amp; GEO Audit</h1>
+<p class="meta">Domain: catalystworks.consulting . Audited 2026-05-01 . Pages crawled: 3 (homepage + 2 sitemap pages) . Methodology: seo-strategy Mode 2</p>
+
+<div class="verdict">
+<h2>Verdict</h2>
+<p><strong>Overall SEO score: <span class="score">72 / 100</span></strong></p>
+<p>The homepage is <strong>exceptional</strong> on technical SEO and structured data. Organization, Person, Service, and FAQPage schemas are all present, well-formed, and aligned with the offer. Title and meta description are within ideal length, OG and Twitter cards are complete. <strong>The site is held back by:</strong> two interior pages (governance.html, ai-data-audit.html) that exist in the sitemap but are <strong>not linked from the homepage</strong> and lack basic meta tags, structured data, and H1 hygiene. There is also <strong>zero local-SEO signal</strong>, no Google Business Profile reference, no NAP markup, no city-specific landing page, despite the footer naming five cities served.</p>
+<p>Closing the 28-point gap requires roughly <strong>2-3 hours of focused work</strong>, almost all of which is on the two orphan pages and a local-SEO addition.</p>
+</div>
+
+<h2>1. Site-wide Resources</h2>
+
+<table>
+<tr><th>Check</th><th>Status</th><th>Detail</th></tr>
+<tr><td><code>robots.txt</code></td><td><span class="pill pass">PASS</span></td><td>Present, valid, references sitemap.xml. Allows all user agents.</td></tr>
+<tr><td><code>sitemap.xml</code></td><td><span class="pill pass">PASS</span></td><td>Present, valid XML, 3 URLs listed (homepage + governance + ai-data-audit). Recent <code>lastmod</code> (2026-04-24).</td></tr>
+<tr><td>HTTPS</td><td><span class="pill pass">PASS</span></td><td>Live HTTPS, valid cert.</td></tr>
+<tr><td>Canonical (homepage)</td><td><span class="pill pass">PASS</span></td><td><code>&lt;link rel="canonical" href="https://catalystworks.consulting/"&gt;</code> set.</td></tr>
+<tr><td>Canonical (interior pages)</td><td><span class="pill fail">FAIL</span></td><td>governance.html and ai-data-audit.html appear to lack canonical tags.</td></tr>
+<tr><td>Sitemap freshness</td><td><span class="pill warn">WARN</span></td><td>All three URLs share the same lastmod (2026-04-24). Recommend updating dates per page when content changes.</td></tr>
+<tr><td><code>&lt;html lang&gt;</code></td><td><span class="pill pass">PASS</span></td><td>Set to <code>en</code>.</td></tr>
+</table>
+
+<h2>2. Homepage On-Page SEO</h2>
+
+<table>
+<tr><th>Element</th><th>Status</th><th>Value / Notes</th></tr>
+<tr><td>Title tag</td><td><span class="pill pass">PASS</span></td><td>59 chars. "AI Risk and Diagnostic Consulting for SMBs | Catalyst Works"</td></tr>
+<tr><td>Meta description</td><td><span class="pill pass">PASS</span></td><td>155 chars. Specific, includes price and time deliverable.</td></tr>
+<tr><td>H1</td><td><span class="pill pass">PASS</span></td><td>Exactly 1 H1: "You know something is wrong. You just can't name it."</td></tr>
+<tr><td>Heading hierarchy</td><td><span class="pill pass">PASS</span></td><td>1 H1, 12 H2s, 10 H3s. Logical nesting.</td></tr>
+<tr><td>Content length</td><td><span class="pill pass">PASS</span></td><td>~1,939 words. Strong for a homepage.</td></tr>
+<tr><td>Image alt text</td><td><span class="pill pass">PASS</span></td><td>1/1 images have alt text (Boubacar headshot).</td></tr>
+<tr><td>Image formats</td><td><span class="pill warn">WARN</span></td><td>1 JPG. No WebP/AVIF used. Modest impact (only one image).</td></tr>
+<tr><td>OG tags</td><td><span class="pill pass">PASS</span></td><td>og:title, og:description, og:image (1200x630), og:url, og:site_name, og:locale all set.</td></tr>
+<tr><td>Twitter card</td><td><span class="pill pass">PASS</span></td><td>summary_large_image with site, title, description, image.</td></tr>
+<tr><td>Favicon</td><td><span class="pill warn">WARN</span></td><td>Single JPG favicon. No 16x16, 32x32, apple-touch-icon variants. Consider adding ICO + apple-touch-icon for full coverage.</td></tr>
+<tr><td>Theme color</td><td><span class="pill warn">WARN</span></td><td>Missing <code>&lt;meta name="theme-color"&gt;</code> for mobile browser chrome.</td></tr>
+<tr><td>Resource hints</td><td><span class="pill pass">PASS</span></td><td>2 preconnect, 1 preload found.</td></tr>
+<tr><td>Lazy loading</td><td><span class="pill pass">PASS</span></td><td>1/1 images use loading="lazy".</td></tr>
+<tr><td>Internal links</td><td><span class="pill warn">WARN</span></td><td>12 internal links, but 10 are anchor-only (#audit, #signal, etc.). 0 link to governance.html or ai-data-audit.html, both interior pages are orphaned from the homepage.</td></tr>
+<tr><td>Hreflang</td><td><span class="pill pass">PASS</span></td><td>None, single-language site, not needed.</td></tr>
+<tr><td>Breadcrumb markup</td><td><span class="pill warn">WARN</span></td><td>None present. Low priority for single-page site, but useful when interior pages get more traffic.</td></tr>
+</table>
+
+<h2>3. Structured Data (Homepage)</h2>
+
+<p><strong>This is the strongest part of the audit.</strong> Four well-formed JSON-LD blocks:</p>
+<ol>
+<li><strong>Organization</strong>, name, url, email, founder (links to Person), description, areaServed (US, UAE, Guinea, Mauritius), sameAs (LinkedIn).</li>
+<li><strong>Person</strong>, Boubacar Barry as Founder, jobTitle, worksFor, knowsAbout (8 topics), description, sameAs (LinkedIn personal).</li>
+<li><strong>Service</strong>, Executive Signal Session, with serviceType, serviceOutput, audience, areaServed, provider, offers (price 497 USD, availability LimitedAvailability), duration PT90M.</li>
+<li><strong>FAQPage</strong>, 7 Q&amp;A pairs. Eligible for Google FAQ rich result. Strong answers, all on-brand.</li>
+</ol>
+<p><strong>Verdict:</strong> <span class="pass">PASS with distinction</span>. This is the kind of structured data most consulting sites do not have. Already eligible for FAQ rich results in SERPs. <strong>Note:</strong> the FAQPage answers contain em-dashes (e.g., "...one named constraint, written, specific...") which violates the brand "no em-dashes" rule and shows up in rich snippets. Scrub these.</p>
+
+<h2>4. Interior Pages: governance.html &amp; ai-data-audit.html</h2>
+
+<table>
+<tr><th>Check</th><th>governance.html</th><th>ai-data-audit.html</th></tr>
+<tr><td>Title tag</td><td><span class="pill pass">PASS</span> "AI Governance for SMBs | Catalyst Works"</td><td><span class="pill pass">PASS</span> "AI Data Exposure Audit for Professional Services Firms | Signal Session"</td></tr>
+<tr><td>Meta description</td><td><span class="pill fail">FAIL</span> Not present</td><td><span class="pill fail">FAIL</span> Not present</td></tr>
+<tr><td>H1</td><td><span class="pill pass">PASS</span> "AI Governance for SMBs"</td><td><span class="pill warn">WARN</span> "90-Minute AI Exposure Diagnostic, Professional Services" (contains em-dash)</td></tr>
+<tr><td>Canonical</td><td><span class="pill fail">FAIL</span> Not set</td><td><span class="pill fail">FAIL</span> Not set</td></tr>
+<tr><td>Structured data (JSON-LD)</td><td><span class="pill fail">FAIL</span> None present</td><td><span class="pill fail">FAIL</span> None present</td></tr>
+<tr><td>Word count</td><td>~2,100 (PASS)</td><td>~2,100 (PASS)</td></tr>
+<tr><td>Linked from homepage</td><td><span class="pill fail">FAIL</span> No</td><td><span class="pill fail">FAIL</span> No</td></tr>
+</table>
+
+<p><strong>Diagnosis:</strong> these are functional pages with strong content (~2,100 words each) and clear CTAs to Signal Sessions, but they're effectively invisible. Search engines find them via sitemap, but a human navigating from the homepage cannot. Each one needs:</p>
+<ul>
+<li>A meta description (155-160 chars, include "Signal Session $497" and the topic)</li>
+<li>A canonical tag pointing to itself</li>
+<li>Service or Article structured data (the homepage Service schema is a template, adapt per page)</li>
+<li>An internal link from the homepage in the relevant section ("Does your team use AI with customer data?" to link to governance.html or ai-data-audit.html)</li>
+<li>Reciprocal link between governance and ai-data-audit if the topics overlap</li>
+</ul>
+
+<h2>5. Local SEO / GEO Signals</h2>
+
+<p>Catalyst Works' footer says "Serving clients in Atlanta . Miami . Dubai . Conakry . Port Louis." The Organization schema's <code>areaServed</code> includes United States, UAE, Guinea, Mauritius. Catalyst Works' actual operator is in <strong>Utah</strong> (per project memory), but the public site shows no Utah-specific signal at all.</p>
+
+<table>
+<tr><th>Check</th><th>Status</th><th>Notes</th></tr>
+<tr><td>Google Business Profile (GBP)</td><td><span class="pill warn">WARN</span></td><td>Could not verify presence in this audit. <strong>Recommendation:</strong> create a GBP for "Catalyst Works" service-area business covering Utah + remote.</td></tr>
+<tr><td>NAP markup (Name/Address/Phone)</td><td><span class="pill fail">FAIL</span></td><td>No phone number on site. No physical address (service-area business). Email-only contact (diagnose@catalystworks.consulting).</td></tr>
+<tr><td>City-specific landing pages</td><td><span class="pill fail">FAIL</span></td><td>None. The 5 cities mentioned in footer are unranked and unindexed as targets.</td></tr>
+<tr><td>LocalBusiness schema</td><td><span class="pill fail">FAIL</span></td><td>Site uses Organization (correct for a remote-first business), but adding <code>ProfessionalService</code> with <code>areaServed</code> as cities (not just countries) would strengthen city queries.</td></tr>
+<tr><td>"AI consulting [city]" SERP visibility</td><td><span class="pill fail">FAIL</span></td><td>Per Phase 3 competitor scrape, all 3 Utah-based competitors rank for "AI consulting Utah" with explicit city signal. Catalyst Works has zero such signal.</td></tr>
+</table>
+
+<p><strong>Quick win:</strong> upgrade <code>areaServed</code> in Organization schema from country names to City entities (e.g., <code>{ "@type": "City", "name": "Salt Lake City" }, { "@type": "City", "name": "Atlanta" }</code>). Add a single "Service Areas" section to the homepage listing the 5 cities. Build out one city page per market over time (start with Salt Lake City for proximity).</p>
+
+<h2>6. Keyword Coverage (Inferred from Site Content)</h2>
+
+<table>
+<tr><th>Keyword cluster</th><th>Site coverage</th><th>Recommendation</th></tr>
+<tr><td>"AI risk consulting SMB" / "AI governance for SMBs"</td><td><span class="pill pass">STRONG</span></td><td>Title, meta, FAQ, governance.html. Owned.</td></tr>
+<tr><td>"business diagnostic consulting"</td><td><span class="pill pass">STRONG</span></td><td>Used 12+ times. Strong semantic coverage with "constraint", "friction", "throughput".</td></tr>
+<tr><td>"Signal Session" / "$497 diagnostic"</td><td><span class="pill pass">STRONG</span></td><td>Branded term, well-ranked for direct searches.</td></tr>
+<tr><td>"fractional AI advisor"</td><td><span class="pill warn">WEAK</span></td><td>Not used on site. Competitor (fractional.ai) owns this term. <strong>Decision:</strong> claim a piece by using "fractional AI risk advisor" on governance.html, OR consciously avoid the category and double down on "diagnostic consulting" as the differentiator.</td></tr>
+<tr><td>"AI consulting Utah" / "Salt Lake City AI"</td><td><span class="pill fail">MISSING</span></td><td>Zero local-SEO signal. Critical gap.</td></tr>
+<tr><td>"Theory of Constraints consulting"</td><td><span class="pill warn">WEAK</span></td><td>Site uses constraint vocabulary heavily but never names the methodology lineage. Adding 1-2 mentions of "theory of constraints" in the methodology section would capture searches from MBA-trained operators.</td></tr>
+<tr><td>"executive coaching" / "leadership consulting"</td><td><span class="pill warn">WEAK</span></td><td>Adjacent searches that could land on Catalyst Works. Boubacar's bio (GE HR leadership, executive development) supports this, but the site doesn't claim the territory.</td></tr>
+</table>
+
+<h2>7. Cross-page Analysis</h2>
+
+<table>
+<tr><th>Check</th><th>Status</th><th>Notes</th></tr>
+<tr><td>Duplicate content</td><td><span class="pill warn">WARN</span></td><td>Could not deeply diff governance.html and ai-data-audit.html, both center on AI/data risk for SMBs. If 30%+ of body text overlaps verbatim, search engines will pick one and demote the other. <strong>Audit recommended.</strong></td></tr>
+<tr><td>Keyword cannibalization</td><td><span class="pill warn">WARN</span></td><td>governance.html and ai-data-audit.html both pursue "AI data" + "SMB" queries. Either differentiate sharply (governance = strategy/policy, ai-data-audit = audit/diagnostic) OR consolidate into one page.</td></tr>
+<tr><td>Internal linking depth</td><td><span class="pill fail">FAIL</span></td><td>Two of three pages are orphaned. Internal-link graph is degenerate.</td></tr>
+<tr><td>Site architecture</td><td><span class="pill warn">WARN</span></td><td>Flat (3 URLs, no folders, no hierarchy). Acceptable for now, but blog or case-study folder will need structure within the year.</td></tr>
+</table>
+
+<h2>8. Top 5 Prioritized Fixes</h2>
+
+<ol>
+<li><strong>Link from homepage to governance.html and ai-data-audit.html</strong> (5 min), fixes the orphan-page problem in one edit. Add the link inside the existing "Does your team use AI with customer data?" section near the bottom.</li>
+<li><strong>Add meta description + canonical to governance.html and ai-data-audit.html</strong> (10 min each), both files need 150-character meta descriptions and self-canonicals. Adapt from the homepage formula (lead with offer, include $497 and 24-hour deliverable).</li>
+<li><strong>Add Service or Article JSON-LD to interior pages</strong> (20 min), copy the homepage Service schema, swap the name/description for governance and ai-data-audit. Critical for rich-result eligibility on those queries.</li>
+<li><strong>Upgrade Organization schema areaServed to include cities + add a "Service Areas" homepage section listing Salt Lake City, Atlanta, Miami, Dubai, Conakry, Port Louis</strong> (30 min), closes the local-SEO gap and gives the 5-city footer line a structural anchor.</li>
+<li><strong>Em-dash scrub across the 7 FAQPage answers + the H1 of ai-data-audit.html</strong> (5 min), em-dashes in JSON-LD will leak into Google rich snippets, breaking the brand rule on the most visible surface.</li>
+</ol>
+
+<h2>9. Quick wins (under 5 min each)</h2>
+<ul>
+<li>Add <code>&lt;meta name="theme-color" content="#071A2E"&gt;</code> to homepage head</li>
+<li>Add <code>color-scheme: dark</code> to <code>:root</code> CSS</li>
+<li>Add an apple-touch-icon and 32x32 PNG favicon variants</li>
+<li>Convert hero JPG (and Boubacar.JPG) to WebP, modest LCP improvement</li>
+<li>Make sure governance.html and ai-data-audit.html each have at least 1 internal link to the homepage signal-session anchor (#signal)</li>
+</ul>
+
+<p class="meta">End of Phase 4. Source: live DOM via Playwright + WebFetch. Methodology: <code>seo-strategy</code> Mode 2 (full website audit).</p>
+
+</main>
+</body>
+</html>

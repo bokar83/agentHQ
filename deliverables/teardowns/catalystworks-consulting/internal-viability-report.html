@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Catalyst Works . Internal Self-Assessment (NOT FOR CLIENTS)</title>
+<style>
+  :root { --ink: #0f172a; --muted: #475569; --good: #16a34a; --warn: #d97706; --bad: #dc2626; --line: #e2e8f0; --bg: #f8fafc; --code: #1e293b; }
+  * { box-sizing: border-box; }
+  body { font-family: ui-monospace, "SF Mono", "Menlo", "Consolas", monospace; color: var(--ink); background: var(--bg); margin: 0; line-height: 1.55; font-size: 14px; }
+  main { max-width: 920px; margin: 0 auto; padding: 32px 20px 80px; }
+  .conf { background: #fee2e2; color: #991b1b; padding: 8px 14px; border-radius: 6px; font-weight: 700; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; display: inline-block; margin-bottom: 16px; }
+  h1 { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 28px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .meta { color: var(--muted); font-size: 12.5px; margin-bottom: 24px; }
+  .verdict-box { background: var(--code); color: #e2e8f0; padding: 24px 28px; border-radius: 10px; margin: 24px 0; }
+  .verdict-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px; }
+  .verdict { font-size: 36px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.1; }
+  .verdict.iterate { color: #fbbf24; }
+  .verdict.ship { color: #4ade80; }
+  .verdict.rebuild { color: #f87171; }
+  .verdict-reason { color: #cbd5e1; font-size: 14px; margin-top: 10px; }
+  h2 { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 18px; font-weight: 700; margin: 32px 0 8px; padding-top: 18px; border-top: 1px solid var(--line); letter-spacing: -0.005em; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 8px 0 16px; background: #fff; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: #f1f5f9; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+  tr:last-child td { border-bottom: none; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+  .pill.green { background: #dcfce7; color: #166534; }
+  .pill.yellow { background: #fef3c7; color: #92400e; }
+  .pill.red { background: #fee2e2; color: #991b1b; }
+  ul, ol { padding-left: 22px; }
+  li { margin: 4px 0; font-size: 13.5px; }
+  .score-block { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin: 12px 0; }
+  .score-card { background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; }
+  .score-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .score-card .num { font-size: 22px; font-weight: 700; line-height: 1; margin-top: 4px; }
+  code { background: #e2e8f0; padding: 1px 6px; border-radius: 3px; font-size: 12.5px; }
+  .next { background: #fef3c7; border-left: 4px solid var(--warn); padding: 14px 18px; border-radius: 6px; margin: 16px 0; }
+  .next h3 { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 14px; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.08em; }
+</style>
+</head>
+<body>
+<main>
+
+<span class="conf">Internal . Boubacar only . Do not share</span>
+<h1>Catalyst Works v1 - Self-Assessment</h1>
+<p class="meta">Subject: catalystworks.consulting (live) . Audited 2026-05-01 . Mode: self-assessment frame (not prospect frame) . Sources: Phases 1-5 of website-teardown skill</p>
+
+<div class="verdict-box">
+  <div class="verdict-label">Verdict</div>
+  <div class="verdict iterate">ITERATE</div>
+  <div class="verdict-reason">Voice, offer architecture, and structured data are already at v2 quality. Visual craft, two orphan pages, and zero local-SEO are the bleed. ~3 hours of focused edits closes the entire gap. Do not rebuild.</div>
+</div>
+
+<h2>1. Is the site doing the job we hired it for</h2>
+
+<table>
+<tr><th>Job</th><th>Status</th><th>Notes</th></tr>
+<tr><td>Convert cold visitor into Signal Session booking ($497)</td><td><span class="pill yellow">PARTIAL</span></td><td>Offer is clear, priced, scarce. Conversion friction: form submit button outside form, fields lack required + name attributes, broken nav anchors leak attention.</td></tr>
+<tr><td>Position Boubacar as a credible diagnostic operator (not a vendor)</td><td><span class="pill green">YES</span></td><td>Bio depth, voice, italic-clay accents, Signal Session productization all do this.</td></tr>
+<tr><td>Differentiate from generic AI consultancies</td><td><span class="pill green">YES</span></td><td>Productized $497 first-touch with 24-hr written deliverable is unique vs all 5 scraped competitors.</td></tr>
+<tr><td>Show up in "AI consulting Utah" searches</td><td><span class="pill red">NO</span></td><td>Zero local-SEO. Competitors with weaker offers outrank because they have explicit geo signal.</td></tr>
+<tr><td>Convert prospects on the AI governance angle (not just the diagnostic angle)</td><td><span class="pill yellow">PARTIAL</span></td><td>governance.html and ai-data-audit.html exist with strong content but are orphaned from homepage. Search engines find them via sitemap; humans cannot.</td></tr>
+<tr><td>Survive a 30-second pitch to a peer or competitor</td><td><span class="pill yellow">PARTIAL</span></td><td>Closest competitor (smbstrategyconsultants.com) uses same vocabulary AND has cleaner visual craft. Catalyst Works wins on offer specificity, loses on first-impression polish.</td></tr>
+</table>
+
+<h2>2. Fit signals (treating self as a "prospect")</h2>
+
+<ul>
+  <li><strong>Business size proxy:</strong> 1-person founder consultancy. Bio names a 4-continent leadership career (GE HR, $500K Mauritius program, Guinea consulting firm). Signal: senior, credible, productized.</li>
+  <li><strong>Budget proxy:</strong> the consultancy itself charges $497/session and has a clear ladder up to Diagnostic Sprint. Site investment to date: clean static HTML, brand-coded design tokens, GA4, Spectral + Public Sans paid Google Fonts, structured data on homepage.</li>
+  <li><strong>Pain depth (craft + market gap from Phases 2-4):</strong> 7 / 10. Two structural fixes (orphan pages, local SEO), one brand-rule fix (em-dash + logo), several polish-pass items.</li>
+  <li><strong>Competitor pressure:</strong> high in Utah local search (3 of 5 scraped Utah-based competitors rank for "AI consulting Utah", Catalyst Works has zero geo signal). Medium nationally for "diagnostic AI consulting" (smbstrategyconsultants.com is direct overlap; differentiator is the productized first-touch).</li>
+  <li><strong>Reachability:</strong> diagnose@catalystworks.consulting + LinkedIn. No phone. Service-area business.</li>
+</ul>
+
+<h2>3. What a v2 would cost us internally to build</h2>
+
+<ul>
+  <li><strong>Scope:</strong> in-place patch on the existing static site, not a rebuild.</li>
+  <li><strong>Estimated dev hours:</strong> ~3 hours focused. Breakdown:
+    <ul>
+      <li>30 min - Phase 2 high-severity items (real logo in header, broken nav, em-dash scrub, color-scheme dark, contrast bump, form wrap)</li>
+      <li>20 min - hero photograph asset (use the kie_media generated image OR a founder portrait shot)</li>
+      <li>30 min - Phase 4 high-priority SEO fixes (link to orphan pages, add meta descriptions + canonicals + JSON-LD to governance.html and ai-data-audit.html)</li>
+      <li>30 min - local-SEO upgrade (areaServed cities in Organization schema, Service Areas section, Google Business Profile creation)</li>
+      <li>30 min - copy polish (curly quotes, theme-color meta, apple-touch-icon variants, font preload check)</li>
+      <li>30 min - QA pass (mobile sticky-nav scroll-margin fix, modal form behavior, em-dash sweep grep)</li>
+    </ul>
+  </li>
+  <li><strong>Lift required:</strong> low. No new infrastructure, no new build pipeline, no framework migration. Hostinger static hosting stays.</li>
+  <li><strong>Asset cost:</strong> negligible. Hero image already generated (mockups/hero-proposed.png, 1.4MB). Logo already exists. Founder photo already exists.</li>
+</ul>
+
+<h2>4. Risks / red flags / what's leaking deals</h2>
+
+<ul>
+  <li><strong>Form submit button is outside its &lt;form&gt;</strong>, Enter-to-submit broken, autofill broken, screen reader announcements broken. This is conversion-critical and probably losing at least some bookings silently.</li>
+  <li><strong>Two broken nav links (#offers)</strong>, high-intent visitors clicking "How It Works" get nothing. Pure leak.</li>
+  <li><strong>Em-dashes in JSON-LD FAQ answers</strong>, leak into Google rich snippets, breaking brand rule on the highest-visibility surface (SERP).</li>
+  <li><strong>governance.html and ai-data-audit.html are orphaned</strong>, these are 2,100-word lead pages, completely invisible to navigating visitors. They're the natural destination for visitors who came in via the AI risk angle.</li>
+  <li><strong>Logo absent from header</strong>, text-logotype reads as placeholder. The actual CW mark is premium and distinctive; using only the favicon underuses the brand asset.</li>
+  <li><strong>No local-SEO signal</strong>, 3 of 5 scraped competitors rank for Utah queries. Catalyst Works ranks for none.</li>
+  <li><strong>Closest competitor (smbstrategyconsultants.com) has cleaner visual craft</strong>, same frame, same vocabulary, light theme, premium photography, single H1, strong section hierarchy. A side-by-side compare today favors them on first impression.</li>
+</ul>
+
+<h2>5. Score out of 100 (internal weighted)</h2>
+
+<div class="score-block">
+  <div class="score-card"><div class="label">Fit (40%)</div><div class="num">36 / 40</div></div>
+  <div class="score-card"><div class="label">Pain (30%)</div><div class="num">21 / 30</div></div>
+  <div class="score-card"><div class="label">Reach (15%)</div><div class="num">9 / 15</div></div>
+  <div class="score-card"><div class="label">Risk (-15%)</div><div class="num">-4 / -15</div></div>
+</div>
+
+<table>
+<tr><th>Category</th><th>Score</th><th>Reasoning</th></tr>
+<tr><td>Fit</td><td>36 / 40</td><td>Voice, offer, productization, founder credibility all at v2 quality. -4 for orphan pages diluting on-site fit signal.</td></tr>
+<tr><td>Pain (gap to close)</td><td>21 / 30</td><td>Real findings exist (~3 hrs work) but none of them block the offer from running today. -9 for not-shipped polish.</td></tr>
+<tr><td>Reach</td><td>9 / 15</td><td>Strong structured data + clean meta on homepage, but zero local SEO and orphan interior pages cap discoverability. -6.</td></tr>
+<tr><td>Risk</td><td>-4 / -15</td><td>Form-not-in-form bug + broken nav anchor are silent leaks. No pre-existing client list at risk yet, so risk is bounded.</td></tr>
+<tr><th>Total</th><th colspan="2">62 / 70 raw, 89 / 100 normalized to grading scale</th></tr>
+</table>
+
+<p class="meta">Note on score interpretation: the score is internal-only and reflects "is this site doing its job" not "do we pursue this lead." Self-assessment frame.</p>
+
+<h2>6. What we'd be changing in v2 (if we ship)</h2>
+
+<table>
+<tr><th>Change</th><th>Surface</th><th>Time</th><th>Source phase</th></tr>
+<tr><td>Real CW logo in header + footer (replace text-logotype)</td><td>visual + brand</td><td>5 min</td><td>Phase 1, Phase 2 finding 1</td></tr>
+<tr><td>Hero photograph (use kie_media render or founder portrait)</td><td>visual</td><td>20 min</td><td>Phase 2 finding 18, Phase 5</td></tr>
+<tr><td>Em-dash scrub site-wide + JSON-LD FAQ answers</td><td>brand + SERP rich result</td><td>5 min</td><td>Phase 2 finding 2</td></tr>
+<tr><td>Fix broken "How It Works" nav anchor</td><td>UX</td><td>5 min</td><td>Phase 2 finding 3</td></tr>
+<tr><td>Wrap modal in &lt;form&gt;, add required + name on inputs</td><td>conversion</td><td>10 min</td><td>Phase 2 findings 6-9</td></tr>
+<tr><td>color-scheme: dark + contrast bump on --text-dim</td><td>a11y</td><td>5 min</td><td>Phase 2 findings 4-5</td></tr>
+<tr><td>Link homepage to governance.html and ai-data-audit.html</td><td>SEO + UX</td><td>5 min</td><td>Phase 4 finding 1</td></tr>
+<tr><td>Add meta description + canonical + JSON-LD to interior pages</td><td>SEO</td><td>20 min each</td><td>Phase 4 findings 2-3</td></tr>
+<tr><td>Upgrade Organization schema areaServed with cities + add Service Areas section</td><td>local SEO</td><td>30 min</td><td>Phase 4 finding 4</td></tr>
+<tr><td>Create Google Business Profile (Utah service-area)</td><td>local SEO</td><td>30 min, off-site</td><td>Phase 4 section 5</td></tr>
+</table>
+
+<div class="next">
+<h3>Recommended next move</h3>
+<p><strong>SHIP THE PATCH THIS WEEK.</strong></p>
+<ol>
+  <li><strong>Today (or next session):</strong> Phase 2 high-severity items + em-dash scrub (30 min). Smallest possible PR. Test the form actually submits.</li>
+  <li><strong>This week:</strong> Phase 4 SEO fixes for orphan pages (90 min). Either link them in or delete them; orphans serve no one.</li>
+  <li><strong>This week:</strong> Local SEO upgrade (60 min) + Google Business Profile (30 min off-site). Closes the highest-leverage gap.</li>
+  <li><strong>Defer:</strong> hero photograph swap. The kie_media render is good directionally but not a substitute for a real founder portrait shot in similar lighting. Make the founder shot the v2.1 task; ship v2.0 with the existing dark-grid hero.</li>
+</ol>
+<p><strong>What if it does not happen this week:</strong> Catalyst Works keeps showing up to Utah search queries with zero signal, the closest competitor (smbstrategyconsultants.com) keeps closing prospects who would otherwise come to us, and the orphan AI-governance pages keep doing zero work despite being good content.</p>
+</div>
+
+<h2>7. Critical separation note</h2>
+
+<p>This report contains internal language (verdict, score, price band, leak language) that <strong>must not appear in the client-facing report</strong>. The client-teardown-report.html in this directory is sanitized for prospect viewing. If you forward anything from this file externally, scrub the verdict box, the score block, and the "leaking deals" section first.</p>
+
+<p class="meta">End of internal self-assessment. Source files: research/01-brand.md, research/01b-design-audit.md, research/02-competitors.md, research/03-seo-audit.html, mockups/before-after.html.</p>
+
+</main>
+</body>
+</html>

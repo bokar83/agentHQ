@@ -172,3 +172,11 @@ a-b testing.xlsx
 signal_works/draft_payloads.json
 apollo_pricing.png
 download.html
+
+# Codex companion local progress tracker
+.codex-task-progress.txt
+
+# Pytest local tmp directories (created by tests in some sandboxes)
+pytest_tmp/
+pytest_tmp_work/
+.pytest-tmp/
