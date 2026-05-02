@@ -120,7 +120,7 @@ You leave with:
 - The mechanism behind it (why it persists)
 - A 90-day plan to remove it (executable without me in the room)
 
-$497. Book in the next 14 days, $397.
+$497. 3 sessions per month. Confirmation within 24 hours.
 
 [Book Signal Session]
 ```
@@ -157,7 +157,7 @@ $497. Book in the next 14 days, $397.
 - Channel: catalystworks.consulting/diagnostic + cold email T2 link + LinkedIn post CTA. ✓
 - Lead magnet: Reveal Problem type, Software delivery, 7-step compliance verified above. ✓
 - Hook: contrarian + specificity ("Where's your 6-8% going?"). ✓
-- Offer (anchored at end of report): $497 Signal Session, $397 if booked in 14 days. ✓
+- Offer (anchored at end of report): $497 Signal Session. Scarcity hook: 3 sessions per month. ✓
 - CTA: one button, "Book Signal Session." ✓
 - Follow-up plan: email-capture triggers a 4-touch nurture sequence (separate spec). ✓
 - Success criteria: 30% completion rate (start to email), 10% Calendly book rate from the report. ✓
