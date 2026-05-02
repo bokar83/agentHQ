@@ -56,7 +56,7 @@ The mental model for Boubacar's businesses. Every revenue-bearing initiative has
 |---|---|---|---|---|---|
 | Catalyst Works (consulting) | revenue / services | [harvest.md](harvest.md) | agentsHQ (`output/websites/catalystworks-site/`) | catalystworks.consulting | $0 → first contract |
 | Signal Works (productized AI presence) | revenue / SaaS-like | [harvest.md](harvest.md) (R1) | agentsHQ (`signal_works/`, future satellite) | geolisted.co (landing) | first contract pending |
-| Dashboards4Sale | product | [dashboards4sale.md](dashboards4sale.md) | satellite (`bokar83/dashboards4sale`, extraction pending) | TBD | pre-extraction |
+| Dashboards4Sale | product | [dashboards4sale.md](dashboards4sale.md) | satellite ([`bokar83/dashboards4sale`](https://github.com/bokar83/dashboards4sale)) | TBD | extracted 2026-05-02; M1 multilingual coverage queued |
 | Studio (faceless agency) | revenue / content channels | [studio.md](studio.md) | agentsHQ (orchestrator + content boards) | per-channel (Under the Baobab, AI Catalyst, First Generation Money) | M1 engine live, M2 channel batch |
 | Atlas (autonomy layer) | platform infrastructure | [atlas.md](atlas.md) | agentsHQ | agentshq.boubacarbarry.com | M15 shipped, M5 gate 2026-05-08 |
 | Echo (async substrate) | platform infrastructure | [echo.md](echo.md) | agentsHQ | n/a (internal) | M1 shipped |
