@@ -7,3 +7,5 @@ Placements: `enhance skills/X` | `extend skills/X` | `new skill skills/Y` | `new
 Leverage types: `producing-motion` | `founder-time-reduction` | `continuous-improvement` | `none`
 
 ---
+2026-05-02 | https://github.com/firecrawl/firecrawl-mcp-server | ARCHIVE-AND-NOTE | archive | none
+2026-05-02 | https://github.com/microsoft/markitdown | PROCEED | new tool | continuous-improvement
