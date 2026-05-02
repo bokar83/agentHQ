@@ -1,1 +1,0 @@
-Content review complete. 17 posts reviewed and set to 'In Review' in Notion. Full scored report sent to Telegram. Reply 'push content to drive' when approved.

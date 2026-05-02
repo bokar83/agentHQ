@@ -32,7 +32,7 @@ REQUIRED_GITIGNORE_ENTRIES = [
     "*.env.txt",
     ".playwright-mcp",
     "logs/",
-    "outputs/",
+    "agent_outputs/",
     "zzzArchive/",
     "qdrant_data",
     "postgres_data",

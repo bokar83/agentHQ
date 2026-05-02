@@ -50,7 +50,7 @@ data/autonomy_state.json
 
 # ── Output directories ───────────────────────────────────────
 agent_outputs/
-outputs/
+# outputs/ removed 2026-05-02: contents migrated to agent_outputs/ to align with AGENTS_OUTPUT_DIR + docker-compose mount name
 
 # ── Archive (contains old .env files — never commit) ─────────
 zzzArchive/
