@@ -1,0 +1,20 @@
+{
+  "valueInputOption": "USER_ENTERED",
+  "data": [
+    {
+      "range": "Income!A1:H1",
+      "values": [["Date", "Client", "Project / Description", "Category", "Invoice #", "Amount", "Currency", "Notes"]]
+    },
+    {
+      "range": "Income!A2:H7",
+      "values": [
+        ["2026-01-05", "Acme Corp", "Website Redesign", "Web Design", "INV-001", 2500, "USD", "Phase 1 payment"],
+        ["2026-01-18", "Beta Studio", "Logo Design", "Branding", "INV-002", 750, "USD", ""],
+        ["2026-02-03", "Acme Corp", "Website Redesign", "Web Design", "INV-003", 2500, "USD", "Phase 2 payment"],
+        ["2026-02-20", "Gamma LLC", "SEO Consulting", "Consulting", "INV-004", 1200, "USD", "Monthly retainer"],
+        ["2026-03-01", "Delta Inc", "Mobile App UI", "UI/UX", "INV-005", 3800, "USD", ""],
+        ["2026-03-15", "Gamma LLC", "SEO Consulting", "Consulting", "INV-006", 1200, "USD", "Monthly retainer"]
+      ]
+    }
+  ]
+}
