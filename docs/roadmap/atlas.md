@@ -1621,3 +1621,25 @@ Phase 10: Verification:
 **Atlas impact:** infrastructure clean. Future-proof for the M5 Chairman/Learning-loop gate that opens 2026-05-08. The folder governance rule plus the manifest pattern means any future cleanup pass is reversible by design.
 
 ---
+
+### 2026-05-02 (Friday late afternoon): Compass governance + Dashboards4Sale extracted + outputs renamed
+
+**What:** continuation of Move Day. Scope grew to include governance scaffolding (Compass M0+M1), Dashboards4Sale satellite extraction, top-level folder hygiene, output/ submodule documentation (full restructure deferred to Compass M5), and outputs/ -> agent_outputs/ migration.
+
+**Six commits shipped:** ec9bac8 (Compass M0+M1), c3fe253 (D4S extracted), 5fa6e58 (external + task_progress hygiene), 42c4058 (output/ anatomy doc + do-not-merge warning), 51e4955 (Compass M5 logged), edb4df1 (outputs -> agent_outputs).
+
+**New satellite:** bokar83/dashboards4sale live. Original tracked content preserved in zzzArchive/_pre-cleanup-20260502/Dashboards4Sale-original/.
+
+**New governance constitution:** docs/GOVERNANCE.md (64 lines) routes between 8 rule surfaces. AGENT_SOP.md stays as load-bearing rules library. Conflict resolution + retirement protocol locked.
+
+**New enforcement:** scripts/check_folder_purpose.py pre-commit hook converts the every-folder-has-AGENTS.md rule from aspirational (32% coverage) to enforced (100% coverage; hook fails any commit that adds a top-level folder without AGENTS.md/README.md).
+
+**Compass roadmap created:** docs/roadmap/compass.md with M0 SHIPPED, M1 SHIPPED, M2-M5 queued.
+
+**Critical surface caught and documented:** output/ submodule on local checkout points at bokar83/signal-works-demo-hvac while agentsHQ .gitmodules registers it as bokar83/attire-inspo-app. Two SEPARATE repos (Boubacar's hard rule 2026-05-02). Reconciliation deferred to Compass M5.
+
+**Path translation table for the day:** docs/handoff/2026-05-02-structural-cleanup-v2.md.
+
+**Atlas impact:** ahead of Atlas M5 gate (2026-05-08). Governance infrastructure now exists to support multi-revenue platform discipline as Studio + Signal Works + Dashboards4Sale + future ventures grow in parallel.
+
+---
