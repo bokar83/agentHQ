@@ -53,7 +53,7 @@ Telegram / HTTP / n8n
  │  • Agent Creator (Future)        │
  └──────────────────────────────────┘
         ↓
-   Output saved → /outputs/
+   Output saved → /agent_outputs/
    Memory saved → Qdrant
    Archive saved → PostgreSQL
    (Phase 5) → GitHub + Drive + Notion + Vercel
@@ -84,8 +84,8 @@ A multi-voice strategic review layer that activates on `consulting_deliverable` 
 
 
 **Outputs:**
-- `outputs/council/TIMESTAMP.json` : full run log
-- `outputs/council/TIMESTAMP.html` : shareable client report
+- `agent_outputs/council/TIMESTAMP.json` : full run log
+- `agent_outputs/council/TIMESTAMP.html` : shareable client report
 - `council_runs` PostgreSQL table : one row per run
 
 **Trigger from CLI:** "council this [question]" : see `skills/council/council.md`
@@ -145,8 +145,8 @@ agentsHQ/
 │       └── agent.py           ← Agent definition (if standalone)
 ├── memory/
 │   └── (Qdrant data : do not edit manually)
-├── outputs/
-│   └── (all agent-generated files)
+├── agent_outputs/
+│   └── (all agent-generated files; canonical sink, container mount /app/outputs)
 ├── logs/
 │   └── (execution logs)
 └── docker-compose.yml
@@ -178,10 +178,13 @@ This is how the system teaches itself.
 
 Skills are reusable capabilities that agents can invoke. When an agent needs a capability it doesn't have:
 
-1. It identifies the gap and proposes a skill
-2. The skill is created in `skills/[skill-name]/SKILL.md` + `skill.py`
-3. It is registered in `tools.py`
-4. All agents gain access on next restart
+1. It identifies the gap and proposes a skill.
+2. The skill is created in `skills/[skill-name]/` with a mandatory `SKILL.md` file. 
+   - **CRITICAL**: The `SKILL.md` MUST contain YAML frontmatter with `name:` and `description:`.
+3. It is registered in `tools.py` (for orchestrator agents).
+4. **Universal Accessibility Guarantee**:
+   - For Claude Code & Codex: The `scripts/lint_and_index_skills.py` pre-commit hook will automatically validate the frontmatter and add the skill to `docs/SKILLS_INDEX.md` (which you should read to discover capabilities).
+   - For Antigravity: The `nsync` skill automatically runs `scripts/setup_local_agents.py` to symlink the new skill into `.agents/skills/` so Antigravity can access it natively.
 
 **Automatic Evolution (OpenSpace):**
 The system also evolves existing skills automatically. After each background job, the OpenSpace engine:

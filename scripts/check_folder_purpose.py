@@ -55,8 +55,7 @@ EXEMPT_DIRS = {
     ".codex_ssh",           # hidden duplicate
     "secrets",              # gitignored, has README.md (good enough)
     "logs",                 # gitignored runtime logs
-    "outputs",              # gitignored agent output sink (becoming agent_outputs)
-    "agent_outputs",        # docker-compose live mount
+    "agent_outputs",        # docker-compose live mount + canonical agent task output sink (formerly outputs/, migrated 2026-05-02)
     "tmp_upload",           # transcribe skill WORK_DIR (live mount)
     ".playwright-mcp",      # Playwright MCP runtime cache, regenerable
     "scratch",              # archived 2026-05-02; leftover empty folder, gitignored
