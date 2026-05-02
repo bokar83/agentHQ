@@ -62,6 +62,7 @@ EXEMPT_DIRS = {
     "scratch",              # archived 2026-05-02; leftover empty folder, gitignored
     "Dashboards4Sale",      # extracts to satellite repo today; transient
     "zzzArchive",           # gitignored graveyard; AGENTS.md exists on disk but not tracked
+    "output",               # submodule; AGENTS.md cannot live inside a submodule. Anatomy doc lives at docs/reference/output-folder-anatomy.md
 }
 
 
