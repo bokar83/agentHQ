@@ -191,8 +191,10 @@ Placement: <enhance skills/X | extend skills/X | new skill skills/Y | new tool |
 Runner-up: <other option>. Rejected because <one line>.
 
 Next action: <one specific concrete next step>
-Target date: <YYYY-MM-DD>
+Target date: <YYYY-MM-DD on PROCEED; "n/a" on ARCHIVE-AND-NOTE or DON'T PROCEED>
 ```
+
+**Target date rule:** On PROCEED, a real YYYY-MM-DD target date is required (matches the follow-up entry). On ARCHIVE-AND-NOTE or DON'T PROCEED, the field still appears with value `n/a` to keep the verdict block schema-stable for the verification harness.
 
 Below that, four collapsed `<details>` sections: **What it is** (Phase 2 dossier), **Sankofa Council** (five voices + chairman + the v1 disclaimer), **Karpathy audit** (four principle verdicts), **Placement reasoning** (why chosen home wins, why runner-up loses).
 

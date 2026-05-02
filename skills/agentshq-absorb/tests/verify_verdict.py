@@ -15,25 +15,57 @@ import re
 import sys
 from pathlib import Path
 
-REQUIRED_FIELDS = [
-    ("verdict", r"^(PROCEED|DON'T PROCEED|ARCHIVE-AND-NOTE)\s*$"),
+VERDICT_PATTERN = r"^(PROCEED|DON'T PROCEED|ARCHIVE-AND-NOTE)\s*$"
+
+# Fields required on every verdict regardless of outcome.
+ALWAYS_REQUIRED = [
+    ("verdict", VERDICT_PATTERN),
     ("leverage", r"^Leverage:\s*(\S.+)$"),
     ("motion", r"^Motion / target:\s*(\S.+)$"),
     ("why", r"^Why\b"),
     ("placement", r"^Placement:\s*(\S.+)$"),
     ("runner_up", r"^Runner-up:\s*(\S.+)$"),
     ("next_action", r"^Next action:\s*(\S.+)$"),
-    ("target_date", r"^Target date:\s*(\d{4}-\d{2}-\d{2})\s*$"),
 ]
+
+# target_date accepts a YYYY-MM-DD date OR the literal "n/a".
+# On PROCEED a real date is required (a real next action without a date is not actionable).
+# On ARCHIVE-AND-NOTE / DON'T PROCEED, "n/a" is acceptable (no follow-up commitment).
+TARGET_DATE_PATTERN = r"^Target date:\s*(\d{4}-\d{2}-\d{2}|n/a)\s*$"
+TARGET_DATE_REAL_PATTERN = r"^Target date:\s*(\d{4}-\d{2}-\d{2})\s*$"
+
+
+def _find_verdict(text: str) -> str | None:
+    for line in text.splitlines():
+        m = re.search(VERDICT_PATTERN, line, re.MULTILINE)
+        if m:
+            return m.group(1)
+    return None
 
 
 def verify_verdict(text: str) -> tuple[bool, list[str]]:
-    """Return (ok, missing_fields)."""
+    """Return (ok, missing_fields).
+
+    target_date enforcement is conditional on the verdict:
+      - PROCEED: must be a real YYYY-MM-DD date.
+      - ARCHIVE-AND-NOTE / DON'T PROCEED: YYYY-MM-DD or 'n/a' both accepted.
+    """
     lines = text.splitlines()
     missing: list[str] = []
-    for name, pattern in REQUIRED_FIELDS:
+    for name, pattern in ALWAYS_REQUIRED:
         if not any(re.search(pattern, line, re.MULTILINE) for line in lines):
             missing.append(name)
+
+    verdict = _find_verdict(text)
+    if verdict == "PROCEED":
+        target_pattern = TARGET_DATE_REAL_PATTERN
+    else:
+        target_pattern = TARGET_DATE_PATTERN
+    if not any(re.search(target_pattern, line, re.MULTILINE) for line in lines):
+        if verdict == "PROCEED":
+            missing.append("target_date (PROCEED requires a real YYYY-MM-DD date)")
+        else:
+            missing.append("target_date (YYYY-MM-DD or 'n/a')")
     return (not missing, missing)
 
 
