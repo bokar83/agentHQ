@@ -112,6 +112,42 @@ Done = all five true at the same time.
 
 ---
 
+### M5: output/ submodule reconciliation + websites/apps restructure ⏳ QUEUED
+
+**Why:** Phase 3 of the 2026-05-02 structural cleanup surfaced two real issues that need a dedicated session:
+
+1. **`output/` .gitmodules mismatch:** agentsHQ's `.gitmodules` registers `output/` as `bokar83/attire-inspo-app`, but the local working tree's `output/.git/config` points at `bokar83/signal-works-demo-hvac.git` (commit `283f7eba`). **These are TWO SEPARATE repos and must NEVER be merged** (Boubacar locked rule 2026-05-02). Resolution requires picking which repo is canonical for `output/` and re-establishing a separate path for the other if both are needed locally.
+2. **`output/` structural restructure:** the parent folder holds 14 live websites (~996 MB) + 5 nested git-link submodules (attire-inspo-app-fresh, baobab-app, calculatorz-app, elevate-rebuild-app, signal-works-rod-app). Original Phase 3 plan to "promote websites/apps to top-level + move attire-inspo to workspace/aminoa" is too high-blast-radius for a multi-purpose session. Needs its own focused 3-4 hour window.
+
+**Trigger:** dedicated window when Boubacar is fresh and has 3-4 hours.
+
+**Scope:**
+
+1. Decide repo canonicalization for `output/` (Option A: re-clone from `bokar83/attire-inspo-app`; Option B: update `.gitmodules` to match `signal-works-demo-hvac`).
+2. Save the non-canonical repo's local checkout to a separate path before any change.
+3. Decide structural endpoint: keep `output/` as parent OR promote `output/websites/` and `output/apps/` to top-level.
+4. If promoting: update `skills/vercel-launch/scripts/launch.sh:61` + every other reference + AGENTS.md for new top-level dirs.
+5. Decide attire-inspo-app destination: `workspace/aminoa/attire-inspo-app/` (per Boubacar's daughter-folder direction) OR keep at current location.
+6. Test each of 14 websites resolves and renders correctly post-move.
+7. Test `vercel-launch` skill on a throwaway test app to confirm it lands at the right path.
+8. Three-way nsync.
+
+**Reference:** `docs/reference/output-folder-anatomy.md` (full anatomy + do-not-merge warning, written 2026-05-02).
+
+**Branch:** `feat/output-restructure-and-reconciliation`
+
+**ETA:** 3-4 hours dedicated.
+
+**Success criteria:**
+
+- `.gitmodules` URL matches local `output/.git/config` URL (one chosen canonical state).
+- The two repos remain distinct on disk; no merge attempted.
+- All 14 websites resolve at expected paths (whatever the new home is).
+- `vercel-launch` test produces a working Vercel deploy from the post-restructure path.
+- All 5 nested submodules still bind correctly.
+
+---
+
 ### M4: LLM-readable governance manifest ⏳ QUEUED
 
 **What:** A machine-readable version of the governance routing table. JSON or YAML at `docs/governance.manifest.json`. Lets every LLM agent (Claude Code, Codex, future MCP servers) load the routing table without reading the markdown.
