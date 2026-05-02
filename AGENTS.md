@@ -170,9 +170,9 @@ This is how the system teaches itself.
 
 ## Skills Registry
 
-| Skill | Purpose | Status |
-| :--- | :--- | :--- |
-| hyperframes | Video production - generates Hyperframes HTML compositions for MP4/WebM rendering via headless Chrome + FFmpeg. Sibling to website_build, not an extension of it. | Phase 1 (phase-gated, inactive in Phase 0) |
+The live inventory of all available skills (currently 74+) is automatically generated and maintained in **`docs/SKILLS_INDEX.md`**.
+
+*Do not list individual skills here. `docs/SKILLS_INDEX.md` is the single source of truth for skill discovery.*
 
 ## Adding New Skills
 
