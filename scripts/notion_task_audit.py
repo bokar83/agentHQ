@@ -27,8 +27,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 DEFAULT_NOTION_TASK_DB_ID = "249bcf1a302980739c26c61cad212477"
 DEFAULT_LLM_MODEL = "anthropic/claude-haiku-4-5"
-HARD_LLM_CALL_CAP = 200
-HARD_LIVE_ROW_CAP = 200
+HARD_LLM_CALL_CAP = 500
+HARD_LIVE_ROW_CAP = 300
 NOTION_VERSION = "2022-06-28"
 FEEDER_GLOBS = (
     "docs/roadmap/*.md",
@@ -282,7 +282,14 @@ def classify_task(task: dict, file_mtime_days_ago: int) -> dict:
     if marker == "IN_PROGRESS":
         return {**task, "disposition": "Live"}
 
-    # No status marker: check age
+    src = task.get("source_path", "").replace("\\", "/")
+    is_plan_or_spec = ("superpowers/plans/" in src) or ("superpowers/specs/" in src)
+    if is_plan_or_spec:
+        return {**task, "disposition": "Archived"}
+
+    if "docs/handoff/" in src and file_mtime_days_ago >= 14:
+        return {**task, "disposition": "Archived"}
+
     if file_mtime_days_ago >= 60:
         return {**task, "disposition": "Archived"}
 
@@ -637,6 +644,11 @@ def _stages_from_arg(arg: str) -> set:
 
 
 def main(argv: list | None = None) -> int:
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except ImportError:
+        pass
     args = parse_args(argv)
     stages = _stages_from_arg(args.stages)
     repo = REPO_ROOT
