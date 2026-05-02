@@ -160,11 +160,95 @@ d:/Ai_Sandbox/agentsHQ/projects/elevate-built-oregon/
     └── 01-Quick-Audit-Brief.html
 
 `C:/Users/HUAWEI/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/`
-├── MEMORY.md                                    [edited - extended website-intelligence pointer]
+├── MEMORY.md                                    [edited - extended website-intelligence pointer + tab-shutdown rule]
 ├── MEMORY_ARCHIVE.md                            [edited - added project pointer]
 ├── feedback_website_intelligence_as_sw_sales_weapon.md          [created]
 ├── feedback_website_intelligence_must_use_frontend_design.md    [created]
 ├── feedback_redesign_familiar_not_foreign.md                    [created]
+├── feedback_tab_shutdown_always_writes_to_skills.md             [created in addendum]
+├── feedback_sw_report_runs_both_skills.md                       [created in addendum]
 ├── project_elevate_roofing_signal_works_pilot.md                [created]
 └── reference_signal_works_audit_one_pager_template.md           [created]
 ``
+
+---
+
+## ADDENDUM (2026-04-30 23:35 MT) :  skill-file edits + SW report enhancement
+
+After the initial handoff was written, Boubacar clarified two rules that triggered additional work in the same session:
+
+### Rule 1: tab-shutdown ALWAYS writes lessons to skill files
+
+Boubacar's words: *"I don't want you to stop editing the skills files. I told you to stop before because we were doing multiple things at the same time. When it comes to the tab shutdown, you ALWAYS write what needs to be written to the skills files to update them. Don't leave that in memory."*
+
+The earlier "Step 3: Skills update (deferred per earlier user signal :  rules live in memory)" was wrong. Mid-session "stop editing the skill" signals do NOT carry over to tab-shutdown. Tab-shutdown is the explicit moment to lock in skill-relevant lessons.
+
+**Skill files updated as a result:**
+
+- `~/.claude/skills/website-intelligence/SKILL.md` :  added top-level HARD RULES block (6 rules), Phase 1 expanded with mandatory media inventory + logo-capture pattern + Elementor data-settings JSON extraction technique, NEW Phase 1.5 (run web-design-guidelines), Phase 4 expanded with mandatory KEPT/ENHANCED/NEW matrix template, Phase 5 fully rewritten with the hand-off rule (do NOT use the static template, hand to frontend-design or 3d-website-building) + Known pitfalls + cache-bust pattern.
+- `~/.claude/skills/frontend-design/SKILL.md` :  added Known Pitfalls section (7 lessons): GSAP split-line invisible-headline bug + the `.js-ready` gating fix, cache-bust during iteration, no-meta-commentary copy rule, em-dash scrub, mobile hero crowding fix, real-logo rule, mix-blend-mode scoping.
+- `~/.claude/skills/tab-shutdown/SKILL.md` :  Step 3 rewritten with explicit HARD RULE: "every lesson learned that belongs in a skill MUST be written to the skill file. Do not silently skip Step 3 because an earlier mid-session edit was rejected."
+
+### Rule 2: SW reports run BOTH website-intelligence AND web-design-guidelines
+
+Boubacar's words: *"Add somewhere, maybe as an enhancement or to the ideas queue at minimum (prefer as an enhancement) that we want both the 'website-intelligence' skill and the 'web-design-guidelines' to run on the initial design and be a part of the report that we give to customers (or at least that I get...tbd) for SW. The two skills are needed, the one to see what is out there in the market and the other to show how the design can be improved and do better with SEO and GEO."*
+
+**Implementation:** Added Phase 1.5 to website-intelligence SKILL.md (run web-design-guidelines on the client's existing site, save scorecard to `research/01b-design-audit.md`, weave findings into Phase 3 audit one-pager and Phase 4 build brief).
+
+**Saved to memory:** `feedback_sw_report_runs_both_skills.md` (not yet pointed to from MEMORY.md :  file at line cap, see below).
+
+### MEMORY.md is at the 200-line cap
+
+Adding the tab-shutdown rule pushed MEMORY.md to exactly 200 lines (the truncation cap). The new `feedback_sw_report_runs_both_skills.md` rule was created as a standalone file but its pointer could not be added to MEMORY.md without first trimming. **Next session should:**
+
+1. Move one project_* or low-traffic feedback pointer from MEMORY.md to MEMORY_ARCHIVE.md
+2. Add the `feedback_sw_report_runs_both_skills.md` pointer to MEMORY.md
+3. Re-verify `wc -l MEMORY.md` returns ≤199
+
+### What this means for the next session prompt
+
+The next-session prompt at the bottom of this handoff is still correct :  Tuesday May 6 send-day procedure unchanged. But add ONE first-action: trim MEMORY.md from 200 → ≤199 and index the new feedback file.
+
+---
+
+## ADDENDUM 2 (2026-04-30 23:50 MT) :  final sweep + 2 more codified rules
+
+Final pre-shutdown sweep caught 4 things stated in conversation that hadn't been codified outside the Rod-specific MESSAGE_TO_ROD.md. Three were one cluster (general SW outreach posture); one was its own pattern (layered reminders).
+
+### Two new feedback files created
+
+- **`feedback_sw_outreach_posture.md`** :  three rules for EVERY SW first-touch message regardless of prospect:
+  1. Show, don't tell. Demo IS the pitch.
+  2. Never say "free" out loud. Use the three-option counter ($1,500 / referral / trade) even when willing to do free work.
+  3. Wait 7 days before any follow-up. One light bump max.
+
+- **`reference_layered_reminders_pattern.md`** :  the 4-channel reminder pattern (in-session cron + standalone Python + Google Calendar + Gmail draft) for any future-dated task that genuinely matters. Documents the exact Rod-reminder setup as the reference implementation.
+
+### MEMORY.md indexed (still at 200-line cap)
+
+Both new files indexed by extending the existing website-intelligence rules pointer line on MEMORY.md line 74. The line is now long but readable. MEMORY.md still hits exactly 200 lines :  the cap warning from Addendum 1 still applies for the next session.
+
+### Final sweep summary :  8 memory artifacts from this session
+
+| File | Type | What it captures |
+|---|---|---|
+| `feedback_website_intelligence_as_sw_sales_weapon.md` | feedback | Tier the asset by lead temperature |
+| `feedback_website_intelligence_must_use_frontend_design.md` | feedback | Phase 5 hand-off rule |
+| `feedback_redesign_familiar_not_foreign.md` | feedback | 20-50% rule + real logo + media inventory |
+| `feedback_sw_report_runs_both_skills.md` | feedback | Run BOTH website-intelligence + web-design-guidelines |
+| `feedback_sw_outreach_posture.md` | feedback | Show don't tell · never say free · 7-day wait |
+| `feedback_tab_shutdown_always_writes_to_skills.md` | feedback | Tab-shutdown writes to skills, not just memory |
+| `project_elevate_roofing_signal_works_pilot.md` | project | Full project state pointer (in MEMORY_ARCHIVE) |
+| `reference_signal_works_audit_one_pager_template.md` | reference | One-pager structure + how to reuse for next prospect |
+| `reference_layered_reminders_pattern.md` | reference | 4-channel reminder pattern |
+
+### Skill files updated this session
+
+| File | What changed |
+|---|---|
+| `~/.claude/skills/website-intelligence/SKILL.md` | Top-level HARD RULES + Phase 1 media inventory + Phase 1.5 web-design-guidelines + Phase 4 KEPT/ENHANCED/NEW matrix + Phase 5 hand-off + Known Pitfalls |
+| `~/.claude/skills/frontend-design/SKILL.md` | Known Pitfalls section (7 lessons including GSAP split-line bug + cache-bust + meta-commentary ban + em-dash scrub + mobile hero + real logo + mix-blend scope) |
+| `~/.claude/skills/tab-shutdown/SKILL.md` | Step 3 rewritten with explicit HARD RULE: always write to skill files, never silently skip |
+
+The session is fully closed. No known uncodified rules remain.
+

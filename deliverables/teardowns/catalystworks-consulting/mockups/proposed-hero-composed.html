@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Proposed Hero . Catalyst Works v2 mockup</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #071A2E; color: #fff; font-family: "Public Sans", -apple-system, system-ui, sans-serif; }
+  .frame { width: 1440px; height: 900px; position: relative; overflow: hidden; }
+  .bg { position: absolute; inset: 0; background-image: url("./hero-proposed.png"); background-size: cover; background-position: center; }
+  .overlay-grad { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7,26,46,0.92) 0%, rgba(7,26,46,0.78) 38%, rgba(7,26,46,0.10) 70%, rgba(7,26,46,0.0) 100%); }
+  header { position: absolute; top: 0; left: 0; right: 0; padding: 20px 60px; display: flex; align-items: center; justify-content: space-between; z-index: 5; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand img { height: 40px; width: 40px; border-radius: 50%; }
+  .brand-name { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }
+  .brand-name .accent { color: #00B7C2; }
+  nav { display: flex; gap: 32px; font-size: 14.5px; color: rgba(255,255,255,0.85); }
+  nav a { color: inherit; text-decoration: none; transition: color .2s; }
+  nav a:hover { color: #00B7C2; }
+  .cta-top { background: #FF7A00; color: #fff; padding: 12px 22px; border-radius: 8px; font-weight: 700; font-size: 14.5px; text-decoration: none; display: inline-block; }
+  .cta-top:hover { background: #E06900; }
+  .hero-wrap { position: absolute; inset: 0; display: flex; align-items: center; padding: 110px 60px 0 60px; z-index: 4; }
+  .hero { max-width: 720px; }
+  .badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(0,183,194,0.10); color: #00B7C2; border: 1px solid rgba(0,183,194,0.25); padding: 7px 14px; border-radius: 999px; font-size: 12.5px; letter-spacing: 0.06em; font-weight: 700; text-transform: uppercase; margin-bottom: 28px; }
+  .badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #00B7C2; box-shadow: 0 0 10px #00B7C2; }
+  h1 { font-family: "Spectral", Georgia, serif; font-size: 64px; line-height: 1.06; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 26px; }
+  h1 .italic { font-style: italic; color: #B47C57; font-weight: 600; }
+  .sub { font-size: 19px; line-height: 1.55; color: rgba(255,255,255,0.85); margin-bottom: 36px; max-width: 580px; }
+  .sub strong { color: #fff; }
+  .offer-card { background: rgba(7,26,46,0.7); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(8px); border-radius: 14px; padding: 22px 26px; max-width: 520px; }
+  .start-here { color: #FF7A00; font-size: 11.5px; letter-spacing: 0.12em; font-weight: 800; margin-bottom: 6px; }
+  .offer-line { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .offer-meta { font-size: 14px; color: rgba(255,255,255,0.55); margin-bottom: 16px; }
+  .cta-main { background: #FF7A00; color: #fff; padding: 14px 24px; border-radius: 10px; font-weight: 700; font-size: 15.5px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+  .cta-main:hover { background: #E06900; }
+  .scarcity { display: flex; align-items: center; gap: 10px; margin-top: 22px; color: rgba(255,255,255,0.7); font-size: 13.5px; }
+  .scarcity::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #FF7A00; box-shadow: 0 0 10px #FF7A00; }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="bg"></div>
+  <div class="overlay-grad"></div>
+  <header>
+    <div class="brand">
+      <img src="source-media/logo.jpg" alt="Catalyst Works">
+      <div class="brand-name">Catalyst<span class="accent">Works</span></div>
+    </div>
+    <nav>
+      <a href="#audit">Friction Audit</a>
+      <a href="#how">How It Works</a>
+      <a href="#signal">Signal Session</a>
+      <a href="#about">About</a>
+    </nav>
+    <a class="cta-top" href="#book">Book a Signal Session</a>
+  </header>
+  <div class="hero-wrap">
+    <div class="hero">
+      <div class="badge">Diagnostic Consulting. AI Governance.</div>
+      <h1>You know something is wrong.<br>You just can't <span class="italic">name it.</span></h1>
+      <p class="sub">Growth has stalled. The same problems keep recurring. Your best people are buried. <strong>There is something specific causing all of it.</strong> Catalyst Works finds it and removes it.</p>
+      <div class="offer-card">
+        <div class="start-here">START HERE</div>
+        <div class="offer-line">Executive Signal Session: 90 min, your constraint named in writing</div>
+        <div class="offer-meta">$497 . 3 sessions per month</div>
+        <a class="cta-main" href="#book">Book a Session →</a>
+      </div>
+      <div class="scarcity">3 Signal Session slots available this month</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

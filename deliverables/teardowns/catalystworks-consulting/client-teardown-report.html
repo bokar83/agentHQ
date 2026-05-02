@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en" style="color-scheme: dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#071A2E">
+<title>Catalyst Works . Website Teardown</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,500;0,700;1,700&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --navy: #071A2E;
+    --carbon: #1E222A;
+    --cyan: #00B7C2;
+    --cyan-dim: rgba(0,183,194,0.10);
+    --cyan-border: rgba(0,183,194,0.25);
+    --orange: #FF7A00;
+    --clay: #B47C57;
+    --mist: #F3F6F9;
+    --white: #FFFFFF;
+    --text-mid: rgba(255,255,255,0.78);
+    --text-muted: rgba(255,255,255,0.62);
+    --line: rgba(255,255,255,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; color: var(--white); background: var(--navy); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  main { max-width: 1100px; margin: 0 auto; padding: 56px 24px 96px; }
+  h1, h2, h3 { font-family: "Spectral", Georgia, serif; font-weight: 700; letter-spacing: -0.015em; line-height: 1.15; text-wrap: balance; }
+  h1 { font-size: 52px; margin: 0 0 12px; }
+  h1 .italic { font-style: italic; color: var(--clay); font-weight: 700; }
+  h2 { font-size: 32px; margin: 64px 0 16px; padding-top: 32px; border-top: 1px solid var(--line); }
+  h3 { font-size: 20px; margin: 24px 0 8px; font-family: "Public Sans", sans-serif; font-weight: 700; letter-spacing: 0.005em; }
+  p, li { font-size: 16px; color: var(--text-mid); }
+  p { margin: 0 0 14px; }
+  p strong, li strong { color: var(--white); font-weight: 600; }
+  ul, ol { padding-left: 22px; margin: 8px 0 16px; }
+  li { margin: 6px 0; }
+  .lead { font-size: 18px; color: var(--text-mid); }
+  .hero-cover { background: linear-gradient(135deg, rgba(0,183,194,0.06), rgba(180,124,87,0.04)), var(--navy); padding: 56px 0 40px; border-bottom: 1px solid var(--line); margin: -56px -24px 32px; padding-left: 24px; padding-right: 24px; }
+  .badge { display: inline-flex; align-items: center; gap: 8px; background: var(--cyan-dim); color: var(--cyan); border: 1px solid var(--cyan-border); padding: 7px 16px; border-radius: 999px; font-size: 12.5px; letter-spacing: 0.06em; font-weight: 700; text-transform: uppercase; margin-bottom: 24px; }
+  .badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+  .meta { color: var(--text-muted); font-size: 14px; margin-top: 16px; }
+  .verdict { background: rgba(255,255,255,0.04); border: 1px solid var(--line); border-left: 4px solid var(--cyan); padding: 22px 28px; border-radius: 10px; margin: 24px 0 8px; }
+  .verdict h3 { font-family: "Public Sans", sans-serif; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cyan); margin-bottom: 10px; }
+  .verdict p { color: var(--white); font-size: 17.5px; margin: 0; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } h1 { font-size: 38px; } h2 { font-size: 24px; } }
+  .card { background: rgba(255,255,255,0.04); border: 1px solid var(--line); border-radius: 10px; padding: 20px 22px; }
+  .card h4 { font-family: "Public Sans", sans-serif; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin: 0 0 8px; font-weight: 700; }
+  .card .big { font-family: "Spectral", serif; font-size: 28px; font-weight: 700; color: var(--white); line-height: 1.2; }
+  .scorecard { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin: 12px 0 8px; }
+  @media (max-width: 720px) { .scorecard { grid-template-columns: 1fr 1fr; } }
+  .score { background: rgba(255,255,255,0.04); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+  .score .label { font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+  .score .val { font-size: 22px; font-weight: 600; color: var(--white); font-family: "Spectral", serif; }
+  .pill { display: inline-block; padding: 2px 9px; border-radius: 4px; font-size: 11.5px; font-weight: 700; }
+  .pill.ok { background: rgba(34,197,94,0.16); color: #4ade80; }
+  .pill.warn { background: rgba(245,158,11,0.16); color: #fbbf24; }
+  .pill.fix { background: rgba(239,68,68,0.16); color: #f87171; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; font-size: 14.5px; background: rgba(255,255,255,0.02); border-radius: 8px; overflow: hidden; }
+  th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--text-mid); }
+  th { background: rgba(255,255,255,0.04); color: var(--white); font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; }
+  tr:last-child td { border-bottom: none; }
+  .compare-iframe { width: 100%; aspect-ratio: 1100 / 820; border: 1px solid var(--line); border-radius: 12px; margin: 16px 0 8px; background: var(--mist); }
+  details { background: rgba(255,255,255,0.03); border: 1px solid var(--line); border-radius: 8px; margin: 14px 0; padding: 0; overflow: hidden; }
+  details summary { cursor: pointer; padding: 14px 18px; font-weight: 600; color: var(--white); list-style: none; display: flex; align-items: center; justify-content: space-between; }
+  details summary::after { content: "+"; font-size: 22px; color: var(--cyan); font-weight: 400; }
+  details[open] summary::after { content: "−"; }
+  details .body { padding: 0 18px 18px; }
+  details iframe { width: 100%; min-height: 1400px; border: 1px solid var(--line); border-radius: 6px; background: var(--mist); }
+  .cta-section { margin-top: 64px; padding: 36px 32px; background: linear-gradient(135deg, rgba(0,183,194,0.10), rgba(255,122,0,0.04)); border: 1px solid var(--cyan-border); border-radius: 14px; text-align: center; }
+  .cta-section h2 { border-top: none; padding-top: 0; margin-top: 0; }
+  .cta-btn { display: inline-block; background: var(--orange); color: var(--white); padding: 16px 28px; border-radius: 10px; font-weight: 700; font-size: 15.5px; text-decoration: none; margin-top: 16px; transition: background 0.2s; }
+  .cta-btn:hover { background: #E06900; }
+  .footer-note { margin-top: 64px; padding-top: 32px; border-top: 1px solid var(--line); color: var(--text-muted); font-size: 13.5px; text-align: center; }
+  /* keeping table cells tight on mobile */
+  @media (max-width: 540px) { table { font-size: 13px; } th, td { padding: 10px 11px; } }
+</style>
+</head>
+<body>
+
+<main>
+
+<div class="hero-cover">
+  <div class="badge">Website Teardown . Diagnostic Report</div>
+  <h1>What's already working,<br>what's <span class="italic">leaking,</span> and what to do next.</h1>
+  <p class="lead">A diagnostic read of catalystworks.consulting against five competitors, full SEO and accessibility checks, and a proposed v2 hero direction informed by the gaps surfaced.</p>
+  <p class="meta">Subject: catalystworks.consulting . Audited 2026-05-01 . Pages crawled: 3 . Competitors analyzed: 5</p>
+</div>
+
+<div class="verdict">
+  <h3>Headline finding</h3>
+  <p>Your offer architecture is already sharper than every competitor we scraped. What's holding the site back is visible craft, two orphan pages no visitor can reach from the homepage, and zero local-search signal. Three hours of focused work closes the gap.</p>
+</div>
+
+<h2>Brand snapshot</h2>
+<p>What's already working. Carry forward, do not replace.</p>
+
+<div class="grid-2">
+  <div class="card">
+    <h4>Voice</h4>
+    <p style="color: var(--white); font-family: 'Spectral', serif; font-style: italic; font-size: 18px; line-height: 1.4;">"You know something is wrong. You just can't name it."</p>
+    <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px;">Short declarative sentences. Negation-then-affirmation. No marketing-speak. The italic clay accent on emphasis words is unmistakable.</p>
+  </div>
+  <div class="card">
+    <h4>Offer</h4>
+    <p class="big">Executive Signal Session</p>
+    <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px;"><strong style="color: var(--orange);">$497</strong> . 90 min . one named constraint in writing within 24 hours . 3 sessions per month. <strong>This is the differentiator.</strong> No competitor in this audit sells a productized first-touch with a fixed price above the fold.</p>
+  </div>
+  <div class="card">
+    <h4>Palette</h4>
+    <p style="display: flex; gap: 6px; margin: 0;">
+      <span style="display: inline-block; width: 24px; height: 24px; background: #071A2E; border-radius: 4px; border: 1px solid rgba(255,255,255,0.18);"></span>
+      <span style="display: inline-block; width: 24px; height: 24px; background: #00B7C2; border-radius: 4px;"></span>
+      <span style="display: inline-block; width: 24px; height: 24px; background: #FF7A00; border-radius: 4px;"></span>
+      <span style="display: inline-block; width: 24px; height: 24px; background: #B47C57; border-radius: 4px;"></span>
+    </p>
+    <p style="color: var(--text-muted); font-size: 14px; margin-top: 10px;">Navy + cyan + orange + clay. Distinctive, intentional, well-tuned. Not a default template palette.</p>
+  </div>
+  <div class="card">
+    <h4>Type</h4>
+    <p class="big" style="font-size: 22px;">Spectral × Public Sans</p>
+    <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px;">Premium serif display + sans body pairing. Spectral italic is the visual signature on emphasis words.</p>
+  </div>
+</div>
+
+<h2>The craft gap</h2>
+<p>Where your site falls short of its own brand identity. Each item below is a concrete fix, not a critique.</p>
+
+<table>
+<tr><th>Finding</th><th>Severity</th><th>Fix</th></tr>
+<tr><td><strong>Real CW logo absent from the header.</strong> The actual brand mark exists on your server as the favicon, but the header renders a plain text wordmark. The logo is distinctive and premium; using only the favicon underuses the brand asset.</td><td><span class="pill fix">High</span></td><td>Swap the text wordmark for an &lt;img&gt; tag pointing at CatalystWorks_logo.jpg in header and footer. 5 min.</td></tr>
+<tr><td><strong>Two broken nav links.</strong> The "How It Works" anchor in the main navigation points to #offers, which does not exist anywhere on the page. Visitors clicking it land back at the top.</td><td><span class="pill fix">High</span></td><td>Either rename to a working anchor (#audit or #signal both exist) or add an id="offers" wrapper around the relevant section. 5 min.</td></tr>
+<tr><td><strong>Body-text contrast falls below WCAG AA.</strong> A handful of paragraphs use a 35% white opacity on the navy background, giving ~3:1 contrast. AA requires 4.5:1.</td><td><span class="pill fix">High</span></td><td>Raise --text-dim to at least 50% opacity. Reserve below-50% for icons or decorative elements only. 5 min.</td></tr>
+<tr><td><strong>The booking form's submit button sits outside its &lt;form&gt; element.</strong> Enter-to-submit is broken, and browser autofill behavior is degraded. Conversion friction.</td><td><span class="pill fix">High</span></td><td>Wrap the modal field block in &lt;form&gt;, add required and name attributes to the inputs. 10 min.</td></tr>
+<tr><td><strong>Em-dashes appear in body copy.</strong> Including in the FAQ schema, which Google can render in rich snippets. This violates the brand rule.</td><td><span class="pill warn">Medium</span></td><td>Global replace em-dashes with sentence breaks or commas. Run on JSON-LD too. 5 min.</td></tr>
+<tr><td><strong>Mobile sections clip behind the fixed nav.</strong> When mid-page sections come into view, their first lines vanish under the sticky header.</td><td><span class="pill warn">Medium</span></td><td>Add scroll-margin-top to section[id] equal to the nav height. 2 min.</td></tr>
+</table>
+
+<h2>The market gap</h2>
+<p>How catalystworks.consulting reads against the closest five competitors in the AI consulting and fractional advisor space.</p>
+
+<table>
+<tr><th>Competitor</th><th>Their angle</th><th>Where Catalyst Works wins</th></tr>
+<tr><td><strong>SMB Strategy Consultants</strong> (smbstrategyconsultants.com)</td><td>"Diagnosis before Prescription." Same audience, same vocabulary, light-theme premium photography.</td><td>Stated $497 price above the fold. Stated 24-hour written deliverable. Scarcity tag. Stronger founder-bio depth.</td></tr>
+<tr><td><strong>Opinosis Analytics</strong> (Utah)</td><td>Deep technical AI consulting with PhD founder, broad service ladder.</td><td>Productized first-touch vs custom-scope on theirs. Sharper voice. Faster commitment.</td></tr>
+<tr><td><strong>Salt Lake City AI</strong> (Utah)</td><td>Generic AI for Utah small business.</td><td>Catalyst Works has identity, voice, and a productized offer. They are template-shaped.</td></tr>
+<tr><td><strong>Fractional AI</strong> (enterprise)</td><td>Owns the "fractional AI" category name; enterprise gen AI engineering.</td><td>Different segment. They sell to mid-market enterprise tech. You sell to SMB owner-operators.</td></tr>
+<tr><td><strong>Advisor Labs</strong> (Utah)</td><td>Vertical-specific custom AI dev shop.</td><td>Different buyer. They build software; you diagnose constraints.</td></tr>
+</table>
+
+<h3 style="margin-top: 32px;">Whitespace observation</h3>
+<p>None of the five sells a fixed-price 90-minute productized first-touch with a written 24-hour deliverable. Four hide pricing entirely. <strong>The market gap Catalyst Works owns is "the diagnostic before the proposal" delivered as a productized SKU.</strong> Lean harder into this, do not dilute it.</p>
+
+<h2>SEO and local-search</h2>
+<p>Where the site is invisible to searches it should win.</p>
+
+<div class="scorecard">
+  <div class="score"><div class="label">Overall SEO</div><div class="val">72 / 100</div></div>
+  <div class="score"><div class="label">Structured data</div><div class="val">Strong</div></div>
+  <div class="score"><div class="label">Technical SEO</div><div class="val">Strong</div></div>
+  <div class="score"><div class="label">Local SEO signal</div><div class="val">Missing</div></div>
+  <div class="score"><div class="label">Interior page hygiene</div><div class="val">Bare</div></div>
+  <div class="score"><div class="label">Internal linking</div><div class="val">Degenerate</div></div>
+</div>
+
+<p>The homepage is excellent. Title tag and meta description are within ideal length. Open Graph, Twitter Card, and four well-formed JSON-LD schemas (Organization, Person, Service with $497 offer, FAQPage with 7 Q&amp;A) are present. The site is already eligible for FAQ rich results in search.</p>
+
+<p>The two interior pages (governance.html and ai-data-audit.html) tell a different story. Both are 2,100 words of strong content but lack meta descriptions, canonical tags, and structured data. Worse, neither is linked from the homepage. Search engines find them via sitemap; humans cannot.</p>
+
+<p>Zero local-SEO signal exists. The footer mentions Atlanta, Miami, Dubai, Conakry, Port Louis, but the Organization schema's areaServed lists only countries, not cities. Three of the five competitors rank for "AI consulting Utah" because they use explicit geographic markup; Catalyst Works has no Utah signal at all despite being Utah-based.</p>
+
+<h3>Top 5 SEO fixes (in priority order)</h3>
+<ol>
+  <li>Link from homepage to governance.html and ai-data-audit.html. One edit fixes the orphan-page problem.</li>
+  <li>Add meta description, self-canonical, and Service or Article JSON-LD to both interior pages. ~30 min total.</li>
+  <li>Upgrade Organization schema areaServed from country names to City entities. Add a Service Areas section to the homepage listing the five cities.</li>
+  <li>Em-dash scrub on the FAQPage JSON-LD answers (they leak into Google rich snippets).</li>
+  <li>Create a Google Business Profile (Utah service-area business) and submit catalystworks.consulting as the website.</li>
+</ol>
+
+<details>
+<summary>See the full SEO audit (technical detail, all checks)</summary>
+<div class="body">
+<iframe src="research/03-seo-audit.html" title="Full SEO audit"></iframe>
+</div>
+</details>
+
+<h2>Before / after</h2>
+<p>What v2 could look like. Same voice, same offer, same colors. Real logo in the header, photographic hero, contrast fix, broken nav anchor removed.</p>
+
+<iframe class="compare-iframe" src="mockups/before-after.html" title="Hero before vs after"></iframe>
+
+<p><strong>What stays:</strong> the H1 voice, the italic clay emphasis on "name it", the $497 offer card, the "3 slots this month" scarcity tag, the navy + cyan + orange + clay palette, the Spectral × Public Sans typography pairing.</p>
+
+<p><strong>What gets upgraded:</strong> the real CW logo enters the header, a photographic hero replaces the text-on-grid background, the broken "How It Works" anchor gets a working target, em-dashes leave the body copy, body-text contrast passes WCAG AA.</p>
+
+<h2>What's next</h2>
+
+<div class="cta-section">
+  <h2 style="font-size: 28px; margin-bottom: 12px;">The teardown is one read of one site on one day.</h2>
+  <p style="font-size: 16.5px; color: var(--text-mid); max-width: 640px; margin: 0 auto;">If you'd like to talk through any of the findings, or scope what a v2 patch would actually look like end-to-end, the next step is a 30-minute conversation. No proposal. No pitch.</p>
+  <a href="https://catalystworks.consulting/#signal" class="cta-btn">Book a 30-minute teardown call</a>
+  <p style="margin-top: 18px; color: var(--text-muted); font-size: 13px;">Or reply to the email this report came with and we'll find a time.</p>
+</div>
+
+<p class="footer-note">Source artifacts available on request: brand extraction, design audit, competitor scrape, full SEO report, hero mockup composition. This report was produced by the website-teardown skill on 2026-05-01.</p>
+
+</main>
+
+</body>
+</html>
