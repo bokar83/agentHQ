@@ -311,6 +311,7 @@ def reveal_emails(apollo_ids: list[str]) -> list[dict]:
                         "linkedin_url": match.get("linkedin_url", ""),
                         "industry": (match.get("organization") or {}).get("industry", ""),
                         "city": match.get("city", ""),
+                        "website_url": (match.get("organization") or {}).get("website_url", ""),
                     })
         except Exception as e:
             logger.error(f"Apollo bulk_match failed: {e}")

@@ -17,6 +17,136 @@ clones, demo sites, and app UIs.
 
 ---
 
+## ⛔ HARD RULE: The hero section is the close
+
+The hero section closes the client AND the client's clients. For Catalyst Works
+sites, the hero is what convinces the visitor to call. For Signal Works pitch
+sites, the hero is what convinces the prospect we know what we're doing. The
+hero gets the most design attention, the most reference research, and the
+strictest sign-off process. **Locked 2026-05-01 after the Elevate hero
+substitution incident.** See `memory/feedback_hero_is_the_close.md`.
+
+**Five sub-rules, all non-negotiable:**
+
+1. **Video over still imagery whenever possible.** Drone footage, time-lapse
+   builds, walk-throughs, founder-to-camera, before/after transforms. Static
+   images are the fallback, not the default. Reasons: motion holds attention
+   5-7× longer; signals premium production value; aligns with 2026 trends
+   (see `memory/reference_web_design_trends.md`).
+
+2. **If video isn't available, pick the single most representative still** : 
+   the one shot that summarizes what the business does. NEVER substitute a
+   smaller-but-different image to optimize a Lighthouse score. If file size
+   is the problem, **compress the approved asset, don't swap it.** Use WebP
+   + JPG fallback via CSS `image-set()` for backgrounds, `<picture>` for
+   `<img>` tags. The Elevate rebuild ships `hero-roof.webp` (454KB) +
+   `hero-roof.jpg` (304KB) compressed from a 1.2MB source: same image,
+   3× smaller.
+
+3. **Asset-level hero changes need explicit operator sign-off.** Once a design
+   is approved, the hero image, video, copy, fonts, and any other front-and-center
+   asset cannot be changed without operator confirmation, even when an automated
+   signal (Lighthouse, accessibility audit, contrast checker) says it should
+   be. Code-level fixes (focus rings, ARIA, schema, contrast tokens that don't
+   change the look) are fine to apply silently. Asset changes are not.
+
+4. **Lead with hero changes in any report.** If the hero gets touched, that
+   change goes at the top of the next user-facing message: not buried in a
+   list. Reporting bar: surface the change in the first 3 lines, not the 30th.
+
+5. **Default hero patterns by business type:**
+   + **Roofer / contractor / builder:** drone footage of completed roof or
+     active build, looped silently, autoplay deferred until idle for LCP.
+     Static fallback = drone still.
+   + **Dentist / orthodontist / pediatric dental:** founder smile-with-team
+     or clean modern operatory walk-through. Static fallback = founder portrait.
+   + **HVAC / plumber / electrician:** tech-in-uniform working on equipment,
+     or before/after thermal imagery. Static fallback = uniformed tech still.
+   + **Lawyer / advisor / consultant:** founder in their office or speaking
+     on a stage. Static fallback = sharp founder portrait.
+   + **SaaS / tech:** product walk-through screencast OR animated illustration
+     of the core flow. Static fallback = product hero shot.
+   + **Restaurant / hospitality:** kitchen close-up or service shot. Static
+     fallback = signature dish or interior.
+
+**The bar:** if the prospect's hero doesn't beat the best 3 reference sites
+in the niche on first impression, redesign it. The hero is not a section. It
+is the close.
+
+---
+
+## ⛔ HARD RULE: Regenerate OG images after every copy or branding change
+
+Many sites keep an `og-image.html` source template that renders to `og-image.jpg`
+(or `.png`) for social shares. The HTML is the source of truth; the JPG/PNG is
+what LinkedIn, Twitter, and Slack actually load. **They drift.**
+
+**Symptom:** You update site copy (price, duration, headline). The HTML
+template is current, but the image file on disk is months stale. Anyone
+sharing the URL on LinkedIn sees the OLD price / OLD copy in the share card.
+
+**Real incident 2026-05-01:** catalystworks.consulting `og-image.jpg` was
+showing "$350 / 60 minutes" for a Signal Session that has cost $497 / 90 min
+for months. The HTML had been edited at some point but the JPG was rendered
+2026-04-03 (pre v3-WOW redesign). Every LinkedIn share for ~30 days carried
+wrong price.
+
+**How to apply:**
+
+When you change ANY of: price, headline, duration, brand colors, founder
+name/photo, eyebrow text, CTA URL, OR any text that appears in the OG
+image template: you MUST regenerate the OG image file in the same commit.
+
+**Regen pattern (Playwright + local server, no extra tooling):**
+
+1. Serve the site locally: `python3 -m http.server 8743` from the site dir
+   (run in background).
+2. `mcp__plugin_playwright_playwright__browser_resize` to width 1200, height 630.
+3. `browser_navigate` to `http://127.0.0.1:8743/og-image.html`.
+4. `browser_take_screenshot` with `type: 'jpeg'`, `fullPage: false`: saves
+   to `.playwright-mcp/og-image-new.jpg` or repo root.
+5. `mv` the new file over the old `og-image.jpg`. Backup the old one if
+   you want, but don't commit the backup.
+6. `git add og-image.html og-image.jpg` together. Commit message names both.
+7. Stop the local server.
+
+**Verify:** open the new JPG and read the text manually. If it still says
+the old price/copy, the source HTML wasn't updated either: fix it and
+re-render before committing.
+
+**Cache-busting:** social platforms cache OG images aggressively. After
+deploy, prime the cache via Twitter/LinkedIn debuggers (or just append a
+`?v=2` query param to the og:image URL in the HTML head: file path stays
+the same, but social scrapers see a new URL).
+
+---
+
+## Stay at the forefront: and create new trends
+
+Boubacar's directive (locked 2026-05-01): *"We will need to be following trends
+for website building and stay at the forefront of them and ourselves go ahead
+and create new trends."*
+
+Before designing any hero or major section, **read `memory/reference_web_design_trends.md`**.
+That memory tracks Awwwards / Godly / Linear / Cofolios / Land-book as the
+trend-following sources, plus the current snapshot of what's hot (cinematic
+video heroes, scroll-driven scrub, glassy translucent layers, bento grids,
+ticker strips, cursor glow, etc.).
+
+The "lead, don't follow" mandate: **ship at least one element per build that
+the next 50 contractors in the niche won't have for 12-18 months.** Examples:
+
+- Schema.org structured data (most contractors haven't even heard of it)
+- Scroll-driven scrubbed video on contractor sites
+- AI-search-optimized FAQ blocks
+- Voice-search-optimized H1/H2 phrasing
+- Calendly-replacement embedded scheduling in the hero CTA itself
+
+Document trend-leading elements in the engagement-ops or roadmap entry so we
+can claim credit when the niche catches up.
+
+---
+
 ## The Volta Standard
 
 `workspace/demo-sites/volta-studio/index.html` is the reference bar for
@@ -58,6 +188,235 @@ Never the reverse. "I'd rather pull you back than push you further."
 
 The question before every build: *if this business had a $50K design budget,
 what would the agency they hired produce?* Build that. Not the $500 version.
+
+---
+
+## THE GOAL: AVOID AI SLOP
+
+This skill exists to prevent AI-generated visual slop. Every other rule serves that one goal. The most important target is **Signal Works demos and client builds**: those sites ARE the agency's portfolio. A prospect judging whether to hire Signal Works to "build me a site that doesn't look AI-generated" is judging the demo they see. If that demo reads as AI-generated within 5 seconds, the agency loses the prospect, regardless of how good the cinematic motion is.
+
+**Signal Works builds get a stricter floor than internal builds:** must score `/design-audit` ≥17/20 with anti-patterns ≥3/4 before going live. No exceptions.
+
+---
+
+## PROJECT CONTEXT PERSISTENCE (PRODUCT.md + DESIGN.md)
+
+Every multi-session project (demo site, client site, lead magnet, internal tool) gets two files at the project root that LOCK strategic + visual decisions across sessions:
+
+- `<project-root>/PRODUCT.md`: register (brand vs product), what this is, who it's for, three voice words, anti-references, audience reflexes to reject, success criterion, failure mode
+- `<project-root>/DESIGN.md`: locked typography, palette, spacing scale, type scale, motion vocabulary, interaction primitives, anti-pattern compliance checklist
+
+### When to use this protocol
+
+- Building any site / artifact that will span more than one session
+- Building any Signal Works demo, client site, or lead magnet (always: these are `register=brand`)
+- Iterating on an existing project (load both files first to avoid drift)
+
+### Protocol
+
+**At session start, before anything else:**
+
+1. Look for `PRODUCT.md` and `DESIGN.md` at the project root
+2. If they exist: READ THEM. They override defaults. Do not re-derive design from scratch.
+3. If they don't exist AND this is a multi-session build: CREATE THEM before writing HTML
+   - Templates: `~/.claude/skills/frontend-design/templates/PRODUCT.md.template` + `DESIGN.md.template`
+   - Copy template → fill in by interviewing user (or reading existing brand.md, engagement notes, prior audit)
+   - **Never synthesize PRODUCT.md from the user's original prompt alone.** Ask 2-3 specific questions per round, minimum one round of real user answers before drafting.
+   - DESIGN.md is created AFTER PRODUCT.md: the design decisions derive from the strategic context, not the other way round.
+
+**During build:**
+
+- Cite the relevant section of DESIGN.md when making a visual decision (e.g. "DESIGN.md locks display font as Spectral 700, using that for hero")
+- If you want to deviate from DESIGN.md mid-session: STOP. Surface the deviation to user. Get explicit approval before changing the file or the build.
+
+**At session end:**
+
+- Update DESIGN.md if any locked decision changed during the session (with user approval)
+- Update build log entry in `workspace/demo-sites/build-log.md` (if applicable)
+- The next session loads PRODUCT.md + DESIGN.md fresh and continues from there
+
+### Why this matters
+
+Without persisted context, every new session starts from defaults. Defaults are AI-slop. Three sessions on the same project produce three different visual directions. The user gets frustrated. The work regresses. Persistence prevents this.
+
+### Catalyst Works projects
+
+CW projects already have `docs/styleguides/styleguide_master.md` v1.1 + `styleguide_websites.md` v1.1 as their global DESIGN.md equivalent. PRODUCT.md per CW project is still useful for register, voice words, anti-references, success criterion. Create one for any CW project that has its own positioning (e.g. `boubacarbarry-site/PRODUCT.md`, `humanatwork-site/PRODUCT.md`).
+
+---
+
+## CRAFT REFERENCE LIBRARY
+
+When you need craft knowledge beyond the rules in this skill (typography reasoning, color contrast theory, motion principles, spatial logic, microcopy guidelines, cognitive load management), load the relevant file from `~/.claude/skills/frontend-design/reference/`:
+
+- `typography.md`: picking fonts, type scales, vertical rhythm
+- `color-and-contrast.md`: palette construction, OKLCH, accessibility
+- `spatial-design.md`: whitespace, grids, asymmetric layout
+- `motion-design.md`: easing curves, scroll triggers, reduced-motion
+- `interaction-design.md`: hover, focus, click affordances
+- `responsive-design.md`: breakpoints, fluid type, touch targets
+- `ux-writing.md`: buttons, errors, empty states, microcopy
+- `cognitive-load.md`: what to cut, hide, hierarchy-rank
+- `heuristics-scoring.md`: design quality dimensions
+
+See `reference/README.md` for when to load each one. Don't load all 9 every time: pick the 1-2 that match the question you're answering.
+
+---
+
+## ABSOLUTE BANS (Impeccable-derived)
+
+These are not preferences. They are training-data tells that mark a site as AI-generated within 5 seconds. Refuse and rewrite.
+
+1. **Side-stripe colored borders**: `border-left` or `border-right` >1px as a colored accent on cards, blocks, sections, or quotes. The "1-3px colored line on the side of a card" is the universal AI tell. Use spacing, weight, or asymmetric layout for hierarchy instead.
+
+2. **Gradient text**: `background-clip: text` + linear-gradient. Always tacky, always reads as AI. Use a single bold color or a typographic moment instead.
+
+3. **Glassmorphism as default**: `backdrop-filter: blur()` on most surfaces, frosted nav bars, blurred translucent cards. Acceptable as a single rare moment. Never as a system.
+
+4. **Hero-metric template**: giant number + small label + supporting stats grid + accent line. The "$9,660 ANNUAL BLEED" pattern. Replace with editorial typography where the number IS the moment, not boxed inside a card.
+
+5. **Identical card grids**: 3-6 cards in a row with the same icon, heading, body. Whether the cards have side-stripes, hover lifts, or gradient backgrounds, the *grid of identical cards* is the tell. Use kinetic lists, asymmetric editorial grids, depth-reveals, or feature-film stacks instead.
+
+6. **Modal as primary CTA path**: popups for booking, signup, or any action that should be inline. Modals for confirmations are fine. Modals as the main conversion mechanism are slop.
+
+7. **Em-dashes**: `: ` and `--` in body copy. Use commas, colons, semicolons, or rewrite. Em-dashes in AI-generated text are the #1 written tell. (This rule is enforced by `scripts/check_no_em_dashes.py` at commit time too.)
+
+8. **Bounce easing as default**: `cubic-bezier` overshoot on every interaction. Bounce should be rare and intentional. Default to `ease-out` or `cubic-bezier(0.22, 1, 0.36, 1)` for entrances.
+
+9. **Category-reflex palettes**: if a stranger could guess the business category from the palette/theme alone, it is training-data slop. Reject and reframe. Examples (all banned as defaults):
+   - Dental → blue/white/sky-blue + tooth mascot
+   - Law → navy + gold + serif
+   - Healthcare → white + teal + smiling person
+   - Crypto → neon-on-black
+   - Agency / creative studio → cinematic dark + neon green or orange accent
+   - SaaS / consulting → navy + cyan + orange CTA
+   - Roofer / HVAC / contractor → dark + orange + industrial display sans
+
+If the palette would look "right" for any business in the category, it is right for none. The whole point of design is to feel specific.
+
+10. **Reflex-reject fonts**: Refuse these picks. They are training-data defaults. Find an alternative from a real catalog (Pangram Pangram, Future Fonts, Klim, Velvetyne, Production Type, Grilli Type) or, for free options, use Google Fonts but pick something that does NOT appear on this list.
+
+| Banned font | Why |
+|---|---|
+| Inter | The #1 reflex sans. Every AI-generated SaaS site. |
+| DM Sans | The #2 reflex sans. Replaced Inter as the default in 2024. |
+| DM Serif Display / DM Serif Text | Default "elegant" pick for AI. |
+| Plus Jakarta Sans | Default "friendly modern" pick. |
+| Space Grotesk / Space Mono | Default "technical/startup" pick. |
+| Syne | Default "agency confident" pick. |
+| Outfit | Default "modern friendly" pick. |
+| Instrument Sans / Instrument Serif | Default "editorial modern" pick. |
+| Fraunces | Default "warm serif" pick. |
+| Newsreader / Lora / Crimson / Crimson Pro / Crimson Text | Default "literary" picks. |
+| Playfair Display | Default "luxury" pick: most overused serif of 2018-2025. |
+| Cormorant / Cormorant Garamond | Default "premium serif" pick. |
+| IBM Plex Sans / Plex Serif / Plex Mono | Default "we read Hacker News" pick. |
+| Source Serif 4 | Default "considered serif" pick. |
+
+**Picks that are NOT on the reject list and are good defaults for free Google Fonts:**
+- **Spectral** (Production Type): display serif, editorial weight
+- **Public Sans** (USWDS): neutral sans with character
+- **Fraunces is banned** but if you need a contemporary serif, try **Roboto Slab** or **Bitter** for body
+- **Unbounded**: display sans, industrial register (used carefully)
+- **Fredoka / Baloo 2**: playful, kid-friendly (rotation, not default)
+- **Bricolage Grotesque**: modern editorial sans, distinctive
+- **Gloock / Big Shoulders Display**: bold display
+- **Cabinet Grotesk / Erode / Satoshi** (Fontshare, free): premium look, not reflex
+
+---
+
+## FONT SELECTION PROCEDURE (Impeccable-derived)
+
+When picking a font for any new build, follow this procedure. Skip and you will reach for Inter or DM Sans by default.
+
+### Step A: Three concrete brand-voice words
+
+Not "modern" or "elegant." Concrete physical-object words.
+
+> Bad: "modern, friendly, professional"
+> Good: "warm and mechanical and opinionated"
+> Good: "weighty, hand-set, like a serious magazine cover"
+> Good: "scrappy, punk-zine, photocopier-pressed"
+
+### Step B: List your three reflex picks
+
+Write down the three fonts you reach for first. Be honest.
+
+### Step C: Reject any reflex pick that's on the ban list
+
+Cross-reference Step B against the ban list above. If any of your three are banned, reject them. They are reflexes precisely because the AI training corpus has those fonts on millions of sites.
+
+### Step D: Browse a real catalog
+
+Open one of:
+- pangrampangram.com
+- futurefonts.xyz
+- klim.co.nz
+- velvetyne.fr
+- productiontype.com
+- grillitype.com
+- fontshare.com (free Indian Type Foundry catalog)
+
+Look for the brand-as-physical-object words from Step A. Pick something that fits.
+
+### Step E: Cross-check
+
+If your final pick equals your original reflex pick (Step B), start over. You rationalized your way back to the default.
+
+### Step F: For Catalyst Works builds
+
+**For any CW-branded artifact, ALWAYS load the source-of-truth typography file FIRST:**
+
+> `D:\Ai_Sandbox\agentsHQ\docs\styleguides\CURRENT_TYPOGRAPHY.md`
+
+This file is the single canonical source for which fonts are active on CW work. Hard-coding font names in this skill goes stale within months: read CURRENT_TYPOGRAPHY.md every time. As of 2026-04-29 it locks Spectral + Public Sans + JetBrains Mono, but check the file for the latest.
+
+Then load the relevant artifact-type styleguide:
+- Website / app: `docs/styleguides/styleguide_websites.md` (currently v1.1)
+- PDF / consulting report: `docs/styleguides/styleguide_pdf_documents.md` (currently v2.2)
+- Master rules (voice, anti-patterns, color): `docs/styleguides/styleguide_master.md` (currently v1.1)
+
+These styleguides DEFER to CURRENT_TYPOGRAPHY.md for fonts and contain only artifact-specific layout rules (cover page geometry, gold bar, button specs, etc). When CURRENT_TYPOGRAPHY.md and a styleguide conflict on fonts, **CURRENT_TYPOGRAPHY.md wins**: it's the latest source of truth.
+
+---
+
+## COLOR SELECTION PROCEDURE
+
+Same logic as fonts: rotation tables encode reflexes. Use procedure.
+
+### Step A: Anchor the palette in something specific to THIS business
+
+Not "the category palette." Something specific. The actual location's light. The actual texture of the materials they sell. The actual interior of their office. A photograph from the client. The cover of a book that captures the register.
+
+### Step B: Reject category-reflex palettes (see ban #9)
+
+If the palette you reached for is the category default, reject it. A pediatric dentist does NOT have to be navy + sky-blue + coral. A roofer does NOT have to be dark + orange. A consultant does NOT have to be navy + cyan.
+
+### Step C: Pick 3 anchor colors max + 1 neutral
+
+More than 4 colors is decoration, not a system. Each color has a job:
+- Surface (background)
+- Ink (text)
+- Accent (CTA, focal moments: used sparingly)
+- Optional: secondary accent OR ornament (for warmth, like CW's clay)
+
+### Step D: One of the colors should surprise
+
+If all 4 colors are predictable for the brief, the palette is generic. One of them should be a choice nobody else in the category would make, anchored in Step A.
+
+---
+
+## DESIGN_PREFLIGHT (mandatory output before first `<` character)
+
+Before writing any HTML, output this exact line in your response:
+
+```
+DESIGN_PREFLIGHT: skeleton=pass build_log=pass agency=pass volta_floor=pass interactions=pass photos=pass reflex_check=pass category_reflex=pass register=brand|product
+```
+
+Each token must be `pass` (not just present: actually verified). If you cannot honestly write `pass` for a token, the build is not ready. The tokens map to the verification checks A-F below + the new reflex/category checks. `register=brand` if the design IS the product (Signal Works demos, agency portfolio, brand-led builds). `register=product` if design serves the product (CW landing, lead magnets, internal tools).
+
+If this string is missing from the output, the skill did not run. The build must restart.
 
 ---
 
@@ -180,8 +539,8 @@ If your output could appear in a Wix template gallery, it has failed.
 Before writing the first `<` character, you MUST open and read at minimum the first 150 lines of ONE of these reference sites:
 
 ```
-workspace/demo-sites/volta-studio/index.html         (926 lines :  cinematic dark, agency)
-workspace/demo-sites/thepointpediatricdentistry/index.html  (923 lines :  storybook blob, kids dental)
+workspace/demo-sites/volta-studio/index.html         (926 lines: cinematic dark, agency)
+workspace/demo-sites/thepointpediatricdentistry/index.html  (923 lines: storybook blob, kids dental)
 ```
 
 Choose the one closest in spirit to the business you are building. Read it. Note:
@@ -253,7 +612,7 @@ This is not optional. It is the research output that feeds the $50K agency quest
 Every site gets at least 3 of these. More is better. Pull back if asked.
 
 - [ ] **Custom cursor**: dot + lagging ring, explicit colors, no blend mode
-- [ ] **Char-split animation** on hero heading: use DOM splitChars() helper (NOT SplitText CDN :  Club plugin, will 404 and kill all JS)
+- [ ] **Char-split animation** on hero heading: use DOM splitChars() helper (NOT SplitText CDN: Club plugin, will 404 and kill all JS)
 - [ ] **ScrollTrigger stagger** on cards, rows, or list items
 - [ ] **Clip-path reveal** OR **scrub parallax** on at least one section
 - [ ] **Magnetic buttons**: GSAP mousemove + elastic.out on leave
@@ -262,14 +621,14 @@ Every site gets at least 3 of these. More is better. Pull back if asked.
 - [ ] **Pinned horizontal scroll** OR **full-bleed cinematic section** (at least one)
 - [ ] **Real photos in every image slot**: no emoji substitutes, no CSS gradient placeholders, no empty boxes
 
-**GSAP CDN :  FREE plugins only (public cdnjs):**
+**GSAP CDN: FREE plugins only (public cdnjs):**
 `gsap.min.js`, `ScrollTrigger.min.js`, `Draggable.min.js`, `Flip.min.js`, `Observer.min.js`, `TextPlugin.min.js`, `EasePack.min.js`
 CDN: `https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/`
 
-**NEVER load from public CDN :  Club GSAP members only:**
+**NEVER load from public CDN: Club GSAP members only:**
 SplitText, MorphSVG, DrawSVG, ScrambleText, MotionPathHelper, Physics2D
 
-Loading a Club plugin from cdnjs returns 404. The variable is undefined. `gsap.registerPlugin(ScrollTrigger, SplitText)` throws and **kills the entire script block** :  cursor, animations, accordions, everything stops working. CSS still loads so the page looks fine but is fully non-interactive. This is silent and extremely hard to diagnose.
+Loading a Club plugin from cdnjs returns 404. The variable is undefined. `gsap.registerPlugin(ScrollTrigger, SplitText)` throws and **kills the entire script block**: cursor, animations, accordions, everything stops working. CSS still loads so the page looks fine but is fully non-interactive. This is silent and extremely hard to diagnose.
 
 **For char/word animation without SplitText:** use the DOM walker pattern:
 ```js
@@ -509,6 +868,150 @@ Example before/after pair for roofing:
 - [ ] Forms wired (Formspree for static)
 - [ ] GitHub push in same session as build
 - [ ] Vercel deploy confirmed live
+- [ ] **`/design-audit <path>` ran and scored ≥15/20 with anti-patterns ≥3/4** (HARD GATE)
+- [ ] **For Signal Works builds: ≥17/20 with anti-patterns ≥3/4** (stricter floor: these ARE the agency's portfolio)
+- [ ] No items from the 10-pattern absolute bans list present
+- [ ] No reflex-reject fonts used (or styleguide explicitly mandates one: note in build-log)
+
+### Post-build: invoke /design-audit
+
+After build is complete and before declaring "done," invoke the `design-audit` skill on the artifact:
+
+```
+/design-audit <path-to-html-or-pdf>
+```
+
+This produces a scored audit at `workspace/design-audits/<artifact>-audit.md`. If the score is below the gate, fix the flagged P0/P1 issues, re-render, and re-audit. Do not skip this step. The audit is the only objective check on whether the build escapes AI slop.
+
+### Live micro-adjust (optional, for refinement)
+
+If the audit flags issues that are aesthetic (font choice, color balance, spacing rhythm) rather than structural, run:
+
+```
+node scripts/design-live.mjs <path-to-html>
+```
+
+This opens the file in a browser with a side panel for swapping fonts/colors/spacing in real time. Tweak, accept, the file is rewritten. See `scripts/design-live.mjs` for usage.
+
+---
+
+## KNOWN PITFALLS (learned the hard way)
+
+These are bugs that have shipped and caused user pain. Add to this list every time a new one is found.
+
+### 1. NEVER hide H2/heading text by default with `transform: translateY(110%)` waiting for GSAP/IntersectionObserver
+
+This is the GSAP split-line bug discovered on the Elevate Roofing build (2026-04-30). The pattern was:
+
+```html
+<h2><span class="split-line"><span>Recent work</span></span></h2>
+```
+
+```css
+.split-line span { transform: translateY(110%); }  /* hidden by default */
+```
+
+```js
+gsap.fromTo('.split-line span', { yPercent: 110 }, { yPercent: 0, scrollTrigger: { ... once: true }});
+```
+
+**Failure modes:**
+
+- GSAP CDN times out or fails → headline invisible forever
+- ScrollTrigger trigger missed on fast scroll → headline never animates in
+- Reduced-motion query matched but JS path didn't reset → headline stays hidden
+- Slow connection → headline invisible for 2-3 seconds on every section
+
+The user's screenshot showed entire empty columns where H2s should be. Looked like a layout bug; was actually a JS-dependent display bug.
+
+**The fix (use ALL of these):**
+
+1. **Gate the hide behind a `.js-ready` class** added by your IIFE entry point:
+   ```js
+   document.documentElement.classList.add('js-ready');
+   ```
+   ```css
+   .js-ready .split-line span { transform: translateY(110%); }
+   /* without JS, the text is always visible */
+   ```
+
+2. **Better: use `gsap.from()`** (animates FROM a state) instead of CSS-default-hidden. The rendered DOM is always the final state; GSAP merely transitions through the start state. If GSAP fails, the final state is what shows.
+
+3. **Best: don't split-line H2s at all unless animation is absolutely required.** A visible static heading beats an animated invisible one. The Elevate fix was to rip out all `.split-line` wrappers and use direct `<h2 class="section-h2">` elements with `gsap.from()` reveals applied to the whole element.
+
+### 2. Cache-bust CSS/JS during iteration
+
+When the user says "I don't see your changes," 95% of the time it is browser cache, not code. Add a unix-timestamp `?v=` query string to every `<link>` and `<script>` tag and bump it via Python regex sweep across all pages on every CSS/JS change:
+
+```python
+import re, glob, time
+ver = str(int(time.time()))
+for p in glob.glob('site/**/*.html', recursive=True):
+    raw = open(p, encoding='utf-8').read()
+    new = re.sub(r'(/css/[a-z]+\.css|/js/[a-z]+\.js)\?v=\d+', r'\1', raw)
+    new = new.replace('/css/site.css"', f'/css/site.css?v={ver}"')
+    new = new.replace('/js/site.js"',  f'/js/site.js?v={ver}"')
+    if new != raw:
+        open(p, 'w', encoding='utf-8', newline='\n').write(new)
+```
+
+Without this, every "fix" reads as "no change" to the user staring at a cached browser.
+
+### 3. No meta-commentary in visitor-facing copy
+
+Lines that read as designer notes that escaped into production. Examples caught on Elevate:
+
+- *"Three real reviews from real clients. Rod by name in every one."*: describes the page, not for the visitor
+- *"01 / Stack"* margin labels using designer-jargon ("Stack" wasn't anywhere in the section)
+- *"Don't just take our word for it"*: defensive cliché that calls attention to the section being a reviews section
+- *"06 / Said"*: the word doesn't make sense in context, sounds like a file directory name
+
+The fix: every line of copy must answer "would a visitor find value in reading this?" If it sounds like designer commentary about what the page is doing, cut it. Use plain section labels ("Reviews", "Where we work") not clever ones.
+
+### 4. Em-dash scrub before declaring done
+
+Boubacar's hard rule: no `: ` or `: ` site-wide. They're the #1 AI-tell in written copy. Run a sweep before every "done" claim:
+
+```python
+import re, glob
+for p in glob.glob('site/**/*.html', recursive=True) + glob.glob('site/**/*.css', recursive=True) + glob.glob('site/**/*.js', recursive=True):
+    raw = open(p, encoding='utf-8').read()
+    new = raw.replace(': ', ' - ').replace(': ', ', ').replace(': ', ' - ').replace(': ', '-')
+    if new != raw:
+        open(p, 'w', encoding='utf-8', newline='\n').write(new)
+```
+
+Caught 12-166 instances per scrub on Elevate. Watch out for JS string fallbacks (e.g. cost-tool placeholder `'- pick a project above -'` will get clobbered to `',  pick a project above , '` if the scrubber runs on bare `-` characters: only scrub the unicode em-dash and en-dash).
+
+### 5. Mobile hero crowding from oversized type clamp
+
+The default `--t-h1` clamp can hit 8.2rem (~131px) at large viewports, which forces the H1 to wrap into 5-6 vertical lines on a 380-1900px screen and crowd whatever is behind it (video, image). The Elevate fix:
+
+- Define a SEPARATE `--hero-h1` clamp ceiling lower than `--t-h1` (e.g. `clamp(2.6rem, 1.8rem + 4vw, 6.2rem)`)
+- Don't use hard `<br>` tags in the H1: let `max-width` control wrapping
+- Add a localized scrim under the headline (linear-gradient with blur) so the type stays readable when video shows through
+- On `max-width: 480px`, drop the clamp floor again and tighten line-height to 0.95
+
+### 6. Use the client's REAL logo. Always.
+
+Per `feedback_redesign_familiar_not_foreign.md`: never improvise a text-based logotype as a stand-in for a client's actual logo. The client immediately recognizes their own logo and immediately doesn't recognize a stylized text version. Render their actual PNG via:
+
+```html
+<img src="/assets/media/logo-wordmark.png" alt="ClientName" class="brand-logo">
+```
+
+```css
+.brand-logo {
+  height: 28px; width: auto;
+  filter: brightness(0) invert(1);  /* white on dark surfaces; flip for light */
+}
+```
+
+If their logo is dark-text-on-transparent (Picsart background-removed PNGs are common), `filter: brightness(0) invert(1)` flips to white. For light sections, scope the filter via `mix-blend-mode` on the parent or swap to a light variant.
+
+### 7. mix-blend-mode scope must be tight
+
+`mix-blend-mode: difference` on the whole `.site-header` will invert EVERY child including borders on `.nav-cta` buttons → the button border looks like a broken dark box on light sections. Scope blend modes to text-only elements (`.brand`, `.nav-links`, `.nav-toggle`) and give the CTA pill its own explicit color treatment.
 
 ---
 
