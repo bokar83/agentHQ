@@ -1534,6 +1534,24 @@ Perform a comprehensive, site-wide SEO audit covering multiple pages, cross-page
 7. Generate the interactive HTML report
 8. Save and open in browser
 
+## Mode 2 Prioritization Rule: Revenue-weighted, not severity-weighted
+
+When ranking the prioritized action plan in Mode 2, weight each fix by **revenue impact**, not by severity score alone.
+
+A "high severity" alt-text issue on a page that gets 12 visits/month ranks BELOW a "medium severity" CTA issue on the hero of a page that gets 8,000 visits/month and sits on the lead-form path.
+
+For each fix in the prioritized list, append:
+
+- **Estimated traffic impact** (rough order of magnitude: current visits, ranking opportunity)
+- **Conversion path it sits on** (lead form, AdSense CPC, e-commerce checkout, brand search, none)
+- **Revenue lever** (low / medium / high, based on traffic × conversion path × commercial intent)
+
+Sort the action plan by **revenue lever**, not by severity. Then by severity within each lever tier. The Top 3 Priorities block at the top of the report must reflect this ordering.
+
+If the user did not provide commercial context in intake (Step 0), ask before generating the action plan. Without it, revenue weighting is a guess.
+
+Framing borrowed from auditzap.io's posture (2026-05-02 awesome-shadcn-ui curation absorb), not their tool.
+
 ---
 
 ## Mode 2 Step 0: User Intake Questionnaire (MANDATORY — DO NOT SKIP)

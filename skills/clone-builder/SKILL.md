@@ -180,7 +180,7 @@ output/apps/[site-name]-app/
 ├── public/
 │   └── favicon.ico
 ├── styles/
-│   └── globals.css        # Match target site colors/fonts
+│   └── globals.css        # Match target site colors/fonts (generate via tweakcn, see `skills/ui-styling/references/shadcn-theming.md`)
 ├── package.json
 └── next.config.js
 ```
