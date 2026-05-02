@@ -29,37 +29,38 @@ Possible framings to choose from:
 
 ---
 
-## Status Snapshot (as of 2026-05-02)
+## Status Snapshot (as of 2026-05-02 evening, post-extraction)
 
-- **Repo location today:** still a submodule inside agentsHQ at `Dashboards4Sale/`: pending extraction
+- **Repo location:** EXTRACTED to satellite repo `bokar83/dashboards4sale` (`https://github.com/bokar83/dashboards4sale`) on 2026-05-02. Original tracked content preserved in agentsHQ at `zzzArchive/_pre-cleanup-20260502/Dashboards4Sale-original/`.
 - **Live URL:** TBD
 - **Customers:** $0 revenue
-- **Build state:** dashboards exist as static templates in the submodule
-- **Languages:** templates exist in EN; AR + FR localization pending
+- **Build state:** dashboards exist as static templates in the satellite
+- **Languages:** templates exist in EN, FR, AR (skeleton only); production-ready localization pending
 - **Distribution:** none yet (no Stripe wiring, no checkout, no marketing site)
 
 ---
 
 ## Milestones
 
-### M0: Extract to its own repo `bokar83/dashboards4sale`
+### M0: Extract to its own repo `bokar83/dashboards4sale` ✅ SHIPPED 2026-05-02
 
-**Status:** Queued. Trigger: dedicated 30-60 min extraction session.
+**Result:** Live at `https://github.com/bokar83/dashboards4sale`. Original tracked content preserved in `zzzArchive/_pre-cleanup-20260502/Dashboards4Sale-original/` per the no-delete rule.
 
-**Steps:**
-1. Create `bokar83/dashboards4sale` on GitHub
-2. Push current `Dashboards4Sale/` submodule contents to the new repo
-3. `git submodule deinit Dashboards4Sale` in agentsHQ
-4. Edit `.gitmodules` to remove the submodule entry
-5. `git rm --cached Dashboards4Sale`
-6. Add `Dashboards4Sale/` to agentsHQ `.gitignore` (in case the directory persists locally as a working clone)
-7. Update `docs/reference/repo-structure.md` and root `AGENTS.md` to mark D4S as extracted
-8. Update Ventures Registry in `docs/roadmap/README.md` with the live satellite URL
-9. Confirm three-way nsync at the new state
+**Verification (Karpathy success criterion):** cloned new satellite to `d:/tmp/d4s-verify`, file-count diff matches expected (67 in satellite, 71 in archive; 4-file delta = pycache + xlsx outputs intentionally gitignored).
+
+**What shipped:**
+
+1. Created `bokar83/dashboards4sale` on GitHub (private)
+2. Copied `Dashboards4Sale/` content to clean temp dir, cleaned pycache, added .gitignore (pycache + xlsx + node_modules + .env), git init, single init commit, pushed
+3. D4S was NOT a submodule (regular tracked directory); used standard `git mv` to archive instead of `git submodule deinit`
+4. `git mv Dashboards4Sale zzzArchive/_pre-cleanup-20260502/Dashboards4Sale-original/`
+5. Verification clone + file-count diff: PASS
+6. This roadmap M0 marked SHIPPED
+7. Ventures Registry in `docs/roadmap/README.md` updated with live satellite URL (in same commit)
 
 ### M1: Multilingual coverage (AR + FR + EN)
 
-**Status:** Pending M0. Trigger: extraction complete, repo working.
+**Status:** Queued. Unblocked by M0.
 
 ### M2: Distribution partner #1
 
