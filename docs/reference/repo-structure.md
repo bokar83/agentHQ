@@ -1,12 +1,12 @@
 # agentsHQ Repository Structure
 
-Last updated: 2026-04-27. Verified against live directory scan.
+Last updated: 2026-05-02 (Move Day). Verified against live directory scan and `docker-compose.yml` mount points.
 
 ## Legend
 
 - **Owner**: who controls this folder (production / workspace / archive / external / tooling)
 - **Routing**: what goes here and what does not
-- **Status**: active / orphan / archive / submodule / gitignored
+- **Status**: active / orphan / archive / submodule / gitignored / live-mount
 
 ---
 
@@ -17,107 +17,126 @@ Last updated: 2026-04-27. Verified against live directory scan.
 | Folder | Owner | Routing | Status |
 |--------|-------|---------|--------|
 | `orchestrator/` | production | All Python app code: agents, crews, tools, handlers, engine, saver, skills. The only place new backend code goes. | active |
-| `signal_works/` | production | Signal Works outreach pipeline code. Separate from orchestrator by design (different team/product). | active |
+| `signal_works/` | production | Signal Works outreach pipeline code. Separate from orchestrator by design (different team/product). Future satellite once import boundaries are refactored. | active |
 | `skills/` | production | Canonical skill library. New skills created here first, then copied to `~/.claude/skills/`. Never create skills only in the global folder. | active |
-| `config/` | production | App configuration files (non-secret). | active |
-| `sql/` | production | SQL migration files and schema snapshots. | active |
+| `config/` | production | App configuration files (non-secret). | active / gitignored |
+| `sql/` | production | SQL migration files. | active |
 | `templates/` | production | Email and document templates used by agents. | active |
-| `scripts/` | production | One-off operational scripts (skool harvester, pre-commit hooks, etc.). Not imported by orchestrator. | active |
-| `tests/` | production | Root-level test suite. Orchestrator-level tests live in `orchestrator/tests/`. | active |
+| `scripts/` | production | One-off operational scripts (skool harvester, pre-commit hooks, deploy scripts, ops helpers). Not imported by orchestrator. | active |
+| `tests/` | production | Root-level test suite. Includes `tests/integration/` for end-to-end tests (graduated from `tmp/` 2026-05-02). | active |
 | `docs/` | production | All documentation: roadmaps, handoffs, playbooks, reference, SOP. Source of truth for session context. | active |
+| `migrations/` | production | DB migration files. | active |
+| `n8n/` | production | n8n workflow imports (JSON). `n8n/imported/` holds synced workflows. Consolidated 2026-05-02 (formerly split across `workflows/`, `n8n-workflows/`). | active |
+
+### Live Mount Points (DO NOT MOVE)
+
+These paths are mounted by `docker-compose.yml` or referenced by skills/workflows. **Moving them breaks production.**
+
+| Folder / file | Why | Reference |
+|---|---|---|
+| `setup-database.sql` (root) | Postgres init mount → `/docker-entrypoint-initdb.d/setup-database.sql` | `docker-compose.yml:32` |
+| `agent_outputs/` | Container outputs mount → `/app/outputs` | `docker-compose.yml:204` + thepopebot ALLOWED_PATHS |
+| `tmp_upload/` | Transcribe skill `WORK_DIR` | `skills/transcribe/transcribe.py:37` |
+| `thepopebot/chat-ui/` | GitHub Actions deploy path filter | `.github/workflows/deploy-agentshq.yml:8` |
+| `thepopebot/` (parent) | docker-compose.thepopebot.yml + thepopebot-event-handler container | `.github/workflows/rebuild-event-handler.yml`, `docker-compose.thepopebot.yml` |
+| `codex_ssh/` | Active Codex tool (gitignored) | gitignored line 153 |
 
 ### Agent Output Sinks
 
 | Folder | Owner | Routing | Status |
 |--------|-------|---------|--------|
 | `outputs/` | production | **Primary agent output sink.** All live code writes here via `AGENTS_OUTPUT_DIR` env var (default `/app/outputs`). Gitignored. Do not move or rename. | active / gitignored |
-| `agent_outputs/` | workspace | Manual/one-off agent outputs (e.g. capital allocation doc). Not written to by production code. Candidate for merge into `workspace/` at cleanup. | orphan |
+| `agent_outputs/` | production | **LIVE container mount** (see Live Mount Points). Container writes `/app/outputs` here. Old contents archived 2026-05-02. | active / live-mount / gitignored |
 | `logs/` | production | Application logs. Gitignored. | active / gitignored |
 
 ### Human Workspace
 
 | Folder | Owner | Routing | Status |
 |--------|-------|---------|--------|
-| `workspace/` | workspace | Boubacar's working area: demo sites, mocks, articles, media, AB tests. Not imported by any production code. | active |
-| `data/` | workspace | Datasets, clusters, local DB snapshots. | active |
-| `sandbox/` | workspace | Experimental code that is not production-ready. | orphan - candidate for zzzArchive |
-| `scratch/` | workspace | Throwaway notes and fragments. | orphan - candidate for deletion |
-| `tmp/` | workspace | Temporary files. | orphan - candidate for deletion |
-| `tmp_upload/` | workspace | Temporary upload staging. | orphan - candidate for deletion |
-| `n8n-workflows/` | workspace | n8n workflow JSON exports. Separate from `n8n/` (see below). | active |
+| `workspace/` | workspace | Boubacar's working area: demo sites, mocks, articles, media, AB tests. Not imported by any production code. Gitignored. | active / gitignored |
+| `workspace/clients/[slug]/` | workspace | Per-client engagement folders (AGENTS.md + BRIEF.md + engagements/ + deliverables/). | active |
+| `workspace/catalyst-works/` | workspace | CW brand work. | active |
+| `workspace/internal/` | workspace | Platform dev scratch. | active |
+| `data/` | workspace | Datasets, clusters, local DB snapshots, runtime state. Gitignored. | active / gitignored |
+| `sandbox/` | workspace | **In-flight builds and experimental work. Tracked in git so laptop dying does not lose work.** No secrets. Monthly sweep: 30d untouched → graduate or archive. `sandbox/.tmp/` is gitignored throwaway corner. Full rule in `sandbox/README.md`. | active / tracked |
+| `tmp_upload/` | workspace | **Transcribe skill WORK_DIR (live).** Old transcripts archived 2026-05-02. | active / live-mount / gitignored |
 
 ### External / Submodule
 
 | Folder | Owner | Routing | Status |
 |--------|-------|---------|--------|
-| `output/` | submodule | Git submodule pointing to `bokar83/attire-inspo-app` (Next.js). Gitignored. NOT an agent output folder - the name is coincidental. Do not write agent output here. | submodule / gitignored |
+| `output/` | submodule | Git submodule pointing to `bokar83/attire-inspo-app` (Next.js). NOT an agent output folder: the name is coincidental. Do not write agent output here. | submodule / gitignored |
 | `skills/community/` | submodule | Git submodule: `sickn33/antigravity-awesome-skills`. Community skill library. | submodule |
-| `external/` | external | Third-party repos cloned for reference (CLI-Anything, OpenSpace). Not imported by production. | archive |
-| `tools/` | external | External CLI tools (opencli-rs binary). | active |
-| `node_modules/` | tooling | JS dependencies for mermaid-cli / HyperFrames. Gitignored. | active / gitignored |
+| `external/` | external | Third-party repos cloned for reference. Not imported by production. Gitignored. | active / gitignored |
+| `tools/` | external | External CLI tools (autocli binary). Gitignored. | active / gitignored |
+| `node_modules/` | tooling | JS dependencies. Gitignored. | active / gitignored |
 
-### Candidate for Separate Repo or Archive
+### Satellites (own GitHub repos)
 
-| Folder | Owner | Routing | Status |
-|--------|-------|---------|--------|
-| `Dashboards4Sale/` | external product | Entirely separate product (Arabic/French/English budget dashboards). No relation to agentsHQ runtime. Should live in its own repo. | orphan - separate repo on next cleanup |
-| `thepopebot/` | abandoned | Separate bot project with its own skills and chat UI. No active development. | orphan - archive |
-| `remote-access-auditor/` | abandoned | One-time security audit tool. Skill exists at `skills/remote-access-auditor/`. | orphan - archive |
-| `codex_ssh/` | abandoned | SSH config experiment for Codex access. Superseded by current setup. | orphan - archive |
-| `server-setup/` | archive | VPS provisioning scripts from initial setup. One-time use. | archive |
+| Satellite | Type | Repo | Status |
+| --- | --- | --- | --- |
+| `Dashboards4Sale/` | product | `bokar83/dashboards4sale` (extraction pending) | submodule today, satellite target |
+| `signal_works/` | productized AI presence | `bokar83/agentshq` (this repo) until imports refactored | future satellite |
 
-### n8n
-
-| Folder | Owner | Routing | Status |
-|--------|-------|---------|--------|
-| `n8n/` | production | n8n workflow imports (JSON). `n8n/imported/` holds synced workflows. | active |
-| `n8n-workflows/` | workspace | n8n workflow exports/drafts. Should consolidate with `n8n/` at cleanup. | orphan - merge into n8n/ |
-
-### Workflows
-
-| Folder | Owner | Routing | Status |
-|--------|-------|---------|--------|
-| `workflows/` | archive | Old workflow definitions. `workflows/legacy/` confirms these are superseded. | archive - candidate for zzzArchive |
+Satellites are referenced in `docs/roadmap/` and the Ventures Registry (`docs/roadmap/README.md`). Their code never lives inside agentsHQ once extracted.
 
 ### Hidden / Dot Folders
 
 | Folder | Owner | Routing | Status |
 |--------|-------|---------|--------|
 | `.agents/` | tooling | Skills and workflows for non-Claude agents. | active |
-| `.windsurf/` | tooling | Windsurf IDE skills. Parallel to `.agents/` and `~/.claude/skills/`. | active |
-| `.claude/` | tooling | Claude Code worktrees. | active |
+| `.windsurf/` | tooling | Windsurf IDE skills. | active |
+| `.claude/` | tooling | Claude Code worktrees + scheduled tasks. | active |
 | `.superpowers/` | tooling | Brainstorm artifacts from superpowers skill. | active |
-| `.worktrees/` | tooling | Git worktrees. | active |
+| `.worktrees/` | tooling | Git worktrees. Gitignored. | active / gitignored |
 | `.venv/` | tooling | Python virtual environment. Gitignored. | active / gitignored |
 | `.vscode/` | tooling | VSCode settings. | active |
 | `.github/` | tooling | GitHub Actions workflows. | active |
-| `.codex_ssh/` | abandoned | Duplicate of `codex_ssh/` (hidden version). | orphan - delete |
-| `.tmp/` | workspace | Temporary files (hidden). Duplicate of `tmp/`. | orphan - delete |
+| `.tmp/` | scratch | pytest cache + antivirus quarantine (regenerable). Gitignored. | active / gitignored |
+| `.codex_ssh/` | scratch | Empty hidden duplicate of codex_ssh (permission-locked). Gitignored. | active / gitignored |
+| `codex_ssh/` | active tool | Active Codex SSH working directory. Gitignored. | active / gitignored |
+
+### Archive
+
+| Folder | Owner | Routing | Status |
+|--------|-------|---------|--------|
+| `zzzArchive/` | archive | **Boubacar's signature graveyard. Gitignored. Batch-organized by date.** Each batch has a `MANIFEST.md` indexing every archived item with original path, archive path, reason, and reference-grep result. **`zzzArchive/` itself is never archived.** Latest batch: `_pre-cleanup-20260502/`. | active / gitignored |
 
 ---
 
-## Top-Level Files (Non-Standard)
+## Top-Level Files (clean as of 2026-05-02)
 
-| File | Status | Note |
-|------|--------|------|
-| `a-b testing.xlsx` | orphan | Should live in `workspace/` or `data/` |
-| `adversarial_report.md` | orphan | One-time security report. Move to `docs/reference/` or `zzzArchive/` |
-| `code_review_20260422.md` | orphan | Move to `docs/handoff/` or `zzzArchive/` |
-| `ideas_full_list.txt` / `ideas_full_list_utf8.txt` | orphan | Superseded by Notion Ideas DB. Delete or move to `zzzArchive/` |
-| `search_output.txt` | orphan | Scratch file. Delete. |
-| `test_sankofa.py` | orphan | Test script at root. Move to `tests/` |
-| `run_council_strat.py` | orphan | One-off script. Move to `scripts/` |
-| `schema_v2.sql` | orphan | Move to `sql/` |
-| `setup-database.sql` | orphan | Move to `sql/` |
-| `system-status.sh` | active | Keep at root for convenience (ops script) |
-| `deploy.sh` | active | Keep at root |
-| `ignite.bat` | active | Keep at root |
-| `MakeShortcut.ps1` | orphan | Windows shortcut helper. Move to `scripts/` |
-| `Run-Local-SecureWatch.bat` | orphan | Move to `scripts/` |
-| `ninja.ico` | orphan | Move to `workspace/` or delete |
-| `skills-lock.json` | active | Skill version lock. Keep at root. |
-| `pyrightconfig.json` | active | Python type checking config. Keep at root. |
-| `vercel.json` | active | Vercel config. Keep at root. |
+| File | Status | Purpose |
+|------|--------|---------|
+| `AGENTS.md` | active | Soul file for all agents |
+| `AGENT_INSTRUCTIONS.md` | active | Agent runtime instructions |
+| `CLAUDE.md` | active | Claude Code session context |
+| `CODEX.md` | active | Codex session context |
+| `README.md` | active | Human-readable system overview |
+| `CHANGELOG.md` | active | Release log |
+| `LESSONS-LEARNED.md` | active | Engineering lessons archive |
+| `review-gate.md` | active | PR review gate doc |
+| `setup-database.sql` | active / live-mount | Postgres init script (mounted by docker-compose) |
+| `system-status.sh` | active | Ops convenience |
+| `deploy.sh` | active | Deploy convenience |
+| `ignite.bat` | active | Windows launcher |
+| `package.json`, `package-lock.json` | active | JS deps for mermaid-cli / Hyperframes |
+| `pyrightconfig.json` | active | Python type checking |
+| `vercel.json` | active | Vercel config |
+| `skills-lock.json` | active / gitignored | Skill version lock |
+| `docker-compose.yml`, `docker-compose.thepopebot.yml` | active | Container orchestration |
+| `.gitignore`, `.gitmodules`, `.pre-commit-config.yaml`, `.env.example` | active | Repo hygiene |
+| `.env`, `.secrets.baseline*` | active / gitignored | Secrets (never committed) |
+
+**Cleaned up 2026-05-02 (archived to `zzzArchive/_pre-cleanup-20260502/`):**
+
+- `schema_v2.sql` → archived (older than `docs/database/schema_v2.sql`)
+- `ideas_full_list.txt`, `ideas_full_list_utf8.txt`, `search_output.txt` → archived (Notion is source of truth)
+- `code_review_20260422.md` → moved to `docs/handoff/`
+- `adversarial_report.md` → moved to `docs/reference/`
+- `MakeShortcut.ps1`, `Run-Local-SecureWatch.bat`, `run_council_strat.py` → moved to `scripts/`
+- `test_sankofa.py` → moved to `tests/`
+- `a-b testing.xlsx`, `ninja.ico` → moved to `workspace/` (both gitignored)
 
 ---
 
@@ -125,28 +144,62 @@ Last updated: 2026-04-27. Verified against live directory scan.
 
 **agentsHQ is the AI operations platform. It is NOT a monorepo.**
 
-> If the thing being built has its own URL, its own customer, or its own revenue stream - it gets its own GitHub repo (satellite).
-> If it is infrastructure, tooling, or an AI capability that powers agentsHQ - it lives here.
+> If the thing being built has its own URL, its own customer, or its own revenue stream: it gets its own GitHub repo (satellite).
+> If it is infrastructure, tooling, or an AI capability that powers agentsHQ: it lives here.
 
-**Satellites referenced in `docs/roadmap/` but code never lives in agentsHQ:**
+**Client work lives in `workspace/clients/[slug]/`: never in orchestrator code.**
 
-| Satellite | Status | Repo |
-| --- | --- | --- |
-| `Dashboards4Sale` | Create own repo, remove submodule | bokar83/dashboards4sale (pending) |
-| `signal_works/` | Platform-adjacent, stays at root until imports refactored | future: own repo |
-
-**Client work lives in `workspace/clients/[slug]/` - never in orchestrator code.**
+**Satellites are tracked in the Ventures Registry** (`docs/roadmap/README.md`).
 
 ---
 
-## Weekend Cleanup Sequence (from Council verdict)
+## Folder Governance (LOCKED 2026-05-02)
 
-1. Tag savepoint before touching anything.
-2. Create `Dashboards4Sale` as its own GitHub repo, remove from agentsHQ.
-3. Move `thepopebot/`, `remote-access-auditor/`, `codex_ssh/`, `.codex_ssh/` to `zzzArchive/`.
-4. Delete `tmp/`, `.tmp/`, `scratch/`, `search_output.txt`.
-5. Move orphan root files to their correct folders (see table above).
-6. Merge `n8n-workflows/` into `n8n/`.
-7. Evaluate `sandbox/` and `workflows/` - archive or delete.
-8. Merge `agent_outputs/` into `workspace/` or delete.
-9. Consolidate `.agents/skills/` and `.windsurf/skills/` documentation - confirm which agents read from which path.
+See `docs/AGENT_SOP.md` "Folder Governance" section + `reference_folder_governance.md` in memory. Summary:
+
+1. Every top-level folder has an `AGENTS.md` or `README.md` explaining its purpose.
+2. No folder is created without a stated purpose.
+3. **The word "delete" is retired.** Items not used → archived to `zzzArchive/<batch>/<path>/` with `MANIFEST.md` entry.
+4. Live mounts never move. Reference-grep + `docker-compose.yml` check before any move.
+5. Triple-verify before archive: grep, mount check, Codex review.
+6. `zzzArchive/` is the graveyard. Gitignored. Batch-organized. Never archived itself.
+7. Sandbox is for in-flight work (tracked). `sandbox/.tmp/` is gitignored throwaway.
+
+---
+
+## Move Day 2026-05-02 Summary (this session)
+
+**Archived (in `zzzArchive/_pre-cleanup-20260502/`):**
+
+- `remote-access-auditor/`: duplicate of `skills/remote-access-auditor/`
+- `server-setup/`: one-time VPS bootstrap, superseded
+- `workflows/`, `workflows/legacy/`: superseded by `n8n/imported/`
+- `n8n-workflows/`: older duplicates of files now in `n8n/imported/`
+- `scratch/`: old probes 2026-04-12 to 2026-04-20
+- `tmp/` content (codex commit drafts + old apollo probes)
+- `tmp_upload/` old transcripts (folder kept for transcribe skill)
+- `agent_outputs/capital-allocation/` (folder kept as live mount)
+- `.tmp/CLAUDE.md` (pytest cache regenerable, left in place)
+- Root orphans: schema_v2.sql, ideas_full_list*.txt, search_output.txt
+
+**Graduated:**
+
+- `tmp/test_phase1_e2e.py` and `tmp/test_autonomy_e2e.py` → `tests/integration/`
+
+**Consolidated:**
+
+- 6 n8n workflow JSONs across 3 folders → `n8n/imported/n50-n52*.json`
+
+**New:**
+
+- `docs/roadmap/dashboards4sale.md` (satellite stub)
+- `docs/roadmap/README.md` Ventures Registry table
+- `sandbox/README.md` (in-flight work rules)
+- `docs/AGENT_SOP.md` Folder Governance section
+- `~/.claude/projects/.../memory/reference_folder_governance.md`
+
+**Token efficiency fix (separate commit):**
+
+- `orchestrator/handlers_chat.py` `limit=100` → `limit=20`
+
+**5 production-mount footguns caught and prevented:** see "Live Mount Points" section above.

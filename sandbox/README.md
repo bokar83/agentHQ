@@ -1,6 +1,6 @@
 # sandbox/
 
-This is the agentsHQ **experimentation and testing workspace**.
+This is the agentsHQ **experimentation and in-flight work workspace**.
 
 ## Purpose
 
@@ -8,17 +8,19 @@ Use `sandbox/` when you want to:
 
 - Test a new tool, API, or integration before wiring it into the orchestrator
 - Prototype a new agent or crew idea without touching production code
-- Run one-off scripts that don't belong in `outputs/` (which is for real deliverables)
+- Park in-flight builds that aren't ready for `skills/`, `output/websites/`, or their own repo yet
 - Experiment with prompts, LLM responses, or data pipelines
-- Park exploratory work that might become a real feature later
+- Keep exploratory work safe (committed to GitHub) while you iterate
 
 ## Rules
 
-1. **Nothing in here is production code.** It can be messy, half-finished, or broken.
-2. **When a sandbox experiment graduates to production**, move the relevant code to `orchestrator/`, `agents/`, or `skills/` and delete the sandbox version.
-3. **Do not import from sandbox/ in any orchestrator or crew code.** One-way door: production → sandbox (never).
-4. **Scripts here are gitignored by default** (see `.gitignore` entry for `sandbox/tmp/`). If you want to commit a sandbox experiment, move it to a named subfolder and commit intentionally.
-5. **Clean up periodically.** If a sandbox experiment is older than 30 days and hasn't graduated, either promote it or delete it.
+1. **`sandbox/` IS tracked in git.** In-flight work is saved so the laptop dying does not lose it. Throwaway content goes in `sandbox/.tmp/` (gitignored).
+2. **No secrets, no credentials, no PII, no env vars.** The pre-commit secret scan applies here. If something needs a secret, put the secret in `secrets/` (gitignored) and reference it from sandbox.
+3. **Nothing in here is production code.** It can be messy, half-finished, or broken.
+4. **One-way door:** production → sandbox is fine (copy a file in to experiment). Sandbox → production requires graduating: move the file to its real home (`orchestrator/`, `skills/`, `output/`, etc.) and remove the sandbox copy.
+5. **No imports from sandbox/ in orchestrator or crew code.** Sandbox is never the source of truth.
+6. **Each subfolder needs a README.md.** One sentence on what it is, when it can be archived. No README + 60d untouched = candidate for `zzzArchive/`.
+7. **Monthly sweep.** First of the month: anything in `sandbox/` not touched in 30 days gets reviewed. Either graduate (promote to its real home) or archive (move to `zzzArchive/_sandbox-sweep-<date>/`). **Nothing is deleted, ever.**
 
 ## Structure (suggested)
 
@@ -29,17 +31,24 @@ sandbox/
 ├── prompts/              ← Prompt engineering experiments
 ├── crews/                ← Draft crew prototypes
 ├── integrations/         ← New API / service integrations
-└── tmp/                  ← Throw-away scripts (gitignored)
+└── .tmp/                 ← Throwaway scripts (gitignored)
 ```
 
-## Relationship to outputs/
+## sandbox/ vs other in-flight folders
 
-| `sandbox/` | `outputs/` |
-|-----------|-----------|
-| Work in progress | Finished deliverables |
-| Experiments, prototypes | Real results from live crews |
-| Gitignored by default | Committed (agent-generated content) |
-| You write the code | Crews generate the content |
+| If the work is... | It belongs in... |
+|---|---|
+| A new skill being prototyped | `sandbox/` until it has a name and a SKILL.md, then `skills/<name>/` |
+| A website being built | `output/websites/<slug>/` (its own dev branch): never sandbox |
+| An app being built | `output/apps/<slug>-app/`: never sandbox |
+| A new client engagement | `workspace/clients/<slug>/`: never sandbox |
+| Brand work for Catalyst Works | `workspace/catalyst-works/`: never sandbox |
+| A throwaway probe / log dump | `sandbox/.tmp/` (gitignored) |
+| A satellite product (Dashboards4Sale, etc.) | Its own GitHub repo: never sandbox |
+
+## Hard rule
+
+**The word "delete" does not exist in agentsHQ.** When sandbox content is no longer needed, it is **archived to `zzzArchive/`** with a manifest entry, never deleted. If we ever need it back, the archive is the index.
 
 ## Previously used for this
 
