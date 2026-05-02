@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "generated_from": "docs/GOVERNANCE.md",
+  "generated_at": "2026-05-02",
+  "compass_milestone": "M4",
+  "_purpose": "LLM-readable mirror of the GOVERNANCE.md routing table. Lets agents (Codex, MCP servers, future bots) answer 'where does this kind of rule live?' without parsing markdown. Treat GOVERNANCE.md as the human-readable source of truth; this file is the machine-readable mirror. If they disagree, the markdown wins and this file is stale.",
+
+  "rule_types": [
+    {
+      "name": "session_behavior",
+      "description": "Behavior of every coding-agent session (Hard Rules, session protocols, Karpathy principles, Codex-First).",
+      "source_of_truth": "docs/AGENT_SOP.md",
+      "enforcement": [
+        "Read at session start",
+        "Sankofa + Karpathy on plans"
+      ],
+      "review_cadence": "Per-session; quarterly purge"
+    },
+    {
+      "name": "folder_purpose_and_structure",
+      "description": "Folder purpose + structure: every top-level folder needs an AGENTS.md or README.md.",
+      "source_of_truth": "docs/AGENT_SOP.md (Folder Governance section) + docs/reference/repo-structure.md",
+      "enforcement": [
+        "scripts/check_folder_purpose.py pre-commit hook",
+        "<folder>/AGENTS.md per folder"
+      ],
+      "review_cadence": "Monthly sandbox sweep; per-PR via hook"
+    },
+    {
+      "name": "cross_session_knowledge",
+      "description": "Cross-session knowledge (case law). Memory entries with frontmatter.",
+      "source_of_truth": "MEMORY.md at ~/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/",
+      "enforcement": [
+        "Frontmatter discipline (scripts/check_memory_frontmatter.py for in-repo mirror at docs/memory/)",
+        "Grep-before-asking rule (Hard Rule in AGENT_SOP)"
+      ],
+      "review_cadence": "Per-session writes; quarterly purge"
+    },
+    {
+      "name": "multi_session_projects",
+      "description": "Multi-session projects: atlas, harvest, studio, echo, dashboards4sale, compass.",
+      "source_of_truth": "docs/roadmap/<codename>.md",
+      "enforcement": [
+        "Roadmap skill",
+        "Session-start + session-end protocol",
+        "scripts/check_session_log_updated.py pre-commit hook"
+      ],
+      "review_cadence": "Per-session log entry"
+    },
+    {
+      "name": "atomic_execution_tasks",
+      "description": "Atomic execution tasks (T-YYxxxx).",
+      "source_of_truth": "Notion Tasks DB + data/changelog.md",
+      "enforcement": [
+        "Notion poller (5-min heartbeat)",
+        "/task add Telegram verb"
+      ],
+      "review_cadence": "Per-task; per-day standup digest"
+    },
+    {
+      "name": "code_level_invariants",
+      "description": "Code-level invariants: em-dashes, secrets, folder-purpose, memory-frontmatter, doc-size, redundancy, session-log.",
+      "source_of_truth": ".pre-commit-config.yaml + scripts/*.py hooks",
+      "enforcement": [
+        "Pre-commit (every commit)"
+      ],
+      "review_cadence": "Per-commit"
+    },
+    {
+      "name": "local_llm_context_per_folder",
+      "description": "Local LLM context per folder: AGENTS.md (or README.md for non-rules folders like sandbox/).",
+      "source_of_truth": "<folder>/AGENTS.md",
+      "enforcement": [
+        "scripts/check_folder_purpose.py pre-commit hook",
+        "Sankofa audit (Compass M1)"
+      ],
+      "review_cadence": "Per-folder-add; Compass M1 audit"
+    },
+    {
+      "name": "platform_vs_satellite_boundary",
+      "description": "Platform vs satellite boundary: when a venture has its own URL/customer/revenue it becomes a satellite repo.",
+      "source_of_truth": "Root AGENTS.md (Platform-with-Satellites Rule) + docs/roadmap/README.md (Ventures Registry)",
+      "enforcement": [
+        "Manual review when a venture has its own URL/customer/revenue"
+      ],
+      "review_cadence": "Per-venture-add"
+    }
+  ],
+
+  "conflict_resolution": [
+    {
+      "precedence": 1,
+      "rule": "user_overrides_everything",
+      "description": "Boubacar's explicit instruction in the current conversation overrides every doc and hook."
+    },
+    {
+      "precedence": 2,
+      "rule": "hooks_beat_docs",
+      "description": "If a pre-commit hook fails, the commit fails, regardless of what any markdown file says. Mechanism wins."
+    },
+    {
+      "precedence": 3,
+      "rule": "agent_sop_beats_memory",
+      "description": "If AGENT_SOP.md and a memory file contradict, AGENT_SOP wins. Memory is case law; AGENT_SOP is constitutional."
+    },
+    {
+      "precedence": 4,
+      "rule": "agent_sop_beats_local_agents_md",
+      "description": "Local context can extend or specialize, but cannot contradict AGENT_SOP."
+    }
+  ],
+
+  "retirement_protocol": {
+    "principle": "Every rule that exists must justify itself today, not three years ago.",
+    "quarterly_purge": {
+      "cadence_days": 90,
+      "method": "git log --since='90 days ago' against each governance surface; any rule untouched 90+ days AND not referenced by any commit, hook, or memory entry is a candidate for retirement.",
+      "first_run": "2026-08-02",
+      "automated_audit_script": "scripts/check_retirement_candidates.py",
+      "manual_run_command": "python scripts/check_retirement_candidates.py --days 90"
+    },
+    "retirement_action": {
+      "delete_forbidden": true,
+      "archive_path_template": "zzzArchive/_governance-retired-<date>/<source-file>/<rule>.md",
+      "manifest_required": true,
+      "manifest_must_include": ["why retired", "when retirement took effect", "reference-grep result that confirmed zero callers"]
+    },
+    "resurrection": {
+      "allowed": true,
+      "method": "Add the rule back to its source surface and cite the manifest entry that explains the prior retirement."
+    }
+  },
+
+  "adding_a_new_rule": {
+    "steps": [
+      "Decide which surface owns the rule (use the rule_types routing above).",
+      "Write it in that surface, with a *Why:* line citing the incident or decision that motivated it.",
+      "If the rule is enforceable by mechanism, add a hook in the same commit. Documents that govern without mechanism decay in 14 days.",
+      "If the rule conflicts with an existing rule, retire the older one or reconcile explicitly. Two contradictory rules in two surfaces is the sprawl pattern."
+    ]
+  },
+
+  "session_start_reading_order": [
+    {"order": 1, "file": "docs/GOVERNANCE.md", "purpose": "the map"},
+    {"order": 2, "file": "docs/AGENT_SOP.md", "purpose": "the rules"},
+    {"order": 3, "file": "MEMORY.md", "purpose": "cross-session context"},
+    {"order": 4, "file": "docs/roadmap/<codename>.md", "purpose": "active project"},
+    {"order": 5, "file": "<folder>/AGENTS.md", "purpose": "only if work is folder-scoped"}
+  ],
+
+  "enforcement_hooks": {
+    "pre_commit": [
+      {"id": "no-em-dashes", "script": "scripts/check_no_em_dashes.py", "scope": "*.md", "mode": "hard-fail", "compass_milestone": "pre-Compass"},
+      {"id": "detect-secrets", "script": "external (Yelp/detect-secrets v1.5.0)", "scope": "all", "mode": "hard-fail", "compass_milestone": "pre-Compass"},
+      {"id": "lint-and-index-skills", "script": "scripts/lint_and_index_skills.py", "scope": "skills/", "mode": "hard-fail", "compass_milestone": "pre-Compass"},
+      {"id": "check-folder-purpose", "script": "scripts/check_folder_purpose.py", "scope": "top-level folders", "mode": "hard-fail", "compass_milestone": "M0"},
+      {"id": "check-memory-frontmatter", "script": "scripts/check_memory_frontmatter.py", "scope": "docs/memory/*.md", "mode": "hard-fail", "compass_milestone": "M2"},
+      {"id": "check-session-log-updated", "script": "scripts/check_session_log_updated.py", "scope": "docs/roadmap/<codename>.md", "mode": "hard-fail", "bypass_env": "SKIP_SESSION_LOG=1", "compass_milestone": "M2"},
+      {"id": "check-rule-redundancy", "script": "scripts/check_rule_redundancy.py", "scope": "rule corpus (AGENT_SOP, GOVERNANCE, memory, AGENTS.md)", "mode": "warn-only", "strict_env": "RULE_REDUNDANCY_STRICT=1", "compass_milestone": "M2"},
+      {"id": "check-doc-size", "script": "scripts/check_doc_size.py", "scope": "rule corpus (skill-payload AGENTS.md exempt; roadmaps exempt)", "mode": "hard-fail", "strict_env": "DOC_SIZE_STRICT=1", "compass_milestone": "M2"},
+      {"id": "check-retirement-candidates", "script": "scripts/check_retirement_candidates.py", "scope": "rule corpus", "mode": "manual-stage", "manual_run": "pre-commit run --hook-stage manual check-retirement-candidates --all-files", "compass_milestone": "M2"}
+    ]
+  },
+
+  "compass_status_at_emit_time": {
+    "M0": "SHIPPED 2026-05-02",
+    "M1": "SHIPPED 2026-05-02",
+    "M2": "SHIPPED 2026-05-02",
+    "M3": "ARMED for 2026-08-02",
+    "M4": "SHIPPED 2026-05-02 (this file)",
+    "M5": "QUEUED (output/ submodule reconciliation)"
+  },
+
+  "_validation": {
+    "validator_script": "scripts/validate_governance_manifest.py",
+    "drift_check": "Run validator after editing GOVERNANCE.md or this manifest. Fails when the markdown's routing table or rule_types are out of sync with this JSON."
+  }
+}

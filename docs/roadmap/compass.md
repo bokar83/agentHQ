@@ -33,7 +33,8 @@ Done = all five true at the same time.
 - M1 SHIPPED 2026-05-02: AGENTS.md compliance audit + backfill. 100% folder coverage (was 32%).
 - M2 SHIPPED 2026-05-02 (evening): 5 enforcement hooks live (memory-frontmatter, session-log, redundancy, doc-size, retirement-candidates manual stage). 31 tests passing. Surfaced + fixed one pre-existing violation (`docs/memory/brand_catalyst_works.md` was missing frontmatter).
 - M3 ARMED for 2026-08-02: quarterly purge agent.
-- M4 + M5: queued.
+- M4 SHIPPED 2026-05-02 (evening): `docs/governance.manifest.json` (LLM-readable routing table) + `scripts/validate_governance_manifest.py` drift check + 7 tests. Wired to fire on edits to GOVERNANCE.md or the manifest.
+- M5: queued (output/ submodule reconciliation).
 
 **Coverage today:**
 
@@ -163,27 +164,23 @@ Done = all five true at the same time.
 
 ---
 
-### M4: LLM-readable governance manifest ⏳ QUEUED
+### M4: LLM-readable governance manifest ✅ SHIPPED 2026-05-02 (evening)
 
-**What:** A machine-readable version of the governance routing table. JSON or YAML at `docs/governance.manifest.json`. Lets every LLM agent (Claude Code, Codex, future MCP servers) load the routing table without reading the markdown.
+**What:** Machine-readable mirror of the GOVERNANCE.md routing table at `docs/governance.manifest.json`. Lets every LLM agent (Codex, MCP servers, future bots) load the routing table without parsing markdown. GOVERNANCE.md remains the human-readable source of truth; the manifest is the machine-readable mirror.
 
-**Schema:**
+**Files shipped:**
 
-```json
-{
-  "rule_types": [
-    {"name": "...", "source_of_truth": "...", "enforcement": [...], "review_cadence": "..."}
-  ],
-  "conflict_resolution": [...],
-  "retirement_protocol": {...}
-}
-```
+- `docs/governance.manifest.json` (~150 lines JSON). Contains: 8 `rule_types` entries (one per routing-table row), `conflict_resolution` (4-tier precedence), `retirement_protocol` (quarterly purge cadence + archive paths), `adding_a_new_rule` (4-step protocol), `session_start_reading_order` (5-file order), `enforcement_hooks.pre_commit` (9 hooks with mode + scope + bypass envs), `compass_status_at_emit_time` snapshot.
+- `scripts/validate_governance_manifest.py` (drift check). Validates: JSON parses, required keys present, routing-table row count matches `rule_types` length, hook-script paths exist on disk.
+- `tests/test_validate_governance_manifest.py` (7 cases, all green).
+- `.pre-commit-config.yaml` wired the validator to fire only on edits to `docs/GOVERNANCE.md` or `docs/governance.manifest.json`.
 
-**Trigger:** when the routing table stabilizes (post-M2, when enforcement layer is in place).
+**Success criterion met:** validator returns `OK: governance manifest in sync with GOVERNANCE.md (8 rule_types, 8 routing-table rows, 9 hooks)`. Codex can now answer "where does a folder-purpose rule live?" by reading only the JSON.
 
-**ETA:** 30 minutes (mechanical conversion of the markdown table).
+**Notes:**
 
-**Success criterion:** Codex can answer "where does a folder-purpose rule live?" by reading only the JSON.
+- Manifest is hand-maintained (not generated). The validator is the discipline: when GOVERNANCE.md gains a row, the next commit fails until the manifest mirrors it. This pushes the discipline onto mechanism without forcing a build step.
+- `compass_status_at_emit_time` is a snapshot. It is allowed to drift; the field signals when the manifest was last written, not the live state. If true live state is ever needed, query `docs/roadmap/compass.md` directly.
 
 ---
 
@@ -231,3 +228,11 @@ Two design calls worth flagging:
 Open question still on the table: keep MEMORY.md cap at 195/220 or raise it to 250/300 as governance work expands? Today's MEMORY.md is at 205 lines (5 over the loader truncation point); the user's auto-memory file was the original target of the question, and the in-repo `docs/memory/MEMORY.md` is only 25 lines.
 
 Next: M4 (LLM-readable governance manifest, ~30 min mechanical conversion) is the smallest queued item. M5 (output/ submodule reconciliation) is a 3-4 hour dedicated window per the existing Notion task.
+
+### 2026-05-02 (evening, late): M4 SHIPPED, manifest + validator live
+
+Built the LLM-readable governance manifest per the M4 spec. Files: `docs/governance.manifest.json` (8 rule_types mirroring the routing table, plus conflict_resolution, retirement_protocol, adding_a_new_rule, session_start_reading_order, enforcement_hooks for all 9 pre-commit hooks, and a compass_status snapshot). Validator at `scripts/validate_governance_manifest.py` with 7 tests (all green); wired to fire only on edits to GOVERNANCE.md or the manifest.
+
+Two new hard rules locked into AGENT_SOP this session (and indexed in MEMORY.md for cross-agent inheritance): (1) auto-update the roadmap + Notion task after every shipped task with no prompting; (2) propose codification (memory / skill / hook / hookify rule) when patterns repeat using the two-strikes rule. The rule additions were demonstrated immediately: M2 + M4 Notion tasks created (M2 backfilled to Done, M4 In Progress → Done in the next push), compass.md updated in the same turn for both shipments.
+
+Compass status as of this entry: M0 + M1 + M2 + M4 SHIPPED. M3 ARMED for 2026-08-02. M5 the only QUEUED milestone. The governance scaffolding is complete; the long-tail work is M5's output/ reconciliation and the open MEMORY.md cap question.

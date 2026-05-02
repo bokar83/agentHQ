@@ -75,3 +75,10 @@ repos:
         pass_filenames: false
         always_run: true
         stages: [manual]
+      - id: validate-governance-manifest
+        name: Governance Manifest Drift (LLM-readable mirror of GOVERNANCE.md)
+        description: Compass M4. Fires only when GOVERNANCE.md or the manifest changes.
+        entry: python scripts/validate_governance_manifest.py
+        language: python
+        pass_filenames: false
+        files: ^docs/(GOVERNANCE\.md|governance\.manifest\.json)$
