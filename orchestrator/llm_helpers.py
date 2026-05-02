@@ -113,4 +113,20 @@ def call_llm(
     logger.debug(f"LLM call model={resolved_model} msgs={len(messages)} tools={len(tools or [])}")
     response = client.chat.completions.create(**kwargs)
     logger.debug(f"LLM response model={resolved_model} finish={response.choices[0].finish_reason}")
+
+    # Fire-and-forget ledger insert. The usage_logger queues the generation_id,
+    # waits 12s for OpenRouter indexing, then GETs /api/v1/generation for cost
+    # + token detail and inserts a row into llm_calls. Without this, chat calls
+    # never reach the ledger and the spend dashboard is blind to chat traffic.
+    try:
+        from usage_logger import log_call, current_call_context
+        gen_id = getattr(response, "id", None)
+        if gen_id:
+            ctx = dict(current_call_context.get() or {})
+            ctx.setdefault("model", resolved_model)
+            ctx.setdefault("project", "agentsHQ")
+            log_call(generation_id=gen_id, metadata=ctx)
+    except Exception as _log_e:
+        logger.debug(f"usage_logger skipped (non-fatal): {_log_e}")
+
     return response

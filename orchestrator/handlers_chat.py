@@ -117,15 +117,25 @@ Always return a valid JSON object:
 SANDBOX MODE: {sandbox_status}
 When sandbox is active, write actions are simulated. Tell the user.
 
-BEHAVIOR:
-When asked to do something, do it with your tools. Do not explain what you are about to do.
-For write actions (approve, reject, queue): confirm once before executing.
-For publish to a live platform: confirm once with exact text and platform, then execute.
-For drafting: produce a first draft immediately. Ask for feedback after.
-For tasks beyond your tool set: call forward_to_crew immediately. Never explain limitations.
-  The orchestrator has many capabilities. Always assume it can handle the task.
+ABSOLUTE RULES, NEVER VIOLATE:
+1. NEVER write a token starting with "conf_" or "job_" or "task_" in your reply. Tokens come ONLY from real tool results, never from your own text.
+2. NEVER claim a task is "running", "pulling", "scanning", "in progress", "incoming", "drafting", "creating", "added", "saved", "scheduled", "posted", "marked", "done", "✅", or any equivalent unless the matching tool was actually called and returned a real result in this turn.
+3. If a request requires action and no tool fits, say so honestly. NEVER pretend the orchestrator did something that did not happen. Promising work you did not do is a banned pattern.
+4. If a tool returned a confirmation gate (a "Confirm token" or "Awaiting confirmation" message in the tool output), tell the user to tap the Confirm button below your message. Do not invent your own confirmation flow.
+5. Do not output em dashes anywhere. Use commas, periods, parentheses, or "and".
 
-Long-running tasks return a job ID. Tell the user the task is running and you will ping them with the result.
+TOOL DISCIPLINE:
+When asked to do something, do it with your tools. Do not explain what you are about to do.
+For write actions (approve, reject, queue, schedule, post, send, create, add, mark): you MUST call forward_to_crew. The system shows the user a Confirm button. Tell them: "Tap Confirm below to run this." Do NOT say the work is happening, started, or done until a real tool result confirms it.
+For drafting (generate a draft I will read inline, no external system write): produce the draft directly in your reply. Ask for feedback after.
+For tasks beyond your tool set: call forward_to_crew immediately with the user's exact request as task_text. Never explain limitations. The orchestrator has many capabilities. Always assume it can handle the task.
+
+When forward_to_crew returns a result that contains "Confirm token:" or "Awaiting your tap":
+  Reply: "Tap Confirm below to run this, or Cancel to drop it." Nothing more.
+  Do NOT echo the token string. Do NOT say "task running". The buttons are attached separately.
+
+When forward_to_crew returns a real completion (the result text contains the actual deliverable, not a confirmation gate):
+  Summarize what came back. Quote any IDs or links the tool returned verbatim.
 
 RESPONSE FORMAT FOR TELEGRAM: Keep reply under 3000 characters. Format data as plain text tables.
 RESPONSE FORMAT FOR WEB: Full markdown is rendered. Tables, code blocks, bullet lists all work.
@@ -327,6 +337,9 @@ def run_chat(message: str, session_key: str = "default") -> dict:
         # trailing assistant messages so the current user message is last.
         while history_messages and history_messages[-1]["role"] == "assistant":
             history_messages.pop()
+        # Strip prior hallucinated execution claims so the model does not
+        # learn from its own poison. Stored history in Postgres is unchanged.
+        history_messages = _sanitize_history_for_model(history_messages)
     except Exception as e:
         logger.warning(f"Chat history load failed (non-fatal): {e}")
 
@@ -554,6 +567,55 @@ def _extract_reply(raw: str) -> str:
     return stripped
 
 
+_HALLUCINATED_TOKEN_RE = _re.compile(
+    r"(?:`?(?:conf|job|task)_[A-Za-z0-9]{6,}`?)",
+)
+_HALLUCINATED_DONE_PHRASES = (
+    "✅ done", "✅ confirmed", "✅ posts added", "✅ post added",
+    "task running", "job running", "job id:", "confirmation token",
+    "pulling content board", "crew is pulling", "creating now",
+    "drafts are being created", "you'll be pinged", "ping you when",
+)
+
+
+def _sanitize_history_for_model(history: list) -> list:
+    """
+    Strip fabricated execution-progress text from prior assistant turns before
+    re-feeding them to the model. Without this the model sees its own earlier
+    hallucinations ("✅ Done. Post added", "Job running: conf_xxx") and treats
+    them as a successful pattern to repeat.
+
+    Removes assistant turns that contain the hallucinated-token pattern AND a
+    completion phrase (high-confidence lie) entirely. For weaker matches
+    (token-only OR phrase-only), redacts the offending span but keeps the turn.
+    """
+    cleaned = []
+    for turn in history:
+        if turn.get("role") != "assistant":
+            cleaned.append(turn)
+            continue
+        content = turn.get("content") or ""
+        if not isinstance(content, str):
+            cleaned.append(turn)
+            continue
+        lower = content.lower()
+        has_token = bool(_HALLUCINATED_TOKEN_RE.search(content))
+        has_phrase = any(p in lower for p in _HALLUCINATED_DONE_PHRASES)
+        if has_token and has_phrase:
+            # Strong hallucination signal. Drop the turn entirely from model's view.
+            cleaned.append({
+                "role": "assistant",
+                "content": "[redacted: prior turn contained an unverified completion claim]",
+            })
+            continue
+        if has_token:
+            redacted = _HALLUCINATED_TOKEN_RE.sub("[redacted-token]", content)
+            cleaned.append({"role": "assistant", "content": redacted})
+            continue
+        cleaned.append(turn)
+    return cleaned
+
+
 def _resolve_artifact_refs(text: str) -> str:
     """Replace [artifact:art_id] placeholders with full artifact content from Postgres."""
     pattern = _re.compile(r"\[artifact:([a-zA-Z0-9_\-]+)\]")
@@ -655,6 +717,9 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
             history_messages.append({"role": role, "content": turn["content"]})
         while history_messages and history_messages[-1]["role"] == "assistant":
             history_messages.pop()
+        # Strip prior hallucinated execution claims so the model does not
+        # learn from its own poison. Stored history in Postgres is unchanged.
+        history_messages = _sanitize_history_for_model(history_messages)
     except Exception as e:
         logger.warning(f"Atlas chat history load failed (non-fatal): {e}")
 
@@ -793,8 +858,11 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
                             "ts_created": _time.time(),
                         }
                         tool_result = (
-                            f"Ready to run: {task_text[:120]}. "
-                            f"Confirm token: {confirm_token}"
+                            f"AWAITING_USER_CONFIRMATION: this task is NOT running yet. "
+                            f"Confirm/Cancel buttons have been attached to your reply. "
+                            f"Tell the user to tap Confirm below to run, or Cancel to drop. "
+                            f"Do NOT echo any token or claim the task is in progress. "
+                            f"Task description: {task_text[:200]}"
                         )
                         actions.append({
                             "label": "Confirm",

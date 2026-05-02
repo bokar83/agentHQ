@@ -37,6 +37,20 @@ WEB_PROMPT = "reply with the single word PONG and nothing else"
 WEB_TIMEOUT_S = 30
 WEB_FAIL_PATTERN = "sorry, i hit an error"
 
+# v2 probes: tool-calling and write-gate hallucination detection
+TOOL_PROBE_PROMPT = "what is in my approval queue right now"
+TOOL_PROBE_TIMEOUT_S = 60
+TOOL_PROBE_OK_TERMS = ("approval", "pending", "queue", "nothing", "empty", "no items", "0 items")
+
+WRITE_PROBE_PROMPT = "schedule a healthcheck synthetic post for next monday on linkedin saying healthcheck"
+WRITE_PROBE_TIMEOUT_S = 60
+HALLUCINATED_PROGRESS_TERMS = (
+    "task running", "job running", "pulling content board",
+    "crew is pulling", "drafts are being created", "you'll be pinged",
+    "creating now", "first draft incoming", "✅ done",
+)
+HALLUCINATED_TOKEN_RE = r"(conf|job|task)_[A-Za-z0-9]{6,}"
+
 TELEGRAM_API = "https://api.telegram.org"
 TELEGRAM_PROBE_TIMEOUT_S = 45
 TELEGRAM_POLL_INTERVAL_S = 3
@@ -112,6 +126,106 @@ def probe_web_chat(api_key: str) -> tuple[bool, str]:
 # ──────────────────────────────────────────────────────────────────────────
 # Probe 2: Telegram bot roundtrip
 # ──────────────────────────────────────────────────────────────────────────
+
+def _post_chat(api_key: str, prompt: str, session_key: str, timeout_s: int) -> tuple[int, dict | None, str]:
+    """POST to /atlas/chat. Returns (status, parsed_json_or_None, raw_body)."""
+    payload = json.dumps({
+        "messages": [{"role": "user", "content": prompt}],
+        "session_key": session_key,
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        ORC_URL,
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout_s) as resp:
+            status = resp.status
+            body = resp.read().decode("utf-8", errors="replace")
+    except urllib.error.HTTPError as e:
+        return e.code, None, e.read().decode("utf-8", errors="replace") if hasattr(e, "read") else str(e)
+    except Exception as e:
+        return 0, None, f"{type(e).__name__}: {e}"
+    try:
+        return status, json.loads(body), body
+    except Exception:
+        return status, None, body
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Probe 3 (v2): tool-calling round-trip via "what's in my approval queue"
+# ──────────────────────────────────────────────────────────────────────────
+
+def probe_tool_calling(api_key: str) -> tuple[bool, str]:
+    """
+    Send a READ-intent prompt that should trigger query_system tool. Assert
+    the reply contains queue language. This probe was designed to catch the
+    2026-05-02 chat-hallucination class of bug, where the model writes
+    plausible-looking text without ever calling a tool.
+    """
+    status, parsed, raw = _post_chat(
+        api_key, TOOL_PROBE_PROMPT, "healthcheck-synthetic-tool", TOOL_PROBE_TIMEOUT_S,
+    )
+    if status != 200 or not parsed:
+        return False, f"tool-calling probe HTTP {status}: {raw[:200]!r}"
+    reply = (parsed.get("reply") or "").lower().strip()
+    if not reply:
+        return False, f"tool-calling probe empty reply: {parsed!r}"
+    if WEB_FAIL_PATTERN in reply:
+        return False, f"tool-calling probe error reply: {reply[:200]!r}"
+    if not any(term in reply for term in TOOL_PROBE_OK_TERMS):
+        return False, (
+            f"tool-calling probe reply has no queue language "
+            f"(expected one of {TOOL_PROBE_OK_TERMS}): {reply[:200]!r}"
+        )
+    return True, f"tool-calling probe OK (reply mentions queue: {reply[:80]!r})"
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Probe 4 (v2): write-action hallucination detector
+# ──────────────────────────────────────────────────────────────────────────
+
+def probe_write_gate_hallucination(api_key: str) -> tuple[bool, str]:
+    """
+    Send a write request. The chat MUST either:
+      (a) attach a Confirm button (actions array contains callback_data starting
+          with "confirm:"), OR
+      (b) decline honestly, OR
+      (c) produce a draft inline without claiming external writes happened.
+    The chat must NOT claim "task running" / "job ID: conf_xxx" without a real
+    Confirm button being attached. That hallucination class wasted 3 hours on
+    2026-05-02 and is exactly what this probe exists to catch.
+    """
+    import re
+    status, parsed, raw = _post_chat(
+        api_key, WRITE_PROBE_PROMPT, "healthcheck-synthetic-write", WRITE_PROBE_TIMEOUT_S,
+    )
+    if status != 200 or not parsed:
+        return False, f"write-gate probe HTTP {status}: {raw[:200]!r}"
+    reply = (parsed.get("reply") or "").lower().strip()
+    actions = parsed.get("actions") or []
+
+    has_confirm_btn = any(
+        (a.get("callback_data") or "").startswith("confirm:") for a in actions
+    )
+    has_progress_lie = any(term in reply for term in HALLUCINATED_PROGRESS_TERMS)
+    has_token_lie = bool(re.search(HALLUCINATED_TOKEN_RE, reply))
+
+    if (has_progress_lie or has_token_lie) and not has_confirm_btn:
+        return False, (
+            f"write-gate probe HALLUCINATION: reply claims execution "
+            f"(progress_phrase={has_progress_lie}, token_pattern={has_token_lie}) "
+            f"but no confirm:* button attached. reply={reply[:300]!r} actions={actions!r}"
+        )
+    return True, (
+        f"write-gate probe OK (confirm_btn={has_confirm_btn}, "
+        f"progress_lie={has_progress_lie}, token_lie={has_token_lie})"
+    )
+
 
 def probe_telegram(bot_token: str) -> tuple[bool, str]:
     """
@@ -227,6 +341,12 @@ def main() -> int:
     passes: list[str] = []
 
     ok, msg = probe_web_chat(api_key)
+    (passes if ok else failures).append(msg)
+
+    ok, msg = probe_tool_calling(api_key)
+    (passes if ok else failures).append(msg)
+
+    ok, msg = probe_write_gate_hallucination(api_key)
     (passes if ok else failures).append(msg)
 
     if bot_token:
