@@ -261,6 +261,14 @@ When you need craft knowledge beyond the rules in this skill (typography reasoni
 
 See `reference/README.md` for when to load each one. Don't load all 9 every time: pick the 1-2 that match the question you're answering.
 
+### Specialized contexts (defer to ui-styling)
+
+For shadcn-substrate decisions (component sources, theming, blocks, agent UIs), defer to `ui-styling` per the canonical-home rule:
+
++ **Agent / chat / tool-call UIs** (Atlas chat, Studio operator panels, MCP-app surfaces): see `skills/ui-styling/references/shadcn-agent-ui.md`. Start from 21st.dev Agent Elements, then apply the Volta standard on top.
++ **Branded theme generation** for any build: see `skills/ui-styling/references/shadcn-theming.md` (tweakcn-first workflow).
++ **Structured business PDFs** (invoice, statement, SOW): see `skills/ui-styling/references/shadcn-pdf.md` (pdfx lane).
+
 ---
 
 ## ABSOLUTE BANS (Impeccable-derived)
