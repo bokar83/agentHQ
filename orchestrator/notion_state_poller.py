@@ -29,7 +29,12 @@ if _module_dir == Path("/app"):
 else:
     REPO_ROOT = _module_dir.parent
 DEFAULT_CACHE_PATH = REPO_ROOT / "data" / "notion_state_cache.json"
-DEFAULT_CHANGELOG_PATH = REPO_ROOT / "docs" / "audits" / "changelog.md"
+# Changelog goes into /app/data (mounted, persistent) inside the container.
+# The /app/docs/audits/ path is not bound to the host, so writes there get
+# wiped on every container rebuild via scripts/orc_rebuild.sh. /app/data is
+# bound to /root/agentsHQ/data on the VPS, so the changelog survives.
+# Outside the container (local dev/tests), this resolves to <repo>/data/changelog.md.
+DEFAULT_CHANGELOG_PATH = REPO_ROOT / "data" / "changelog.md"
 DEFAULT_NOTION_TASK_DB_ID = "249bcf1a302980739c26c61cad212477"
 
 WINDOW_MIN = 6
