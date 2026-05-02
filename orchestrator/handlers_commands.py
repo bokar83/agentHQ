@@ -18,8 +18,13 @@ goal. Side-effects (threading, state dict writes) mirror the monolith
 exactly so runtime behavior does not drift.
 """
 import logging
+import os
+import re
 import threading
+from dataclasses import dataclass
 from datetime import datetime, timezone
+
+import httpx
 
 from state import _last_completed_job, _active_project
 
@@ -515,6 +520,262 @@ def _cmd_griot_dryrun(text: str, chat_id: str) -> bool:
 
 
 # ══════════════════════════════════════════════════════════════
+# Task add
+# ══════════════════════════════════════════════════════════════
+
+VALID_OWNERS = ("Boubacar", "Coding", "agentsHQ", "Decision")
+VALID_SPRINTS = (
+    "Backlog",
+    "Week 1", "Week 2", "Week 3", "Week 4", "Week 5", "Week 6",
+    "Week 7", "Week 8", "Week 9", "Week 10", "Week 11", "Week 12",
+    "Archive",
+)
+NOTION_TASK_DB_ID = os.environ.get("NOTION_TASK_DB_ID", "249bcf1a302980739c26c61cad212477")
+NOTION_VERSION = "2022-06-28"
+
+
+@dataclass
+class TaskAddParse:
+    ok: bool
+    title: str = ""
+    owner: str = "Boubacar"
+    sprint: str = "Backlog"
+    p0: bool = False
+    error: str = ""
+
+
+def _closest_owner(name: str) -> str | None:
+    """Case-insensitive prefix or substring match. Returns the canonical owner if 1 match."""
+    needle = name.lower()
+    matches = [o for o in VALID_OWNERS if needle in o.lower() or o.lower().startswith(needle)]
+    if len(matches) == 1:
+        return matches[0]
+    return None
+
+
+def parse_task_add(text: str) -> TaskAddParse:
+    """Parse `/task add "<title>" [--owner=X] [--sprint=Y] [--p0]`.
+
+    Returns TaskAddParse with ok=True or ok=False+error.
+    """
+    body = text.strip()
+    if body.lower().startswith("/task add"):
+        body = body[len("/task add"):].strip()
+    else:
+        return TaskAddParse(ok=False, error='Expected "/task add" prefix.')
+
+    if not body:
+        return TaskAddParse(ok=False, error='Missing title. Usage: /task add "<title>" [--owner=X] [--sprint=Y] [--p0]')
+
+    m = re.match(r'"([^"]*)"\s*(.*)$', body)
+    if not m:
+        return TaskAddParse(
+            ok=False,
+            error='Title must be in quotes. Usage: /task add "<title>" [--owner=X] [--sprint=Y] [--p0]',
+        )
+    title = m.group(1).strip()
+    rest = m.group(2).strip()
+
+    if not title:
+        return TaskAddParse(ok=False, error="Title cannot be empty.")
+
+    owner = "Boubacar"
+    sprint = "Backlog"
+    p0 = False
+
+    flag_re = re.compile(r'--(\w+)(?:=("[^"]+"|\S+))?')
+    pos = 0
+    rest_lower = rest.lower()
+    while pos < len(rest):
+        m2 = flag_re.search(rest, pos)
+        if not m2:
+            break
+        key = m2.group(1).lower()
+        val = m2.group(2)
+        if val is not None and val.startswith('"') and val.endswith('"'):
+            val = val[1:-1]
+        if key == "p0":
+            p0 = True
+        elif key == "owner":
+            if val is None:
+                return TaskAddParse(ok=False, error="--owner requires a value")
+            cand = _closest_owner(val)
+            if cand is None:
+                return TaskAddParse(
+                    ok=False,
+                    error=f'Owner "{val}" not found. Valid: {", ".join(VALID_OWNERS)}.',
+                )
+            owner = cand
+        elif key == "sprint":
+            if val is None:
+                return TaskAddParse(ok=False, error="--sprint requires a value")
+            tail_after = rest[m2.end():]
+            tail_match = re.match(r'\s+(\d+)', tail_after)
+            if val.lower() == "week" and tail_match:
+                val = f"Week {tail_match.group(1)}"
+                pos = m2.end() + tail_match.end()
+            else:
+                pos = m2.end()
+            if val not in VALID_SPRINTS:
+                return TaskAddParse(
+                    ok=False,
+                    error=f'Sprint "{val}" not found. Valid: Backlog, Week 1-12, Archive.',
+                )
+            sprint = val
+            continue
+        else:
+            return TaskAddParse(ok=False, error=f"Unknown flag --{key}. Valid: --owner, --sprint, --p0")
+        pos = m2.end()
+
+    return TaskAddParse(ok=True, title=title, owner=owner, sprint=sprint, p0=p0)
+
+
+def _notion_headers_for_tasks() -> dict:
+    token = os.environ.get("NOTION_SECRET")
+    if not token:
+        raise RuntimeError("NOTION_SECRET not in environment.")
+    return {
+        "Authorization": f"Bearer {token}",
+        "Notion-Version": NOTION_VERSION,
+        "Content-Type": "application/json",
+    }
+
+
+def _query_database(database_id: str, filter_body=None, sorts=None) -> list:
+    """Thin wrapper to the existing skills.notion_skill helper, importable here for monkeypatching."""
+    from skills.notion_skill.notion_tool import query_database
+    return query_database(database_id, filter_body=filter_body, sorts=sorts)
+
+
+def _next_task_id(database_id: str) -> str:
+    """Find max T-YYxxx, increment by 1. Year prefix from current UTC year."""
+    today_year = datetime.now(timezone.utc).strftime("%y")
+    rows = _query_database(
+        database_id,
+        sorts=[{"timestamp": "created_time", "direction": "descending"}],
+    )
+    max_n = 0
+    prefix = f"T-{today_year}"
+    for r in rows[:200]:
+        rt = r.get("properties", {}).get("Task ID", {}).get("rich_text", [])
+        if not rt:
+            continue
+        tid = rt[0].get("plain_text", "")
+        if tid.startswith(prefix):
+            try:
+                n = int(tid[len(prefix):])
+                if n > max_n:
+                    max_n = n
+            except ValueError:
+                continue
+    return f"{prefix}{max_n + 1:03d}"
+
+
+def _clear_existing_p0(database_id: str) -> None:
+    """Patch every P0=true row to P0=false. Single-P0 invariant."""
+    rows = _query_database(
+        database_id,
+        filter_body={"property": "P0", "checkbox": {"equals": True}},
+    )
+    headers = _notion_headers_for_tasks()
+    for r in rows:
+        body = {"properties": {"P0": {"checkbox": False}}}
+        httpx.patch(
+            f"https://api.notion.com/v1/pages/{r['id']}",
+            headers=headers,
+            json=body,
+            timeout=30,
+        )
+
+
+def _top_3_boubacar() -> list:
+    """Top 3 active Boubacar tasks for echo. Returns list of dicts {task_id, title, p0}."""
+    rows = _query_database(
+        NOTION_TASK_DB_ID,
+        filter_body={
+            "and": [
+                {"property": "Owner", "multi_select": {"contains": "Boubacar"}},
+                {"property": "Status", "select": {"does_not_equal": "Done"}},
+            ]
+        },
+        sorts=[
+            {"property": "P0", "direction": "descending"},
+            {"property": "Priority", "direction": "ascending"},
+            {"property": "Task ID", "direction": "ascending"},
+        ],
+    )
+    out = []
+    for r in rows[:3]:
+        props = r.get("properties", {})
+        title_arr = props.get("Task", {}).get("title", [])
+        title = title_arr[0].get("plain_text", "") if title_arr else ""
+        tid_arr = props.get("Task ID", {}).get("rich_text", [])
+        task_id = tid_arr[0].get("plain_text", "") if tid_arr else ""
+        p0 = bool(props.get("P0", {}).get("checkbox", False))
+        out.append({"task_id": task_id, "title": title, "p0": p0})
+    return out
+
+
+def _format_top_3_lines(items: list) -> str:
+    if not items:
+        return ""
+    lines = ["Top 3:"]
+    for it in items:
+        flag = "P0" if it.get("p0") else "  "
+        lines.append(f"  {it.get('task_id', '?')}  {flag}  {it.get('title', '')[:50]}")
+    return "\n".join(lines)
+
+
+def handle_task_add(text: str) -> str:
+    """Handle /task add command. Returns Telegram-friendly reply string."""
+    parsed = parse_task_add(text)
+    if not parsed.ok:
+        return parsed.error
+
+    db_id = NOTION_TASK_DB_ID
+    try:
+        new_id = _next_task_id(db_id)
+        if parsed.p0:
+            _clear_existing_p0(db_id)
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        props = {
+            "Task": {"title": [{"text": {"content": parsed.title}}]},
+            "Status": {"select": {"name": "Not Started"}},
+            "Owner": {"multi_select": [{"name": parsed.owner}]},
+            "Sprint": {"multi_select": [{"name": parsed.sprint}]},
+            "Task ID": {"rich_text": [{"text": {"content": new_id}}]},
+            "Source": {"rich_text": [{"text": {"content": f"Manual: {today}"}}]},
+            "P0": {"checkbox": parsed.p0},
+        }
+        body = {"parent": {"database_id": db_id}, "properties": props}
+        httpx.post(
+            "https://api.notion.com/v1/pages",
+            headers=_notion_headers_for_tasks(),
+            json=body,
+            timeout=30,
+        ).raise_for_status()
+    except httpx.HTTPError as e:
+        logger.warning(f"handle_task_add: Notion API error ({e})")
+        return "Notion API error. Try again in 1 min."
+
+    top3 = _top_3_boubacar()
+    reply_lines = [f'Added {new_id}: "{parsed.title}"']
+    top3_block = _format_top_3_lines(top3)
+    if top3_block:
+        reply_lines.append("")
+        reply_lines.append(top3_block)
+    return "\n".join(reply_lines)
+
+
+def _cmd_task_add(text: str, chat_id: str) -> bool:
+    if not text.lower().startswith("/task add"):
+        return False
+    from notifier import send_message as _send
+    _send(chat_id, handle_task_add(text))
+    return True
+
+
+# ══════════════════════════════════════════════════════════════
 # Dispatcher (order matters: longest prefix first to avoid collisions)
 # ══════════════════════════════════════════════════════════════
 
@@ -523,6 +784,7 @@ def _cmd_griot_dryrun(text: str, chat_id: str) -> bool:
 # unique prefixes so order within the Phase 0 group does not matter. /status
 # has a guard against /status_foo inside its own handler.
 _COMMANDS = [
+    _cmd_task_add,
     _cmd_heartbeat_status,
     _cmd_trigger_heartbeat,
     _cmd_griot_dryrun,

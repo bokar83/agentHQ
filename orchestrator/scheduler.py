@@ -570,6 +570,22 @@ def start_scheduler():
     except Exception as e:
         logger.error(f"STUDIO_TREND_SCOUT: wake registration failed ({e}); continuing without trend scout", exc_info=True)
 
+    # Atlas: Notion State Poller. Runs every 5 minutes. Queries Tasks DB for
+    # rows changed in last 6 minutes, diffs against cache, writes changelog.
+    # Single source of truth for "what changed in the Tasks DB" event log.
+    # Spec: docs/superpowers/specs/2026-05-02-task-poller-and-add-design.md
+    try:
+        import heartbeat as _heartbeat
+        from notion_state_poller import tick as _notion_state_poller_tick
+        _heartbeat.register_wake(
+            "notion-state-poller",
+            crew_name="atlas",
+            callback=_notion_state_poller_tick,
+            every="5m",
+        )
+    except Exception as e:
+        logger.error(f"NOTION_STATE_POLLER: wake registration failed ({e}); continuing without poller", exc_info=True)
+
     # Atlas M9c: cross-session memory compressor. Fires every 30 minutes.
     # Finds sessions quiet for 30-90 min, summarizes with Haiku, writes to session_summaries.
     # crew_name=SELF_TEST_CREW (diagnostic, no kill switch needed).
