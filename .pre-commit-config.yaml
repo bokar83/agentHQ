@@ -20,4 +20,5 @@ repos:
         entry: python scripts/check_no_em_dashes.py
         language: python
         files: \.md$
+        exclude: ^zzzArchive/
         types: [file]

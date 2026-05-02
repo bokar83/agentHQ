@@ -42,9 +42,25 @@ Every roadmap gets a one or two word lowercase codename. Codenames are claimed f
 | Codename | Status | Lifespan | One-line | File |
 |---|---|---|---|---|
 | atlas | active | open-ended | the autonomy layer that runs the content pipeline while the laptop is off | [atlas.md](atlas.md) |
+| dashboards4sale | active (stub) | open-ended | multilingual budget dashboards as a standalone product, satellite to agentsHQ | [dashboards4sale.md](dashboards4sale.md) |
 | echo | active | open-ended | async partnership substrate: agent proposes commits and acks, human responds asynchronously, neither blocks on the other | [echo.md](echo.md) |
 | harvest | active | open-ended | Catalyst Works revenue pipeline (stub until first revenue session) | [harvest.md](harvest.md) |
 | studio | active | open-ended | faceless agency running multiple branded channels on agentsHQ as adjacent revenue to Catalyst Works | [studio.md](studio.md) |
+
+## Ventures Registry
+
+The mental model for Boubacar's businesses. Every revenue-bearing initiative has a row here, regardless of whether its code lives in agentsHQ or in a satellite repo. This is the "where do my businesses live?" answer.
+
+| Venture | Type | Roadmap | Code lives in | Live URL | Stage |
+|---|---|---|---|---|---|
+| Catalyst Works (consulting) | revenue / services | [harvest.md](harvest.md) | agentsHQ (`output/websites/catalystworks-site/`) | catalystworks.consulting | $0 → first contract |
+| Signal Works (productized AI presence) | revenue / SaaS-like | [harvest.md](harvest.md) (R1) | agentsHQ (`signal_works/`, future satellite) | geolisted.co (landing) | first contract pending |
+| Dashboards4Sale | product | [dashboards4sale.md](dashboards4sale.md) | satellite (`bokar83/dashboards4sale`, extraction pending) | TBD | pre-extraction |
+| Studio (faceless agency) | revenue / content channels | [studio.md](studio.md) | agentsHQ (orchestrator + content boards) | per-channel (Under the Baobab, AI Catalyst, First Generation Money) | M1 engine live, M2 channel batch |
+| Atlas (autonomy layer) | platform infrastructure | [atlas.md](atlas.md) | agentsHQ | agentshq.boubacarbarry.com | M15 shipped, M5 gate 2026-05-08 |
+| Echo (async substrate) | platform infrastructure | [echo.md](echo.md) | agentsHQ | n/a (internal) | M1 shipped |
+
+**Rule:** new venture = new row here. If the venture has its own URL, customer, or revenue stream, its code goes in its own GitHub repo (Platform-With-Satellites rule, locked 2026-04-27). Code never lives in agentsHQ for satellites; only the roadmap and registry pointer do.
 
 **To add a new codename:** invoke the `roadmap` skill with `roadmap new <codename>`. The skill validates the name, scaffolds the file, and adds the registry entry.
 

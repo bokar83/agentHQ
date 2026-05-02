@@ -158,6 +158,9 @@ workspace/
 workspace/memory-index/*
 !workspace/memory-index/.gitkeep
 
+# Sandbox throwaway corner (sandbox/ itself IS tracked for in-flight work)
+sandbox/.tmp/
+
 # Machine-local tooling config (tmux, etc.)
 config/
 

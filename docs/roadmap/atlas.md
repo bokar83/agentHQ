@@ -1521,3 +1521,103 @@ Two of three blockers from earlier session resolved.
 - **`.env` SMTP_PASS bash-parse issue:** skipped per Boubacar. docker-compose handles it; only `scripts/orc_rebuild.sh` chokes, and the bypass (direct `docker compose build && up`) is documented in this session log.
 
 ---
+
+### 2026-05-02 (Friday afternoon): Move Day: repo structurally sound, governance locked, "delete" word retired
+
+**Trigger:** continuation of 2026-04-27 architecture session that scoped Priority 1 work but explicitly deferred file moves to a future session. Today was that session.
+
+**Pre-flight (90 min):**
+
+- Reviewed handoff `docs/handoff/2026-04-27-repo-architecture-cleanup.md` and roadmap state. 5 days had passed; verified live repo state matches the 04-27 plan (no drift).
+- Pulled current Notion task DB state. Found T-260306 (savepoint) + T-260307 (archive dead folders) Not Started; matched today's scope.
+- Ran `/sankofa` Council on the original 16-step plan. Verdicts: (1) `git tag` does not back up gitignored content; need real tar backup. (2) 16-step bundle too large; risk of half-done at hour 4. (3) Ventures registry as markdown table is a 5th source of truth. (4) plan asserts but does not verify.
+- Ran `/karpathy` 7-gate audit. **5 production-mount footguns surfaced** that the original plan would have broken: `setup-database.sql` (docker-compose:32 init mount), `agent_outputs/` (docker-compose:204 `/app/outputs` mount), `tmp_upload/` (transcribe skill WORK_DIR), `thepopebot/chat-ui/` (deploy-agentshq.yml path filter), `codex_ssh/` (active Codex tool).
+- Boubacar locked two new hard rules mid-session: **(a) the word "delete" is retired**, items not used → archived to `zzzArchive/<batch>/<path>/` with manifest; **(b) make educated decisions on routine triage**, don't paginate three-way verdicts.
+
+**Execution (single bundled session, ~3 hours):**
+
+Phase 0: Backup safety net:
+- Tarred 5 gitignored folders (tmp/, scratch/, tmp_upload/, .tmp/, agent_outputs/) → `zzzArchive/_pre-cleanup-20260502/_backup-gitignored.tar.gz` (53 MB)
+- `git tag savepoint-pre-archive-cleanup-20260502`
+- `zzzArchive/_pre-cleanup-20260502/MANIFEST.md` written (rule statement + reference-check methodology + per-item entries)
+
+Phase 1: Triple-verified archives to `zzzArchive/_pre-cleanup-20260502/`:
+- `remote-access-auditor/` (root duplicate; canonical lives at `skills/remote-access-auditor/`)
+- `server-setup/` (one-time VPS bootstrap, superseded)
+- `workflows/legacy/`, `workflows/README.md` (legacy n8n exports)
+
+Phase 2: n8n consolidation:
+- `n8n-workflows/*.json` (3 files) + `workflows/*.json` (2 files, 1 newer than n8n-workflows version) → renamed and merged into `n8n/imported/n50-sub-always-save.json`, `n51-daily-news-brief.json`, `n52-whatsapp-v6.json`
+- Older duplicates archived with -OLDER / -DUPLICATE / -LEGACY suffixes
+- `workflows/`, `n8n-workflows/` folders removed (empty)
+
+Phase 3: Root file moves (live-mount aware):
+- `test_sankofa.py` → `tests/`
+- `run_council_strat.py`, `MakeShortcut.ps1`, `Run-Local-SecureWatch.bat` → `scripts/`
+- `code_review_20260422.md` → `docs/handoff/`
+- `adversarial_report.md` → `docs/reference/`
+- `a-b testing.xlsx`, `ninja.ico` → `workspace/`
+- Archived (NOT deleted): root `schema_v2.sql` (older than `docs/database/schema_v2.sql`), `ideas_full_list.txt`, `ideas_full_list_utf8.txt`, `search_output.txt`
+- **Live-mount paths kept exactly in place:** `setup-database.sql`, `agent_outputs/`, `tmp_upload/`, `codex_ssh/`, `thepopebot/`
+
+Phase 4: Scratch folder triage:
+- **Graduated to `tests/integration/`:** `tmp/test_phase1_e2e.py`, `tmp/test_autonomy_e2e.py` (real autonomy + approval-queue end-to-end tests, not throwaways)
+- Archived: `tmp/codex-commit-*.txt` (8 files), `tmp/check_apollo_*.py`, old apollo probes, `scratch/` full content (12 files), `.tmp/CLAUDE.md`, `tmp_upload/` old transcripts (folder kept for transcribe skill), `agent_outputs/capital-allocation/` (folder kept as live mount)
+
+Phase 5: Sandbox decision:
+- `sandbox/` stays tracked in git (in-flight work backed up so laptop dying does not lose it)
+- `sandbox/.tmp/` added to `.gitignore` (throwaway corner)
+- `sandbox/README.md` rewritten with full rule set: no secrets, monthly sweep at 30d, graduate-or-archive (NOT delete), one-way door (production → sandbox is fine, sandbox → production requires graduation)
+
+Phase 6: Ventures Registry:
+- `docs/roadmap/dashboards4sale.md` stub created (satellite codename added to registry)
+- `docs/roadmap/README.md` Ventures Registry table added: 6 ventures (Catalyst Works, Signal Works, Dashboards4Sale, Studio, Atlas, Echo) with type / roadmap / repo / live URL / stage. Answers Boubacar's "where do my businesses live?" question without violating the Platform-with-Satellites rule.
+
+Phase 7: Folder Governance:
+- `docs/AGENT_SOP.md` Hard Rules updated with **"delete" word retired** rule + **make educated decisions on routine triage** rule
+- New `docs/AGENT_SOP.md` "Folder Governance" section: 7 rules covering AGENTS.md/README.md per folder, no folder without purpose, 14d-untouched + zero refs = archive candidate, live mounts never move, triple-verify before archive, zzzArchive is never archived, sandbox monthly sweep
+- `~/.claude/projects/.../memory/reference_folder_governance.md` written + `MEMORY.md` index entry
+
+Phase 8: repo-structure.md fully rewritten:
+- Fixed 04-27 errors (agent_outputs and tmp_upload were marked "orphan": they are live mounts)
+- Added "Live Mount Points" section (top-level, prominent)
+- Added "Folder Governance" summary
+- Added "Move Day 2026-05-02 Summary" section listing every archive + every move
+
+Phase 9: Token efficiency fix:
+- `orchestrator/handlers_chat.py` `limit=50` → `limit=20` (2 occurrences via `replace_all`). Note: handoff said 100 → 20, but a prior session had already cut to 50; today's edit takes it the rest of the way.
+- Live state confirmed by reading file before edit. py_compile passes.
+
+Phase 10: Verification:
+- `py_compile` sweep across 317 tracked Python files: **all compile clean** (the one "error" was `scratch/trigger_deploy.py` which is staged-as-deleted from this session's archive moves; not a real error)
+- `git status` reads cleanly: 7 modified, 13 renames (R), 14 new tracked files, 4 untracked (dashboards4sale.md, tests/integration/, sandbox/.tmp/, etc.)
+- All moves preserve `git mv` history; blame survives
+
+**State at session end:**
+
+- Local: clean working tree pending one bundled commit + one separate token-fix commit
+- Remote: pending push
+- VPS: pending pull (token fix is the only runtime change requiring deploy)
+- Notion: T-260306 ✅ Done, T-260307 ✅ Done
+
+**Lessons captured to memory this session:**
+
+- `feedback_make_educated_decisions.md` (NEW): execute routine triage yourself, surface only irreversible/strategic/ambiguous calls
+- `reference_folder_governance.md` (NEW): full rule + workflow + decision flow + mount footgun list
+- `MEMORY.md` index updated with both pointers
+
+**Cross-references:**
+
+- Manifest: `zzzArchive/_pre-cleanup-20260502/MANIFEST.md`
+- Backup: `zzzArchive/_pre-cleanup-20260502/_backup-gitignored.tar.gz` (53 MB)
+- Savepoint: `git tag savepoint-pre-archive-cleanup-20260502`
+- Handoff: this session log entry replaces a separate handoff doc
+
+**Explicitly NOT done today (deferred per Council verdict on coordinated dependencies):**
+
+- `thepopebot/chat-ui/` → `ui/atlas/` move (path-watched in deploy-agentshq.yml; needs coordinated GitHub Actions + docker-compose + VPS window)
+- Dashboards4Sale code extraction to `bokar83/dashboards4sale` satellite repo (its own 30-60 min focused session: see `docs/roadmap/dashboards4sale.md` M0)
+
+**Atlas impact:** infrastructure clean. Future-proof for the M5 Chairman/Learning-loop gate that opens 2026-05-08. The folder governance rule plus the manifest pattern means any future cleanup pass is reversible by design.
+
+---
