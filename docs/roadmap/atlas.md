@@ -370,6 +370,40 @@ Explicitly excluded (have code-level defaults, hard-failing on these creates new
 
 ---
 
+### M15: Notion State Poller + /task add SHIPPED 2026-05-02
+
+**Closed bidirectional-sync gap.** Notion stays the editing surface; agentsHQ catches up automatically via 5-min poller. Plus one Telegram verb for fast capture.
+
+**Files shipped:**
+- `orchestrator/notion_state_poller.py`: 5-min heartbeat tick, queries Notion Tasks DB for rows changed in last 6 min, diffs against `data/notion_state_cache.json`, appends to `data/changelog.md`. Backfill mode on first run. Coordination lock prevents overlap. 22 unit tests.
+- `orchestrator/handlers_commands.py`: `handle_task_add()` for `/task add "<title>" [--owner] [--sprint] [--p0]`. Auto-assigns next T-YYxxxx, single-P0 invariant, B+C echo (confirmation + top 3). 11 unit tests.
+- `orchestrator/scheduler.py`: registered `notion-state-poller` wake every 5m under `_heartbeat.SELF_TEST_CREW` (read-only diagnostic, not gated by crew kill switches).
+
+**Verification (live on VPS):**
+- C1 PASS: poller caught real Notion click on `T-260009 Test all agent task types via Telegram` (Not Started -> In Progress)
+- C2 PASS: `/task add` from Telegram created T-26618 with correct defaults
+- C3 PASS: failure modes (no title, bad owner, untracked field) handled correctly
+- C4 PASS: concurrent ticks, second skips on lock
+
+**Container deploy bugs caught + fixed in PR chain:**
+- PR #25: spec + plan + initial build (33 tests)
+- PR #26: hotfix `crew_name="atlas"` to `SELF_TEST_CREW` (heartbeat was skipping every fire because no atlas crew exists in autonomy_state.json)
+- PR #27: hotfix `REPO_ROOT` resolution under flattened orc-crewai container paths
+- PR #28: hotfix changelog destination from `/app/docs/audits/` (not mounted) to `/app/data/` (mounted to `/root/agentsHQ/data/`, persists across rebuilds)
+
+**Spec:** `docs/superpowers/specs/2026-05-02-task-poller-and-add-design.md`
+**Plan:** `docs/superpowers/plans/2026-05-02-task-poller-and-add.md`
+**Branch:** `feature/task-poller` (merged via PR #25, then 3 follow-up fix PRs)
+
+**Out-of-scope (deferred per spec section 7):**
+- All `/task` verbs other than `add` (done, p0, sprint, block, archive, reopen, reassign)
+- 3-day past-due Telegram digest (separate work; reads changelog)
+- Daily standup / Golden Gem nudge / weekly recap generators
+- `--due` flag on `/task add`
+- Automated changelog rotation when file >5MB
+
+---
+
 ## Descoped Items
 
 These are explicit "do not build" decisions with reasons, so we don't relitigate.
