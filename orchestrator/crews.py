@@ -3019,8 +3019,7 @@ def build_content_board_fetch_crew(user_request: str) -> Crew:
     else:
         # List mode: detect status filter
         STATUS_MAP = {
-            "Idea":         ["idea", "ideas", "brainstorm"],
-            "Draft":        ["draft", "drafts"],
+            "Draft":        ["draft", "drafts", "idea", "ideas", "brainstorm", "build", "build out", "no content", "content yet"],
             "Queued":       ["queue", "queued"],
             "Ready":        ["ready"],
             "In Review":    ["in review", "review", "reviewing"],
@@ -3028,7 +3027,7 @@ def build_content_board_fetch_crew(user_request: str) -> Crew:
             "Posted":       ["posted", "published", "live"],
             "Archived":     ["archived", "archive"],
         }
-        target_status = "Queued"
+        target_status = "Draft"
         for status, keywords in STATUS_MAP.items():
             if any(kw in msg for kw in keywords):
                 target_status = status
