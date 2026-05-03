@@ -1,0 +1,28 @@
+{
+  "channel_id": "placeholder",
+  "display_name": "Studio Channel",
+  "voice_id": "X4Lh5Ftnso6JSt25plzX",
+  "tts_fallback": "kie_tts",
+  "primary_color": "#C8A96E",
+  "accent_color": "#2D1B00",
+  "background_color": "#1A0F00",
+  "font_family": "Playfair Display",
+  "font_family_body": "Inter",
+  "logo_drive_id": null,
+  "intro_duration_sec": 3,
+  "outro_duration_sec": 4,
+  "intro_template": "placeholder_intro",
+  "outro_template": "placeholder_outro",
+  "visual_style": "warm cinematic, soft bokeh, rich earth tones",
+  "regional_motif_tags": [],
+  "pronunciation_dict": {},
+  "script_tone": "warm, authoritative, storytelling",
+  "target_duration_sec": 600,
+  "hook_word_budget": 30,
+  "retention_loop_interval_words": 200,
+  "platform_specs": {
+    "long_form": {"width": 1920, "height": 1080, "fps": 30, "aspect_ratio": "16:9"},
+    "shorts":    {"width": 1080, "height": 1920, "fps": 30, "aspect_ratio": "9:16"},
+    "square":    {"width": 1080, "height": 1080, "fps": 30, "aspect_ratio": "1:1"}
+  }
+}
