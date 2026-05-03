@@ -238,7 +238,7 @@ def _probe_openrouter_credits() -> tuple[str, bool, str]:
         # Response: {"data": {"total_credits": N, "total_usage": N}}
         total = float((data.get("data") or {}).get("total_credits", 0))
         used = float((data.get("data") or {}).get("total_usage", 0))
-        balance_usd = (total - used) / 100  # credits are in cents
+        balance_usd = total - used  # API returns raw USD, not cents
         if balance_usd < _CREDIT_ALERT_THRESHOLD_USD:
             return label, False, f"balance ${balance_usd:.2f} below ${_CREDIT_ALERT_THRESHOLD_USD:.0f} threshold -- add credits at openrouter.ai/settings/credits"
         return label, True, f"balance ${balance_usd:.2f}"
