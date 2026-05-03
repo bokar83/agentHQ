@@ -75,6 +75,13 @@ repos:
         pass_filenames: false
         always_run: true
         stages: [manual]
+      - id: check-no-provider-redirect
+        name: Provider Redirect Guard (block ANTHROPIC_BASE_URL in committed configs)
+        description: Prevents committing a non-Anthropic ANTHROPIC_BASE_URL. See docs/notes/switch-provider-paused-2026-05-02.md.
+        entry: python scripts/check_no_provider_redirect.py
+        language: python
+        pass_filenames: false
+        always_run: true
       - id: validate-governance-manifest
         name: Governance Manifest Drift (LLM-readable mirror of GOVERNANCE.md)
         description: Compass M4. Fires only when GOVERNANCE.md or the manifest changes.
