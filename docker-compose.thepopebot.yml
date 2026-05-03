@@ -84,15 +84,16 @@ services:
       - "traefik.http.routers.chat-ui.tls=true"
       - "traefik.http.routers.chat-ui.entrypoints=websecure"
       - "traefik.http.routers.chat-ui.tls.certresolver=mytlschallenge"
-      - "traefik.http.routers.chat-ui.service=nginx-static"
+      - "traefik.http.routers.chat-ui.service=nginx-chat"
       # /atlas route (Mission Control dashboard)
       - "traefik.http.routers.atlas-ui.rule=Host(`${APP_HOSTNAME}`) && PathPrefix(`/atlas`)"
       - "traefik.http.routers.atlas-ui.tls=true"
       - "traefik.http.routers.atlas-ui.entrypoints=websecure"
       - "traefik.http.routers.atlas-ui.tls.certresolver=mytlschallenge"
-      - "traefik.http.routers.atlas-ui.service=nginx-static"
+      - "traefik.http.routers.atlas-ui.service=nginx-atlas"
       # shared backend service (one service, two routers)
-      - "traefik.http.services.nginx-static.loadbalancer.server.port=80"
+      - "traefik.http.services.nginx-chat.loadbalancer.server.port=80"
+      - "traefik.http.services.nginx-atlas.loadbalancer.server.port=80"
     networks:
       - root_default
 
