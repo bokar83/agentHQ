@@ -465,3 +465,61 @@ Cost ceiling for M1 build: <$20 in tokens. Firecrawl 0/3000 until 2026-05-14 fla
 **Commits:** `1d0cd88` (Studio M1 engine), now on origin via rebase.
 
 ---
+
+### 2026-05-03: M2 Brand Identity - Palettes + Brand Bibles LOCKED
+
+**Session scope:** Studio M2 brand identity for all 3 channels. Boubacar approved palettes after preview at `localhost:7420`.
+
+**What shipped:**
+
+3 brand bibles at `docs/roadmap/studio/brand/`:
+
+- `under-the-baobab-brand.md`
+- `ai-catalyst-brand.md`
+- `first-generation-money-brand.md`
+
+Each bible locks: final name, tagline, color palette (hex + role), typography stack, motion vocabulary, TTS voice spec + persona name, end-card template layout, thumbnail grammar, avatar spec, banner layout spec, About copy (YouTube + X), and M3 production crew brand injection block.
+
+**Palette decisions (LOCKED):**
+
+| Channel | Primary | Secondary | Accent 1 | Accent 2 |
+| --- | --- | --- | --- | --- |
+| Under the Baobab | Saffron Gold `#E8A020` | Baobab Indigo `#3D2B8E` | Terracotta Fire `#C45E2A` | Savanna Amber `#F5C842` |
+| AI Catalyst | Fulani Indigo `#2D1B8E` | Catalyst Orange `#F26419` | Living Green `#1DB954` | Pale Indigo `#8B7FD4` |
+| First Generation Money | Grove Green `#166B50` | First-Gen Cream `#F7EDD8` | Clarity Violet `#6B3FA0` | Warm Gold `#D4922A` |
+
+**Palette rationale (design intent, not color theory defaults):**
+
+- Under the Baobab: baobab bark + kente gold + night sky indigo + savanna earth. African sunset energy, never corporate.
+- AI Catalyst: Fulani indigo (West African textile tradition) + Boubacar's personal energy (orange = him walking into a room) + living green (hope, growth). Unique in the AI-education niche - every competitor uses teal-on-dark or purple gradient.
+- First Generation Money: grove teal-green (patient growth, not stock-market hype) + first-gen cream (the kitchen table that should have existed) + clarity violet (the "aha moment" color - precious, used sparingly). Zero Boubacar connection by design.
+
+**Typography stacks:**
+
+- Under the Baobab: Playfair Display + DM Sans + Cinzel Decorative
+- AI Catalyst: Space Grotesk + Atkinson Hyperlegible + JetBrains Mono
+- First Generation Money: Plus Jakarta Sans + Inter + IBM Plex Mono
+
+**Voice personas locked:**
+
+- Under the Baobab: Griot Kofi (ElevenLabs, warm baritone, unhurried)
+- AI Catalyst: The Strategist (ElevenLabs, neutral, deliberate authority)
+- First Generation Money: The Sibling (ElevenLabs, gender-neutral, warm calm)
+
+**Palette preview:** `docs/roadmap/studio/brand/preview/index.html` - served at `localhost:7420`. Swatches, hero mockups, thumbnail grammar, type specimens. Swatches click-to-copy hex.
+
+**Boubacar feedback during session:**
+
+- Palette direction: "fun, outgoing, subtle African flair, interesting, bright, AND unique. No red as primary."
+- AI Catalyst palette: initially hesitant, approved after stepping back and reviewing all 3 together.
+
+**Remaining M2 deliverables (next session):**
+
+1. Logo generation - design skill scripts (`scripts/logo/generate.py`) for all 3 channels
+2. Avatar images - kie_media generation from locked prompts in each brand bible
+3. Banner images - kie_media generation (background scenes) + HTML composite
+4. End-card HTML templates - per channel, hyperframes-ready
+5. Thumbnail template HTML - per channel, production-crew-injectable
+6. Boubacar actions (not agent): create First Generation Money YouTube channel, register X handles
+
+---

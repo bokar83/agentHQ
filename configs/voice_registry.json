@@ -1,0 +1,34 @@
+{
+  "_comment": "ElevenLabs voice IDs. Update here only — all pipeline modules read from this file via studio_brand_config.",
+  "voices": {
+    "african_stories_male": {
+      "id": "U7wWSnxIJwCjioxt86mk",
+      "label": "African Stories — Male narrator",
+      "use_for": ["under_the_baobab", "african-folktales", "parenting-psychology"]
+    },
+    "african_stories_female": {
+      "id": "D9xwB6HNBJ9h4YvQFWuE",
+      "label": "African Stories — Female narrator",
+      "use_for": ["under_the_baobab", "african-folktales", "parenting-psychology"]
+    },
+    "boubacar": {
+      "id": "KuCymRJ2M5Gs5LQIAbwJ",
+      "label": "Boubacar — personal brand voice (AI Catalyst, Catalyst Works content)",
+      "use_for": ["ai_catalyst", "catalyst_works"]
+    },
+    "hunter_vo": {
+      "id": "X4Lh5Ftnso6JSt25plzX",
+      "label": "Hunter — generic VO (lead gen, outreach, placeholder default)",
+      "use_for": ["generic", "placeholder", "first_generation_money"]
+    },
+    "elder_male": {
+      "id": "Kpr3bkxYd7gPcHKxBohV",
+      "label": "Elhadja — older gentleman, gravitas, elder/wisdom narrator",
+      "use_for": ["under_the_baobab", "african-folktales", "elder-character-roles"]
+    }
+  },
+  "defaults": {
+    "studio_generic": "X4Lh5Ftnso6JSt25plzX",
+    "placeholder": "X4Lh5Ftnso6JSt25plzX"
+  }
+}
