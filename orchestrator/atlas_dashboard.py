@@ -347,7 +347,7 @@ def _get_historical_comparisons() -> dict:
         return {}
 
 
-MONTHLY_BUDGET_USD = 50.0
+MONTHLY_BUDGET_USD = 60.0
 
 
 def get_spend() -> dict:
