@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1280px; height: 720px; overflow: hidden; }
+
+  .thumb {
+    width: 1280px;
+    height: 720px;
+    position: relative;
+    overflow: hidden;
+    background: #FDFAF4;
+  }
+
+  .bg {
+    position: absolute;
+    inset: 0;
+    background: url('bg-firstgen.png') center center / cover no-repeat;
+  }
+
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to right,
+        rgba(253, 250, 244, 0.96) 0%,
+        rgba(253, 250, 244, 0.75) 55%,
+        rgba(253, 250, 244, 0.10) 100%
+      );
+  }
+
+  /* Violet left bar */
+  .bar-left { position: absolute; top: 0; left: 0; bottom: 0; width: 10px; background: #6B3FA0; }
+  /* Gold bottom bar */
+  .bar-bottom { position: absolute; bottom: 0; left: 0; right: 0; height: 6px; background: #D4922A; }
+
+  /* BIG number — the hook */
+  .big-number {
+    position: absolute;
+    left: 60px;
+    top: 44px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    font-size: 200px;
+    color: #D4922A;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .number-label {
+    position: absolute;
+    left: 62px;
+    top: 248px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px;
+    color: #8A9099;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  /* Question bottom */
+  .content {
+    position: absolute;
+    bottom: 44px;
+    left: 60px;
+    right: 60px;
+  }
+
+  .question {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800;
+    font-size: 72px;
+    line-height: 1;
+    color: #1A1F2E;
+    letter-spacing: -0.02em;
+    margin-bottom: 14px;
+  }
+
+  .question span { color: #166B50; }
+
+  .channel-tag {
+    font-family: 'Inter', sans-serif;
+    font-size: 22px;
+    color: #8A9099;
+    letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+<div class="thumb">
+  <div class="bg"></div>
+  <div class="overlay"></div>
+  <div class="bar-left"></div>
+
+  <div class="big-number">$7K</div>
+  <p class="number-label">2026 Roth IRA limit</p>
+
+  <div class="content">
+    <h1 class="question">Are you leaving<br>this <span>on the table?</span></h1>
+    <p class="channel-tag">First Generation Money</p>
+  </div>
+
+  <div class="bar-bottom"></div>
+</div>
+</body>
+</html>

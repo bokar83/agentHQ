@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500&family=Cinzel+Decorative&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1280px; height: 720px; overflow: hidden; }
+
+  .thumb {
+    width: 1280px;
+    height: 720px;
+    position: relative;
+    overflow: hidden;
+    background: #1E1433;
+  }
+
+  .bg {
+    position: absolute;
+    inset: 0;
+    background: url('bg-baobab.png') center center / cover no-repeat;
+  }
+
+  /* Strong overlay — heavier than banner, thumbnail must read at 300px */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to top,
+        rgba(14, 8, 32, 0.96) 0%,
+        rgba(14, 8, 32, 0.70) 45%,
+        rgba(14, 8, 32, 0.20) 100%
+      );
+  }
+
+  /* Main text — bottom left */
+  .content {
+    position: absolute;
+    bottom: 48px;
+    left: 48px;
+    right: 200px;
+  }
+
+  .episode-title {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 86px;
+    line-height: 0.95;
+    color: #FAF3E0;
+    letter-spacing: -0.02em;
+    margin-bottom: 18px;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.8);
+  }
+
+  .episode-title span { color: #E8A020; }
+
+  .channel-tag {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 26px;
+    color: #FAF3E0;
+    opacity: 0.55;
+    letter-spacing: 0.06em;
+  }
+
+  /* Kente bottom stripe */
+  .stripe { position: absolute; bottom: 0; left: 0; right: 0; height: 6px; background: #E8A020; }
+</style>
+</head>
+<body>
+<div class="thumb">
+  <div class="bg"></div>
+  <div class="overlay"></div>
+
+  <div class="content">
+    <h1 class="episode-title">Why Anansi<br>Owns All <span>Stories</span></h1>
+    <p class="channel-tag">Under the Baobab</p>
+  </div>
+
+  <div class="stripe"></div>
+</div>
+</body>
+</html>
