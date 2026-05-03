@@ -795,7 +795,7 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
                     f"{system_data}"
                 ),
             }]
-            synthesis = call_llm(synthesis_messages, model=None, model_key="ATLAS_CHAT_MODEL", temperature=CHAT_TEMPERATURE)
+            synthesis = call_llm(synthesis_messages, model=None, model_key="ATLAS_CHAT_MODEL", temperature=CHAT_TEMPERATURE, max_tokens=8192)
             resolved_model = getattr(synthesis, "_resolved_model", None)
             raw_reply = (synthesis.choices[0].message.content or "").strip()
             reply = _extract_reply(raw_reply)
@@ -823,6 +823,7 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
             tools=_TOOLS,
             tool_choice="auto",
             temperature=CHAT_TEMPERATURE,
+            max_tokens=8192,
         )
         resolved_model = getattr(response, "_resolved_model", None)
 
@@ -897,7 +898,7 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
                     "content": tool_result,
                 })
 
-            followup = call_llm(full_messages, model=None, model_key="ATLAS_CHAT_MODEL", temperature=CHAT_TEMPERATURE)
+            followup = call_llm(full_messages, model=None, model_key="ATLAS_CHAT_MODEL", temperature=CHAT_TEMPERATURE, max_tokens=8192)
             resolved_model = getattr(followup, "_resolved_model", resolved_model)
             raw_reply = (followup.choices[0].message.content or "").strip()
         else:
