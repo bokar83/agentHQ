@@ -201,7 +201,12 @@ async function refreshHero() {
 
     const spendEl = document.getElementById('hero-spend-val');
     const sp = d.spend_pacing || {};
-    spendEl.textContent = sp.pct != null ? sp.pct.toFixed(1) + '%' : '--';
+    if (sp.pct != null) {
+      spendEl.textContent = '$' + (sp.spent_usd || 0).toFixed(2) + ' (' + sp.pct.toFixed(0) + '% of $' + ((sp.monthly_budget || 50) / 31).toFixed(2) + '/d)';
+      spendEl.className = 'hero-value' + (sp.pct > 100 ? ' red' : sp.pct > 80 ? ' amber' : '');
+    } else {
+      spendEl.textContent = '--';
+    }
 
     const hcVal = document.getElementById('hero-health-val');
     const hcTs = document.getElementById('hero-health-ts');
@@ -394,6 +399,49 @@ function renderSpend(d) {
   const pctLabel = el('div', { class: 'data-label' });
   pctLabel.textContent = pct.toFixed(1) + '% of daily cap';
   body.appendChild(pctLabel);
+
+  // Historical comparisons (week-over-week, month-over-month, YTD)
+  const hist = d.historical || {};
+  if (hist.this_week != null || hist.ytd != null) {
+    const histDivider = el('div', { class: 'data-label' });
+    histDivider.textContent = 'Comparisons';
+    histDivider.style.marginTop = '8px';
+    body.appendChild(histDivider);
+    var _fmtDelta = function(pct) {
+      if (pct == null) return '';
+      return ' (' + (pct >= 0 ? '+' : '') + pct.toFixed(0) + '% vs prior)';
+    };
+    if (hist.this_week != null) {
+      body.appendChild(el('div', { class: 'data-row' },
+        el('span', { class: 'data-label' }, 'This Week'),
+        el('span', { class: 'data-value' }, '$' + hist.this_week.toFixed(2) + _fmtDelta(hist.week_delta_pct)),
+      ));
+    }
+    if (hist.last_week != null) {
+      body.appendChild(el('div', { class: 'data-row' },
+        el('span', { class: 'data-label' }, 'Last Week'),
+        el('span', { class: 'data-value' }, '$' + hist.last_week.toFixed(2)),
+      ));
+    }
+    if (hist.this_month != null) {
+      body.appendChild(el('div', { class: 'data-row' },
+        el('span', { class: 'data-label' }, 'This Month'),
+        el('span', { class: 'data-value' }, '$' + hist.this_month.toFixed(2) + _fmtDelta(hist.month_delta_pct)),
+      ));
+    }
+    if (hist.last_month != null) {
+      body.appendChild(el('div', { class: 'data-row' },
+        el('span', { class: 'data-label' }, 'Last Month'),
+        el('span', { class: 'data-value' }, '$' + hist.last_month.toFixed(2)),
+      ));
+    }
+    if (hist.ytd != null) {
+      body.appendChild(el('div', { class: 'data-row' },
+        el('span', { class: 'data-label' }, 'YTD'),
+        el('span', { class: 'data-value' }, '$' + hist.ytd.toFixed(2)),
+      ));
+    }
+  }
 
   // Provider ground-truth section (OpenRouter actual billing)
   if (d.provider_today != null || d.provider_week != null) {

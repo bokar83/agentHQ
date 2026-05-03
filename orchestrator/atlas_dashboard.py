@@ -286,39 +286,117 @@ def _fetch_provider_spend() -> dict:
         return {"provider_today": None, "provider_week": None, "provider_month": None, "provider_balance": None}
 
 
-def get_spend() -> dict:
-    """Spend card: today (or most recent day with spend)/week/month totals + cap.
-
-    Returns both ledger totals (llm_calls, attributable per-crew) and provider
-    totals (OpenRouter ground truth, includes CrewAI calls). Delta = provider - ledger.
+def _get_historical_comparisons() -> dict:
     """
+    Build week-over-week, month-over-month, and YTD comparisons from
+    provider_billing snapshots. Returns empty dict gracefully if no data yet.
+    """
+    try:
+        from spend_snapshot import get_historical
+        rows = get_historical(days=400)
+        if not rows:
+            return {}
+
+        import datetime as _dt
+        today = _dt.date.today()
+
+        def _week_start(d): return d - _dt.timedelta(days=d.weekday())
+        def _month_key(d): return (d.year, d.month)
+
+        this_week_start  = _week_start(today)
+        last_week_start  = this_week_start - _dt.timedelta(weeks=1)
+        last_week_end    = this_week_start - _dt.timedelta(days=1)
+        this_month       = _month_key(today)
+        last_month_end   = today.replace(day=1) - _dt.timedelta(days=1)
+        last_month       = _month_key(last_month_end)
+        ytd_start        = today.replace(month=1, day=1)
+
+        this_week_total = last_week_total = 0.0
+        this_month_total = last_month_total = ytd_total = 0.0
+
+        for r in rows:
+            d = _dt.date.fromisoformat(r["day"])
+            usd = r["usd_today"]
+            if _week_start(d) == this_week_start:
+                this_week_total += usd
+            elif last_week_start <= d <= last_week_end:
+                last_week_total += usd
+            if _month_key(d) == this_month:
+                this_month_total += usd
+            elif _month_key(d) == last_month:
+                last_month_total += usd
+            if d >= ytd_start:
+                ytd_total += usd
+
+        def _delta_pct(current, prior):
+            if not prior:
+                return None
+            return round((current - prior) / prior * 100, 1)
+
+        return {
+            "this_week":        round(this_week_total, 4),
+            "last_week":        round(last_week_total, 4),
+            "week_delta_pct":   _delta_pct(this_week_total, last_week_total),
+            "this_month":       round(this_month_total, 4),
+            "last_month":       round(last_month_total, 4),
+            "month_delta_pct":  _delta_pct(this_month_total, last_month_total),
+            "ytd":              round(ytd_total, 4),
+        }
+    except Exception as e:
+        logger.warning(f"_get_historical_comparisons: {e}")
+        return {}
+
+
+MONTHLY_BUDGET_USD = 50.0
+
+
+def get_spend() -> dict:
+    """Spend card: today/week/month totals from both ledger and provider (ground truth).
+
+    Also returns historical comparisons (week-over-week, month-over-month, YTD)
+    from provider_billing snapshots, and hero pacing vs $50/mo budget.
+    """
+    import calendar, datetime as _dt
     from autonomy_guard import get_guard
     snap = get_guard().snapshot()
     agg = _spend_aggregates()
     by_day = _spend_7d_by_day()
     provider = _fetch_provider_spend()
+    historical = _get_historical_comparisons()
     today_usd = max(snap.spent_today_usd, agg["today_usd"])
+
+    # Pacing: provider_today vs daily share of $50/mo budget
+    today = _dt.date.today()
+    days_in_month = calendar.monthrange(today.year, today.month)[1]
+    daily_budget = MONTHLY_BUDGET_USD / days_in_month
+    provider_today = provider["provider_today"] or 0.0
+    pacing_pct = round(provider_today / daily_budget * 100, 1) if daily_budget else 0.0
+
     return {
         "today": {
-            "spent_usd": round(today_usd, 4),
-            "cap_usd": round(snap.cap_usd, 4),
-            "remaining_usd": round(snap.cap_usd - today_usd, 4),
-            "per_crew": {k: round(v, 4) for k, v in snap.per_crew.items()},
+            "spent_usd":      round(today_usd, 4),
+            "cap_usd":        round(snap.cap_usd, 4),
+            "remaining_usd":  round(snap.cap_usd - today_usd, 4),
+            "per_crew":       {k: round(v, 4) for k, v in snap.per_crew.items()},
         },
-        "last_day_usd":  agg["last_day_usd"],
-        "last_day_date": agg["last_day_date"],
-        "show_last_day": agg["show_last_day"],
-        "week_usd":  agg["week_usd"],
-        "month_usd": agg["month_usd"],
-        "today_tokens": agg.get("today_tokens", 0),
-        "week_tokens":  agg.get("week_tokens", 0),
-        "month_tokens": agg.get("month_tokens", 0),
+        "last_day_usd":   agg["last_day_usd"],
+        "last_day_date":  agg["last_day_date"],
+        "show_last_day":  agg["show_last_day"],
+        "week_usd":       agg["week_usd"],
+        "month_usd":      agg["month_usd"],
+        "today_tokens":   agg.get("today_tokens", 0),
+        "week_tokens":    agg.get("week_tokens", 0),
+        "month_tokens":   agg.get("month_tokens", 0),
         "ledger_last_ts": agg.get("ledger_last_ts"),
-        "by_day":    by_day,
+        "by_day":         by_day,
         "provider_today":   provider["provider_today"],
         "provider_week":    provider["provider_week"],
         "provider_month":   provider["provider_month"],
         "provider_balance": provider["provider_balance"],
+        "monthly_budget":   MONTHLY_BUDGET_USD,
+        "daily_budget":     round(daily_budget, 4),
+        "pacing_pct":       pacing_pct,
+        "historical":       historical,
     }
 
 
@@ -575,15 +653,24 @@ def _next_scheduled_fire() -> dict:
 
 def get_hero() -> dict:
     """Hero strip: system_status, last_action, next_fire, spend_pacing, health_check."""
+    import calendar, datetime as _dt
     from autonomy_guard import get_guard
     guard = get_guard()
-    snap = guard.snapshot()
     killed = guard.is_killed()
     log_errors = _error_log_tail(lines=5)
-    pct = (snap.spent_today_usd / snap.cap_usd * 100) if snap.cap_usd else 0.0
+
+    # Spend pacing: provider ground-truth today vs daily share of $50/mo budget.
+    # Ledger (snap.spent_today_usd) misses CrewAI calls so use provider directly.
+    provider = _fetch_provider_spend()
+    provider_today = provider.get("provider_today") or 0.0
+    today = _dt.date.today()
+    days_in_month = calendar.monthrange(today.year, today.month)[1]
+    daily_budget = MONTHLY_BUDGET_USD / days_in_month
+    pct = round(provider_today / daily_budget * 100, 1) if daily_budget else 0.0
+
     if killed:
         system_status = "red"
-    elif log_errors or pct > 90:
+    elif log_errors or pct > 100:
         system_status = "amber"
     else:
         system_status = "green"
@@ -600,9 +687,11 @@ def get_hero() -> dict:
         "last_action": _last_autonomous_action(),
         "next_fire": _next_scheduled_fire(),
         "spend_pacing": {
-            "spent_usd": round(snap.spent_today_usd, 4),
-            "cap_usd": round(snap.cap_usd, 4),
-            "pct": round(pct, 1),
+            "spent_usd":    round(provider_today, 4),
+            "cap_usd":      round(daily_budget, 4),
+            "pct":          pct,
+            "monthly_budget": MONTHLY_BUDGET_USD,
+            "balance_usd":  provider.get("provider_balance"),
         },
         "health_check": sweep,
     }

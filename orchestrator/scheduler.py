@@ -616,6 +616,21 @@ def start_scheduler():
     except Exception as e:
         logger.error(f"HEALTH_SWEEP: wake registration failed ({e}); continuing without sweep", exc_info=True)
 
+    # M13: daily provider spend snapshot at 23:55 MT. Upserts one row into
+    # provider_billing so the dashboard has true historicals for week-over-week,
+    # month-over-month, and YTD comparisons.
+    try:
+        import heartbeat as _heartbeat
+        from spend_snapshot import spend_snapshot_tick
+        _heartbeat.register_wake(
+            "spend-snapshot",
+            crew_name=_heartbeat.SELF_TEST_CREW,
+            callback=spend_snapshot_tick,
+            at="23:55",
+        )
+    except Exception as e:
+        logger.error(f"SPEND_SNAPSHOT: wake registration failed ({e}); continuing without snapshot", exc_info=True)
+
     # Atlas M11d: weekly leGriot model quality review. Registered as daily at 13:00
     # UTC (08:00 MT). The callback gates internally on day-of-week == Sunday so it
     # is a no-op on Mon-Sat. Uses crew_name='model_review_agent' (its own kill
