@@ -1721,3 +1721,42 @@ Two changes to prevent recurrence:
 New probe added to the daily sweep. Hits `GET https://openrouter.ai/api/v1/credits`, computes `(total_credits - total_usage) / 100` in USD. Fails the sweep with a Telegram alert if balance is below $5. Gives ~1 day of warning before balance hits zero at current spend rates. Commit `9602e72`.
 
 **Action required (still):** Add credits at `openrouter.ai/settings/credits`. These guardrails alert and degrade gracefully; they don't pay the bill.
+
+---
+
+### 2026-05-03 (Saturday): Burn Guard RCA + hardening shipped
+
+**Trigger:** $57.45 burned on OpenRouter the night before. Root cause: a `UserPromptSubmit` hook
+(`classify_task.py`, reverted 2026-05-02) was still live and silently redirecting every Claude Code
+API call through OpenRouter via `ANTHROPIC_BASE_URL`. Context snowballed from 16k to 344k tokens
+across 363 calls. Boubacar topped up while the redirect was still live. Full 914-call, $62.12 CSV
+confirmed on 2026-05-03 UTC. No refund case: all calls completed successfully.
+
+**Three-round RCA:** Codex (mechanism), Sankofa (strategic), Karpathy (principles audit).
+Karpathy scores: Think before coding 2/10, Simplicity first 2/10, Surgical changes 1/10,
+Goal-driven 2/10. Root finding: ANTHROPIC_BASE_URL redirect + context snowball + no kill switch.
+
+**Hardening shipped (2 commits on main):**
+
+Commit 6002ff8: `orchestrator/provider_probe.py` extended with `_fetch_balance()` +
+`_check_spike()` (Telegram alert if balance drops more than $2 in one 5-min probe window).
+`C:/Users/HUAWEI/.claude/hooks/check-base-url.js` (new PreToolUse hook: blocks all tool calls
+if `ANTHROPIC_BASE_URL` is non-Anthropic host). `scripts/check_no_provider_redirect.py` +
+`.pre-commit-config.yaml` (pre-commit blocks commits baking a non-Anthropic base URL into JSON).
+
+Commit 7592575: `scripts/check_hook_registration.py` + `.pre-commit-config.yaml` (pre-commit
+blocks new per-message hook commands without HOOK_MODEL / HOOK_COST_PER_FIRE / HOOK_FIRING_RATE
+annotations). `orchestrator/contracts/TEMPLATE.md` C6a canary gate added (supervised $0.50-cap
+run before 7-day dry-run). `docs/AGENT_SOP.md` new hard rule: 4 mandatory questions before
+registering any LLM-calling hook.
+
+**Plugins wired (token reduction):** caveman (UserPromptSubmit), context-mode (SessionStart).
+
+**Not done:** Atlas dashboard live OpenRouter balance sparkline. Interim: `provider_probe.py`
+spike detection covers the alert layer. Full sparkline is M13 scope (target 2026-05-07).
+
+**Handoff:** `docs/handoff/2026-05-03-burn-guard-rca.md`
+
+**Next session:** Wire `GET https://openrouter.ai/api/v1/credits` into the Atlas dashboard
+frontend. Add `/atlas/openrouter-balance` endpoint in `app.py`. Add balance tile + 7-day
+sparkline to `atlas.html` / `atlas.js` hero strip. This completes M13.
