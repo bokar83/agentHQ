@@ -233,6 +233,22 @@ async def startup_event():
     except Exception as e:
         logger.warning(f"video_crew wake registration failed (non-fatal): {e}")
 
+    # Provider health probe: 5-min heartbeat that tests OpenRouter and alerts via Telegram on failure.
+    try:
+        from provider_health import ensure_table as _ph_ensure
+        _ph_ensure()
+        import heartbeat as _heartbeat
+        from provider_probe import run_probe as _provider_probe_callback
+        _heartbeat.register_wake(
+            "provider-probe",
+            crew_name="provider-probe",
+            callback=_provider_probe_callback,
+            every="5m",
+        )
+        logger.info("HEARTBEAT: provider-probe registered (every 5m)")
+    except Exception as e:
+        logger.warning(f"provider-probe wake registration failed (non-fatal): {e}")
+
     # Telegram polling in the background (hardened loop in handlers.py).
     asyncio.create_task(telegram_polling_loop())
     logger.info("Telegram Polling Loop scheduled.")
