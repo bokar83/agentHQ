@@ -395,6 +395,60 @@ function renderSpend(d) {
   pctLabel.textContent = pct.toFixed(1) + '% of daily cap';
   body.appendChild(pctLabel);
 
+  // Provider ground-truth section (OpenRouter actual billing)
+  if (d.provider_today != null || d.provider_week != null) {
+    const provDivider = el('div', { class: 'data-label' });
+    provDivider.textContent = 'OpenRouter (ground truth)';
+    provDivider.style.marginTop = '8px';
+    body.appendChild(provDivider);
+    if (d.provider_today != null) {
+      body.appendChild(el('div', { class: 'data-row' },
+        el('span', { class: 'data-label' }, 'Today'),
+        el('span', { class: 'data-value' }, '$' + d.provider_today.toFixed(4)),
+      ));
+    }
+    if (d.provider_week != null) {
+      body.appendChild(el('div', { class: 'data-row' },
+        el('span', { class: 'data-label' }, 'This Week'),
+        el('span', { class: 'data-value' }, '$' + d.provider_week.toFixed(4)),
+      ));
+    }
+    if (d.provider_month != null) {
+      body.appendChild(el('div', { class: 'data-row' },
+        el('span', { class: 'data-label' }, 'Month to Date'),
+        el('span', { class: 'data-value' }, '$' + d.provider_month.toFixed(4)),
+      ));
+    }
+    if (d.provider_balance != null) {
+      const balVal = el('span', { class: 'data-value' });
+      balVal.textContent = '$' + d.provider_balance.toFixed(2);
+      if (d.provider_balance < 5) { balVal.style.color = '#ef4444'; }
+      body.appendChild(el('div', { class: 'data-row' },
+        el('span', { class: 'data-label' }, 'Balance'),
+        balVal,
+      ));
+    }
+    // Delta: how much CrewAI and other untracked calls cost
+    if (d.provider_today != null && d.today) {
+      const delta = d.provider_today - (d.today.spent_usd || 0);
+      if (delta > 0.0001) {
+        const dVal = el('span', { class: 'data-value' });
+        dVal.textContent = '+$' + delta.toFixed(4);
+        dVal.title = 'Spend not captured in llm_calls ledger (CrewAI calls)';
+        dVal.style.color = '#d97706';
+        body.appendChild(el('div', { class: 'data-row' },
+          el('span', { class: 'data-label' }, 'Untracked (CrewAI)'),
+          dVal,
+        ));
+      }
+    }
+  }
+
+  // Ledger section
+  const ledgerDivider = el('div', { class: 'data-label' });
+  ledgerDivider.textContent = 'Ledger (attributable)';
+  ledgerDivider.style.marginTop = '8px';
+  body.appendChild(ledgerDivider);
   if (d.week_usd != null) {
     body.appendChild(el('div', { class: 'data-row' },
       el('span', { class: 'data-label' }, 'This Week'),
@@ -434,8 +488,6 @@ function renderSpend(d) {
     ));
   }
 
-  // Ledger staleness signal. M11 (2026-05-07) wires provider-billing APIs in
-  // and removes the "lower bound" framing.
   const LEDGER_STALE_HOURS = 24;
   if (d.ledger_last_ts) {
     const last = new Date(d.ledger_last_ts);
@@ -447,10 +499,7 @@ function renderSpend(d) {
     const val = el('span', { class: 'data-value' });
     val.textContent = last.toISOString().slice(0, 16).replace('T', ' ') + 'Z'
                      + (stale ? '  (stale)' : '');
-    if (stale) {
-      val.style.color = '#d97706';
-      val.title = 'Last write to llm_calls (lower bound, CrewAI calls not logged here yet).';
-    }
+    if (stale) { val.style.color = '#d97706'; }
     wrap.appendChild(lbl);
     wrap.appendChild(val);
     body.appendChild(wrap);

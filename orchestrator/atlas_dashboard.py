@@ -249,16 +249,54 @@ def _spend_7d_by_day() -> list:
         return []
 
 
+def _fetch_provider_spend() -> dict:
+    """
+    Pull live spend figures from OpenRouter's auth/key endpoint.
+    Returns usage_daily/weekly/monthly in USD (raw, not cents).
+    Non-fatal: returns None values on any error.
+    """
+    import os, urllib.request, json as _json
+    key = os.environ.get("OPENROUTER_API_KEY", "")
+    if not key:
+        return {"provider_today": None, "provider_week": None, "provider_month": None, "provider_balance": None}
+    try:
+        req = urllib.request.Request(
+            "https://openrouter.ai/api/v1/auth/key",
+            headers={"Authorization": f"Bearer {key}"},
+        )
+        with urllib.request.urlopen(req, timeout=8) as r:
+            data = _json.loads(r.read()).get("data", {})
+
+        credits_req = urllib.request.Request(
+            "https://openrouter.ai/api/v1/credits",
+            headers={"Authorization": f"Bearer {key}"},
+        )
+        with urllib.request.urlopen(credits_req, timeout=8) as r:
+            cdata = _json.loads(r.read()).get("data", {})
+        balance = round(float(cdata.get("total_credits", 0)) - float(cdata.get("total_usage", 0)), 4)
+
+        return {
+            "provider_today":   round(float(data.get("usage_daily",   0) or 0), 4),
+            "provider_week":    round(float(data.get("usage_weekly",  0) or 0), 4),
+            "provider_month":   round(float(data.get("usage_monthly", 0) or 0), 4),
+            "provider_balance": balance,
+        }
+    except Exception as e:
+        logger.warning(f"_fetch_provider_spend: {e}")
+        return {"provider_today": None, "provider_week": None, "provider_month": None, "provider_balance": None}
+
+
 def get_spend() -> dict:
     """Spend card: today (or most recent day with spend)/week/month totals + cap.
 
-    Also returns token totals (prompt + completion + cache) for the same windows
-    and ledger_last_ts so the UI can flag a stale llm_calls ledger.
+    Returns both ledger totals (llm_calls, attributable per-crew) and provider
+    totals (OpenRouter ground truth, includes CrewAI calls). Delta = provider - ledger.
     """
     from autonomy_guard import get_guard
     snap = get_guard().snapshot()
     agg = _spend_aggregates()
     by_day = _spend_7d_by_day()
+    provider = _fetch_provider_spend()
     today_usd = max(snap.spent_today_usd, agg["today_usd"])
     return {
         "today": {
@@ -277,6 +315,10 @@ def get_spend() -> dict:
         "month_tokens": agg.get("month_tokens", 0),
         "ledger_last_ts": agg.get("ledger_last_ts"),
         "by_day":    by_day,
+        "provider_today":   provider["provider_today"],
+        "provider_week":    provider["provider_week"],
+        "provider_month":   provider["provider_month"],
+        "provider_balance": provider["provider_balance"],
     }
 
 
