@@ -1709,3 +1709,15 @@ Secondary failure: I didn't know Boubacar was on `/chat/` not `/atlas/` until 3+
 **Verification:** All 4 healthcheck probes green immediately after deploy.
 
 **Action required:** Top up OpenRouter credits at `openrouter.ai/settings/credits`. The 8192 cap keeps chat working at current credit levels indefinitely, but crew tasks that go through other `call_llm` paths could hit 402 as the balance continues to drain. The cap does not fix the underlying low-credits situation.
+
+### 2026-05-03 (Saturday morning, follow-up): Credit guardrails shipped
+
+Two changes to prevent recurrence:
+
+**1. `orchestrator/llm_helpers.py` (402 early-exit)**
+`call_llm` now catches HTTP 402 before the generic exception handler. On 402: logs clearly, fires one Telegram alert ("ATLAS ALERT: OpenRouter out of credits"), raises `RuntimeError("OpenRouter out of credits. Add funds at openrouter.ai/settings/credits")`. The chat handler catches this and surfaces a clean user-facing message instead of "Sorry, I hit an error." Prior behavior: 402 hit the generic circuit-breaker path, logged as an opaque error, and spammed the circuit breaker counter for a problem that isn't a transient outage.
+
+**2. `orchestrator/health_sweep.py` (`_probe_openrouter_credits`)**
+New probe added to the daily sweep. Hits `GET https://openrouter.ai/api/v1/credits`, computes `(total_credits - total_usage) / 100` in USD. Fails the sweep with a Telegram alert if balance is below $5. Gives ~1 day of warning before balance hits zero at current spend rates. Commit `9602e72`.
+
+**Action required (still):** Add credits at `openrouter.ai/settings/credits`. These guardrails alert and degrade gracefully; they don't pay the bill.
