@@ -217,6 +217,35 @@ def _probe_history_empty_session() -> tuple[str, bool, str]:
         return label, False, str(e)[:120]
 
 
+_CREDIT_ALERT_THRESHOLD_USD = 5.0
+
+
+def _probe_openrouter_credits() -> tuple[str, bool, str]:
+    """Alert when OpenRouter balance drops below $5. Prevents silent 402 outages."""
+    label = "OpenRouter credits"
+    api_key = os.environ.get("OPENROUTER_API_KEY", "")
+    if not api_key:
+        return label, True, "(skipped -- no OPENROUTER_API_KEY)"
+    try:
+        r = _requests.get(
+            "https://openrouter.ai/api/v1/credits",
+            headers={"Authorization": f"Bearer {api_key}"},
+            timeout=_TIMEOUT,
+        )
+        data = r.json()
+        if r.status_code != 200:
+            return label, False, f"credits API returned {r.status_code}: {str(data)[:120]}"
+        # Response: {"data": {"total_credits": N, "total_usage": N}}
+        total = float((data.get("data") or {}).get("total_credits", 0))
+        used = float((data.get("data") or {}).get("total_usage", 0))
+        balance_usd = (total - used) / 100  # credits are in cents
+        if balance_usd < _CREDIT_ALERT_THRESHOLD_USD:
+            return label, False, f"balance ${balance_usd:.2f} below ${_CREDIT_ALERT_THRESHOLD_USD:.0f} threshold -- add credits at openrouter.ai/settings/credits"
+        return label, True, f"balance ${balance_usd:.2f}"
+    except Exception as e:
+        return label, False, str(e)[:120]
+
+
 # ══════════════════════════════════════════════════════════════
 # Runner
 # ══════════════════════════════════════════════════════════════
@@ -230,6 +259,7 @@ _PROBES = [
     _probe_atlas_state,
     _probe_atlas_chat,
     _probe_history_empty_session,
+    _probe_openrouter_credits,
 ]
 
 
