@@ -793,15 +793,7 @@ html, body {
   padding: 0 14px;
 }
 #chat-attachment-strip:empty { padding: 0; }
-.chat-model-footer {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.45);
-  padding: 4px 14px 6px;
-  text-align: right;
-  letter-spacing: 0.02em;
-  user-select: none;
-}
-.chat-model-footer:empty { display: none; }
+.chat-model-footer { display: none; }
 .chat-chip {
   display: inline-flex;
   align-items: center;

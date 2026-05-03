@@ -391,7 +391,6 @@ var atlasChat = (function() {
       _messages.push({ role: 'assistant', content: r.reply || '' });
       _appendMessage('assistant', r.reply || '', r.actions || [], r.artifact || null);
       if (r.job_id) { _pollJob(r.job_id); }
-      if (r.model) { _updateModelFooter(r.model); }
       try { refreshQueue(); } catch (_) {}
     }).catch(function(e) {
       _typing(false);
@@ -400,7 +399,12 @@ var atlasChat = (function() {
     }).finally(function() {
       if (sendBtn) sendBtn.disabled = false;
       if (attachBtn) attachBtn.disabled = false;
-      if (inputEl) { inputEl.disabled = false; inputEl.focus(); }
+      if (inputEl) {
+        inputEl.disabled = false;
+        inputEl.value = '';
+        inputEl.style.height = 'auto';
+        inputEl.focus();
+      }
     });
   }
 
@@ -410,13 +414,17 @@ var atlasChat = (function() {
     var attachBtn = document.getElementById('chat-attach');
     var fileInput = document.getElementById('chat-file-input');
     if (!sendBtn || !inputEl) return;
-    sendBtn.addEventListener('click', function() { var t = inputEl.value; inputEl.value = ''; sendMessage(t); });
+    sendBtn.addEventListener('click', function() { var t = inputEl.value; inputEl.value = ''; inputEl.style.height = 'auto'; sendMessage(t); });
     inputEl.addEventListener('keydown', function(e) {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        var t = inputEl.value; inputEl.value = '';
+        var t = inputEl.value; inputEl.value = ''; inputEl.style.height = 'auto';
         sendMessage(t);
       }
+    });
+    inputEl.addEventListener('input', function() {
+      inputEl.style.height = 'auto';
+      inputEl.style.height = Math.min(inputEl.scrollHeight, 200) + 'px';
     });
     if (attachBtn && fileInput) {
       attachBtn.addEventListener('click', function() { fileInput.click(); });
@@ -446,5 +454,11 @@ var atlasChat = (function() {
   return { init: init, sendMessage: sendMessage };
 })();
 
-var _origShowDashboard = showDashboard;
-showDashboard = function() { _origShowDashboard(); atlasChat.init(); };
+// If dashboard is already visible when this script loads (cached token auto-login),
+// init immediately. Otherwise patch showDashboard for PIN-flow login.
+if (document.getElementById('dashboard') && !document.getElementById('dashboard').hidden) {
+  atlasChat.init();
+} else {
+  var _origShowDashboard = showDashboard;
+  showDashboard = function() { _origShowDashboard(); atlasChat.init(); };
+}
