@@ -73,8 +73,9 @@ def get_status(provider: str = "openrouter") -> dict:
             return {"provider": provider, "status": "healthy", "fail_count": 0,
                     "window_start": None, "tripped_at": None, "recovered_at": None}
         return {
-            "provider": row[0], "status": row[1], "fail_count": row[2],
-            "window_start": row[3], "tripped_at": row[4], "recovered_at": row[5],
+            "provider": row["provider"], "status": row["status"],
+            "fail_count": row["fail_count"], "window_start": row["window_start"],
+            "tripped_at": row["tripped_at"], "recovered_at": row["recovered_at"],
         }
     except Exception as e:
         logger.warning(f"provider_health.get_status failed: {e}")
@@ -102,7 +103,9 @@ def record_failure(provider: str = "openrouter") -> dict:
             ensure_table()
             fail_count, window_start, status = 0, None, "healthy"
         else:
-            fail_count, window_start, status = row[0], row[1], row[2]
+            fail_count = row["fail_count"]
+            window_start = row["window_start"]
+            status = row["status"]
 
         # Start window on first failure; reset count only when window has expired
         if window_start is None:
