@@ -119,7 +119,7 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 
 ---
 
-### M2: Brand Identity for Two Channels ⏳ QUEUED
+### M2: Brand Identity for Two Channels ✅ SHIPPED 2026-05-03
 
 **What:** Lock brand identity for BOTH M1 channels in parallel. Each channel gets: name (final), logo, color palette, typography, motion vocabulary, voice identity (TTS voice or stock narration), end-card template, thumbnail template, channel-page assets (avatar, banner, about copy, links).
 
@@ -137,7 +137,7 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 
 ---
 
-### M3: Content Production Pipeline ⏳ QUEUED
+### M3: Content Production Pipeline 🔄 IN PROGRESS
 
 **What:** Wire the studio production crew that takes a Pipeline DB candidate (qa-passed) and produces a publish-ready asset. Pipeline shape:
 
