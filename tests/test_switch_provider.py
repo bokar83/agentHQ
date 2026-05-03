@@ -102,3 +102,41 @@ def test_corrupted_settings_file_creates_minimal_config(tmp_path, providers_json
 def test_unknown_provider_raises(tmp_settings, providers_json):
     with pytest.raises(SystemExit):
         switch_provider.switch_claude("nonexistent", str(providers_json), str(tmp_settings))
+
+
+def test_switch_codex_model(tmp_path):
+    """Codex config.toml model key is updated, other keys preserved."""
+    config = tmp_path / "config.toml"
+    config.write_text('model = "gpt-5.5"\npersonality = "pragmatic"\n')
+
+    providers_with_codex = tmp_path / "providers_codex.json"
+    providers_with_codex.write_text(json.dumps({
+        "openrouter": {
+            "label": "OpenRouter",
+            "claude": {},
+            "codex": {"model": "openai/gpt-4o"}
+        }
+    }))
+
+    switch_provider.switch_codex(
+        provider_key="openrouter",
+        providers_path=str(providers_with_codex),
+        config_path=str(config),
+    )
+    content = config.read_text()
+    assert 'model = "openai/gpt-4o"' in content
+    assert 'personality = "pragmatic"' in content
+
+
+def test_switch_codex_missing_config_creates_file(tmp_path):
+    config = tmp_path / "config.toml"
+    providers_with_codex = tmp_path / "providers_codex.json"
+    providers_with_codex.write_text(json.dumps({
+        "openrouter": {
+            "label": "OpenRouter",
+            "codex": {"model": "openai/gpt-4o"}
+        }
+    }))
+    switch_provider.switch_codex("openrouter", str(providers_with_codex), str(config))
+    content = config.read_text()
+    assert 'model = "openai/gpt-4o"' in content
