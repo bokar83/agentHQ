@@ -36,14 +36,25 @@ from typing import Any
 
 import httpx
 
-from orchestrator.async_poll import (
-    poll_until_done,
-    submit_and_poll,
-    high_res_params,
-    ENDPOINT_JOBS,
-    ENDPOINT_GENERATE,
-    PollFailed,
-    PollTimeout,
+try:
+    from orchestrator.async_poll import (
+        poll_until_done,
+        submit_and_poll,
+        high_res_params,
+        ENDPOINT_JOBS,
+        ENDPOINT_GENERATE,
+        PollFailed,
+        PollTimeout,
+    )
+except ModuleNotFoundError:
+    from async_poll import (  # flat /app layout inside container
+        poll_until_done,
+        submit_and_poll,
+        high_res_params,
+        ENDPOINT_JOBS,
+        ENDPOINT_GENERATE,
+        PollFailed,
+        PollTimeout,
 )
 
 logger = logging.getLogger(__name__)
@@ -514,13 +525,21 @@ def generate_image(
     local_path = LOCAL_CACHE_DIR / "images" / _current_quarter() / filename
     _download_asset(source_url, local_path)
 
-    quarter_folder_id = _find_or_create_folder(_current_quarter(), IMAGES_FOLDER)
-    drive_result = _upload_to_drive(local_path, quarter_folder_id, filename, "image/png")
+    drive_url = ""
+    drive_file_id = ""
+    try:
+        quarter_folder_id = _find_or_create_folder(_current_quarter(), IMAGES_FOLDER)
+        drive_result = _upload_to_drive(local_path, quarter_folder_id, filename, "image/png")
+        drive_url = drive_result.get("webViewLink", "")
+        drive_file_id = drive_result.get("id", "")
+    except Exception as e:
+        logger.warning("generate_image: Drive upload failed (non-fatal): %s", e)
 
     result = {
-        "drive_url": drive_result["webViewLink"],
-        "drive_file_id": drive_result["id"],
+        "drive_url": drive_url,
+        "drive_file_id": drive_file_id,
         "local_path": str(local_path),
+        "source_url": source_url,   # Kai CDN URL — pass to image_to_video if Drive unavailable
         "model_used": gen["model_used"],
         "rank_used": gen["rank_used"],
         "attempts": gen["attempts"],
@@ -544,12 +563,20 @@ def generate_video(
     aspect_ratio: str = "16:9",
     task_type: str = "text_to_video",
     linked_content_id: str | None = None,
+    image_url: str | None = None,
 ) -> dict:
     """
     Generate a video via the top-ranked Kai model, store on Drive, log metadata.
     Returns: {drive_url, drive_file_id, local_path, model_used, attempts}
+
+    image_url: required for task_type="image_to_video" — Kai CDN or Drive URL of source image.
     """
-    extra = {"aspect_ratio": aspect_ratio} if task_type == "text_to_video" else {}
+    if task_type == "text_to_video":
+        extra = {"aspect_ratio": aspect_ratio}
+    elif task_type == "image_to_video" and image_url:
+        extra = {"image_url": image_url, "aspect_ratio": aspect_ratio}
+    else:
+        extra = {}
     gen = _run_with_retries(task_type, prompt, extra)
 
     source_url = gen["result_urls"][0]
@@ -561,12 +588,19 @@ def generate_video(
     local_path = LOCAL_CACHE_DIR / "videos" / _current_quarter() / filename
     _download_asset(source_url, local_path)
 
-    quarter_folder_id = _find_or_create_folder(_current_quarter(), VIDEOS_FOLDER)
-    drive_result = _upload_to_drive(local_path, quarter_folder_id, filename, "video/mp4")
+    drive_url = ""
+    drive_file_id = ""
+    try:
+        quarter_folder_id = _find_or_create_folder(_current_quarter(), VIDEOS_FOLDER)
+        drive_result = _upload_to_drive(local_path, quarter_folder_id, filename, "video/mp4")
+        drive_url = drive_result.get("webViewLink", "")
+        drive_file_id = drive_result.get("id", "")
+    except Exception as e:
+        logger.warning("generate_video: Drive upload failed (non-fatal): %s", e)
 
     result = {
-        "drive_url": drive_result["webViewLink"],
-        "drive_file_id": drive_result["id"],
+        "drive_url": drive_url,
+        "drive_file_id": drive_file_id,
         "local_path": str(local_path),
         "model_used": gen["model_used"],
         "rank_used": gen["rank_used"],
@@ -679,12 +713,19 @@ def generate_promo_video(
     local_path = LOCAL_CACHE_DIR / "videos" / _current_quarter() / filename
     _download_asset(source_url, local_path)
 
-    quarter_folder_id = _find_or_create_folder(_current_quarter(), VIDEOS_FOLDER)
-    drive_result = _upload_to_drive(local_path, quarter_folder_id, filename, "video/mp4")
+    drive_url = ""
+    drive_file_id = ""
+    try:
+        quarter_folder_id = _find_or_create_folder(_current_quarter(), VIDEOS_FOLDER)
+        drive_result = _upload_to_drive(local_path, quarter_folder_id, filename, "video/mp4")
+        drive_url = drive_result.get("webViewLink", "")
+        drive_file_id = drive_result.get("id", "")
+    except Exception as e:
+        logger.warning("generate_video (promo): Drive upload failed (non-fatal): %s", e)
 
     result = {
-        "drive_url": drive_result["webViewLink"],
-        "drive_file_id": drive_result["id"],
+        "drive_url": drive_url,
+        "drive_file_id": drive_file_id,
         "local_path": str(local_path),
         "model_used": gen["model_used"],
         "rank_used": gen["rank_used"],

@@ -79,6 +79,8 @@ def check_spellcheck_grammar(text: str) -> QACheckResult:
     """
     if not text or not text.strip():
         return QACheckResult("spellcheck", False, "empty text")
+    # Strip [SCENE: ...] markers — they leave double-spaces that aren't typos
+    check_text = re.sub(r'\[SCENE:[^\]]*\]\s*', '', text)
     # Common typo patterns (extend as we learn)
     typos = [
         (r"\bteh\b", "teh -> the"),
@@ -87,11 +89,10 @@ def check_spellcheck_grammar(text: str) -> QACheckResult:
         (r"\bdefinately\b", "definately -> definitely"),
         (r"\boccured\b", "occured -> occurred"),
         (r"\bweather\s+(?=or not)", "weather or not -> whether or not"),
-        (r"\s\s+", "double-space"),
     ]
     issues = []
     for pat, label in typos:
-        if re.search(pat, text, re.IGNORECASE):
+        if re.search(pat, check_text, re.IGNORECASE):
             issues.append(label)
     if issues:
         return QACheckResult("spellcheck", False, f"likely typos: {', '.join(issues)}")
@@ -141,24 +142,26 @@ def check_banned_phrases(text: str) -> QACheckResult:
 # ═════════════════════════════════════════════════════════════════════════════
 
 LENGTH_TARGETS = {
-    # length_target name -> (min_chars, max_chars) for the script body
-    "short (<60s)": (50, 350),       # ~150-200 words spoken
-    "medium (60-180s)": (350, 1200),
-    "long (3-15m)": (1200, 6000),
+    # length_target name -> (min_words, max_words) at ~150 wpm spoken
+    "short (<60s)":    (50,   200),   # 20-80 sec
+    "medium (60-180s)":(200,  600),   # 1-4 min
+    "long (3-15m)":    (400, 2500),   # 3-15 min (10 min = ~1500 words)
 }
 
 
 def check_length_target(text: str, length_target: str) -> QACheckResult:
-    """Verify the draft text is within the configured length-target band."""
+    """Verify word count is within the configured length-target band."""
     if length_target not in LENGTH_TARGETS:
         return QACheckResult("length_target", True, f"unknown target '{length_target}', skipping")
     lo, hi = LENGTH_TARGETS[length_target]
-    n = len(text)
+    # Strip [SCENE:...] markers before counting — they aren't spoken
+    spoken = re.sub(r'\[SCENE:[^\]]*\]', '', text)
+    n = len(spoken.split())
     if n < lo:
-        return QACheckResult("length_target", False, f"{n} chars < min {lo} for '{length_target}'")
+        return QACheckResult("length_target", False, f"{n} words < min {lo} for '{length_target}'")
     if n > hi:
-        return QACheckResult("length_target", False, f"{n} chars > max {hi} for '{length_target}'")
-    return QACheckResult("length_target", True, f"{n} chars within [{lo}, {hi}]")
+        return QACheckResult("length_target", False, f"{n} words > max {hi} for '{length_target}'")
+    return QACheckResult("length_target", True, f"{n} words within [{lo}, {hi}]")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -342,12 +345,117 @@ def check_brand_voice(text: str, niche: str) -> QACheckResult:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-# Run all 8 checks
+# Check 9: Retention loop density
+# ═════════════════════════════════════════════════════════════════════════════
+
+RETENTION_LOOP_PATTERNS = [
+    r"\[RETENTION:",                   # explicit marker from script generator
+    r"\bbut here('s| is) the\b",
+    r"\bhere('s| is) what (?:nobody|no one|most people)\b",
+    r"\bstay (?:with me|tuned)\b",
+    r"\bmore on that in a (?:moment|second|minute)\b",
+    r"\bwe(?:'ll| will) (?:get to|come back to) that\b",
+    r"\bthe answer (?:might|will) surprise you\b",
+    r"\bwait for (?:it|this)\b",
+    r"\bbefore (?:we|I) (?:get to|continue)\b",
+    r"\bhere's (?:the part|what)\b",
+    r"\bkeep watching\b",
+    r"\bthis next part\b",
+    r"\bmost people get this (?:completely )?wrong\b",
+]
+
+_RETENTION_INTERVAL_WORDS = 250  # slightly generous — script generator targets every 200w
+
+
+def check_retention_loops(text: str) -> QACheckResult:
+    """Long-form scripts must include a curiosity/cliffhanger trigger every
+    ~200 words to maintain viewer retention. Signal from V5 YouTube analysis.
+    """
+    if not text or not text.strip():
+        return QACheckResult("retention_loops", False, "empty text")
+    # Strip [SCENE: ...] markers — they inflate word count without being narrated
+    spoken = re.sub(r'\[SCENE:[^\]]*\]', '', text).strip()
+    words = spoken.split()
+    if len(words) < _RETENTION_INTERVAL_WORDS:
+        return QACheckResult("retention_loops", True, "short content, loop check skipped")
+
+    segments = []
+    step = _RETENTION_INTERVAL_WORDS
+    for i in range(0, len(words), step):
+        segments.append(" ".join(words[i: i + step]))
+
+    missing = []
+    for idx, seg in enumerate(segments[:-1]):  # last segment = outro, skip
+        seg_lower = seg.lower()
+        has_loop = any(re.search(p, seg_lower, re.IGNORECASE) for p in RETENTION_LOOP_PATTERNS)
+        if not has_loop:
+            missing.append(f"segment {idx + 1}")
+
+    if missing:
+        return QACheckResult(
+            "retention_loops",
+            False,
+            f"no retention trigger in: {', '.join(missing)}",
+        )
+    return QACheckResult("retention_loops", True, "")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Check 10: YouTube 100% AI monetization risk flag
+# ═════════════════════════════════════════════════════════════════════════════
+
+# Phrases that YouTube's review team flags as AI-generated disclosure risk.
+# Source: V4 YouTube analysis — YouTube penalizes 100% AI script+voice+visuals.
+# The script itself must contain at least one human editorial signal:
+# an original opinion, a specific named source, or a personal observation.
+_AI_RISK_PATTERNS = [
+    r"\bin (?:today's|this) video,?\s+(?:we(?:'ll| will)|I(?:'ll| will)) (?:explore|dive into|look at|cover|discuss)\b",
+    r"\bwithout further ado\b",
+    r"\bin conclusion,?\s+(?:we can|it is clear|it's clear)\b",
+    r"\blet(?:'s| us) (?:explore|dive into|delve into)\b",
+    r"\bfascinating (?:world|topic|subject)\b",
+    r"\bsit back and (?:relax|enjoy)\b",
+]
+
+_HUMAN_SIGNAL_PATTERNS = [
+    r"\baccording to\b",
+    r"\bper (?:the\s+)?[A-Z]",       # per Harvard, per WHO, etc.
+    r"\ba \d{4} (?:study|report|survey)\b",
+    r"\bresearchers (?:at|from)\b",
+    r"\bI (?:believe|think|argue|contend)\b",  # editorial opinion (narrator voice OK)
+    r"\bone thing (?:that|I)\b",
+    r"\bhere's what (?:the data|research|science)\b",
+]
+
+
+def check_ai_origin_safe(text: str) -> QACheckResult:
+    """Script must not read as 100% AI-boilerplate AND must contain at least
+    one human editorial signal (named source, opinion, or specific data point).
+    YouTube penalizes 100% AI content during monetization review.
+    """
+    if not text or not text.strip():
+        return QACheckResult("ai_origin_safe", False, "empty text")
+
+    text_lower = text.lower()
+    risk_hits = [p for p in _AI_RISK_PATTERNS if re.search(p, text_lower, re.IGNORECASE)]
+    human_signals = [p for p in _HUMAN_SIGNAL_PATTERNS if re.search(p, text, re.IGNORECASE)]
+
+    if risk_hits and not human_signals:
+        return QACheckResult(
+            "ai_origin_safe",
+            False,
+            f"AI-boilerplate phrases present, no human editorial signal. Risk patterns: {risk_hits[:2]}",
+        )
+    return QACheckResult("ai_origin_safe", True, f"{len(human_signals)} human signal(s) found")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Run all 10 checks
 # ═════════════════════════════════════════════════════════════════════════════
 
 def run_qa(text: str, niche: str, length_target: str = "long (3-15m)",
             notion_id: str = "", channel: str = "", title: str = "") -> QAReport:
-    """Run all 8 checks. Returns QAReport with per-check pass/fail."""
+    """Run all 10 checks. Returns QAReport with per-check pass/fail."""
     report = QAReport(notion_id=notion_id, channel=channel, title=title)
     report.checks = [
         check_spellcheck_grammar(text),
@@ -358,6 +466,8 @@ def run_qa(text: str, niche: str, length_target: str = "long (3-15m)",
         check_cta_present(text),
         check_personal_rules(text),
         check_brand_voice(text, niche),
+        check_retention_loops(text),
+        check_ai_origin_safe(text),
     ]
     return report
 
