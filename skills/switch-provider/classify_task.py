@@ -10,6 +10,7 @@ Exit codes:
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -18,11 +19,11 @@ SCRIPT_DIR = Path(__file__).parent
 
 # Keywords that map to anthropic-official (design/creative/frontend)
 ANTHROPIC_KEYWORDS = {
-    "design", "creative", "writing", "brand", "copy", "logo", "font",
+    "design", "creative", "writing", "brand", "logo", "font",
     "color", "colour", "palette", "landing page", "ui", "frontend",
-    "visual", "layout", "style", "wireframe", "mockup", "hero", "banner",
+    "visual", "layout", "wireframe", "mockup", "banner",
     "email template", "illustration", "typography", "aesthetic", "branding",
-    "figma", "canva", "graphic",
+    "figma", "canva", "graphic", "hero section", "brand copy", "font style",
 }
 
 # Manual override phrases -> provider key
@@ -65,7 +66,7 @@ def classify(text: str) -> str:
         return override
 
     lower = text.lower()
-    words = set(lower.replace(",", " ").replace(".", " ").split())
+    words = set(re.findall(r"[a-z0-9]+", lower))
     for kw in ANTHROPIC_KEYWORDS:
         if " " in kw:
             if kw in lower:
@@ -86,14 +87,21 @@ def switch(provider_key: str) -> None:
         return
 
     script = SCRIPT_DIR / "switch_provider.py"
+    if not script.exists():
+        print(f"[smart-router] switch_provider.py not found at {script} (non-fatal)", file=sys.stderr)
+        return
+
     try:
-        subprocess.run(
+        result = subprocess.run(
             [sys.executable, str(script), provider_key, "--quiet"],
             check=False,
             timeout=5,
             encoding="utf-8",
             errors="replace",
+            capture_output=True,
         )
+        if result.returncode != 0:
+            print(f"[smart-router] switch failed (exit {result.returncode}): {result.stderr.strip()}", file=sys.stderr)
     except Exception as e:
         print(f"[smart-router] switch failed (non-fatal): {e}", file=sys.stderr)
 
