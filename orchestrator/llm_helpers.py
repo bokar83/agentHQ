@@ -142,7 +142,28 @@ def call_llm(
         kwargs["response_format"] = response_format
 
     logger.debug(f"LLM call model={resolved_model} msgs={len(messages)} tools={len(tools or [])}")
-    response = client.chat.completions.create(**kwargs)
+    try:
+        response = client.chat.completions.create(**kwargs)
+    except Exception as exc:
+        try:
+            from provider_health import record_failure
+            from notifier import send_message
+            result = record_failure("openrouter")
+            if result.get("just_tripped"):
+                chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+                if chat_id:
+                    send_message(chat_id, (
+                        "ATLAS ALERT: OpenRouter circuit tripped\n"
+                        "3 failures in the last 5 minutes.\n\n"
+                        "Manual switch command (run on your laptop):\n"
+                        "  python skills/switch-provider/switch_provider.py therouter --cli claude\n\n"
+                        "Restore when fixed:\n"
+                        "  python skills/switch-provider/switch_provider.py openrouter --cli claude"
+                    ))
+        except Exception as _cb_err:
+            logger.debug(f"circuit breaker record skipped (non-fatal): {_cb_err}")
+        raise
+
     logger.debug(f"LLM response model={resolved_model} finish={response.choices[0].finish_reason}")
 
     # Attach the resolved model to the response so callers can surface it to
