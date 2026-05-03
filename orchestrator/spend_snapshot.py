@@ -32,7 +32,7 @@ from datetime import date, datetime, timezone
 logger = logging.getLogger("agentsHQ.spend_snapshot")
 
 PROVIDER = "openrouter"
-MONTHLY_BUDGET_USD = 50.0
+MONTHLY_BUDGET_USD = 60.0
 
 
 def _ensure_table(cur) -> None:
