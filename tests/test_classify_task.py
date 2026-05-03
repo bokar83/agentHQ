@@ -83,3 +83,54 @@ def test_parse_prompt_missing_key_returns_empty():
 def test_parse_prompt_invalid_json_returns_empty():
     text = classify_task.parse_prompt("not json at all")
     assert text == ""
+
+
+from unittest.mock import patch, MagicMock
+
+
+def test_switch_codex_suggest_logs_to_stderr(capsys):
+    classify_task.switch("codex-suggest")
+    captured = capsys.readouterr()
+    assert "Codex" in captured.err
+    assert captured.out == ""
+
+
+def test_switch_calls_switch_provider_with_correct_args(monkeypatch, tmp_path):
+    # Create a fake switch_provider.py next to classify_task
+    fake_script = tmp_path / "switch_provider.py"
+    fake_script.write_text("")
+
+    calls = []
+    def fake_run(args, **kwargs):
+        calls.append(args)
+        m = MagicMock()
+        m.returncode = 0
+        m.stderr = ""
+        return m
+
+    monkeypatch.setattr(classify_task, "SCRIPT_DIR", tmp_path)
+    with patch("classify_task.subprocess.run", side_effect=fake_run):
+        classify_task.switch("openrouter")
+
+    assert len(calls) == 1
+    assert calls[0][1] == str(tmp_path / "switch_provider.py")
+    assert calls[0][2] == "openrouter"
+    assert "--quiet" in calls[0]
+
+
+def test_switch_logs_stderr_on_nonzero_exit(monkeypatch, tmp_path, capsys):
+    fake_script = tmp_path / "switch_provider.py"
+    fake_script.write_text("")
+
+    def fake_run(_args, **kwargs):
+        m = MagicMock()
+        m.returncode = 1
+        m.stderr = "ERROR: unknown provider"
+        return m
+
+    monkeypatch.setattr(classify_task, "SCRIPT_DIR", tmp_path)
+    with patch("classify_task.subprocess.run", side_effect=fake_run):
+        classify_task.switch("bad-provider")
+
+    captured = capsys.readouterr()
+    assert "exit 1" in captured.err
