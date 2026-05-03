@@ -314,37 +314,29 @@ Explicitly excluded (have code-level defaults, hard-failing on these creates new
 
 ---
 
-### M13: True spend visibility (provider billing API integration)
+### M13: True spend visibility (provider billing API integration) SHIPPED 2026-05-03
 
-**Target:** 2026-05-07 (Wednesday)
+**What shipped:**
+- `orchestrator/spend_snapshot.py`: new module. Pulls `usage_daily/weekly/monthly` + balance from OpenRouter `auth/key` + `credits` endpoints. Upserts one row per day into `provider_billing` Postgres table (created on first run). Fires daily at 23:55 MT via heartbeat, sends Telegram digest.
+- `atlas_dashboard._fetch_provider_spend()`: live provider figures injected into every `get_spend()` call (no DB required for today's numbers).
+- `atlas_dashboard._get_historical_comparisons()`: reads `provider_billing` rows and computes this-week vs last-week delta %, this-month vs last-month delta %, YTD total.
+- `atlas_dashboard.get_spend()`: now returns `provider_today/week/month/balance`, `historical`, `pacing_pct` (vs $50/mo budget), `daily_budget`.
+- `atlas_dashboard.get_hero()`: `spend_pacing` now uses provider ground-truth today vs daily share of $50/mo. Hero tile shows "$X.XX (NNN% of $Y.YY/d)" and turns red above 100%.
+- `atlas.js` Spend card: added "Comparisons" section (this/last week, this/last month, YTD with delta %), "OpenRouter (ground truth)" section (today/week/month/balance, untracked CrewAI delta in amber), relabeled existing rows as "Ledger (attributable)".
+- `health_sweep._probe_openrouter_credits()`: fixed units bug (was dividing by 100; API returns raw USD). Probe now correctly alerts at $5.
+- Monthly budget set at $50. After 3 full months of data, revisit.
 
-**Trigger:** Now. Atlas dashboard's `llm_calls` ledger is a lower bound (council + direct Anthropic SDK only; CrewAI calls bypass it by design, see `usage_logger.py:366-368`). Today's tooltip says "lower bound, CrewAI calls not logged here yet". That string goes away when this ships.
+**What was descoped (moved to M16):**
+- Anthropic Console API pull (no public endpoint confirmed; needs spike).
+- Claude Code / Codex CLI token tracking (no programmatic API; M16 spike).
 
-**Scope:**
-
-- **(a)** Daily cron pulls `GET https://openrouter.ai/api/v1/credits` and writes one row per day to a new `provider_billing` table (provider, day, amount_usd, tokens, raw_json).
-- **(b)** Daily cron pulls Anthropic Console usage endpoint (`/v1/organizations/usage` or successor; verify auth method during build) and writes one row per day to the same table.
-- **(c)** `atlas_dashboard.get_spend()` joins `llm_calls` aggregates with `provider_billing` totals so the Spend card shows: ledger total (per-crew attributable) + provider total (ground truth) + delta.
-- **(d)** Once (a)+(b) ship and the delta is visible, remove the "lower bound" tooltip from atlas.js.
-- **(e)** Per-crew attribution for CrewAI calls is a follow-on. Only build if (a)+(b)+(c) reveal a delta large enough to matter for cost-allocation decisions. The killed plan to subclass `crewai.LLM` and intercept `set_callbacks` stays killed unless this trigger fires.
-
-**Success criterion (verifiable):** Spend card on `https://agentshq.boubacarbarry.com/atlas` shows a non-zero "Provider total (today)" alongside today's `llm_calls` total, with the delta labelled. Manual cross-check: numbers within 5% of `openrouter.ai/activity` dashboard and `console.anthropic.com` usage page.
-
-**Out of scope:** Per-call attribution beyond what providers expose. Per-token cost normalization across providers (provider-given USD totals are the unit).
-
-**Why now (Sankofa First Principles):** "True spend" is the user's actual ask. The dashboard fix shipped 2026-04-30 surfaces the gap; this milestone closes it.
+**Commit:** `287dfe7`
 
 ---
 
-**Branch:** `feat/atlas-m12-startup-contract`
-**ETA:** 30 minutes.
-**Save point:** `savepoint-pre-atlas-m12-startup-contract-YYYYMMDD` (to create before first edit)
+### M14: Click-to-open-Notion links on Atlas dashboard ✅ SHIPPED 2026-04-30
 
----
-
-### M14: Click-to-open-Notion links on Atlas dashboard
-
-**Target:** 2026-04-30 (this session, sub-1h work).
+**Target:** 2026-04-30 (shipped).
 
 **Trigger:** Now. Boubacar wants to click any item in the Content Board card, Approval Queue card, or Top Ideas card and have it open the underlying Notion page in a new tab. Today these render as plain text and require him to switch to Notion and search for the title manually.
 
@@ -401,6 +393,28 @@ Explicitly excluded (have code-level defaults, hard-failing on these creates new
 - Daily standup / Golden Gem nudge / weekly recap generators
 - `--due` flag on `/task add`
 - Automated changelog rotation when file >5MB
+
+---
+
+### M16: Cross-provider token tracking spike (Claude Code, Codex, Anthropic Console)
+
+**Status:** QUEUED
+
+**Trigger:** After 3 full months of OpenRouter data (earliest 2026-08-01). Build earlier only if Boubacar explicitly asks.
+
+**What:** Single daily snapshot that captures token usage across ALL AI providers, not just OpenRouter:
+- Anthropic Console API (covers direct SDK calls, Claude Code CLI, claude.ai usage): endpoint and auth method TBD via spike
+- Codex CLI: no known programmatic API; may require parsing local log files or usage exports
+- OpenRouter (already done in M13)
+
+**Why not now:** Anthropic has no confirmed public `/v1/organizations/usage` endpoint. Claude Code CLI token usage is not accessible programmatically. Both need a spike before any build work. M13 already captures the majority of agent spend (OpenRouter routes all crew calls). The remaining gap (Claude Code sessions, manual claude.ai chats) is real but not blocking operations.
+
+**Spike questions to answer before building:**
+1. Does Anthropic Console expose a usage API? If so, what auth (org API key, cookie, OAuth)?
+2. Does Claude Code CLI write a local usage log that can be parsed?
+3. Does Codex expose usage via its API or config?
+
+**Success criterion:** Spend card shows a "Total AI spend (all providers)" line that is the ground truth across OpenRouter + Anthropic + any others, with per-provider breakdown. Numbers cross-check within 5% of each provider's own dashboard.
 
 ---
 
@@ -1760,3 +1774,29 @@ spike detection covers the alert layer. Full sparkline is M13 scope (target 2026
 **Next session:** Wire `GET https://openrouter.ai/api/v1/credits` into the Atlas dashboard
 frontend. Add `/atlas/openrouter-balance` endpoint in `app.py`. Add balance tile + 7-day
 sparkline to `atlas.html` / `atlas.js` hero strip. This completes M13.
+
+---
+
+### 2026-05-03 (Saturday afternoon): M13 SHIPPED: true spend visibility live
+
+**What shipped (commits `062e631`, `287dfe7`):**
+
+OpenRouter ground-truth spend now visible on the Atlas dashboard. Hero Spend Pacing tile corrected. Daily snapshot cron armed.
+
+**Files:**
+- `orchestrator/spend_snapshot.py` (NEW): pulls `usage_daily/weekly/monthly` + balance from OpenRouter `auth/key` + `credits` endpoints. Upserts one row/day into `provider_billing` table (auto-created). Fires at 23:55 MT via heartbeat, sends Telegram digest.
+- `orchestrator/atlas_dashboard.py`: `_fetch_provider_spend()` for live figures, `_get_historical_comparisons()` for week-over-week / month-over-month / YTD from snapshots, `get_spend()` extended with `provider_*` + `historical` + `pacing_pct`, `get_hero()` `spend_pacing` now uses provider ground-truth vs $50/mo daily share.
+- `orchestrator/scheduler.py`: `spend-snapshot` heartbeat registered at 23:55 MT.
+- `thepopebot/chat-ui/atlas.js`: Spend card shows "Comparisons" section (this/last week, this/last month, YTD with delta %), "OpenRouter (ground truth)" with today/week/month/balance/untracked-CrewAI-delta, hero tile shows "$X.XX (NNN% of $Y.YY/d)" and turns red above 100%.
+- `orchestrator/health_sweep.py`: fixed credit probe units bug (was dividing by 100; API is raw USD).
+
+**Key numbers confirmed live:**
+- Provider today: ~$62 (was showing $2.42 from ledger alone)
+- Untracked delta (CrewAI): ~$59.58
+- Balance: $10.71
+
+**Monthly budget set at $50.** Red threshold at 100% of daily share. Revisit after 3 full months.
+
+**M16 added to roadmap:** Anthropic Console + Claude Code CLI token tracking. No public API confirmed. Spike before build. Earliest trigger 2026-08-01.
+
+**Next:** Historicals will accumulate from 23:55 MT tonight. Week-over-week comparisons meaningful after 7 days (2026-05-10). Month-over-month meaningful after June closes.
