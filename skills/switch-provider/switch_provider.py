@@ -56,6 +56,7 @@ def switch_claude(
     provider_key: str,
     providers_path: str = str(DEFAULT_PROVIDERS_PATH),
     settings_path: str = str(DEFAULT_CLAUDE_SETTINGS),
+    quiet: bool = False,
 ) -> None:
     """Write provider config into ~/.claude/settings.json env block."""
     providers = _load_providers(providers_path)
@@ -92,12 +93,13 @@ def switch_claude(
         existing["env"].update(claude_config)
 
     _atomic_write(p, json.dumps(existing, indent=2))
-    label = provider.get("label", provider_key)
-    base_url = claude_config.get("ANTHROPIC_BASE_URL", "official Anthropic")
-    print(f"Switched Claude Code to {label} ({base_url})")
-    if not claude_config:
-        print("  ANTHROPIC_BASE_URL removed. Claude Code will use official Anthropic auth.")
-    print("  Takes effect on next tool call (no restart needed).")
+    if not quiet:
+        label = provider.get("label", provider_key)
+        base_url = claude_config.get("ANTHROPIC_BASE_URL", "official Anthropic")
+        print(f"Switched Claude Code to {label} ({base_url})")
+        if not claude_config:
+            print("  ANTHROPIC_BASE_URL removed. Claude Code will use official Anthropic auth.")
+        print("  Takes effect on next tool call (no restart needed).")
 
 
 def switch_codex(
@@ -168,6 +170,10 @@ def main() -> None:
         "--providers", default=str(DEFAULT_PROVIDERS_PATH),
         help="Path to providers.json (default: alongside this script)"
     )
+    parser.add_argument(
+        "--quiet", action="store_true",
+        help="Suppress stdout output (for use in hooks)"
+    )
     args = parser.parse_args()
 
     if args.list:
@@ -181,7 +187,7 @@ def main() -> None:
         parser.error("provider argument required unless --list is used")
 
     if args.cli in ("claude", "all"):
-        switch_claude(args.provider, args.providers)
+        switch_claude(args.provider, args.providers, quiet=args.quiet)
     if args.cli in ("codex", "all"):
         switch_codex(args.provider, args.providers)
 

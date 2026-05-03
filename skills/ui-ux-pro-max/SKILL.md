@@ -57,7 +57,7 @@ This Skill is not needed in the following situations:
 | 4 | Style Selection | HIGH | `style`, `product` | Match product type, Consistency, SVG icons (no emoji) | Mixing flat & skeuomorphic randomly, Emoji as icons |
 | 5 | Layout & Responsive | HIGH | `ux` | Mobile-first breakpoints, Viewport meta, No horizontal scroll | Horizontal scroll, Fixed px container widths, Disable zoom |
 | 6 | Typography & Color | MEDIUM | `typography`, `color` | Base 16px, Line-height 1.5, Semantic color tokens | Text &lt; 12px body, Gray-on-gray, Raw hex in components |
-| 7 | Animation | MEDIUM | `ux` | Duration 150–300ms, Motion conveys meaning, Spatial continuity | Decorative-only animation, Animating width/height, No reduced-motion |
+| 7 | Animation | MEDIUM | `ux` | Duration 150-300ms, Motion conveys meaning, Spatial continuity | Decorative-only animation, Animating width/height, No reduced-motion |
 | 8 | Forms & Feedback | MEDIUM | `ux` | Visible labels, Error near field, Helper text, Progressive disclosure | Placeholder-only label, Errors only at top, Overwhelm upfront |
 | 9 | Navigation Patterns | HIGH | `ux` | Predictable back, Bottom nav ≤5, Deep linking | Overloaded nav, Broken back behavior, No deep links |
 | 10 | Charts & Data | LOW | `chart` | Legends, Tooltips, Accessible colors | Relying on color alone to convey meaning |
@@ -67,7 +67,7 @@ This Skill is not needed in the following situations:
 ### 1. Accessibility (CRITICAL)
 
 - `color-contrast` - Minimum 4.5:1 ratio for normal text (large text 3:1); Material Design
-- `focus-states` - Visible focus rings on interactive elements (2–4px; Apple HIG, MD)
+- `focus-states` - Visible focus rings on interactive elements (2-4px; Apple HIG, MD)
 - `alt-text` - Descriptive alt text for meaningful images
 - `aria-labels` - aria-label for icon-only buttons; accessibilityLabel in native (Apple HIG)
 - `keyboard-nav` - Tab order matches visual order; full keyboard support (Apple HIG)
@@ -145,7 +145,7 @@ This Skill is not needed in the following situations:
 - `mobile-first` - Design mobile-first, then scale up to tablet and desktop
 - `breakpoint-consistency` - Use systematic breakpoints (e.g. 375 / 768 / 1024 / 1440)
 - `readable-font-size` - Minimum 16px body text on mobile (avoids iOS auto-zoom)
-- `line-length-control` - Mobile 35–60 chars per line; desktop 60–75 chars
+- `line-length-control` - Mobile 35-60 chars per line; desktop 60-75 chars
 - `horizontal-scroll` - No horizontal scroll on mobile; ensure content fits viewport width
 - `spacing-scale` - Use 4pt/8dp incremental spacing system (Material Design)
 - `touch-density` - Keep component spacing comfortable for touch: not cramped, not causing mis-taps
@@ -156,7 +156,7 @@ This Skill is not needed in the following situations:
 - `viewport-units` - Prefer min-h-dvh over 100vh on mobile
 - `orientation-support` - Keep layout readable and operable in landscape mode
 - `content-priority` - Show core content first on mobile; fold or hide secondary content
-- `visual-hierarchy` - Establish hierarchy via size, spacing, contrast — not color alone
+- `visual-hierarchy` - Establish hierarchy via size, spacing, contrast: not color alone
 
 ### 6. Typography & Color (MEDIUM)
 
@@ -166,7 +166,7 @@ This Skill is not needed in the following situations:
 - `font-scale` - Consistent type scale (e.g. 12 14 16 18 24 32)
 - `contrast-readability` - Darker text on light backgrounds (e.g. slate-900 on white)
 - `text-styles-system` - Use platform type system: iOS 11 Dynamic Type styles / Material 5 type roles (display, headline, title, body, label) (HIG, MD)
-- `weight-hierarchy` - Use font-weight to reinforce hierarchy: Bold headings (600–700), Regular body (400), Medium labels (500) (MD)
+- `weight-hierarchy` - Use font-weight to reinforce hierarchy: Bold headings (600-700), Regular body (400), Medium labels (500) (MD)
 - `color-semantic` - Define semantic color tokens (primary, secondary, error, surface, on-surface) not raw hex in components (Material color system)
 - `color-dark-mode` - Dark mode uses desaturated / lighter tonal variants, not inverted colors; test contrast separately (HIG, MD)
 - `color-accessible-pairs` - Foreground/background pairs must meet 4.5:1 (AA) or 7:1 (AAA); use tools to verify (WCAG, MD)
@@ -178,7 +178,7 @@ This Skill is not needed in the following situations:
 
 ### 7. Animation (MEDIUM)
 
-- `duration-timing` - Use 150–300ms for micro-interactions; complex transitions ≤400ms; avoid >500ms (MD)
+- `duration-timing` - Use 150-300ms for micro-interactions; complex transitions ≤400ms; avoid >500ms (MD)
 - `transform-performance` - Use transform/opacity only; avoid animating width/height/top/left
 - `loading-states` - Show skeleton or progress indicator when loading exceeds 300ms
 - `excessive-motion` - Animate 1-2 key elements per view max
@@ -188,19 +188,19 @@ This Skill is not needed in the following situations:
 - `continuity` - Page/screen transitions should maintain spatial continuity (shared element, directional slide) (Apple HIG)
 - `parallax-subtle` - Use parallax sparingly; must respect reduced-motion and not cause disorientation (Apple HIG)
 - `spring-physics` - Prefer spring/physics-based curves over linear or cubic-bezier for natural feel (Apple HIG fluid animations)
-- `exit-faster-than-enter` - Exit animations shorter than enter (~60–70% of enter duration) to feel responsive (MD motion)
-- `stagger-sequence` - Stagger list/grid item entrance by 30–50ms per item; avoid all-at-once or too-slow reveals (MD)
+- `exit-faster-than-enter` - Exit animations shorter than enter (~60-70% of enter duration) to feel responsive (MD motion)
+- `stagger-sequence` - Stagger list/grid item entrance by 30-50ms per item; avoid all-at-once or too-slow reveals (MD)
 - `shared-element-transition` - Use shared element / hero transitions for visual continuity between screens (MD, HIG)
 - `interruptible` - Animations must be interruptible; user tap/gesture cancels in-progress animation immediately (Apple HIG)
 - `no-blocking-animation` - Never block user input during an animation; UI must stay interactive (Apple HIG)
 - `fade-crossfade` - Use crossfade for content replacement within the same container (MD)
-- `scale-feedback` - Subtle scale (0.95–1.05) on press for tappable cards/buttons; restore on release (HIG, MD)
+- `scale-feedback` - Subtle scale (0.95-1.05) on press for tappable cards/buttons; restore on release (HIG, MD)
 - `gesture-feedback` - Drag, swipe, and pinch must provide real-time visual response tracking the finger (MD Motion)
 - `hierarchy-motion` - Use translate/scale direction to express hierarchy: enter from below = deeper, exit upward = back (MD)
 - `motion-consistency` - Unify duration/easing tokens globally; all animations share the same rhythm and feel
 - `opacity-threshold` - Fading elements should not linger below opacity 0.2; either fade fully or remain visible
 - `modal-motion` - Modals/sheets should animate from their trigger source (scale+fade or slide-in) for spatial context (HIG, MD)
-- `navigation-direction` - Forward navigation animates left/up; backward animates right/down — keep direction logically consistent (HIG)
+- `navigation-direction` - Forward navigation animates left/up; backward animates right/down: keep direction logically consistent (HIG)
 - `layout-shift-avoid` - Animations must not cause layout reflow or CLS; use transform for position changes
 
 ### 8. Forms & Feedback (MEDIUM)
@@ -213,7 +213,7 @@ This Skill is not needed in the following situations:
 - `toast-dismiss` - Auto-dismiss toasts in 3-5s
 - `confirmation-dialogs` - Confirm before destructive actions
 - `input-helper-text` - Provide persistent helper text below complex inputs, not just placeholder (Material Design)
-- `disabled-states` - Disabled elements use reduced opacity (0.38–0.5) + cursor change + semantic attribute (MD)
+- `disabled-states` - Disabled elements use reduced opacity (0.38-0.5) + cursor change + semantic attribute (MD)
 - `progressive-disclosure` - Reveal complex options progressively; don't overwhelm users upfront (Apple HIG)
 - `inline-validation` - Validate on blur (not keystroke); show error only after user finishes input (MD)
 - `input-type-keyboard` - Use semantic input types (email, tel, number) to trigger the correct mobile keyboard (HIG, MD)
@@ -332,6 +332,18 @@ winget install Python.Python.3.12
 
 ---
 
+## HARD RULE: Run the design system generator first
+
+The Python toolchain is live (data/ + scripts/ real directories as of 2026-05-02). Before writing any UI code or reasoning from the static tables below, run:
+
+```bash
+python3 ~/.claude/skills/ui-ux-pro-max/scripts/search.py "<industry keywords>" --design-system -p "ProjectName"
+```
+
+This returns industry-matched CSS variable colors, font pairings, page pattern, and anti-patterns in seconds. Use the output to seed the build: do not ask the user for design preferences that the tool already resolves. The user should never need to invoke this command themselves.
+
+---
+
 ## How to Use This Skill
 
 Use this skill when the user requests any of the following:
@@ -386,8 +398,8 @@ python3 skills/ui-ux-pro-max/scripts/search.py "<query>" --design-system --persi
 ```
 
 This creates:
-- `design-system/MASTER.md` — Global Source of Truth with all design rules
-- `design-system/pages/` — Folder for page-specific overrides
+- `design-system/MASTER.md`: Global Source of Truth with all design rules
+- `design-system/pages/`: Folder for page-specific overrides
 
 **With page-specific override:**
 ```bash
@@ -395,7 +407,7 @@ python3 skills/ui-ux-pro-max/scripts/search.py "<query>" --design-system --persi
 ```
 
 This also creates:
-- `design-system/pages/dashboard.md` — Page-specific deviations from Master
+- `design-system/pages/dashboard.md`: Page-specific deviations from Master
 
 **How hierarchical retrieval works:**
 1. When building a specific page (e.g., "Checkout"), first check `design-system/pages/checkout.md`
@@ -528,7 +540,7 @@ python3 skills/ui-ux-pro-max/scripts/search.py "fintech crypto" --design-system 
 
 ### Query Strategy
 
-- Use **multi-dimensional keywords** — combine product + industry + tone + density: `"entertainment social vibrant content-dense"` not just `"app"`
+- Use **multi-dimensional keywords**: combine product + industry + tone + density: `"entertainment social vibrant content-dense"` not just `"app"`
 - Try different keywords for the same need: `"playful neon"` → `"vibrant dark"` → `"content-first minimal"`
 - Use `--design-system` first for full recommendations, then `--domain` to deep-dive any dimension you're unsure about
 - Always add `--stack react-native` for implementation-specific guidance
@@ -548,7 +560,7 @@ python3 skills/ui-ux-pro-max/scripts/search.py "fintech crypto" --design-system 
 ### Pre-Delivery Checklist
 
 - Run `--domain ux "animation accessibility z-index loading"` as a UX validation pass before implementation
-- Run through Quick Reference **§1–§3** (CRITICAL + HIGH) as a final review
+- Run through Quick Reference **§1-§3** (CRITICAL + HIGH) as a final review
 - Test on 375px (small phone) and landscape orientation
 - Verify behavior with **reduced-motion** enabled and **Dynamic Type** at largest size
 - Check dark mode contrast independently (don't assume light mode values work)

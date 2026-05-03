@@ -10,6 +10,231 @@ description: >
 
 # Frontend Design Skill
 
+---
+
+## ⛔ COMPILED CRAFT SYSTEM: READ THIS BEFORE EVERYTHING ELSE
+
+This skill uses the **Humanized Standard Compiled Craft architecture**.
+Before writing a single line of HTML, CSS, or JavaScript, execute the
+mandatory pre-build sequence below. It is not optional. The critic agent
+greps for violations after every build.
+
+### STEP 0: Verify Craft Components Exist
+
+Read the first 5 lines of `skills/frontend-design/components/SmoothScrollProvider.tsx`.
+
+If the file does not exist, output this and STOP:
+```
+CRAFT COMPONENT VERIFICATION FAILED: SmoothScrollProvider.tsx not found at
+skills/frontend-design/components/. Cannot proceed. Escalate to operator.
+```
+
+Do not write your own SmoothScrollProvider. Stop completely.
+
+### STEP 1: Select Archetype (2 questions + lookup, no tree)
+
+**Q1: Primary audience:**
+- A = Technical / professional (developers, ops, B2B buyers)
+- B = General consumers (non-technical, everyday users)
+- C = Creative industry (designers, agencies, entertainment)
+- D = Institutional (researchers, public sector, policy)
+
+**Q2: Dominant emotion the site must produce:**
+- 1 = Trust / reliability / permanence
+- 2 = Excitement / energy / novelty
+- 3 = Calm / clarity / control
+- 4 = Awe / wonder / immersion
+- 5 = Curiosity / depth / discovery
+- 6 = Comfort / warmth / belonging
+
+**Lookup table:**
+
+| A1 = TRUST_ENTERPRISE | A2 = CALM_PRODUCT | A3 = CALM_PRODUCT | A4 = CINEMATIC_AGENCY |
+| A5 = DOCUMENTARY_DATA | B1 = TRUST_ENTERPRISE | B2 = CONVERSION_FIRST | B3 = CALM_PRODUCT |
+| B6 = ILLUSTRATIVE_PLAYFUL | C2 = BRUTALIST | C3 = CALM_PRODUCT | C4 = CINEMATIC_AGENCY |
+| D1 = TRUST_ENTERPRISE | D5 = EDITORIAL_NARRATIVE | D5(data) = DOCUMENTARY_DATA |
+
+**Tiebreaker:** Precise/formal voice -> CALM_PRODUCT or TRUST_ENTERPRISE. Warm/personal -> EDITORIAL_NARRATIVE or ILLUSTRATIVE_PLAYFUL. Bold/provocative -> BRUTALIST or CINEMATIC_AGENCY.
+
+**Override:** If conversion rate is the primary metric -> CONVERSION_FIRST regardless of table.
+
+### STEP 2: Write design_brief.md to project root
+
+```
+ARCHETYPE DECLARATION
+---------------------
+Selected archetype: [NAME]
+Q1: [A/B/C/D]   Q2: [1-6]
+Tiebreaker: [yes/no]   Override: [yes/no]
+
+Typography pair: [heading font] + [body font]
+Motion character: [one sentence: what moves, how, at what pace]
+Emotional position: [visitor feels X on arrival, Y while scrolling, Z at CTA]
+Banned for this build: [3-4 specific patterns from archetype refuse list]
+
+Build checkpoints:
+  [ ] Hero:         avoid [most relevant banned pattern]
+  [ ] Features:     avoid [banned pattern]
+  [ ] Social proof: avoid [banned pattern]
+  [ ] CTA:          avoid [banned pattern]
+  [ ] Footer:       avoid [banned pattern]
+```
+
+### STEP 3: Confirm Runtime
+
+This build requires **Next.js 14+ with App Router**. If not: stop and escalate.
+
+### STEP 4: Copy Craft Components
+
+From `skills/frontend-design/components/` to `src/components/craft/`:
+- SmoothScrollProvider.tsx
+- KineticText.tsx
+- MagneticButton.tsx
+- ParallaxLayer.tsx
+- ScrollReveal.tsx
+
+Copy `skills/ui-styling/craft-tokens.ts` to `src/lib/craft-tokens.ts`.
+
+### STEP 5: Import Craft Tokens
+
+Copy `skills/ui-styling/craft-tokens.css` to `src/app/craft-tokens.css`.
+
+Add as **FIRST LINE** of `src/app/globals.css`:
+```css
+@import "./craft-tokens.css";
+```
+
+### STEP 6: Install Dependencies
+
+```json
+"lenis": "^1.1.0",
+"gsap": "^3.12.0",
+"framer-motion": "^11.0.0"
+```
+
+---
+
+## ⛔ MANDATORY BUILD CONSTRAINTS
+
+### Banned Strings: critic agent greps for these, zero tolerance
+
+- `ease-in-out`: anywhere in CSS or JS/TS
+- `duration-300`: Tailwind class or CSS value
+- `ease-linear`: except inside `linear()` spring function definitions
+- `box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1)`: Tailwind shadow-md applied globally
+- `rgba(0,0,0,0.1)` as the sole shadow value on any element
+
+### Banned Patterns
+
+- `<div>` where `<button>`, `<article>`, `<nav>`, `<main>`, `<section>`, or `<footer>` applies
+- Inter as a heading font (h1, h2, h3 must NOT use Inter)
+- The same border-radius value on cards AND buttons AND inputs
+- Centered H1 + gradient background + subtitle below it (the default hero)
+- Any form, list, or modal with no error state or empty state styling
+- `grid-template-columns: repeat(3, 1fr)` with 3 identical children (3-box grid)
+
+### Mandatory Components
+
+- `<SmoothScrollProvider>` at application root (exception: BRUTALIST, TRUST_ENTERPRISE)
+- `<KineticText>` on every hero headline (exception: BRUTALIST)
+- `<MagneticButton>` on every primary CTA button (exception: BRUTALIST)
+
+---
+
+## ⛔ SECTION CHECKPOINT RULE
+
+Before writing code for each major section, output:
+```
+Now building: [section name]
+Archetype reminder: [archetype]: avoiding [most relevant banned pattern for this section]
+Emotional target: [from emotional position in design_brief.md]
+```
+
+Re-read `design_brief.md` at each checkpoint. Do not rely on memory from earlier context.
+
+---
+
+## ARCHETYPE SPECIFICATIONS
+
+### CALM_PRODUCT
+- **Fonts:** Geist Sans 700 or Neue Montreal 700 (heading) + Inter 400 or DM Sans 400 (body) + Geist Mono (code)
+- **Colors:** Near-black bg (~`#0f0f11`), functional status colors (green/amber/red), single gradient accent
+- **Scroll:** Lenis `lerp={0.10}`, ScrollTrigger `scrub: 1`
+- **Spring:** stiffness 300, damping 25: no overshoot
+- **Motion:** KineticText `motionStyle="calm"` (opacity + translateY, no rotation)
+- **Refuse:** Glass morphism, rainbow gradients, mascots, WebGL heroes, decorative motion
+
+### EDITORIAL_NARRATIVE
+- **Fonts:** Tiempos Text or Playfair Display (heading) + Tiempos Text or Söhne (body)
+- **Colors:** Off-white foundation (`#f5f2ed`), one functional accent color only
+- **Scroll:** Lenis `lerp={0.05}`, View Transitions API for page navigation
+- **Motion:** KineticText `motionStyle="editorial"` (word-by-word reveal), Scrollama + D3 for data steps
+- **Refuse:** Dark mode, glass morphism, icon grids, countdown timers, anything signaling "landing page"
+
+### CINEMATIC_AGENCY
+- **Fonts:** Clash Display or Neue Montreal 900 (heading) + Neue Montreal 400 or DM Sans 400 (body)
+- **Colors:** Dark or near-black base, single high-contrast accent moment
+- **Scroll:** Lenis `lerp={0.05}`, ScrollTrigger `scrub: 2`
+- **Motion:** KineticText `motionStyle="cinematic"` (rotationX: -90, stagger 0.03), ParallaxLayer on hero bg
+- **Hero:** Must fill 100vh with full-bleed media (video or high-res photo)
+- **Refuse:** 3-box feature grids, pricing tables, uniform card radii, Inter at regular weight
+
+### BRUTALIST
+- **Fonts:** Helvetica Neue 900 or Druk Wide Super (heading) + same grotesque 400 or Courier New (body)
+- **Colors:** Pure saturated primaries OR no color; pure white or black backgrounds
+- **Radius:** `border-radius: 0` on ALL elements: no exceptions
+- **Motion:** NONE, or instant state changes only: no Lenis, no MagneticButton, no KineticText
+- **Refuse:** Rounded corners, soft shadows, gradients, smooth scroll, icon libraries, glass morphism
+
+### ILLUSTRATIVE_PLAYFUL
+- **Fonts:** Nunito 800 or Poppins 700 (heading) + same family 400 (body)
+- **Colors:** Warm saturated palette with clear primary + secondary + accent
+- **Scroll:** Lenis `lerp={0.10}`
+- **Spring:** stiffness 150, damping 8: pronounced bounce is correct for this archetype
+- **Motion:** KineticText `motionStyle="playful"`, scale(1.05) hover with bouncy spring
+- **Refuse:** Dark mode default, monospace type, dense data tables, corporate blue palettes
+
+### DOCUMENTARY_DATA
+- **Fonts:** IBM Plex Sans 600 or DM Sans 600 (heading, chart titles) + same grotesque 400 (body)
+- **Colors:** White or `#fafafa` foundation, 5-7 colorblind-safe discrete chart colors
+- **Scroll:** Lenis `lerp={0.07}`, Scrollama for data steps
+- **Motion:** D3 chart draw-in, CSS scroll-driven animations, no decorative motion
+- **Special:** `font-variant-numeric: tabular-nums` on ALL numeric data
+- **Refuse:** WebGL, dark mode default, gradient chart fills, motion that does not reveal data
+
+### TRUST_ENTERPRISE
+- **Fonts:** Freight Display or Neue Haas Grotesk (heading) + Source Serif 4 or Georgia (body)
+- **Colors:** Navy or dark teal primary, white secondary, gold or amber accent
+- **Scroll:** NO Lenis, NO scroll animation
+- **Motion:** CSS transitions only: `transition: all 0.2s var(--ease-out-expo)`. KineticText `motionStyle="calm"` for hero only.
+- **Refuse:** Dark mode, experimental type, illustration, mascots, neon accents, startup energy
+
+### CONVERSION_FIRST
+- **Fonts:** Inter 800 or Neue Montreal 700 (heading) + same sans 400 (body)
+- **Colors:** High-contrast CTA (NOT indigo: must pass WCAG AA 4.5:1 contrast ratio)
+- **Scroll:** Lenis `lerp={0.10}` or disabled
+- **Motion:** CTA hover only (scale 1.02, shadow deepens): no scroll animation before fold
+- **States:** Loading spinner on form submit, checkmark on success: mandatory
+- **Refuse:** Multiple CTAs, hero animation delaying message, dark mode, pre-CTA cognitive load
+
+---
+
+## SELF-CHECK BEFORE CRITIC SUBMISSION
+
+Run these before handing off:
+```bash
+grep -r "ease-in-out" src/           # must return 0
+grep -r "duration-300" src/          # must return 0
+grep -r "SmoothScrollProvider" src/app/layout.tsx  # must return 1+ (unless BRUTALIST/TRUST_ENTERPRISE)
+grep -r "KineticText" src/           # must return 1+ (unless BRUTALIST)
+grep -r "MagneticButton" src/        # must return 1+ (unless BRUTALIST)
+grep -r "craft-tokens.css" src/app/globals.css  # must return 1+
+```
+
+Fix any failures before submitting. Do not submit a build you know fails the rubric.
+
+---
+
 **No HTML/CSS before this skill completes. Every time. No exceptions.**
 
 Applies to: new sites, redesigns, section updates, single-page tweaks,
