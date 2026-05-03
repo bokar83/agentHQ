@@ -126,6 +126,7 @@ def test_switch_codex_model(tmp_path):
     content = config.read_text()
     assert 'model = "openai/gpt-4o"' in content
     assert 'personality = "pragmatic"' in content
+    assert 'model = "gpt-5.5"' not in content
 
 
 def test_switch_codex_missing_config_creates_file(tmp_path):
@@ -140,3 +141,9 @@ def test_switch_codex_missing_config_creates_file(tmp_path):
     switch_provider.switch_codex("openrouter", str(providers_with_codex), str(config))
     content = config.read_text()
     assert 'model = "openai/gpt-4o"' in content
+
+
+def test_unresolved_env_var_raises(tmp_settings, providers_json, monkeypatch):
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    with pytest.raises(SystemExit):
+        switch_provider.switch_claude("openrouter", str(providers_json), str(tmp_settings))

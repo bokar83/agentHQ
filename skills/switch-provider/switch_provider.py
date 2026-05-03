@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -68,6 +69,10 @@ def switch_claude(
         return
 
     claude_config = _resolve_env_vars(provider["claude"])
+    for k, v in claude_config.items():
+        if isinstance(v, str) and v.startswith("$"):
+            print(f"ERROR: env var {v} is not set. Export it before switching.", file=sys.stderr)
+            sys.exit(1)
 
     p = Path(settings_path)
     existing: dict = {}
@@ -129,7 +134,7 @@ def switch_codex(
     new_lines = []
     model_written = False
     for line in lines:
-        if line.strip().startswith("model") and "=" in line:
+        if re.match(r'^\s*model\s*=', line):
             new_lines.append(f'model = "{new_model}"')
             model_written = True
         else:
