@@ -1642,4 +1642,20 @@ Phase 10: Verification:
 
 **Atlas impact:** ahead of Atlas M5 gate (2026-05-08). Governance infrastructure now exists to support multi-revenue platform discipline as Studio + Signal Works + Dashboards4Sale + future ventures grow in parallel.
 
+### 2026-05-02 (evening): cc-switch absorb + multi-CLI provider switching (M-new: provider resilience)
+
+**Triggered by:** absorbing cc-switch (farion1231/cc-switch), a Tauri desktop GUI for managing Claude Code / Codex / Gemini CLI providers. Absorb verdict: PROCEED. Built two independent layers instead of installing cc-switch.
+
+**Layer A/B SHIPPED (local machine):** `skills/switch-provider/` with a Python script + providers.json that atomically switches Claude Code's `ANTHROPIC_BASE_URL` in `~/.claude/settings.json` and Codex's model in `~/.codex/config.toml`. No restart needed for Claude Code. Agent-callable via subprocess. 9 tests, all passing.
+
+**Layer C SHIPPED (VPS):** OpenRouter circuit breaker wired into `orchestrator/llm_helpers.py`. Trips on 3 failures in 5 minutes, fires Telegram alert with the exact manual switch command. `orchestrator/provider_probe.py` runs every 5 min as a heartbeat wake, tests OpenRouter, fires recovery Telegram on restoration. `provider_health` table created and seeded. 3 tests.
+
+**Bonus fix:** VPS `.env` had SMTP_PASS with unquoted spaces (`urnh jwyo vyur qurl`) silently aborting `orc_rebuild.sh`. Fixed by quoting the value.
+
+**Health check routine:** Remote agent `trig_01KHkpRpAk8huaCgNrBBexAA` fires 2026-05-17T15:00:00Z (9am MT) to verify probe is firing, row is fresh, and circuit has not tripped unexpectedly.
+
+**Files:** `skills/switch-provider/switch_provider.py`, `skills/switch-provider/providers.json`, `skills/switch-provider/SKILL.md`, `orchestrator/provider_health.py`, `orchestrator/provider_probe.py`, `orchestrator/llm_helpers.py` (modified), `orchestrator/app.py` (modified), `tests/test_switch_provider.py`, `tests/test_provider_probe.py`.
+
+**Next:** M13 (true spend visibility, target 2026-05-07) or M8 (Mission Control dashboard) depending on priority. L5 Learn (chairman crew) still blocked until 2026-05-08 (needs 14 days of L4 data).
+
 ---
