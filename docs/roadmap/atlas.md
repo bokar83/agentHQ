@@ -1699,3 +1699,13 @@ Secondary failure: I didn't know Boubacar was on `/chat/` not `/atlas/` until 3+
 **Next:** Content board workflow is live. Boubacar can now draft, approve/reject/enhance posts through `/chat/`. M13 (true spend visibility) when ready. L5 (chairman crew) gate: 2026-05-08.
 
 ---
+
+### 2026-05-03 (Saturday morning): Chat healthcheck restored after 12h 402 outage
+
+**Root cause:** OpenRouter account credit balance (~64,554 tokens) dropped below the default `max_tokens` ceiling that `claude-sonnet-4.6` requests (65,536). Every `/atlas/chat` call returned HTTP 402 for approximately 12 hours. The `chat_healthcheck.py` probes (`web /atlas/chat` and `tool-calling probe`) both failed, triggering repeated Telegram alerts.
+
+**Fix:** Added `max_tokens=8192` to all three `call_llm` invocations inside `run_atlas_chat` in `orchestrator/handlers_chat.py`. Chat responses never require 65k tokens; 8192 is well above any realistic reply. Commit `2693103`. Deployed via `scripts/orc_rebuild.sh`.
+
+**Verification:** All 4 healthcheck probes green immediately after deploy.
+
+**Action required:** Top up OpenRouter credits at `openrouter.ai/settings/credits`. The 8192 cap keeps chat working at current credit levels indefinitely, but crew tasks that go through other `call_llm` paths could hit 402 as the balance continues to drain. The cap does not fix the underlying low-credits situation.
