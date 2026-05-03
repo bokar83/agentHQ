@@ -255,6 +255,10 @@
     #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
     @media (max-width: 480px) { .msg { max-width: 92%; } }
+    .chat-action-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .btn-chat-action { background: #1a3a58; color: #e8f0f7; border: 1px solid var(--accent); border-radius: 5px; padding: 5px 14px; font-size: 13px; cursor: pointer; transition: background 0.15s; }
+    .btn-chat-action:hover:not(:disabled) { background: var(--accent); color: #071A2E; }
+    .btn-chat-action:disabled { opacity: 0.4; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -506,7 +510,7 @@
     try {
       const r = await postTask(text || 'Please review and summarize the attached file.', fileId);
       typing.remove();
-      appendMessage('agent', r.reply || '(no response)');
+      appendMessage('agent', r.reply || '(no response)', null, r.actions || []);
       // If the crew returned a job_id, poll for the crew result and append it
       if (r.job_id) {
         appendMessage('agent', 'Running\u2026 I will update you when done.');
@@ -616,7 +620,7 @@
   }
 
   // ── DOM helpers ────────────────────────────────────────────
-  function appendMessage(role, text, isoTimestamp) {
+  function appendMessage(role, text, isoTimestamp, actions) {
     const msgs = document.getElementById('messages');
     const wrap = document.createElement('div');
     wrap.className = 'msg ' + role;
@@ -632,9 +636,39 @@
     meta.textContent = ts.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     wrap.appendChild(bubble);
+    if (actions && actions.length) {
+      const row = document.createElement('div');
+      row.className = 'chat-action-row';
+      actions.forEach(function(a) {
+        const btn = document.createElement('button');
+        btn.className = 'btn-chat-action';
+        btn.textContent = a.label || '';
+        btn.addEventListener('click', async function() {
+          btn.disabled = true;
+          const cb = a.callback_data || '';
+          try {
+            if (cb.indexOf('confirm:') === 0) {
+              const token = cb.slice('confirm:'.length);
+              const cr = await fetch(ORC_BASE + '/atlas/confirm/' + token, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _token }, body: '{}' });
+              const d = await cr.json();
+              row.remove();
+              if (d.job_id) { appendMessage('agent', 'Running… I will update you when done.'); pollJob(d.job_id); }
+              else { appendMessage('agent', d.message || 'Done.'); }
+            } else if (cb.indexOf('cancel:') === 0) {
+              const token = cb.slice('cancel:'.length);
+              fetch(ORC_BASE + '/atlas/confirm/' + token + '/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _token }, body: '{}' }).catch(() => {});
+              row.remove();
+              appendMessage('agent', 'Cancelled.');
+            }
+          } catch(e) { btn.disabled = false; appendMessage('agent', 'Error: ' + e.message); }
+        });
+        row.appendChild(btn);
+      });
+      wrap.appendChild(row);
+    }
     wrap.appendChild(meta);
     msgs.appendChild(wrap);
-    msgs.scrollTop = msgs.scrollHeight;
+    requestAnimationFrame(function() { msgs.scrollTop = msgs.scrollHeight; });
     return wrap;
   }
 
