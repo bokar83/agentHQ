@@ -551,13 +551,22 @@ def classify_task(user_message: str, explicit_task_type: str = "") -> dict:
     Uses keyword fast-path first; falls back to LLM when keywords return unknown.
     If explicit_task_type is a valid TASK_TYPES key, skip classification entirely.
     """
+    # When the engine passes conversation history, extract only the last [USER] turn
+    # so prior assistant replies (e.g. CRM results) don't poison the classifier.
+    _classify_input = user_message
+    if "--- CONVERSATION HISTORY" in user_message:
+        import re as _re
+        user_turns = _re.findall(r'\[USER\]:\s*(.+?)(?=\[USER\]|\[ASSISTANT\]|$)', user_message, _re.DOTALL)
+        if user_turns:
+            _classify_input = user_turns[-1].strip()
+
     used_llm = False
     if explicit_task_type and explicit_task_type in TASK_TYPES:
         task_type = explicit_task_type
     else:
-        task_type = _classify_raw(user_message)
+        task_type = _classify_raw(_classify_input)
         if task_type == "unknown":
-            task_type = _llm_classify(user_message)
+            task_type = _llm_classify(_classify_input)
             used_llm = True
 
     crew = TASK_TYPES.get(task_type, {}).get("crew", "unknown_crew")
