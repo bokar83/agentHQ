@@ -1659,3 +1659,43 @@ Phase 10: Verification:
 **Next:** M13 (true spend visibility, target 2026-05-07) or M8 (Mission Control dashboard) depending on priority. L5 Learn (chairman crew) still blocked until 2026-05-08 (needs 14 days of L4 data).
 
 ---
+
+### 2026-05-02/03 (Friday night into Saturday): Chat UI overhaul + content board routing fixed
+
+**Session arc:** Started with 3 bug reports: hallucinated tool calls, Haiku running instead of Sonnet, and chat bugs. Ended with the content-board to social crew pipeline working end-to-end for the first time.
+
+**Shipped:**
+
+| Fix | What changed |
+|-----|-------------|
+| Hallucination fix | System prompt ABSOLUTE RULES, `_sanitize_history_for_model()`, tool result renamed to AWAITING_USER_CONFIRMATION, healthcheck v2 probes |
+| Haiku/Sonnet fix | `call_llm(model_key=)` param, deprecated import-time constants with sentinel, `_resolve_model` rewrite, 11 unit tests, UI model footer |
+| Chat confirm buttons | `/chat/``/chat/` (index.html) was missing `actions` rendering entirely. It was the wrong app the whole time; `/atlas/` had a separate init timing bug |
+| `/atlas/` init bug | `showDashboard()` fired before `atlas-chat.js` loaded; patched `showDashboard` never ran for cached-token logins |
+| nginx `try_files` | `$uri/` fallback served `index.html` (24388-byte wrong app) instead of `atlas.html` for `/atlas/` route |
+| Traefik routing | `nginx-static` service name conflict between `atlas-ui` and `chat-ui` routers; split into `nginx-atlas` and `nginx-chat` |
+| Textarea UX | Min-height 72px, rows=3, auto-grow on input, height reset after send for both `/chat/` and `/atlas/` |
+| "Atlas is using..." | Removed from both UIs |
+| Content board status | Board uses "Draft" (16 posts), not "Idea" (0 posts); status mapping fixed |
+| Router CRM poison | `_classify_raw` CRM read-intent shortcut fires on "show me" + "draft" before content board check; moved content board check to absolute top of `_classify_raw` |
+| Router history poison | Engine passes conversation history as task_request; prior CRM replies ("1899 leads", "draft") poisoned LLM classifier; extract `CURRENT REQUEST:` substring before classification |
+| `build_content_draft_crew` | New crew: fetches Draft posts from Notion, picks one LinkedIn post, writes 2 variations in Boubacar's voice, returns inline for approve/reject/enhance without touching Notion |
+
+**Verified live (end-to-end test):**
+- `/chat/` confirm buttons render and fire
+- `/atlas/` send button and Enter key work on cached-token login
+- `classify_task("Show me all posts from the Notion Content Board with status Draft")` returns `social_content` (was `crm_query`)
+- `build_content_draft_crew` fetches 4 LinkedIn Draft posts from Notion and drafts content
+- Full job run: crew dispatched, completed in 38s, returned post variations
+
+**Post-mortem on the 4-hour routing debug:**
+
+Root cause was always: `_classify_raw` CRM shortcut at line 338 fired first on "show me" + "draft". 6 fixes failed because I tested with paraphrased clean strings ("Draft one LinkedIn post") instead of the exact failing string ("Show me all posts..."). The lesson is in `feedback_router_debugging_discipline.md`: always test `classify_task()` inside the container with the EXACT string from the logs before shipping.
+
+Secondary failure: I didn't know Boubacar was on `/chat/` not `/atlas/` until 3+ hours in. New memory: `feedback_chat_ui_ask_which_url.md`.
+
+**Commits today:** 1779945, c1a9a6f, a7a76cc, 5d5363b, 4221fdb, 22e93de, 630d491, 5ec83b8, bcr7ikdea series (router fixes), bwbrd02jo (content_draft_crew).
+
+**Next:** Content board workflow is live. Boubacar can now draft, approve/reject/enhance posts through `/chat/`. M13 (true spend visibility) when ready. L5 (chairman crew) gate: 2026-05-08.
+
+---
