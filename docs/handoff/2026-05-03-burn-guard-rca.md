@@ -60,22 +60,14 @@ no balance alerting layer to catch it mid-run.
 
 ## What is NOT done yet
 
-The Atlas live spend card on the Mission Control dashboard currently shows only the `llm_calls`
-ledger (Anthropic SDK calls, lower bound) with a stale-indicator tooltip. A real-time OpenRouter
-balance sparkline that makes the burn rate visible without opening a browser tab has not been
-built. Spike detection via `provider_probe.py` is the interim solution: it alerts within 5
-minutes of a large drawdown but does not provide a visual trend or running daily total on the
-dashboard surface.
+Nothing from this session is incomplete. All burn-guard layers shipped and verified.
+
+M13 (Atlas live spend card / OpenRouter balance feed) was completed in a separate session
+running in parallel. See `docs/roadmap/atlas.md` for the shipped milestone entry.
 
 ---
 
 ## Next session
 
-Wire the OpenRouter balance feed from `GET https://openrouter.ai/api/v1/credits` into the Atlas
-dashboard frontend. The backend polling already exists in `health_sweep.py`
-(`_probe_openrouter_credits`). The work is:
-
-1. Expose the latest credit balance as a `/atlas/openrouter-balance` JSON endpoint in `app.py`.
-2. Add a balance tile (current balance + 7-day sparkline from `provider_billing` table, M13
-   scope) to the hero strip on `atlas.html` / `atlas.js`.
-3. This is the M13 milestone already logged in `docs/roadmap/atlas.md`. Target: 2026-05-07.
+No carry-over from this session. Burn guard is fully deployed. Pick up from the atlas roadmap
+for the next queued milestone.
