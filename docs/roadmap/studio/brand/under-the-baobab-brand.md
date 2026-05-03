@@ -96,6 +96,8 @@ Inspired by the baobab tree itself at dusk: the bark, the sky behind it, the ken
 
 **Pronunciation dictionary:** Build per-story for names; Wolof, Akan, Yoruba, Bamileke phonetics logged per episode in Pipeline DB
 
+**Parenting Psychology niche (Pillar 2) voice note:** Use female narrator `D9xwB6HNBJ9h4YvQFWuE` as default for parenting-psychology content. Maternal warmth fits the "safety and connection" angle better than Griot Kofi baritone. Elhadja `Kpr3bkxYd7gPcHKxBohV` for elder wisdom moments in either pillar. Source of truth: `configs/voice_registry.json`.
+
 ---
 
 ## Logo Spec
