@@ -145,6 +145,18 @@ def call_llm(
     try:
         response = client.chat.completions.create(**kwargs)
     except Exception as exc:
+        # 402 = out of credits. Surface a clear message instead of the generic error.
+        _status = getattr(exc, "status_code", None)
+        if _status == 402:
+            logger.error(f"OpenRouter 402: out of credits. Add funds at openrouter.ai/settings/credits. raw={exc}")
+            try:
+                from notifier import send_message as _send
+                _chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+                if _chat_id:
+                    _send(_chat_id, "ATLAS ALERT: OpenRouter out of credits (402). Add funds at openrouter.ai/settings/credits")
+            except Exception:
+                pass
+            raise RuntimeError("OpenRouter out of credits. Add funds at openrouter.ai/settings/credits") from exc
         try:
             from provider_health import record_failure
             from notifier import send_message
