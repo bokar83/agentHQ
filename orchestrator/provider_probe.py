@@ -20,7 +20,7 @@ PROBE_MESSAGES = [{"role": "user", "content": "hi"}]
 
 def run_probe() -> None:
     """Fire one lightweight test call and update provider_health accordingly."""
-    from provider_health import get_status, record_failure, record_recovery
+    from provider_health import get_status, record_recovery
     from notifier import send_message
 
     chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")

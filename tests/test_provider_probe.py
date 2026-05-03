@@ -15,7 +15,7 @@ def test_record_failure_increments_count():
     mock_conn = MagicMock()
     mock_cur = MagicMock()
     mock_conn.cursor.return_value = mock_cur
-    mock_cur.fetchone.return_value = (2, None, "healthy")
+    mock_cur.fetchone.return_value = {"fail_count": 2, "window_start": None, "status": "healthy"}
 
     with patch("provider_health.get_local_connection", return_value=mock_conn):
         result = ph.record_failure("openrouter")
@@ -30,7 +30,7 @@ def test_record_failure_below_threshold_not_tripped():
     mock_conn = MagicMock()
     mock_cur = MagicMock()
     mock_conn.cursor.return_value = mock_cur
-    mock_cur.fetchone.return_value = (1, None, "healthy")
+    mock_cur.fetchone.return_value = {"fail_count": 1, "window_start": None, "status": "healthy"}
 
     with patch("provider_health.get_local_connection", return_value=mock_conn):
         result = ph.record_failure("openrouter")
@@ -51,3 +51,6 @@ def test_record_recovery_marks_healthy():
 
     call_args = mock_cur.execute.call_args[0][0]
     assert "healthy" in call_args
+    assert "fail_count = 0" in call_args
+    assert "window_start = NULL" in call_args
+    mock_conn.commit.assert_called_once()

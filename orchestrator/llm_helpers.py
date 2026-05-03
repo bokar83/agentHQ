@@ -161,7 +161,7 @@ def call_llm(
                         "  python skills/switch-provider/switch_provider.py openrouter --cli claude"
                     ))
         except Exception as _cb_err:
-            logger.debug(f"circuit breaker record skipped (non-fatal): {_cb_err}")
+            logger.warning(f"circuit breaker record skipped (non-fatal): {_cb_err}")
         raise
 
     logger.debug(f"LLM response model={resolved_model} finish={response.choices[0].finish_reason}")
