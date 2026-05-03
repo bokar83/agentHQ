@@ -75,6 +75,13 @@ repos:
         pass_filenames: false
         always_run: true
         stages: [manual]
+      - id: check-hook-registration
+        name: Hook Registration Guard (high-risk hooks need cost annotation)
+        description: Blocks UserPromptSubmit/PreToolUse additions without HOOK_MODEL/HOOK_COST_PER_FIRE/HOOK_FIRING_RATE annotation. See docs/notes/switch-provider-paused-2026-05-02.md.
+        entry: python scripts/check_hook_registration.py
+        language: python
+        pass_filenames: false
+        always_run: true
       - id: check-no-provider-redirect
         name: Provider Redirect Guard (block ANTHROPIC_BASE_URL in committed configs)
         description: Prevents committing a non-Anthropic ANTHROPIC_BASE_URL. See docs/notes/switch-provider-paused-2026-05-02.md.

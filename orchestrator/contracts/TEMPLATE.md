@@ -39,6 +39,20 @@ Declared below in SIGNED block. Guard enforces it per tick.
 - Location in code: <e.g. orchestrator/auto_publisher.py:42>
 - Reasoning: <e.g. max records per tick to prevent feed bursts>
 
+### C6a: Canary run ($0.50 cap)
+
+Before the 7-day observation window, run one supervised canary session:
+
+- [ ] Canary date: YYYY-MM-DD
+- [ ] Budget cap applied: $0.50 (set AUTONOMY_DAILY_USD_CAP=0.50 for the run)
+- [ ] llm_calls rows confirmed: at least one row with correct crew_name + model
+- [ ] Actual cost per tick: $MEASURED (must be <= COST_CEILING_USD declared below)
+- [ ] Firing rate verified: CALLS/min observed
+- [ ] Rate check: cost/call x calls/min must be less than $0.10/min
+
+Why: a canary catches runaway spend before 7 days of dry-run accumulate. A crew that
+costs $0.50 in one tick drains the canary budget and stops before doing real damage.
+
 **C7: 7-day dry-run observation**
 Machine-verified at enable time. The guard queries llm_calls automatically.
 
