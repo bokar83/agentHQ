@@ -128,7 +128,7 @@ var atlasChat = (function() {
       bubble.appendChild(row);
     }
     panel.appendChild(bubble);
-    panel.scrollTop = panel.scrollHeight;
+    requestAnimationFrame(function() { panel.scrollTop = panel.scrollHeight; });
     if (artifact && artifact.content) { _renderArtifact(artifact); }
   }
 
