@@ -1001,6 +1001,128 @@ def build_social_crew(user_request: str) -> Crew:
     )
 
 
+def build_content_draft_crew(user_request: str) -> Crew:
+    """Crew for: social_content (content board draft flow)"""
+    import os
+    from skills.forge_cli.notion_client import NotionClient
+
+    notion = NotionClient(os.environ.get("NOTION_SECRET", ""))
+    db_id = os.environ.get("FORGE_CONTENT_DB", "339bcf1a-3029-81d1-8377-dc2f2de13a20")
+
+    msg = user_request.lower()
+    wants_linkedin = "linkedin" in msg
+    wants_x = any(x in msg for x in ["x post", "twitter", " x ", "tweet"])
+
+    try:
+        posts = notion.query_database(db_id, filter_obj={"property": "Status", "select": {"equals": "Draft"}})
+    except Exception:
+        posts = []
+
+    def _get_title(props):
+        parts = props.get("Title", {}).get("title", [])
+        return "".join(p.get("plain_text", "") for p in parts)
+
+    def _get_select(props, field):
+        return (props.get(field, {}).get("select") or {}).get("name", "")
+
+    candidates = []
+    for page in (posts or []):
+        props = page.get("properties", {})
+        title = _get_title(props)
+        ptype = _get_select(props, "Type")
+        platform = _get_select(props, "Platform")
+        if not title.strip():
+            continue
+        if any(skip in title.lower() for skip in ["pitch reel", "http", "build a 12-post", "review this"]):
+            continue
+        score = 0
+        if wants_linkedin and ("linkedin" in ptype.lower() or "linkedin" in platform.lower()):
+            score += 2
+        if wants_x and ("post" == ptype.lower() or "x" in platform.lower() or "twitter" in platform.lower()):
+            score += 2
+        candidates.append({"title": title, "type": ptype, "platform": platform, "score": score, "id": page["id"]})
+
+    candidates.sort(key=lambda x: x["score"], reverse=True)
+    chosen = candidates[0] if candidates else None
+
+    if not chosen:
+        griot = build_social_media_agent()
+        no_post_task = Task(
+            description="Tell the user: No Draft posts found in the content board that are ready to draft. Ask them to add post ideas to the content board first.",
+            expected_output="Short message to user",
+            agent=griot
+        )
+        return Crew(agents=[griot], tasks=[no_post_task], process=Process.sequential, verbose=False, memory=False)
+
+    body_text = ""
+    try:
+        blocks = notion.get_page_blocks(chosen["id"])
+        for block in (blocks or [])[:5]:
+            bt = block.get("type", "")
+            rich = block.get(bt, {}).get("rich_text", [])
+            body_text += "".join(r.get("plain_text", "") for r in rich) + "\n"
+        body_text = body_text.strip()
+    except Exception:
+        body_text = ""
+
+    platform_label = chosen["platform"] or ("LinkedIn" if wants_linkedin else "X/Twitter" if wants_x else "LinkedIn")
+
+    context_block = (
+        f"POST TITLE / IDEA: {chosen['title']}\n"
+        f"POST TYPE: {chosen['type'] or 'Post'}\n"
+        f"PLATFORM: {platform_label}\n"
+        f"EXISTING NOTES: {body_text if body_text else '(none -- draft from the title only)'}\n"
+    )
+
+    griot = build_social_media_agent()
+    qa = build_qa_agent()
+    qa.max_iter = 1
+
+    task_write = Task(
+        description=(
+            "Write TWO variations of a full social media post based on this content board draft:\n\n"
+            + context_block
+            + "\nBoubacar's voice rules:\n"
+            "- Direct and specific. No 'I am excited to share...'\n"
+            "- Earned insight -- sounds like lived experience, not marketing\n"
+            "- LinkedIn: 150-300 words, professional but human, paragraph breaks, optional 3-5 hashtags at end\n"
+            "- X/Twitter: punchy, 280 chars max OR numbered thread (1/ 2/ 3/)\n"
+            "- No buzzword soup. No 'game-changer', 'leverage', 'synergy'\n\n"
+            "Write 2 complete variations. Label them VARIATION 1 and VARIATION 2."
+        ),
+        expected_output="Two complete post variations labeled VARIATION 1 and VARIATION 2",
+        agent=griot
+    )
+
+    task_qa = Task(
+        description=(
+            "Review the two post variations. Does each sound like Boubacar -- direct, specific, earned?\n"
+            "If any variation is too generic or marketing-speak, rewrite it.\n\n"
+            "Then output EXACTLY in this format:\n\n"
+            f"TITLE: {chosen['title']}\n"
+            f"PLATFORM: {platform_label}\n"
+            "---\n"
+            "VARIATION 1:\n"
+            "[full post text]\n\n"
+            "VARIATION 2:\n"
+            "[full post text]\n"
+            "---\n"
+            "Reply 'approve 1' or 'approve 2' to queue it, 'reject' to archive it, or 'enhance: [your feedback]' to revise."
+        ),
+        expected_output="Formatted post review with both variations and instructions",
+        agent=qa,
+        context=[task_write]
+    )
+
+    return Crew(
+        agents=[griot, qa],
+        tasks=[task_write, task_qa],
+        process=Process.sequential,
+        verbose=False,
+        memory=False,
+    )
+
+
 def build_newsletter_crew(user_request: str, metadata: dict = None) -> Crew:
     """
     Crew for: newsletter
@@ -3173,7 +3295,7 @@ CREW_REGISTRY = {
     "app_crew":            build_app_crew,
     "research_crew":       build_research_crew,
     "consulting_crew":     build_consulting_crew,
-    "social_crew":         build_social_crew,
+    "social_crew":         build_content_draft_crew,
     "newsletter_crew":     build_newsletter_crew,
     "linkedin_x_crew":     build_linkedin_x_crew,
     "code_crew":           build_code_crew,

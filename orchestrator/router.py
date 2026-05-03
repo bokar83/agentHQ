@@ -343,6 +343,21 @@ def _classify_raw(user_message: str) -> str:
     ):
         return "crm_query"
 
+    # Hard pre-checks: phrases that must never misroute to CRM/research
+    # "content board" in any context = content_board_fetch (list/draft from Notion)
+    # "write a post" / "draft a post" / "linkedin post" / "x post" = social_content
+    _CONTENT_BOARD_SIGNALS = ("content board", "content board", "from the content board", "from content board")
+    _SOCIAL_DRAFT_SIGNALS = ("write a post", "draft a post", "write me a post", "draft me a post",
+                             "write one post", "draft one post", "write a linkedin post", "draft a linkedin post",
+                             "write a x post", "draft a x post", "write an x post", "draft an x post")
+    if any(s in msg for s in _CONTENT_BOARD_SIGNALS):
+        # Sub-route: if they want content drafted, use social_content; otherwise fetch list
+        if any(s in msg for s in ("draft", "write", "create", "build", "full post", "generate")):
+            return "social_content"
+        return "content_board_fetch"
+    if any(s in msg for s in _SOCIAL_DRAFT_SIGNALS):
+        return "social_content"
+
     # High-priority explicit task prefixes checked first
     if any(kw in msg for kw in TASK_TYPES["content_push_to_drive"]["keywords"]):
         return "content_push_to_drive"
