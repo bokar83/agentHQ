@@ -147,3 +147,15 @@ def test_unresolved_env_var_raises(tmp_settings, providers_json, monkeypatch):
     monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
     with pytest.raises(SystemExit):
         switch_provider.switch_claude("openrouter", str(providers_json), str(tmp_settings))
+
+
+def test_quiet_flag_suppresses_stdout(tmp_settings, providers_json, monkeypatch, capsys):
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-test-123")
+    switch_provider.switch_claude(
+        provider_key="openrouter",
+        providers_path=str(providers_json),
+        settings_path=str(tmp_settings),
+        quiet=True,
+    )
+    captured = capsys.readouterr()
+    assert captured.out == ""

@@ -1,0 +1,156 @@
+/* ============================================================
+   CRAFT TOKENS: agentsHQ Humanized Standard
+   Inject as the FIRST import in every build's globals.css:
+   @import "./craft-tokens.css";
+   Do not override these values without written architectural justification.
+   ============================================================ */
+
+:root {
+
+  /* ----------------------------------------------------------
+     EASING
+     Use these. Use nothing else.
+     BANNED: ease-in-out, ease, linear (except inside linear() spring defs), duration-300
+     ---------------------------------------------------------- */
+
+  --ease-out-expo:   cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-expo:    cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out-expo: cubic-bezier(0.87, 0, 0.13, 1);
+
+  /* CSS spring approximations: no JS required */
+  /* spring-sm: gentle overshoot, settles quickly (Calm Product, Trust/Enterprise) */
+  --ease-spring-sm: linear(
+    0, 0.009, 0.035 2.1%, 0.141, 0.281 6.7%, 0.723 12.9%,
+    0.938 16.7%, 1.017, 1.077, 1.121, 1.149 24.3%,
+    1.159, 1.163, 1.153, 1.128 32.8%, 1.051 39.5%,
+    1.017 43.1%, 0.991, 0.977 51%, 0.974 53.8%,
+    0.975 57.1%, 0.997 69.8%, 1.003 76.9%, 1
+  );
+
+  /* spring-lg: more pronounced bounce (Illustrative/Playful archetype) */
+  --ease-spring-lg: linear(
+    0, 0.028, 0.113, 0.264, 0.46, 0.642, 0.789,
+    0.893, 0.956, 0.989, 1.006, 1.014, 1.017, 1.016,
+    1.013, 1.009, 1.006, 1.003, 1.001, 1
+  );
+
+  /* ----------------------------------------------------------
+     DURATIONS
+     300ms is banned. Match duration to element size + motion character.
+     ---------------------------------------------------------- */
+
+  --duration-micro:  120ms;   /* button press, focus ring */
+  --duration-fast:   220ms;   /* hover state, small reveals */
+  --duration-base:   380ms;   /* modal entry, standard reveal */
+  --duration-slow:   600ms;   /* hero entrance, section reveal */
+  --duration-cinema: 1200ms;  /* Cinematic/Agency archetype only */
+
+  /* ----------------------------------------------------------
+     SCROLL
+     Lenis lerp values by archetype: see craft-tokens.ts for JS constants.
+     ---------------------------------------------------------- */
+
+  /* Reference values (used by SmoothScrollProvider component):
+     EDITORIAL_NARRATIVE:  0.05
+     CINEMATIC_AGENCY:     0.05
+     DOCUMENTARY_DATA:     0.07  (default)
+     CALM_PRODUCT:         0.10
+     ILLUSTRATIVE_PLAYFUL: 0.10
+     CONVERSION_FIRST:     0.10
+     BRUTALIST:            none (do not use SmoothScrollProvider)
+     TRUST_ENTERPRISE:     none (do not use SmoothScrollProvider) */
+
+  /* ----------------------------------------------------------
+     BORDER RADIUS
+     Derive by element type. NEVER use the same value on cards AND buttons AND inputs.
+     ---------------------------------------------------------- */
+
+  --radius-none: 0px;    /* Brutalist archetype, full-bleed images */
+  --radius-xs:   3px;    /* tags, badges, chips */
+  --radius-sm:   6px;    /* buttons, inputs, form elements */
+  --radius-md:   12px;   /* cards, panels */
+  --radius-lg:   20px;   /* modals, large cards, drawers */
+  --radius-xl:   32px;   /* pill elements, large badges */
+  --radius-full: 9999px; /* fully circular elements */
+
+  /* ----------------------------------------------------------
+     SHADOWS: elevation-aware, not uniform
+     BANNED: box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) applied globally (Tailwind shadow-md)
+     ---------------------------------------------------------- */
+
+  --shadow-none:  none;
+  --shadow-low:   0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-mid:   0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-high:  0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.18), 0 8px 24px rgba(0, 0, 0, 0.08);
+
+  /* ----------------------------------------------------------
+     TYPOGRAPHY SCALE: fluid, clamp-based, not fixed px
+     ---------------------------------------------------------- */
+
+  --text-display-xl: clamp(3.5rem, 8vw, 8rem);     /* Cinematic/Agency hero only */
+  --text-display:    clamp(2.5rem, 5vw, 5rem);      /* standard hero headline */
+  --text-title:      clamp(1.75rem, 3vw, 2.5rem);   /* section titles */
+  --text-heading:    clamp(1.25rem, 2vw, 1.75rem);  /* subsection headings */
+  --text-body:       1rem;
+  --text-small:      0.875rem;
+  --text-caption:    0.75rem;
+
+  /* Letter spacing */
+  --tracking-tight:  -0.03em;  /* grotesque display type */
+  --tracking-normal: -0.01em;  /* standard headings */
+  --tracking-wide:    0.02em;  /* captions, labels, small text */
+
+  /* Line height */
+  --leading-tight:   1.1;
+  --leading-snug:    1.3;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.7;
+  --leading-loose:   1.9;
+
+  /* ----------------------------------------------------------
+     SPACING: 8px grid base
+     ---------------------------------------------------------- */
+
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+  --space-32: 128px;
+
+}
+
+/* ----------------------------------------------------------
+   UTILITY CLASSES: use these in Tailwind arbitrary values
+   e.g. duration-[var(--duration-base)] ease-[var(--ease-out-expo)]
+   ---------------------------------------------------------- */
+
+.transition-craft {
+  transition-timing-function: var(--ease-out-expo);
+  transition-duration: var(--duration-fast);
+}
+
+.transition-craft-slow {
+  transition-timing-function: var(--ease-out-expo);
+  transition-duration: var(--duration-base);
+}
+
+/* ----------------------------------------------------------
+   EXPLICIT BANS (overrides any Tailwind defaults that slip through)
+   These selectors intentionally override the generic Tailwind values.
+   ---------------------------------------------------------- */
+
+/* If any element uses Tailwind's ease-in-out, override it */
+.ease-in-out {
+  transition-timing-function: var(--ease-out-expo) !important;
+}
+
+/* If any element uses duration-300 (the generic tell), override it */
+.duration-300 {
+  transition-duration: var(--duration-fast) !important; /* 220ms instead of 300ms */
+}
