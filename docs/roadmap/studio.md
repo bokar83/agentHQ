@@ -536,6 +536,36 @@ Research sourced 2026 IG + TikTok warm-up protocols: IG requires 7-day silence b
 
 ---
 
+### 2026-05-03 (night): M4 publisher deployed + heartbeat live on VPS
+
+**Blotato publisher fully operational on VPS.** Session fixed schema mismatches and confirmed clean run.
+
+**What shipped in this half-session:**
+
+- `studio-blotato-publisher` heartbeat wake registered in `scheduler.py` at 09:00 MT
+- Fixed `notion_client` → `skills.forge_cli.NotionClient` (correct import for VPS container)
+- Fixed Status field type: `status` → `select` (Notion schema confirmed via API)
+- Fixed Status option names: `publishing` → `rendering`, `posted` → `published` (actual Pipeline DB values)
+- Verified on VPS: `STUDIO PUBLISHER: tick start ... 0 record(s) scheduled`  -  clean, no errors
+- All commits pushed to main
+
+**Account wiring (already in .env):**
+- YT: all 3 channels wired (35697, 35696, 35698)
+- X: all 3 channels wired
+- TikTok: all 3 channels wired (40989, 40987, 40994)
+- IG: Baobab (45174) + Catalyst (45176) wired; 1stGen pending `firstgenerationmoney_` IG review
+
+**IG account creation recap:**
+- `under_thebaobab` IG: live
+- `aicatalyst_official` IG: under selfie review (submitted)
+- `firstgenerationmoney_` IG: under review
+- TikTok accounts created by Boubacar; all 3 IDs in .env
+
+**What's next (M4 gates remaining):**
+1. `firstgenerationmoney_` IG review clears → Boubacar adds `BLOTATO_1STGEN_INSTAGRAM_ACCOUNT_ID` to .env
+2. First Pipeline DB record reaches Status=scheduled → publisher fires at next 09:00 MT tick
+3. Confirm first auto-post live → M4 SHIPPED
+
 ### 2026-05-03: M3 Production Pipeline BUILT + API-tested
 
 **Session scope:** M3 content production pipeline  -  built all modules, live API tested, deployed to VPS.
