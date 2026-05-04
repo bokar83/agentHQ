@@ -32,7 +32,7 @@
     "Griot": "GREE-oh"
   },
   "script_tone": "warm, storytelling, wise narrator, intergenerational, griot register",
-  "target_duration_sec": 600,
+  "target_duration_sec": 55,
   "hook_word_budget": 30,
   "retention_loop_interval_words": 200,
   "platform_specs": {
