@@ -37,7 +37,19 @@ from typing import Optional
 
 logger = logging.getLogger("agentsHQ.gate_agent")
 
-REPO_PATH = Path(os.environ.get("REPO_ROOT", "/app" if Path("/app/.git").exists() else "/root/agentsHQ"))
+def _detect_repo_path() -> Path:
+    """Detect repo root. Container: /app has gate_agent.py, data/ mounted there.
+    Host/local: /root/agentsHQ or REPO_ROOT env var."""
+    if "REPO_ROOT" in os.environ:
+        return Path(os.environ["REPO_ROOT"])
+    # Inside container: gate_agent.py is at /app/gate_agent.py
+    if Path("/app/gate_agent.py").exists():
+        return Path("/app")
+    # Host fallback
+    return Path("/root/agentsHQ")
+
+
+REPO_PATH = _detect_repo_path()
 VPS_HOST = os.environ.get("VPS_HOST", "root@72.60.209.109")
 MAIN_BRANCH = "main"
 TICK_INTERVAL = 60  # seconds
