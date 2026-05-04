@@ -222,6 +222,36 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 
 ---
 
+### M3.6: Content Intelligence Layer ⏳ STUB LIVE (post-M3 confirm)
+
+**What:** Per-channel intelligence dossiers injected into the Studio script crew at production time. Scripts read niche signal, competitor gaps, and proven hooks before writing. Scripts do not write blind.
+
+**Why:** Inspired by Graeme Kay's research agent architecture (2026-05-04 Sankofa Council). Borrowed the dossier concept; skipped the full 29-dir vault until M5 analytics prove ROI. Minimum viable research layer: one markdown file per channel, one context injection in the script generator.
+
+**What is live (seeded 2026-05-04):**
+
+- `research-vault/dossiers/under_the_baobab.md`: African storytelling trends, competitor signal, hooks that convert, verification queue
+- `research-vault/dossiers/ai_catalyst.md`: AI displacement content trends, competitor signal, professional audience hooks
+- `research-vault/dossiers/first_generation_money.md`: first-gen finance trends, RPM estimates, competitor signal, YMYL compliance notes
+- `orchestrator/studio_script_generator.py`: `_load_dossier()` + `_CHANNEL_DOSSIER_MAP`; dossier injected as `CHANNEL INTELLIGENCE DOSSIER` block in system prompt
+
+**What this is NOT yet:**
+
+- No automated refresh (manual until M5 proves ROI)
+- No `findings.jsonl` / `claims.jsonl` ledgers
+- No source registry or cron collector
+
+**Trigger to expand:** M5 analytics show measurable CTR or watch-time lift on dossier-informed scripts vs. baseline. If lift confirmed, build automated refresh + findings ledger. If flat, dossiers stay as manual editorial context only.
+
+**Success proxy (reviewable before M5):** At least one script per channel references a niche-specific hook, angle, or trend from its dossier.
+
+**Dossier update cadence (manual):** After each M5 analytics review, update competitor signal + trending topics. ~20 min per channel.
+
+**Blockers:** None. Stub is already live and injecting.
+**Branch:** `feat/studio-m3-production`.
+
+---
+
 ### M4: Multi-Channel Publish Pipeline 🔄 IN PROGRESS
 
 **What:** Auto-publish from Studio Pipeline DB to the platform on Scheduled Date. Default path: Blotato Creator at $97/mo (verified live 2026-04-25), supports YouTube + IG + TikTok + Threads + LinkedIn + X + FB + Pinterest, 5,000 AI credits/mo, 40 social accounts.
@@ -263,6 +293,8 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 ---
 
 ### M6: Monetization Wiring ⏳ TRIGGER-GATED
+
+**Channel Launch Protocol:** See [`skills/kie_media/references/channel-launch-doctrine.md`](../../skills/kie_media/references/channel-launch-doctrine.md). Covers: 5-decision launch framework, 4-part content formula, Shorts path doctrine, iteration protocol. Load at every new channel launch.
 
 **What:** Connect the revenue rails for Channel 1: AdSense application (YouTube) or platform fund (TikTok), affiliate program signups (Amazon Associates, Impact, ShareASale, niche-specific), sponsor outreach scaffolding (media kit auto-generated from M5 metrics).
 
@@ -679,3 +711,58 @@ Session scope: post-Monday first-fire review. Scout ran (22 candidates written).
 2. If render succeeds: merge `feat/studio-m3-production` → `main`, mark M3 SHIPPED
 3. Build music vault: `workspace/media/music/` dir + `build_vault.py` scanner (Suno instrumentals per channel)
 4. Review video quality  -  Ken Burns + GPT Image 2 acceptable?
+
+---
+
+### 2026-05-04: Monetization doctrine absorbed + QA check 11 wired
+
+Absorbed YT monetization playbook (X thread, anonymous, unverified 9-day claim). Extracted structural doctrine (4-part formula and 5-decision launch framework) and encoded as callable reference.
+
+**What shipped:**
+
+- `skills/kie_media/references/channel-launch-doctrine.md`: 5-decision channel launch framework, 4-part content formula (Hook/Value/Curiosity Gap/Loop Ending), Shorts path doctrine (3-5/day), iteration protocol (retention rate + avg watch duration + drop-off point per video), anti-patterns, Atlas agent integration note. Review date: 2026-08-04.
+- `orchestrator/studio_qa_crew.py`: QA check 11 added (`check_four_part_formula()`). Validates curiosity gap + loop ending in every long-form script. Shorts skipped (hook + CTA checks cover it). Total QA checks: 11.
+- `orchestrator/studio_script_generator.py`: 4-part formula promoted to HARD RULE 2 in system prompt. Sonnet now instructed to produce Hook / Value / Curiosity Gap / Loop Ending explicitly.
+- `docs/roadmap/studio.md` M6: Channel Launch Protocol reference added pointing to doctrine file.
+
+**Key doctrine decisions:**
+
+- Shorts path is Studio default (faster testing, lower cost per asset)
+- Pattern replication over originality at launch. Replicate winning format, swap topic only.
+- Curiosity gap + loop ending are now enforced at QA, not just advised
+- 4-part formula applies to X/LinkedIn content board (cross-motion leverage)
+
+**Next steps:**
+
+1. Deploy updated `studio_qa_crew.py` + `studio_script_generator.py` to VPS
+2. First produced video: verify QA check 11 fires correctly on script output
+3. M5 (analytics): must include retention rate + avg watch duration + drop-off point per video. These are the three doctrine iteration metrics.
+
+---
+
+### 2026-05-04: Research Intelligence Layer: M3.6 seeded, dossiers wired into script crew
+
+**Session scope:** Architecture review + minimum viable implementation. No VPS deploy required (dossiers read from repo at script-generation time).
+
+**Trigger:** Sankofa Council review of Graeme Kay's research agent architecture (X thread 2026-05-04). Sankofa + Karpathy both ran on full adoption vs. selective borrow.
+
+**Council verdict:** Build stub now, not full vault. Full vault (29 dirs, JSONL ledgers, 6h cron) only if M5 analytics prove dossier lift.
+
+**What shipped:**
+
+- `research-vault/dossiers/under_the_baobab.md`: African storytelling niche signal, competitor gaps, hooks that convert, verification queue
+- `research-vault/dossiers/ai_catalyst.md`: AI displacement content trends, professional audience hooks, competitor signal
+- `research-vault/dossiers/first_generation_money.md`: first-gen finance trends, $15-22 RPM estimate, competitor signal, YMYL notes
+- `orchestrator/studio_script_generator.py`: `_load_dossier()` + `_CHANNEL_DOSSIER_MAP`; dossier injected as `CHANNEL INTELLIGENCE DOSSIER` block in system prompt. Non-breaking: empty string if no dossier found.
+- `docs/roadmap/studio.md`: M3.6 milestone added
+- `docs/roadmap/atlas.md`: verification queue concept documented in Cross-References + session log
+
+**What was NOT built (Karpathy surgical rule):** No JSONL ledgers, no source registry, no cron, no automated refresh, no operator cockpit, no wiki layer.
+
+**Success proxy (before M5):** First post-dossier script contains a niche-specific hook or trend reference from its dossier. Reviewable by reading script output before render.
+
+**Next steps:**
+
+1. Confirm first video rendered (M3 first render). Review whether dossier influenced hook choice
+2. M5 gate: if CTR/watch-time shows lift on dossier-informed scripts, expand to `findings.jsonl` + source registry + weekly refresh cron
+3. Atlas M5 Chairman crew design (2026-05-08+): add `data/verification_queue.md` on VPS as knowledge-claim staging layer
