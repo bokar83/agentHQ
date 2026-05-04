@@ -702,6 +702,25 @@ def start_scheduler():
     except Exception as e:
         logger.error(f"NEWSLETTER_ANCHOR: wake registration failed ({e}); continuing", exc_info=True)
 
+    # Echo M2.5: Gate Agent. Runs every 60s. Sole arbiter of all writes to
+    # shared state: GitHub, VPS, main branch. Detects feature branches ahead
+    # of main, conflict-checks, runs tests, auto-merges clean branches,
+    # deploys VPS, notifies Telegram on conflict/failure only.
+    # crew_name='gate' (own kill switch -- disable without stopping other crews).
+    # Default state: gate.enabled=False; flip on after VPS deploy + smoke test.
+    try:
+        import heartbeat as _heartbeat
+        from gate_agent import gate_tick
+        _heartbeat.register_wake(
+            "gate-agent",
+            crew_name="gate",
+            callback=gate_tick,
+            every="1m",
+        )
+        logger.info("GATE: agent registered (every 60s). Enable via autonomy_state.json gate.enabled=true")
+    except Exception as e:
+        logger.error(f"GATE: wake registration failed ({e}); continuing without gate agent", exc_info=True)
+
     sync_thread = threading.Thread(target=_periodic_sync, daemon=True)
     sync_thread.start()
 

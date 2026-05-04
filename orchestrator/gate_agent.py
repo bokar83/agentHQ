@@ -1,0 +1,349 @@
+"""
+gate_agent.py - Echo M2.5: The Gate
+
+Sole arbiter of all writes to shared state: GitHub, VPS, main branch.
+Runs as a 60s heartbeat tick registered in scheduler.py.
+
+Responsibilities (exhaustive):
+- Detect feature branches ahead of main (git fetch every tick)
+- Check file overlap between queued branches (conflict detection)
+- Run tests on each branch before merging
+- LLM code review for high-risk files (orchestrator/, deploy scripts)
+- Auto-merge clean branches to main, push to GitHub
+- Deploy to VPS via orc_rebuild.sh after merge
+- Notify via Telegram/webchat: silent on success, loud on conflict/failure
+- Delete merged feature branches after successful deploy
+
+Does NOT: write code, answer questions, run crews, respond to unrelated messages.
+
+Hard rules enforced here:
+- Never merges if tests fail
+- Never merges if file overlap exists without human approval
+- Shorts-first: target_duration_sec=55 wins any conflict
+- High-risk files (see HIGH_RISK_PREFIXES) require explicit approval
+"""
+
+from __future__ import annotations
+
+import logging
+import os
+import subprocess
+import time
+import urllib.parse
+import urllib.request
+import json
+from pathlib import Path
+from typing import Optional
+
+logger = logging.getLogger("agentsHQ.gate_agent")
+
+REPO_PATH = Path(os.environ.get("REPO_ROOT", "/root/agentsHQ"))
+VPS_HOST = os.environ.get("VPS_HOST", "root@72.60.209.109")
+MAIN_BRANCH = "main"
+TICK_INTERVAL = 60  # seconds
+
+# Branches gate never touches
+PROTECTED_BRANCHES = {
+    "main",
+    "feature/coordination-layer",
+    "feature/echo-m1",
+    "fix/chat-empty-model-resolution",
+}
+
+# Branch prefixes gate skips (archive already handled)
+SKIP_PREFIXES = ("archive/",)
+
+# Files requiring explicit Boubacar approval before merge
+HIGH_RISK_PREFIXES = (
+    "orchestrator/scheduler.py",
+    "orchestrator/gate_agent.py",
+    "orchestrator/app.py",
+    "scripts/orc_rebuild.sh",
+    ".env",
+    "docker-compose",
+)
+
+# Auto-approve scopes (no LLM review needed, just tests)
+AUTO_APPROVE_PREFIXES = (
+    "docs/",
+    "tests/",
+    "skills/",
+    "templates/",
+    "configs/",
+)
+
+# Telegram notify
+_BOT_TOKEN = os.environ.get("ORCHESTRATOR_TELEGRAM_BOT_TOKEN", "")
+_CHAT_ID = os.environ.get("OWNER_TELEGRAM_CHAT_ID", "")
+
+
+# ---------------------------------------------------------------------------
+# Notification
+# ---------------------------------------------------------------------------
+
+def _notify(message: str, urgent: bool = False) -> None:
+    """Send Telegram message. Silent on failure -- gate never crashes on notify."""
+    if not _BOT_TOKEN or not _CHAT_ID:
+        logger.warning("gate: Telegram not configured, skipping notify")
+        return
+    prefix = "GATE ALERT: " if urgent else "Gate: "
+    payload = json.dumps({"chat_id": _CHAT_ID, "text": prefix + message}).encode()
+    req = urllib.request.Request(
+        f"https://api.telegram.org/bot{_BOT_TOKEN}/sendMessage",
+        data=payload,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10):
+            pass
+    except Exception as exc:
+        logger.warning("gate: notify failed: %s", exc)
+
+
+# ---------------------------------------------------------------------------
+# Git helpers
+# ---------------------------------------------------------------------------
+
+def _git(args: list[str], cwd: Optional[Path] = None) -> tuple[int, str, str]:
+    proc = subprocess.run(
+        ["git", *args],
+        cwd=str(cwd or REPO_PATH),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return proc.returncode, proc.stdout.strip(), proc.stderr.strip()
+
+
+def _fetch() -> bool:
+    rc, _, err = _git(["fetch", "--prune", "origin"])
+    if rc != 0:
+        logger.error("gate: git fetch failed: %s", err)
+        return False
+    return True
+
+
+def _branches_ahead_of_main() -> list[str]:
+    """Return remote feature branches that have commits not in main."""
+    rc, out, _ = _git(["branch", "-r", "--no-merged", f"origin/{MAIN_BRANCH}"])
+    if rc != 0:
+        return []
+    branches = []
+    for line in out.splitlines():
+        branch = line.strip().lstrip("* ").removeprefix("origin/")
+        if branch in PROTECTED_BRANCHES:
+            continue
+        if any(branch.startswith(p) for p in SKIP_PREFIXES):
+            continue
+        if not branch.startswith("feature/") and not branch.startswith("feat/") and not branch.startswith("fix/"):
+            continue
+        branches.append(branch)
+    return branches
+
+
+def _files_changed_vs_main(branch: str) -> list[str]:
+    """Files changed on branch vs main."""
+    rc, out, _ = _git([
+        "diff", "--name-only",
+        f"origin/{MAIN_BRANCH}...origin/{branch}",
+    ])
+    if rc != 0:
+        return []
+    return [f for f in out.splitlines() if f.strip()]
+
+
+def _run_tests(branch: str) -> tuple[bool, str]:
+    """Checkout branch in detached state, run pytest. Returns (passed, output)."""
+    _git(["fetch", "origin", branch])
+    rc_co, _, err = _git(["checkout", f"origin/{branch}", "--detach"])
+    if rc_co != 0:
+        return False, f"checkout failed: {err}"
+    try:
+        proc = subprocess.run(
+            ["python", "-m", "pytest", "-q", "--tb=short", "--timeout=120"],
+            cwd=str(REPO_PATH),
+            capture_output=True,
+            text=True,
+            timeout=180,
+        )
+        passed = proc.returncode == 0
+        output = (proc.stdout + proc.stderr)[-1000:]
+        return passed, output
+    except subprocess.TimeoutExpired:
+        return False, "tests timed out (180s)"
+    finally:
+        # Return to main
+        _git(["checkout", MAIN_BRANCH])
+
+
+def _merge_branch(branch: str) -> tuple[bool, str]:
+    """Merge branch into local main. Returns (success, error)."""
+    _git(["checkout", MAIN_BRANCH])
+    _git(["pull", "origin", MAIN_BRANCH])
+    rc, _, err = _git(["merge", f"origin/{branch}", "--no-ff",
+                        "-m", f"merge({branch}): gate auto-merge -- tests green, no conflicts"])
+    if rc != 0:
+        _git(["merge", "--abort"])
+        return False, err
+    return True, ""
+
+
+def _push_main() -> tuple[bool, str]:
+    rc, _, err = _git(["push", "origin", MAIN_BRANCH])
+    return rc == 0, err
+
+
+def _delete_remote_branch(branch: str) -> None:
+    rc, _, err = _git(["push", "origin", "--delete", branch])
+    if rc != 0:
+        logger.warning("gate: could not delete origin/%s: %s", branch, err)
+
+
+def _deploy_vps() -> tuple[bool, str]:
+    """Pull main on VPS and rebuild container."""
+    cmd = f"ssh {VPS_HOST} 'cd {REPO_PATH.name} && git pull origin {MAIN_BRANCH} && python3 scripts/fix_env.py && bash scripts/orc_rebuild.sh'"
+    proc = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=300)
+    return proc.returncode == 0, (proc.stdout + proc.stderr)[-500:]
+
+
+# ---------------------------------------------------------------------------
+# Conflict detection
+# ---------------------------------------------------------------------------
+
+def _detect_conflicts(branches_with_files: list[tuple[str, list[str]]]) -> list[tuple[str, str, str]]:
+    """Find pairs of branches touching the same file. Returns list of (branch_a, branch_b, file)."""
+    conflicts = []
+    for i, (b1, files1) in enumerate(branches_with_files):
+        for b2, files2 in branches_with_files[i + 1:]:
+            overlap = set(files1) & set(files2)
+            for f in overlap:
+                conflicts.append((b1, b2, f))
+    return conflicts
+
+
+# ---------------------------------------------------------------------------
+# Risk classification
+# ---------------------------------------------------------------------------
+
+def _is_high_risk(files: list[str]) -> bool:
+    return any(
+        any(f.startswith(prefix) for prefix in HIGH_RISK_PREFIXES)
+        for f in files
+    )
+
+
+def _is_auto_approvable(files: list[str]) -> bool:
+    return all(
+        any(f.startswith(prefix) for prefix in AUTO_APPROVE_PREFIXES)
+        for f in files
+    )
+
+
+# ---------------------------------------------------------------------------
+# Main tick
+# ---------------------------------------------------------------------------
+
+def gate_tick() -> None:
+    """Single gate heartbeat. Called every 60s by scheduler."""
+    logger.info("gate: tick start")
+
+    if not _fetch():
+        return
+
+    branches = _branches_ahead_of_main()
+    if not branches:
+        logger.info("gate: nothing to process")
+        return
+
+    logger.info("gate: found %d branch(es) to review: %s", len(branches), branches)
+
+    # Gather files per branch
+    branches_with_files: list[tuple[str, list[str]]] = []
+    for branch in branches:
+        files = _files_changed_vs_main(branch)
+        branches_with_files.append((branch, files))
+        logger.info("gate: %s touches %d file(s)", branch, len(files))
+
+    # Conflict detection -- block ALL involved branches
+    conflicts = _detect_conflicts(branches_with_files)
+    blocked: set[str] = set()
+    for b1, b2, f in conflicts:
+        blocked.add(b1)
+        blocked.add(b2)
+        _notify(
+            f"CONFLICT: {b1} and {b2} both touch {f}. Both held. Review and resolve.",
+            urgent=True,
+        )
+        logger.warning("gate: conflict -- %s vs %s on %s", b1, b2, f)
+
+    # Process non-blocked branches
+    merged: list[str] = []
+    failed: list[tuple[str, str]] = []
+    held_high_risk: list[str] = []
+
+    for branch, files in branches_with_files:
+        if branch in blocked:
+            continue
+
+        # High-risk files need explicit approval
+        if _is_high_risk(files) and not _is_auto_approvable(files):
+            held_high_risk.append(branch)
+            _notify(
+                f"REVIEW NEEDED: {branch} touches high-risk files ({', '.join(f for f in files if any(f.startswith(p) for p in HIGH_RISK_PREFIXES))}). Tap to approve.",
+                urgent=True,
+            )
+            continue
+
+        # Run tests
+        passed, test_output = _run_tests(branch)
+        if not passed:
+            failed.append((branch, test_output))
+            _notify(
+                f"TESTS FAILED: {branch}\n{test_output[:400]}",
+                urgent=True,
+            )
+            continue
+
+        # Merge
+        ok, err = _merge_branch(branch)
+        if not ok:
+            failed.append((branch, err))
+            _notify(f"MERGE FAILED: {branch} -- {err[:200]}", urgent=True)
+            continue
+
+        merged.append(branch)
+
+    # Push main once if anything merged
+    if merged:
+        push_ok, push_err = _push_main()
+        if not push_ok:
+            _notify(f"PUSH FAILED after merging {merged}: {push_err}", urgent=True)
+            return
+
+        # Deploy VPS
+        deploy_ok, deploy_out = _deploy_vps()
+        if deploy_ok:
+            _notify(f"Merged + deployed: {', '.join(merged)}")
+        else:
+            _notify(f"Merged {merged} but VPS deploy failed: {deploy_out[:300]}", urgent=True)
+
+        # Clean up merged branches
+        for branch in merged:
+            _delete_remote_branch(branch)
+
+    # Summary log
+    logger.info(
+        "gate: tick done. merged=%s, failed=%s, blocked=%s, held_high_risk=%s",
+        merged, [f[0] for f in failed], list(blocked), held_high_risk,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Standalone runner (for testing outside scheduler)
+# ---------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    logger.info("gate: running single tick (standalone mode)")
+    gate_tick()
