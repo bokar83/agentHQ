@@ -585,6 +585,21 @@ def start_scheduler():
     except Exception as e:
         logger.error(f"STUDIO_BLOTATO_PUBLISHER: wake registration failed ({e}); continuing without publisher", exc_info=True)
 
+    # Studio M2: QA tick. Runs every 15 minutes, picks up scouted candidates
+    # from Studio Pipeline DB, runs QA checks, flips to qa-passed or qa-failed.
+    # Uses crew_name='studio' — same kill switch as trend scout.
+    try:
+        import heartbeat as _heartbeat
+        from studio_qa_crew import studio_qa_tick
+        _heartbeat.register_wake(
+            "studio-qa",
+            crew_name="studio",
+            callback=studio_qa_tick,
+            every="15m",
+        )
+    except Exception as e:
+        logger.error(f"STUDIO_QA: wake registration failed ({e}); continuing without QA tick", exc_info=True)
+
     # Studio M3: Production tick. Runs every 30 minutes, picks up qa-passed
     # candidates from Studio Pipeline DB, runs full production pipeline
     # (script → QA → voice → visuals → compose → render → Drive → Notion).
