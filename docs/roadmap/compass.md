@@ -217,11 +217,15 @@ Done = all five true at the same time.
 - Sankofa audit: 2026-05-02 chat
 - Karpathy audit: 2026-05-02 chat
 - Memory: `reference_folder_governance.md` (Folder Governance rule)
-- Sister roadmaps that this one governs: `atlas.md`, `harvest.md`, `studio.md`, `echo.md`, `dashboards4sale.md`
+- Sister roadmaps that this one governs: `atlas.md`, `harvest.md`, `studio.md`, `echo.md`
 
 ---
 
 ## Session Log
+
+### 2026-05-04: Studio M3 production pipeline shipped, no compass changes
+
+Studio M3 session touched compass.md as part of a bulk commit. No compass milestones changed this session.
 
 ### 2026-05-02: Roadmap created, M0 SHIPPED, M1 in progress
 

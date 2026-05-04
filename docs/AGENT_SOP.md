@@ -7,11 +7,13 @@ Applies to every coding-agent session (Claude Code, Codex, any future agent). Ag
 ## Session Start
 
 1. Read `D:\Ai_Sandbox\agentsHQ\docs\memory\MEMORY.md` and every linked file.
-2. **Read both active roadmaps every session, regardless of what Boubacar asks for:**
+2. **Read all active roadmaps every session, regardless of what Boubacar asks for:**
    - `docs/roadmap/atlas.md` (THE ENGINE ROOM): Autonomy infrastructure: content pipeline, heartbeats, approval queues, publish loops, learning crews, VPS hardening. If it makes agentsHQ operate without Boubacar, it lives here.
    - `docs/roadmap/harvest.md` (THE SALES FLOOR): Revenue work: offers, outreach, contracts, client milestones, Signal Works pipeline. If it puts money in the door, it lives here.
+   - `docs/roadmap/studio.md` (THE CONTENT FACTORY): Faceless agency - branded channels producing revenue independent of client work. Trend scout, production crew, publish pipeline, monetization.
+   - `docs/roadmap/compass.md` (THE RULEBOOK): Governance model - where rules live, how they enforce, how they retire, anti-sprawl. Milestone-gated evolution of AGENT_SOP + GOVERNANCE.
+   - `docs/roadmap/echo.md` (THE ASYNC LAYER): Partnership substrate - agent proposes commits, human acks asynchronously. Neither blocks on the other.
    - Read the latest session-log entry in each. Surface any milestone that has gone stale (trigger date passed, blocker removed, or action overdue) and flag it before starting work.
-   - These two roadmaps share zero milestones by design. Never move an item from one to the other.
 3. Check `docs/superpowers/plans/` for a handoff. Legacy: roadmaps supersede handoff docs for any roadmapped project.
 4. **Read `docs/CADENCE_CALENDAR.md`** if work touches scheduling, heartbeats, or anything that pulls Boubacar into a window. The calendar is the single source of truth for what runs when and where humans are required. Update it when a schedule changes; never schedule new human-in-loop work without first checking the daily attention budget there.
 
@@ -68,6 +70,8 @@ Every folder in agentsHQ has a purpose. If it does not, it is a candidate for ar
 2. **Simplicity first**: minimum code that solves the problem.
 3. **Surgical changes**: touch only what must change.
 4. **Goal-driven execution**: verifiable success criteria, checkpoints, loop back.
+
+**Multi-agent work:** apply `skills/boubacar-skill-creator/references/context-budget-discipline.md` - four-tier degradation model (PEAK/GOOD/DEGRADING/POOR), read-depth-by-window table, early warning signs. Apply `skills/boubacar-skill-creator/references/gates-taxonomy.md` for any workflow with subagents or review loops.
 
 ## Codex-First Rule
 
