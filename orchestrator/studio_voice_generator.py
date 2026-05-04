@@ -107,7 +107,10 @@ def _elevenlabs_tts(
     # Strip SSML phoneme tags for the plain text path; ElevenLabs SSML requires
     # the text endpoint, not the timestamps endpoint. Send clean text + rely on
     # the pronunciation dict applied upstream in script_generator.
-    plain_text = _strip_ssml(text)
+    plain_text = _strip_ssml(_strip_scene_markers(text))
+    # Strip [RETENTION:] and any other bracketed markers before sending to TTS
+    plain_text = re.sub(r'\[RETENTION:[^\]]*\]\s*', '', plain_text)
+    plain_text = re.sub(r'\[[A-Z][^\]]*\]\s*', '', plain_text).strip()
 
     headers = {
         "xi-api-key": api_key,
