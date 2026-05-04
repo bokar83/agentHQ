@@ -37,19 +37,8 @@ from typing import Optional
 
 logger = logging.getLogger("agentsHQ.gate_agent")
 
-def _detect_repo_path() -> Path:
-    """Detect repo root. Container: /app has gate_agent.py, data/ mounted there.
-    Host/local: /root/agentsHQ or REPO_ROOT env var."""
-    if "REPO_ROOT" in os.environ:
-        return Path(os.environ["REPO_ROOT"])
-    # Inside container: gate_agent.py is at /app/gate_agent.py
-    if Path("/app/gate_agent.py").exists():
-        return Path("/app")
-    # Host fallback
-    return Path("/root/agentsHQ")
-
-
-REPO_PATH = _detect_repo_path()
+DATA_DIR = Path(os.environ.get("GATE_DATA_DIR", "/app/data"))
+REPO_DIR = Path(os.environ.get("REPO_ROOT", "/app"))
 VPS_HOST = os.environ.get("VPS_HOST", "root@72.60.209.109")
 MAIN_BRANCH = "main"
 TICK_INTERVAL = 60  # seconds
@@ -120,7 +109,7 @@ def _notify(message: str, urgent: bool = False) -> None:
 def _git(args: list[str], cwd: Optional[Path] = None) -> tuple[int, str, str]:
     proc = subprocess.run(
         ["git", *args],
-        cwd=str(cwd or REPO_PATH),
+        cwd=str(cwd or REPO_DIR),
         capture_output=True,
         text=True,
         check=False,
@@ -220,7 +209,7 @@ def _run_tests(branch: str) -> tuple[bool, str]:
     try:
         proc = subprocess.run(
             ["python", "-m", "pytest", "-q", "--tb=short", "--timeout=120"],
-            cwd=str(REPO_PATH),
+            cwd=str(REPO_DIR),
             capture_output=True,
             text=True,
             timeout=180,
@@ -323,7 +312,7 @@ def _is_auto_approvable(files: list[str]) -> bool:
 def _gate_enabled() -> bool:
     """Check autonomy_state.json crews.gate.enabled flag. Defaults to False if missing."""
     try:
-        state_path = REPO_PATH / "data" / "autonomy_state.json"
+        state_path = DATA_DIR / "autonomy_state.json"
         if not state_path.exists():
             return False
         state = json.loads(state_path.read_text())
@@ -335,7 +324,7 @@ def _gate_enabled() -> bool:
 def _write_gate_log(entry: dict) -> None:
     """Append one JSONL entry to data/gate_log.jsonl (persists across rebuilds)."""
     try:
-        log_path = REPO_PATH / "data" / "gate_log.jsonl"
+        log_path = DATA_DIR / "gate_log.jsonl"
         with open(log_path, "a", encoding="utf-8") as f:
             f.write(json.dumps(entry) + "\n")
     except Exception as exc:
