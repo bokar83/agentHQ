@@ -16,11 +16,34 @@ from __future__ import annotations
 
 import logging
 import re
+from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger("agentsHQ.studio_script_generator")
 
 _DEFAULT_TARGET_WORDS = 1500  # ~10 minutes at 150 wpm
+
+_DOSSIER_DIR = Path(__file__).parent.parent / "research-vault" / "dossiers"
+_CHANNEL_DOSSIER_MAP = {
+    "under_the_baobab": "under_the_baobab.md",
+    "under-the-baobab": "under_the_baobab.md",
+    "ai_catalyst": "ai_catalyst.md",
+    "ai-catalyst": "ai_catalyst.md",
+    "first_generation_money": "first_generation_money.md",
+    "first-generation-money": "first_generation_money.md",
+    "1stgen": "first_generation_money.md",
+}
+
+
+def _load_dossier(channel_id: str) -> str:
+    slug = channel_id.lower().replace(" ", "_")
+    filename = _CHANNEL_DOSSIER_MAP.get(slug) or _CHANNEL_DOSSIER_MAP.get(channel_id.lower())
+    if not filename:
+        return ""
+    path = _DOSSIER_DIR / filename
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8")
 
 
 def generate_script(
@@ -57,6 +80,7 @@ def generate_script(
     pronunciation_dict = brand.get("pronunciation_dict", {})
 
     voice_role = _select_voice_role(niche, channel_id)
+    dossier = _load_dossier(channel_id)
 
     if dry_run:
         logger.info("[dry_run] script_generator skipping LLM call for '%s'", title)
@@ -65,12 +89,13 @@ def generate_script(
         return stub
 
     system_prompt = _build_system_prompt(
-        channel_id, script_tone, visual_style, hook_budget, loop_interval, target_words
+        channel_id, script_tone, visual_style, hook_budget, loop_interval, target_words,
+        dossier=dossier,
     )
     user_prompt = _build_user_prompt(hook, twist, niche, title)
 
     raw_script = _call_llm(system_prompt, user_prompt)
-    clean_script = _post_process(raw_script, pronunciation_dict)
+    clean_script = _post_process(raw_script, pronunciation_dict, loop_interval)
 
     word_count = len(clean_script.split())
     duration_sec = int(word_count / 150 * 60)
@@ -97,26 +122,36 @@ def _build_system_prompt(
     hook_budget: int,
     loop_interval: int,
     target_words: int,
+    *,
+    dossier: str = "",
 ) -> str:
-    return f"""You are a professional YouTube scriptwriter for the "{channel_id}" channel.
+    dossier_block = ""
+    if dossier:
+        dossier_block = f"\n\nCHANNEL INTELLIGENCE DOSSIER — use this to inform hooks, topics, and angle choices:\n{dossier}\n"
+    return f"""You are a professional YouTube scriptwriter for the "{channel_id}" channel.{dossier_block}
 
 VOICE AND TONE: {tone}
 VISUAL STYLE THIS CHANNEL USES: {visual_style}
 
 HARD RULES — follow exactly:
-1. Hook MUST appear in the first {hook_budget} words. It must name a felt problem or surprising fact.
-2. RETENTION LOOPS — required every {loop_interval} words without exception. Insert a line in this exact format:
+1. Hook MUST appear in the first {hook_budget} words. It must name a felt problem or surprising fact. NO generic intros.
+2. 4-PART FORMULA — every script must follow this structure in order:
+   - HOOK (first {hook_budget} words): felt problem or surprising fact — stops the scroll
+   - VALUE BODY: useful, surprising, or specific information — deliver immediately after hook
+   - CURIOSITY GAP (at least once before the final 10%): leave something slightly incomplete to trigger rewatch or continued watching. Use phrases like "But here is the part nobody talks about" or a [RETENTION:] marker.
+   - LOOP ENDING (final paragraph): close with a question, a rewatch trigger, or a "watch next" CTA — make the viewer want to loop or continue.
+3. RETENTION LOOPS — required every {loop_interval} words without exception. Insert a line in this exact format:
    [RETENTION: phrase]
    Where phrase is one of: "But here is the part nobody talks about." / "Stay with me, because this is where it gets surprising." / "Here is what the research actually shows." / "And this next part changes everything." / "Most people get this completely wrong."
    These ARE narrated aloud — they are spoken by the narrator to keep viewers watching.
-3. End with a clear CTA (subscribe, share, or watch another video) in the last paragraph.
-4. Target length: ~{target_words} words ({target_words // 150} minutes at 150 wpm).
-5. NO em-dashes (use commas or periods instead).
-6. NO first-person Boubacar references. This is a faceless channel.
-7. NO fabricated client stories or testimonials.
-8. NO alcohol, coffee, or substance imagery.
-9. EVERY factual claim MUST have a named source inline. Format: "according to [University/Organization] researchers" or "a [year] [Journal] study found". NO bare claims like "scientists discovered" or "research shows" without naming the source. If you cannot name a real source, reframe as an observation rather than a study claim.
-10. Write for narration — spoken aloud, not read. Short sentences. Active voice.
+4. End with a clear CTA (subscribe, share, or watch another video) in the last paragraph.
+5. Target length: ~{target_words} words ({target_words // 150} minutes at 150 wpm).
+6. NO em-dashes (use commas or periods instead).
+7. NO first-person Boubacar references. This is a faceless channel.
+8. NO fabricated client stories or testimonials.
+9. NO alcohol, coffee, or substance imagery.
+10. EVERY factual claim MUST have a named source inline. Format: "according to [University/Organization] researchers" or "a [year] [Journal] study found". NO bare claims like "scientists discovered" or "research shows" without naming the source. If you cannot name a real source, reframe as an observation rather than a study claim.
+11. Write for narration — spoken aloud, not read. Short sentences. Active voice.
 
 SCENE MARKERS: After every 150-200 words, insert a line in the format:
 [SCENE: brief visual description for the visual team]
@@ -151,9 +186,49 @@ def _build_user_prompt(hook: str, twist: str, niche: str, title: str) -> str:
 # Post-processing
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _post_process(text: str, pronunciation_dict: dict[str, str]) -> str:
+_RETENTION_PHRASES = [
+    "But here is the part nobody talks about.",
+    "Stay with me, because this is where it gets surprising.",
+    "And this next part changes everything.",
+    "Most people get this completely wrong.",
+    "Here is what actually happens next.",
+]
+
+
+def _inject_retention_loops(text: str, interval: int = 200) -> str:
+    """Ensure a [RETENTION:] marker appears at least every `interval` words.
+    Inserts one at the nearest paragraph break if a segment is missing one.
+    """
+    paragraphs = text.split("\n\n")
+    result = []
+    words_since_retention = 0
+    phrase_idx = 0
+
+    for para in paragraphs:
+        has_retention = bool(re.search(r'\[RETENTION:', para))
+        word_count = len(para.split())
+
+        if not has_retention and (words_since_retention + word_count) >= interval:
+            phrase = _RETENTION_PHRASES[phrase_idx % len(_RETENTION_PHRASES)]
+            phrase_idx += 1
+            para = para.rstrip() + f"\n[RETENTION: {phrase}]"
+            words_since_retention = 0
+        elif has_retention:
+            words_since_retention = 0
+        else:
+            words_since_retention += word_count
+
+        result.append(para)
+
+    return "\n\n".join(result)
+
+
+def _post_process(text: str, pronunciation_dict: dict[str, str], loop_interval: int = 200) -> str:
     # Strip em-dashes (house rule)
     text = text.replace("—", ", ").replace(" -- ", ", ")
+
+    # Guarantee retention loops every loop_interval words
+    text = _inject_retention_loops(text, loop_interval)
 
     # Apply SSML phonetic tags for ElevenLabs pronunciation
     for word, phonetic in pronunciation_dict.items():

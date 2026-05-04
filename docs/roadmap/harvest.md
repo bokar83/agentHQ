@@ -246,6 +246,34 @@ skills/signal-works-conversion/
 
 ---
 
+### R1f: frontend-design skill - art direction + design audit lift (taste-skill absorb)
+
+**Status:** PROCEED. Integration target 2026-05-07.
+**Source:** `leonxlnx/taste-skill` (MIT). Security scan: STATIC-CLEAN.
+**Absorb verdict:** continuous-improvement. Logged in `docs/reviews/absorb-log.md`.
+
+**What this is:** Two surgical changes to `skills/frontend-design/SKILL.md` that directly lift image and design quality on every SW and CW site build:
+
+1. **Kie prompt template rewrite** (~line 1002-1070): replace the current one-sentence example prompt format with a structured 4-6 line template using compositional vocabulary from `imagegen-frontend-web`: composition anchor + background mode + hero scale + typography character + one anti-slop prohibition per site type. Today's Kie prompts are single sentences; every site's images are generic as a result.
+
+2. **Design audit reference file**: add `skills/frontend-design/references/design-audit.md` - flat checklist ported from taste-skill's `redesign-skill` Design Audit section (80+ specific anti-generic checks across typography, color, layout, interactivity, content, components, icons). Wire one line into Step 5 pre-launch checklist: "Run design-audit.md against all visible sections."
+
+**Why now:** Design quality is Boubacar's stated key area of focus. Every SW build (Rod/Elevate, future prospects) and CW site ships via frontend-design. The current Kie prompt generates single-sentence briefs; imagegen-frontend-web's combinatorial vocabulary (composition anchors, background modes, hero scale, anti-slop rules) is exactly what's missing. Sankofa chairman verdict: "the gap is in the Kie prompt construction, not in the art direction vocabulary." Karpathy verdict: SHIP.
+
+**What was NOT absorbed:** The full 20-section imagegen-frontend-web art direction system was not imported wholesale - it is designed for models that generate images directly. Claude Code's role is prompt writer for Kie API. Vocabulary extraction only, not system import. Studio thumbnail art direction (kie_media) and brandkit content (design skill) deferred to separate sessions.
+
+**Tasks:**
+- [ ] Rewrite Kie prompt block in `skills/frontend-design/SKILL.md` ~line 1002-1070
+- [ ] Add `skills/frontend-design/references/design-audit.md` (80+ checklist from redesign-skill)
+- [ ] Wire one-line reference into Step 5 pre-launch checklist
+- [ ] Verify: run one site build, confirm Kie prompt contains 2+ compositional vocabulary terms
+
+**Success criterion:** Next SW or CW site build generates a Kie prompt with 2+ compositional vocabulary terms (composition anchor / background mode / hero scale / typography character / anti-slop prohibition). Design-audit.md exists and is referenced in Step 5.
+
+**Target:** 2026-05-07
+
+---
+
 ### R1e: catalystworks.consulting v3-WOW (cinematic + Constraints AI live demo)
 
 **Status:** Tier 1 shipped 2026-05-01 to `dev-v3-WOW` branch. Sankofa Council + design+SEO audit run. Tier 2 + Tier 3 planned below, not yet built.
@@ -291,6 +319,27 @@ skills/signal-works-conversion/
 - Localhost preview: `cd output/websites/catalystworks-site && python -m http.server 8745`
 
 **Sankofa Council verdict (2026-05-01):** the site is a $100k positioning piece. Tier 1 added the conversion mechanics (capture, risk reversal, Calendly). Tier 2 + 3 turn it into a $100k revenue piece.
+
+---
+
+### R-automation: CW AI automation delivery service line
+
+**Status:** Queued. n8n-mcp MCP installed 2026-05-04. Skill build target 2026-05-18.
+**Trigger:** After R1 closes (need first social proof) OR first inbound automation inquiry.
+
+**What it is:** One-man AI automation agency offering alongside Catalyst Works. Build client n8n workflows that save 5-20 hours/week. Pricing: $3K-$5K per build engagement, $500-$1K/month maintenance. Model validated by X-thread 6-phase playbook (@eng_khairallah1).
+
+**Stack wired 2026-05-04:**
+- n8n-mcp MCP server installed (`npx n8n-mcp`) - gives Claude expert knowledge of 1,650 n8n nodes + 2,352 templates
+- `cw-automation-engagement` skill planned (v1 = Phase 3 only: case study acquisition workflow)
+
+**Karpathy WARN (logged):** v1 skill scoped to Phase 3 only. Do not build full 6-phase skill speculatively. Acceptance criterion: first CW automation engagement scoped and priced by 2026-07-04.
+
+**Sankofa verdict:** n8n-mcp install-only (not skill absorb). Real asset is the engagement methodology (6-phase X-thread). Skill worth building is `cw-automation-engagement`, not a wrapper around the MCP docs.
+
+**Why this is adjacent to CW (not separate):** Same buyer (SMB professional services). Same discovery motion (Signal Session). Same constraint: Boubacar's time. Automation delivery = the natural upsell after AI presence (Signal Works) and AI diagnostic (CW Signal Session).
+
+**Success criterion:** First paying automation engagement closed and delivered using this stack.
 
 ---
 
@@ -407,6 +456,30 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 ---
 
 ## Session Log
+
+### 2026-05-04: R1f added - taste-skill absorbed, frontend-design art direction lift queued
+
+Absorbed `leonxlnx/taste-skill` (MIT, 12 SKILL.md files). Security scan: STATIC-CLEAN. Focus: `imagegen-frontend-web` (21-section image art direction system) + `redesign-skill` (80+ anti-generic design audit checklist).
+
+Key finding: frontend-design's Kie prompt template is a single sentence. Every site's generated images are generic as a result. The gap is prompt construction depth, not missing capability. Sankofa chairman: "the gap is in the Kie prompt construction." Karpathy: SHIP.
+
+Two surgical changes queued for 2026-05-07:
+1. Rewrite Kie prompt block to use compositional vocabulary (composition anchor + background mode + hero scale + typography character + anti-slop prohibition per site type).
+2. Add `skills/frontend-design/references/design-audit.md` (80+ checklist) wired into Step 5 pre-launch.
+
+Not absorbed: full 20-section art direction system (designed for models that generate images directly, not prompt writers). Studio thumbnail art direction and brandkit content deferred to separate sessions.
+
+### 2026-05-04: R-automation milestone added - n8n-mcp installed, agency methodology absorbed
+
+Absorbed `czlonkowski/n8n-mcp` (MCP server, MIT, 1,650 nodes, 2,352 templates). Security scan: STATIC-CLEAN. Verdict: install-only - MCP wired via `claude mcp add n8n-mcp -- npx n8n-mcp`. No skill wrapper needed; value is in Claude having node knowledge, not in a thin README skill.
+
+Separately absorbed X-thread 6-phase AI automation agency playbook (@eng_khairallah1). Sankofa+Karpathy audits: real leverage is the engagement methodology, not the tool. Chairman verdict: n8n-mcp is a dependency; `cw-automation-engagement` skill is the actual producing motion.
+
+R-automation milestone added. Karpathy WARN: v1 scoped to Phase 3 only (case study acquisition). Full 6-phase skill only after first paid engagement closes. Target: skill built by 2026-05-18, first engagement by 2026-07-04.
+
+Strategic context locked: this is the "AI automation agency adjacent to CW" model. Same buyer, same discovery motion, natural upsell. Market window noted - supply of builders still thin vs demand.
+
+Next: build `skills/cw-automation-engagement/SKILL.md` v1 (Phase 3 only). Accept criterion at top of file before any content.
 
 ### 2026-04-29 (afternoon): transcript-style-dna wired into CW outreach (R7 active)
 

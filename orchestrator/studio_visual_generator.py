@@ -101,28 +101,59 @@ def _process_batch(
     return [r for _, r in results]
 
 
+def _vault_lookup(prompt: str) -> str:
+    """Return local video path from asset vault if tags match, else empty string."""
+    import json, pathlib, re
+    vault_path = pathlib.Path("/app/configs/asset_vault.json")
+    if not vault_path.exists():
+        return ""
+    try:
+        vault = json.loads(vault_path.read_text())
+        query_words = set(re.findall(r'[a-z]+', prompt.lower())) - {"a","an","the","of","in","with","and","to","for","on","slow","cinematic","zoom"}
+        best_path, best_score = "", 0
+        for asset in vault.get("assets", []):
+            if not pathlib.Path(asset["path"]).exists():
+                continue
+            tags = set(asset.get("tags", []))
+            score = len(query_words & tags)
+            if score > best_score and score >= 2:
+                best_score, best_path = score, asset["path"]
+        if best_path:
+            logger.info("visual_generator: vault hit (score=%d) for scene: %s", best_score, prompt[:60])
+        return best_path
+    except Exception as e:
+        logger.warning("visual_generator: vault lookup failed: %s", e)
+        return ""
+
+
 def _generate_scene_assets(scene: Any, channel_id: str) -> dict[str, Any]:
-    """Generate image then video for one scene."""
-    from kie_media import generate_image, generate_video
+    """Generate still image for one scene. Images only — ffmpeg handles motion/assembly.
+
+    Model: GPT Image 2 (best quality, handles complex prompts well).
+    Vault lookup first to reuse existing images and avoid Kai spend.
+    No video generation — Ken Burns motion applied at render time by ffmpeg.
+    """
+    from kie_media import generate_image
+
+    prompt = getattr(scene, "image_prompt", "") or getattr(scene, "video_prompt", "")
+
+    # Check vault first
+    vault_path = _vault_lookup(prompt)
+    if vault_path:
+        return {
+            "scene_index": scene.index,
+            "image_url": "", "image_drive_id": "",
+            "image_local_path": vault_path,
+            "video_url": "", "video_drive_id": "", "video_local_path": "",
+        }
 
     notion_id = f"studio_scene_{channel_id}_{scene.index}"
 
-    # Step 1: Still image
     img_result = generate_image(
-        prompt=scene.image_prompt,
+        prompt=prompt,
         aspect_ratio="16:9",
-        task_type="text_to_image",
+        task_type="gpt_image_2_text",
         linked_content_id=notion_id,
-    )
-
-    # Step 2: Image-to-video — Kai CDN source_url required (Drive webViewLink returns HTML, not raw image)
-    img_url = img_result.get("source_url") or img_result.get("drive_url", "")
-    vid_result = generate_video(
-        prompt=scene.video_prompt,
-        aspect_ratio="16:9",
-        task_type="image_to_video",
-        linked_content_id=notion_id,
-        image_url=img_url,
     )
 
     return {
@@ -130,9 +161,7 @@ def _generate_scene_assets(scene: Any, channel_id: str) -> dict[str, Any]:
         "image_url": img_result.get("drive_url", ""),
         "image_drive_id": img_result.get("drive_file_id", ""),
         "image_local_path": img_result.get("local_path", ""),
-        "video_url": vid_result.get("drive_url", ""),
-        "video_drive_id": vid_result.get("drive_file_id", ""),
-        "video_local_path": vid_result.get("local_path", ""),
+        "video_url": "", "video_drive_id": "", "video_local_path": "",
     }
 
 

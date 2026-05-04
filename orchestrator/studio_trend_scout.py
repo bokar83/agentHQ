@@ -719,9 +719,11 @@ def _send_summary(total: int, today_iso: str) -> None:
 
 def get_reply_for_week(week_start_date: date) -> Optional[str]:
     """Lazy import wrapper for the Sunday editorial reply lookup."""
-    from newsletter_editorial_input import get_reply_for_week as _get_reply_for_week
-
-    return _get_reply_for_week(week_start_date)
+    try:
+        from newsletter_editorial_input import get_reply_for_week as _get_reply_for_week
+        return _get_reply_for_week(week_start_date)
+    except ImportError:
+        return None
 
 
 def _send_anchor_alert(text: str) -> None:

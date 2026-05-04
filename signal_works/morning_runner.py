@@ -132,13 +132,23 @@ def _main_body():
             logger.error(f"  Signal Works sequence failed: {e}")
 
     # ── Step 4: Catalyst Works -- Apollo lead topup ───────────────
-    logger.info("STEP 4: Catalyst Works lead topup via Apollo (target: 10 leads)...")
+    logger.info("STEP 4: Catalyst Works lead topup via Apollo (target: 20 leads, full US)...")
     try:
         from signal_works.topup_cw_leads import topup_cw_leads
-        cw_leads = topup_cw_leads(minimum=10)
+        cw_leads = topup_cw_leads(minimum=20)
         logger.info(f"  Done. {cw_leads} CW email leads ready.")
     except Exception as e:
         logger.error(f"  CW Apollo topup failed: {e}")
+
+    # ── Step 4b: Studio -- Apollo lead topup (full US) ────────────
+    studio_leads = 0
+    logger.info("STEP 4b: Studio lead topup via Apollo (target: 25 leads, full US)...")
+    try:
+        from signal_works.topup_studio_leads import topup_studio_leads
+        studio_leads = topup_studio_leads(minimum=25)
+        logger.info(f"  Done. {studio_leads} Studio email leads ready.")
+    except Exception as e:
+        logger.error(f"  Studio Apollo topup failed: {e}")
 
     # ── Step 4.5: CW voice personalization (transcript-style-dna) ─
     voice_personalized = 0
@@ -175,6 +185,7 @@ def _main_body():
     logger.info(f"  SW drafts created:      {sw_drafted}")
     logger.info(f"  CW leads personalized:  {voice_personalized}")
     logger.info(f"  CW outreach drafts:     {cw_drafted}")
+    logger.info(f"  Studio leads harvested: {studio_leads}")
     logger.info(f"  TOTAL drafts in inbox:  {total}")
     if total > 0:
         logger.info("  Check boubacar@catalystworks.consulting Drafts -- ready to send.")
