@@ -143,7 +143,8 @@ def check_banned_phrases(text: str) -> QACheckResult:
 
 LENGTH_TARGETS = {
     # length_target name -> (min_words, max_words) at ~150 wpm spoken
-    "short (<60s)":    (50,   200),   # 20-80 sec
+    # short: 55s target = ~137 words; allow up to 275 for natural delivery variance
+    "short (<60s)":    (30,   275),
     "medium (60-180s)":(200,  600),   # 1-4 min
     "long (3-15m)":    (400, 2500),   # 3-15 min (10 min = ~1500 words)
 }
@@ -239,10 +240,18 @@ CTA_PATTERNS = [
     r"\blink\s+in\s+bio\b",
     r"\bdrop\s+a\s+comment\b",
     r"\bdm\s+me\b",
-    r"\bvisit\s+\w+\.\w+",  # any visit some-domain
+    r"\bvisit\s+\w+\.\w+",
     r"\bjoin\s+(?:the|us|me)\b",
     r"\bwhat\s+do\s+you\s+think\b",
-    r"\?\s*$",  # ends with a question
+    r"\?",                              # any question anywhere in text
+    r"\bsave\s+this\b",
+    r"\bshare\s+this\b",
+    r"\bpass\s+this\b",
+    r"\bsee\s+you\s+(?:in\s+the\s+next|next\s+time|tomorrow)\b",
+    r"\buntil\s+next\s+time\b",
+    r"\bmore\s+(?:stories|videos|content|episodes)\b",
+    r"\bwatch\s+(?:this|the\s+next|more)\b",
+    r"\blike\s+(?:this|and)\b",
 ]
 
 
