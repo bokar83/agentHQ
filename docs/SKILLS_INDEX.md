@@ -46,7 +46,7 @@ Total skills: 73
 - `library` (`skills/library/`): Shared internal skill library assets and reusable capability references.
 - `linkedin-mvm` (`skills/linkedin_mvm/`): Operational tooling for the LinkedIn AI Governance motion, including personalized DMs, prospect ingestion, and morning nudges.
 - `local-crm` (`skills/local_crm/`): Agent-driven pipeline management for tracking Catalyst Growth Engine leads in a local PostgreSQL CRM.
-- `memory` (`skills/memory/`): Memory helpers and references for retrieving and preserving agent operating context.
+- `memory` (`skills/memory/`): Memory helpers and references for retrieving and preserving agent operating context. Two layers: (1) flat-file auto-memory in ~/.claude/projects/.../memory/ for curated signal; (2) MemPalace semantic search over verbatim conversation history.
 - `mermaid_diagrammer` (`skills/mermaid_diagrammer/`): Generates PNG, SVG, or PDF diagrams from Mermaid syntax using local Mermaid-CLI.
 - `notion-cli` (`skills/notion_cli/`): Project-specific CLI for direct interaction with Notion databases in agentsHQ.
 - `notion-skill` (`skills/notion_skill/`): Notion API helper tooling for querying, creating, and updating Notion workspace records.

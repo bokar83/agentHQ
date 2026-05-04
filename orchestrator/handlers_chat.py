@@ -126,14 +126,41 @@ ABSOLUTE RULES, NEVER VIOLATE:
 
 TOOL DISCIPLINE:
 When asked to do something, do it with your tools. Do not explain what you are about to do.
-For write actions (approve, reject, queue, schedule, post, send, create, add, mark): you MUST call forward_to_crew. The system shows the user a Confirm button. Tell them: "Tap Confirm below to run this." Do NOT say the work is happening, started, or done until a real tool result confirms it.
-For drafting (generate a draft I will read inline, no external system write): produce the draft directly in your reply. Ask for feedback after.
-For tasks beyond your tool set: call forward_to_crew with a task_text that uses the correct action verbs so the task router picks the right crew:
-- To draft a social post from content board: task_text = "draft one X post from content board status=Draft" (routes to social_crew)
-- To fetch/show content board items: task_text = "show me content board posts with status Draft" (routes to content_board_fetch_crew)
-- To review content quality: task_text = "run content review on ready posts" (routes to content_review_crew)
-- To push approved posts to Drive: task_text = "push content to drive" (routes to content_drive_crew)
-Do NOT use "review the content board" when the intent is drafting — that routes to the wrong crew.
+
+AMBIGUITY RULE (highest priority): If a request could mean two different things, ASK before acting.
+Keep it to one question, two options max. Examples:
+- "Are you asking me to show you post 1, or draft a new post based on it?"
+- "Do you want me to write a draft inline, or queue this for the orchestrator to produce?"
+- "Are you asking about your task list or your content board?"
+Never guess when confused. One clarifying question saves multiple wrong runs.
+
+COMPOUND REQUEST RULE: If a message asks for two different actions (e.g. "write AND post"),
+ask which to do first. Do not attempt both at once.
+
+CONTENT BOARD READS (no confirm, instant):
+For ANY request to show, list, get, fetch, retrieve, or see content board posts:
+call query_content_board. Do NOT call forward_to_crew for reads.
+Examples: show me post 1, what posts do I have, fetch the full text of post X.
+
+WRITE ACTIONS (always confirm):
+For write actions (approve, reject, queue, schedule, post to social media, create, add, mark):
+call forward_to_crew. The system shows the user a Confirm button.
+Tell them: "Tap Confirm below to run this." Do NOT say work is happening until a real tool result confirms it.
+
+DRAFTING INLINE:
+For drafting (generate a draft you will read here, no external system write):
+produce the draft directly in your reply. Ask for feedback after.
+
+FORWARD TO CREW — REFORMULATION RULE:
+When calling forward_to_crew, always set task_text to a clean action-verb phrase.
+Do NOT pass the user's raw conversational message. The routing engine matches on action verbs.
+Good reformulations:
+- User says "can you write something about AI for LinkedIn" → task_text = "draft a LinkedIn post about AI adoption"
+- User says "push these posts" → task_text = "push approved content board posts to Drive"
+- User says "review my draft" → task_text = "review and improve the draft social post"
+- User says "run research on competitor X" → task_text = "research competitor X pricing and positioning"
+- User says "approve the queued post" → task_text = "fetch and approve queued content board post"
+- User says "write an email newsletter" → task_text = "draft email newsletter for this week"
 
 When forward_to_crew returns a result that contains "Confirm token:" or "Awaiting your tap":
   Reply: "Tap Confirm below to run this, or Cancel to drop it." Nothing more.
@@ -228,6 +255,33 @@ _TOOLS = [
                     },
                 },
                 "required": ["fact"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "query_content_board",
+            "description": (
+                "Read and return posts from the Notion Content Board directly. "
+                "NO confirmation gate. NO crew spin-up. Instant inline result. "
+                "Call this for ANY request to show, get, fetch, list, send, display, pull, "
+                "retrieve, or see content board posts or their contents. "
+                "Examples: show me post 1, send me the contents of post X, "
+                "list all draft posts, get the full post titled Y, show all items, "
+                "what posts do I have, fetch post about AI tools. "
+                "Pass the user's exact original message as task_text. "
+                "Do NOT call forward_to_crew for content board reads."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "task_text": {
+                        "type": "string",
+                        "description": "The user's exact message about the content board.",
+                    }
+                },
+                "required": ["task_text"],
             },
         },
     },
@@ -569,6 +623,17 @@ def _extract_reply(raw: str) -> str:
     if sl.startswith("<!doctype") or sl.startswith("<html"):
         return "The crew produced a visual artifact. Ask me to show you the result or check the Atlas dashboard."
 
+    # Last resort: model may have wrapped JSON inside prose.
+    # Scan for first {..} block and try to extract reply key.
+    try:
+        _jm = re.search(r'\{[^{}]{10,}\}', stripped)
+        if _jm:
+            _p = json.loads(_jm.group())
+            if "reply" in _p:
+                return (_p["reply"] or "").strip()
+    except Exception:
+        pass
+
     # Not valid JSON -- plain text or markdown, return as-is
     return stripped
 
@@ -859,6 +924,26 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
                         tool_result = f"Saved to memory: {fact}"
                     except Exception as mem_e:
                         tool_result = f"Memory save failed: {mem_e}"
+                elif fn_name == "query_content_board":
+                    args = json.loads(tool_call.function.arguments or "{}")
+                    task_text = args.get("task_text", "")
+                    try:
+                        from engine import run_orchestrator
+                        cb_result = run_orchestrator(
+                            task_request=task_text,
+                            from_number=session_key,
+                            session_key=session_key,
+                            explicit_task_type="content_board_fetch",
+                        )
+                        tool_result = (
+                            cb_result.get("result")
+                            or cb_result.get("deliverable")
+                            or "No content board results returned."
+                        )
+                        logger.info(f"Atlas chat used query_content_board: {task_text[:60]}")
+                    except Exception as cb_e:
+                        tool_result = f"Content board query failed: {cb_e}"
+                        logger.error(f"query_content_board failed: {cb_e}")
                 elif fn_name == "forward_to_crew":
                     args = json.loads(tool_call.function.arguments or "{}")
                     task_text = args.get("task_text", "")

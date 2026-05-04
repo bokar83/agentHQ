@@ -962,6 +962,13 @@ def build_social_crew(user_request: str) -> Crew:
         Write the social content for:
         REQUEST: {user_request}
 
+        ANTI-FABRICATION RULE: Do NOT invent personal stories, client losses,
+        specific incidents, or first-person anecdotes that were not in the original
+        request. If the request is abstract, write from a professional observer lens,
+        NOT a fabricated personal experience. If you need a concrete example,
+        use a generic business scenario (e.g. 'a team I worked with') not a specific
+        invented story claimed as Boubacar's own.
+
         Write in Boubacar's voice: direct, insightful, specific, and real.
         No "I'm excited to share..." No buzzword soup.
         Include platform-appropriate formatting (hashtags for Instagram,
