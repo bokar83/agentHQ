@@ -4,8 +4,9 @@ Schema: `YYYY-MM-DD | placement | leverage type | next action | target date`
 
 PROCEED verdicts append here automatically. PROCEED without a follow-up entry is incomplete.
 
-2026-05-04 | new skill skills/cw-automation-engagement | producing-motion | Build v1 scoped to Phase 3 only (case study acquisition workflow). Add acceptance criterion at top of SKILL.md: "Success = first CW automation engagement scoped and priced using this skill by 2026-07-04." n8n-mcp listed as tool dependency (already installed). | 2026-05-18
-2026-05-04 | enhance skills/frontend-design | continuous-improvement | (1) Rewrite Kie prompt template in SKILL.md ~line 1002-1070: replace one-line example with 4-6 line structured template using composition anchor / background mode / hero scale / typography character / anti-slop prohibition per site type (vocab from imagegen-frontend-web). (2) Add skills/frontend-design/references/design-audit.md - flat checklist from redesign-skill Design Audit section. Wire one-line reference into Step 5 pre-launch checklist. Verify: next site build Kie prompt contains 2+ compositional vocabulary terms. | 2026-05-07
+2026-05-04 | new skill skills/cw-automation-engagement | producing-motion | SHIPPED 2026-05-04: full v1 built (all 6 phases, pricing, n8n-mcp quick ref, case study template, acceptance criterion at top of file). Verify: first engagement scoped+priced using skill by 2026-07-04. | 2026-05-18
+2026-05-04 | enhance skills/frontend-design | continuous-improvement | SHIPPED 2026-05-04: Kie prompt block rewritten (6-field template: composition anchor / background mode / hero scale / anti-slop prohibition + 3 worked examples). design-audit.md created (80+ items). Step 5 wired. Karpathy P4 WARN: verify on next live site build. | 2026-05-07
+2026-05-04 | enhance skills/kie_media | continuous-improvement | SHIPPED 2026-05-04: Studio Art Direction section added (6-field prompt template, per-channel palette anchors for Under the Baobab / AI Catalyst / 1stGen Money, anti-slop prohibitions per channel, 3 worked examples, Ken Burns still rule). | n/a
 
 2026-05-04 | enhance skills/memory + Atlas autonomy infra | continuous-improvement | Run MemPalace pilot: venv install + sweep 30d transcripts + validate 5 recall queries (correct drawer top-3) before wiring MCP | 2026-05-11
 
