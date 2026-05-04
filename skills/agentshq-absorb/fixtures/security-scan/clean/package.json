@@ -1,0 +1,14 @@
+{
+  "name": "clean-example",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node index.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.0",
+    "lodash": "^4.17.21",
+    "dotenv": "^16.0.3"
+  }
+}

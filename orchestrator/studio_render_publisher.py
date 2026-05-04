@@ -39,10 +39,10 @@ _DRIVE_ASSET_LIBRARY_ROOT = os.environ.get(
     "1T3uF6jDOo_RBTXIb4qE60_ZxUeqJj6gL",  # pragma: allowlist secret
 )
 
-# POC: render long_form only until channels are monetized.
-# Add shorts + square back when G4 ($1k/mo) is in sight.
+# Strategy: Shorts-first path to monetization (10M views/90 days threshold).
+# Long-form added once Shorts traction is proven.
 _PLATFORM_SPECS = {
-    "long_form": {"width": 1920, "height": 1080, "fps": 30},
+    "shorts": {"width": 1080, "height": 1920, "fps": 30},
 }
 
 
@@ -87,7 +87,7 @@ def render_and_publish(
             renders[fmt] = {"local_path": "", "drive_url": "", "drive_file_id": ""}
             logger.warning("render_publisher: %s render missing for %s", fmt, channel_id)
 
-    primary_url = renders.get("long_form", {}).get("drive_url", "")
+    primary_url = renders.get("shorts", renders.get("long_form", {})).get("drive_url", "")
     notion_updated = _update_notion(notion_id, primary_url, dry_run)
     _notify_telegram(channel_id, notion_id, renders, dry_run, title=title)
     _notify_email(channel_id, notion_id, renders, dry_run)
