@@ -570,6 +570,38 @@ def start_scheduler():
     except Exception as e:
         logger.error(f"STUDIO_TREND_SCOUT: wake registration failed ({e}); continuing without trend scout", exc_info=True)
 
+    # Studio M4: Blotato publisher tick. Runs daily at 09:00 MT.
+    # Scans Pipeline DB for Status=scheduled + ScheduledDate=today,
+    # publishes via Blotato API, flips to posted. Reads account IDs from env.
+    try:
+        import heartbeat as _heartbeat
+        from studio_blotato_publisher import studio_blotato_publisher_tick
+        _heartbeat.register_wake(
+            "studio-blotato-publisher",
+            crew_name="studio",
+            callback=studio_blotato_publisher_tick,
+            at="09:00",
+        )
+    except Exception as e:
+        logger.error(f"STUDIO_BLOTATO_PUBLISHER: wake registration failed ({e}); continuing without publisher", exc_info=True)
+
+    # Studio M3: Production tick. Runs every 30 minutes, picks up qa-passed
+    # candidates from Studio Pipeline DB, runs full production pipeline
+    # (script → QA → voice → visuals → compose → render → Drive → Notion).
+    # Uses crew_name='studio' — same kill switch as trend scout.
+    # Default state: studio.enabled=False; flip on after M3 VPS deploy.
+    try:
+        import heartbeat as _heartbeat
+        from studio_production_crew import studio_production_tick
+        _heartbeat.register_wake(
+            "studio-production",
+            crew_name="studio",
+            callback=studio_production_tick,
+            every="30m",
+        )
+    except Exception as e:
+        logger.error(f"STUDIO_PRODUCTION: wake registration failed ({e}); continuing without production tick", exc_info=True)
+
     # Atlas: Notion State Poller. Runs every 5 minutes. Queries Tasks DB for
     # rows changed in last 6 minutes, diffs against cache, writes changelog.
     # Single source of truth for "what changed in the Tasks DB" event log.
