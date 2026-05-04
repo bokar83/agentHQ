@@ -309,15 +309,25 @@ def _is_auto_approvable(files: list[str]) -> bool:
 # ---------------------------------------------------------------------------
 
 def _gate_enabled() -> bool:
-    """Check autonomy_state.json gate.enabled flag. Defaults to False if missing."""
+    """Check autonomy_state.json crews.gate.enabled flag. Defaults to False if missing."""
     try:
         state_path = REPO_PATH / "data" / "autonomy_state.json"
         if not state_path.exists():
             return False
         state = json.loads(state_path.read_text())
-        return bool(state.get("gate", {}).get("enabled", False))
+        return bool(state.get("crews", {}).get("gate", {}).get("enabled", False))
     except Exception:
         return False
+
+
+def _write_gate_log(entry: dict) -> None:
+    """Append one JSONL entry to data/gate_log.jsonl (persists across rebuilds)."""
+    try:
+        log_path = REPO_PATH / "data" / "gate_log.jsonl"
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+    except Exception as exc:
+        logger.warning("gate: could not write gate_log: %s", exc)
 
 
 def gate_tick() -> None:
@@ -427,11 +437,20 @@ def gate_tick() -> None:
         for branch in merged:
             _delete_remote_branch(branch)
 
-    # Summary log
+    # Summary log + persistent audit trail
+    import datetime as _dt
+    summary = {
+        "ts": _dt.datetime.now(_dt.timezone.utc).isoformat(),
+        "merged": merged,
+        "failed": [{"branch": b, "reason": r[:200]} for b, r in failed],
+        "blocked_conflicts": list(blocked),
+        "held_high_risk": held_high_risk,
+    }
     logger.info(
         "gate: tick done. merged=%s, failed=%s, blocked=%s, held_high_risk=%s",
         merged, [f[0] for f in failed], list(blocked), held_high_risk,
     )
+    _write_gate_log(summary)
 
 
 # ---------------------------------------------------------------------------
