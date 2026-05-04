@@ -257,9 +257,19 @@ def _ken_burns_filter(motion: str, w: int, h: int, fps: int, dur: float) -> str:
 
 def _render_ken_burns_clip(img: str, out: Path, dur: float, fps: int, w: int, h: int, motion: str) -> None:
     kb = _ken_burns_filter(motion, w, h, fps, dur)
+    # For portrait/square formats, center-crop source to target aspect ratio
+    # before Ken Burns so landscape images fill frame without letterboxing.
+    if h > w:
+        # portrait (shorts 1080x1920): crop width to ih*(w/h)
+        crop = f"crop=ih*{w}/{h}:ih,"
+    elif w == h:
+        # square (1080x1080): crop to shortest side
+        crop = "crop=min(iw\\,ih):min(iw\\,ih),"
+    else:
+        crop = ""
     _ffmpeg([
         "-loop", "1", "-i", img,
-        "-vf", kb,
+        "-vf", f"{crop}{kb}",
         "-t", str(dur),
         "-c:v", "libx264", "-preset", "fast", "-crf", "20",
         "-pix_fmt", "yuv420p", "-an",
