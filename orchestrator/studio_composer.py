@@ -1,294 +1,168 @@
 """
-studio_composer.py — Studio M3: Assemble voiceover + visuals + captions via hyperframes.
+studio_composer.py - Studio M3: Compose video from scenes + audio using ffmpeg.
 
-Flow:
-  1. npx hyperframes init <project_dir> --non-interactive --audio <audio_path>
-  2. Write index.html composition (scenes, captions, branded intro/outro)
-  3. npx hyperframes lint
-  4. Return project_dir path (render happens in studio_render_publisher)
+Replaces hyperframes entirely. Pipeline:
+  1. Each scene image gets a Ken Burns motion effect (zoom/pan, varied per scene)
+  2. Scenes are concatenated with crossfade transitions
+  3. Narration audio overlaid
+  4. Word-level SRT subtitle file generated for multilingual captioning
+  5. Output: project dict with paths for render_publisher
 
-Brand values (colors, fonts, intro/outro) loaded from brand_config.
-Placeholder values used until M2 ships final brand identity.
+No Chrome, no headless browser, no video audio bleed.
 """
 from __future__ import annotations
 
 import json
 import logging
 import os
+import pathlib
+import re
 import subprocess
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger("agentsHQ.studio_composer")
 
-_HF_CMD = os.environ.get("HYPERFRAMES_CMD", "npx hyperframes")
-_COMPOSITIONS_DIR = Path(os.environ.get("STUDIO_COMPOSITIONS_DIR", "workspace/compositions"))
+WORKSPACE = pathlib.Path("/app/workspace")
+COMPOSITIONS_DIR = WORKSPACE / "compositions"
+
+# Ken Burns motion variants — cycled per scene for variety
+_MOTION_EFFECTS = [
+    "zoom_in",       # slow zoom toward center
+    "pan_right",     # pan left to right
+    "zoom_out",      # slow zoom out from center
+    "pan_left",      # pan right to left
+    "zoom_in_tl",    # zoom in from top-left
+    "zoom_out_br",   # zoom out toward bottom-right
+    "pan_up",        # pan bottom to top
+    "zoom_in_tr",    # zoom in from top-right
+]
+
+# Transition between scenes
+_TRANSITIONS = [
+    "fade",
+    "fadeblack",
+    "slideleft",
+    "slideright",
+    "dissolve",
+    "pixelize",
+    "fadewhite",
+    "smoothleft",
+]
+
+_TRANSITION_DURATION = 0.5  # seconds
 
 
 def compose(
-    scenes: list[Any],               # list[Scene] from studio_scene_builder
-    scene_assets: list[dict],        # from studio_visual_generator
-    voice: dict[str, Any],           # from studio_voice_generator
-    script: dict[str, Any],
-    brand: dict[str, Any],
+    scenes: list[Any],
+    scene_assets: list[dict],
+    voice: dict,
+    script: dict,
+    brand: dict,
     *,
     dry_run: bool = False,
 ) -> dict[str, Any]:
-    """
-    Build a hyperframes project for the video.
-
-    Returns:
-      {
-        "project_dir": str,
-        "composition_html": str,
-        "lint_passed": bool,
-        "lint_output": str,
-      }
-    """
-    channel_id = brand.get("channel_id", "unknown")
+    """Build ffmpeg composition project. Returns project dict for render_publisher."""
     title = script.get("title", "untitled")
+    channel_id = brand.get("channel_id", "unknown")
     ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    project_name = f"{channel_id}_{_slugify(title)}_{ts}"
-    project_dir = _COMPOSITIONS_DIR / project_name
-
-    html = _build_composition_html(scenes, scene_assets, voice, script, brand)
-
-    if dry_run:
-        logger.info("[dry_run] composer: skipping hyperframes CLI calls")
-        project_dir.mkdir(parents=True, exist_ok=True)
-        (project_dir / "index.html").write_text(html, encoding="utf-8")
-        return {
-            "project_dir": str(project_dir),
-            "composition_html": html,
-            "lint_passed": True,
-            "lint_output": "[dry_run] lint skipped",
-        }
-
-    audio_path = voice.get("audio_path", "")
+    slug = _slugify(title)
+    project_dir = COMPOSITIONS_DIR / f"{channel_id}_{slug}_{ts}"
     project_dir.mkdir(parents=True, exist_ok=True)
 
-    _hf_init(project_dir, audio_path)
-    (project_dir / "index.html").write_text(html, encoding="utf-8")
-    lint_passed, lint_output = _hf_lint(project_dir)
-
-    if not lint_passed:
-        logger.warning("hyperframes lint errors in %s:\n%s", project_dir, lint_output)
-
-    return {
-        "project_dir": str(project_dir),
-        "composition_html": html,
-        "lint_passed": lint_passed,
-        "lint_output": lint_output,
-    }
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# hyperframes CLI calls
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _hf_init(project_dir: Path, audio_path: str) -> None:
-    cmd = _HF_CMD.split() + ["init", str(project_dir), "--non-interactive"]
-    abs_audio = str(Path(audio_path).resolve()) if audio_path else ""
-    if abs_audio and Path(abs_audio).exists():
-        cmd += ["--audio", abs_audio]
-    _run(cmd, cwd=str(project_dir.parent))
-
-
-def _hf_lint(project_dir: Path) -> tuple[bool, str]:
-    cmd = _HF_CMD.split() + ["lint", "--json"]
-    result = _run(cmd, cwd=str(project_dir), capture=True)
-    return result.returncode == 0, result.stdout + result.stderr
-
-
-def _run(
-    cmd: list[str],
-    cwd: str = ".",
-    capture: bool = False,
-) -> subprocess.CompletedProcess:
-    logger.debug("composer: %s", " ".join(cmd))
-    return subprocess.run(
-        cmd,
-        cwd=cwd,
-        capture_output=capture,
-        text=True,
-        timeout=120,
-    )
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# HTML composition builder
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _build_composition_html(
-    scenes: list[Any],
-    scene_assets: list[dict],
-    voice: dict[str, Any],
-    script: dict[str, Any],
-    brand: dict[str, Any],
-) -> str:
-    title = script.get("title", "Untitled")
-    primary = brand.get("primary_color", "#C8A96E")
-    bg = brand.get("background_color", "#1A0F00")
-    font = brand.get("font_family", "Playfair Display")
-    font_body = brand.get("font_family_body", "Inter")
-    channel_name = brand.get("display_name", "Studio")
-    intro_dur = brand.get("intro_duration_sec", 3)
-    outro_dur = brand.get("outro_duration_sec", 4)
-    total_dur = voice.get("duration_sec", 60.0)
+    audio_path = voice.get("audio_path", "")
+    audio_dur = voice.get("duration_sec", 60.0)
     timestamps = voice.get("timestamps", [])
 
-    scenes_html = "\n".join(
-        _scene_block(i, scene, scene_assets[i] if i < len(scene_assets) else {})
-        for i, scene in enumerate(scenes)
-    )
+    # Build scene plan: image path + timing + motion effect
+    scene_plan = []
+    for i, scene in enumerate(scenes):
+        assets = scene_assets[i] if i < len(scene_assets) else {}
+        img = assets.get("image_local_path", "") or assets.get("video_local_path", "")
+        motion = _MOTION_EFFECTS[i % len(_MOTION_EFFECTS)]
+        transition = _TRANSITIONS[i % len(_TRANSITIONS)]
+        scene_plan.append({
+            "index": i,
+            "image_path": img,
+            "start_sec": getattr(scene, "start_sec", 0.0),
+            "end_sec": getattr(scene, "end_sec", 10.0),
+            "duration_sec": getattr(scene, "duration_sec", 10.0),
+            "motion": motion,
+            "transition": transition,
+            "narration": getattr(scene, "narration", ""),
+        })
 
-    # Build timestamps JSON for caption script (controlled internal data, not user input)
-    timestamps_json = json.dumps([
-        {"w": t["word"], "s": t["start"], "e": t["end"]}
-        for t in timestamps
-    ])
+    # Generate SRT from word timestamps
+    srt_path = project_dir / "captions_en.srt"
+    _write_srt(timestamps, srt_path, intro_offset=3.0)
 
-    intro_end = intro_dur
-    outro_start = int(total_dur + intro_dur)
-    outro_end = int(total_dur + intro_dur + outro_dur)
-    total_comp_dur = outro_end
+    # Write project manifest for render_publisher
+    manifest = {
+        "title": title,
+        "channel_id": channel_id,
+        "project_dir": str(project_dir),
+        "audio_path": audio_path,
+        "audio_dur_sec": audio_dur,
+        "srt_path": str(srt_path),
+        "scenes": scene_plan,
+        "brand": {
+            "primary_color": brand.get("primary_color", "#E8A020"),
+            "background_color": brand.get("background_color", "#1E1433"),
+            "font_family": brand.get("font_family", "Playfair Display"),
+            "display_name": brand.get("display_name", channel_id),
+        },
+        "intro_duration_sec": brand.get("intro_duration_sec", 3),
+        "outro_duration_sec": brand.get("outro_duration_sec", 4),
+        "lint": True,
+        "dry_run": dry_run,
+    }
 
-    comp_id = _slugify(title)
+    manifest_path = project_dir / "manifest.json"
+    manifest_path.write_text(json.dumps(manifest, indent=2))
+    logger.info("composer: project written to %s (%d scenes)", project_dir, len(scene_plan))
 
-    return f"""<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=1920, height=1080">
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
-  <style>
-    *{{margin:0;padding:0;box-sizing:border-box}}
-    html,body{{margin:0;width:1920px;height:1080px;overflow:hidden;background:{bg};font-family:'{font_body}',sans-serif}}
-    #root{{position:relative;width:1920px;height:1080px;overflow:hidden}}
-    .scene{{position:absolute;top:0;left:0;width:1920px;height:1080px;opacity:0;overflow:hidden}}
-    .scene video,.scene img{{width:100%;height:100%;object-fit:cover}}
-    #captions{{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);z-index:100;text-align:center;max-width:1400px;pointer-events:none}}
-    .cap-word{{display:inline-block;font-family:'{font_body}',sans-serif;font-size:52px;font-weight:700;color:white;text-shadow:2px 2px 8px rgba(0,0,0,.9);margin:0 4px;opacity:.6}}
-    .cap-word.active{{color:{primary};opacity:1}}
-    #intro{{position:absolute;top:0;left:0;width:1920px;height:1080px;background:{bg};display:flex;align-items:center;justify-content:center;z-index:200}}
-    #intro h1{{font-family:'{font}',serif;font-size:96px;color:{primary};text-align:center;max-width:1400px;line-height:1.2}}
-    #outro{{position:absolute;top:0;left:0;width:1920px;height:1080px;background:{bg};display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;opacity:0}}
-    #outro h2{{font-family:'{font}',serif;font-size:72px;color:{primary}}}
-    #outro p{{font-size:36px;color:white;margin-top:24px}}
-  </style>
-</head>
-<body>
-  <div
-    id="root"
-    data-composition-id="{comp_id}"
-    data-start="0"
-    data-duration="{total_comp_dur}"
-    data-width="1920"
-    data-height="1080"
-  >
-    <div id="intro" class="clip" data-start="0" data-duration="{intro_end}">
-      <h1>{_escape_html(title)}</h1>
-    </div>
-
-    {scenes_html}
-
-    <div id="captions"></div>
-
-    <div id="outro" class="clip" data-start="{outro_start}" data-duration="{outro_end - outro_start}">
-      <h2>{_escape_html(channel_name)}</h2>
-      <p>Share this if it helped someone you love.</p>
-    </div>
-  </div>
-
-  <script>
-    window.__timelines = window.__timelines || {{}};
-    const tl = gsap.timeline({{ paused: true }});
-
-    var INTRO = {intro_dur};
-    var WORDS = {timestamps_json};
-
-    // Intro fade
-    tl.fromTo("#intro h1",{{opacity:0,y:40}},{{opacity:1,y:0,duration:1,ease:"power2.out"}}, 0.3);
-    tl.to("#intro",{{opacity:0,duration:.5}}, {intro_dur - 0.5});
-    tl.set("#intro",{{display:"none"}}, {intro_dur});
-
-    // Scene fades
-    document.querySelectorAll(".scene").forEach(function(el){{
-      var s = parseFloat(el.dataset.start);
-      var dur = parseFloat(el.dataset.duration || 0);
-      tl.to(el, {{opacity:1, duration:.5}}, s);
-      tl.to(el, {{opacity:0, duration:.5}}, s + dur - 0.5);
-      tl.set(el, {{opacity:0, visibility:"hidden"}}, s + dur);
-    }});
-
-    // Outro
-    tl.to("#outro", {{opacity:1, duration:.8}}, {outro_start});
-
-    // Word-level captions
-    var container = document.getElementById("captions");
-    WORDS.forEach(function(w, i){{
-      var span = document.createElement("span");
-      span.className = "cap-word";
-      span.id = "cw"+i;
-      span.textContent = w.w + " ";
-      container.appendChild(span);
-      tl.set("#cw"+i, {{className:"cap-word active"}}, w.s + INTRO);
-      tl.set("#cw"+i, {{className:"cap-word"}}, w.e + INTRO);
-    }});
-
-    window.__timelines["{comp_id}"] = tl;
-  </script>
-</body>
-</html>"""
+    return manifest
 
 
-def _scene_block(index: int, scene: Any, assets: dict) -> str:
-    video_path = assets.get("video_local_path", "")
-    image_path = assets.get("image_local_path", "")
-    start = getattr(scene, "start_sec", 0.0)
-    end = getattr(scene, "end_sec", 10.0)
+def _write_srt(timestamps: list[dict], path: pathlib.Path, intro_offset: float = 3.0) -> None:
+    """Write word-level SRT. Groups words into ~8-word caption chunks."""
+    if not timestamps:
+        path.write_text("")
+        return
 
-    duration = round(end - start, 2)
+    chunks = []
+    chunk: list[dict] = []
+    for word in timestamps:
+        chunk.append(word)
+        w_text = word.get("word") or word.get("w", "")
+        if len(chunk) >= 8 or w_text.endswith((".", "!", "?")):
+            chunks.append(chunk)
+            chunk = []
+    if chunk:
+        chunks.append(chunk)
 
-    # Use absolute paths — hyperframes file server resolves from project dir,
-    # but our media lives in /app/workspace which may not be relative to project dir
-    def _abs(p: str) -> str:
-        return str(Path(p).resolve()) if p else ""
+    lines = []
+    for i, ch in enumerate(chunks, 1):
+        start = (ch[0].get("start") or ch[0].get("s", 0.0)) + intro_offset
+        end = (ch[-1].get("end") or ch[-1].get("e", 0.0)) + intro_offset
+        text = " ".join(w.get("word") or w.get("w", "") for w in ch)
+        lines.append(f"{i}")
+        lines.append(f"{_srt_ts(start)} --> {_srt_ts(end)}")
+        lines.append(text)
+        lines.append("")
 
-    abs_video = _abs(video_path)
-    abs_image = _abs(image_path)
-
-    if abs_video and Path(abs_video).exists():
-        media = f'<video id="scene-{index}-media" src="{abs_video}" muted playsinline></video>'
-    elif abs_image and Path(abs_image).exists():
-        media = f'<img id="scene-{index}-media" src="{abs_image}" alt="">'
-    else:
-        media = f'<div id="scene-{index}-media" style="background:#1a1a1a;width:100%;height:100%"></div>'
-
-    return (
-        f'  <div class="scene clip" id="scene-{index}" '
-        f'data-timeline="scene-{index}" '
-        f'data-start="{start:.2f}" data-duration="{duration}">\n'
-        f'    {media}\n'
-        f'  </div>'
-    )
-
-
-def _escape_html(text: str) -> str:
-    return (
-        text.replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace('"', "&quot;")
-    )
+    path.write_text("\n".join(lines), encoding="utf-8")
+    logger.info("composer: SRT written (%d chunks) → %s", len(chunks), path)
 
 
-def _escape_attr(text: str) -> str:
-    return text.replace('"', "&quot;").replace("'", "&#39;")
+def _srt_ts(sec: float) -> str:
+    h = int(sec // 3600)
+    m = int((sec % 3600) // 60)
+    s = int(sec % 60)
+    ms = int((sec % 1) * 1000)
+    return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
 
 
 def _slugify(text: str, max_len: int = 40) -> str:
-    slug = "".join(c.lower() if c.isalnum() else "-" for c in text.strip())
-    slug = "-".join(s for s in slug.split("-") if s)
-    return slug[:max_len] or "untitled"
+    slug = re.sub(r'[^a-z0-9]+', '-', text.lower().strip())
+    return slug.strip('-')[:max_len]

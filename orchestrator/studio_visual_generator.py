@@ -127,36 +127,33 @@ def _vault_lookup(prompt: str) -> str:
 
 
 def _generate_scene_assets(scene: Any, channel_id: str) -> dict[str, Any]:
-    """Generate image then video for one scene. Checks asset vault first to avoid Kai spend."""
-    from kie_media import generate_image, generate_video
+    """Generate still image for one scene. Images only — ffmpeg handles motion/assembly.
 
-    # Check vault before spending Kai credits
-    vault_video = _vault_lookup(getattr(scene, "video_prompt", "") or getattr(scene, "image_prompt", ""))
-    if vault_video:
+    Model: GPT Image 2 (best quality, handles complex prompts well).
+    Vault lookup first to reuse existing images and avoid Kai spend.
+    No video generation — Ken Burns motion applied at render time by ffmpeg.
+    """
+    from kie_media import generate_image
+
+    prompt = getattr(scene, "image_prompt", "") or getattr(scene, "video_prompt", "")
+
+    # Check vault first
+    vault_path = _vault_lookup(prompt)
+    if vault_path:
         return {
             "scene_index": scene.index,
-            "image_url": "", "image_drive_id": "", "image_local_path": "",
-            "video_url": "", "video_drive_id": "", "video_local_path": vault_video,
+            "image_url": "", "image_drive_id": "",
+            "image_local_path": vault_path,
+            "video_url": "", "video_drive_id": "", "video_local_path": "",
         }
 
     notion_id = f"studio_scene_{channel_id}_{scene.index}"
 
-    # Step 1: Still image
     img_result = generate_image(
-        prompt=scene.image_prompt,
+        prompt=prompt,
         aspect_ratio="16:9",
-        task_type="text_to_image",
+        task_type="gpt_image_2_text",
         linked_content_id=notion_id,
-    )
-
-    # Step 2: Image-to-video — Kai CDN source_url required (Drive webViewLink returns HTML, not raw image)
-    img_url = img_result.get("source_url") or img_result.get("drive_url", "")
-    vid_result = generate_video(
-        prompt=scene.video_prompt,
-        aspect_ratio="16:9",
-        task_type="image_to_video",
-        linked_content_id=notion_id,
-        image_url=img_url,
     )
 
     return {
@@ -164,9 +161,7 @@ def _generate_scene_assets(scene: Any, channel_id: str) -> dict[str, Any]:
         "image_url": img_result.get("drive_url", ""),
         "image_drive_id": img_result.get("drive_file_id", ""),
         "image_local_path": img_result.get("local_path", ""),
-        "video_url": vid_result.get("drive_url", ""),
-        "video_drive_id": vid_result.get("drive_file_id", ""),
-        "video_local_path": vid_result.get("local_path", ""),
+        "video_url": "", "video_drive_id": "", "video_local_path": "",
     }
 
 

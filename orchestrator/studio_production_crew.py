@@ -123,8 +123,9 @@ def run_production(notion_id: str, *, dry_run: bool = False) -> dict[str, Any]:
     from studio_composer import compose
     composition = compose(scenes, scene_assets, voice, script, brand, dry_run=dry_run)
     logger.info(
-        "production_crew: composition built (lint_passed=%s)",
-        composition["lint_passed"],
+        "production_crew: composition built (%d scenes, project=%s)",
+        len(composition.get("scenes", [])),
+        composition["project_dir"],
     )
 
     # Stage 9: Render + publish
@@ -336,7 +337,7 @@ def _run_smoke_test() -> None:
     logger.info("assets: %d stubs", len(assets))
 
     composition = compose(scenes, assets, voice, script, brand, dry_run=True)
-    logger.info("composition: project=%s lint=%s", composition["project_dir"], composition["lint_passed"])
+    logger.info("composition: project=%s scenes=%d", composition["project_dir"], len(composition.get("scenes", [])))
 
     result = render_and_publish(composition, brand, "smoke-test", dry_run=True)
     logger.info("renders: %s", {k: v.get("drive_url") for k, v in result["renders"].items()})
