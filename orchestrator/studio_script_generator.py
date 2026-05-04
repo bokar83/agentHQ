@@ -133,12 +133,17 @@ OUTPUT: Return only the script text. No preamble, no "Here is your script", no m
 def _build_user_prompt(hook: str, twist: str, niche: str, title: str) -> str:
     parts = [
         f'VIDEO TITLE: "{title}"',
-        f'HOOK/OPENING CONCEPT: {hook}',
+        f'OPENING LINE (use this or riff from it): {hook}',
     ]
     if twist:
-        parts.append(f'UNIQUE ANGLE/TWIST: {twist}')
+        parts.append(
+            f'VIDEO CONCEPT BRIEF (who this is for, what insight it delivers, how it ends):\n{twist}'
+        )
     parts.append(f'NICHE: {niche}')
-    parts.append("Write the full script now.")
+    parts.append(
+        "Write the full script now. Follow the concept brief exactly — "
+        "this video was designed for a specific audience, not a generic one."
+    )
     return "\n".join(parts)
 
 

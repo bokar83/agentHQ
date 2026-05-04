@@ -115,8 +115,8 @@ def _generate_scene_assets(scene: Any, channel_id: str) -> dict[str, Any]:
         linked_content_id=notion_id,
     )
 
-    # Step 2: Image-to-video — pass source image URL (Drive URL preferred, Kai CDN fallback)
-    img_url = img_result.get("drive_url") or img_result.get("source_url", "")
+    # Step 2: Image-to-video — Kai CDN source_url required (Drive webViewLink returns HTML, not raw image)
+    img_url = img_result.get("source_url") or img_result.get("drive_url", "")
     vid_result = generate_video(
         prompt=scene.video_prompt,
         aspect_ratio="16:9",
