@@ -94,6 +94,59 @@ A multi-voice strategic review layer that activates on `consulting_deliverable` 
 
 ---
 
+## HARD RULES: Push, Deploy, and Branch Operations
+
+**Effective 2026-05-04. No exceptions. No agent bypasses these rules.**
+
+### What NO agent may do
+
+- `git push` to any branch on origin
+- `git push origin main` under any circumstance
+- `git push --force` or `git push --delete` on any remote ref
+- SSH to VPS and run `orc_rebuild.sh`, `docker compose`, or any deploy script
+- Delete remote branches
+- Merge any branch to main
+
+### What agents MAY do (read-only git + VPS)
+
+- `git fetch`, `git log`, `git status`, `git diff` (any branch, any location)
+- `git pull` on a local feature branch (not main)
+- SSH to VPS for reads: `docker logs`, `git log`, `git status`, `git rev-parse HEAD`
+- `gh pr list`, `gh issue list`, `gh pr view` (reads only)
+- Commit to local feature branches (never push)
+
+### The Gate
+
+All push/deploy/merge operations route through **the Gate** (currently Claude acting as gate agent; will become `orchestrator/gate_agent.py`).
+
+Agent workflow:
+1. Write code on feature branch
+2. Commit locally (allowed)
+3. Call `/propose` (queues commit proposal, sends Telegram notification)
+4. Gate reviews: conflict check, code review, merge policy
+5. Gate merges, pushes, deploys. Not the agent.
+
+### Emergency path
+
+No bypass exists. Send "PRIORITY: [description]" to Telegram; Gate processes within 60s. Boubacar may push manually from local if Gate is down. No agent equivalent exists.
+
+### File-locking (concurrent agents)
+
+Before writing any file, call:
+```python
+from skills.coordination import claim
+task = claim(resource='file:<relative-path>', holder='<agent-name>', ttl_seconds=3600)
+if task is None:
+    # resource held — wait or pick different task
+```
+After writing + committing: `complete(task['id'])`. Never skip this on files shared across agents.
+
+### Shorts-first rule (Studio)
+
+Any conflict between short-form and long-form video defaults: **shorts win**. `target_duration_sec=55`, `1080x1920` only, until G4 ($1k/mo) traction proven.
+
+---
+
 ## Task Type Registry
 
 The Router classifies every incoming request into one of these types. New types are added here as the system grows.
