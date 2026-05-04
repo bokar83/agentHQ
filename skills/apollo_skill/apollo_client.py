@@ -141,50 +141,96 @@ SW_ICP = {
     "score_titles": ["owner", "founder", "ceo", "president", "operator"],
 }
 
+# Studio ICP: any business owner in the US + Canada who could benefit from a
+# web presence. No niche ceiling. Solopreneurs to 500-person firms all qualify.
+# Score favors decision-makers with verified email — industry is not a filter.
 STUDIO_ICP = {
     "name": "studio",
     "person_locations": [
-        # Utah + immediate west
-        "Salt Lake City, Utah", "Provo, Utah", "Denver, Colorado",
-        "Phoenix, Arizona", "Las Vegas, Nevada", "Scottsdale, Arizona",
-        "Boise, Idaho",
-        # Major US metros — southeast + south
-        "Atlanta, Georgia", "Charlotte, North Carolina", "Nashville, Tennessee",
+        # Northeast
+        "New York, New York", "Brooklyn, New York", "Philadelphia, Pennsylvania",
+        "Boston, Massachusetts", "Washington, DC", "Baltimore, Maryland",
+        "Pittsburgh, Pennsylvania", "Hartford, Connecticut", "Providence, Rhode Island",
+        "Albany, New York", "Buffalo, New York",
+        # Southeast
+        "Atlanta, Georgia", "Charlotte, North Carolina", "Raleigh, North Carolina",
+        "Nashville, Tennessee", "Memphis, Tennessee", "Miami, Florida",
+        "Tampa, Florida", "Orlando, Florida", "Jacksonville, Florida",
+        "Richmond, Virginia", "Virginia Beach, Virginia", "Louisville, Kentucky",
+        "Columbia, South Carolina", "Greenville, South Carolina",
+        # South + Texas
         "Dallas, Texas", "Houston, Texas", "Austin, Texas", "San Antonio, Texas",
-        "Miami, Florida", "Tampa, Florida", "Orlando, Florida", "Jacksonville, Florida",
-        # Northeast + mid-atlantic
-        "New York, New York", "Philadelphia, Pennsylvania", "Boston, Massachusetts",
-        "Washington, DC", "Baltimore, Maryland", "Pittsburgh, Pennsylvania",
+        "Fort Worth, Texas", "El Paso, Texas", "New Orleans, Louisiana",
+        "Oklahoma City, Oklahoma", "Tulsa, Oklahoma", "Little Rock, Arkansas",
         # Midwest
         "Chicago, Illinois", "Columbus, Ohio", "Indianapolis, Indiana",
         "Detroit, Michigan", "Minneapolis, Minnesota", "Kansas City, Missouri",
         "Cleveland, Ohio", "St. Louis, Missouri", "Milwaukee, Wisconsin",
-        # West coast
+        "Cincinnati, Ohio", "Omaha, Nebraska", "Des Moines, Iowa",
+        "Grand Rapids, Michigan", "Madison, Wisconsin",
+        # Mountain + Southwest
+        "Denver, Colorado", "Phoenix, Arizona", "Scottsdale, Arizona",
+        "Tucson, Arizona", "Las Vegas, Nevada", "Albuquerque, New Mexico",
+        "Colorado Springs, Colorado", "Salt Lake City, Utah", "Provo, Utah",
+        "Boise, Idaho", "Reno, Nevada", "El Paso, Texas",
+        # West Coast
         "Los Angeles, California", "San Diego, California", "San Francisco, California",
-        "Sacramento, California", "Portland, Oregon", "Seattle, Washington",
-        # Mountain / southwest
-        "Albuquerque, New Mexico", "Tucson, Arizona", "Colorado Springs, Colorado",
-        "Salt Lake City, Utah", "Reno, Nevada",
+        "Sacramento, California", "Fresno, California", "Oakland, California",
+        "Portland, Oregon", "Seattle, Washington", "Spokane, Washington",
+        "Anchorage, Alaska", "Honolulu, Hawaii",
+        # Canada
+        "Toronto, Ontario", "Vancouver, British Columbia", "Calgary, Alberta",
+        "Montreal, Quebec", "Ottawa, Ontario", "Edmonton, Alberta",
+        "Winnipeg, Manitoba", "Halifax, Nova Scotia",
     ],
     "person_titles": [
-        "Owner", "Founder", "CEO", "President", "Co-Founder",
-        "Marketing Director", "Brand Manager", "Content Manager",
-        "Director of Marketing", "CMO", "Head of Marketing",
-        "Managing Partner", "Principal", "General Manager",
+        # Solo operators
+        "Owner", "Founder", "Co-Founder", "CEO", "President",
+        "Operator", "Proprietor", "Self-Employed",
+        # Professional services
+        "Managing Partner", "Principal", "Partner",
+        "Attorney", "Lawyer", "CPA", "Accountant", "Financial Advisor",
+        "Realtor", "Real Estate Agent", "Broker",
+        "Photographer", "Videographer", "Graphic Designer",
+        "Interior Designer", "Architect", "Engineer",
+        "Consultant", "Coach", "Therapist", "Counselor",
+        "Nutritionist", "Personal Trainer", "Yoga Instructor",
+        # Business managers
+        "General Manager", "Managing Director",
+        "Marketing Director", "CMO", "Director of Marketing",
+        "Brand Manager", "Content Manager",
+        # Event + creative
+        "Wedding Planner", "Event Planner", "Event Coordinator",
+        "Creative Director", "Art Director",
+        # Trades + services
+        "Contractor", "Plumber", "Electrician", "HVAC Technician",
+        "Landscaper", "Roofer", "Painter",
     ],
-    "person_seniorities": _DECISION_MAKER_SENIORITIES + ["vp", "director"],
-    "organization_num_employees_ranges": ["1,500"],
+    "person_seniorities": _DECISION_MAKER_SENIORITIES + ["vp", "director", "manager"],
+    "organization_num_employees_ranges": ["1,1000"],
     "score_industries": [
-        "ecommerce", "retail", "restaurant", "fitness", "beauty",
-        "real estate", "mortgage", "insurance", "marketing", "agency",
-        "food", "beverage", "health", "wellness", "coaching", "consulting",
-        "photography", "media", "entertainment", "sports", "hospitality",
-        "dental", "chiropractic", "medical spa", "aesthetics", "salon",
-        "personal training", "yoga", "pilates", "nutrition",
-        "home services", "landscaping", "construction", "roofing", "hvac",
-        "legal", "accounting", "financial", "education", "technology",
+        # Any industry scores — wide net
+        "photography", "videography", "design", "media", "creative",
+        "restaurant", "food", "beverage", "catering", "bakery",
+        "fitness", "wellness", "beauty", "salon", "spa", "aesthetics",
+        "real estate", "mortgage", "insurance", "financial",
+        "legal", "accounting", "consulting", "coaching",
+        "ecommerce", "retail", "fashion", "jewelry",
+        "healthcare", "dental", "chiropractic", "medical",
+        "events", "wedding", "entertainment", "hospitality", "travel",
+        "education", "tutoring", "training",
+        "construction", "roofing", "hvac", "plumbing", "landscaping",
+        "cleaning", "pest control", "home services",
+        "technology", "software", "agency", "marketing",
+        "nonprofit", "church", "community", "arts",
+        "automotive", "transportation", "logistics",
+        "manufacturing", "wholesale", "distribution",
     ],
-    "score_titles": ["owner", "founder", "ceo", "marketing", "brand", "content", "president", "cmo"],
+    "score_titles": [
+        "owner", "founder", "ceo", "president", "partner", "principal",
+        "operator", "director", "manager", "consultant", "coach",
+        "photographer", "planner", "designer", "attorney", "realtor",
+    ],
 }
 
 
