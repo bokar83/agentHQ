@@ -883,6 +883,18 @@ def studio_trend_scout_tick() -> None:
         return
 
     today = now.date().isoformat()
+
+    # One-run-per-day guard: prevents repeated Telegram briefs on container restarts.
+    # Writes a marker file after first successful run; cleared at midnight by date change.
+    _run_marker = pathlib.Path("/app/data/scout_ran_today.txt")
+    try:
+        _run_marker.parent.mkdir(parents=True, exist_ok=True)
+        if _run_marker.exists() and _run_marker.read_text().strip() == today:
+            logger.info("studio_trend_scout: already ran today (%s), skipping duplicate", today)
+            return
+    except Exception:
+        pass  # If we can't check the marker, run anyway
+
     seeds = _load_seeds()
     logger.info(f"studio_trend_scout: Monday tick start, {len(seeds)} niches configured")
 
@@ -941,6 +953,12 @@ def studio_trend_scout_tick() -> None:
         _select_and_tag_anchor(notion, cw_picks_written, now.date())
     except Exception as e:
         logger.error(f"studio_trend_scout: anchor selection raised: {e}", exc_info=True)
+
+    # Write run marker so restarts don't re-send Telegram briefs today
+    try:
+        _run_marker.write_text(today)
+    except Exception:
+        pass
 
     _send_summary(written_count, today)
     logger.info(
