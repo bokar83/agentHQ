@@ -95,6 +95,8 @@ def test_clean_branch_auto_merges(monkeypatch):
     """Branch with no conflicts + green tests + safe files gets merged."""
     monkeypatch.setattr(gate_agent, "_branches_ahead_of_main",
                         MagicMock(return_value=["feature/docs-update"]))
+    monkeypatch.setattr(gate_agent, "_branch_is_claimed", MagicMock(return_value=False))
+    monkeypatch.setattr(gate_agent, "_branch_is_ready", MagicMock(return_value=True))
     monkeypatch.setattr(gate_agent, "_files_changed_vs_main",
                         MagicMock(return_value=["docs/roadmap/echo.md"]))
     monkeypatch.setattr(gate_agent, "_run_tests",
@@ -116,6 +118,8 @@ def test_high_risk_branch_held(monkeypatch):
     """Branch touching scheduler.py is held, not auto-merged."""
     monkeypatch.setattr(gate_agent, "_branches_ahead_of_main",
                         MagicMock(return_value=["feature/scheduler-fix"]))
+    monkeypatch.setattr(gate_agent, "_branch_is_claimed", MagicMock(return_value=False))
+    monkeypatch.setattr(gate_agent, "_branch_is_ready", MagicMock(return_value=True))
     monkeypatch.setattr(gate_agent, "_files_changed_vs_main",
                         MagicMock(return_value=["orchestrator/scheduler.py"]))
     monkeypatch.setattr(gate_agent, "_run_tests", MagicMock())
@@ -137,6 +141,8 @@ def test_test_failure_blocks_merge(monkeypatch):
     """Red tests on a branch prevent merge."""
     monkeypatch.setattr(gate_agent, "_branches_ahead_of_main",
                         MagicMock(return_value=["feature/broken-thing"]))
+    monkeypatch.setattr(gate_agent, "_branch_is_claimed", MagicMock(return_value=False))
+    monkeypatch.setattr(gate_agent, "_branch_is_ready", MagicMock(return_value=True))
     monkeypatch.setattr(gate_agent, "_files_changed_vs_main",
                         MagicMock(return_value=["skills/coordination/__init__.py"]))
     monkeypatch.setattr(gate_agent, "_run_tests",
@@ -167,6 +173,8 @@ def test_conflict_blocks_only_involved_branches(monkeypatch):
 
     monkeypatch.setattr(gate_agent, "_branches_ahead_of_main",
                         MagicMock(return_value=branches))
+    monkeypatch.setattr(gate_agent, "_branch_is_claimed", MagicMock(return_value=False))
+    monkeypatch.setattr(gate_agent, "_branch_is_ready", MagicMock(return_value=True))
     monkeypatch.setattr(gate_agent, "_files_changed_vs_main",
                         MagicMock(side_effect=mock_files))
     monkeypatch.setattr(gate_agent, "_run_tests",
@@ -204,6 +212,94 @@ def test_auto_approvable_docs_and_tests():
 
 def test_not_auto_approvable_mixed():
     assert gate_agent._is_auto_approvable(["docs/readme.md", "orchestrator/app.py"]) is False
+
+
+# ---------------------------------------------------------------------------
+# [READY] sentinel (Option 2)
+# ---------------------------------------------------------------------------
+
+def test_branch_is_ready_when_commit_has_ready(monkeypatch):
+    monkeypatch.setattr(gate_agent, "_last_commit_message",
+                        MagicMock(return_value="feat(studio): render fix [READY]"))
+    assert gate_agent._branch_is_ready("feature/studio-fix") is True
+
+
+def test_branch_not_ready_without_sentinel(monkeypatch):
+    monkeypatch.setattr(gate_agent, "_last_commit_message",
+                        MagicMock(return_value="WIP: still testing render pipeline"))
+    assert gate_agent._branch_is_ready("feature/studio-fix") is False
+
+
+def test_wip_branch_skipped_by_gate(monkeypatch):
+    """Branch without [READY] is skipped entirely -- not merged."""
+    monkeypatch.setattr(gate_agent, "_branches_ahead_of_main",
+                        MagicMock(return_value=["feature/wip-thing"]))
+    monkeypatch.setattr(gate_agent, "_branch_is_claimed",
+                        MagicMock(return_value=False))
+    monkeypatch.setattr(gate_agent, "_branch_is_ready",
+                        MagicMock(return_value=False))
+    monkeypatch.setattr(gate_agent, "_run_tests", MagicMock())
+
+    gate_agent.gate_tick()
+
+    gate_agent._merge_branch.assert_not_called()
+    gate_agent._push_main.assert_not_called()
+
+
+def test_ready_branch_processed(monkeypatch):
+    """Branch with [READY] and green tests gets merged."""
+    monkeypatch.setattr(gate_agent, "_branches_ahead_of_main",
+                        MagicMock(return_value=["feature/done-thing"]))
+    monkeypatch.setattr(gate_agent, "_branch_is_claimed",
+                        MagicMock(return_value=False))
+    monkeypatch.setattr(gate_agent, "_branch_is_ready",
+                        MagicMock(return_value=True))
+    monkeypatch.setattr(gate_agent, "_files_changed_vs_main",
+                        MagicMock(return_value=["docs/readme.md"]))
+    monkeypatch.setattr(gate_agent, "_run_tests",
+                        MagicMock(return_value=(True, "1 passed")))
+
+    gate_agent.gate_tick()
+
+    gate_agent._merge_branch.assert_called_once_with("feature/done-thing")
+
+
+# ---------------------------------------------------------------------------
+# branch claim check (Option 3)
+# ---------------------------------------------------------------------------
+
+def test_claimed_branch_skipped(monkeypatch):
+    """Branch claimed by an in-flight agent is skipped this tick."""
+    monkeypatch.setattr(gate_agent, "_branches_ahead_of_main",
+                        MagicMock(return_value=["feature/in-flight"]))
+    monkeypatch.setattr(gate_agent, "_branch_is_claimed",
+                        MagicMock(return_value=True))
+    monkeypatch.setattr(gate_agent, "_branch_is_ready", MagicMock())
+    monkeypatch.setattr(gate_agent, "_run_tests", MagicMock())
+
+    gate_agent.gate_tick()
+
+    gate_agent._merge_branch.assert_not_called()
+    # _branch_is_ready never called -- claimed check short-circuits
+    gate_agent._branch_is_ready.assert_not_called()
+
+
+def test_unclaimed_ready_branch_processed(monkeypatch):
+    """Unclaimed + [READY] branch proceeds to merge."""
+    monkeypatch.setattr(gate_agent, "_branches_ahead_of_main",
+                        MagicMock(return_value=["feature/clean"]))
+    monkeypatch.setattr(gate_agent, "_branch_is_claimed",
+                        MagicMock(return_value=False))
+    monkeypatch.setattr(gate_agent, "_branch_is_ready",
+                        MagicMock(return_value=True))
+    monkeypatch.setattr(gate_agent, "_files_changed_vs_main",
+                        MagicMock(return_value=["skills/foo/SKILL.md"]))
+    monkeypatch.setattr(gate_agent, "_run_tests",
+                        MagicMock(return_value=(True, "all passed")))
+
+    gate_agent.gate_tick()
+
+    gate_agent._merge_branch.assert_called_once_with("feature/clean")
 
 
 # ---------------------------------------------------------------------------
