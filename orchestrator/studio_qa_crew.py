@@ -475,6 +475,19 @@ _LOOP_ENDING_PATTERNS = [
     r"\bwatch (?:this|the next|my next)\b",
     r"\bthe (?:answer|truth|secret) (?:might|will|may) surprise\b",
     r"\bsave (?:this|it) for later\b",
+    # Broader CTA patterns Sonnet commonly writes
+    r"\bfollow\b.{0,40}\bmore\b",
+    r"\bsubscribe\b.{0,40}\b(?:more|next|channel)\b",
+    r"\bshare\b.{0,40}\bwho\b",
+    r"\bif this (?:helped|resonated|hit)\b",
+    r"\buntil (?:next time|then)\b",
+    r"\bsee you (?:in the next|next time|tomorrow)\b",
+    r"\bmore (?:stories|videos|episodes|content) like this\b",
+    r"\bpass this (?:on|along)\b",
+    r"\bsomeone (?:who needs|needs) to hear this\b",
+    r"\bnext (?:video|episode|time|story)\b",
+    r"\bcheck (?:out|the) (?:next|more)\b",
+    r"\b(?:like|tap).{0,20}\bnotif",
 ]
 
 
