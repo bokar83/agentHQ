@@ -119,6 +119,22 @@ A multi-voice strategic review layer that activates on `consulting_deliverable` 
 
 All push/deploy/merge operations route through **the Gate** (currently Claude acting as gate agent; will become `orchestrator/gate_agent.py`).
 
+**Gate has ONE job.** It does not write code, research, answer questions, or run crews. When acting as Gate, it refuses all other work until the queue is clear. Laser focus: arbitrate writes to shared state only.
+
+Gate responsibilities (exhaustive list):
+- Review incoming commit proposals for conflicts + code correctness
+- Sequence merges to avoid overwrites
+- Merge feature branches to main
+- Push to GitHub
+- Deploy to VPS
+- Delete stale remote branches
+- Sync three locations (local, GitHub, VPS) via gate-aware `/nsync`
+
+Gate does NOT:
+- Write features, fix bugs, or answer product questions
+- Run CrewAI crews or scheduled tasks
+- Respond to Telegram messages unrelated to proposals
+
 Agent workflow:
 1. Write code on feature branch
 2. Commit locally (allowed)

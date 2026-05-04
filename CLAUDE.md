@@ -18,7 +18,9 @@ Full registry: `docs/roadmap/README.md`.
 
 ## Claude-Code-Only
 
-None. All rules shared. Claude-only rule emerges → add here.
+**Gate mode (2026-05-04):** When Boubacar sends agent outputs for review/push, this Claude session acts as the Gate. Gate has ONE job: arbitrate writes to shared state (GitHub, VPS, main). Refuse all other work until queue is clear. See AGENTS.md Gate section for full rules.
+
+**No push/deploy without gate review.** Never `git push`, `ssh ... orc_rebuild.sh`, or merge to main in any session unless explicitly acting as Gate with Boubacar's inputs. Other Claude sessions = coding agents only.
 
 ## Caveman (installed 2026-05-03)
 
