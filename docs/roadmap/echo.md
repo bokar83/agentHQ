@@ -98,6 +98,48 @@ The pause-to-commit ceremony is gone. Boubacar can let Claude (or any autonomous
 
 ---
 
+### M2.5 - Push Gate: file-locking discipline + conflict detection
+
+**Status:** PLANNED. Gated on M2 (`deploy-proposal` kind in real use).
+
+**Goal:** Eliminate three failure modes confirmed 2026-05-04: merge conflicts on GitHub, push overwrites on shared branches, VPS wrong-code from concurrent deploys. Designed for 5+ concurrent agents (local Claude Code sessions + CrewAI subagents on VPS).
+
+**Three layers, built in order:**
+
+**Layer 1: File-locking discipline (rule + zero new code)**
+
+- Hard rule in `AGENT_SOP.md`: before writing any file, agent calls `claim(resource='file:<path>', holder='<agent-id>', ttl_seconds=3600)`. Second agent gets `None` and waits.
+- CLAUDE.md convention: "Never write a file without claiming it first."
+- Verification: extend `test_agent_collision.py` with `file:` prefix test.
+
+**Layer 2: Conflict detection in proposal queue (~20 lines in proposal.py)**
+
+- Before queuing, `propose()` checks all `status='queued'` proposals for overlapping files.
+- If overlap found: Telegram warning fires BEFORE enqueue.
+- No new schema. No new table.
+
+**Layer 3: VPS deploy gating + Gate Agent service**
+
+- `orchestrator/gate_agent.py`: heartbeat service (60s tick), sole entity that merges to main, pushes GitHub, deploys VPS.
+- Merge policy: auto-merge docs/tests/skills if tests green + no overlap. Ask via Telegram for orchestrator/pipeline/deploy changes.
+- Priority escalation: send "PRIORITY: P-xxxx" to Telegram bot; gate processes within 60s, no manual push needed.
+- `/nsync` becomes gate-aware: Step 0 flushes gate queue before sync verification.
+- Hard gate: no agent ever pushes to main directly. Emergency = priority message to gate, not a bypass.
+
+**Exit criteria:**
+
+- C1: Two agents claim `file:orchestrator/pipeline.py` simultaneously; second returns None. Verified by test.
+- C2: Two proposals with overlapping files fire Telegram conflict warning before either merges.
+- C3: VPS deploy only fires after `deploy-proposal` acked.
+- C4: Gate auto-merges a docs-only proposal without prompting.
+- C5: `/nsync` runs clean after gate flushes queue.
+
+**Trigger to start:** M2 (`deploy-proposal`) in real use AND confirmed collision incident in session history.
+
+**Council verdicts (2026-05-04):** Sankofa + Karpathy both say build discipline first, not a new monolithic agent. Gate Agent is Layer 3, not Layer 1. Build in sequence.
+
+---
+
 ### M4 - Auto-detection (DEFERRED INDEFINITELY)
 
 **Status:** DEFERRED.
@@ -141,6 +183,20 @@ The pause-to-commit ceremony is gone. Boubacar can let Claude (or any autonomous
 ---
 
 ## Session Log
+
+### 2026-05-04: M2.5 Push Gate specced, Sankofa + Karpathy councils ratified
+
+**What happened:**
+
+Boubacar raised the multi-agent collision problem: 5+ concurrent agents (local Claude Code + CrewAI on VPS) stomping each other on commits, pushes, and VPS deploys. Three failure modes confirmed: merge conflicts on GitHub, push overwrites on shared branches, VPS wrong-code from concurrent deploys.
+
+Sankofa verdict: do not build a monolithic Push Gate Master agent. Build resource-claiming discipline first (Layer 1, zero new code), then extend the existing Echo proposal queue with conflict detection (Layer 2), then add the Gate Agent service (Layer 3). Bureaucracy does not fix discipline gaps at the source.
+
+Karpathy verdict: HOLD on a new agent. `claim()` and `proposal.py` already exist. Close the gap, do not rebuild. Gate policy confirmed: hard gate, no agent pushes to main directly, priority-message escalation for emergencies (not a bypass).
+
+Resolution: M2.5 added between M2 and M3. Three-layer design documented. Gate Agent will be Claude acting as the gate for now, until `orchestrator/gate_agent.py` is built. `/nsync` will become gate-aware in Layer 3.
+
+**Next session:** start Layer 1 (AGENT_SOP.md hard rule + test) when M2 (`deploy-proposal`) is in real use.
 
 ### 2026-04-29: Echo conceived, M1 specced, councils ratified the plan
 

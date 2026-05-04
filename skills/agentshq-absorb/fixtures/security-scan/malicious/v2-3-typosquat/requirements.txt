@@ -1,0 +1,8 @@
+# FIXTURE: v2-3 typosquatting pattern
+# "requets" = 1 char from "requests" (missing 's') → SUSPICIOUS
+# "numppy" = 1 char from "numpy" (extra 'p') → SUSPICIOUS
+# "flaskk" = 1 char from "flask" (extra 'k') → SUSPICIOUS
+requets==2.31.0
+numppy==1.26.0
+flaskk==3.0.0
+pandas==2.1.0
