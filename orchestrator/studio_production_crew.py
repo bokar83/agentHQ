@@ -79,6 +79,19 @@ def run_production(notion_id: str, *, dry_run: bool = False) -> dict[str, Any]:
         title=script["title"],
     )
 
+    if not qa_report.passed and not dry_run:
+        failed_names = [c.name for c in qa_report.failed_checks]
+        failed_details = [f"{c.name}: {c.detail}" for c in qa_report.failed_checks]
+        # One auto-retry for fixable issues (retention loops, citations)
+        fixable = {"retention_loops", "source_citation"}
+        if set(failed_names) <= fixable:
+            logger.info("production_crew: QA retry — fixable failures: %s", failed_names)
+            fix_hint = "IMPORTANT FIX REQUIRED: " + "; ".join(failed_details)
+            retry_candidate = dict(candidate)
+            retry_candidate["twist"] = (candidate.get("twist", "") + "\n\n" + fix_hint).strip()
+            script = generate_script(retry_candidate, brand, dry_run=dry_run)
+            qa_report = run_qa(script["full_text"], niche, length_target, notion_id=notion_id, channel=channel_id, title=script["title"])
+
     if not qa_report.passed:
         failed = [f"{c.name}: {c.detail}" for c in qa_report.failed_checks]
         logger.warning("production_crew: QA failed for %s: %s", notion_id, failed)
@@ -219,7 +232,7 @@ def _fetch_qa_passed_candidates() -> list[str]:
                 "Authorization": f"Bearer {_NOTION_TOKEN}",
                 "Notion-Version": "2022-06-28",
             },
-            json={"filter": {"property": "Status", "select": {"equals": "qa-passed"}}},
+            json={"filter": {"property": "Status", "select": {"equals": "Ready"}}},
             timeout=10,
         )
         resp.raise_for_status()

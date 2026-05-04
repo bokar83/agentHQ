@@ -70,7 +70,7 @@ def render_and_publish(
     """
     project_dir = Path(composition["project_dir"])
     channel_id = brand.get("channel_id", "unknown")
-    title = composition.get("composition_html", "")[:60]  # for logging only
+    title = composition.get("title", composition.get("composition_html", "")[:60])
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
     renders: dict[str, Any] = {}
@@ -90,7 +90,8 @@ def render_and_publish(
 
     primary_url = renders.get("long_form", {}).get("drive_url", "")
     notion_updated = _update_notion(notion_id, primary_url, dry_run)
-    _notify_telegram(channel_id, notion_id, renders, dry_run)
+    _notify_telegram(channel_id, notion_id, renders, dry_run, title=title)
+    _notify_email(channel_id, notion_id, renders, dry_run)
 
     return {
         "renders": renders,
@@ -226,6 +227,7 @@ def _notify_telegram(
     notion_id: str,
     renders: dict,
     dry_run: bool,
+    title: str = "",
 ) -> None:
     if dry_run:
         logger.info("[dry_run] render_publisher: Telegram notification skipped")
@@ -235,15 +237,77 @@ def _notify_telegram(
         lf = renders.get("long_form", {})
         sh = renders.get("shorts", {})
         sq = renders.get("square", {})
+        lf_url = lf.get("drive_url") or "MISSING"
+        sh_url = sh.get("drive_url") or "MISSING"
+        sq_url = sq.get("drive_url") or "MISSING"
         lines = [
-            f"Studio M3 render complete",
+            f"Video ready: {title or channel_id}",
             f"Channel: {channel_id}",
+            f"Long form: {lf_url}",
+            f"Shorts: {sh_url}",
+            f"Square: {sq_url}",
             f"Notion: {notion_id}",
-            f"Long form: {lf.get('drive_url') or 'MISSING'}",
-            f"Shorts: {sh.get('drive_url') or 'MISSING'}",
-            f"Square: {sq.get('drive_url') or 'MISSING'}",
-            f"Status: scheduled",
         ]
-        send_message("\n".join(lines))
+        chat_id = os.environ.get("OWNER_TELEGRAM_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID", "")
+        send_message(chat_id, "\n".join(lines))
     except Exception as exc:
         logger.warning("render_publisher: Telegram notification failed: %s", exc)
+
+
+_NOTIFY_EMAILS = "boubacar@catalystworks.consulting,bokar83@gmail.com,thatguy@boubacar.barry"
+
+
+def _notify_email(
+    channel_id: str,
+    notion_id: str,
+    renders: dict,
+    dry_run: bool,
+    title: str = "",
+) -> None:
+    if dry_run:
+        logger.info("[dry_run] render_publisher: email notification skipped")
+        return
+    try:
+        import subprocess
+        lf = renders.get("long_form", {})
+        sh = renders.get("shorts", {})
+        sq = renders.get("square", {})
+        lf_url = lf.get("drive_url") or "not available"
+        sh_url = sh.get("drive_url") or "not available"
+        sq_url = sq.get("drive_url") or "not available"
+
+        subject = f"Studio render complete: {title or channel_id}"
+        body = (
+            f"<h2>Video Ready: {title or channel_id}</h2>"
+            f"<p><b>Channel:</b> {channel_id}</p>"
+            f"<h3>Assets</h3>"
+            f"<ul>"
+            f"<li><b>Long form (16:9):</b> <a href=\"{lf_url}\">{lf_url}</a></li>"
+            f"<li><b>Shorts (9:16):</b> <a href=\"{sh_url}\">{sh_url}</a></li>"
+            f"<li><b>Square (1:1):</b> <a href=\"{sq_url}\">{sq_url}</a></li>"
+            f"</ul>"
+            f"<p>Notion: {notion_id}</p>"
+        )
+        # Send from channel alias so recipient knows which channel produced it
+        _channel_sender = {
+            "under_the_baobab": "UnderTheBaobab@catalystworks.consulting",
+            "ai_catalyst": "aiCatalyst@catalystworks.consulting",
+            "first_generation_money": "1stGenMoney@catalystworks.consulting",
+        }
+        sender = _channel_sender.get(channel_id.lower().replace(" ", "_"), "boubacar@catalystworks.consulting")
+
+        result = subprocess.run(
+            ["gws", "gmail", "+send",
+             "--to", _NOTIFY_EMAILS,
+             "--from", sender,
+             "--subject", subject,
+             "--body", body,
+             "--html"],
+            capture_output=True, text=True, timeout=30
+        )
+        if result.returncode == 0:
+            logger.info("render_publisher: email sent to %s", _NOTIFY_EMAILS)
+        else:
+            logger.warning("render_publisher: email send failed: %s", result.stderr[:200])
+    except Exception as exc:
+        logger.warning("render_publisher: email notification failed: %s", exc)
