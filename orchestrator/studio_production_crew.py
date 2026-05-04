@@ -79,6 +79,19 @@ def run_production(notion_id: str, *, dry_run: bool = False) -> dict[str, Any]:
         title=script["title"],
     )
 
+    if not qa_report.passed and not dry_run:
+        failed_names = [c.name for c in qa_report.failed_checks]
+        failed_details = [f"{c.name}: {c.detail}" for c in qa_report.failed_checks]
+        # One auto-retry for fixable issues (retention loops, citations, formula)
+        fixable = {"retention_loops", "source_citation", "four_part_formula"}
+        if set(failed_names) <= fixable:
+            logger.info("production_crew: QA retry — fixable failures: %s", failed_names)
+            fix_hint = "IMPORTANT FIX REQUIRED: " + "; ".join(failed_details)
+            retry_candidate = dict(candidate)
+            retry_candidate["twist"] = (candidate.get("twist", "") + "\n\n" + fix_hint).strip()
+            script = generate_script(retry_candidate, brand, dry_run=dry_run)
+            qa_report = run_qa(script["full_text"], niche, length_target, notion_id=notion_id, channel=channel_id, title=script["title"])
+
     if not qa_report.passed:
         failed = [f"{c.name}: {c.detail}" for c in qa_report.failed_checks]
         logger.warning("production_crew: QA failed for %s: %s", notion_id, failed)
@@ -110,8 +123,9 @@ def run_production(notion_id: str, *, dry_run: bool = False) -> dict[str, Any]:
     from studio_composer import compose
     composition = compose(scenes, scene_assets, voice, script, brand, dry_run=dry_run)
     logger.info(
-        "production_crew: composition built (lint_passed=%s)",
-        composition["lint_passed"],
+        "production_crew: composition built (%d scenes, project=%s)",
+        len(composition.get("scenes", [])),
+        composition["project_dir"],
     )
 
     # Stage 9: Render + publish
@@ -219,7 +233,7 @@ def _fetch_qa_passed_candidates() -> list[str]:
                 "Authorization": f"Bearer {_NOTION_TOKEN}",
                 "Notion-Version": "2022-06-28",
             },
-            json={"filter": {"property": "Status", "select": {"equals": "qa-passed"}}},
+            json={"filter": {"property": "Status", "select": {"equals": "scouted"}}},
             timeout=10,
         )
         resp.raise_for_status()
@@ -323,7 +337,7 @@ def _run_smoke_test() -> None:
     logger.info("assets: %d stubs", len(assets))
 
     composition = compose(scenes, assets, voice, script, brand, dry_run=True)
-    logger.info("composition: project=%s lint=%s", composition["project_dir"], composition["lint_passed"])
+    logger.info("composition: project=%s scenes=%d", composition["project_dir"], len(composition.get("scenes", [])))
 
     result = render_and_publish(composition, brand, "smoke-test", dry_run=True)
     logger.info("renders: %s", {k: v.get("drive_url") for k, v in result["renders"].items()})

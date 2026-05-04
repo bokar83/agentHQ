@@ -30,7 +30,7 @@ except ModuleNotFoundError:
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
-DAILY_MINIMUM = 10
+DAILY_MINIMUM = 20
 
 
 def _count_ready_cw_leads(conn) -> int:
@@ -103,7 +103,7 @@ def topup_cw_leads(minimum: int = DAILY_MINIMUM, dry_run: bool = False) -> int:
     saved = 0
 
     # Slot 1-5: fresh Apollo
-    fresh = harvest_leads(CW_ICP_WIDENED, target=target_fresh, max_pages=6)
+    fresh = harvest_leads(CW_ICP_WIDENED, target=target_fresh, max_pages=12)
     for lead in fresh:
         if not lead.get("email"):
             continue
@@ -128,7 +128,7 @@ def topup_cw_leads(minimum: int = DAILY_MINIMUM, dry_run: bool = False) -> int:
     # Top up the gap: if saved < minimum, pull more fresh
     gap = minimum - saved
     if gap > 0:
-        topup_extra = harvest_leads(CW_ICP_WIDENED, target=gap, max_pages=6)
+        topup_extra = harvest_leads(CW_ICP_WIDENED, target=gap, max_pages=12)
         for lead in topup_extra:
             if not lead.get("email"):
                 continue

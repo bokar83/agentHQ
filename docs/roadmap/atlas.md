@@ -418,6 +418,94 @@ Explicitly excluded (have code-level defaults, hard-failing on these creates new
 
 ---
 
+### M17: Kie.ai Spend Tracking
+
+**Status:** QUEUED (gate-blocked)
+
+**Gate condition (do this first, 10 min):**
+
+```bash
+docker exec orc-crewai python3 -c "
+import requests, os
+h = {'Authorization': f'Bearer {os.environ[\"KIE_AI_API_KEY\"]}'}
+r = requests.get('https://api.kie.ai/api/v1/chat/credit', headers=h)
+print('credit:', r.status_code, r.json())
+r2 = requests.get('https://api.kie.ai/api/v1/usage', headers=h)
+print('usage:', r2.status_code, r2.text[:500])
+r3 = requests.get('https://api.kie.ai/api/v1/transactions', headers=h)
+print('txns:', r3.status_code, r3.text[:500])
+"
+```
+
+Answer two questions before writing any code:
+
+1. Does Kie expose a transaction/usage history endpoint? (If yes: mirror OpenRouter pattern exactly. Plan below is obsolete.)
+2. What is the credit-to-USD conversion rate? Is it fixed or per-model-variable?
+
+**What:** Add Kie.ai spend to the Atlas dashboard Spend card so total AI cost is visible alongside OpenRouter.
+
+**Implementation path (balance-delta approach -- only if no transaction endpoint exists):**
+
+- `orchestrator/spend_snapshot.py`: add `_fetch_kie()` (hits `/api/v1/chat/credit`, returns integer credits). Add `take_kie_snapshot()` as standalone function (do NOT refactor `take_snapshot()` signature -- keep existing callers untouched). Delta logic: `usd_today = (prev_balance - current_balance) / KIE_CREDITS_PER_USD`. Day-1 sentinel: write NULL for `usd_today` when no prior row exists. Top-up detection: if `current_balance > prev_balance`, write NULL (not 0 -- zero implies confirmed zero spend). Update `spend_snapshot_tick()` to call both snapshots.
+- `orchestrator/atlas_dashboard.py`: add standalone `_fetch_kie_live()` (returns current balance only, fails independently from OpenRouter fetch). Update `get_spend()` to include `kie_balance`, `kie_today` (from latest provider_billing row, not live delta). Dashboard shows "---" when `kie_today` is NULL.
+- Schema: do NOT store Kie credits in `usd_today` with unknown units. Store confirmed USD only. Add `KIE_CREDITS_PER_USD` constant once rate confirmed. If rate is per-model-variable, use separate `kie_balance_log` table instead of `provider_billing` to avoid unit contamination.
+
+**What is NOT in scope:**
+
+- Intraday polling (future enhancement if Kie becomes top spend source)
+- Per-job attribution (future; needs balance read before/after each API call)
+- Aggregating Kie into `_get_historical_comparisons()` -- audit first: inject a synthetic row and confirm existing function already sums it. If yes, no code change needed there.
+
+**Success criterion (verifiable):**
+
+1. `provider_billing` has a Kie row after 23:55 MT with `usd_today` in confirmed USD (not raw credits)
+2. Atlas dashboard Spend card shows Kie balance matching `GET /api/v1/chat/credit` raw response / confirmed rate
+3. SQL assertion after two consecutive snapshots: `usd_today` == hand-calculated delta
+
+**Sankofa + Karpathy review:** 2026-05-03. Both councils flagged credit-unit mismatch as fatal flaw in original plan. Karpathy verdict: HOLD until gate clears. Key findings: top-up guard in original plan erases real spend; delta approach conditionally sound only with confirmed fixed credit rate; `_get_historical_comparisons()` may need zero code changes once rows exist.
+
+**ETA:** 2-3h after gate clears.
+**Branch:** `feat/atlas-m9-kie-spend` (create when gate clears)
+
+---
+
+### M18: HALO Loop - Trace-Driven Harness Optimization ⏳ TRIGGER-GATED
+
+**What:** Wire OpenTelemetry JSONL tracing into one agentsHQ harness (Atlas heartbeat loop first, Studio pipeline second). Once 50+ traces are collected, run the HALO CLI to surface systemic failure patterns. Feed verified findings to Claude Code to patch the harness. Repeat until performance plateaus.
+
+**Why:** Sankofa + Karpathy both flagged this as the right tool at the wrong time (2026-05-04). The Atlas L5 Learn loop (M5) and "learning crews" milestone share the same goal as HALO: make the harness self-improve from data. HALO is the concrete, benchmarked implementation of that concept. AppWorld results: Sonnet 73.7→89.5, Gemini Flash 36.8→52.6 - by optimizing the harness, not the model.
+
+**How HALO works:**
+1. Harness emits OTel-compatible JSONL traces via `tracing.py` (copyable from `halo-engine` demo)
+2. `halo <traces.jsonl> -p "<diagnostic question>"` runs RLM over traces, surfaces systemic failure patterns
+3. Claude Code (this) maps findings to code, makes the minimum change, verifies, re-runs
+4. Loop repeats
+
+**Key constraint:** HALO is a two-actor system. HALO Engine = trace diagnostics only (no repo access). Claude Code = maps findings to code. Never ask HALO to write patches.
+
+**Install:** `pip install halo-engine` (MIT, PyPI). Ships its own `skills/claude/SKILL.md` - use that as the operating manual when the loop starts.
+
+**Trigger gate (ALL required before any build):**
+1. Instrument Atlas heartbeat loop with HALO's `tracing.py` pattern (copy from `demo/openai-agents-sdk-demo/tracing.py`)
+2. Collect ≥50 traces from real runs
+3. Run `halo <traces.jsonl>` and verify ≥1 actionable finding
+4. If ≥1 finding verified → proceed to M18 build. If 0 findings → harness is already clean; archive permanently.
+
+**Trace format requirements:**
+- Plain JSONL (not gzip)
+- Required fields: `trace_id`, `span_id`, `parent_span_id`, `name`, `inference.project_id`, `inference.observation_kind`
+- `inference.observation_kind` must be one of: `AGENT`, `LLM`, `TOOL`, `CHAIN`, `GUARDRAIL`, `SPAN`
+- Do NOT use `OPENAI_AGENTS_DISABLE_TRACING=1` - disable the OpenAI uploader with `agents.set_trace_processors([])` instead
+
+**Trigger date:** 2026-05-18 (instrument + first run). If no instrumented traces by 2026-06-01 → archive permanently.
+**Blockers:** No agentsHQ harness emits OTel JSONL today. Instrumentation is the unlock.
+**Branch:** `feat/atlas-m18-halo-tracing` (create when gate clears)
+**ETA:** 1h instrumentation + first run. Optimization loop is ongoing.
+
+**Source:** `github.com/context-labs/halo` absorbed 2026-05-04. ARCHIVE-AND-NOTE verdict; revisit condition = this milestone.
+
+---
+
 ## Descoped Items
 
 These are explicit "do not build" decisions with reasons, so we don't relitigate.
@@ -442,6 +530,7 @@ These are explicit "do not build" decisions with reasons, so we don't relitigate
 - **Modules:** `orchestrator/griot.py`, `orchestrator/griot_scheduler.py`, `orchestrator/publish_brief.py`, `orchestrator/heartbeat.py`, `orchestrator/scheduler.py`
 - **State:** `/root/agentsHQ/data/autonomy_state.json` on VPS
 - **DB:** `approval_queue`, `task_outcomes` tables in `postgres` DB on `orc-postgres`
+- **Verification queue concept (2026-05-04):** Graeme Kay research agent architecture (Sankofa Council session) surfaced a gap: Atlas has an `approval_queue` for human-gated commits but no equivalent for *knowledge claims* - agent outputs that need verification before becoming facts the system acts on. Future enhancement: add `data/verification_queue.md` alongside `autonomy_state.json` on VPS. Any claim an agent makes that another agent will act on gets queued here before promotion to fact. Blocks hallucination laundering. Gate: build when M5 Chairman crew is being designed (2026-05-08+).
 
 ---
 
@@ -1426,7 +1515,7 @@ This session was originally scoped as "continue the agentsHQ structure cleanup s
 
 ---
 
-## Session Log: 2026-04-29 (Wednesday) — autoresearch loop pattern validated as L5 substrate
+## Session Log: 2026-04-29 (Wednesday) - autoresearch loop pattern validated as L5 substrate
 
 **Entry type:** Research + proof-of-mechanism. No code shipped. Two gates passed.
 
@@ -1434,7 +1523,7 @@ This session was originally scoped as "continue the agentsHQ structure cleanup s
 
 **Initial verdict (pre-Council):** FORK. Top-ranked Monday move was "build generic loop_runner, deploy on cold outreach copy first."
 
-**Sankofa Council ran (with /karpathy lens) and rejected the ranking.** Cold outreach reply-rate at n=10 has a confidence interval of roughly [0%, 30%] on a 5% baseline — the loop would optimize toward false positives. The Council reframed: the only metric in Boubacar's stack with `val_bpb`-grade properties (deterministic, fast, evidence-grounded) is the **design-audit 5-dimension rubric**. That's the right target for the loop, and the right Monday step is a 30-min determinism test, not a 4-week framework build.
+**Sankofa Council ran (with /karpathy lens) and rejected the ranking.** Cold outreach reply-rate at n=10 has a confidence interval of roughly [0%, 30%] on a 5% baseline - the loop would optimize toward false positives. The Council reframed: the only metric in Boubacar's stack with `val_bpb`-grade properties (deterministic, fast, evidence-grounded) is the **design-audit 5-dimension rubric**. That's the right target for the loop, and the right Monday step is a 30-min determinism test, not a 4-week framework build.
 
 **Determinism test (executed):** Same artifact (`workspace/demo-sites/volta-studio/index.html`), same rubric, scored 4 times (3 fresh runs in this session + 1 historical run from 2026-04-28).
 
@@ -1450,7 +1539,7 @@ This session was originally scoped as "continue the agentsHQ structure cleanup s
 **Loop iteration test (executed):** Pattern proof-of-mechanism on a copy of the catalystworks-consulting homepage (production source untouched).
 
 - Copied `output/websites/catalystworks-site/index.html` to `workspace/loop-test/cw-index-{baseline,mutated}.html`
-- Mutation: single targeted change — Inter font (P1 reflex-reject) → Spectral (heading) + Public Sans (body) per styleguide v1.1
+- Mutation: single targeted change - Inter font (P1 reflex-reject) → Spectral (heading) + Public Sans (body) per styleguide v1.1
 - Baseline score: 14/20 (dims: 3/3/4/3/1)
 - Mutated score: 15/20 (dims: 3/3/4/3/**2**)
 - Δ: **+1 on Anti-Patterns, no regression on other dimensions**
@@ -1467,7 +1556,7 @@ This session was originally scoped as "continue the agentsHQ structure cleanup s
 2. **First production target: design-audit on Catalyst Works deliverables**, NOT cold outreach copy (Council was right; outreach metric is too noisy at n=10).
 3. **Cold outreach iterator descoped** until volume reaches 30+ sends/batch with statistical power.
 4. **Always work on copies in `workspace/loop-test/`**, never mutate real source. Saved as feedback memory: `feedback_always_copy_for_experiments.md`.
-5. **Runner build deferred** ("Let's stop and build later" — Boubacar). Substrate proven; build happens in a future session.
+5. **Runner build deferred** ("Let's stop and build later" - Boubacar). Substrate proven; build happens in a future session.
 
 **Files created this session:**
 
@@ -1479,7 +1568,7 @@ This session was originally scoped as "continue the agentsHQ structure cleanup s
 
 **Open work (next session):**
 
-1. Build `agentsHQ/loops/loop_runner.py` — generic pattern (artifact + metric_fn + mutator + git memory + Postgres log)
+1. Build `agentsHQ/loops/loop_runner.py` - generic pattern (artifact + metric_fn + mutator + git memory + Postgres log)
 2. First deployment target: pick one in-flight Catalyst Works deliverable, baseline-audit, run loop overnight, wake up to git log of N attempts
 3. After 5+ successful runs, evaluate whether to register as a 6th heartbeat wake on VPS for autonomous overnight iteration
 4. Tally-from-dimensions enforcement in the runner (do not let agent free-type totals)
@@ -1800,3 +1889,41 @@ OpenRouter ground-truth spend now visible on the Atlas dashboard. Hero Spend Pac
 **M16 added to roadmap:** Anthropic Console + Claude Code CLI token tracking. No public API confirmed. Spike before build. Earliest trigger 2026-08-01.
 
 **Next:** Historicals will accumulate from 23:55 MT tonight. Week-over-week comparisons meaningful after 7 days (2026-05-10). Month-over-month meaningful after June closes.
+
+---
+
+### 2026-05-03 (Saturday late): M17 Kie.ai spend tracking planned, councils run, milestone added
+
+**What happened:** Kie.ai spend tracking plan reviewed by Sankofa Council + Karpathy audit before any code was written. Both councils returned HOLD.
+
+**Council verdicts:**
+
+- **Sankofa fatal flaw (Contrarian):** top-up guard in original plan erases real spend. Balance delta is not spend. Credits are not dollars. Storing credit-delta in `usd_today` column is a unit lie from day one.
+- **Sankofa First Principles:** goal is "know what Kie costs." You have one balance integer. That is not spend. Before any code: does Kie expose transaction/usage history endpoint?
+- **Sankofa Executor:** run API probe before touching any file (probe command documented in M17).
+- **Karpathy P1 FAIL:** credit unit unconfirmed. `check_credits()` returns raw integer. Plan stores as `usd_today` with no confirmed conversion rate. Day-1 bootstrap unhandled. VERDICT: HOLD.
+
+**Original plan changes rejected:**
+
+- Refactoring `take_snapshot()` signature -- unnecessary, breaks surgical rule
+- Merging Kie into `_fetch_provider_spend()` -- couples failure modes incorrectly
+- Mock test with assumed conversion rate -- false confidence until unit confirmed
+- "If current > previous, set usd_today = 0" guard -- erases real spend on top-up-then-spend days
+
+**M17 milestone written to roadmap.** Gate: API probe first (10 min). Implementation path depends on answer.
+
+**Next:** Run the API probe. Come back with output. Build or re-plan based on result.
+
+---
+
+### 2026-05-04: Research Agent Architecture Review - verification queue concept logged
+
+**Session scope:** Research review only. No code shipped to Atlas in this session.
+
+**What happened:** Sankofa Council ran on whether to adopt Graeme Kay's research agent architecture (X thread, 2026-05-04). Council surfaced one Atlas-relevant finding: the `approval_queue` gates human-approved commits, but there is no equivalent for *agent knowledge claims* - outputs one agent makes that another agent acts on.
+
+**Cross-reference added to Atlas Cross-References:** `data/verification_queue.md` concept documented. Single markdown file alongside `autonomy_state.json` on VPS. Any claim an agent makes that another agent will act on gets queued before becoming a fact the system acts on. Prevents hallucination laundering in the L5 Learning loop.
+
+**Build gate:** When M5 Chairman crew is being designed (2026-05-08+). Not before.
+
+**Next:** M5 (Chairman / L5 Learning) gate opens 2026-05-08. When designing the Chairman crew, add `verification_queue.md` as the claim-staging layer before any agent output is promoted to a scoring mutation.

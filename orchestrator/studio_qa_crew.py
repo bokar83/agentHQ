@@ -450,26 +450,110 @@ def check_ai_origin_safe(text: str) -> QACheckResult:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-# Run all 10 checks
+# Check 11: 4-part content formula (Shorts-optimised structure)
 # ═════════════════════════════════════════════════════════════════════════════
+# Doctrine: skills/kie_media/references/channel-launch-doctrine.md
+# Every script must have: Hook (0-2s) / Value body / Curiosity Gap / Loop Ending.
+# Hook is already enforced by check 4. This check validates the other three.
+
+_CURIOSITY_GAP_PATTERNS = [
+    r"\bbut (?:here|there)(?:'s| is) (?:the|what)\b",
+    r"\bwhat (?:nobody|no one|most people) (?:tell|tells|told|know|knows)\b",
+    r"\band (?:here|this) is where (?:it|things) get\b",
+    r"\bthe part (?:they|nobody|no one) (?:tell|mention|talk)\b",
+    r"\bstay (?:with me|tuned)\b",
+    r"\bbefore (?:we|I) (?:get|continue|go)\b",
+    r"\[RETENTION:",
+]
+
+_LOOP_ENDING_PATTERNS = [
+    r"\bwhat (?:do|did|would) you (?:think|do|say)\b",
+    r"\blet (?:me|us) know (?:in the comments|below|down below)\b",
+    r"\bcomment (?:below|down below|your thoughts)\b",
+    r"\bwhich (?:one|of these) (?:is|was|do) you\b",
+    r"\bif you (?:found|enjoyed|liked) (?:this|today)\b",
+    r"\bwatch (?:this|the next|my next)\b",
+    r"\bthe (?:answer|truth|secret) (?:might|will|may) surprise\b",
+    r"\bsave (?:this|it) for later\b",
+    # Broader CTA patterns Sonnet commonly writes
+    r"\bfollow\b.{0,40}\bmore\b",
+    r"\bsubscribe\b.{0,40}\b(?:more|next|channel)\b",
+    r"\bshare\b.{0,40}\bwho\b",
+    r"\bif this (?:helped|resonated|hit)\b",
+    r"\buntil (?:next time|then)\b",
+    r"\bsee you (?:in the next|next time|tomorrow)\b",
+    r"\bmore (?:stories|videos|episodes|content) like this\b",
+    r"\bpass this (?:on|along)\b",
+    r"\bsomeone (?:who needs|needs) to hear this\b",
+    r"\bnext (?:video|episode|time|story)\b",
+    r"\bcheck (?:out|the) (?:next|more)\b",
+    r"\b(?:like|tap).{0,20}\bnotif",
+]
+
+
+def check_four_part_formula(text: str, length_target: str = "long (3-15m)") -> QACheckResult:
+    """Validate 4-part formula: Hook / Value / Curiosity Gap / Loop Ending.
+    Hook validated by check 4. This check requires curiosity gap + loop ending.
+    Skipped for Shorts (under 60s target) — formula still applies but regex is
+    too strict for very short scripts.
+    """
+    if not text or not text.strip():
+        return QACheckResult("four_part_formula", False, "empty text")
+
+    # Skip strict check for Shorts — hook + CTA checks already cover it
+    if "short" in length_target.lower():
+        return QACheckResult("four_part_formula", True, "shorts: hook+CTA checks cover formula")
+
+    clean = re.sub(r'\[SCENE:[^\]]*\]', '', text)
+    text_lower = clean.lower()
+
+    missing = []
+
+    has_gap = any(re.search(p, text_lower, re.IGNORECASE) for p in _CURIOSITY_GAP_PATTERNS)
+    if not has_gap:
+        missing.append("curiosity gap")
+
+    has_loop = any(re.search(p, text_lower, re.IGNORECASE) for p in _LOOP_ENDING_PATTERNS)
+    if not has_loop:
+        missing.append("loop ending")
+
+    if missing:
+        return QACheckResult("four_part_formula", False, f"missing: {', '.join(missing)}")
+    return QACheckResult("four_part_formula", True, "")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Run all 11 checks
+# ═════════════════════════════════════════════════════════════════════════════
+
+# Niches that are storytelling/creative — source citations don't apply
+_STORYTELLING_NICHES = {"african-folktales", "parenting-psychology"}
+
 
 def run_qa(text: str, niche: str, length_target: str = "long (3-15m)",
             notion_id: str = "", channel: str = "", title: str = "") -> QAReport:
-    """Run all 10 checks. Returns QAReport with per-check pass/fail."""
+    """Run all 11 checks. Returns QAReport with per-check pass/fail."""
     report = QAReport(notion_id=notion_id, channel=channel, title=title)
+    # Source citation check skipped for storytelling niches (folktales, parenting stories)
+    if niche in _STORYTELLING_NICHES:
+        citation_check = QACheckResult("source_citation", True, f"skipped for storytelling niche '{niche}'")
+    else:
+        citation_check = check_source_citation(text)
     report.checks = [
         check_spellcheck_grammar(text),
         check_banned_phrases(text),
         check_length_target(text, length_target),
         check_hook_present(text, length_target),
-        check_source_citation(text),
+        citation_check,
         check_cta_present(text),
         check_personal_rules(text),
         check_brand_voice(text, niche),
         check_retention_loops(text),
         check_ai_origin_safe(text),
+        check_four_part_formula(text, length_target),
     ]
     return report
+
 
 
 def run_qa_on_record(notion_id: str) -> Optional[QAReport]:

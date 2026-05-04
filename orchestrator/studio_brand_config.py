@@ -30,15 +30,25 @@ _PLACEHOLDER_PATH = _CONFIGS_DIR / "brand_config.placeholder.json"
 _NOTION_BRAND_DB_ID = os.environ.get("NOTION_STUDIO_BRAND_CONFIG_DB_ID", "")
 
 
+def _slugify(channel_id: str) -> str:
+    """'Under the Baobab' → 'under_the_baobab'"""
+    import re
+    return re.sub(r'[^a-z0-9]+', '_', channel_id.lower()).strip('_')
+
+
 def load_brand_config(channel_id: str) -> dict[str, Any]:
     """Return brand config for channel_id. Never raises — falls back to placeholder."""
+    slug = _slugify(channel_id)
+
     if _NOTION_BRAND_DB_ID:
-        cfg = _load_from_notion(channel_id)
+        cfg = _load_from_notion(slug) or _load_from_notion(channel_id)
         if cfg:
             logger.info("brand_config loaded from Notion for %s", channel_id)
             return cfg
 
-    per_channel_path = _CONFIGS_DIR / f"brand_config.{channel_id}.json"
+    per_channel_path = _CONFIGS_DIR / f"brand_config.{slug}.json"
+    if not per_channel_path.exists():
+        per_channel_path = _CONFIGS_DIR / f"brand_config.{channel_id}.json"
     if per_channel_path.exists():
         cfg = _load_json(per_channel_path)
         if cfg:
