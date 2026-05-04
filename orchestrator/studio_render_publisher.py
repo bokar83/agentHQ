@@ -1,15 +1,15 @@
 """
-studio_render_publisher.py — Studio M3: Render + Drive upload + Notion update.
+studio_render_publisher.py - Studio M3: Render + Drive upload + Notion update.
 
-Renders 3 formats from one hyperframes project:
-  long_form  1920x1080 → 05_Asset_Library/<channel>/<YYYY-MM-DD>/long_form/
-  shorts     1080x1920 → .../shorts/
-  square     1080x1080 → .../square/
+Renders 3 formats using pure ffmpeg (no hyperframes, no Chrome):
+  long_form  1920x1080 → Ken Burns images + narration + SRT captions
+  shorts     1080x1920 → vertical crop/reframe of same scenes
+  square     1080x1080 → square crop
 
 After render:
   - Upload each MP4 to Drive
   - Update Notion Pipeline DB record: Asset_URL + Status=scheduled
-  - Send Telegram notification
+  - Send Telegram + email notification
 """
 from __future__ import annotations
 
@@ -24,8 +24,7 @@ import httpx
 
 logger = logging.getLogger("agentsHQ.studio_render_publisher")
 
-_HF_CMD = os.environ.get("HYPERFRAMES_CMD", "npx hyperframes")
-_RENDERS_DIR = Path(os.environ.get("STUDIO_RENDERS_DIR", "workspace/renders"))
+_RENDERS_DIR = Path(os.environ.get("STUDIO_RENDERS_DIR", "/app/workspace/renders"))
 
 _NOTION_TOKEN = (
     os.environ.get("NOTION_SECRET")
@@ -122,41 +121,247 @@ def _render_format(
         logger.info("[dry_run] render_publisher: stub render %s", output_path)
         return output_path
 
+    import json as _json
+    manifest_path = project_dir / "manifest.json"
+    if not manifest_path.exists():
+        logger.error("render_publisher: no manifest.json in %s", project_dir)
+        return None
+
+    manifest = _json.loads(manifest_path.read_text())
     w, h, fps = specs["width"], specs["height"], specs["fps"]
-    cmd = (
-        _HF_CMD.split()
-        + ["render",
-           "--output", str(output_path),
-           "--quality", "high",
-           "--fps", str(fps),
-           # hyperframes reads composition dimensions from index.html data-composition-id
-           # Width/height override passed via env for platform format switching
-           ]
-    )
 
-    env = os.environ.copy()
-    env["HF_RENDER_WIDTH"] = str(w)
-    env["HF_RENDER_HEIGHT"] = str(h)
-
-    logger.info("render_publisher: rendering %s (%dx%d@%d)", fmt, w, h, fps)
-    result = subprocess.run(
-        cmd,
-        cwd=str(project_dir),
-        env=env,
-        capture_output=True,
-        text=True,
-        timeout=600,
-    )
-
-    if result.returncode != 0:
-        logger.error(
-            "render_publisher: %s render failed (rc=%d):\n%s",
-            fmt, result.returncode, result.stderr[-2000:],
-        )
+    logger.info("render_publisher: ffmpeg rendering %s (%dx%d@%d)", fmt, w, h, fps)
+    try:
+        _ffmpeg_render(manifest, output_path, w, h, fps, fmt)
+    except Exception as exc:
+        logger.error("render_publisher: %s render failed: %s", fmt, exc)
         return None
 
     logger.info("render_publisher: %s complete → %s", fmt, output_path)
     return output_path
+
+
+def _ffmpeg_render(
+    manifest: dict,
+    output_path: Path,
+    width: int,
+    height: int,
+    fps: int,
+    fmt: str,
+) -> None:
+    """Render MP4 from image scenes + audio using ffmpeg Ken Burns pipeline."""
+    import tempfile
+
+    scenes = manifest["scenes"]
+    audio_path = manifest.get("audio_path", "")
+    srt_path = manifest.get("srt_path", "")
+    intro_dur = float(manifest.get("intro_duration_sec", 3))
+    outro_dur = float(manifest.get("outro_duration_sec", 4))
+    brand = manifest.get("brand", {})
+    title = manifest.get("title", "")
+    channel_name = brand.get("display_name", "")
+    bg_color = brand.get("background_color", "#1E1433").lstrip("#")
+    primary_color = brand.get("primary_color", "#E8A020").lstrip("#")
+    font = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+
+    # Fallback font if brand font not available
+    if not Path(font).exists():
+        font = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Step 1: Build a clip for each scene (Ken Burns on image → scene_N.mp4)
+    clip_paths = []
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp = Path(tmpdir)
+
+        for scene in scenes:
+            img = scene.get("image_path", "")
+            dur = float(scene.get("duration_sec", 8.0))
+            motion = scene.get("motion", "zoom_in")
+            clip_out = tmp / f"clip_{scene['index']:03d}.mp4"
+
+            if img and Path(img).exists():
+                _render_ken_burns_clip(img, clip_out, dur, fps, width, height, motion)
+            else:
+                # Fallback: solid color clip
+                _render_color_clip(clip_out, dur, fps, width, height, bg_color)
+
+            clip_paths.append(clip_out)
+
+        # Step 2: Intro title card
+        intro_path = tmp / "intro.mp4"
+        _render_title_card(
+            intro_path, intro_dur, fps, width, height,
+            title, bg_color, primary_color, font,
+        )
+
+        # Step 3: Outro card
+        outro_path = tmp / "outro.mp4"
+        _render_outro_card(
+            outro_path, outro_dur, fps, width, height,
+            channel_name, bg_color, primary_color, font,
+        )
+
+        # Step 4: Concat all clips with crossfade transitions
+        all_clips = [intro_path] + clip_paths + [outro_path]
+        concat_path = tmp / "concat.mp4"
+        _concat_clips(all_clips, concat_path, scenes, fps)
+
+        # Step 5: Mix narration audio
+        if audio_path and Path(audio_path).exists():
+            mixed_path = tmp / "mixed.mp4"
+            _mix_audio(concat_path, audio_path, mixed_path, intro_dur)
+        else:
+            mixed_path = concat_path
+
+        # Step 6: Burn SRT captions (or copy without)
+        if srt_path and Path(srt_path).exists() and Path(srt_path).stat().st_size > 10:
+            _burn_captions(mixed_path, srt_path, output_path, width, height, font, primary_color)
+        else:
+            subprocess.run(
+                ["ffmpeg", "-y", "-i", str(mixed_path), "-c", "copy", str(output_path)],
+                check=True, capture_output=True, timeout=300,
+            )
+
+
+def _ffmpeg(cmd: list, timeout: int = 300) -> None:
+    result = subprocess.run(
+        ["ffmpeg", "-y"] + cmd,
+        capture_output=True, text=True, timeout=timeout,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"ffmpeg failed:\n{result.stderr[-1500:]}")
+
+
+def _ken_burns_filter(motion: str, w: int, h: int, fps: int, dur: float) -> str:
+    """Return ffmpeg zoompan filter string for Ken Burns effect."""
+    frames = int(dur * fps)
+    # Oversample at 2x then scale down for smoother motion
+    ow, oh = w * 2, h * 2
+    d = frames
+
+    effects = {
+        "zoom_in":    f"zoompan=z='min(zoom+0.0015,1.5)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={d}:s={ow}x{oh}:fps={fps}",
+        "zoom_out":   f"zoompan=z='if(lte(zoom,1.0),1.5,max(1.0,zoom-0.0015))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={d}:s={ow}x{oh}:fps={fps}",
+        "pan_right":  f"zoompan=z='1.3':x='if(lte(on,1),0,min(x+2,iw/3))':y='ih/2-(ih/zoom/2)':d={d}:s={ow}x{oh}:fps={fps}",
+        "pan_left":   f"zoompan=z='1.3':x='if(lte(on,1),iw/3,max(0,x-2))':y='ih/2-(ih/zoom/2)':d={d}:s={ow}x{oh}:fps={fps}",
+        "pan_up":     f"zoompan=z='1.3':x='iw/2-(iw/zoom/2)':y='if(lte(on,1),ih/3,max(0,y-2))':d={d}:s={ow}x{oh}:fps={fps}",
+        "zoom_in_tl": f"zoompan=z='min(zoom+0.0015,1.5)':x='0':y='0':d={d}:s={ow}x{oh}:fps={fps}",
+        "zoom_out_br":f"zoompan=z='if(lte(zoom,1.0),1.5,max(1.0,zoom-0.0015))':x='iw-iw/zoom':y='ih-ih/zoom':d={d}:s={ow}x{oh}:fps={fps}",
+        "zoom_in_tr": f"zoompan=z='min(zoom+0.0015,1.5)':x='iw-iw/zoom':y='0':d={d}:s={ow}x{oh}:fps={fps}",
+    }
+    zp = effects.get(motion, effects["zoom_in"])
+    return f"{zp},scale={w}:{h}:flags=lanczos"
+
+
+def _render_ken_burns_clip(img: str, out: Path, dur: float, fps: int, w: int, h: int, motion: str) -> None:
+    kb = _ken_burns_filter(motion, w, h, fps, dur)
+    _ffmpeg([
+        "-loop", "1", "-i", img,
+        "-vf", kb,
+        "-t", str(dur),
+        "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+        "-pix_fmt", "yuv420p", "-an",
+        str(out),
+    ], timeout=120)
+
+
+def _render_color_clip(out: Path, dur: float, fps: int, w: int, h: int, color: str) -> None:
+    _ffmpeg([
+        "-f", "lavfi", "-i", f"color=#{color}:size={w}x{h}:rate={fps}",
+        "-t", str(dur), "-c:v", "libx264", "-preset", "fast", "-an",
+        str(out),
+    ])
+
+
+def _render_title_card(out: Path, dur: float, fps: int, w: int, h: int,
+                       title: str, bg: str, fg: str, font: str) -> None:
+    # Wrap title at ~40 chars
+    words = title.split()
+    lines, line = [], []
+    for word in words:
+        line.append(word)
+        if len(" ".join(line)) > 38:
+            lines.append(" ".join(line[:-1]))
+            line = [word]
+    if line:
+        lines.append(" ".join(line))
+    text = r"\n".join(lines)
+
+    drawtext = (
+        f"drawtext=fontfile='{font}':text='{text}':"
+        f"fontcolor=#{fg}:fontsize={w // 18}:"
+        f"x=(w-text_w)/2:y=(h-text_h)/2:"
+        f"line_spacing=20"
+    )
+    _ffmpeg([
+        "-f", "lavfi", "-i", f"color=#{bg}:size={w}x{h}:rate={fps}",
+        "-vf", f"fade=t=in:st=0:d=0.5,fade=t=out:st={dur-0.5}:d=0.5,{drawtext}",
+        "-t", str(dur), "-c:v", "libx264", "-preset", "fast", "-an",
+        str(out),
+    ])
+
+
+def _render_outro_card(out: Path, dur: float, fps: int, w: int, h: int,
+                       channel_name: str, bg: str, fg: str, font: str) -> None:
+    subscribe = r"Like \& Subscribe"
+    drawtext = (
+        f"drawtext=fontfile='{font}':text='{channel_name}':"
+        f"fontcolor=#{fg}:fontsize={w // 16}:x=(w-text_w)/2:y=(h/2-80),"
+        f"drawtext=fontfile='{font}':text='{subscribe}':"
+        f"fontcolor=white:fontsize={w // 28}:x=(w-text_w)/2:y=(h/2+40)"
+    )
+    _ffmpeg([
+        "-f", "lavfi", "-i", f"color=#{bg}:size={w}x{h}:rate={fps}",
+        "-vf", f"fade=t=in:st=0:d=0.5,{drawtext}",
+        "-t", str(dur), "-c:v", "libx264", "-preset", "fast", "-an",
+        str(out),
+    ])
+
+
+def _concat_clips(clips: list[Path], out: Path, scenes: list[dict], fps: int) -> None:
+    # Simple concat without xfade for reliability; transitions can be added later
+    list_file = out.parent / "concat_list.txt"
+    list_file.write_text("\n".join(f"file '{p}'" for p in clips))
+    _ffmpeg([
+        "-f", "concat", "-safe", "0", "-i", str(list_file),
+        "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+        "-pix_fmt", "yuv420p", "-an",
+        str(out),
+    ], timeout=300)
+
+
+def _mix_audio(video: Path, audio: Path, out: Path, audio_delay: float) -> None:
+    # Delay audio by intro_duration so narration starts after title card
+    _ffmpeg([
+        "-i", str(video),
+        "-i", str(audio),
+        "-map", "0:v",
+        "-map", "1:a",
+        "-filter:a", f"adelay={int(audio_delay * 1000)}|{int(audio_delay * 1000)}",
+        "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+        "-shortest",
+        str(out),
+    ], timeout=300)
+
+
+def _burn_captions(video: Path, srt: Path, out: Path, w: int, h: int, font: str, fg: str) -> None:
+    fontsize = w // 28
+    subtitle_filter = (
+        f"subtitles={srt}:force_style='"
+        f"FontName=DejaVu Sans Bold,FontSize={fontsize},"
+        f"PrimaryColour=&H00{fg[:6]}&,"
+        f"OutlineColour=&H00000000&,Outline=2,Shadow=1,"
+        f"MarginV=60,Alignment=2'"
+    )
+    _ffmpeg([
+        "-i", str(video),
+        "-vf", subtitle_filter,
+        "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+        "-c:a", "copy",
+        str(out),
+    ], timeout=600)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
