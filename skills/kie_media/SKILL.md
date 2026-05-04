@@ -36,9 +36,15 @@ Do NOT trigger for:
 
 ---
 
-## HARD RULES (learned 2026-04-28)
+## HARD RULES (learned 2026-04-28 + 2026-05-04)
+
+**Studio scene images:** ALWAYS use `task_type="gpt_image_2_text"` for scene stills. Never use seedream for cinematic/storytelling images — quality is mediocre. GPT Image 2 handles complex cinematic prompts and cultural scenes well. Confirmed live: Under the Baobab pipeline 2026-05-04.
 
 **Text-heavy images (thumbnails, covers, posters):** ALWAYS use `task_type="gpt_image_2_text"` (slug: `gpt-image-2-text-to-image`). GPT Image 2 is the only model that renders text accurately. Seedream scrambles words on anything longer than 3-4 words. Confirmed live: Weekly Signal Issue 2 thumbnail.
+
+**Suno music on Kie:** Available via Kie marketplace. Use for instrumental-only backgrounds (no lyrics). Boubacar also has his own Suno account. Drop MP3s to `workspace/media/music/` to index into music vault.
+
+**Video clips carry audio:** All seedance/hailuo/kling video outputs include audio from the source. Strip audio with ffmpeg `-an` or use `muted playsinline` in HTML. For Studio, pivot away from video generation entirely — use GPT Image 2 stills + ffmpeg Ken Burns motion instead. Much cheaper (~$0.04/image vs ~$7/video clip).
 
 **Nano-banana (`google/nano-banana-pro-image-to-image`):** Our registry has this wired as image-to-image only. Kie supports text-to-image with a different slug. Do not attempt to use it for text-to-image until the registry is updated.
 

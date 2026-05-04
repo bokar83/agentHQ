@@ -192,3 +192,4 @@ pytest_tmp_work/
 # Moved 2026-05-02 from root `task_progress/` to `data/codex/` per Compass governance: runtime ephemera belongs under data/.
 data/codex/
 configs/asset_vault.json
+CLAUDE.original.md
