@@ -622,3 +622,60 @@ Research sourced 2026 IG + TikTok warm-up protocols: IG requires 7-day silence b
 2. First qa-passed candidate: run `python3 -m studio_production_crew --notion-id <id>` live
 3. Confirm MP4 renders and lands in Drive `05_Asset_Library/<channel>/<date>/`
 4. M3 marked SHIPPED  -  M4 publish path takes over
+
+---
+
+### 2026-05-03 (late): M3 ffmpeg pivot  -  hyperframes dropped
+
+Session scope: M3 render engine pivot after hyperframes failed in container (Chrome headless can't access container filesystem paths → blank purple renders).
+
+**What shipped (7 modules rewritten):**
+
+- `studio_composer.py`: full rewrite  -  ffmpeg manifest + SRT writer (no hyperframes)
+- `studio_render_publisher.py`: full rewrite  -  ffmpeg Ken Burns (8 motion variants) + concat + audio mix + SRT caption burn; email via gws +send from channel alias
+- `studio_visual_generator.py`: GPT Image 2 only (`gpt_image_2_text`), vault lookup before Kai
+- `studio_production_crew.py`: status=Ready fix, QA retry, lint_passed removed
+- `studio_qa_crew.py`: skip source_citation for storytelling niches
+- `studio_brand_config.py`: slugify channel name for config lookup
+- `studio_script_generator.py`: retention loop auto-inject, loop_interval passthrough
+- `studio_voice_generator.py`: strip SCENE/RETENTION markers before TTS
+- `studio_trend_scout.py`: niche-aware classifier (inspiration mode), dual YT key rotation
+
+**Key decisions locked:**
+1. hyperframes dropped permanently  -  ffmpeg is the renderer
+2. GPT Image 2 for stills (~$0.04/image vs ~$7/video clip)
+3. SRT as separate track (multilingual ready)
+4. Ken Burns 8-variant cycle per scene
+5. Asset vault: search before generating (score ≥2 tag match = reuse)
+
+**What is NOT done:** shorts (1080x1920) + square (1080x1080) reframe, music vault, branch not merged to main.
+
+---
+
+### 2026-05-04: First Fire review  -  3 blocking bugs found and fixed
+
+Session scope: post-Monday first-fire review. Scout ran (22 candidates written). No video produced.
+
+**Root cause analysis:**
+
+| Bug | Effect | Fix |
+|---|---|---|
+| No `studio-qa` heartbeat (misdiagnosed first) | Caused scout tick to error mid-run | `newsletter_editorial_input` import guarded with `try/except ImportError` |
+| `_fetch_qa_passed_candidates()` queried `Status="Ready"` | Zero candidates picked up by production tick | Fixed filter to `"scouted"` |
+| Spurious `studio-qa` heartbeat added then removed | Ran QA on empty-Draft scouted records → all 19 flipped to `qa-failed` | Removed heartbeat, reset 19 records back to `scouted` via Notion API |
+
+**Also shipped:**
+- Shorts/square center-crop before Ken Burns in `_render_ken_burns_clip()`  -  portrait: `crop=ih*w/h:ih`, square: `crop=min(iw,ih):min(iw,ih)`
+
+**State at session end (2026-05-04 ~17:20 MT):**
+- 19 `scouted` records in Pipeline DB  -  production tick picks up at next 30m fire (~17:20 MT)
+- `studio-production` heartbeat: `every=30m`, `crew_name=studio`
+- Flow confirmed: `scouted` → production_tick → script (Sonnet) → inline QA → voice → visuals → ffmpeg render → `scheduled`
+- Monitor armed watching for first production run logs
+- **Music vault deferred:** `build_vault.py` + `workspace/media/music/` not yet built
+
+**Next steps:**
+1. Confirm first successful video in Drive + Telegram notification
+2. If render succeeds: merge `feat/studio-m3-production` → `main`, mark M3 SHIPPED
+3. Build music vault: `workspace/media/music/` dir + `build_vault.py` scanner (Suno instrumentals per channel)
+4. Review video quality  -  Ken Burns + GPT Image 2 acceptable?
