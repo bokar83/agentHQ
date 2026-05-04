@@ -233,7 +233,7 @@ def _fetch_qa_passed_candidates() -> list[str]:
                 "Authorization": f"Bearer {_NOTION_TOKEN}",
                 "Notion-Version": "2022-06-28",
             },
-            json={"filter": {"property": "Status", "select": {"equals": "qa-passed"}}},
+            json={"filter": {"property": "Status", "select": {"equals": "scouted"}}},
             timeout=10,
         )
         resp.raise_for_status()

@@ -481,40 +481,6 @@ def run_qa(text: str, niche: str, length_target: str = "long (3-15m)",
     return report
 
 
-def studio_qa_tick() -> None:
-    """Heartbeat tick: fetch all scouted candidates from Studio Pipeline DB,
-    run QA on each, flip status to qa-passed or qa-failed."""
-    notion_token = os.environ.get("NOTION_SECRET") or os.environ.get("NOTION_API_KEY", "")
-    if not PIPELINE_DB_ID or not notion_token:
-        logger.warning("studio_qa_tick: PIPELINE_DB_ID or NOTION token not set; skip")
-        return
-
-    try:
-        import httpx
-        resp = httpx.post(
-            f"https://api.notion.com/v1/databases/{PIPELINE_DB_ID}/query",
-            headers={"Authorization": f"Bearer {notion_token}", "Notion-Version": "2022-06-28"},
-            json={"filter": {"property": "Status", "select": {"equals": "scouted"}}},
-            timeout=10,
-        )
-        resp.raise_for_status()
-        candidates = [p["id"] for p in resp.json().get("results", [])]
-    except Exception as exc:
-        logger.error("studio_qa_tick: cannot query Pipeline DB: %s", exc)
-        return
-
-    logger.info("studio_qa_tick: %d scouted candidates to QA", len(candidates))
-    passed = failed = 0
-    for notion_id in candidates:
-        report = run_qa_on_record(notion_id)
-        if report is None:
-            failed += 1
-        elif report.passed:
-            passed += 1
-        else:
-            failed += 1
-    logger.info("studio_qa_tick: done passed=%d failed=%d", passed, failed)
-
 
 def run_qa_on_record(notion_id: str) -> Optional[QAReport]:
     """Pull a record from Studio Pipeline by Notion ID, run QA, write result
