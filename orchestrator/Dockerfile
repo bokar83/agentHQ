@@ -7,17 +7,19 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies + Node.js 20 for gws CLI
+# Install system dependencies + Node.js 22 (required by hyperframes) + ffmpeg (required by hyperframes render)
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
     curl \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    ffmpeg \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Google Workspace CLI (gws) globally
+# Install Google Workspace CLI (gws) + hyperframes globally
 RUN npm install -g @googleworkspace/cli@0.22.1
+RUN npm install -g hyperframes
 
 # Set gws credentials path (file mounted from secrets/ volume at runtime)
 ENV GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE=/app/secrets/gws-oauth-credentials.json
@@ -40,6 +42,7 @@ COPY skills/ skills/
 COPY templates/ templates/
 COPY docs/ docs/
 COPY signal_works/ signal_works/
+COPY configs/ configs/
 
 # Create required directories
 RUN mkdir -p /app/outputs /app/logs /app/outputs/proposals /app/outputs/council

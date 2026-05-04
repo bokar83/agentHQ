@@ -1,0 +1,42 @@
+{
+  "channel_id": "first_generation_money",
+  "display_name": "First Generation Money",
+  "voice_id": "X4Lh5Ftnso6JSt25plzX",
+  "tts_fallback": "kie_tts",
+  "primary_color": "#166B50",
+  "accent_color": "#6B3FA0",
+  "accent_color_2": "#D4922A",
+  "background_color": "#0D2E20",
+  "background_color_light": "#FDFAF4",
+  "secondary_color": "#F7EDD8",
+  "text_color": "#1A1F2E",
+  "neutral_color": "#8A9099",
+  "font_family": "Plus Jakarta Sans",
+  "font_family_body": "Inter",
+  "font_family_mono": "IBM Plex Mono",
+  "logo_drive_id": "19AvIjojPFCE09ArsjhwzHuKOw8WGWsL8",
+  "avatar_drive_id": "1afSw54ErMaoL7Jit0wZMxuDiHE9n90sB",
+  "intro_duration_sec": 3,
+  "outro_duration_sec": 4,
+  "intro_template": "firstgen_intro",
+  "outro_template": "firstgen_outro",
+  "tagline": "Build the wealth your family never had.",
+  "disclaimer": "This is financial education, not personal advice. Always consult a qualified financial professional before making investment decisions.",
+  "visual_style": "clean modern, aspirational, warm cream-gold tones, kitchen table warmth, Grove Green data bars",
+  "regional_motif_tags": ["global-professional", "immigrant", "wealth", "first-gen"],
+  "pronunciation_dict": {
+    "IRS": "I-R-S",
+    "401k": "four-oh-one-K",
+    "Roth": "ROTH",
+    "HYSA": "H-Y-S-A"
+  },
+  "script_tone": "warm mentor, older sibling who figured it out, calm, no hype, no condescension, show your work",
+  "target_duration_sec": 600,
+  "hook_word_budget": 30,
+  "retention_loop_interval_words": 200,
+  "platform_specs": {
+    "long_form": {"width": 1920, "height": 1080, "fps": 30, "aspect_ratio": "16:9"},
+    "shorts":    {"width": 1080, "height": 1920, "fps": 30, "aspect_ratio": "9:16"},
+    "square":    {"width": 1080, "height": 1080, "fps": 30, "aspect_ratio": "1:1"}
+  }
+}
