@@ -273,8 +273,11 @@ def _update_notion_status(notion_id: str, status: str, notes: str = "") -> None:
 
 def _notify_qa_fail(notion_id: str, channel_id: str, failures: list[str]) -> None:
     try:
+        import os
         from notifier import send_message
+        chat_id = os.environ.get("OWNER_TELEGRAM_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID", "")
         send_message(
+            chat_id,
             f"Studio QA failed\n"
             f"Channel: {channel_id}\n"
             f"Record: {notion_id}\n"
