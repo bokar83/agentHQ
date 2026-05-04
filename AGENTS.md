@@ -154,6 +154,8 @@ Agent workflow:
 5. Release branch claim: `complete(task_id)`
 6. Gate picks up branch on next 60s tick, reviews, merges, deploys
 
+**No Telegram. No /propose. No manual notification.** Gate watches GitHub automatically. Agents push and move on. Done.
+
 **[READY] sentinel rule:** Gate skips any branch whose last commit does not contain `[READY]`. This prevents gate from processing in-flight work. Never add `[READY]` to a WIP commit. Only the final commit of a logical unit gets `[READY]`.
 
 **Branch claim rule:** `claim(resource='branch:<name>')` signals to other agents that this branch is in-flight. Any agent checking before starting related work can see it is claimed and wait. Failure to claim does not block gate (fail-open), but is required discipline for multi-agent coordination.

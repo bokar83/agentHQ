@@ -49,6 +49,8 @@ complete(branch_task['id'])
 
 Skipping any step breaks multi-agent coordination. Gate checks the task table before processing any branch. Unclaimed = in-flight = gate skips it.
 
+**No Telegram. No /propose. No manual signal to gate.** Push feature branch with [READY] commit. Gate watches GitHub every 60s and handles everything. Agent moves on immediately after push.
+
 ## Caveman (installed 2026-05-03)
 
 Caveman plugin installed via `irm .../install.ps1 | iex`. Reduces output tokens ~65%, auto-activates every session via SessionStart hook.
