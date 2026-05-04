@@ -100,20 +100,31 @@ A multi-voice strategic review layer that activates on `consulting_deliverable` 
 
 ### What NO agent may do
 
-- `git push` to any branch on origin
 - `git push origin main` under any circumstance
 - `git push --force` or `git push --delete` on any remote ref
 - SSH to VPS and run `orc_rebuild.sh`, `docker compose`, or any deploy script
 - Delete remote branches
 - Merge any branch to main
+- Edit files directly on VPS (SSH + vim/sed/etc). VPS is read-only except for gate deploys.
 
-### What agents MAY do (read-only git + VPS)
+### What agents MAY do
 
+- Write and test code locally (preferred dev environment)
+- Commit to a personal feature branch locally
+- `git push origin feature/<name>` (own feature branch only, never main)
 - `git fetch`, `git log`, `git status`, `git diff` (any branch, any location)
-- `git pull` on a local feature branch (not main)
-- SSH to VPS for reads: `docker logs`, `git log`, `git status`, `git rev-parse HEAD`
+- SSH to VPS for reads only: `docker logs`, `git log`, `git status`, `git rev-parse HEAD`
 - `gh pr list`, `gh issue list`, `gh pr view` (reads only)
-- Commit to local feature branches (never push)
+
+### Dev discipline
+
+Local is the dev + test environment. VPS is deploy-only. Flow:
+
+```
+Local (write + test) -> origin/feature/<name> -> gate_agent -> VPS
+```
+
+Never skip a step. Never push untested code. Never edit VPS files directly.
 
 ### The Gate
 
