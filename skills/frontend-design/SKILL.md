@@ -1064,17 +1064,58 @@ Never hotlink the Kie temp URL: it expires.
 
 ### Prompt format for site images
 
+Build every prompt from these six fields in order. All six are required.
+
 ```
-[Composition/angle], [subject matching the business], [lighting], [color palette matching site], [mood].
+[COMPOSITION ANCHOR] [SUBJECT] [LIGHTING + MOOD] [COLOR PALETTE] [BACKGROUND MODE] [ANTI-SLOP PROHIBITION]
 No text. No watermarks. Photorealistic.
 ```
 
-Example for a pediatric dentist hero:
-> "Bright, inviting dental office waiting room with colorful children's toys, warm natural light, soft blues and yellows, wide angle, welcoming and playful mood. No text. No people. Photorealistic."
+**COMPOSITION ANCHOR** - how the frame is structured. Pick one per image; vary across sections:
+- `Wide-angle centered, subject fills lower two-thirds` (hero, cinematic)
+- `Left-third subject, right-two-thirds open space` (editorial split)
+- `Full-bleed background, text safe zone lower-left` (overlay sections)
+- `Close macro crop, subject fills frame edge-to-edge` (detail / feature)
+- `Overhead flat-lay` (product, service icons)
+- `Eye-level documentary` (team, process, trust)
 
-Example before/after pair for roofing:
-> Before: "Aerial overhead view of old worn asphalt shingle roof, missing shingles, moss stains, weathered, photorealistic, no people"
-> After: "Aerial overhead view of brand new charcoal asphalt shingle roof, clean perfect installation, sharp ridgeline, sunny day, photorealistic, no people"
+**BACKGROUND MODE** - what sits behind the subject. Vary across sections; never use the same mode twice in a row:
+- `Solid surface + subject in foreground` (clean, minimal)
+- `Full-bleed cinematic with tonal overlay` (hero, atmosphere)
+- `Editorial side-image, subject occupies 60% of frame` (split sections)
+- `Soft radial vignette, subject centered` (premium, luxury)
+- `Subtle texture / paper / material surface` (editorial, warm)
+
+**HERO SCALE** - choose once per page, apply consistently:
+- Giant Statement: large subject, dominant first impression, high visual tension
+- Mid Editorial: balanced subject/space, cinematic but not screen-filling
+- Mini Minimalist: restrained, confident negative space, subject small and precise
+
+**ANTI-SLOP PROHIBITION** - one per prompt, matched to site type:
+- Service / trades: `No stock-photo clichés, no posed handshakes, no generic hard-hat scenes`
+- Professional services: `No purple-blue AI gradients, no floating orbs, no generic office smiles`
+- Restaurant / hospitality: `No oversaturated food lighting, no white-plate-on-white-background`
+- Healthcare: `No sterile corridor clichés, no stock stethoscope props`
+- Agency / creative: `No glassmorphism blobs, no neon edge glow, no generic dashboard UI panels`
+- Real estate: `No drone shot of generic suburb, no empty white room with hardwood floors`
+
+**Examples:**
+
+Hero for a roofing company (Giant Statement, full-bleed):
+```
+Full-bleed cinematic with tonal overlay, skilled roofer silhouetted against golden-hour sky installing dark shingles on steep-pitch roof, warm amber and deep charcoal tones matching site palette, dramatic underlit clouds, image fills frame with text safe zone lower-left. No stock-photo clichés, no posed hard-hat scenes. No text. No watermarks. Photorealistic.
+```
+
+Feature section for a pediatric dental practice (Mid Editorial, editorial split):
+```
+Left-third subject right-two-thirds open space, cheerful child in dental chair relaxed and smiling, bright warm natural light from window left, soft blues and warm yellows matching site palette, editorial side-image style, calm welcoming mood. No oversaturated clinical lighting, no generic stock smiles. No text. No watermarks. Photorealistic.
+```
+
+Before/after pair for roofing (matched scene, same composition both shots):
+```
+Before: Overhead flat-lay, old asphalt shingle roof with missing shingles and moss stains, overcast flat light, muted grey-brown palette, documentary realism. No text. No watermarks. Photorealistic.
+After: Overhead flat-lay, brand new charcoal shingle roof clean perfect installation sharp ridgeline, same angle same lens same focal length as before image, sunny warm light, rich charcoal matching site accent. No text. No watermarks. Photorealistic.
+```
 
 ### Rules
 
@@ -1087,6 +1128,8 @@ Example before/after pair for roofing:
 ---
 
 ## Step 5: Pre-launch checklist (live deploys)
+
+- [ ] **Run `skills/frontend-design/references/design-audit.md` against all visible sections - fix flagged items before declaring done**
 
 - [ ] Favicon wired
 - [ ] OG image 1200x630px

@@ -469,6 +469,43 @@ Answer two questions before writing any code:
 
 ---
 
+### M18: HALO Loop - Trace-Driven Harness Optimization ⏳ TRIGGER-GATED
+
+**What:** Wire OpenTelemetry JSONL tracing into one agentsHQ harness (Atlas heartbeat loop first, Studio pipeline second). Once 50+ traces are collected, run the HALO CLI to surface systemic failure patterns. Feed verified findings to Claude Code to patch the harness. Repeat until performance plateaus.
+
+**Why:** Sankofa + Karpathy both flagged this as the right tool at the wrong time (2026-05-04). The Atlas L5 Learn loop (M5) and "learning crews" milestone share the same goal as HALO: make the harness self-improve from data. HALO is the concrete, benchmarked implementation of that concept. AppWorld results: Sonnet 73.7→89.5, Gemini Flash 36.8→52.6 - by optimizing the harness, not the model.
+
+**How HALO works:**
+1. Harness emits OTel-compatible JSONL traces via `tracing.py` (copyable from `halo-engine` demo)
+2. `halo <traces.jsonl> -p "<diagnostic question>"` runs RLM over traces, surfaces systemic failure patterns
+3. Claude Code (this) maps findings to code, makes the minimum change, verifies, re-runs
+4. Loop repeats
+
+**Key constraint:** HALO is a two-actor system. HALO Engine = trace diagnostics only (no repo access). Claude Code = maps findings to code. Never ask HALO to write patches.
+
+**Install:** `pip install halo-engine` (MIT, PyPI). Ships its own `skills/claude/SKILL.md` - use that as the operating manual when the loop starts.
+
+**Trigger gate (ALL required before any build):**
+1. Instrument Atlas heartbeat loop with HALO's `tracing.py` pattern (copy from `demo/openai-agents-sdk-demo/tracing.py`)
+2. Collect ≥50 traces from real runs
+3. Run `halo <traces.jsonl>` and verify ≥1 actionable finding
+4. If ≥1 finding verified → proceed to M18 build. If 0 findings → harness is already clean; archive permanently.
+
+**Trace format requirements:**
+- Plain JSONL (not gzip)
+- Required fields: `trace_id`, `span_id`, `parent_span_id`, `name`, `inference.project_id`, `inference.observation_kind`
+- `inference.observation_kind` must be one of: `AGENT`, `LLM`, `TOOL`, `CHAIN`, `GUARDRAIL`, `SPAN`
+- Do NOT use `OPENAI_AGENTS_DISABLE_TRACING=1` - disable the OpenAI uploader with `agents.set_trace_processors([])` instead
+
+**Trigger date:** 2026-05-18 (instrument + first run). If no instrumented traces by 2026-06-01 → archive permanently.
+**Blockers:** No agentsHQ harness emits OTel JSONL today. Instrumentation is the unlock.
+**Branch:** `feat/atlas-m18-halo-tracing` (create when gate clears)
+**ETA:** 1h instrumentation + first run. Optimization loop is ongoing.
+
+**Source:** `github.com/context-labs/halo` absorbed 2026-05-04. ARCHIVE-AND-NOTE verdict; revisit condition = this milestone.
+
+---
+
 ## Descoped Items
 
 These are explicit "do not build" decisions with reasons, so we don't relitigate.
@@ -493,6 +530,7 @@ These are explicit "do not build" decisions with reasons, so we don't relitigate
 - **Modules:** `orchestrator/griot.py`, `orchestrator/griot_scheduler.py`, `orchestrator/publish_brief.py`, `orchestrator/heartbeat.py`, `orchestrator/scheduler.py`
 - **State:** `/root/agentsHQ/data/autonomy_state.json` on VPS
 - **DB:** `approval_queue`, `task_outcomes` tables in `postgres` DB on `orc-postgres`
+- **Verification queue concept (2026-05-04):** Graeme Kay research agent architecture (Sankofa Council session) surfaced a gap: Atlas has an `approval_queue` for human-gated commits but no equivalent for *knowledge claims* - agent outputs that need verification before becoming facts the system acts on. Future enhancement: add `data/verification_queue.md` alongside `autonomy_state.json` on VPS. Any claim an agent makes that another agent will act on gets queued here before promotion to fact. Blocks hallucination laundering. Gate: build when M5 Chairman crew is being designed (2026-05-08+).
 
 ---
 
@@ -1875,3 +1913,17 @@ OpenRouter ground-truth spend now visible on the Atlas dashboard. Hero Spend Pac
 **M17 milestone written to roadmap.** Gate: API probe first (10 min). Implementation path depends on answer.
 
 **Next:** Run the API probe. Come back with output. Build or re-plan based on result.
+
+---
+
+### 2026-05-04: Research Agent Architecture Review - verification queue concept logged
+
+**Session scope:** Research review only. No code shipped to Atlas in this session.
+
+**What happened:** Sankofa Council ran on whether to adopt Graeme Kay's research agent architecture (X thread, 2026-05-04). Council surfaced one Atlas-relevant finding: the `approval_queue` gates human-approved commits, but there is no equivalent for *agent knowledge claims* - outputs one agent makes that another agent acts on.
+
+**Cross-reference added to Atlas Cross-References:** `data/verification_queue.md` concept documented. Single markdown file alongside `autonomy_state.json` on VPS. Any claim an agent makes that another agent will act on gets queued before becoming a fact the system acts on. Prevents hallucination laundering in the L5 Learning loop.
+
+**Build gate:** When M5 Chairman crew is being designed (2026-05-08+). Not before.
+
+**Next:** M5 (Chairman / L5 Learning) gate opens 2026-05-08. When designing the Chairman crew, add `verification_queue.md` as the claim-staging layer before any agent output is promoted to a scoring mutation.

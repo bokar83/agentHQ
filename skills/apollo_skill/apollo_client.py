@@ -80,13 +80,32 @@ CW_ICP = {
 CW_ICP_WIDENED = {
     "name": "catalyst_works_widened",
     "person_locations": [
+        # Utah base
         "Salt Lake City, Utah", "Provo, Utah", "Ogden, Utah",
         "Sandy, Utah", "Lehi, Utah", "St. George, Utah",
         "West Jordan, Utah", "Murray, Utah", "Draper, Utah",
         "American Fork, Utah", "Orem, Utah", "Layton, Utah",
         "Bountiful, Utah", "Logan, Utah",
+        # West
         "Denver, Colorado", "Phoenix, Arizona", "Las Vegas, Nevada",
-        "Boise, Idaho",
+        "Boise, Idaho", "Scottsdale, Arizona", "Tucson, Arizona",
+        "Albuquerque, New Mexico", "Colorado Springs, Colorado",
+        "Portland, Oregon", "Seattle, Washington",
+        "Los Angeles, California", "San Diego, California",
+        "Sacramento, California", "San Francisco, California",
+        # South + Southeast
+        "Dallas, Texas", "Houston, Texas", "Austin, Texas",
+        "San Antonio, Texas", "Atlanta, Georgia",
+        "Charlotte, North Carolina", "Nashville, Tennessee",
+        "Miami, Florida", "Tampa, Florida", "Orlando, Florida",
+        # Midwest
+        "Chicago, Illinois", "Columbus, Ohio", "Indianapolis, Indiana",
+        "Minneapolis, Minnesota", "Kansas City, Missouri",
+        "Detroit, Michigan", "St. Louis, Missouri",
+        # Northeast
+        "New York, New York", "Philadelphia, Pennsylvania",
+        "Boston, Massachusetts", "Washington, DC",
+        "Baltimore, Maryland", "Pittsburgh, Pennsylvania",
     ],
     "person_titles": [
         "Owner", "Founder", "CEO", "President", "Managing Partner",
@@ -125,21 +144,47 @@ SW_ICP = {
 STUDIO_ICP = {
     "name": "studio",
     "person_locations": [
+        # Utah + immediate west
         "Salt Lake City, Utah", "Provo, Utah", "Denver, Colorado",
         "Phoenix, Arizona", "Las Vegas, Nevada", "Scottsdale, Arizona",
+        "Boise, Idaho",
+        # Major US metros — southeast + south
+        "Atlanta, Georgia", "Charlotte, North Carolina", "Nashville, Tennessee",
+        "Dallas, Texas", "Houston, Texas", "Austin, Texas", "San Antonio, Texas",
+        "Miami, Florida", "Tampa, Florida", "Orlando, Florida", "Jacksonville, Florida",
+        # Northeast + mid-atlantic
+        "New York, New York", "Philadelphia, Pennsylvania", "Boston, Massachusetts",
+        "Washington, DC", "Baltimore, Maryland", "Pittsburgh, Pennsylvania",
+        # Midwest
+        "Chicago, Illinois", "Columbus, Ohio", "Indianapolis, Indiana",
+        "Detroit, Michigan", "Minneapolis, Minnesota", "Kansas City, Missouri",
+        "Cleveland, Ohio", "St. Louis, Missouri", "Milwaukee, Wisconsin",
+        # West coast
+        "Los Angeles, California", "San Diego, California", "San Francisco, California",
+        "Sacramento, California", "Portland, Oregon", "Seattle, Washington",
+        # Mountain / southwest
+        "Albuquerque, New Mexico", "Tucson, Arizona", "Colorado Springs, Colorado",
+        "Salt Lake City, Utah", "Reno, Nevada",
     ],
     "person_titles": [
-        "Owner", "Founder", "CEO", "President",
+        "Owner", "Founder", "CEO", "President", "Co-Founder",
         "Marketing Director", "Brand Manager", "Content Manager",
+        "Director of Marketing", "CMO", "Head of Marketing",
+        "Managing Partner", "Principal", "General Manager",
     ],
     "person_seniorities": _DECISION_MAKER_SENIORITIES + ["vp", "director"],
-    "organization_num_employees_ranges": ["5,200"],
+    "organization_num_employees_ranges": ["1,500"],
     "score_industries": [
         "ecommerce", "retail", "restaurant", "fitness", "beauty",
         "real estate", "mortgage", "insurance", "marketing", "agency",
-        "food", "beverage", "health", "wellness",
+        "food", "beverage", "health", "wellness", "coaching", "consulting",
+        "photography", "media", "entertainment", "sports", "hospitality",
+        "dental", "chiropractic", "medical spa", "aesthetics", "salon",
+        "personal training", "yoga", "pilates", "nutrition",
+        "home services", "landscaping", "construction", "roofing", "hvac",
+        "legal", "accounting", "financial", "education", "technology",
     ],
-    "score_titles": ["owner", "founder", "ceo", "marketing", "brand", "content"],
+    "score_titles": ["owner", "founder", "ceo", "marketing", "brand", "content", "president", "cmo"],
 }
 
 
@@ -245,7 +290,7 @@ def search_leads(icp: dict, page: int = 1, per_page: int = 20) -> list[dict]:
         "person_titles": icp["person_titles"],
         "person_seniorities": icp.get("person_seniorities", _DECISION_MAKER_SENIORITIES),
         "organization_num_employees_ranges": icp["organization_num_employees_ranges"],
-        "contact_email_status": ["verified"],
+        "contact_email_status": ["verified", "likely_to_engage"],
         "page": page,
         "per_page": per_page,
     }

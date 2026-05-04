@@ -11,6 +11,128 @@ Codify Boubacar's manual workflow for evaluating any artifact (GitHub repo, live
 
 A bare GitHub URL with no other context **always** triggers absorb. Never install. The shallow clone in Phase 1 lives in `sandbox/.tmp/absorb-<slug>/` and is read-only. Install only fires on explicit "install this repo / install <name> / add this to agentsHQ / wire this up" + URL, and is handled by other skills.
 
+## Hard rule: security scan before any clone or install
+
+Before any `git clone`, pip install, or execution of external code: run the **Security Scan Gate** (see below). No exceptions. BLOCKED = halt immediately, notify Boubacar. SUSPICIOUS = flag prominently, Boubacar decides. STATIC-CLEAN = continue.
+
+This scan is a **shared primitive** - invoke it from any agentsHQ ingestion path (absorb, Dockerfiles, pip requirements, n8n workflow URLs, MCP installs), not only here.
+
+### Security Scan Gate
+
+Runs entirely via static analysis: Claude reads file tree and manifests and scripts. No external tools. No new dependencies.
+
+**Step 1 - Fetch file tree and key files (read-only, no clone needed for this step):**
+
+For GitHub repos: use the GitHub MCP or fetch raw file list via the GitHub API trees endpoint. Read these specific files if present:
+
+- `package.json` (postinstall / preinstall / prepare scripts)
+- `setup.py`, `setup.cfg`, `pyproject.toml` (entry_points, install_requires)
+- Any `*.sh`, `Makefile`, `.github/workflows/*.yml`, `Dockerfile`
+- `requirements.txt`, `go.mod`, `Cargo.toml`
+- Top-level `.js`, `.py`, `.ts` entry points
+
+**Step 2 - Apply v1 pattern checklist (two mandatory, rest v2):**
+
+| Priority | Pattern | Signal |
+| -------- | ------- | ------ |
+| **v1-1** | `postinstall`, `preinstall`, or `prepare` script containing `curl`, `wget`, `fetch`, `sh`, `bash`, or shell invocation | Install-time shell-out - highest-risk supply chain vector |
+| **v1-2** | `base64.*eval`, `atob(`, `Buffer.from.*base64`, or decode-then-run chains in any `.js`, `.py`, `.ts` file | Runtime decode-plus-run chain - obfuscated payload delivery |
+| **v2-3** | Package name in `requirements.txt` or `package.json` that differs by exactly 1 character (insert/delete/substitute) from any name in the Popular Package Reference below | Typosquatting / dependency confusion |
+| **v2-4** | Hardcoded IPv4 address (`\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b`) or non-localhost domain in a `requests.post`, `fetch(`, `http.request`, `axios.post`, or `urllib.request` call in any script | Exfil endpoint - data leaving the machine |
+| **v2-5** | `os.environ`, `process.env`, or `System.getenv` read into a variable that is then passed to an HTTP call or written to a file at an external path | Credential/env var harvesting |
+| **v2-6** | Hardcoded credential assignment matching the v2-6 regex (see below table) in any tracked file not covered by `.gitignore` | Secret committed to history |
+| **v3-7** | Repo age < 30 days AND stargazer count ≥ 50 (see v3-7 procedure below) | Astroturfed trust signal - fabricated popularity used to lend legitimacy |
+
+**v2-6 regex:** `(password|secret|token|api_key|private_key)\s*=\s*['"][^'"]{8,}['"]`
+Apply against any `.py`, `.js`, `.ts`, `.env`, `.yml`, `.yaml`, `.json` file that is tracked (not in `.gitignore`).
+
+**v3-7 procedure (GitHub repos only):**
+
+Use the GitHub MCP `get_repository` tool (or fetch `https://api.github.com/repos/<owner>/<repo>`) and read:
+
+- `created_at` - repo creation date
+- `stargazers_count` - current star count
+- `forks_count` - current fork count
+
+Compute repo age in days from `created_at` to today.
+
+Flag **SUSPICIOUS** if ALL of:
+
+1. Age ≤ 30 days
+2. Stars ≥ 50
+
+Flag **SUSPICIOUS** (lower confidence) if:
+
+1. Age ≤ 30 days AND forks ≥ 20 (fork spike without stars)
+
+Note: stars alone are not suspicious (legitimate viral repos exist). The combination of very new + already popular is the signal. Always include the exact numbers in the flag: `created_at: <date> (<N> days old), stars: <N>, forks: <N>`.
+
+---
+
+**Popular Package Reference (typosquatting baseline - v2-3):**
+
+Check each dependency name against this list using 1-char edit distance (Levenshtein). A match that is NOT on this list but is 1 edit away from one that is = SUSPICIOUS.
+
+```text
+Python (requirements.txt / pyproject.toml):
+requests, numpy, pandas, flask, django, fastapi, sqlalchemy, boto3, pydantic,
+pillow, scipy, matplotlib, tensorflow, torch, scikit-learn, celery, redis,
+pytest, black, mypy, uvicorn, aiohttp, httpx, click, typer, rich, loguru,
+cryptography, paramiko, fabric, invoke, ansible, setuptools, wheel, pip,
+six, urllib3, certifi, charset-normalizer, idna, packaging, attrs, PyYAML
+
+npm / package.json:
+react, express, lodash, axios, moment, webpack, babel, eslint, prettier,
+typescript, next, vue, angular, svelte, tailwindcss, vite, rollup, esbuild,
+dotenv, chalk, commander, inquirer, jest, mocha, chai, sinon, nodemon,
+socket.io, mongoose, sequelize, knex, pg, mysql2, redis, bull, winston,
+cors, helmet, morgan, passport, jsonwebtoken, bcrypt, uuid, dayjs, zod,
+openai, anthropic, langchain, cheerio, puppeteer, playwright
+```
+
+Flag: if a dependency name is within 1 edit of ANY item on this list AND is not itself on this list → **SUSPICIOUS** with note "possible typosquat of `<matched-name>`".
+
+**Step 3 - Build security verdict block:**
+
+```text
+SECURITY SCAN : <repo-slug>
+============================
+Status: STATIC-CLEAN | SUSPICIOUS | BLOCKED
+  (STATIC-CLEAN = no patterns matched. Runtime payloads not checked - dynamic execution is out of scope.)
+
+Flags:
+  - <file>:<line> - <exact matched pattern> - <threat description>
+  (or "none" if STATIC-CLEAN)
+
+Recommendation: PROCEED | PROCEED-WITH-CAUTION | HALT
+
+Override (SUSPICIOUS only): [ ] Boubacar annotated: "<reason>" on <date>
+  (BLOCKED is a hard stop - no override path)
+```
+
+**Verdict rules:**
+
+- Any v1-1 or v1-2 match → **BLOCKED**. Halt. No clone. No install. Surface the exact file:line and matched pattern to Boubacar.
+- Any v2-3, v2-4, v2-5, v2-6, or v3-7 match → **SUSPICIOUS**. Continue but prominently flag. Boubacar must annotate the Override field before absorb proceeds.
+- No matches → **STATIC-CLEAN**. Disclaimer always shown: "Runtime payloads not checked."
+- SUSPICIOUS with Override annotated → treated as PROCEED-WITH-CAUTION in the log.
+
+**Where this gate fires in each ingestion path:**
+
+| Path | When to run |
+| ---- | ----------- |
+| absorb (GitHub repo) | After detection, before Phase 0 leverage gate |
+| absorb (MCP server clone) | Same - before clone |
+| Any `orc_rebuild.sh` Dockerfile with external pip install or npm install | Before rebuild |
+| n8n workflow with external URL fetch nodes | Before import |
+| Any "install this" explicit command | Before install |
+
+**Log the scan result** in the dossier under `SECURITY SCAN` section. Always. Even STATIC-CLEAN results are logged so the audit trail exists.
+
+**Acceptance test fixtures:** `skills/agentshq-absorb/fixtures/security-scan/` - clean samples (must produce zero flags) and malicious samples (one per pattern, must trigger their labeled pattern). Use these to calibrate false-positive rate before flagging a real repo.
+
+---
+
 ## Hard rule: read the README first, every time
 
 Before any analysis, scoring, or placement work: read the README. No exceptions. The README defines what the artifact actually is. Many placement mistakes happen because this step is skipped and the agent infers from the repo name or description alone.
@@ -160,6 +282,16 @@ Dependencies: <list>
 Cost: <license / infra / complexity>
 Risks: <list, or "none flagged">
 Leverage type (from Phase 0): <producing-motion | founder-time-reduction | continuous-improvement>
+
+SECURITY SCAN : <repo-slug>
+============================
+Status: STATIC-CLEAN | SUSPICIOUS | BLOCKED
+  (STATIC-CLEAN = no patterns matched. Runtime payloads not checked - dynamic execution is out of scope.)
+Flags:
+  - <file>:<line> - <exact matched pattern> - <threat description>
+  (or "none" if STATIC-CLEAN)
+Recommendation: PROCEED | PROCEED-WITH-CAUTION | HALT
+Override (SUSPICIOUS only): [ ] Boubacar annotated: "<reason>" on <date>
 ```
 
 ### Coverage check (runs after dossier, before Phase 3)
@@ -316,3 +448,7 @@ Below that, four collapsed `<details>` sections: **What it is** (Phase 2 dossier
 | Running skill placement taxonomy on an external tool | Tools (CLIs, binaries, plugins) go through Tool Fit Check + Sankofa/Karpathy with tool-bloat framing, not Phase 3. "Where does this live in our skills?" is the wrong question for rtk, ffmpeg, or caveman. The right question is "does it work on our stack, make our work better, and earn its place?" |
 | Skipping the README | README defines what the artifact is. Skipping it causes misclassification. Read it before any analysis, every time. |
 | Running council before checking our own stack | Grep AGENT_SOP.md + CLAUDE.md + SKILLS_INDEX.md for core capability keywords BEFORE Phase 3 or Phase 4. If coverage exists, ARCHIVE-AND-NOTE immediately. Council is for genuinely ambiguous placements, not rubber-stamping duplicates. Example: forrestchang/andrej-karpathy-skills: full Sankofa council run; AGENT_SOP.md line 65-70 already had all 4 principles verbatim. |
+| Skipping security scan because "I trust this repo" | Hard rule - scan runs on every external artifact before clone/install. Trust is not a bypass. STATIC-CLEAN is a 30-second check; skipping it is how supply chain injections land. |
+| Reporting STATIC-CLEAN as "safe" | Always show the disclaimer: "Runtime payloads not checked." STATIC-CLEAN means no obvious static patterns found, not that the code is trustworthy. |
+| SUSPICIOUS verdict with no pattern attribution | Every SUSPICIOUS or BLOCKED verdict must show exact `file:line - matched pattern`. Opaque status labels create friction without protection. |
+| Bypassing BLOCKED via workaround | BLOCKED is a hard stop. No clone. No install. No override path. Surface the finding to Boubacar and stop. |
