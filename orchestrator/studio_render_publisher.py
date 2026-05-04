@@ -39,10 +39,10 @@ _DRIVE_ASSET_LIBRARY_ROOT = os.environ.get(
     "1T3uF6jDOo_RBTXIb4qE60_ZxUeqJj6gL",  # pragma: allowlist secret
 )
 
+# POC: render long_form only until channels are monetized.
+# Add shorts + square back when G4 ($1k/mo) is in sight.
 _PLATFORM_SPECS = {
     "long_form": {"width": 1920, "height": 1080, "fps": 30},
-    "shorts":    {"width": 1080, "height": 1920, "fps": 30},
-    "square":    {"width": 1080, "height": 1080, "fps": 30},
 }
 
 
@@ -420,6 +420,7 @@ def _update_notion(notion_id: str, asset_url: str, dry_run: bool) -> bool:
                 "properties": {
                     "Status": {"select": {"name": "scheduled"}},
                     "Asset URL": {"url": asset_url or None},
+                    "Scheduled Date": {"date": {"start": datetime.now(timezone.utc).strftime("%Y-%m-%d")}},
                 }
             },
             timeout=15,
