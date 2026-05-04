@@ -69,7 +69,14 @@ def run_production(notion_id: str, *, dry_run: bool = False) -> dict[str, Any]:
     # Stage 4: QA
     from studio_qa_crew import run_qa
     niche = candidate.get("niche", "")
-    length_target = candidate.get("length_target", "long (3-15m)")
+    # Derive length_target from brand config duration — overrides stale Notion field
+    _dur = brand.get("target_duration_sec", 600)
+    if _dur <= 60:
+        length_target = "short (<60s)"
+    elif _dur <= 180:
+        length_target = "medium (60-180s)"
+    else:
+        length_target = candidate.get("length_target", "long (3-15m)")
     qa_report = run_qa(
         script["full_text"],
         niche,

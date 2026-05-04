@@ -17,12 +17,12 @@
   "font_family_decorative": "Cinzel Decorative",
   "logo_drive_id": "1rJyCRGrSKh32_Pn2E4b_0ytapt2ZU2oL",
   "avatar_drive_id": "1STVQPFluDjYF7RB0aScXj83Vle9CZA2v",
-  "intro_duration_sec": 3,
-  "outro_duration_sec": 4,
+  "intro_duration_sec": 1,
+  "outro_duration_sec": 1,
   "intro_template": "baobab_intro",
   "outro_template": "baobab_outro",
   "tagline": "Stories from the roots.",
-  "signoff": "Until next time — under the baobab.",
+  "signoff": "Until next time, under the baobab.",
   "visual_style": "warm cinematic, African textile motifs, soft bokeh, earthy palette, baobab silhouette, savanna dusk",
   "regional_motif_tags": ["kente", "adinkra", "baobab", "savanna", "african-family"],
   "pronunciation_dict": {
@@ -32,9 +32,9 @@
     "Griot": "GREE-oh"
   },
   "script_tone": "warm, storytelling, wise narrator, intergenerational, griot register",
-  "target_duration_sec": 600,
-  "hook_word_budget": 30,
-  "retention_loop_interval_words": 200,
+  "target_duration_sec": 55,
+  "hook_word_budget": 15,
+  "retention_loop_interval_words": 50,
   "platform_specs": {
     "long_form": {"width": 1920, "height": 1080, "fps": 30, "aspect_ratio": "16:9"},
     "shorts":    {"width": 1080, "height": 1920, "fps": 30, "aspect_ratio": "9:16"},
