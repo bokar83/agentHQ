@@ -37,7 +37,7 @@ from typing import Optional
 
 logger = logging.getLogger("agentsHQ.gate_agent")
 
-REPO_PATH = Path(os.environ.get("REPO_ROOT", "/root/agentsHQ"))
+REPO_PATH = Path(os.environ.get("REPO_ROOT", "/app" if Path("/app/.git").exists() else "/root/agentsHQ"))
 VPS_HOST = os.environ.get("VPS_HOST", "root@72.60.209.109")
 MAIN_BRANCH = "main"
 TICK_INTERVAL = 60  # seconds
@@ -247,10 +247,28 @@ def _delete_remote_branch(branch: str) -> None:
 
 
 def _deploy_vps() -> tuple[bool, str]:
-    """Pull main on VPS and rebuild container."""
-    cmd = f"ssh {VPS_HOST} 'cd {REPO_PATH.name} && git pull origin {MAIN_BRANCH} && python3 scripts/fix_env.py && bash scripts/orc_rebuild.sh'"
-    proc = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=300)
-    return proc.returncode == 0, (proc.stdout + proc.stderr)[-500:]
+    """Signal VPS to pull + rebuild.
+
+    Gate runs inside orc-crewai container. Source code is NOT volume-mounted,
+    so orc_rebuild.sh must run on the host. We write a trigger file to /app/data/
+    (which IS mounted to /root/agentsHQ/data/ on host). A host-side watchdog
+    picks this up and runs the rebuild. Until watchdog is wired, gate does a
+    git pull inside the container (updates the baked image copy) and logs the
+    trigger for manual pickup.
+    """
+    # Write trigger file for host watchdog
+    trigger = Path("/app/data/gate_deploy_trigger")
+    try:
+        trigger.write_text(f"deploy:{MAIN_BRANCH}\n")
+        logger.info("gate: deploy trigger written to %s", trigger)
+    except Exception as exc:
+        logger.warning("gate: could not write deploy trigger: %s", exc)
+
+    # Pull inside container (partial -- host rebuild still needed for full deploy)
+    rc, out, err = _git(["pull", "origin", MAIN_BRANCH])
+    if rc != 0:
+        return False, f"git pull failed: {err}"
+    return True, out
 
 
 # ---------------------------------------------------------------------------
