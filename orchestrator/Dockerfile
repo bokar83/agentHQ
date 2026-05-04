@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
     curl \
+    git \
     ffmpeg \
     libnss3 \
     libatk1.0-0 \
