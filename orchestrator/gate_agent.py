@@ -142,6 +142,52 @@ def _branches_ahead_of_main() -> list[str]:
     return branches
 
 
+def _last_commit_message(branch: str) -> str:
+    """Return the last commit message on a remote branch."""
+    rc, out, _ = _git(["log", "-1", "--format=%s", f"origin/{branch}"])
+    return out if rc == 0 else ""
+
+
+def _branch_is_ready(branch: str) -> bool:
+    """Branch is ready for gate processing if last commit contains [READY].
+
+    Agents mark work complete by ending their final commit message with [READY].
+    WIP branches are skipped until the agent explicitly signals completion.
+    """
+    return "[READY]" in _last_commit_message(branch)
+
+
+def _branch_is_claimed(branch: str) -> bool:
+    """Check coordination tasks table -- if branch resource is claimed, skip.
+
+    Agents call claim(resource='branch:<name>') when starting work.
+    Gate skips claimed branches to avoid processing in-flight work.
+    Returns False (not claimed) if coordination substrate is unavailable.
+    """
+    try:
+        import sys
+        import os
+        # Add app path for container context
+        if "/app" not in sys.path:
+            sys.path.insert(0, "/app")
+        from skills.coordination import _connect
+        with _connect() as c, c.cursor() as cur:
+            cur.execute(
+                """
+                SELECT 1 FROM tasks
+                WHERE resource = %s
+                  AND status = 'running'
+                  AND (lease_expires_at IS NULL OR lease_expires_at > now())
+                LIMIT 1
+                """,
+                (f"branch:{branch}",),
+            )
+            return cur.fetchone() is not None
+    except Exception as exc:
+        logger.debug("gate: claim check unavailable for %s: %s", branch, exc)
+        return False  # fail open -- process the branch
+
+
 def _files_changed_vs_main(branch: str) -> list[str]:
     """Files changed on branch vs main."""
     rc, out, _ = _git([
@@ -258,9 +304,24 @@ def gate_tick() -> None:
 
     logger.info("gate: found %d branch(es) to review: %s", len(branches), branches)
 
-    # Gather files per branch
-    branches_with_files: list[tuple[str, list[str]]] = []
+    # Filter: skip WIP (no [READY] sentinel) and claimed (in-flight) branches
+    ready_branches: list[str] = []
     for branch in branches:
+        if _branch_is_claimed(branch):
+            logger.info("gate: %s skipped -- claimed (in-flight work)", branch)
+            continue
+        if not _branch_is_ready(branch):
+            logger.info("gate: %s skipped -- no [READY] in last commit", branch)
+            continue
+        ready_branches.append(branch)
+
+    if not ready_branches:
+        logger.info("gate: no ready branches this tick")
+        return
+
+    # Gather files per ready branch
+    branches_with_files: list[tuple[str, list[str]]] = []
+    for branch in ready_branches:
         files = _files_changed_vs_main(branch)
         branches_with_files.append((branch, files))
         logger.info("gate: %s touches %d file(s)", branch, len(files))
