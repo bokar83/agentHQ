@@ -740,6 +740,21 @@ Absorbed YT monetization playbook (X thread, anonymous, unverified 9-day claim).
 
 ---
 
+### 2026-05-04: kie_media Studio Art Direction wired - thumbnail/scene prompt quality lift
+
+`skills/kie_media/SKILL.md` updated with Studio Art Direction section. Every thumbnail, scene still, and cover art call now uses a 6-field structured prompt instead of freeform text:
+
+- Composition Anchor (5 options, vary per batch)
+- Background Mode (5 options, never repeat twice in a row)
+- Subject + Channel Context
+- Lighting + Mood
+- Palette (channel-locked: Under the Baobab = ochre/terracotta/gold; AI Catalyst = navy/slate/amber; 1stGen Money = forest green/charcoal/warm gold)
+- Anti-Slop Prohibition per channel (no generic African stock clichés / no purple-blue AI gradient / no fake urgency expressions)
+
+Ken Burns still rule added: generate at 16:9, offset subject from center, 2-3 stills per scene for motion variety.
+
+Source: taste-skill `imagegen-frontend-web` vocabulary. Absorb verdict: PROCEED (continuous-improvement).
+
 ### 2026-05-04: Research Intelligence Layer: M3.6 seeded, dossiers wired into script crew
 
 **Session scope:** Architecture review + minimum viable implementation. No VPS deploy required (dossiers read from repo at script-generation time).
