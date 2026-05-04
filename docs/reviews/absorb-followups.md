@@ -4,6 +4,11 @@ Schema: `YYYY-MM-DD | placement | leverage type | next action | target date`
 
 PROCEED verdicts append here automatically. PROCEED without a follow-up entry is incomplete.
 
+2026-05-04 | new skill skills/cw-automation-engagement | producing-motion | Build v1 scoped to Phase 3 only (case study acquisition workflow). Add acceptance criterion at top of SKILL.md: "Success = first CW automation engagement scoped and priced using this skill by 2026-07-04." n8n-mcp listed as tool dependency (already installed). | 2026-05-18
+2026-05-04 | enhance skills/frontend-design | continuous-improvement | (1) Rewrite Kie prompt template in SKILL.md ~line 1002-1070: replace one-line example with 4-6 line structured template using composition anchor / background mode / hero scale / typography character / anti-slop prohibition per site type (vocab from imagegen-frontend-web). (2) Add skills/frontend-design/references/design-audit.md - flat checklist from redesign-skill Design Audit section. Wire one-line reference into Step 5 pre-launch checklist. Verify: next site build Kie prompt contains 2+ compositional vocabulary terms. | 2026-05-07
+
+2026-05-04 | enhance skills/memory + Atlas autonomy infra | continuous-improvement | Run MemPalace pilot: venv install + sweep 30d transcripts + validate 5 recall queries (correct drawer top-3) before wiring MCP | 2026-05-11
+
 2026-05-03 | infrastructure install | continuous-improvement | run `/plugin marketplace add mksglu/context-mode` + `/plugin install context-mode@context-mode` + ctx-doctor verify | 2026-05-06
 2026-05-03 | infrastructure install (rtk) | Atlas autonomy infra | inside WSL2: `curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh && rtk init -g`, restart Claude Code, run `rtk gain` after 5 sessions to verify savings | 2026-05-07
 
@@ -16,3 +21,5 @@ PROCEED verdicts append here automatically. PROCEED without a follow-up entry is
 2026-05-03 | docs/roadmap/atlas/l5-curator-pattern.md | continuous-improvement | Spec is written. L5 implementer reads and implements on 2026-05-08. Verify: all 5 checklist items answerable from doc alone. WARN (Karpathy P4): acceptance checklist embedded in doc header  -  verify items present before L5 kickoff. | 2026-05-08
 2026-05-03 | skills/boubacar-skill-creator/references/gates-taxonomy.md | continuous-improvement | SHIPPED 2026-05-03: pointer added to boubacar-skill-creator SKILL.md Step 4 + Reference Files. Verify by next skill created: does it name gate types? | 2026-05-10
 2026-05-03 | skills/boubacar-skill-creator/references/context-budget-discipline.md | continuous-improvement | SHIPPED 2026-05-03: pointer added to AGENT_SOP.md Coding Principles section. Verify: next Atlas orchestrator run does not inline full subagent output at GOOD tier. | 2026-05-10
+
+2026-05-04 | new-tool skills/kie_media/references/channel-launch-doctrine.md | producing-motion (Studio) | agent cites channel-launch-doctrine.md at next Studio channel launch + outputs 30-day posting schedule using 4-part formula | 2026-06-04

@@ -151,7 +151,78 @@ except Exception as e:
 }
 trap release_lock EXIT
 
-# Step 3: source .env so docker-compose ${VAR} interpolation resolves
+# Step 3: security scan — check Dockerfile + requirements for supply chain red flags
+# Mirrors the Security Scan Gate in skills/agentshq-absorb/SKILL.md.
+# v1-1: postinstall shell-outs (curl/wget/bash in RUN lines that also do pip/npm install)
+# v1-2: base64 decode+exec chains in any script copied into the image
+# v2-6: hardcoded credentials in tracked files
+# Exits 1 on BLOCKED. Prints WARN on SUSPICIOUS (does not block, Boubacar decides).
+SCAN_BLOCKED=0
+SCAN_WARNINGS=()
+
+_scan_file() {
+  local f="$1"
+  [ -f "$f" ] || return 0
+
+  # v1-1: RUN line that does pip/npm install AND also shells out via curl/wget/bash
+  if grep -qP 'RUN\s.*\b(pip|npm)\s+install' "$f" 2>/dev/null; then
+    if grep -P 'RUN\s.*\b(pip|npm)\s+install' "$f" | grep -qP '\b(curl|wget)\b'; then
+      SCAN_WARNINGS+=("BLOCKED v1-1: $f — pip/npm install + curl/wget in same RUN line")
+      SCAN_BLOCKED=1
+    fi
+  fi
+
+  # v1-1: standalone curl|wget piped to bash/sh anywhere in file
+  if grep -qP '\bcurl\b.*\|\s*(ba)?sh|\bwget\b.*-O-.*\|\s*(ba)?sh' "$f" 2>/dev/null; then
+    SCAN_WARNINGS+=("BLOCKED v1-1: $f — curl/wget pipe to shell detected")
+    SCAN_BLOCKED=1
+  fi
+
+  # v1-2: base64 decode + exec chain
+  if grep -qP 'base64\s*-d|base64\.b64decode|Buffer\.from.*base64' "$f" 2>/dev/null; then
+    SCAN_WARNINGS+=("BLOCKED v1-2: $f — base64 decode pattern detected")
+    SCAN_BLOCKED=1
+  fi
+
+  # v2-6: hardcoded credentials
+  if grep -qP '(password|secret|token|api_key|private_key)\s*=\s*['"'"'"][^'"'"'"]{8,}['"'"'"]' "$f" 2>/dev/null; then
+    SCAN_WARNINGS+=("SUSPICIOUS v2-6: $f — possible hardcoded credential")
+  fi
+}
+
+log "security scan: checking Dockerfile and requirements files..."
+for scan_target in \
+    "$REPO_ROOT/Dockerfile" \
+    "$REPO_ROOT/docker/Dockerfile" \
+    "$REPO_ROOT/docker-compose.yml" \
+    "$REPO_ROOT/docker-compose.yaml" \
+    "$REPO_ROOT/requirements.txt" \
+    "$REPO_ROOT/requirements-dev.txt" \
+    "$REPO_ROOT/pyproject.toml" \
+    "$REPO_ROOT/package.json"; do
+  _scan_file "$scan_target"
+done
+
+if [ "${#SCAN_WARNINGS[@]}" -gt 0 ]; then
+  for w in "${SCAN_WARNINGS[@]}"; do
+    if [[ "$w" == BLOCKED* ]]; then
+      err "SECURITY SCAN — $w"
+    else
+      log "SECURITY SCAN — $w"
+    fi
+  done
+fi
+
+if [ "$SCAN_BLOCKED" -eq 1 ]; then
+  err "SECURITY SCAN: BLOCKED — supply chain red flags found above. Rebuild refused."
+  err "Review the flagged files, annotate an override in docs/reviews/absorb-log.md, then re-run with SKIP_SECURITY_SCAN=1 to proceed."
+  [ "${SKIP_SECURITY_SCAN:-0}" -eq 1 ] || exit 1
+  log "SKIP_SECURITY_SCAN=1 set — proceeding despite flags"
+else
+  ok "security scan: STATIC-CLEAN (runtime payloads not checked)"
+fi
+
+# Step 4: source .env so docker-compose ${VAR} interpolation resolves
 if [ ! -f "$REPO_ROOT/.env" ]; then
   err ".env not found at $REPO_ROOT/.env"
   exit 1
@@ -161,7 +232,7 @@ set -a
 . "$REPO_ROOT/.env"
 set +a
 
-# Step 4: build + up
+# Step 5: build + up
 log "docker compose build orchestrator..."
 if ! docker compose build orchestrator; then
   err "docker compose build failed"

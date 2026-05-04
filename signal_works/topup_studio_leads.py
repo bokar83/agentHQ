@@ -26,7 +26,7 @@ from orchestrator.db import get_crm_connection
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
-DAILY_MINIMUM = 10
+DAILY_MINIMUM = 25
 
 
 def _count_ready_studio_leads(conn) -> int:
@@ -94,7 +94,7 @@ def topup_studio_leads(minimum: int = DAILY_MINIMUM, dry_run: bool = False) -> i
         conn.close()
         return current
 
-    new_leads = harvest_leads(STUDIO_ICP, target=needed + 5, max_pages=5)
+    new_leads = harvest_leads(STUDIO_ICP, target=needed + 10, max_pages=15)
 
     saved = 0
     for lead in new_leads:

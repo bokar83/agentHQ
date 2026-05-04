@@ -203,6 +203,26 @@ Done = all five true at the same time.
 
 ---
 
+### M6: Security Scan Gate v2 patterns ✅ SHIPPED 2026-05-04
+
+**What:** Extend the v1 security scan (2 patterns shipped 2026-05-04) with the remaining 5 high-value patterns:
+
+1. Typosquatted package names (1-char edit distance from popular libs in requirements.txt / package.json)
+2. Hardcoded IPs or exfil endpoints in scripts
+3. Environment variable harvesting sent to external URL
+4. Secrets committed in history (grep against known patterns)
+5. Repo created < 30 days ago with sudden star/fork spike (astroturfed trust signal)
+
+**Also:** add acceptance test fixtures to `skills/agentshq-absorb/fixtures/` with known-malicious and known-clean sample files so false-positive rate is measurable.
+
+**Trigger:** any session focused on agentshq-absorb hardening, OR after v1 patterns generate their first BLOCKED or SUSPICIOUS verdict in the wild.
+
+**Shipped:** v1 (2 patterns) + v2 (4 patterns + 80-pkg reference list) + v3 (astroturfed repo detection via GitHub API) + acceptance test fixtures for all 7 patterns. 4 Notion tasks Done.
+
+**Success criterion:** ≥1 pattern detects a real suspicious repo in 30 days of use; false positive rate on known-clean repos stays at zero.
+
+---
+
 ## Descoped Items
 
 - **300-line meta-document constitution.** Sankofa Council 2026-05-02 verdict: that's the dying-enterprise pattern. Skipped in favor of 64-line routing table + load-bearing AGENT_SOP.
@@ -222,6 +242,22 @@ Done = all five true at the same time.
 ---
 
 ## Session Log
+
+### 2026-05-04: n8n-mcp absorb session: M6 security scan gate exercised in the wild
+
+First real-world use of the v1 security scan gate (shipped earlier this session). Ran against `czlonkowski/n8n-mcp`: checked package.json `prepare` script (husky: secretlint only, no shell-out), `.husky/pre-commit` (secretlint on staged files, no curl/wget), `src/telemetry/` (Supabase telemetry present but disclosed in PRIVACY.md, opt-out env var available, sanitizes credentials). Result: STATIC-CLEAN. Gate functioned as designed.
+
+Telemetry disclosure pattern noted: hardcoded Supabase anon key + URL in `TELEMETRY_BACKEND` constant is not a v2 exfil flag when disclosed + opt-out exists. This edge case is worth documenting in M6 v2 pattern work as a false-positive guard.
+
+No compass milestones changed this session. M6 v2 pattern work still queued.
+
+### 2026-05-04: M6 fully complete - v1+v2+v3 all shipped, fixtures written
+
+Continued same session: v2 patterns (typosquatting with 80-pkg reference list, exfil IPs, env var harvesting, hardcoded secrets) + v3 (astroturfed repo detection via GitHub API: age ≤ 30d + stars ≥ 50 = SUSPICIOUS). Acceptance test fixtures written for every pattern under `skills/agentshq-absorb/fixtures/security-scan/`. v3 fixture is a procedure README (GitHub API required - no static file). 4 Notion tasks total, all Done. M6 complete.
+
+### 2026-05-04: Security Scan Gate shipped in agentshq-absorb skill (M6 added)
+
+Added mandatory security scan gate to `skills/agentshq-absorb/SKILL.md`. Fires before any clone or install. Static-only (no external tools). Two v1 patterns shipped: postinstall shell-out and base64/decode-exec chain. Sankofa+Karpathy councils run; Sankofa returned PROCEED-WITH-MODIFICATIONS, all 5 mods applied: shared primitive framing, pattern attribution in verdicts, SUSPICIOUS override path, STATIC-CLEAN label (not CLEAN), v2 patterns deferred. New M6 milestone added for v2 pattern work. Three Notion tasks created (Backlog).
 
 ### 2026-05-04: Studio M3 production pipeline shipped, no compass changes
 

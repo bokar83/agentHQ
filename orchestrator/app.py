@@ -176,6 +176,13 @@ async def startup_event():
     from startup_check import assert_required_env_vars
     assert_required_env_vars()
 
+    # M18: HALO trace collection (opt-in via HALO_TRACING_ENABLED=true).
+    try:
+        from halo_tracer import maybe_install_halo_tracer
+        maybe_install_halo_tracer()
+    except Exception as e:
+        logger.warning(f"halo_tracer startup failed (non-fatal): {e}")
+
     # Token ledger: register litellm callback BEFORE any crew or council
     # fires. Without this, llm_calls stops receiving rows after the flip.
     try:
