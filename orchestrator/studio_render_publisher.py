@@ -469,7 +469,7 @@ def _notify_telegram(
         logger.warning("render_publisher: Telegram notification failed: %s", exc)
 
 
-_NOTIFY_EMAILS = "boubacar@catalystworks.consulting,bokar83@gmail.com,thatguy@boubacar.barry"
+_NOTIFY_EMAILS = "boubacar@catalystworks.consulting,bokar83@gmail.com,thatguy@boubacarbarry.com"
 
 
 def _notify_email(

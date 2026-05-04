@@ -29,7 +29,7 @@ Long session that launched Studio M3 production pipeline, hit walls with hyperfr
 3. **SRT as separate track** - multilingual ready. English first, French translation later.
 4. **Ken Burns motion** - 8 variants cycled per scene (zoom_in, pan_right, zoom_out, pan_left, zoom_in_tl, zoom_out_br, pan_up, zoom_in_tr)
 5. **Asset vault** - search before generating (score >= 2 tag match = reuse, zero Kai spend)
-6. **Email via gws** - `gws gmail +send --from UnderTheBaobab@catalystworks.consulting` (channel alias). 3 recipients: boubacar@catalystworks.consulting, bokar83@gmail.com, thatguy@boubacar.barry
+6. **Email via gws** - `gws gmail +send --from UnderTheBaobab@catalystworks.consulting` (channel alias). 3 recipients: boubacar@catalystworks.consulting, bokar83@gmail.com, thatguy@boubacarbarry.com
 7. **Music vault** - future: workspace/media/music/, Suno on Kie or Boubacar's own Suno account
 
 ## What is NOT done (explicit)
