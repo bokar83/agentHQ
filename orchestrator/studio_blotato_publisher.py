@@ -45,7 +45,6 @@ from __future__ import annotations
 import argparse
 import logging
 import os
-import time
 from datetime import date, datetime, timezone
 from typing import Optional
 
@@ -124,11 +123,11 @@ def _today_str() -> str:
 
 
 def _notion_client():
-    from notion_client import Client
-    api_key = os.environ.get("NOTION_API_KEY")
+    from skills.forge_cli.notion_client import NotionClient
+    api_key = os.environ.get("NOTION_API_KEY") or os.environ.get("NOTION_SECRET") or os.environ.get("NOTION_TOKEN")
     if not api_key:
         raise ValueError("NOTION_API_KEY not set")
-    return Client(auth=api_key)
+    return NotionClient(api_key)
 
 
 def _prop_text(record: dict, name: str) -> str:
@@ -150,30 +149,16 @@ def _prop_text(record: dict, name: str) -> str:
 
 
 def _query_db(notion, db_id: str, filter_obj: dict) -> list[dict]:
-    """Paginated query of a Notion database."""
-    results: list[dict] = []
-    cursor = None
-    while True:
-        kwargs: dict = {"database_id": db_id, "filter": filter_obj}
-        if cursor:
-            kwargs["start_cursor"] = cursor
-        resp = notion.databases.query(**kwargs)
-        results.extend(resp.get("results", []))
-        if not resp.get("has_more"):
-            break
-        cursor = resp.get("next_cursor")
-    return results
+    """Query a Notion database with a filter."""
+    return notion.query_database(db_id, filter_obj=filter_obj)
 
 
 def _flip_status(notion, page_id: str, status: str) -> None:
-    notion.pages.update(
-        page_id=page_id,
-        properties={PROP_STATUS: {"status": {"name": status}}},
-    )
+    notion.update_page(page_id, {PROP_STATUS: {"select": {"name": status}}})
 
 
 def _write_props(notion, page_id: str, props: dict) -> None:
-    notion.pages.update(page_id=page_id, properties=props)
+    notion.update_page(page_id, props)
 
 
 def _send_telegram(msg: str) -> None:
@@ -188,7 +173,7 @@ def _clear_orphaned_publishing(notion, dry_run: bool) -> int:
     """Promote stuck publishing records to publish-failed after TTL."""
     records = _query_db(notion, PIPELINE_DB_ID, {
         "property": PROP_STATUS,
-        "status": {"equals": "publishing"},
+        "select": {"equals": "rendering"},
     })
     promoted = 0
     now_utc = datetime.now(timezone.utc)
@@ -236,7 +221,7 @@ def studio_blotato_publisher_tick(dry_run: bool = False) -> dict:
 
     records = _query_db(notion, PIPELINE_DB_ID, {
         "and": [
-            {"property": PROP_STATUS, "status": {"equals": "scheduled"}},
+            {"property": PROP_STATUS, "select": {"equals": "scheduled"}},
             {"property": PROP_SCHEDULED_DATE, "date": {"equals": today}},
         ]
     })
@@ -287,7 +272,7 @@ def studio_blotato_publisher_tick(dry_run: bool = False) -> dict:
 
         # Step b: idempotency flip before API call.
         try:
-            _flip_status(notion, page_id, "publishing")
+            _flip_status(notion, page_id, "rendering")
         except Exception as e:
             logger.error(f"STUDIO PUBLISHER: cannot flip {page_id} to publishing: {e}")
             skipped += 1
@@ -335,7 +320,7 @@ def studio_blotato_publisher_tick(dry_run: bool = False) -> dict:
         if result.ok:
             posted_date = datetime.now(timezone.utc).date().isoformat()
             props_update: dict = {
-                PROP_STATUS: {"status": {"name": "posted"}},
+                PROP_STATUS: {"select": {"name": "published"}},
                 PROP_POSTED_DATE: {"date": {"start": posted_date}},
             }
             if result.public_url:
