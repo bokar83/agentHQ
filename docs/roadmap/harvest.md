@@ -457,17 +457,26 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 
 ## Session Log
 
-### 2026-05-04: R1f added - taste-skill absorbed, frontend-design art direction lift queued
+### 2026-05-04: Design quality lift session SHIPPED - taste-skill absorbed, 4 skills upgraded, followup queue cleared
 
-Absorbed `leonxlnx/taste-skill` (MIT, 12 SKILL.md files). Security scan: STATIC-CLEAN. Focus: `imagegen-frontend-web` (21-section image art direction system) + `redesign-skill` (80+ anti-generic design audit checklist).
+Absorbed `leonxlnx/taste-skill` (MIT, 12 SKILL.md files). Security scan: STATIC-CLEAN. Sankofa + Karpathy both ran. Chairman: "gap is in Kie prompt construction, not art direction vocabulary." Karpathy: SHIP.
 
-Key finding: frontend-design's Kie prompt template is a single sentence. Every site's generated images are generic as a result. The gap is prompt construction depth, not missing capability. Sankofa chairman: "the gap is in the Kie prompt construction." Karpathy: SHIP.
+**What shipped:**
 
-Two surgical changes queued for 2026-05-07:
-1. Rewrite Kie prompt block to use compositional vocabulary (composition anchor + background mode + hero scale + typography character + anti-slop prohibition per site type).
-2. Add `skills/frontend-design/references/design-audit.md` (80+ checklist) wired into Step 5 pre-launch.
+- `skills/frontend-design/SKILL.md` - Kie prompt block replaced with 6-field structured template (Composition Anchor + Subject + Lighting/Mood + Palette + Background Mode + Anti-Slop Prohibition per site type). 3 worked examples (roofing hero, pediatric dental, before/after pair).
+- `skills/frontend-design/references/design-audit.md` - New. 80+ item anti-generic checklist (typography, color, layout, interactivity, content, components, icons, code, strategic omissions, slop final check). Wired into Step 5 pre-launch gate.
+- `skills/kie_media/SKILL.md` - Studio Art Direction section added. 6-field prompt template, per-channel palette anchors (Under the Baobab / AI Catalyst / 1stGen Money), anti-slop prohibitions per channel, 3 worked examples, Ken Burns still rule.
+- `scripts/markitdown_helper.py` - markitdown v0.1.5 wrapper. URL, local file, YouTube to Markdown. Validated on 3 artifacts.
+- rtk v0.38.0 installed in WSL2 (`/root/.local/bin/rtk`). Global hook registered. Run `rtk gain` after 5 sessions.
+- `absorb-followups.md` - All 2026-05-02/03/04 entries confirmed shipped or pre-existing. Queue clean.
 
-Not absorbed: full 20-section art direction system (designed for models that generate images directly, not prompt writers). Studio thumbnail art direction and brandkit content deferred to separate sessions.
+**Open / blocked:**
+- context-mode MCP: installed, failing to connect - needs `/ctx-upgrade` or restart (user action)
+- MemPalace pilot: dedicated session when ready (target 2026-05-11)
+- Studio M3 first render: waiting on qa-passed candidates
+- Rod/Elevate R1: Boubacar's court
+
+**Karpathy P4 WARN:** Verify on next live SW/CW site build that Kie prompt contains 2+ compositional vocabulary terms (composition anchor / background mode / anti-slop prohibition).
 
 ### 2026-05-04: R-automation milestone added - n8n-mcp installed, agency methodology absorbed
 
