@@ -1,18 +1,21 @@
 """
 signal_works/topup_studio_leads.py
-Harvests Studio faceless-agency outreach leads via Apollo.io.
+Harvests Studio web-presence outreach leads via Apollo.io.
 
-Targets: ecommerce, retail, restaurant, fitness, beauty, real estate
-owners in Utah + adjacent markets who need video/content production.
+Target: ANY business owner in US+Canada who needs a website or better web
+presence. Alternates between two ICPs each day:
+  - STUDIO_ICP: broad sweep — all industries, any size
+  - STUDIO_ICP_TARGETED: high-need sweep — trades, solo pros, local services
 
 Usage:
   python -m signal_works.topup_studio_leads
-  python -m signal_works.topup_studio_leads --minimum 10
+  python -m signal_works.topup_studio_leads --minimum 25
   python -m signal_works.topup_studio_leads --dry-run
 """
 import argparse
 import logging
 import sys
+from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -20,7 +23,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
-from skills.apollo_skill.apollo_client import harvest_leads, STUDIO_ICP
+from skills.apollo_skill.apollo_client import harvest_leads, STUDIO_ICP, STUDIO_ICP_TARGETED
 from orchestrator.db import get_crm_connection
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -87,14 +90,22 @@ def topup_studio_leads(minimum: int = DAILY_MINIMUM, dry_run: bool = False) -> i
         return current
 
     needed = minimum - current
-    logger.info(f"Need {needed} more leads. Harvesting via Apollo (STUDIO_ICP)...")
+
+    # Alternate ICPs daily: even days = broad sweep, odd days = high-need targeted sweep
+    icp = STUDIO_ICP if datetime.now().day % 2 == 0 else STUDIO_ICP_TARGETED
+    logger.info(f"Need {needed} more leads. Harvesting via Apollo ({icp['name']})...")
 
     if dry_run:
         logger.info("[DRY-RUN] Would call Apollo harvest. Skipping.")
         conn.close()
         return current
 
-    new_leads = harvest_leads(STUDIO_ICP, target=needed + 10, max_pages=15)
+    new_leads = harvest_leads(icp, target=needed + 10, max_pages=15)
+    # If first pass short, fill gap with the other ICP
+    if len(new_leads) < needed:
+        other_icp = STUDIO_ICP_TARGETED if icp is STUDIO_ICP else STUDIO_ICP
+        logger.info(f"  First pass short ({len(new_leads)}). Gap-filling with {other_icp['name']}...")
+        new_leads += harvest_leads(other_icp, target=needed - len(new_leads) + 5, max_pages=10)
 
     saved = 0
     for lead in new_leads:

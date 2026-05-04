@@ -233,6 +233,55 @@ STUDIO_ICP = {
     ],
 }
 
+# Targeted sweep: highest-need segments — trades, solo professionals, local services.
+# These are the people most likely to have NO website or a terrible one.
+# Rotate with STUDIO_ICP to ensure both broad + high-need coverage every day.
+STUDIO_ICP_TARGETED = {
+    "name": "studio_targeted",
+    "person_locations": STUDIO_ICP["person_locations"],  # same full US+Canada geo
+    "person_titles": [
+        # Trades (almost always no website or a 2005-era site)
+        "Owner", "Founder", "CEO", "President", "Operator", "Proprietor",
+        "Contractor", "General Contractor", "Roofer", "Plumber", "Electrician",
+        "HVAC Technician", "Painter", "Landscaper", "Mason", "Carpenter",
+        "Welder", "Pool Contractor",
+        # Solo creatives
+        "Photographer", "Videographer", "Graphic Designer", "Illustrator",
+        "Muralist", "Artist",
+        # Event + hospitality
+        "Wedding Planner", "Event Planner", "Event Coordinator",
+        "Caterer", "Baker", "Chef",
+        # Personal services
+        "Barber", "Hair Stylist", "Nail Technician", "Esthetician",
+        "Personal Trainer", "Yoga Instructor", "Life Coach",
+        "Nutritionist", "Massage Therapist",
+        # Specialty services
+        "Architect", "Interior Designer", "Landscape Architect",
+        "Pet Groomer", "Dog Trainer", "Veterinarian",
+        "Tutor", "Music Teacher", "Dance Instructor",
+        "Tax Preparer", "Bookkeeper", "Notary",
+        "Moving Company Owner", "Storage Facility Owner",
+        "Auto Mechanic", "Detailer",
+    ],
+    "person_seniorities": _DECISION_MAKER_SENIORITIES,
+    "organization_num_employees_ranges": ["1,50"],  # focused on small/solo operators
+    "score_industries": [
+        "photography", "videography", "construction", "roofing", "landscaping",
+        "cleaning", "hvac", "plumbing", "electrical", "pest control",
+        "beauty", "salon", "spa", "fitness", "wellness", "personal training",
+        "events", "wedding", "catering", "food", "restaurant",
+        "architecture", "interior design", "home services",
+        "automotive", "storage", "transportation",
+        "arts", "music", "education", "tutoring",
+        "bookkeeping", "tax", "legal", "consulting",
+    ],
+    "score_titles": [
+        "owner", "founder", "operator", "contractor", "photographer",
+        "planner", "trainer", "barber", "stylist", "architect",
+        "chef", "baker", "coach", "tutor", "mechanic",
+    ],
+}
+
 
 # ── Dedup: track revealed Apollo IDs in Supabase ─────────────────────────────
 
