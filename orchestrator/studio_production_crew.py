@@ -82,8 +82,8 @@ def run_production(notion_id: str, *, dry_run: bool = False) -> dict[str, Any]:
     if not qa_report.passed and not dry_run:
         failed_names = [c.name for c in qa_report.failed_checks]
         failed_details = [f"{c.name}: {c.detail}" for c in qa_report.failed_checks]
-        # One auto-retry for fixable issues (retention loops, citations)
-        fixable = {"retention_loops", "source_citation"}
+        # One auto-retry for fixable issues (retention loops, citations, formula)
+        fixable = {"retention_loops", "source_citation", "four_part_formula"}
         if set(failed_names) <= fixable:
             logger.info("production_crew: QA retry — fixable failures: %s", failed_names)
             fix_hint = "IMPORTANT FIX REQUIRED: " + "; ".join(failed_details)
