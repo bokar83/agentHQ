@@ -6,9 +6,13 @@
 
 ## What this channel is
 
-A faceless animated storytelling channel. African folktales (Akan, Wolof, Mande, Yoruba, Bamileke, Berber, etc) plus original African children's tales we write ourselves. Mix of cultures permitted. The brand is "the griot under the baobab" telling stories.
+A faceless animated storytelling channel with two content pillars:
 
-NOT academic ethnography. Entertainment for African children, diaspora children, parents who want their kids hearing African voices.
+**Pillar 1  -  African Folktales:** Akan, Wolof, Mande, Yoruba, Bamileke, Berber, Fulani, and more. Original African children's tales we write ourselves. Mix of cultures permitted. The brand is "the griot under the baobab" telling stories. NOT academic ethnography. Entertainment for African children, diaspora children, parents who want their kids hearing African voices.
+
+**Pillar 2  -  Parenting Psychology & Childhood Development:** Science-backed parenting insights framed through warmth and connection, not fear. Early brain development, attachment styles, the first 3 years, African parenting approaches. Speaks to the same parent audience as Pillar 1  -  gatekeepers who want the best for their children. Tone: calm, grounded, "safety and connection over complexity."
+
+Both pillars serve the same core audience and live under the same brand aesthetic. The griot voice works for both: a wise elder telling you something you need to know for your child.
 
 ## Audience
 

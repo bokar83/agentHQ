@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500&family=Cinzel+Decorative&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1920px; height: 1080px; overflow: hidden; background: #1E1433; }
+
+  .card {
+    width: 1920px;
+    height: 1080px;
+    position: relative;
+    overflow: hidden;
+    background: #1E1433;
+  }
+
+  /* Background texture — radial glows */
+  .bg-glow {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 900px 600px at 20% 50%, #3D2B8E22 0%, transparent 70%),
+      radial-gradient(ellipse 600px 400px at 80% 80%, #C45E2A18 0%, transparent 60%),
+      radial-gradient(ellipse 500px 500px at 75% 20%, #E8A02010 0%, transparent 60%);
+  }
+
+  /* Kente stripes */
+  .stripe-top { position: absolute; top: 0; left: 0; right: 0; height: 8px; background: #E8A020; }
+  .stripe-bottom { position: absolute; bottom: 0; left: 0; right: 0; height: 8px; background: #E8A020; }
+
+  /* Ghost baobab mark — right side background */
+  .ghost-mark {
+    position: absolute;
+    right: -60px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 700px;
+    height: 700px;
+    opacity: 0.07;
+  }
+
+  /* LEFT PANEL — branding */
+  .left {
+    position: absolute;
+    left: 100px;
+    top: 0; bottom: 0;
+    width: 680px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 24px;
+  }
+
+  /* Baobab SVG mark */
+  .mark { width: 110px; height: 110px; }
+
+  .channel { font-family: 'Playfair Display', serif; font-weight: 900; font-size: 72px; color: #E8A020; line-height: 1; letter-spacing: -0.01em; }
+  .tagline { font-family: 'DM Sans', sans-serif; font-size: 28px; color: #FAF3E0; opacity: 0.65; letter-spacing: 0.06em; font-style: italic; }
+
+  /* Subscribe CTA */
+  .subscribe {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    background: #C45E2A;
+    color: #FAF3E0;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 26px;
+    padding: 18px 36px;
+    border-radius: 8px;
+    letter-spacing: 0.04em;
+    margin-top: 12px;
+    width: fit-content;
+  }
+
+  .subscribe-arrow { font-size: 22px; }
+
+  /* DIVIDER */
+  .divider {
+    position: absolute;
+    left: 820px;
+    top: 80px; bottom: 80px;
+    width: 2px;
+    background: linear-gradient(to bottom, transparent, #E8A02044, #E8A02044, transparent);
+  }
+
+  /* RIGHT PANEL — video tiles (YouTube clickable zones) */
+  .right {
+    position: absolute;
+    right: 80px;
+    top: 0; bottom: 0;
+    width: 960px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 32px;
+  }
+
+  .tiles-label {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 18px;
+    letter-spacing: 0.2em;
+    color: #F5C842;
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-bottom: 8px;
+  }
+
+  .tiles-row {
+    display: flex;
+    gap: 28px;
+  }
+
+  /* YouTube end-card video tile — standard position */
+  .tile {
+    width: 426px;
+    height: 240px;
+    border-radius: 10px;
+    background: #2C1A0E;
+    border: 2px solid #E8A02033;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tile-icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: #E8A02022;
+    border: 2px solid #E8A02066;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .tile-play { width: 0; height: 0; border-top: 12px solid transparent; border-bottom: 12px solid transparent; border-left: 20px solid #E8A020; margin-left: 4px; }
+  .tile-label { font-family: 'DM Sans', sans-serif; font-size: 16px; color: #FAF3E0; opacity: 0.4; letter-spacing: 0.08em; }
+
+  /* Terracotta rule between tiles label and tiles */
+  .rule { width: 60px; height: 3px; background: #C45E2A; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="bg-glow"></div>
+  <!-- Ghost baobab right side -->
+  <svg class="ghost-mark" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="200" cy="200" r="160" stroke="#E8A020" stroke-width="18"/>
+    <line x1="200" y1="360" x2="200" y2="60"  stroke="#E8A020" stroke-width="14" stroke-linecap="round"/>
+    <line x1="200" y1="360" x2="100" y2="100" stroke="#E8A020" stroke-width="11" stroke-linecap="round"/>
+    <line x1="200" y1="360" x2="310" y2="105" stroke="#E8A020" stroke-width="11" stroke-linecap="round"/>
+    <line x1="200" y1="360" x2="60"  y2="190" stroke="#E8A020" stroke-width="8"  stroke-linecap="round"/>
+    <line x1="200" y1="360" x2="340" y2="195" stroke="#E8A020" stroke-width="8"  stroke-linecap="round"/>
+  </svg>
+  <div class="stripe-top"></div>
+
+  <div class="left">
+    <!-- Logo mark -->
+    <svg class="mark" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="200" cy="200" r="160" stroke="#E8A020" stroke-width="22"/>
+      <line x1="200" y1="360" x2="200" y2="60"  stroke="#E8A020" stroke-width="18" stroke-linecap="round"/>
+      <line x1="200" y1="360" x2="100" y2="100" stroke="#E8A020" stroke-width="14" stroke-linecap="round"/>
+      <line x1="200" y1="360" x2="310" y2="105" stroke="#E8A020" stroke-width="14" stroke-linecap="round"/>
+      <line x1="200" y1="360" x2="60"  y2="190" stroke="#E8A020" stroke-width="10" stroke-linecap="round"/>
+      <line x1="200" y1="360" x2="340" y2="195" stroke="#E8A020" stroke-width="10" stroke-linecap="round"/>
+    </svg>
+
+    <div>
+      <h2 class="channel">Under the Baobab</h2>
+      <p class="tagline">Until next time — under the baobab.</p>
+    </div>
+
+    <div class="rule"></div>
+
+    <div class="subscribe">
+      <span>More Tales</span>
+      <span class="subscribe-arrow">→</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="right">
+    <p class="tiles-label">Watch next</p>
+    <div class="tiles-row">
+      <div class="tile">
+        <div class="tile-icon"><div class="tile-play"></div></div>
+        <p class="tile-label">Next episode</p>
+      </div>
+      <div class="tile">
+        <div class="tile-icon"><div class="tile-play"></div></div>
+        <p class="tile-label">Suggested</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="stripe-bottom"></div>
+</div>
+</body>
+</html>

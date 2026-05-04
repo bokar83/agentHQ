@@ -70,7 +70,7 @@ def generate_script(
     user_prompt = _build_user_prompt(hook, twist, niche, title)
 
     raw_script = _call_llm(system_prompt, user_prompt)
-    clean_script = _post_process(raw_script, pronunciation_dict)
+    clean_script = _post_process(raw_script, pronunciation_dict, loop_interval)
 
     word_count = len(clean_script.split())
     duration_sec = int(word_count / 150 * 60)
@@ -133,12 +133,17 @@ OUTPUT: Return only the script text. No preamble, no "Here is your script", no m
 def _build_user_prompt(hook: str, twist: str, niche: str, title: str) -> str:
     parts = [
         f'VIDEO TITLE: "{title}"',
-        f'HOOK/OPENING CONCEPT: {hook}',
+        f'OPENING LINE (use this or riff from it): {hook}',
     ]
     if twist:
-        parts.append(f'UNIQUE ANGLE/TWIST: {twist}')
+        parts.append(
+            f'VIDEO CONCEPT BRIEF (who this is for, what insight it delivers, how it ends):\n{twist}'
+        )
     parts.append(f'NICHE: {niche}')
-    parts.append("Write the full script now.")
+    parts.append(
+        "Write the full script now. Follow the concept brief exactly — "
+        "this video was designed for a specific audience, not a generic one."
+    )
     return "\n".join(parts)
 
 
@@ -146,9 +151,49 @@ def _build_user_prompt(hook: str, twist: str, niche: str, title: str) -> str:
 # Post-processing
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _post_process(text: str, pronunciation_dict: dict[str, str]) -> str:
+_RETENTION_PHRASES = [
+    "But here is the part nobody talks about.",
+    "Stay with me, because this is where it gets surprising.",
+    "And this next part changes everything.",
+    "Most people get this completely wrong.",
+    "Here is what actually happens next.",
+]
+
+
+def _inject_retention_loops(text: str, interval: int = 200) -> str:
+    """Ensure a [RETENTION:] marker appears at least every `interval` words.
+    Inserts one at the nearest paragraph break if a segment is missing one.
+    """
+    paragraphs = text.split("\n\n")
+    result = []
+    words_since_retention = 0
+    phrase_idx = 0
+
+    for para in paragraphs:
+        has_retention = bool(re.search(r'\[RETENTION:', para))
+        word_count = len(para.split())
+
+        if not has_retention and (words_since_retention + word_count) >= interval:
+            phrase = _RETENTION_PHRASES[phrase_idx % len(_RETENTION_PHRASES)]
+            phrase_idx += 1
+            para = para.rstrip() + f"\n[RETENTION: {phrase}]"
+            words_since_retention = 0
+        elif has_retention:
+            words_since_retention = 0
+        else:
+            words_since_retention += word_count
+
+        result.append(para)
+
+    return "\n\n".join(result)
+
+
+def _post_process(text: str, pronunciation_dict: dict[str, str], loop_interval: int = 200) -> str:
     # Strip em-dashes (house rule)
     text = text.replace("—", ", ").replace(" -- ", ", ")
+
+    # Guarantee retention loops every loop_interval words
+    text = _inject_retention_loops(text, loop_interval)
 
     # Apply SSML phonetic tags for ElevenLabs pronunciation
     for word, phonetic in pronunciation_dict.items():

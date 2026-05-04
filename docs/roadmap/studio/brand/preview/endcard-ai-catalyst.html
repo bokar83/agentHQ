@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;1,400&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1920px; height: 1080px; overflow: hidden; background: #120B3D; }
+
+  .card {
+    width: 1920px;
+    height: 1080px;
+    position: relative;
+    overflow: hidden;
+    background: #120B3D;
+  }
+
+  .bg-glow {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 800px 600px at 15% 50%, #2D1B8E28 0%, transparent 70%),
+      radial-gradient(ellipse 400px 400px at 85% 20%, #F2641918 0%, transparent 60%);
+  }
+
+  /* Ghost stat background */
+  .ghost {
+    position: absolute;
+    right: -40px; top: 50%;
+    transform: translateY(-52%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 680px;
+    font-weight: 500;
+    color: #2D1B8E;
+    opacity: 0.15;
+    line-height: 1;
+    user-select: none;
+    letter-spacing: -0.04em;
+  }
+
+  .bar-top { position: absolute; top: 0; left: 0; right: 0; height: 10px; background: #F26419; }
+  .bar-bottom { position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: #1DB954; opacity: 0.6; }
+
+  .left {
+    position: absolute;
+    left: 100px;
+    top: 0; bottom: 0;
+    width: 740px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 22px;
+  }
+
+  /* Logo mark */
+  .mark { width: 90px; height: 56px; }
+
+  .headline { font-family: 'Space Grotesk', sans-serif; font-weight: 800; font-size: 68px; color: #F8F6FF; line-height: 1.05; letter-spacing: -0.02em; }
+  .headline span { color: #1DB954; }
+
+  .tagline { font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 28px; color: #F8F6FF; opacity: 0.55; letter-spacing: 0.02em; }
+
+  .subscribe {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    background: #F26419;
+    color: #F8F6FF;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    padding: 18px 36px;
+    border-radius: 8px;
+    margin-top: 8px;
+    width: fit-content;
+    letter-spacing: 0.02em;
+  }
+
+  .director {
+    font-family: 'Atkinson Hyperlegible', sans-serif;
+    font-style: italic;
+    font-size: 20px;
+    color: #8B7FD4;
+    opacity: 0.7;
+    letter-spacing: 0.04em;
+  }
+
+  .divider {
+    position: absolute;
+    left: 880px;
+    top: 80px; bottom: 80px;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, #F2641933, #F2641933, transparent);
+  }
+
+  .right {
+    position: absolute;
+    right: 80px;
+    top: 0; bottom: 0;
+    width: 900px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 32px;
+    z-index: 2;
+  }
+
+  .tiles-label {
+    font-family: 'Atkinson Hyperlegible', sans-serif;
+    font-size: 18px;
+    letter-spacing: 0.18em;
+    color: #8B7FD4;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  .tiles-row { display: flex; gap: 28px; }
+
+  .tile {
+    width: 426px;
+    height: 240px;
+    border-radius: 10px;
+    background: #1E1550;
+    border: 1px solid #2D1B8E55;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tile-icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: #F2641918;
+    border: 2px solid #F2641966;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .tile-play { width: 0; height: 0; border-top: 12px solid transparent; border-bottom: 12px solid transparent; border-left: 20px solid #F26419; margin-left: 4px; }
+  .tile-label { font-family: 'Atkinson Hyperlegible', sans-serif; font-size: 16px; color: #F8F6FF; opacity: 0.35; letter-spacing: 0.06em; }
+
+  .stat-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    color: #1DB954;
+    letter-spacing: 0.06em;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="bg-glow"></div>
+  <div class="ghost">44%</div>
+  <div class="bar-top"></div>
+
+  <div class="left">
+    <!-- AI Catalyst logo SVG inline -->
+    <svg class="mark" viewBox="0 0 280 170" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="90" cy="85" r="72" stroke="#2D1B8E" stroke-width="14"/>
+      <circle cx="190" cy="85" r="60" stroke="#2D1B8E" stroke-width="14"/>
+      <path d="M 140 44 A 72 72 0 0 1 140 126 A 60 60 0 0 1 140 44 Z" fill="#2D1B8E" opacity="0.9"/>
+      <!-- Filled intersection approximation -->
+      <ellipse cx="140" cy="85" rx="26" ry="42" fill="#4D3BBE"/>
+    </svg>
+
+    <div>
+      <h2 class="headline">You're still<br><span>standing.</span></h2>
+      <p class="tagline" style="margin-top:12px;">Keep going.</p>
+    </div>
+
+    <div class="subscribe">
+      Stay Ahead →
+    </div>
+
+    <p class="director">Boubacar Barry · Director of HR · boubacarbarry.com</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="right">
+    <div>
+      <p class="tiles-label">Watch next</p>
+      <p class="stat-tag" style="margin-top:8px;">AI · STRATEGY · DATA</p>
+    </div>
+    <div class="tiles-row">
+      <div class="tile">
+        <div class="tile-icon"><div class="tile-play"></div></div>
+        <p class="tile-label">Next episode</p>
+      </div>
+      <div class="tile">
+        <div class="tile-icon"><div class="tile-play"></div></div>
+        <p class="tile-label">Suggested</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="bar-bottom"></div>
+</div>
+</body>
+</html>

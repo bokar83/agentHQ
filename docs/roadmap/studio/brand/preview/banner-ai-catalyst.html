@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;1,400&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 2560px; height: 1440px; overflow: hidden; }
+
+  .banner {
+    width: 2560px;
+    height: 1440px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bg {
+    position: absolute;
+    inset: 0;
+    background: url('bg-catalyst.png') center center / cover no-repeat;
+  }
+
+  /* Heavy dark overlay — makes it readable, keeps the energy */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to right,
+        rgba(9, 5, 30, 0.92) 0%,
+        rgba(9, 5, 30, 0.75) 45%,
+        rgba(9, 5, 30, 0.30) 72%,
+        rgba(9, 5, 30, 0.10) 100%
+      ),
+      linear-gradient(to bottom,
+        rgba(9, 5, 30, 0.5) 0%,
+        transparent 25%,
+        transparent 75%,
+        rgba(9, 5, 30, 0.6) 100%
+      );
+  }
+
+  /* Orange accent bar — top */
+  .bar-top {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 10px;
+    background: #F26419;
+  }
+
+  /* Green thin rule — bottom */
+  .bar-bottom {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 5px;
+    background: #1DB954;
+  }
+
+  /* Content — left anchored */
+  .content {
+    position: absolute;
+    left: 520px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    max-width: 900px;
+  }
+
+  /* Big stat — floats in background, pre-content visual anchor */
+  .bg-stat {
+    position: absolute;
+    right: 140px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    font-size: 520px;
+    color: #2D1B8E;
+    opacity: 0.22;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    user-select: none;
+  }
+
+  .eyebrow {
+    font-family: 'Atkinson Hyperlegible', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.22em;
+    color: #8B7FD4;
+    text-transform: uppercase;
+    margin-bottom: 36px;
+  }
+
+  .channel-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800;
+    font-size: 152px;
+    line-height: 0.9;
+    letter-spacing: -0.025em;
+    margin-bottom: 48px;
+  }
+
+  .channel-name .ai { color: #8B7FD4; }
+  .channel-name .catalyst { color: #F26419; display: block; }
+
+  .divider {
+    width: 100px;
+    height: 4px;
+    background: #F26419;
+    margin-bottom: 36px;
+  }
+
+  .tagline {
+    font-family: 'Atkinson Hyperlegible', sans-serif;
+    font-size: 36px;
+    color: #F8F6FF;
+    opacity: 0.7;
+    margin-bottom: 24px;
+    letter-spacing: 0.02em;
+  }
+
+  .director {
+    font-family: 'Atkinson Hyperlegible', sans-serif;
+    font-style: italic;
+    font-size: 22px;
+    color: #8B7FD4;
+    opacity: 0.8;
+    letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+<div class="banner">
+  <div class="bg"></div>
+  <div class="overlay"></div>
+  <div class="bar-top"></div>
+
+  <!-- Ghost stat right side -->
+  <div class="bg-stat">44%</div>
+
+  <div class="content">
+    <p class="eyebrow">AI Strategy for Working Professionals</p>
+    <h1 class="channel-name">
+      <span class="ai">AI</span>
+      <span class="catalyst">Catalyst</span>
+    </h1>
+    <div class="divider"></div>
+    <p class="tagline">Thrive alongside AI. Don't wait for permission.</p>
+    <p class="director">Boubacar Barry &nbsp;·&nbsp; Director of HR, Global Experience &nbsp;·&nbsp; boubacarbarry.com</p>
+  </div>
+
+  <div class="bar-bottom"></div>
+</div>
+</body>
+</html>

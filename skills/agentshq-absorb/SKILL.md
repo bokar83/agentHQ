@@ -11,6 +11,66 @@ Codify Boubacar's manual workflow for evaluating any artifact (GitHub repo, live
 
 A bare GitHub URL with no other context **always** triggers absorb. Never install. The shallow clone in Phase 1 lives in `sandbox/.tmp/absorb-<slug>/` and is read-only. Install only fires on explicit "install this repo / install <name> / add this to agentsHQ / wire this up" + URL, and is handled by other skills.
 
+## Hard rule: read the README first, every time
+
+Before any analysis, scoring, or placement work: read the README. No exceptions. The README defines what the artifact actually is. Many placement mistakes happen because this step is skipped and the agent infers from the repo name or description alone.
+
+## Hard rule: tool vs skill detection (runs before Phase 0)
+
+Before the leverage gate, classify the artifact:
+
+**External tool / binary / CLI:** anything that installs as a standalone executable, CLI, plugin, or binary (e.g. rtk, caveman, context-mode, markitdown, ffmpeg, wsl-distro).
+
+→ Route to **Tool Fit Check** (see below). Skip Phase 3 placement taxonomy entirely.
+
+**Skill / workflow / pattern / knowledge artifact:** anything that adds capabilities to how Claude Code or agentsHQ operates (prompts, SKILL.md, agent definitions, n8n workflows, MCP servers, docs/patterns).
+
+→ Continue to Phase 0 leverage gate, then Phase 3 placement taxonomy.
+
+### Tool Fit Check (for external tools/binaries only)
+
+Answer three questions. Output the answers directly. No placement taxonomy.
+
+1. **Does it work on our stack?** (Windows 11 native + WSL2 Ubuntu + VPS Linux). Name which environment it works in and any limitations.
+2. **Does it make our work measurably better?** (faster, cheaper, fewer manual steps, less context burn). Quantify if possible.
+3. **Is there already something doing this?** Check installed tools + existing skills + MCP connections.
+
+Then run **Sankofa and Karpathy**, but reframe the question for tools:
+
+**Sankofa framing for tools:**
+> Council, stress-test whether we should add this tool to agentsHQ's stack.
+>
+> Tool: `<name>`
+> What it does: `<one line>`
+> Stack fit: `<which environments it works in, any limitations>`
+> Proposed verdict: `<INSTALL IT | SKIP IT | REVISIT WHEN>`
+> Already on stack: `<what currently covers this need, if anything>`
+>
+> Apply the tool-bloat lens:
+> - Contrarian: Does this actually solve a real pain, or does it just feel useful?
+> - First Principles: What specific recurring cost or friction does this eliminate? Name it exactly.
+> - Expansionist: What else on the stack does this interact with, positively or negatively?
+> - Outsider: A year from now, is this tool still pulling its weight or has it become dead weight?
+> - Executor: Name the install command, the environment, and the metric that proves it earned its place.
+
+**Karpathy framing for tools:**
+> Karpathy, audit whether adding this tool is the minimum change that solves the problem.
+>
+> Tool: `<name>`
+> Problem it solves: `<one sentence>`
+> Install plan: `<what gets added, where, what it touches>`
+>
+> 1. Think Before Coding: is the problem real and clearly stated?
+> 2. Simplicity First: is this tool the minimum solution, or is there a simpler path?
+> 3. Surgical Changes: does installing this touch only what must change?
+> 4. Goal-Driven Execution: is there a verifiable metric that proves the tool earned its place?
+
+Verdict: **INSTALL IT** / **SKIP IT** / **REVISIT WHEN** (name the condition).
+
+If INSTALL IT: provide the exact install command(s) for the applicable environment. Log to absorb-log.md and absorb-followups.md. Done.
+
+If SKIP IT or REVISIT WHEN: one sentence why. Log to absorb-log.md. Done.
+
 ## Phase 0: Leverage gate
 
 Apply three questions. **Any yes continues. All no = ARCHIVE-AND-NOTE and stop.**
@@ -101,6 +161,23 @@ Cost: <license / infra / complexity>
 Risks: <list, or "none flagged">
 Leverage type (from Phase 0): <producing-motion | founder-time-reduction | continuous-improvement>
 ```
+
+### Coverage check (runs after dossier, before Phase 3)
+
+**Hard rule: grep our stack before any council work.**
+
+Extract 2-3 core capability keywords from the dossier. Then grep all four:
+
+1. `docs/AGENT_SOP.md`
+2. `CLAUDE.md`
+3. `docs/SKILLS_INDEX.md`
+4. `skills/<closest-match>/SKILL.md`
+
+If matches found that cover the artifact's core capability: **stop**. Surface the matching file + line number. Verdict is ARCHIVE-AND-NOTE immediately. Do not continue to Phase 3 or Phase 4.
+
+If no coverage found: continue to Phase 3.
+
+**Why this rule exists:** 2026-05-03: absorbed `forrestchang/andrej-karpathy-skills`, ran full Sankofa council, council argued persuasively to PROCEED. But AGENT_SOP.md line 65-70 already had all 4 Karpathy principles verbatim. Council was run on a duplicate. Full council review wasted on noise that a 10-second grep would have caught.
 
 ## Phase 3: Placement proposal
 
@@ -235,3 +312,7 @@ Below that, four collapsed `<details>` sections: **What it is** (Phase 2 dossier
 | Capability looks "missing" but is already wired via an existing MCP | In Phase 2, also check MCP connections + descriptions of all 75 skills. Example: `firecrawl-mcp-server` looked like a PROCEED candidate but was ARCHIVE-AND-NOTE because Firecrawl MCP is already used by skills/website-intelligence. Verdict: ARCHIVE-AND-NOTE = correct; accept it. |
 | Sankofa shifts the placement mid-review | Accept the shift. Write the original proposal in "Placement reasoning" details, then the revised placement in the verdict. Example: markitdown started as "enhance skills/agentshq-absorb"; Sankofa First Principles correctly downgraded to "shared helper" because binding a general utility to one consumer was suboptimal. |
 | target_date forgotten on ARCHIVE-AND-NOTE / DON'T PROCEED | Field is still required for harness compatibility. Use literal `n/a`. PROCEED requires real YYYY-MM-DD. |
+| Running full Sankofa + Karpathy on obvious infrastructure install | Phase 0 passes + install = one CLI command → fast-path PROCEED + install commands. Skip taxonomy debate. Example: context-mode was a `/plugin install`; full council review wasted more tokens than the install. Reserve Sankofa/Karpathy for genuinely ambiguous placements only. |
+| Running skill placement taxonomy on an external tool | Tools (CLIs, binaries, plugins) go through Tool Fit Check + Sankofa/Karpathy with tool-bloat framing, not Phase 3. "Where does this live in our skills?" is the wrong question for rtk, ffmpeg, or caveman. The right question is "does it work on our stack, make our work better, and earn its place?" |
+| Skipping the README | README defines what the artifact is. Skipping it causes misclassification. Read it before any analysis, every time. |
+| Running council before checking our own stack | Grep AGENT_SOP.md + CLAUDE.md + SKILLS_INDEX.md for core capability keywords BEFORE Phase 3 or Phase 4. If coverage exists, ARCHIVE-AND-NOTE immediately. Council is for genuinely ambiguous placements, not rubber-stamping duplicates. Example: forrestchang/andrej-karpathy-skills: full Sankofa council run; AGENT_SOP.md line 65-70 already had all 4 principles verbatim. |

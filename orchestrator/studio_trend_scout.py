@@ -133,43 +133,64 @@ class TrendCandidate:
     notion_page_id: str = ""
 
 
+_yt_key_index = 0  # round-robin state
+
+
 def _yt_api_key() -> Optional[str]:
-    return os.environ.get("YOUTUBE_API_KEY") or os.environ.get("GOOGLE_API_KEY") or None
+    keys = [k for k in [
+        os.environ.get("YOUTUBE_API_KEY"),
+        os.environ.get("YOUTUBE_API_KEY_2"),
+        os.environ.get("GOOGLE_API_KEY"),
+    ] if k]
+    return keys[0] if keys else None
+
+
+def _yt_api_key_rotate() -> list[str]:
+    """Return all available keys for rotation."""
+    return [k for k in [
+        os.environ.get("YOUTUBE_API_KEY"),
+        os.environ.get("YOUTUBE_API_KEY_2"),
+        os.environ.get("GOOGLE_API_KEY"),
+    ] if k]
 
 
 def _yt_search(query: str, max_results: int = 10) -> list:
     """YouTube Data API v3 search. Returns list of video items.
+    Rotates across all available API keys on 403 quota errors.
     Returns [] if no API key configured.
     """
-    key = _yt_api_key()
-    if not key:
+    keys = _yt_api_key_rotate()
+    if not keys:
         return []
-    try:
-        import httpx
-        published_after = (datetime.now(timezone.utc) - timedelta(days=LOOKBACK_DAYS)).isoformat()
-        with httpx.Client(timeout=15) as client:
-            resp = client.get(
-                "https://www.googleapis.com/youtube/v3/search",
-                params={
-                    "key": key,
-                    "part": "snippet",
-                    "type": "video",
-                    "q": query,
-                    "publishedAfter": published_after,
-                    "order": "viewCount",
-                    "maxResults": max_results,
-                },
-            )
-        if resp.status_code != 200:
-            logger.warning(
-                f"studio_trend_scout: YouTube search '{query}' returned {resp.status_code}: "
-                f"{resp.text[:300]}"
-            )
+    import httpx
+    published_after = (datetime.now(timezone.utc) - timedelta(days=LOOKBACK_DAYS)).isoformat()
+    for key in keys:
+        try:
+            with httpx.Client(timeout=15) as client:
+                resp = client.get(
+                    "https://www.googleapis.com/youtube/v3/search",
+                    params={
+                        "key": key,
+                        "part": "snippet",
+                        "type": "video",
+                        "q": query,
+                        "publishedAfter": published_after,
+                        "order": "viewCount",
+                        "maxResults": max_results,
+                    },
+                )
+            if resp.status_code == 403:
+                logger.warning(f"studio_trend_scout: key ending ...{key[-6:]} quota exceeded, trying next")
+                continue
+            if resp.status_code != 200:
+                logger.warning(f"studio_trend_scout: YouTube search '{query}' returned {resp.status_code}: {resp.text[:200]}")
+                return []
+            return resp.json().get("items", [])
+        except Exception as e:
+            logger.warning(f"studio_trend_scout: YouTube search '{query}' error: {e}")
             return []
-        return resp.json().get("items", [])
-    except Exception as e:
-        logger.warning(f"studio_trend_scout: YouTube search '{query}' error: {e}")
-        return []
+    logger.warning(f"studio_trend_scout: all API keys exhausted for query '{query}'")
+    return []
 
 
 def _yt_video_stats(video_ids: list) -> dict:
@@ -252,7 +273,112 @@ def _serper_search(query: str, max_results: int = 5) -> list:
 # Haiku classifier (replaces full Council, correct tool for triage)
 # ═════════════════════════════════════════════════════════════════════════════
 
-_CLASSIFIER_PROMPT = """You are a content triage assistant for Boubacar Barry, a consulting strategist and founder of Catalyst Works.
+_NICHE_CLASSIFIER_CONTEXTS = {
+    "african-folktales": {
+        "channel_desc": "Under the Baobab — animated African storytelling channel for kids and families",
+        "scoring_guide": (
+            "Score HIGH (4-5) if: story has a clear moral, features animals/heroes/tricksters, has "
+            "emotional arc, strong visual potential, or could be retold with African setting/characters. "
+            "Score MEDIUM (3) if: not African but the story structure or moral could be Africanized — "
+            "a Japanese fable, a Native American legend, a universal fairy tale. "
+            "Score LOW (1-2) if: pure drama/soap opera with no adaptable story structure."
+        ),
+        "inspiration_note": (
+            "We don't need to clone directly. A Japanese kitsune story becomes a West African spirit tale. "
+            "A Greek myth becomes a griot legend. Score for INSPIRATION POTENTIAL, not exact fit."
+        ),
+        "medium_options": "YouTube video",
+        "destination": "Studio Pipeline",
+    },
+    "parenting-psychology": {
+        "channel_desc": "Under the Baobab — African family storytelling, parenting through story and wisdom",
+        "scoring_guide": (
+            "Score HIGH (4-5) if: touches childhood development, parenting styles, family dynamics, "
+            "or emotional/behavioral psychology — especially if it has an African or diaspora angle. "
+            "Score MEDIUM (3) if: universal parenting insight we could reframe through African lens. "
+            "Score LOW (1-2) if: purely clinical with no storytelling or cultural adaptation potential."
+        ),
+        "inspiration_note": (
+            "Western parenting psychology content can be reframed through African family values. "
+            "Score for whether we could tell this story our way."
+        ),
+        "medium_options": "YouTube video",
+        "destination": "Studio Pipeline",
+    },
+    "first-gen-money": {
+        "channel_desc": "First Generation Money — financial education for diaspora, immigrants, first-gens who never got the kitchen-table money talk",
+        "scoring_guide": (
+            "Score HIGH (4-5) if: covers wealth building, budgeting, debt, investing, homebuying, "
+            "mortgages, credit, taxes, starting a business, saving for college/vacation/emergencies — "
+            "especially if explained simply for beginners. "
+            "Score MEDIUM (3) if: general personal finance we can reframe for first-gen audience "
+            "(e.g. 'how compound interest works' becomes 'what your parents never told you about money'). "
+            "Score LOW (1-2) if: targets high-net-worth or already-wealthy audience with no first-gen angle."
+        ),
+        "inspiration_note": (
+            "Any solid money education video is fair game. We take the idea and tell it for the person "
+            "whose parents never had a 401k. Score for reframe potential."
+        ),
+        "medium_options": "YouTube video",
+        "destination": "Studio Pipeline",
+    },
+    "ai-displacement-first-gen": {
+        "channel_desc": "AI Catalyst — helping working-class and first-gen professionals navigate the AI economy",
+        "scoring_guide": (
+            "Score HIGH (4-5) if: covers AI job displacement, future of work, career pivoting, "
+            "AI-proof skills, or automation impact on blue-collar/service workers. "
+            "Score MEDIUM (3) if: general AI or career content we can angle toward first-gen workers. "
+            "Score LOW (1-2) if: targets executives or investors with no working-class relevance."
+        ),
+        "inspiration_note": "Score for whether a first-gen worker would find this urgent and actionable.",
+        "medium_options": "YouTube video",
+        "destination": "Studio Pipeline",
+    },
+}
+
+_CLASSIFIER_PROMPT_STUDIO = """You are a creative video producer for a faceless YouTube studio. A content scout has found a video. Your job: decide if we can make OUR version of this idea, then design that video.
+
+OUR CHANNEL: {channel_desc}
+
+SCORING GUIDE:
+{scoring_guide}
+
+KEY RULE — INSPIRATION OVER CLONING:
+{inspiration_note}
+The source video does NOT need to match our niche. If a Japanese folktale, a Portuguese finance video, or a Korean parenting clip sparks an idea we can make for our audience — that counts. Score the IDEA we'd make, not the source.
+
+SOURCE VIDEO:
+Title: {title}
+From channel: {source}
+Description: {snippet}
+
+Think step by step:
+1. What is the core idea or insight in this video?
+2. How would WE tell that idea for OUR specific audience?
+3. What's our title, our hook, our angle?
+
+OUTPUT FORMAT (JSON only, no markdown):
+{{
+  "fit": 3,
+  "our_title": "the title of the video WE would make",
+  "first_line": "the exact opening line of our video — arresting, specific, in our channel voice",
+  "our_concept": "2-3 sentences: the video we make, who it's for, what insight it delivers, how it ends",
+  "source_spark": "one sentence on what in the source video sparked this — could be the structure, the emotion, the data point, or just the topic",
+  "destination": "{destination}"
+}}
+
+fit: 1-5
+  1 = no usable idea even with creativity
+  2 = weak spark, not worth pursuing
+  3 = solid inspiration — we make an adjacent video
+  4 = strong idea — direct adaptation with our twist
+  5 = clone-worthy — same structure, same hook energy, just our audience and voice
+our_title: the actual title we'd publish, not a description of it
+first_line: write it as if you're the narrator — this is the first sentence of the script
+our_concept: specific enough that a scriptwriter could run with it immediately
+"""
+
+_CLASSIFIER_PROMPT_CW = """You are a content triage assistant for Boubacar Barry, a consulting strategist and founder of Catalyst Works.
 
 Given a content item, score it and suggest how Boubacar can use it. Respond with valid JSON only.
 
@@ -289,11 +415,23 @@ def _classify_pick(cand: TrendCandidate) -> TrendCandidate:
     try:
         from llm_helpers import call_llm
         import json as _json
-        prompt = _CLASSIFIER_PROMPT.format(
-            title=cand.title[:300],
-            source=cand.source_channel or cand.channel,
-            snippet=cand.snippet[:400] if cand.snippet else cand.hook[:400],
-        )
+        niche_ctx = _NICHE_CLASSIFIER_CONTEXTS.get(cand.niche)
+        if niche_ctx:
+            prompt = _CLASSIFIER_PROMPT_STUDIO.format(
+                channel_desc=niche_ctx["channel_desc"],
+                scoring_guide=niche_ctx["scoring_guide"],
+                inspiration_note=niche_ctx["inspiration_note"],
+                title=cand.title[:300],
+                source=cand.source_channel or cand.channel,
+                snippet=cand.snippet[:400] if cand.snippet else cand.hook[:400],
+                destination=niche_ctx["destination"],
+            )
+        else:
+            prompt = _CLASSIFIER_PROMPT_CW.format(
+                title=cand.title[:300],
+                source=cand.source_channel or cand.channel,
+                snippet=cand.snippet[:400] if cand.snippet else cand.hook[:400],
+            )
         response = call_llm(
             messages=[{"role": "user", "content": prompt}],
             model="anthropic/claude-haiku-4.5",
@@ -307,9 +445,17 @@ def _classify_pick(cand: TrendCandidate) -> TrendCandidate:
                 raw = raw[4:]
         parsed = _json.loads(raw)
         cand.fit_score = int(parsed.get("fit", 0))
-        cand.medium = parsed.get("medium", "LinkedIn post")
+        cand.medium = parsed.get("medium", "YouTube video")
         cand.first_line = parsed.get("first_line", "")
-        cand.unique_add = parsed.get("unique_add", "")
+        # Studio niches: our_title overrides source title, our_concept goes in unique_add
+        if parsed.get("our_title"):
+            cand.hook = parsed["our_title"]
+        if parsed.get("our_concept"):
+            cand.unique_add = parsed["our_concept"]
+        elif parsed.get("unique_add"):
+            cand.unique_add = parsed["unique_add"]
+        if parsed.get("source_spark"):
+            cand.twist = parsed["source_spark"]
         cand.destination = parsed.get("destination", cand.destination)
     except Exception as e:
         logger.warning(f"studio_trend_scout: classifier failed for '{cand.title[:60]}': {e}")
@@ -430,9 +576,10 @@ def _write_to_studio_pipeline(notion, cand: TrendCandidate) -> Optional[str]:
         logger.warning("studio_trend_scout: NOTION_STUDIO_PIPELINE_DB_ID not set; cannot write")
         return None
 
-    hook_text = cand.first_line or cand.hook or ""
+    # our_title (video we'll make) lives in cand.hook; source title in cand.title
+    our_title = cand.hook or cand.title or "(no title)"
     properties = {
-        "Title": {"title": [{"text": {"content": cand.title[:200] or "(no title)"}}]},
+        "Title": {"title": [{"text": {"content": our_title[:200]}}]},
         "Channel": {"select": {"name": cand.channel}},
         "Niche tag": {"select": {"name": cand.niche}},
         "Status": {"select": {"name": "scouted"}},
@@ -440,10 +587,18 @@ def _write_to_studio_pipeline(notion, cand: TrendCandidate) -> Optional[str]:
         "Source channel": {"rich_text": [{"text": {"content": cand.source_channel[:200]}}]},
         "Source views": {"number": int(cand.views)},
     }
-    if hook_text:
-        properties["Hook"] = {"rich_text": [{"text": {"content": hook_text[:1000]}}]}
+    # Hook = first_line (opening sentence the scriptwriter starts with)
+    if cand.first_line:
+        properties["Hook"] = {"rich_text": [{"text": {"content": cand.first_line[:1000]}}]}
+    # Twist = our_concept (full video brief — who it's for, insight, ending)
     if cand.unique_add:
         properties["Twist"] = {"rich_text": [{"text": {"content": cand.unique_add[:1000]}}]}
+    # Store source title + spark in Draft field (QA notes alt — only field available)
+    if cand.title and cand.title != our_title:
+        source_note = f"Source: {cand.title[:300]}"
+        if cand.twist:
+            source_note += f"\nSpark: {cand.twist[:300]}"
+        properties["Draft"] = {"rich_text": [{"text": {"content": source_note[:2000]}}]}
 
     try:
         page = notion.create_page(database_id=db_id, properties=properties)
@@ -527,14 +682,14 @@ def _send_pick_with_buttons(cand: TrendCandidate, notion_page_id: str) -> None:
         return
     try:
         from notifier import send_message_with_buttons
-        dest_label = "Content Board" if cand.destination == "Content Board" else "Studio Pipeline"
+        our_title = cand.hook or cand.title
+        inspired_by = f"\nInspired by: {cand.title[:80]}" if cand.hook and cand.hook != cand.title else ""
         text = (
-            f"Scout pick [{cand.niche}]\n"
-            f"{cand.title[:120]}\n"
-            f"Medium: {cand.medium} | Dest: {dest_label}\n"
-            f"Opening: {cand.first_line[:200]}\n"
-            f"Boubacar adds: {cand.unique_add[:200]}\n"
-            f"{cand.source_url}"
+            f"🎬 [{cand.niche}] {our_title[:100]}\n"
+            f"{inspired_by}"
+            f"\nOpening: {cand.first_line[:200]}"
+            f"\nConcept: {cand.unique_add[:250]}"
+            f"\nSource: {cand.source_url}"
         )
         buttons = [[
             (f"Approve", f"scout_approve:{notion_page_id}"),
