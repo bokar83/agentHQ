@@ -42,11 +42,17 @@ logger = logging.getLogger(__name__)
 
 # SW: 4 touches at Day 0/3/7/12
 # CW: 5 touches at Day 0/6/9/14/19 (T2 = SaaS PDF value-add)
+# Studio: 4 touches at Day 0/5/11/18 (website + AI presence angle)
 TOUCH_DAYS_SW = {1: 0, 2: 3, 3: 7, 4: 12}
 TOUCH_DAYS_CW = {1: 0, 2: 6, 3: 9, 4: 14, 5: 19}
+TOUCH_DAYS_STUDIO = {1: 0, 2: 5, 3: 11, 4: 18}
 
 def _touch_days(pipeline: str) -> dict:
-    return TOUCH_DAYS_CW if pipeline == "cw" else TOUCH_DAYS_SW
+    if pipeline == "cw":
+        return TOUCH_DAYS_CW
+    if pipeline == "studio":
+        return TOUCH_DAYS_STUDIO
+    return TOUCH_DAYS_SW
 
 CW_ACCOUNT = "catalystworks.ai@gmail.com"
 SW_ACCOUNT = "catalystworks.ai@gmail.com"
@@ -64,6 +70,12 @@ TEMPLATES = {
         2: "templates.email.sw_t2",
         3: "templates.email.sw_t3",
         4: "templates.email.sw_t4",
+    },
+    "studio": {
+        1: "templates.email.studio_t1",
+        2: "templates.email.studio_t2",
+        3: "templates.email.studio_t3",
+        4: "templates.email.studio_t4",
     },
 }
 
@@ -108,7 +120,12 @@ def _get_due_leads(conn, pipeline: str, touch: int, limit: int = 10) -> list[dic
     min_gap = timedelta(days=_touch_days(pipeline)[touch])
     cutoff = datetime.now(timezone.utc) - min_gap
 
-    source_filter = "apollo_catalyst_works%" if pipeline == "cw" else "signal_works%"
+    if pipeline == "cw":
+        source_filter = "apollo_catalyst_works%"
+    elif pipeline == "studio":
+        source_filter = "apollo_studio%"
+    else:
+        source_filter = "signal_works%"
     source_op = "LIKE"
 
     if touch == 1:
@@ -434,7 +451,13 @@ def run_sequence(pipeline: str, dry_run: bool = False, daily_limit: int = 10) ->
     """
     auto_send_cw = os.environ.get("AUTO_SEND_CW", "false").lower() == "true"
     auto_send_sw = os.environ.get("AUTO_SEND_SW", "false").lower() == "true"
-    auto_send = auto_send_cw if pipeline == "cw" else auto_send_sw
+    auto_send_studio = os.environ.get("AUTO_SEND_STUDIO", "false").lower() == "true"
+    if pipeline == "cw":
+        auto_send = auto_send_cw
+    elif pipeline == "studio":
+        auto_send = auto_send_studio
+    else:
+        auto_send = auto_send_sw
     conn = _get_conn()
     _ensure_sequence_columns(conn)
 
