@@ -128,13 +128,21 @@ MODEL_REGISTRY = {
     ],
     "image_to_video": [
         {
+            # Confirmed working on Kai 2026-05-03: uses imageUrl key
             "slug": "hailuo/2-3-image-to-video-pro",
             "endpoint": "unified",
             "input_key": "input",
             "default_input": {},
         },
         {
-            "slug": "kling/v2-1-master-text-to-video",
+            # veo3 supports image-to-video via /veo/generate with image_url param
+            "slug": "veo3_fast",
+            "endpoint": "/api/v1/veo/generate",
+            "body_override": {"model": "veo3_fast", "aspect_ratio": "16:9"},
+            "prompt_key": "prompt",
+        },
+        {
+            "slug": "bytedance/seedance-2",
             "endpoint": "unified",
             "input_key": "input",
             "default_input": {},
@@ -348,6 +356,7 @@ def _upload_to_drive(local_path: Path, drive_folder_id: str, filename: str, mime
         import json as _json
         creds_path = (
             _os.environ.get("GWS_CREDS_PATH")
+            or _os.environ.get("GOOGLE_OAUTH_CREDENTIALS_JSON")
             or _os.path.join(_os.path.dirname(__file__), "..", "secrets", "gws_token.json")
         )
         with open(creds_path) as f:
@@ -574,7 +583,8 @@ def generate_video(
     if task_type == "text_to_video":
         extra = {"aspect_ratio": aspect_ratio}
     elif task_type == "image_to_video" and image_url:
-        extra = {"image_url": image_url, "aspect_ratio": aspect_ratio}
+        # Include both key variants — models differ: hailuo uses imageUrl, others use image_url
+        extra = {"image_url": image_url, "imageUrl": image_url, "aspect_ratio": aspect_ratio}
     else:
         extra = {}
     gen = _run_with_retries(task_type, prompt, extra)

@@ -570,6 +570,21 @@ def start_scheduler():
     except Exception as e:
         logger.error(f"STUDIO_TREND_SCOUT: wake registration failed ({e}); continuing without trend scout", exc_info=True)
 
+    # Studio M4: Blotato publisher tick. Runs daily at 09:00 MT.
+    # Scans Pipeline DB for Status=scheduled + ScheduledDate=today,
+    # publishes via Blotato API, flips to posted. Reads account IDs from env.
+    try:
+        import heartbeat as _heartbeat
+        from studio_blotato_publisher import studio_blotato_publisher_tick
+        _heartbeat.register_wake(
+            "studio-blotato-publisher",
+            crew_name="studio",
+            callback=studio_blotato_publisher_tick,
+            at="09:00",
+        )
+    except Exception as e:
+        logger.error(f"STUDIO_BLOTATO_PUBLISHER: wake registration failed ({e}); continuing without publisher", exc_info=True)
+
     # Studio M3: Production tick. Runs every 30 minutes, picks up qa-passed
     # candidates from Studio Pipeline DB, runs full production pipeline
     # (script → QA → voice → visuals → compose → render → Drive → Notion).

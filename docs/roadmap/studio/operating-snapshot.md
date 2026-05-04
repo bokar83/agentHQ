@@ -13,13 +13,13 @@
 
 ## Channel portfolio (LOCKED 2026-04-25 night)
 
-Three channels in the M1 batch. Each must run on YouTube + X (no LinkedIn, ever). All faceless. All ride the M1 engine (Trend Scout + Pipeline DB + QA Crew).
+Three channels in the M1 batch. Each runs on YouTube + X (no LinkedIn). All faceless. All ride the M1 engine.
 
-| # | Channel | YouTube | X handle target | Niche |
+| # | Channel | YouTube | X handle | Status |
 |---|---|---|---|---|
-| 1 | Under the Baobab | EXISTS | `@UnderTheBaobab` | African folktales + original African children's tales. Faceless TTS griot persona. Mix of cultures permitted (Akan, Wolof, Mande, Yoruba, Bamileke, Berber). Entertainment for African children + diaspora children + parents. NOT academic ethnography. |
-| 2 | AI Catalyst | EXISTS (virgin) | `@AICatalyst` | AI displacement education for working professionals. Path A: openly Boubacar Barry, Director of HR with global experience framing. Links to boubacarbarry.com. NOT linked to Catalyst Works publicly. The agentic-channel-built-by-an-AI-strategist meta-story is the moat. |
-| 3 | First Generation Money | NEEDS CREATION (M2) | `@FirstGenMoney_` | First-generation US wealth building. Immigrant kids, diaspora professionals, first-gens who never got the financial literacy other people's families taught at home. Faceless TTS, animated whiteboard finance via hyperframes. Zero connection to anything else Boubacar does. Pure agentic test channel. |
+| 1 | Under the Baobab | EXISTS | `@UnderTheBaobab` | Linked in Blotato |
+| 2 | AI Catalyst | EXISTS | `@AICatalyst` | Linked in Blotato |
+| 3 | First Generation Money | EXISTS | `@FirstGenMoney_` | Linked in Blotato |
 
 Naming SEO/GEO research done 2026-04-25: "First Generation Money" beat "Inherited Nothing" on (a) zero negative-framing semantic confusion, (b) keyword stack matches search demand ("first gen money," "first generation wealth"), (c) clean parse by generative engines for diaspora/immigrant queries. "Wealth Atlas" descoped in favor of this sharper framing.
 

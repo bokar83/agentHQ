@@ -65,15 +65,44 @@
       "business systems scaling problems"
     ]
   },
+  "parenting-psychology": {
+    "channel": "Under the Baobab",
+    "source": "youtube",
+    "destination": "Studio Pipeline",
+    "youtube_seed_search_terms": [
+      "parenting psychology childhood development",
+      "attachment styles children behavior",
+      "how childhood experiences shape adults",
+      "helicopter parenting effects child psychology",
+      "African parenting style child development",
+      "gentle parenting explained",
+      "child trauma and adult behavior",
+      "raising confident kids psychology",
+      "sibling rivalry child psychology",
+      "screen time effects on children brain"
+    ]
+  },
   "african-folktales": {
     "channel": "Under the Baobab",
     "source": "youtube",
     "destination": "Studio Pipeline",
     "youtube_seed_search_terms": [
-      "african folktales kids animation",
-      "african bedtime story children",
-      "african children animated story",
-      "anansi spider story animation"
+      "african folktale animated",
+      "african fable moral lesson",
+      "african story for kids",
+      "anansi spider story",
+      "west african folktale",
+      "african mythology animated",
+      "griot story africa",
+      "african legend explained",
+      "folktale moral lesson kids animation",
+      "world fable kids animated",
+      "bedtime story moral lesson kids",
+      "fairy tale animated moral",
+      "japanese folktale animated",
+      "native american folktale story",
+      "ancient story moral lesson animated",
+      "folklore story kids youtube"
     ]
   },
   "ai-displacement-first-gen": {
@@ -84,7 +113,13 @@
       "AI taking jobs what to do",
       "first generation wealth AI era",
       "AI proof your career 2026",
-      "immigrant family money AI economy"
+      "immigrant family money AI economy",
+      "AI replacing workers blue collar",
+      "future of work AI automation",
+      "skills that AI cannot replace",
+      "AI and income inequality",
+      "automation job loss working class",
+      "AI career pivot how to"
     ]
   },
   "first-gen-money": {
@@ -92,10 +127,26 @@
     "source": "youtube",
     "destination": "Studio Pipeline",
     "youtube_seed_search_terms": [
-      "first generation wealth building",
-      "no inheritance build wealth",
-      "immigrant entrepreneur money mindset",
-      "first gen money advice 2026"
+      "first gen homebuyer tips",
+      "immigrant build credit usa",
+      "first paycheck money rules",
+      "roth ira explained beginners",
+      "how to budget from scratch",
+      "avoiding debt young adults",
+      "saving for a house explained",
+      "saving for college 101",
+      "how to invest with no money",
+      "starting a business with nothing",
+      "wealth building basics",
+      "money mistakes to avoid 20s",
+      "how mortgages work explained simply",
+      "family vacation on a budget",
+      "emergency fund how to start",
+      "taxes explained first job",
+      "generational wealth from zero",
+      "credit score explained beginners",
+      "side hustle to build savings",
+      "financial literacy no one taught me"
     ]
   }
 }
