@@ -1,7 +1,7 @@
 # Channel Brief: First Generation Money
 
 **Locked:** 2026-04-25 night, Studio M1 build session.
-**Status:** Channel does NOT exist yet. M2 task: create the YouTube channel + register X handle. Engine ready to point at it once the channel exists.
+**Status:** Channel created; X handle `@FirstGenMoney_` registered; Linked in Blotato (M4 ready).
 **Niche tag:** `first-gen-money`
 
 ## What this channel is

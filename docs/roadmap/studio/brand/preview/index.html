@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Studio M2 — Brand Identity</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500&family=Cinzel+Decorative:wght@400&family=Space+Grotesk:wght@700;800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500&family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gap: 2rem;
+    --radius: 12px;
+  }
+
+  body {
+    background: #111118;
+    color: #f0ece4;
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding: 3rem 2rem 6rem;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+
+  /* ── Logo display ── */
+  .logo-showcase {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+    background: #1a1a24;
+    border-radius: var(--radius);
+    padding: 2rem 2.5rem;
+  }
+
+  .logo-img-wrap {
+    flex-shrink: 0;
+    width: 120px;
+    height: 120px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .logo-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .logo-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .logo-concept {
+    font-size: 0.8rem;
+    color: #55555f;
+    line-height: 1.5;
+    max-width: 480px;
+  }
+
+  /* ── Avatar row ── */
+  .avatar-row {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .avatar-wrap {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 2px solid #2a2a35;
+  }
+
+  .avatar-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .avatar-label {
+    font-size: 0.72rem;
+    color: #55555f;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  header h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.6rem, 3vw, 2.6rem);
+    letter-spacing: -0.02em;
+    color: #fff;
+  }
+
+  header p {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: #6b6b7a;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* ── Channel sections ── */
+  .channels {
+    display: flex;
+    flex-direction: column;
+    gap: 5rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .channel-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .channel-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #55555f;
+    margin-bottom: -1rem;
+  }
+
+  .channel-name {
+    font-size: clamp(1.4rem, 2.5vw, 2rem);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .channel-tagline {
+    font-size: 0.95rem;
+    margin-top: 0.25rem;
+    opacity: 0.6;
+  }
+
+  /* ── Palette strip ── */
+  .palette-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .swatch {
+    border-radius: var(--radius);
+    padding: 1.25rem 1rem 1rem;
+    min-height: 110px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 0.2rem;
+    position: relative;
+    cursor: default;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .swatch:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+  }
+
+  .swatch-role {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    opacity: 0.7;
+  }
+
+  .swatch-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .swatch-hex {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    opacity: 0.65;
+    margin-top: 0.1rem;
+  }
+
+  /* ── Type specimen ── */
+  .type-specimen {
+    background: #1a1a24;
+    border-radius: var(--radius);
+    padding: 2rem 2rem 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+
+  @media (max-width: 640px) {
+    .type-specimen { grid-template-columns: 1fr; }
+  }
+
+  .type-block { display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .type-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: #55555f;
+  }
+
+  /* ── Hero card ── */
+  .hero-card {
+    border-radius: var(--radius);
+    overflow: hidden;
+    height: 220px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 1.75rem;
+    position: relative;
+  }
+
+  .hero-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .hero-card-content {
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-card-eyebrow {
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-bottom: 0.4rem;
+  }
+
+  .hero-card-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: #fff;
+  }
+
+  .hero-card-tagline {
+    font-size: 0.85rem;
+    margin-top: 0.35rem;
+    opacity: 0.75;
+    color: #fff;
+  }
+
+  /* ── Thumbnail mockup ── */
+  .thumb-mockup {
+    border-radius: 10px;
+    overflow: hidden;
+    aspect-ratio: 16/9;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 1rem 1.25rem;
+    position: relative;
+  }
+
+  .thumb-mockup .bottom-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 70px;
+    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
+  }
+
+  .thumb-text {
+    position: relative;
+    z-index: 2;
+    font-size: 1.1rem;
+    font-weight: 800;
+    line-height: 1.15;
+    color: #fff;
+    max-width: 75%;
+  }
+
+  /* ── Voice pill ── */
+  .voice-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  .voice-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  /* ── Divider ── */
+  .divider {
+    height: 1px;
+    background: #222230;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* ── Copy-hex tooltip ── */
+  .swatch[data-hex]:active::before {
+    content: 'copied!';
+    position: absolute;
+    top: 0.6rem; right: 0.6rem;
+    font-size: 0.65rem;
+    background: rgba(255,255,255,0.15);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #fff;
+  }
+
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Studio M2 — Brand Identity</h1>
+  <p>3 channels · logos + palettes + typography · locked 2026-05-03</p>
+</header>
+
+<div class="channels">
+
+  <!-- ════════════════════════════════════════
+       CHANNEL 1: UNDER THE BAOBAB
+  ════════════════════════════════════════ -->
+  <div class="channel-block">
+    <div>
+      <p class="channel-label">Channel 01 · African Folktales</p>
+      <h2 class="channel-name" style="font-family:'Playfair Display',serif; color:#E8A020;">Under the Baobab</h2>
+      <p class="channel-tagline" style="font-family:'DM Sans',sans-serif;">Stories from the roots.</p>
+    </div>
+
+    <!-- Logo showcase -->
+    <div class="logo-showcase">
+      <div class="logo-img-wrap" style="background:#1E1433;">
+        <img src="under-the-baobab-logo.png" alt="Under the Baobab logo">
+      </div>
+      <div class="logo-meta">
+        <span style="font-family:'Cinzel Decorative',serif; font-size:0.65rem; color:#C45E2A; letter-spacing:0.15em; text-transform:uppercase;">Logo mark · v1</span>
+        <span style="font-family:'Playfair Display',serif; font-size:1.4rem; font-weight:700; color:#E8A020;">Under the Baobab</span>
+        <p class="logo-concept">Circle = baobab seed. Five roots radiate upward — the tree's iconic inversion. One idea, one stroke weight. Nothing added.</p>
+      </div>
+    </div>
+
+    <div class="palette-strip">
+      <!-- Primary -->
+      <div class="swatch" style="background:#E8A020; color:#2C1A0E;">
+        <span class="swatch-role">Primary</span>
+        <span class="swatch-name">Saffron Gold</span>
+        <span class="swatch-hex">#E8A020</span>
+      </div>
+      <!-- Secondary -->
+      <div class="swatch" style="background:#3D2B8E; color:#FAF3E0;">
+        <span class="swatch-role">Secondary</span>
+        <span class="swatch-name">Baobab Indigo</span>
+        <span class="swatch-hex">#3D2B8E</span>
+      </div>
+      <!-- Accent 1 -->
+      <div class="swatch" style="background:#C45E2A; color:#FAF3E0;">
+        <span class="swatch-role">Accent 1</span>
+        <span class="swatch-name">Terracotta Fire</span>
+        <span class="swatch-hex">#C45E2A</span>
+      </div>
+      <!-- Accent 2 -->
+      <div class="swatch" style="background:#F5C842; color:#2C1A0E;">
+        <span class="swatch-role">Accent 2</span>
+        <span class="swatch-name">Savanna Amber</span>
+        <span class="swatch-hex">#F5C842</span>
+      </div>
+      <!-- Text -->
+      <div class="swatch" style="background:#2C1A0E; color:#FAF3E0; border: 1px solid #3a2410;">
+        <span class="swatch-role">Text</span>
+        <span class="swatch-name">Bark Brown</span>
+        <span class="swatch-hex">#2C1A0E</span>
+      </div>
+      <!-- Background -->
+      <div class="swatch" style="background:#FAF3E0; color:#2C1A0E;">
+        <span class="swatch-role">Background</span>
+        <span class="swatch-name">Cream Parchment</span>
+        <span class="swatch-hex">#FAF3E0</span>
+      </div>
+      <!-- Surface Dark -->
+      <div class="swatch" style="background:#1E1433; color:#FAF3E0; border: 1px solid #2d2050;">
+        <span class="swatch-role">Surface Dark</span>
+        <span class="swatch-name">Dusk Mauve</span>
+        <span class="swatch-hex">#1E1433</span>
+      </div>
+    </div>
+
+    <!-- Avatar -->
+    <div class="avatar-row">
+      <div class="avatar-wrap"><img src="under-the-baobab-avatar.png" alt="Under the Baobab avatar"></div>
+      <div>
+        <p class="avatar-label">YouTube channel avatar · 800×800</p>
+        <p style="font-size:0.82rem; color:#888; margin-top:0.25rem;">Displays at 98px desktop · 176px profile page</p>
+      </div>
+    </div>
+
+    <!-- Hero card mockup -->
+    <div class="hero-card" style="background: linear-gradient(135deg, #1E1433 0%, #3D2B8E 60%, #2C1A0E 100%);">
+      <div class="hero-card-content">
+        <p class="hero-card-eyebrow" style="font-family:'Cinzel Decorative',serif; color:#F5C842;">Akan Tale · Episode 12</p>
+        <h3 class="hero-card-title" style="font-family:'Playfair Display',serif;">Anansi and the Sky God's Stories</h3>
+        <p class="hero-card-tagline" style="font-family:'DM Sans',sans-serif;">Under the Baobab</p>
+      </div>
+    </div>
+
+    <!-- Thumbnail mockup -->
+    <div>
+      <p class="type-label" style="margin-bottom:0.5rem;">Thumbnail grammar</p>
+      <div class="thumb-mockup" style="background: linear-gradient(160deg, #1E1433 0%, #3D2B8E 100%);">
+        <div class="bottom-bar"></div>
+        <div style="position:absolute; top:1rem; right:1rem; background:#C45E2A; color:#FAF3E0; font-family:'Cinzel Decorative',serif; font-size:0.6rem; padding:4px 10px; border-radius:4px; letter-spacing:0.12em; z-index:2;">WOLOF FABLE</div>
+        <p class="thumb-text" style="font-family:'Playfair Display',serif;">Why the Spider Weaves at Night</p>
+      </div>
+    </div>
+
+    <!-- Type specimen -->
+    <div class="type-specimen">
+      <div class="type-block">
+        <span class="type-label">Wordmark / H1 — Playfair Display Bold</span>
+        <span style="font-family:'Playfair Display',serif; font-size:1.8rem; font-weight:700; color:#E8A020; line-height:1.1;">Under the Baobab</span>
+      </div>
+      <div class="type-block">
+        <span class="type-label">Episode title — Playfair Display Semibold</span>
+        <span style="font-family:'Playfair Display',serif; font-size:1.2rem; font-weight:600; color:#FAF3E0;">The Lioness Who Wept Stars</span>
+      </div>
+      <div class="type-block">
+        <span class="type-label">Body — DM Sans Regular</span>
+        <span style="font-family:'DM Sans',sans-serif; font-size:0.95rem; color:#d4cfc4; line-height:1.6;">Long ago, under the oldest baobab in the village, the griot sat and called the children near.</span>
+      </div>
+      <div class="type-block">
+        <span class="type-label">Chapter label — Cinzel Decorative</span>
+        <span style="font-family:'Cinzel Decorative',serif; font-size:0.85rem; color:#F5C842; letter-spacing:0.1em;">Akan · Part One</span>
+      </div>
+    </div>
+
+    <!-- Voice pill -->
+    <div>
+      <p class="type-label" style="margin-bottom:0.5rem;">Voice identity</p>
+      <div class="voice-pill" style="background:#1E1433; border: 1px solid #3D2B8E; color:#E8A020;">
+        <span class="voice-dot" style="background:#E8A020;"></span>
+        Griot Kofi — ElevenLabs · warm baritone · unhurried
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ════════════════════════════════════════
+       CHANNEL 2: AI CATALYST
+  ════════════════════════════════════════ -->
+  <div class="channel-block">
+    <div>
+      <p class="channel-label">Channel 02 · AI Displacement · Openly Boubacar Barry</p>
+      <h2 class="channel-name" style="font-family:'Space Grotesk',sans-serif; font-weight:800; color:#F26419;">AI <span style="color:#8B7FD4;">Catalyst</span></h2>
+      <p class="channel-tagline" style="font-family:'Atkinson Hyperlegible',sans-serif;">Thrive alongside AI. Don't wait for permission.</p>
+    </div>
+
+    <!-- Logo showcase -->
+    <div class="logo-showcase" style="background:#0F1829;">
+      <div class="logo-img-wrap" style="background:#F8F6FF;">
+        <img src="ai-catalyst-logo.png" alt="AI Catalyst logo">
+      </div>
+      <div class="logo-meta">
+        <span style="font-family:'Space Grotesk',sans-serif; font-size:0.65rem; color:#8B7FD4; letter-spacing:0.15em; text-transform:uppercase;">Logo mark · v1</span>
+        <span style="font-family:'Space Grotesk',sans-serif; font-size:1.4rem; font-weight:800; color:#F8F6FF;"><span style="color:#8B7FD4;">AI</span> <span style="color:#F26419;">Catalyst</span></span>
+        <p class="logo-concept" style="color:#8A8FAA;">Two worlds overlapping. The filled intersection — indigo — is the only place that matters. Human + AI converging into one forward point.</p>
+      </div>
+    </div>
+
+    <div class="palette-strip">
+      <div class="swatch" style="background:#2D1B8E; color:#F8F6FF;">
+        <span class="swatch-role">Primary</span>
+        <span class="swatch-name">Fulani Indigo</span>
+        <span class="swatch-hex">#2D1B8E</span>
+      </div>
+      <div class="swatch" style="background:#F26419; color:#0A0912;">
+        <span class="swatch-role">Secondary</span>
+        <span class="swatch-name">Catalyst Orange</span>
+        <span class="swatch-hex">#F26419</span>
+      </div>
+      <div class="swatch" style="background:#1DB954; color:#0A0912;">
+        <span class="swatch-role">Accent 1</span>
+        <span class="swatch-name">Living Green</span>
+        <span class="swatch-hex">#1DB954</span>
+      </div>
+      <div class="swatch" style="background:#8B7FD4; color:#0A0912;">
+        <span class="swatch-role">Accent 2</span>
+        <span class="swatch-name">Pale Indigo</span>
+        <span class="swatch-hex">#8B7FD4</span>
+      </div>
+      <div class="swatch" style="background:#120B3D; color:#F8F6FF; border:1px solid #2D1B8E;">
+        <span class="swatch-role">Surface Dark</span>
+        <span class="swatch-name">Indigo Night</span>
+        <span class="swatch-hex">#120B3D</span>
+      </div>
+      <div class="swatch" style="background:#1E1550; color:#F8F6FF; border:1px solid #2D1B8E;">
+        <span class="swatch-role">Surface Mid</span>
+        <span class="swatch-name">Indigo Dusk</span>
+        <span class="swatch-hex">#1E1550</span>
+      </div>
+      <div class="swatch" style="background:#F8F6FF; color:#0A0912;">
+        <span class="swatch-role">Surface Light</span>
+        <span class="swatch-name">Warm White</span>
+        <span class="swatch-hex">#F8F6FF</span>
+      </div>
+      <div class="swatch" style="background:#8A8FAA; color:#0A0912;">
+        <span class="swatch-role">Neutral</span>
+        <span class="swatch-name">Cool Slate</span>
+        <span class="swatch-hex">#8A8FAA</span>
+      </div>
+    </div>
+
+    <!-- Avatar -->
+    <div class="avatar-row">
+      <div class="avatar-wrap" style="border-color:#2D1B8E;"><img src="ai-catalyst-avatar.png" alt="AI Catalyst avatar"></div>
+      <div>
+        <p class="avatar-label" style="color:#8B7FD4;">YouTube channel avatar · 800×800</p>
+        <p style="font-size:0.82rem; color:#555; margin-top:0.25rem;">Displays at 98px desktop · 176px profile page</p>
+      </div>
+    </div>
+
+    <!-- Hero card -->
+    <div class="hero-card" style="background: linear-gradient(135deg, #120B3D 0%, #2D1B8E 70%, #1E1550 100%);">
+      <!-- Orange accent bar top -->
+      <div style="position:absolute; top:0; left:0; right:0; height:5px; background:#F26419;"></div>
+      <!-- Data reveal mockup -->
+      <div style="position:absolute; top:2rem; right:2rem; text-align:right; z-index:2;">
+        <div style="font-family:'JetBrains Mono',monospace; font-size:2.2rem; font-weight:500; color:#F26419; line-height:1;">42%</div>
+        <div style="font-family:'Atkinson Hyperlegible',sans-serif; font-size:0.7rem; color:#8A8FAA; letter-spacing:0.08em; text-transform:uppercase;">of jobs at risk by 2027</div>
+      </div>
+      <div class="hero-card-content">
+        <p class="hero-card-eyebrow" style="font-family:'Atkinson Hyperlegible',sans-serif; color:#8B7FD4;">Director of HR · Global Experience</p>
+        <h3 class="hero-card-title" style="font-family:'Space Grotesk',sans-serif; font-weight:800;">Is Your Job Safe From AI?</h3>
+        <p class="hero-card-tagline" style="font-family:'Atkinson Hyperlegible',sans-serif;">The 5-test version. 9 minutes.</p>
+      </div>
+    </div>
+
+    <!-- Thumbnail -->
+    <div>
+      <p class="type-label" style="margin-bottom:0.5rem;">Thumbnail grammar</p>
+      <div class="thumb-mockup" style="background:#120B3D;">
+        <div style="position:absolute; bottom:0; left:0; right:0; height:6px; background:#F26419; z-index:3;"></div>
+        <div class="bottom-bar"></div>
+        <div style="position:absolute; top:1.2rem; left:1.25rem; z-index:2;">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:3rem; font-weight:500; color:#F26419; line-height:1;">42%</div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:#1DB954; letter-spacing:0.06em;">GONE BY 2027</div>
+        </div>
+        <p class="thumb-text" style="font-family:'Space Grotesk',sans-serif; font-size:1rem; max-width:55%; color:#F8F6FF;">Is your job on the list?</p>
+      </div>
+    </div>
+
+    <!-- Type specimen -->
+    <div class="type-specimen" style="background:#0F1829;">
+      <div class="type-block">
+        <span class="type-label">Wordmark — Space Grotesk ExtraBold</span>
+        <span style="font-family:'Space Grotesk',sans-serif; font-weight:800; font-size:1.8rem; color:#F8F6FF; line-height:1.1;"><span style="color:#8B7FD4;">AI</span> <span style="color:#F26419;">Catalyst</span></span>
+      </div>
+      <div class="type-block">
+        <span class="type-label">Data / stat — JetBrains Mono</span>
+        <span style="font-family:'JetBrains Mono',monospace; font-size:1.4rem; font-weight:500; color:#F26419;">+3.2M jobs affected</span>
+      </div>
+      <div class="type-block">
+        <span class="type-label">Body — Atkinson Hyperlegible</span>
+        <span style="font-family:'Atkinson Hyperlegible',sans-serif; font-size:0.95rem; color:#c8cad6; line-height:1.6;">AI is not coming for your job. It is already reshaping the role you wake up to every morning.</span>
+      </div>
+      <div class="type-block">
+        <span class="type-label">Positive outcome — Living Green</span>
+        <span style="font-family:'Space Grotesk',sans-serif; font-size:1.1rem; font-weight:700; color:#1DB954;">You're still standing. Keep going.</span>
+      </div>
+    </div>
+
+    <!-- Voice pill -->
+    <div>
+      <p class="type-label" style="margin-bottom:0.5rem;">Voice identity</p>
+      <div class="voice-pill" style="background:#120B3D; border: 1px solid #2D1B8E; color:#F8F6FF;">
+        <span class="voice-dot" style="background:#F26419;"></span>
+        The Strategist — ElevenLabs · calm authority · deliberate pacing
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ════════════════════════════════════════
+       CHANNEL 3: FIRST GENERATION MONEY
+  ════════════════════════════════════════ -->
+  <div class="channel-block">
+    <div>
+      <p class="channel-label">Channel 03 · First-Gen Finance · Pure Agentic Test</p>
+      <h2 class="channel-name" style="font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; color:#166B50;">First Generation <span style="color:#D4922A;">Money</span></h2>
+      <p class="channel-tagline" style="font-family:'Inter',sans-serif;">The money talk your family never had.</p>
+    </div>
+
+    <!-- Logo showcase -->
+    <div class="logo-showcase" style="background:#F7EDD8;">
+      <div class="logo-img-wrap" style="background:#FDFAF4; border: 1px solid #e8dcc5;">
+        <img src="first-generation-money-logo.png" alt="First Generation Money logo">
+      </div>
+      <div class="logo-meta">
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:0.65rem; color:#8A9099; letter-spacing:0.15em; text-transform:uppercase;">Logo mark · v1</span>
+        <span style="font-family:'Plus Jakarta Sans',sans-serif; font-size:1.4rem; font-weight:800; color:#166B50;">First Generation <span style="color:#D4922A;">Money</span></span>
+        <p class="logo-concept" style="color:#1A1F2E;">One ascending curve. Compound interest made visible. Starts flat — ends steep. That IS the financial journey. Nothing else needed.</p>
+      </div>
+    </div>
+
+    <div class="palette-strip">
+      <div class="swatch" style="background:#166B50; color:#FDFAF4;">
+        <span class="swatch-role">Primary</span>
+        <span class="swatch-name">Grove Green</span>
+        <span class="swatch-hex">#166B50</span>
+      </div>
+      <div class="swatch" style="background:#F7EDD8; color:#1A1F2E;">
+        <span class="swatch-role">Secondary</span>
+        <span class="swatch-name">First-Gen Cream</span>
+        <span class="swatch-hex">#F7EDD8</span>
+      </div>
+      <div class="swatch" style="background:#6B3FA0; color:#FDFAF4;">
+        <span class="swatch-role">Accent 1</span>
+        <span class="swatch-name">Clarity Violet</span>
+        <span class="swatch-hex">#6B3FA0</span>
+      </div>
+      <div class="swatch" style="background:#D4922A; color:#1A1F2E;">
+        <span class="swatch-role">Accent 2</span>
+        <span class="swatch-name">Warm Gold</span>
+        <span class="swatch-hex">#D4922A</span>
+      </div>
+      <div class="swatch" style="background:#1A1F2E; color:#FDFAF4; border:1px solid #2a3040;">
+        <span class="swatch-role">Text</span>
+        <span class="swatch-name">Ink Charcoal</span>
+        <span class="swatch-hex">#1A1F2E</span>
+      </div>
+      <div class="swatch" style="background:#0D2E20; color:#FDFAF4; border:1px solid #166B50;">
+        <span class="swatch-role">Surface Dark</span>
+        <span class="swatch-name">Deep Grove</span>
+        <span class="swatch-hex">#0D2E20</span>
+      </div>
+      <div class="swatch" style="background:#FDFAF4; color:#1A1F2E;">
+        <span class="swatch-role">Surface Light</span>
+        <span class="swatch-name">Parchment White</span>
+        <span class="swatch-hex">#FDFAF4</span>
+      </div>
+      <div class="swatch" style="background:#8A9099; color:#1A1F2E;">
+        <span class="swatch-role">Neutral</span>
+        <span class="swatch-name">Stone</span>
+        <span class="swatch-hex">#8A9099</span>
+      </div>
+    </div>
+
+    <!-- Avatar -->
+    <div class="avatar-row">
+      <div class="avatar-wrap" style="border-color:#166B50;"><img src="first-generation-money-avatar.png" alt="First Generation Money avatar"></div>
+      <div>
+        <p class="avatar-label" style="color:#166B50;">YouTube channel avatar · 800×800</p>
+        <p style="font-size:0.82rem; color:#888; margin-top:0.25rem;">Displays at 98px desktop · 176px profile page</p>
+      </div>
+    </div>
+
+    <!-- Hero card — light mode default -->
+    <div class="hero-card" style="background: linear-gradient(135deg, #F7EDD8 0%, #e8dcc5 100%);">
+      <!-- Violet left accent -->
+      <div style="position:absolute; top:0; left:0; bottom:0; width:6px; background:#6B3FA0;"></div>
+      <div class="hero-card-content">
+        <p class="hero-card-eyebrow" style="font-family:'Inter',sans-serif; color:#8A9099;">Financial education · No jargon</p>
+        <h3 class="hero-card-title" style="font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; color:#1A1F2E;">Roth IRA in 9 Minutes</h3>
+        <p class="hero-card-tagline" style="font-family:'Inter',sans-serif; color:#1A1F2E; opacity:0.65;">The version your employer never gave you.</p>
+      </div>
+      <!-- Gold number decoration -->
+      <div style="position:absolute; top:1.5rem; right:1.75rem; font-family:'IBM Plex Mono',monospace; font-size:2.8rem; font-weight:500; color:#D4922A; opacity:0.3; line-height:1;">$7,000</div>
+    </div>
+
+    <!-- Thumbnail -->
+    <div>
+      <p class="type-label" style="margin-bottom:0.5rem;">Thumbnail grammar</p>
+      <div class="thumb-mockup" style="background:#F7EDD8;">
+        <!-- Violet left bar -->
+        <div style="position:absolute; top:0; left:0; bottom:0; width:8px; background:#6B3FA0; z-index:3;"></div>
+        <div class="bottom-bar" style="background:linear-gradient(to top, rgba(26,31,46,0.8) 0%, transparent 100%);"></div>
+        <!-- Big number -->
+        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-family:'IBM Plex Mono',monospace; font-size:3.5rem; font-weight:500; color:#D4922A; opacity:0.15; white-space:nowrap; z-index:1;">$7,000/yr</div>
+        <div style="position:absolute; top:1.2rem; left:1.5rem; z-index:2;">
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:2.4rem; font-weight:500; color:#166B50; line-height:1;">$7,000</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:0.7rem; color:#8A9099; letter-spacing:0.06em;">2026 ROTH IRA LIMIT</div>
+        </div>
+        <p class="thumb-text" style="font-family:'Plus Jakarta Sans',sans-serif; font-size:0.95rem; max-width:60%; color:#1A1F2E;">Are you leaving this on the table?</p>
+      </div>
+    </div>
+
+    <!-- Type specimen -->
+    <div class="type-specimen" style="background:#F7EDD8;">
+      <div class="type-block">
+        <span class="type-label">Wordmark — Plus Jakarta Sans ExtraBold</span>
+        <span style="font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:1.6rem; color:#166B50; line-height:1.1;">First Generation <span style="color:#D4922A;">Money</span></span>
+      </div>
+      <div class="type-block">
+        <span class="type-label">Numbers / citations — IBM Plex Mono</span>
+        <span style="font-family:'IBM Plex Mono',monospace; font-size:1rem; font-weight:500; color:#D4922A;">IRS Pub. 590-A · $7,000 · 2026</span>
+      </div>
+      <div class="type-block">
+        <span class="type-label">Body — Inter Regular</span>
+        <span style="font-family:'Inter',sans-serif; font-size:0.95rem; color:#1A1F2E; line-height:1.6;">Nobody taught you this at home. We fix that. Plain language, real math, no jargon.</span>
+      </div>
+      <div class="type-block">
+        <span class="type-label">Aha moment — Clarity Violet</span>
+        <span style="font-family:'Plus Jakarta Sans',sans-serif; font-size:1.1rem; font-weight:700; color:#6B3FA0;">Wait — this is actually achievable.</span>
+      </div>
+    </div>
+
+    <!-- Voice pill -->
+    <div>
+      <p class="type-label" style="margin-bottom:0.5rem;">Voice identity</p>
+      <div class="voice-pill" style="background:#0D2E20; border: 1px solid #166B50; color:#FDFAF4;">
+        <span class="voice-dot" style="background:#166B50;"></span>
+        The Sibling — ElevenLabs · gender-neutral · warm, calm, never condescending
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Banner links -->
+<div style="max-width:1100px; margin:4rem auto 0; display:flex; flex-direction:column; gap:1rem;">
+  <p style="font-size:0.65rem; letter-spacing:0.2em; text-transform:uppercase; color:#55555f;">Banners — open in new tab · 2560×1440</p>
+  <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+    <a href="banner-under-the-baobab.html" target="_blank" style="padding:0.6rem 1.2rem; background:#1E1433; border:1px solid #3D2B8E; border-radius:8px; color:#E8A020; font-family:'Playfair Display',serif; font-size:0.9rem; text-decoration:none;">Under the Baobab →</a>
+    <a href="banner-ai-catalyst.html" target="_blank" style="padding:0.6rem 1.2rem; background:#120B3D; border:1px solid #2D1B8E; border-radius:8px; color:#F26419; font-family:'Space Grotesk',sans-serif; font-size:0.9rem; text-decoration:none;">AI Catalyst →</a>
+    <a href="banner-first-generation-money.html" target="_blank" style="padding:0.6rem 1.2rem; background:#F7EDD8; border:1px solid #166B50; border-radius:8px; color:#166B50; font-family:'Plus Jakarta Sans',sans-serif; font-size:0.9rem; text-decoration:none;">First Generation Money →</a>
+  </div>
+</div>
+
+<!-- Thumbnail links -->
+<div style="max-width:1100px; margin:3rem auto 0; display:flex; flex-direction:column; gap:1rem;">
+  <p style="font-size:0.65rem; letter-spacing:0.2em; text-transform:uppercase; color:#55555f;">Thumbnails — 1280×720</p>
+  <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+    <a href="thumbnail-under-the-baobab.html" target="_blank" style="padding:0.6rem 1.2rem; background:#1E1433; border:1px solid #3D2B8E; border-radius:8px; color:#E8A020; font-family:'Playfair Display',serif; font-size:0.9rem; text-decoration:none;">Under the Baobab →</a>
+    <a href="thumbnail-ai-catalyst.html" target="_blank" style="padding:0.6rem 1.2rem; background:#120B3D; border:1px solid #2D1B8E; border-radius:8px; color:#F26419; font-family:'Space Grotesk',sans-serif; font-size:0.9rem; text-decoration:none;">AI Catalyst →</a>
+    <a href="thumbnail-first-generation-money.html" target="_blank" style="padding:0.6rem 1.2rem; background:#F7EDD8; border:1px solid #166B50; border-radius:8px; color:#166B50; font-family:'Plus Jakarta Sans',sans-serif; font-size:0.9rem; text-decoration:none;">First Generation Money →</a>
+  </div>
+</div>
+
+<!-- End-card links -->
+<div style="max-width:1100px; margin:3rem auto 0; display:flex; flex-direction:column; gap:1rem;">
+  <p style="font-size:0.65rem; letter-spacing:0.2em; text-transform:uppercase; color:#55555f;">End-cards — 1920×1080 · last 20 sec of every video</p>
+  <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+    <a href="endcard-under-the-baobab.html" target="_blank" style="padding:0.6rem 1.2rem; background:#1E1433; border:1px solid #3D2B8E; border-radius:8px; color:#E8A020; font-family:'Playfair Display',serif; font-size:0.9rem; text-decoration:none;">Under the Baobab →</a>
+    <a href="endcard-ai-catalyst.html" target="_blank" style="padding:0.6rem 1.2rem; background:#120B3D; border:1px solid #2D1B8E; border-radius:8px; color:#F26419; font-family:'Space Grotesk',sans-serif; font-size:0.9rem; text-decoration:none;">AI Catalyst →</a>
+    <a href="endcard-first-generation-money.html" target="_blank" style="padding:0.6rem 1.2rem; background:#F7EDD8; border:1px solid #166B50; border-radius:8px; color:#166B50; font-family:'Plus Jakarta Sans',sans-serif; font-size:0.9rem; text-decoration:none;">First Generation Money →</a>
+  </div>
+</div>
+
+<!-- Footer -->
+<div style="text-align:center; margin-top:4rem; color:#333340; font-size:0.75rem; letter-spacing:0.1em; text-transform:uppercase;">
+  Studio M2 · Brand Identity Lock · 2026-05-03
+</div>
+
+<script>
+// Click swatch to copy hex
+document.querySelectorAll('.swatch').forEach(sw => {
+  const hex = sw.querySelector('.swatch-hex');
+  if (!hex) return;
+  sw.style.cursor = 'pointer';
+  sw.title = 'Click to copy hex';
+  sw.addEventListener('click', () => {
+    navigator.clipboard.writeText(hex.textContent.trim()).catch(() => {});
+    const orig = hex.textContent;
+    hex.textContent = 'copied!';
+    setTimeout(() => { hex.textContent = orig; }, 1200);
+  });
+});
+</script>
+
+</body>
+</html>

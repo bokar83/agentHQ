@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1920px; height: 1080px; overflow: hidden; background: #FDFAF4; }
+
+  .card {
+    width: 1920px;
+    height: 1080px;
+    position: relative;
+    overflow: hidden;
+    background: #FDFAF4;
+  }
+
+  /* Subtle texture — very light warm noise via repeating gradient */
+  .bg-texture {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 700px 500px at 20% 50%, #166B5008 0%, transparent 70%),
+      radial-gradient(ellipse 400px 400px at 80% 80%, #D4922A0A 0%, transparent 60%);
+  }
+
+  /* Ghost number — right side */
+  .ghost {
+    position: absolute;
+    right: 60px; top: 50%;
+    transform: translateY(-52%);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 620px;
+    font-weight: 500;
+    color: #166B50;
+    opacity: 0.05;
+    line-height: 1;
+    user-select: none;
+    letter-spacing: -0.04em;
+  }
+
+  .bar-left { position: absolute; top: 0; left: 0; bottom: 0; width: 14px; background: #6B3FA0; }
+  .bar-bottom { position: absolute; bottom: 0; left: 0; right: 0; height: 8px; background: #D4922A; }
+  .bar-top { position: absolute; top: 0; left: 0; right: 0; height: 4px; background: #166B50; opacity: 0.4; }
+
+  .left {
+    position: absolute;
+    left: 120px;
+    top: 0; bottom: 0;
+    width: 760px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 24px;
+  }
+
+  /* 1stGen curve mark inline SVG */
+  .mark { width: 100px; height: 100px; }
+
+  .headline {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800;
+    font-size: 80px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: #1A1F2E;
+  }
+
+  .headline .pass { color: #6B3FA0; display: block; font-size: 96px; }
+
+  .tagline {
+    font-family: 'Inter', sans-serif;
+    font-size: 28px;
+    color: #1A1F2E;
+    opacity: 0.55;
+    letter-spacing: 0.01em;
+  }
+
+  .subscribe {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    background: #166B50;
+    color: #FDFAF4;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    padding: 18px 36px;
+    border-radius: 8px;
+    margin-top: 8px;
+    width: fit-content;
+    letter-spacing: 0.02em;
+  }
+
+  .disclaimer {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    color: #8A9099;
+    letter-spacing: 0.02em;
+    line-height: 1.5;
+  }
+
+  .divider {
+    position: absolute;
+    left: 920px;
+    top: 80px; bottom: 80px;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, #166B5033, #166B5033, transparent);
+  }
+
+  .right {
+    position: absolute;
+    right: 80px;
+    top: 0; bottom: 0;
+    width: 880px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 32px;
+    z-index: 2;
+  }
+
+  .tiles-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    letter-spacing: 0.18em;
+    color: #166B50;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  .tiles-row { display: flex; gap: 28px; }
+
+  .tile {
+    width: 396px;
+    height: 240px;
+    border-radius: 10px;
+    background: #F7EDD8;
+    border: 1px solid #166B5033;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tile-icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: #166B5018;
+    border: 2px solid #166B5066;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .tile-play { width: 0; height: 0; border-top: 12px solid transparent; border-bottom: 12px solid transparent; border-left: 20px solid #166B50; margin-left: 4px; }
+  .tile-label { font-family: 'Inter', sans-serif; font-size: 16px; color: #1A1F2E; opacity: 0.35; letter-spacing: 0.04em; }
+
+  .math-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 20px;
+    color: #D4922A;
+    letter-spacing: 0.08em;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="bg-texture"></div>
+  <div class="ghost">+22%</div>
+  <div class="bar-top"></div>
+  <div class="bar-left"></div>
+
+  <div class="left">
+    <!-- Growth curve SVG mark -->
+    <svg class="mark" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 30 170 C 60 168, 100 140, 170 30" stroke="#166B50" stroke-width="14" stroke-linecap="round"/>
+    </svg>
+
+    <div>
+      <h2 class="headline">
+        Built for first-gens.
+        <span class="pass">Pass it on.</span>
+      </h2>
+    </div>
+
+    <p class="tagline">The money talk your family never had.</p>
+
+    <div class="subscribe">
+      Learn More →
+    </div>
+
+    <p class="disclaimer">Financial education only. Not personal advice.<br>Always consult a qualified financial professional.</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="right">
+    <div>
+      <p class="tiles-label">Watch next</p>
+      <p class="math-tag" style="margin-top:8px;">EDUCATION · MATH · FIRST-GEN</p>
+    </div>
+    <div class="tiles-row">
+      <div class="tile">
+        <div class="tile-icon"><div class="tile-play"></div></div>
+        <p class="tile-label">Next episode</p>
+      </div>
+      <div class="tile">
+        <div class="tile-icon"><div class="tile-play"></div></div>
+        <p class="tile-label">Suggested</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="bar-bottom"></div>
+</div>
+</body>
+</html>

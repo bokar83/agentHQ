@@ -119,7 +119,7 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 
 ---
 
-### M2: Brand Identity for Two Channels ⏳ QUEUED
+### M2: Brand Identity for Two Channels ✅ SHIPPED 2026-05-03
 
 **What:** Lock brand identity for BOTH M1 channels in parallel. Each channel gets: name (final), logo, color palette, typography, motion vocabulary, voice identity (TTS voice or stock narration), end-card template, thumbnail template, channel-page assets (avatar, banner, about copy, links).
 
@@ -137,7 +137,7 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 
 ---
 
-### M3: Content Production Pipeline ⏳ QUEUED
+### M3: Content Production Pipeline 🔄 BUILT  -  awaiting first real render
 
 **What:** Wire the studio production crew that takes a Pipeline DB candidate (qa-passed) and produces a publish-ready asset. Pipeline shape:
 
@@ -222,20 +222,30 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 
 ---
 
-### M4: Multi-Channel Publish Pipeline ⏳ DECISION-GATED
+### M4: Multi-Channel Publish Pipeline 🔄 IN PROGRESS
 
-**What:** Auto-publish from Studio Pipeline DB to the platform on Scheduled Date. Default path: Blotato Creator at $97/mo (verified live 2026-04-25), supports YouTube + IG + TikTok + Threads + LinkedIn + X + FB + Pinterest, 5,000 AI credits/mo, 40 social accounts (covers all M1+M7+M8 channels). Atlas's M7a Blotato spike outcome determines whether studio rides Blotato or pivots to OAuth.
+**What:** Auto-publish from Studio Pipeline DB to the platform on Scheduled Date. Default path: Blotato Creator at $97/mo (verified live 2026-04-25), supports YouTube + IG + TikTok + Threads + LinkedIn + X + FB + Pinterest, 5,000 AI credits/mo, 40 social accounts.
 
-**Why:** Without auto-publish, G3 is impossible. With two channels in the M1 batch and 4-6 platform endpoints per channel, manual publishing alone breaks the 3 hr/week steady-state budget.
+**Progress:**
+- [x] Social Launch Kits shipped (2026-05-03): `docs/roadmap/studio/social-launch-kit/`  -  bios, avatar specs, link-in-bio strategy, warm-up protocols for IG + TikTok for all 3 channels
+- [x] `orchestrator/studio_blotato_publisher.py` initialized (2026-05-03): scans Pipeline DB for Status=scheduled + ScheduledDate=Today → Blotato API → Status=posted
+- [ ] Boubacar creates IG + TikTok accounts for all 3 channels (see kits)
+- [ ] Blotato IG/TikTok account IDs collected and added to .env
+- [ ] Warm-up window executed per-platform protocols (30 days per channel)
+- [ ] End-to-end test: 1 scheduled record → Blotato → posted
 
-**Trigger gate:** Atlas M7 resolved (Blotato Creator subscription active OR OAuth apps approved). Studio rides whichever path Atlas picked.
+**Why:** Without auto-publish, G3 is impossible. With 3 channels × 4+ platform endpoints, manual publishing breaks the 3 hr/week steady-state budget.
+
+**Trigger gate:** Atlas M7 resolved ✅ (Blotato Creator $20.30/mo active, YT + X already linked). IG/TikTok accounts needed to complete platform coverage.
+
 **Blockers:**
-- Atlas M7
-- Per-channel platform accounts (Sankofa Stories needs new YouTube + IG + TikTok + Spotify; AI Catalyst reuses existing YouTube but needs new IG + TikTok)
+
+- IG + TikTok account creation (Boubacar  -  2FA required)
+- Blotato IG/TikTok account IDs after creation
 
 **Branch:** `feat/studio-m4-publish`
-**ETA:** 3-5 hr once Atlas M7 path is live (mostly per-channel credential plumbing in Blotato).
-**Cost:** $97/mo Blotato Creator. Triggers when M4 starts. Adds to studio operating cost ledger.
+**ETA:** Unblocked on code side. Wall-clock gate = account creation + warm-up window (30 days).
+**Cost:** $97/mo Blotato Creator (already active).
 
 ---
 
@@ -465,3 +475,150 @@ Cost ceiling for M1 build: <$20 in tokens. Firecrawl 0/3000 until 2026-05-14 fla
 **Commits:** `1d0cd88` (Studio M1 engine), now on origin via rebase.
 
 ---
+
+### 2026-05-03: M2 Brand Identity - Palettes + Brand Bibles LOCKED
+
+**Session scope:** Studio M2 brand identity for all 3 channels. Boubacar approved palettes after preview at `localhost:7420`.
+
+**What shipped:**
+
+3 brand bibles at `docs/roadmap/studio/brand/`:
+
+- `under-the-baobab-brand.md`
+- `ai-catalyst-brand.md`
+- `first-generation-money-brand.md`
+
+Each bible locks: final name, tagline, color palette (hex + role), typography stack, motion vocabulary, TTS voice spec + persona name, end-card template layout, thumbnail grammar, avatar spec, banner layout spec, About copy (YouTube + X), and M3 production crew brand injection block.
+
+**Palette decisions (LOCKED):**
+
+| Channel | Primary | Secondary | Accent 1 | Accent 2 |
+| --- | --- | --- | --- | --- |
+| Under the Baobab | Saffron Gold `#E8A020` | Baobab Indigo `#3D2B8E` | Terracotta Fire `#C45E2A` | Savanna Amber `#F5C842` |
+| AI Catalyst | Fulani Indigo `#2D1B8E` | Catalyst Orange `#F26419` | Living Green `#1DB954` | Pale Indigo `#8B7FD4` |
+| First Generation Money | Grove Green `#166B50` | First-Gen Cream `#F7EDD8` | Clarity Violet `#6B3FA0` | Warm Gold `#D4922A` |
+
+**Asset Generation (COMPLETED):**
+- Logos: `docs/roadmap/studio/brand/logos/` (all 3 channels, including no-bg variants)
+- Avatars: `docs/roadmap/studio/brand/avatars/` (all 3 channels)
+- Banners: Background scenes generated via `kie_media`; composite scripts ready.
+- Templates: End-card and Thumbnail HTML templates verified for `hyperframes` injection.
+
+**Boubacar actions (not agent):**
+
+- [ ] Create First Generation Money YouTube channel
+- [ ] Register X handles
+- [ ] Create IG + TikTok accounts for all 3 channels (see `docs/roadmap/studio/social-launch-kit/`)
+- [ ] Connect IG + TikTok to Blotato, share account IDs with agent
+
+---
+
+### 2026-05-03: M4 Kickoff  -  Social Launch Kits + Blotato Publisher
+
+**M4 officially IN PROGRESS.** Session shipped two M4 deliverables.
+
+**Social Launch Kits (all 3 channels):** `docs/roadmap/studio/social-launch-kit/`
+
+- `under-the-baobab.md`  -  IG + TikTok bio, avatar spec, link-in-bio strategy, 30-day warm-up protocol
+- `ai-catalyst.md`  -  same, plus cross-promotion note for boubacarbarry.com
+- `first-generation-money.md`  -  same, plus YMYL compliance notes for financial content
+
+Research sourced 2026 IG + TikTok warm-up protocols: IG requires 7-day silence before adding link in bio; 5-hashtag cap; Stories signal trust score. TikTok requires 7-day observation phase; 1-2 posts/day max; consistent IP + device + posting window.
+
+**Blotato Publisher (`orchestrator/studio_blotato_publisher.py`):** Wraps existing `BlotatoPublisher` class. Scans Pipeline DB for Status=scheduled + ScheduledDate=Today → publishes via Blotato API → flips Status=posted. Per-channel account ID mapping for all 3 channels × 4 platforms (YT, X, IG, TikTok). Dry-run mode (`--dry-run`) for safe testing. Heartbeat tick registered as `studio-blotato-publisher` at 09:00 MT daily.
+
+**What's next (wall-clock gated):**
+
+1. Boubacar creates IG + TikTok for all 3 channels (see kits for handles + checklist)
+2. Connects accounts in Blotato, shares account IDs → agent updates .env
+3. Agent registers heartbeat tick on VPS (`studio-blotato-publisher`)
+4. End-to-end test: 1 scheduled Pipeline DB record → publisher tick → Blotato → posted
+
+---
+
+### 2026-05-03 (night): M4 publisher deployed + heartbeat live on VPS
+
+**Blotato publisher fully operational on VPS.** Session fixed schema mismatches and confirmed clean run.
+
+**What shipped in this half-session:**
+
+- `studio-blotato-publisher` heartbeat wake registered in `scheduler.py` at 09:00 MT
+- Fixed `notion_client` → `skills.forge_cli.NotionClient` (correct import for VPS container)
+- Fixed Status field type: `status` → `select` (Notion schema confirmed via API)
+- Fixed Status option names: `publishing` → `rendering`, `posted` → `published` (actual Pipeline DB values)
+- Verified on VPS: `STUDIO PUBLISHER: tick start ... 0 record(s) scheduled`  -  clean, no errors
+- All commits pushed to main
+
+**Account wiring (already in .env):**
+- YT: all 3 channels wired (35697, 35696, 35698)
+- X: all 3 channels wired
+- TikTok: all 3 channels wired (40989, 40987, 40994)
+- IG: Baobab (45174) + Catalyst (45176) wired; 1stGen pending `firstgenerationmoney_` IG review
+
+**IG account creation recap:**
+- `under_thebaobab` IG: live
+- `aicatalyst_official` IG: under selfie review (submitted)
+- `firstgenerationmoney_` IG: under review
+- TikTok accounts created by Boubacar; all 3 IDs in .env
+
+**What's next (M4 gates remaining):**
+1. `firstgenerationmoney_` IG review clears → Boubacar adds `BLOTATO_1STGEN_INSTAGRAM_ACCOUNT_ID` to .env
+2. First Pipeline DB record reaches Status=scheduled → publisher fires at next 09:00 MT tick
+3. Confirm first auto-post live → M4 SHIPPED
+
+### 2026-05-03: M3 Production Pipeline BUILT + API-tested
+
+**Session scope:** M3 content production pipeline  -  built all modules, live API tested, deployed to VPS.
+
+**What shipped:**
+
+7 new orchestrator modules:
+
+| Module | Purpose |
+|---|---|
+| `studio_brand_config.py` | Dynamic brand loader: Notion → JSON → placeholder fallback |
+| `studio_script_generator.py` | Sonnet scriptwriter, SSML pronunciation, [SCENE:] + [RETENTION:] markers |
+| `studio_voice_generator.py` | ElevenLabs primary (word-level timestamps), Kai TTS stub fallback |
+| `studio_scene_builder.py` | Script → timed scenes, brand-enforced image/video prompts |
+| `studio_visual_generator.py` | kie_media wrapper, parallel batch-3, source_url passthrough for image_to_video |
+| `studio_composer.py` | hyperframes project builder, GSAP word-level captions, branded intro/outro |
+| `studio_render_publisher.py` | 3-format render (16:9 / 9:16 / 1:1) + Drive + Notion update + Telegram |
+| `studio_production_crew.py` | Main orchestrator + heartbeat tick + CLI (`--test`, `--notion-id`, `--tick`) |
+
+**Brand + voice configs (COMPLETED):**
+- `configs/brand_config.{under_the_baobab,ai_catalyst,first_generation_money}.json`  -  full colors, fonts, voice IDs
+- `configs/voice_registry.json`  -  5 locked ElevenLabs voice IDs (male/female African, Boubacar, Hunter, Elhadja elder)
+- Notion Studio Brand Config DB created under `agentsHQ > Studio`; all 3 channel rows seeded and status=ready
+- Logos + avatars uploaded to Drive: `05_Asset_Library/Studio/Brand/{Logos,Avatars}/`
+
+**QA crew extended to 10 checks:**
+- Check 9: retention loop density (≥1 `[RETENTION:]` trigger per 250 spoken words)
+- Check 10: AI-origin safe (no 100%-AI boilerplate pattern without human editorial signal)
+
+**Live API test results (2026-05-03):**
+- Sonnet script: 1700 words, all 10 QA checks passing ✅
+- ElevenLabs: 9MB MP3, 1400+ word-level timestamps ✅
+- kie_media image: Seedream/4.5 confirmed working, Drive upload via `GOOGLE_OAUTH_CREDENTIALS_JSON` ✅
+- kie_media video: Seedance-2 confirmed working (Kling image-to-video slugs all 422 on Kai as of today) ✅
+- Compose + render: dry_run clean; hyperframes + Node 22 + ffmpeg baked into container ✅
+
+**Infrastructure fixes:**
+- Dockerfile: Node 20 → 22 (required by hyperframes), `hyperframes` + `ffmpeg` installed globally
+- `configs/` baked into Docker image (no more manual `docker cp`)
+- `docker-compose.yml`: `ELEVENLABS_API_KEY`, `KIE_AI_API_KEY`, `NOTION_STUDIO_BRAND_CONFIG_DB_ID` wired
+- `kie_media._upload_to_drive`: reads `GOOGLE_OAUTH_CREDENTIALS_JSON` (already set in container)  -  Drive upload now works without `gws_token.json`
+- `kie_media`: Drive upload failures non-fatal in all 3 generate functions
+- `.env` CRLF + unquoted-value fix script: `/root/agentsHQ/scripts/fix_env.py`
+- `parenting-psychology` niche seed added to `studio_trend_seeds.default.json` for Under the Baobab
+- Heartbeat wake `studio-production` registered at `every="30m"`, `crew_name="studio"`
+
+**What M3 does NOT yet have (not started):**
+- First real video rendered end-to-end from a qa-passed Pipeline DB candidate (no candidates exist yet  -  trend scout runs at 06:00)
+- `studio.enabled=True` on VPS (intentionally left False until first 5 candidates reviewed)
+- hyperframes composition live render test (dry_run only  -  no candidate to trigger it)
+
+**Next steps to close M3 fully:**
+1. Flip `studio.enabled=True` in `data/autonomy_state.json` after first 5 trend-scout briefs reviewed
+2. First qa-passed candidate: run `python3 -m studio_production_crew --notion-id <id>` live
+3. Confirm MP4 renders and lands in Drive `05_Asset_Library/<channel>/<date>/`
+4. M3 marked SHIPPED  -  M4 publish path takes over

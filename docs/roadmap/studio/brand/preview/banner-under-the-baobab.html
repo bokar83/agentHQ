@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500&family=Cinzel+Decorative:wght@400&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 2560px; height: 1440px; overflow: hidden; }
+
+  .banner {
+    width: 2560px;
+    height: 1440px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Full-bleed background photo */
+  .bg {
+    position: absolute;
+    inset: 0;
+    background: url('bg-baobab.png') center center / cover no-repeat;
+  }
+
+  /* Dark overlay — heavier on left where text lives, lighter on right to show the tree */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to right,
+        rgba(14, 8, 32, 0.88) 0%,
+        rgba(14, 8, 32, 0.65) 40%,
+        rgba(14, 8, 32, 0.15) 70%,
+        rgba(14, 8, 32, 0.05) 100%
+      ),
+      linear-gradient(to top,
+        rgba(14, 8, 32, 0.7) 0%,
+        transparent 35%
+      );
+  }
+
+  /* Kente gold stripe — top */
+  .stripe-top {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 8px;
+    background: #E8A020;
+  }
+
+  /* Kente gold stripe — bottom */
+  .stripe-bottom {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 8px;
+    background: #E8A020;
+  }
+
+  /* Terracotta thin rule above tagline */
+  .rule {
+    width: 120px;
+    height: 3px;
+    background: #C45E2A;
+    margin-bottom: 28px;
+  }
+
+  /* Left-anchored content block */
+  .content {
+    position: absolute;
+    left: 520px;
+    top: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    max-width: 920px;
+  }
+
+  .eyebrow {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 22px;
+    letter-spacing: 0.3em;
+    color: #F5C842;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+    opacity: 0.9;
+  }
+
+  .channel-name {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 148px;
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+    color: #FAF3E0;
+    margin-bottom: 50px;
+  }
+
+  .channel-name span {
+    color: #E8A020;
+    display: block;
+  }
+
+  .tagline {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 38px;
+    font-weight: 400;
+    color: #FAF3E0;
+    opacity: 0.75;
+    letter-spacing: 0.06em;
+    font-style: italic;
+  }
+
+  /* Bottom-right: logo mark watermark */
+  .logo-mark {
+    position: absolute;
+    bottom: 60px;
+    right: 80px;
+    opacity: 0.45;
+  }
+</style>
+</head>
+<body>
+<div class="banner">
+  <div class="bg"></div>
+  <div class="overlay"></div>
+  <div class="stripe-top"></div>
+
+  <div class="content">
+    <p class="eyebrow">African Folktales &amp; Original Tales</p>
+    <h1 class="channel-name">
+      Under the<br>
+      <span>Baobab</span>
+    </h1>
+    <div class="rule"></div>
+    <p class="tagline">Stories from the roots.</p>
+  </div>
+
+  <!-- SVG logo mark bottom-right -->
+  <svg class="logo-mark" width="280" height="280" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="200" cy="200" r="160" stroke="#E8A020" stroke-width="18"/>
+    <line x1="200" y1="360" x2="200" y2="60"  stroke="#E8A020" stroke-width="14" stroke-linecap="round"/>
+    <line x1="200" y1="360" x2="100" y2="100" stroke="#E8A020" stroke-width="11" stroke-linecap="round"/>
+    <line x1="200" y1="360" x2="310" y2="105" stroke="#E8A020" stroke-width="11" stroke-linecap="round"/>
+    <line x1="200" y1="360" x2="60"  y2="190" stroke="#E8A020" stroke-width="8"  stroke-linecap="round"/>
+    <line x1="200" y1="360" x2="340" y2="195" stroke="#E8A020" stroke-width="8"  stroke-linecap="round"/>
+  </svg>
+
+  <div class="stripe-bottom"></div>
+</div>
+</body>
+</html>

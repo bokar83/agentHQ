@@ -191,3 +191,4 @@ pytest_tmp_work/
 # Codex sandbox progress fallback artifact
 # Moved 2026-05-02 from root `task_progress/` to `data/codex/` per Compass governance: runtime ephemera belongs under data/.
 data/codex/
+configs/asset_vault.json

@@ -453,16 +453,25 @@ def check_ai_origin_safe(text: str) -> QACheckResult:
 # Run all 10 checks
 # ═════════════════════════════════════════════════════════════════════════════
 
+# Niches that are storytelling/creative — source citations don't apply
+_STORYTELLING_NICHES = {"african-folktales", "parenting-psychology"}
+
+
 def run_qa(text: str, niche: str, length_target: str = "long (3-15m)",
             notion_id: str = "", channel: str = "", title: str = "") -> QAReport:
     """Run all 10 checks. Returns QAReport with per-check pass/fail."""
     report = QAReport(notion_id=notion_id, channel=channel, title=title)
+    # Source citation check skipped for storytelling niches (folktales, parenting stories)
+    if niche in _STORYTELLING_NICHES:
+        citation_check = QACheckResult("source_citation", True, f"skipped for storytelling niche '{niche}'")
+    else:
+        citation_check = check_source_citation(text)
     report.checks = [
         check_spellcheck_grammar(text),
         check_banned_phrases(text),
         check_length_target(text, length_target),
         check_hook_present(text, length_target),
-        check_source_citation(text),
+        citation_check,
         check_cta_present(text),
         check_personal_rules(text),
         check_brand_voice(text, niche),

@@ -43,7 +43,7 @@ Every roadmap gets a one or two word lowercase codename. Codenames are claimed f
 |---|---|---|---|---|
 | atlas | active | open-ended | the autonomy layer that runs the content pipeline while the laptop is off | [atlas.md](atlas.md) |
 | compass | active | open-ended | governance model: where rules live, how they enforce, how they retire, anti-sprawl | [compass.md](compass.md) |
-| dashboards4sale | active (stub) | open-ended | multilingual budget dashboards as a standalone product, satellite to agentsHQ | [dashboards4sale.md](dashboards4sale.md) |
+| dashboards4sale | satellite-external | open-ended | multilingual budget dashboards as a standalone product, satellite to agentsHQ | n/a (external repo) |
 | echo | active | open-ended | async partnership substrate: agent proposes commits and acks, human responds asynchronously, neither blocks on the other | [echo.md](echo.md) |
 | harvest | active | open-ended | Catalyst Works revenue pipeline (stub until first revenue session) | [harvest.md](harvest.md) |
 | studio | active | open-ended | faceless agency running multiple branded channels on agentsHQ as adjacent revenue to Catalyst Works | [studio.md](studio.md) |
@@ -56,7 +56,7 @@ The mental model for Boubacar's businesses. Every revenue-bearing initiative has
 |---|---|---|---|---|---|
 | Catalyst Works (consulting) | revenue / services | [harvest.md](harvest.md) | agentsHQ (`output/websites/catalystworks-site/`) | catalystworks.consulting | $0 → first contract |
 | Signal Works (productized AI presence) | revenue / SaaS-like | [harvest.md](harvest.md) (R1) | agentsHQ (`signal_works/`, future satellite) | geolisted.co (landing) | first contract pending |
-| Dashboards4Sale | product | [dashboards4sale.md](dashboards4sale.md) | satellite ([`bokar83/dashboards4sale`](https://github.com/bokar83/dashboards4sale)) | TBD | extracted 2026-05-02; M1 multilingual coverage queued |
+| Dashboards4Sale | product | n/a | satellite ([`bokar83/dashboards4sale`](https://github.com/bokar83/dashboards4sale)) | TBD | EXTRACTED 2026-05-02; dev roadmap lives in satellite repo |
 | Studio (faceless agency) | revenue / content channels | [studio.md](studio.md) | agentsHQ (orchestrator + content boards) | per-channel (Under the Baobab, AI Catalyst, First Generation Money) | M1 engine live, M2 channel batch |
 | Atlas (autonomy layer) | platform infrastructure | [atlas.md](atlas.md) | agentsHQ | agentshq.boubacarbarry.com | M15 shipped, M5 gate 2026-05-08 |
 | Echo (async substrate) | platform infrastructure | [echo.md](echo.md) | agentsHQ | n/a (internal) | M1 shipped |
