@@ -33,7 +33,7 @@
     "ROI": "R-O-I"
   },
   "script_tone": "authoritative, data-driven, calm authority, Director of HR framing, no panic",
-  "target_duration_sec": 600,
+  "target_duration_sec": 55,
   "hook_word_budget": 30,
   "retention_loop_interval_words": 200,
   "platform_specs": {
