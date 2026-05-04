@@ -1,0 +1,69 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Edit(./.env)",
+      "Edit(./.env.*)",
+      "Write(./.env)",
+      "Write(./.env.*)",
+      "Bash(ssh root@* rm -rf:*)",
+      "Bash(ssh root@* DROP:*)",
+      "Bash(ssh root@* TRUNCATE:*)",
+      "Bash(ssh root@* docker rm -f:*)",
+      "Bash(ssh root@* docker-compose down -v:*)",
+      "Bash(ssh root@* psql * -c \"DROP:*)",
+      "Bash(ssh root@* psql * -c \"TRUNCATE:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"C:/Program Files/nodejs/node.exe\" \"C:/Users/HUAWEI/.claude/plugins/cache/context-mode/context-mode/1.0.107/hooks/vscode-copilot/pretooluse.mjs\"",
+            "HOOK_MODEL": "N/A",
+            "HOOK_MAX_CONTEXT": "N/A",
+            "HOOK_COST_PER_FIRE": "N/A",
+            "HOOK_FIRING_RATE": "per-tool"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"C:/Program Files/nodejs/node.exe\" \"C:/Users/HUAWEI/.claude/plugins/cache/context-mode/context-mode/1.0.107/hooks/vscode-copilot/posttooluse.mjs\""
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"C:/Program Files/nodejs/node.exe\" \"C:/Users/HUAWEI/.claude/plugins/cache/context-mode/context-mode/1.0.107/hooks/vscode-copilot/precompact.mjs\""
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"C:/Program Files/nodejs/node.exe\" \"C:/Users/HUAWEI/.claude/plugins/cache/context-mode/context-mode/1.0.107/hooks/vscode-copilot/sessionstart.mjs\""
+          }
+        ]
+      }
+    ]
+  }
+}

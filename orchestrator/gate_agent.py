@@ -308,8 +308,24 @@ def _is_auto_approvable(files: list[str]) -> bool:
 # Main tick
 # ---------------------------------------------------------------------------
 
+def _gate_enabled() -> bool:
+    """Check autonomy_state.json gate.enabled flag. Defaults to False if missing."""
+    try:
+        state_path = REPO_PATH / "data" / "autonomy_state.json"
+        if not state_path.exists():
+            return False
+        state = json.loads(state_path.read_text())
+        return bool(state.get("gate", {}).get("enabled", False))
+    except Exception:
+        return False
+
+
 def gate_tick() -> None:
     """Single gate heartbeat. Called every 60s by scheduler."""
+    if not _gate_enabled():
+        logger.debug("gate: disabled (gate.enabled=false in autonomy_state.json)")
+        return
+
     logger.info("gate: tick start")
 
     if not _fetch():
