@@ -163,8 +163,10 @@ def _write_props(notion, page_id: str, props: dict) -> None:
 
 def _send_telegram(msg: str) -> None:
     try:
+        import os
         from notifier import send_message
-        send_message(msg)
+        chat_id = os.environ.get("OWNER_TELEGRAM_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID", "")
+        send_message(chat_id, msg)
     except Exception as e:
         logger.warning(f"Telegram send failed: {e}")
 

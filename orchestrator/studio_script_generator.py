@@ -145,7 +145,7 @@ HARD RULES — follow exactly:
    Where phrase is one of: "But here is the part nobody talks about." / "Stay with me, because this is where it gets surprising." / "Here is what the research actually shows." / "And this next part changes everything." / "Most people get this completely wrong."
    These ARE narrated aloud — they are spoken by the narrator to keep viewers watching.
 4. End with a clear CTA (subscribe, share, or watch another video) in the last paragraph.
-5. Target length: ~{target_words} words ({target_words // 150} minutes at 150 wpm).
+5. Target length: ~{target_words} words (~{int(target_words / 150 * 60)} seconds at 150 wpm). Do NOT exceed {target_words + 20} words total.
 6. NO em-dashes (use commas or periods instead).
 7. NO first-person Boubacar references. This is a faceless channel.
 8. NO fabricated client stories or testimonials.
