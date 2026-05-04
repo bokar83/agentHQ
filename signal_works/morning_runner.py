@@ -92,6 +92,7 @@ def _main_body():
     sw_leads = 0
     sw_drafted = 0
     cw_drafted = 0
+    studio_drafted = 0
 
     # Weekday gate: harvest every day, but only send Mon-Fri.
     # Saturday=5, Sunday=6. Uses local time of the runner (orc-crewai container).
@@ -167,7 +168,7 @@ def _main_body():
     if is_weekend:
         logger.info("STEP 5: SKIPPED on weekend (no CW sends Sat/Sun).")
     else:
-        logger.info("STEP 5: Catalyst Works sequence T1-T4 (auto-send)...")
+        logger.info("STEP 5: Catalyst Works sequence T1-T5 (auto-send)...")
         try:
             from skills.outreach.sequence_engine import run_sequence
             cw_result = run_sequence("cw", dry_run=False, daily_limit=10)
@@ -176,8 +177,21 @@ def _main_body():
         except Exception as e:
             logger.error(f"  CW sequence failed: {e}")
 
+    # ── Step 6: Studio -- web presence 4-touch sequence (auto-send) ──
+    if is_weekend:
+        logger.info("STEP 6: SKIPPED on weekend (no Studio sends Sat/Sun).")
+    else:
+        logger.info("STEP 6: Studio web presence sequence T1-T4 (auto-send)...")
+        try:
+            from skills.outreach.sequence_engine import run_sequence
+            studio_seq = run_sequence("studio", dry_run=False, daily_limit=15)
+            studio_drafted = studio_seq.get("drafted", 0) or studio_seq.get("sent", 0)
+            logger.info(f"  Done. {studio_drafted} Studio emails drafted.")
+        except Exception as e:
+            logger.error(f"  Studio sequence failed: {e}")
+
     # ── Summary ───────────────────────────────────────────────────
-    total = sw_drafted + cw_drafted
+    total = sw_drafted + cw_drafted + studio_drafted
     logger.info("=" * 60)
     logger.info(f"Run complete:")
     logger.info(f"  Bounces cleared:        {bounce_nulled}")
@@ -186,6 +200,7 @@ def _main_body():
     logger.info(f"  CW leads personalized:  {voice_personalized}")
     logger.info(f"  CW outreach drafts:     {cw_drafted}")
     logger.info(f"  Studio leads harvested: {studio_leads}")
+    logger.info(f"  Studio outreach drafts: {studio_drafted}")
     logger.info(f"  TOTAL drafts in inbox:  {total}")
     if total > 0:
         logger.info("  Check boubacar@catalystworks.consulting Drafts -- ready to send.")
