@@ -22,6 +22,33 @@ Full registry: `docs/roadmap/README.md`.
 
 **No push/deploy without gate review.** Never `git push`, `ssh ... orc_rebuild.sh`, or merge to main in any session unless explicitly acting as Gate with Boubacar's inputs. Other Claude sessions = coding agents only.
 
+## Hard Rule: Task Table as Live Registry (2026-05-04)
+
+Every Claude Code session acting as a coding agent MUST update the coordination task table in real time. Not after. Not at the end. As work happens.
+
+```python
+from skills.coordination import claim, complete
+
+# 1. Session start -- claim the branch
+branch_task = claim('branch:feature/<name>', '<agent-id>', ttl_seconds=7200)
+# If None: branch already claimed by another agent. Stop. Pick different task.
+
+# 2. Before editing any file -- claim the file
+file_task = claim('file:<relative-path>', '<agent-id>', ttl_seconds=1800)
+# If None: file claimed. Wait or edit a different file.
+
+# 3. After editing + committing the file
+complete(file_task['id'])
+
+# 4. All work done. Final commit MUST contain [READY].
+# complete() the branch claim, then push.
+complete(branch_task['id'])
+# git commit -m "feat(x): description [READY]"
+# git push origin feature/<name>
+```
+
+Skipping any step breaks multi-agent coordination. Gate checks the task table before processing any branch. Unclaimed = in-flight = gate skips it.
+
 ## Caveman (installed 2026-05-03)
 
 Caveman plugin installed via `irm .../install.ps1 | iex`. Reduces output tokens ~65%, auto-activates every session via SessionStart hook.

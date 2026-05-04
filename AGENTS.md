@@ -147,11 +147,16 @@ Gate does NOT:
 - Respond to Telegram messages unrelated to proposals
 
 Agent workflow:
-1. Write code on feature branch
-2. Commit locally (allowed)
-3. Call `/propose` (queues commit proposal, sends Telegram notification)
-4. Gate reviews: conflict check, code review, merge policy
-5. Gate merges, pushes, deploys. Not the agent.
+1. Claim your branch before starting: `claim(resource='branch:<name>', holder='<agent-id>', ttl_seconds=7200)`
+2. Write and test code locally on feature branch
+3. When done, final commit message MUST end with `[READY]`
+4. Push to `origin/feature/<name>` (own branch only)
+5. Release branch claim: `complete(task_id)`
+6. Gate picks up branch on next 60s tick, reviews, merges, deploys
+
+**[READY] sentinel rule:** Gate skips any branch whose last commit does not contain `[READY]`. This prevents gate from processing in-flight work. Never add `[READY]` to a WIP commit. Only the final commit of a logical unit gets `[READY]`.
+
+**Branch claim rule:** `claim(resource='branch:<name>')` signals to other agents that this branch is in-flight. Any agent checking before starting related work can see it is claimed and wait. Failure to claim does not block gate (fail-open), but is required discipline for multi-agent coordination.
 
 ### Emergency path
 
