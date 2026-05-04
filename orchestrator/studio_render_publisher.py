@@ -237,22 +237,21 @@ def _ffmpeg(cmd: list, timeout: int = 300) -> None:
 def _ken_burns_filter(motion: str, w: int, h: int, fps: int, dur: float) -> str:
     """Return ffmpeg zoompan filter string for Ken Burns effect."""
     frames = int(dur * fps)
-    # Oversample at 2x then scale down for smoother motion
-    ow, oh = w * 2, h * 2
+    # Render at target resolution directly — 2x oversample (3840x2160) times out on VPS CPU
     d = frames
 
     effects = {
-        "zoom_in":    f"zoompan=z='min(zoom+0.0015,1.5)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={d}:s={ow}x{oh}:fps={fps}",
-        "zoom_out":   f"zoompan=z='if(lte(zoom,1.0),1.5,max(1.0,zoom-0.0015))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={d}:s={ow}x{oh}:fps={fps}",
-        "pan_right":  f"zoompan=z='1.3':x='if(lte(on,1),0,min(x+2,iw/3))':y='ih/2-(ih/zoom/2)':d={d}:s={ow}x{oh}:fps={fps}",
-        "pan_left":   f"zoompan=z='1.3':x='if(lte(on,1),iw/3,max(0,x-2))':y='ih/2-(ih/zoom/2)':d={d}:s={ow}x{oh}:fps={fps}",
-        "pan_up":     f"zoompan=z='1.3':x='iw/2-(iw/zoom/2)':y='if(lte(on,1),ih/3,max(0,y-2))':d={d}:s={ow}x{oh}:fps={fps}",
-        "zoom_in_tl": f"zoompan=z='min(zoom+0.0015,1.5)':x='0':y='0':d={d}:s={ow}x{oh}:fps={fps}",
-        "zoom_out_br":f"zoompan=z='if(lte(zoom,1.0),1.5,max(1.0,zoom-0.0015))':x='iw-iw/zoom':y='ih-ih/zoom':d={d}:s={ow}x{oh}:fps={fps}",
-        "zoom_in_tr": f"zoompan=z='min(zoom+0.0015,1.5)':x='iw-iw/zoom':y='0':d={d}:s={ow}x{oh}:fps={fps}",
+        "zoom_in":    f"zoompan=z='min(zoom+0.0015,1.5)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={d}:s={w}x{h}:fps={fps}",
+        "zoom_out":   f"zoompan=z='if(lte(zoom,1.0),1.5,max(1.0,zoom-0.0015))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={d}:s={w}x{h}:fps={fps}",
+        "pan_right":  f"zoompan=z='1.3':x='if(lte(on,1),0,min(x+2,iw/3))':y='ih/2-(ih/zoom/2)':d={d}:s={w}x{h}:fps={fps}",
+        "pan_left":   f"zoompan=z='1.3':x='if(lte(on,1),iw/3,max(0,x-2))':y='ih/2-(ih/zoom/2)':d={d}:s={w}x{h}:fps={fps}",
+        "pan_up":     f"zoompan=z='1.3':x='iw/2-(iw/zoom/2)':y='if(lte(on,1),ih/3,max(0,y-2))':d={d}:s={w}x{h}:fps={fps}",
+        "zoom_in_tl": f"zoompan=z='min(zoom+0.0015,1.5)':x='0':y='0':d={d}:s={w}x{h}:fps={fps}",
+        "zoom_out_br":f"zoompan=z='if(lte(zoom,1.0),1.5,max(1.0,zoom-0.0015))':x='iw-iw/zoom':y='ih-ih/zoom':d={d}:s={w}x{h}:fps={fps}",
+        "zoom_in_tr": f"zoompan=z='min(zoom+0.0015,1.5)':x='iw-iw/zoom':y='0':d={d}:s={w}x{h}:fps={fps}",
     }
     zp = effects.get(motion, effects["zoom_in"])
-    return f"{zp},scale={w}:{h}:flags=lanczos"
+    return zp
 
 
 def _render_ken_burns_clip(img: str, out: Path, dur: float, fps: int, w: int, h: int, motion: str) -> None:
@@ -274,7 +273,7 @@ def _render_ken_burns_clip(img: str, out: Path, dur: float, fps: int, w: int, h:
         "-c:v", "libx264", "-preset", "fast", "-crf", "20",
         "-pix_fmt", "yuv420p", "-an",
         str(out),
-    ], timeout=120)
+    ], timeout=600)
 
 
 def _render_color_clip(out: Path, dur: float, fps: int, w: int, h: int, color: str) -> None:
