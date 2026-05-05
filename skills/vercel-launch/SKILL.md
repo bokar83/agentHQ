@@ -1,11 +1,14 @@
 ---
 name: vercel-launch
-description: Full app launch workflow for Boubacar's projects. Use when user says "deploy my app", "launch my app", or "push <name> to Vercel". Creates the app folder, GitHub repo, git history, Vercel link, and deploys. App name becomes <name>-app. ALWAYS deploy as preview by default. Only deploy to production when user explicitly says "go live" or "to production".
+description: Vercel preview deploy for Boubacar's apps — for mobile testing and sharing preview links with clients ONLY. NOT for production. All live/production deployments go to Hostinger (use hostinger-deploy skill). Use when user says "deploy my app to Vercel", "get me a preview link", "share this with a client", or "test on mobile". App name becomes <name>-app. ALWAYS preview only — never production.
 ---
 
 # Vercel Launch
 
-Full one-command launch for apps in `output/apps/`. Handles folder creation, GitHub repo, git init/push, Vercel linking, and deployment.
+> **SCOPE: Preview & client sharing only.** Vercel = mobile testing + shareable preview links.
+> **ALL production/live deployments go to Hostinger.** Never propose Vercel for a live site.
+
+Full one-command preview launch for apps in `output/apps/`. Handles folder creation, GitHub repo, git init/push, Vercel linking, and preview deployment.
 
 ## How It Works
 
@@ -15,8 +18,8 @@ Full one-command launch for apps in `output/apps/`. Handles folder creation, Git
 4. Check if GitHub repo `bokar83/<name>-app` exists; create it (public) if not
 5. Git init, commit, set remote, push to `main` (or push changes if already initialized)
 6. Link to Vercel with `vercel link --repo`
-7. Deploy: **ALWAYS preview by default**. Only use `--prod` if user explicitly said "go live" or "to production"
-8. Report repo URL + preview/production URL
+7. Deploy: **ALWAYS preview. Never `--prod`.** Vercel is never the production host.
+8. Report repo URL + preview URL. Remind user: "To go live, use Hostinger deploy."
 
 ## Usage
 
@@ -64,23 +67,17 @@ Script writes progress to stderr and final JSON to stdout:
 After the script completes, present results like this:
 
 ```
-App launched!
+Preview ready!
 
 Name:    attire-inspo-app
 Repo:    https://github.com/bokar83/attire-inspo-app
 Preview: https://attire-inspo-app-abc123.vercel.app
 
-To go live: "deploy attire-inspo live"
+Share this link for client review or mobile testing.
+To go LIVE (production): use Hostinger deploy — say "deploy to Hostinger".
 ```
 
-If production deploy:
-```
-App is live!
-
-Name:       attire-inspo-app
-Repo:       https://github.com/bokar83/attire-inspo-app
-Production: https://attire-inspo-app.vercel.app
-```
+**Never present a Vercel URL as a production/live deployment.** Always remind user that Hostinger is the live host.
 
 ## Naming Convention
 

@@ -271,16 +271,26 @@ that validates the core value proposition. Everything else is roadmap.
 
 After the build is complete and code is written:
 
+**Step 1 — Preview (Vercel, for testing + client review):**
+
 1. Run the vercel-launch skill:
    ```
    /vercel-launch [site-name]
    ```
-   This handles: GitHub repo creation, git init/commit/push, Vercel linking, preview deploy.
+   This handles: GitHub repo creation, git init/commit/push, Vercel linking, **preview deploy only**.
 
-2. Report the preview URL immediately.
+2. Report the preview URL. This is for mobile testing and sharing with Boubacar.
+   **This is NOT the live site.** Vercel = preview only.
 
-3. Do NOT deploy to production yet. Production deploy requires Boubacar to review
-   the preview and say "go live" or "to production".
+3. Do NOT deploy to production yet. Boubacar reviews first.
+
+**Step 2 — Production (Hostinger, after Boubacar approves):**
+
+When Boubacar says "go live", "push it live", or "to production":
+
+- Use the `hostinger-deploy` skill
+- All live/production sites go to Hostinger, not Vercel
+- Vercel preview URL stays active for reference but is never the production URL
 
 ---
 
