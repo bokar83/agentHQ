@@ -391,7 +391,7 @@ def _upload_render(
         channel_folder = _find_or_create_folder(channel_id, _DRIVE_ASSET_LIBRARY_ROOT)
         date_folder = _find_or_create_folder(today, channel_folder)
         fmt_folder = _find_or_create_folder(fmt, date_folder)
-        return _upload_to_drive(local_path, fmt_folder)
+        return _upload_to_drive(local_path, fmt_folder, local_path.name, "video/mp4")
     except Exception as exc:
         logger.error("render_publisher: Drive upload failed for %s/%s: %s", fmt, local_path.name, exc)
         return {}
