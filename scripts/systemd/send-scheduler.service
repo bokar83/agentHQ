@@ -1,0 +1,15 @@
+[Unit]
+Description=agentsHQ Send Scheduler -- batched email sender (inside orc-crewai container)
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/docker exec orc-crewai python3 -m signal_works.send_scheduler
+StandardOutput=append:/var/log/send_scheduler.log
+StandardError=append:/var/log/send_scheduler.log
+TimeoutStartSec=30min
+
+[Install]
+WantedBy=multi-user.target
