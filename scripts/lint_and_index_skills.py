@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import re
 import sys
+import argparse
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -164,12 +165,24 @@ def write_index(skills: list[Skill]) -> None:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description="Lint skill frontmatter and generate docs/SKILLS_INDEX.md.")
+    parser.add_argument(
+        "--check-only",
+        action="store_true",
+        help="Validate skill frontmatter without writing docs/SKILLS_INDEX.md.",
+    )
+    args = parser.parse_args()
+
     skills, errors = load_skills()
     if errors:
         print("Skill lint failed:", file=sys.stderr)
         for error in errors:
             print(f"- {error}", file=sys.stderr)
         return 1
+
+    if args.check_only:
+        print(f"Validated {len(skills)} skills")
+        return 0
 
     write_index(skills)
     print(f"Indexed {len(skills)} skills in {INDEX_PATH.relative_to(REPO_ROOT)}")
