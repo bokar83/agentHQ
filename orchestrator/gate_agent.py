@@ -220,7 +220,7 @@ def _run_tests(branch: str) -> tuple[bool, str]:
         return False, f"checkout failed: {err}"
     try:
         proc = subprocess.run(
-            ["python", "-m", "pytest", "-q", "--tb=short", "--timeout=120"],
+            ["python3", "-m", "pytest", "-q", "--tb=short", "--timeout=120"],
             cwd=str(REPO_DIR),
             capture_output=True,
             text=True,
