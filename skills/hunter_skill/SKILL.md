@@ -24,3 +24,19 @@ description: Automates discovery, logging, and reporting of high-intent Utah lea
 
 - Runs daily on VPS at 06:00 AM MT.
 - Delivers reports to `bokar83@gmail.com`, `boubacarbusiness@gmail.com`, and `catalystworks.ai@gmail.com`.
+
+## HARD RULES (added 2026-05-05)
+
+**Niche resolution:** Never use `lead.get("niche", "small business")` in email templates.
+Apollo leads have `industry` not `niche`. Use `_resolve_niche(lead)` from
+`templates/email/sw_t1.py` which maps industry -> human label via `_INDUSTRY_TO_NICHE`.
+Fallback to generic hook (no ChatGPT prompt) when niche cannot be resolved.
+
+**Geography:** SW = Utah-only trades (Serper+Firecrawl). CW = full US (Apollo CW_ICP_WIDENED).
+Studio = full US+Canada (STUDIO_ICP + STUDIO_ICP_TARGETED alternating daily).
+
+**Daily targets (2026-05-05):** SW=35 drafts, CW=15 drafts, gap fill to 50 total, Studio=15 bonus.
+
+**Calendly:** Use `calendly.com/boubacarbarry/signal-works-discovery-call`. Never `catalystworks` (404).
+
+**Docker deploy:** Code dirs (signal_works/skills/templates/orchestrator) are volume-mounted as of 2026-05-05. Deploy = `git pull && docker compose up -d orchestrator` (~10 sec). Rebuild ONLY when `requirements.txt` changes.

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="A working website for your trade business. $997 flat. Live in 5 business days. Built by Signal Works.">
+<title>The 5-Day Trade Site, $997 Flat | Signal Works</title>
+<style>
+  :root {
+    --ink: #0B0F14;
+    --ink-soft: #2A323D;
+    --paper: #FAFAF7;
+    --line: #E6E2D9;
+    --signal: #D64545;
+    --signal-deep: #A82E2E;
+    --gold: #C9A14A;
+    --muted: #6B7280;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.55;
+    font-size: 17px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 32px 22px 80px; }
+  .brand-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 18px; border-bottom: 1px solid var(--line);
+    margin-bottom: 36px;
+  }
+  .brand {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight: 700; font-size: 22px; letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .brand .dot { color: var(--signal); }
+  .meta {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--muted);
+  }
+  h1 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 38px; line-height: 1.1; letter-spacing: -0.02em;
+    margin-bottom: 18px; color: var(--ink);
+  }
+  h1 .accent { color: var(--signal); font-style: italic; }
+  .lede {
+    font-size: 19px; color: var(--ink-soft); margin-bottom: 28px;
+    max-width: 56ch;
+  }
+  .price-stamp {
+    display: inline-block; padding: 10px 16px;
+    background: var(--ink); color: var(--paper);
+    font-weight: 600; letter-spacing: 0.02em;
+    margin-bottom: 36px; border-radius: 2px;
+    font-size: 15px;
+  }
+  .price-stamp .crossed {
+    text-decoration: line-through; opacity: 0.45; margin-right: 10px;
+    font-weight: 400;
+  }
+  h2 {
+    font-family: Georgia, serif;
+    font-size: 22px; margin-top: 44px; margin-bottom: 16px;
+    color: var(--ink); letter-spacing: -0.01em;
+  }
+  h2::before {
+    content: ""; display: inline-block; width: 28px; height: 2px;
+    background: var(--signal); margin-right: 12px; vertical-align: middle;
+  }
+  p { margin-bottom: 14px; color: var(--ink-soft); }
+  p strong { color: var(--ink); font-weight: 600; }
+  ul.spec-list {
+    list-style: none; padding: 0; margin: 18px 0;
+  }
+  ul.spec-list li {
+    padding: 14px 0 14px 32px; border-bottom: 1px solid var(--line);
+    position: relative; color: var(--ink-soft);
+  }
+  ul.spec-list li::before {
+    content: "→"; position: absolute; left: 0; top: 14px;
+    color: var(--signal); font-weight: 700;
+  }
+  ul.spec-list li strong { color: var(--ink); display: block; margin-bottom: 4px; }
+  .what-not {
+    background: #FFF8F0; border-left: 3px solid var(--gold);
+    padding: 18px 20px; margin: 28px 0; font-size: 16px;
+    color: var(--ink-soft);
+  }
+  .what-not strong { color: var(--ink); }
+  .timeline {
+    margin: 24px 0; counter-reset: day;
+  }
+  .timeline-row {
+    display: grid; grid-template-columns: 70px 1fr; gap: 16px;
+    padding: 14px 0; border-bottom: 1px dotted var(--line);
+  }
+  .day-label {
+    font-family: Georgia, serif; font-size: 14px;
+    color: var(--signal); font-weight: 700; letter-spacing: 0.05em;
+  }
+  .day-text { color: var(--ink-soft); font-size: 16px; }
+  .day-text strong { color: var(--ink); }
+  .guarantee {
+    background: var(--ink); color: var(--paper);
+    padding: 28px 24px; margin: 40px 0; border-radius: 4px;
+  }
+  .guarantee h3 {
+    font-family: Georgia, serif; font-size: 22px; margin-bottom: 10px;
+    color: var(--paper);
+  }
+  .guarantee p { color: rgba(250,250,247,0.85); margin-bottom: 0; }
+  .guarantee .stamp {
+    display: inline-block; padding: 4px 10px; border: 1px solid var(--gold);
+    color: var(--gold); font-size: 11px; letter-spacing: 0.15em;
+    text-transform: uppercase; margin-bottom: 14px;
+  }
+  .pricing-table {
+    width: 100%; border-collapse: collapse; margin: 18px 0;
+    font-size: 16px;
+  }
+  .pricing-table th, .pricing-table td {
+    padding: 14px 10px; text-align: left; border-bottom: 1px solid var(--line);
+  }
+  .pricing-table th {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--muted); font-weight: 600;
+  }
+  .pricing-table .price-cell { font-weight: 700; color: var(--ink); }
+  .pricing-table .small { font-size: 13px; color: var(--muted); }
+  .cta-block {
+    background: var(--paper); border: 1px solid var(--line);
+    padding: 28px 24px; margin: 44px 0 28px; border-radius: 4px;
+    text-align: center;
+  }
+  .cta-block h3 {
+    font-family: Georgia, serif; font-size: 24px; margin-bottom: 8px;
+  }
+  .cta-block p { margin-bottom: 22px; color: var(--ink-soft); }
+  .cta-btn {
+    display: inline-block; padding: 16px 32px;
+    background: var(--signal); color: var(--paper);
+    font-weight: 700; letter-spacing: 0.03em; font-size: 17px;
+    text-decoration: none; border-radius: 3px;
+    transition: background 0.15s;
+  }
+  .cta-btn:hover { background: var(--signal-deep); }
+  .cta-btn.secondary {
+    background: transparent; color: var(--ink);
+    border: 1px solid var(--ink); margin-left: 8px;
+  }
+  .cta-btn.secondary:hover { background: var(--ink); color: var(--paper); }
+  .micro-trust {
+    font-size: 13px; color: var(--muted); margin-top: 14px;
+  }
+  .faq-item {
+    padding: 16px 0; border-bottom: 1px solid var(--line);
+  }
+  .faq-q { font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+  .faq-a { color: var(--ink-soft); font-size: 16px; }
+  .signoff {
+    margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--line);
+    font-size: 14px; color: var(--muted);
+  }
+  .signoff strong { color: var(--ink); }
+  @media (max-width: 520px) {
+    h1 { font-size: 30px; }
+    .lede { font-size: 17px; }
+    .wrap { padding: 24px 18px 60px; }
+    .timeline-row { grid-template-columns: 60px 1fr; gap: 12px; }
+    .cta-btn.secondary { margin-left: 0; margin-top: 10px; display: block; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand-row">
+    <div class="brand">Signal<span class="dot">.</span>Works</div>
+    <div class="meta">Spec Sheet / $997</div>
+  </div>
+
+  <h1>A site that <span class="accent">actually books jobs.</span> Live in 5 business days.</h1>
+
+  <p class="lede">For trades whose phone rings less than it should. We build the site, fix the call button, clean up the Google listing, and hand you the keys. Flat fee. No retainer required.</p>
+
+  <div class="price-stamp">
+    <span class="crossed">$3,500</span> $997 one-time. Pay half to start.
+  </div>
+
+  <h2>What the $997 covers</h2>
+  <ul class="spec-list">
+    <li>
+      <strong>5-page mobile-first site</strong>
+      Home, About, Services, Gallery, Contact. Loads in under 3 seconds on a phone or we rebuild it free.
+    </li>
+    <li>
+      <strong>Working call button on every page</strong>
+      Tap once, phone dials. Tested on iPhone and Android before launch.
+    </li>
+    <li>
+      <strong>Click-to-text on every page</strong>
+      Half your customers won't call. They'll text. Works out of the box.
+    </li>
+    <li>
+      <strong>Google Business Profile cleanup</strong>
+      Hours, photos, services, categories. Synced with the site so Google stops second-guessing you.
+    </li>
+    <li>
+      <strong>Local schema + Search Console verified</strong>
+      Google sees you as a [trade] in [your city], not a generic webpage. Indexed before launch.
+    </li>
+    <li>
+      <strong>One round of revisions, before launch</strong>
+      Tell me what's wrong. I fix it. Ship.
+    </li>
+    <li>
+      <strong>Stripe or Square payment link, if you want it</strong>
+      Get paid through the site for deposits, retainers, estimates. Setup included.
+    </li>
+  </ul>
+
+  <div class="what-not">
+    <strong>What this is not.</strong> Not a fancy custom design. Not a 30-page mega-site. Not a marketing agency on retainer. It is the smallest functional website that books jobs for a trade. That is the entire point.
+  </div>
+
+  <h2>The 5-day build</h2>
+  <div class="timeline">
+    <div class="timeline-row">
+      <div class="day-label">DAY 1</div>
+      <div class="day-text"><strong>Intake call (20 min).</strong> Trade, service area, busiest job, what your competitors are doing wrong. I gather photos and brand details.</div>
+    </div>
+    <div class="timeline-row">
+      <div class="day-label">DAY 2</div>
+      <div class="day-text"><strong>First draft live on a preview link.</strong> Real copy, real photos, real call button. You review it from your phone.</div>
+    </div>
+    <div class="timeline-row">
+      <div class="day-label">DAY 3</div>
+      <div class="day-text"><strong>Revisions.</strong> One round. Send me the changes in a single text or email. I apply them.</div>
+    </div>
+    <div class="timeline-row">
+      <div class="day-label">DAY 4</div>
+      <div class="day-text"><strong>GBP cleanup + schema + indexing.</strong> Google now treats you like a real local business, not a phantom.</div>
+    </div>
+    <div class="timeline-row">
+      <div class="day-label">DAY 5</div>
+      <div class="day-text"><strong>Launch.</strong> Site is live on your domain. I hand you the keys, the login, and a 1-page "what changed" summary.</div>
+    </div>
+  </div>
+
+  <h2>The numbers behind it</h2>
+  <p>Google's own data: a mobile site that loads in 3 seconds keeps roughly half its visitors. At 6 seconds, half are gone. Most trade sites I audit load between 5 and 9 seconds on mobile.</p>
+  <p>The fix is not complicated. It is just rarely done. That is the entire opening.</p>
+
+  <div class="guarantee">
+    <span class="stamp">Risk Reversal</span>
+    <h3>Live in 5 business days, or you don't pay the second half.</h3>
+    <p>The deal is half down ($498) to start. The other half ($499) is due on launch day. If I miss the 5-business-day window for any reason on my side, the second half is waived. You keep the site either way.</p>
+  </div>
+
+  <h2>Optional: maintenance, $497/month</h2>
+  <table class="pricing-table">
+    <tr>
+      <th>Item</th>
+      <th style="text-align:right;">Cost</th>
+    </tr>
+    <tr>
+      <td>The site, built and launched</td>
+      <td class="price-cell" style="text-align:right;">$997 one-time</td>
+    </tr>
+    <tr>
+      <td>Hosting, security patches, monthly content swap, monthly performance check<br><span class="small">Cancel any month. No contract.</span></td>
+      <td class="price-cell" style="text-align:right;">$497/mo (optional)</td>
+    </tr>
+  </table>
+  <p style="font-size: 15px; color: var(--muted);">Most clients keep the maintenance for the first 90 days, then decide. Stay or cancel. No phone call required to leave.</p>
+
+  <h2>Who this is for</h2>
+  <ul class="spec-list">
+    <li><strong>Trades with no website at all.</strong> Plumbers, roofers, electricians, landscapers, HVAC, painters, contractors, photographers, wedding planners.</li>
+    <li><strong>Trades with a broken site.</strong> Site doesn't load on mobile. Call button doesn't work. Last updated 2014.</li>
+    <li><strong>Trades whose Google listing is doing all the work.</strong> Customers find you on Maps, but the website is empty or dead, so the lead leaks.</li>
+  </ul>
+
+  <h2>Who this is not for</h2>
+  <p>National brands. SaaS. E-commerce stores with 500+ SKUs. Multi-location chains. Anyone who needs a custom design system. None of that is what $997 buys. Be honest with yourself before booking.</p>
+
+  <div class="cta-block">
+    <h3>Book a 10-minute call.</h3>
+    <p>I'll look at your current setup live, tell you if you actually need a new site, and quote you on the call. No deck, no pitch.</p>
+    <a href="https://calendly.com/boubacarbarry/signal-works-discovery-call" class="cta-btn">Book the 10-min call</a>
+    <a href="sms:+1XXXXXXXXXX&body=Hey%20Boubacar%2C%20saw%20the%20%24997%20spec.%20Want%20to%20talk." class="cta-btn secondary">Text me instead</a>
+    <div class="micro-trust">No deposit until we agree on the build. No spam. No follow-up sequence.</div>
+  </div>
+
+  <h2>Common questions</h2>
+  <div class="faq-item">
+    <div class="faq-q">Can I keep my current domain?</div>
+    <div class="faq-a">Yes. I move the site to your existing domain at launch. If you don't have one, I'll register it for you ($15/yr, billed at cost).</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">What if I want changes after launch?</div>
+    <div class="faq-a">Maintenance plan covers it. Without the plan, edits are billed at $97 per change, fixed-fee.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">Do I own the site?</div>
+    <div class="faq-a">Yes. Domain, hosting login, and code are yours on day 5. If you ever fire me, you keep everything.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">Why so cheap?</div>
+    <div class="faq-a">Because I built the production system to do most of the work. You get the same site a $4,000 agency would deliver, in a fifth of the time, because I'm not running an agency.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">What do you need from me?</div>
+    <div class="faq-a">20 minutes on day 1. 10 photos of your work. Your business info. That is it.</div>
+  </div>
+
+  <div class="signoff">
+    <p><strong>Signal Works</strong> is the productized arm of Catalyst Works Consulting. Boubacar Barry, operator. Based in Utah. Building for trades across the United States.</p>
+    <p style="margin-top: 8px;">Last updated: May 5, 2026. Pricing valid through June 30, 2026.</p>
+  </div>
+
+</div>
+</body>
+</html>
