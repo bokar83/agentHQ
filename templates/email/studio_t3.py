@@ -25,7 +25,7 @@ No agency overhead. No upsell. Just a site that works.
 
 If now isn't the right time, I get it. But if you're thinking about it, I'd rather you work with someone who'll actually move fast than see you wait another year.
 
-Book a free 15-minute call: https://calendly.com/catalystworks
+Book a free 15-minute call: https://calendly.com/boubacarbarry/signal-works-discovery-call
 
 Boubacar
 catalystworks.consulting
