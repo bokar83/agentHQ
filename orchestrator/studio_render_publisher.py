@@ -166,7 +166,7 @@ def _ffmpeg_render(
     """Render MP4 from image scenes + audio using ffmpeg Ken Burns pipeline.
 
     Prepends channel intro and appends channel outro from static VPS assets.
-    No captions burned in — SRT delivered as sidecar only.
+    No captions burned in - SRT delivered as sidecar only.
     """
     import tempfile
 
