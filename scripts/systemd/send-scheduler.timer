@@ -1,0 +1,17 @@
+[Unit]
+Description=Fire send-scheduler every 90 min during business hours (09:00-17:00 MT, weekdays)
+
+[Timer]
+# 09:00, 10:30, 12:00, 13:30, 15:00, 16:30 MT -- 6 batches/day
+# At 10 SW + 5 CW + 5 Studio per batch max, capped at 35 SW / 15 CW / 15 Studio daily
+OnCalendar=Mon-Fri *-*-* 09:00:00 America/Denver
+OnCalendar=Mon-Fri *-*-* 10:30:00 America/Denver
+OnCalendar=Mon-Fri *-*-* 12:00:00 America/Denver
+OnCalendar=Mon-Fri *-*-* 13:30:00 America/Denver
+OnCalendar=Mon-Fri *-*-* 15:00:00 America/Denver
+OnCalendar=Mon-Fri *-*-* 16:30:00 America/Denver
+Persistent=false
+Unit=send-scheduler.service
+
+[Install]
+WantedBy=timers.target
