@@ -9,7 +9,7 @@ Import:
   from templates.email.sw_t5 import SUBJECT, build_body
 """
 
-SAAS_AUDIT_PDF_URL = "https://drive.google.com/file/d/132_DHAct81kC6Obhrksyixq9lFuCSYQD/view"
+SAAS_AUDIT_PDF_URL = "https://drive.google.com/file/d/1ctmqUjhxa5hBkIj47AMDPvgbJzXwkETd/view"
 
 SUBJECT = "Different angle: the software question"
 
