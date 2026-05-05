@@ -101,6 +101,9 @@ def generate_script(
     duration_sec = int(word_count / 150 * 60)
     scenes_hint = _extract_scene_hints(clean_script)
 
+    # Strip colons from title — ffmpeg drawtext and file naming both fail on colons
+    title = title.replace(":", ",")
+
     return {
         "title": title,
         "full_text": clean_script,
