@@ -32,10 +32,13 @@ Apollo leads have `industry` not `niche`. Use `_resolve_niche(lead)` from
 `templates/email/sw_t1.py` which maps industry -> human label via `_INDUSTRY_TO_NICHE`.
 Fallback to generic hook (no ChatGPT prompt) when niche cannot be resolved.
 
-**Geography:** SW = Utah-only trades (Serper+Firecrawl). CW = full US (Apollo CW_ICP_WIDENED).
-Studio = full US+Canada (STUDIO_ICP + STUDIO_ICP_TARGETED alternating daily).
+**Geography (updated 2026-05-05 evening):** SW = full US, industry-agnostic, employees 1-50 (was Utah-only trades). CW = full US (Apollo CW_ICP_WIDENED). Studio outreach is MERGED INTO SW -- no separate Studio harvest. Studio codename now = faceless YouTube agency only (content production, no leads).
 
-**Daily targets (2026-05-05):** SW=35 drafts, CW=15 drafts, gap fill to 50 total, Studio=15 bonus.
+**Daily targets:** SW=50 drafts/day (35 + gap fill from CW shortfall), CW=15 drafts/day. Hormozi ramp: prove reply rate before scaling to 100/day.
+
+**Hunter.io tier:** MUST be on paid Starter ($49/mo) or higher. Free tier (50/mo) was exhausted 2026-05-05 and produced 0 SW emails for ~24 hours. Check quota at session start when investigating "0 emails" reports: `curl -s "https://api.hunter.io/v2/account?api_key=$KEY"`.
+
+**Apollo limitation:** `find_owner_by_company` has near-zero hit rate for local trades-SMBs (663 misses, 1 hit in one Phoenix/Vegas pass). Apollo people DB is corporate-biased. SW workhorse = Serper -> website domain extract -> Hunter domain_search.
 
 **Calendly:** Use `calendly.com/boubacarbarry/signal-works-discovery-call`. Never `catalystworks` (404).
 
