@@ -16,7 +16,7 @@ If the timing isn't right or this isn't a priority, no hard feelings — I'll st
 
 One last ask: if you know someone who's been meaning to get their business online or fix a website that's not pulling its weight, I'd be grateful for the introduction. I make the process easy and fast, and I don't waste people's time.
 
-If your situation changes, my calendar is always open: https://calendly.com/catalystworks
+If your situation changes, my calendar is always open: https://calendly.com/boubacarbarry/signal-works-discovery-call
 
 Thanks for your time.
 
