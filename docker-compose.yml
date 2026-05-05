@@ -204,6 +204,10 @@ services:
       - VIDEO_CREW_ENABLED=${VIDEO_CREW_ENABLED:-}
     volumes:
       - ./agent_outputs:/app/outputs
+      - ./signal_works:/app/signal_works
+      - ./skills:/app/skills
+      - ./templates:/app/templates
+      - ./orchestrator:/app/orchestrator
       - /root/.notebooklm-mcp-cli:/root/.notebooklm-mcp-cli
       - ./logs:/app/logs
       - ./secrets:/app/secrets:ro
