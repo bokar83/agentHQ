@@ -34,9 +34,10 @@ _NOTION_TOKEN = (
 _PIPELINE_DB_ID = os.environ.get("NOTION_STUDIO_PIPELINE_DB_ID", "")
 
 # Drive folder IDs — per-format subfolders created automatically under channel folder
-_DRIVE_ASSET_LIBRARY_ROOT = os.environ.get(
-    "DRIVE_ASSET_LIBRARY_ROOT",
-    "1T3uF6jDOo_RBTXIb4qE60_ZxUeqJj6gL",  # pragma: allowlist secret
+_DRIVE_ASSET_LIBRARY_ROOT = (
+    os.environ.get("DRIVE_ASSET_LIBRARY_ROOT")
+    or os.environ.get("GOOGLE_DRIVE_FOLDER_ID")
+    or "1T3uF6jDOo_RBTXIb4qE60_ZxUeqJj6gL"  # pragma: allowlist secret
 )
 
 # Shorts-first: render vertical 9:16 only until channels are monetized.

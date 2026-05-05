@@ -269,6 +269,16 @@ TASK_TYPES = {
                      "post review", "check my posts", "voice check", "run content review"],
         "crew": "content_review_crew",
     },
+    "schedule_content": {
+        "description": "Schedule a post to the Notion Content Board with a date. Does NOT publish to social media.",
+        "keywords": [
+            "schedule it", "schedule this post", "schedule for today", "schedule for tomorrow",
+            "schedule for monday", "schedule for", "add to content board scheduled",
+            "schedule variation", "schedule post for", "schedule the post",
+            "add scheduled date", "set scheduled date",
+        ],
+        "crew": "schedule_content_crew",
+    },
     "content_push_to_drive": {
         "description": "Push approved In Review social posts to Google Drive and update Notion",
         "keywords": ["push content to drive", "push to drive", "create drive docs",
@@ -361,6 +371,8 @@ def _classify_raw(user_message: str) -> str:
         return "crm_query"
 
     # High-priority explicit task prefixes checked first
+    if any(kw in msg for kw in TASK_TYPES["schedule_content"]["keywords"]):
+        return "schedule_content"
     if any(kw in msg for kw in TASK_TYPES["content_push_to_drive"]["keywords"]):
         return "content_push_to_drive"
     if any(kw in msg for kw in TASK_TYPES["voice_polishing"]["keywords"]):
@@ -404,7 +416,7 @@ def _classify_raw(user_message: str) -> str:
     _PRIORITY_CHECKED = {
         "content_push_to_drive", "voice_polishing", "linkedin_x_campaign",
         "inline_post_review", "content_review",
-        "content_board_fetch", "agent_creation",
+        "content_board_fetch", "schedule_content", "agent_creation",
         "forge_kpi_refresh", "doc_routing", "notion_tasks", "notion_capture", "design_review",
         "video_job", "create_media", "research_report",
     }
