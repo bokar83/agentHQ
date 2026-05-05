@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Internal Viability Report: {{PROSPECT_NAME}}</title>
+<style>
+  :root {
+    --bg: #0d0f12;
+    --surface: #161920;
+    --border: #2a2e38;
+    --text: #e2e8f0;
+    --dim: #8892a4;
+    --pursue: #22c55e;
+    --drop: #ef4444;
+    --warn: #f59e0b;
+    --accent: #60a5fa;
+    --red-bg: #1a0a0a;
+    --green-bg: #071a0e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; font-size: 15px; line-height: 1.6; padding: 2rem; max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem; }
+  h2 { font-size: 1.1rem; font-weight: 600; color: var(--accent); margin: 2rem 0 0.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+  h3 { font-size: 0.95rem; font-weight: 600; color: var(--dim); margin: 1rem 0 0.4rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .meta { color: var(--dim); font-size: 0.85rem; margin-bottom: 2rem; }
+  .meta a { color: var(--accent); text-decoration: none; }
+  .verdict-block {
+    padding: 1.5rem 2rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+  .verdict-block.pursue { background: var(--green-bg); border: 1px solid var(--pursue); }
+  .verdict-block.drop { background: var(--red-bg); border: 1px solid var(--drop); }
+  .verdict-label {
+    font-size: 2.5rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .verdict-block.pursue .verdict-label { color: var(--pursue); }
+  .verdict-block.drop .verdict-label { color: var(--drop); }
+  .verdict-rationale { font-size: 1rem; color: var(--text); padding-top: 0.4rem; }
+  .score-total {
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--text);
+    line-height: 1;
+  }
+  .score-total .denominator { font-size: 1.5rem; color: var(--dim); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th { text-align: left; color: var(--dim); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); }
+  td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .score-num { font-weight: 700; color: var(--text); }
+  .score-low { color: var(--drop); }
+  .score-mid { color: var(--warn); }
+  .score-high { color: var(--pursue); }
+  .pill {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  .pill-yes { background: rgba(34,197,94,0.15); color: var(--pursue); }
+  .pill-no { background: rgba(239,68,68,0.15); color: var(--drop); }
+  .pill-maybe { background: rgba(245,158,11,0.15); color: var(--warn); }
+  .price-band {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  .price-band .field { flex: 1; min-width: 140px; }
+  .price-band .label { font-size: 0.75rem; color: var(--dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem; }
+  .price-band .value { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+  .redflag-list { list-style: none; }
+  .redflag-list li { padding: 0.5rem 0; border-bottom: 1px solid var(--border); padding-left: 1.2rem; position: relative; color: var(--warn); }
+  .redflag-list li::before { content: "!"; position: absolute; left: 0; color: var(--drop); font-weight: 700; }
+  .redflag-list li:last-child { border-bottom: none; }
+  .hard-stop-list { list-style: none; }
+  .hard-stop-list li { padding: 0.4rem 0; padding-left: 1.5rem; position: relative; color: var(--drop); }
+  .hard-stop-list li::before { content: "X"; position: absolute; left: 0; font-weight: 700; }
+  .hard-stop-list li.clear { color: var(--pursue); }
+  .hard-stop-list li.clear::before { content: "OK"; color: var(--pursue); }
+  footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--dim); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+
+<h1>Internal Viability Report</h1>
+<p class="meta">
+  Prospect: <strong>{{PROSPECT_NAME}}</strong> &nbsp;|&nbsp;
+  URL: <a href="{{PROSPECT_URL}}" target="_blank">{{PROSPECT_URL}}</a> &nbsp;|&nbsp;
+  Date: {{TEARDOWN_DATE}} &nbsp;|&nbsp;
+  Analyst: Boubacar Barry / Catalyst Works
+</p>
+
+<div class="verdict-block {{VERDICT_CLASS}}">
+  <div>
+    <div class="verdict-label">{{VERDICT}}</div>
+  </div>
+  <div>
+    <div class="verdict-rationale">{{VERDICT_RATIONALE}}</div>
+    <div style="margin-top:0.75rem;">
+      <span class="score-total">{{TOTAL_SCORE}}<span class="denominator">/100</span></span>
+    </div>
+  </div>
+</div>
+
+<h2>Weighted Score</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Dimension</th>
+      <th>Weight</th>
+      <th>Score</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Brand clarity</td>
+      <td>20%</td>
+      <td class="score-num {{BRAND_CLASS}}">{{BRAND_SCORE}}/20</td>
+      <td>{{BRAND_NOTES}}</td>
+    </tr>
+    <tr>
+      <td>UX craft</td>
+      <td>20%</td>
+      <td class="score-num {{UX_CLASS}}">{{UX_SCORE}}/20</td>
+      <td>{{UX_NOTES}}</td>
+    </tr>
+    <tr>
+      <td>SEO foundation</td>
+      <td>20%</td>
+      <td class="score-num {{SEO_CLASS}}">{{SEO_SCORE}}/20</td>
+      <td>{{SEO_NOTES}}</td>
+    </tr>
+    <tr>
+      <td>Market gap (opportunity)</td>
+      <td>20%</td>
+      <td class="score-num {{GAP_CLASS}}">{{GAP_SCORE}}/20</td>
+      <td>{{GAP_NOTES}}</td>
+    </tr>
+    <tr>
+      <td>AI search readiness</td>
+      <td>20%</td>
+      <td class="score-num {{AI_CLASS}}">{{AI_SCORE}}/20</td>
+      <td>{{AI_NOTES}}</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Hard Stops</h2>
+<ul class="hard-stop-list">
+  <li class="{{HARDSTOP_AGENCY_CLASS}}">Competitor agency client: {{HARDSTOP_AGENCY_VALUE}}</li>
+  <li class="{{HARDSTOP_DIGITAL_CLASS}}">Owner signals zero interest in digital/AI: {{HARDSTOP_DIGITAL_VALUE}}</li>
+  <li class="{{HARDSTOP_CLOSING_CLASS}}">Business appears to be closing: {{HARDSTOP_CLOSING_VALUE}}</li>
+</ul>
+
+<h2>Fit Signals</h2>
+<table>
+  <thead>
+    <tr><th>Signal</th><th>Status</th><th>Evidence</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Local service business</td>
+      <td><span class="pill {{FIT_LOCAL_CLASS}}">{{FIT_LOCAL}}</span></td>
+      <td>{{FIT_LOCAL_EVIDENCE}}</td>
+    </tr>
+    <tr>
+      <td>Phone number prominent</td>
+      <td><span class="pill {{FIT_PHONE_CLASS}}">{{FIT_PHONE}}</span></td>
+      <td>{{FIT_PHONE_EVIDENCE}}</td>
+    </tr>
+    <tr>
+      <td>Recently updated</td>
+      <td><span class="pill {{FIT_RECENT_CLASS}}">{{FIT_RECENT}}</span></td>
+      <td>{{FIT_RECENT_EVIDENCE}}</td>
+    </tr>
+    <tr>
+      <td>Budget signals</td>
+      <td><span class="pill {{FIT_BUDGET_CLASS}}">{{FIT_BUDGET}}</span></td>
+      <td>{{FIT_BUDGET_EVIDENCE}}</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Scope Estimate</h2>
+<div class="price-band">
+  <div class="field">
+    <div class="label">Recommended Tier</div>
+    <div class="value">{{TIER}}</div>
+  </div>
+  <div class="field">
+    <div class="label">Estimated Hours</div>
+    <div class="value">{{EST_HOURS}} hrs</div>
+  </div>
+  <div class="field">
+    <div class="label">Price Band</div>
+    <div class="value">{{PRICE_BAND}}</div>
+  </div>
+  <div class="field">
+    <div class="label">Monthly Recurring</div>
+    <div class="value">{{MONTHLY_RECURRING}}</div>
+  </div>
+</div>
+
+<h2>Red Flags (Internal Only)</h2>
+<ul class="redflag-list">
+  {{RED_FLAGS_HTML}}
+</ul>
+
+<h2>Competitor Snapshot</h2>
+<table>
+  <thead>
+    <tr><th>Competitor</th><th>Strength vs. Prospect</th><th>Weakness to Exploit</th></tr>
+  </thead>
+  <tbody>
+    {{COMPETITORS_HTML}}
+  </tbody>
+</table>
+
+<h2>Research Files</h2>
+<ul style="padding-left:1.25rem; color: var(--accent);">
+  <li><a href="research/brand-intel.md">brand-intel.md</a></li>
+  <li><a href="research/ux-audit.md">ux-audit.md</a></li>
+  <li><a href="research/seo-audit.md">seo-audit.md</a></li>
+  <li><a href="mockups/before-after.html">before/after mockup slider</a></li>
+</ul>
+
+<footer>
+  Internal use only. Not for distribution. Generated by website-teardown skill. Catalyst Works Consulting.
+</footer>
+
+</body>
+</html>
