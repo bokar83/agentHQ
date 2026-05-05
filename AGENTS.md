@@ -152,7 +152,7 @@ Agent workflow:
 3. When done, final commit message MUST end with `[READY]`
 4. Push to `origin/feature/<name>` (own branch only)
 5. Release branch claim: `complete(task_id)`
-6. Gate picks up branch on next 60s tick, reviews, merges, deploys
+6. Gate runs as host cron every 60s on VPS (not inside container). Picks up branch within 60s of push.
 
 **No Telegram. No /propose. No manual notification.** Gate watches GitHub automatically. Agents push and move on. Done.
 

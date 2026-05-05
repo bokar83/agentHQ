@@ -708,18 +708,11 @@ def start_scheduler():
     # deploys VPS, notifies Telegram on conflict/failure only.
     # crew_name='gate' (own kill switch -- disable without stopping other crews).
     # Default state: gate.enabled=False; flip on after VPS deploy + smoke test.
-    try:
-        import heartbeat as _heartbeat
-        from gate_agent import gate_tick
-        _heartbeat.register_wake(
-            "gate-agent",
-            crew_name="gate",
-            callback=gate_tick,
-            every="1m",
-        )
-        logger.info("GATE: agent registered (every 60s). Enable via autonomy_state.json gate.enabled=true")
-    except Exception as e:
-        logger.error(f"GATE: wake registration failed ({e}); continuing without gate agent", exc_info=True)
+    # Gate agent runs on VPS HOST via cron, not inside this container.
+    # Container has no .git dir (Docker COPY strips it) so git operations fail.
+    # Install: bash scripts/gate_cron_install.sh on VPS host.
+    # Logs: tail -f /var/log/gate-agent.log
+    logger.info("GATE: gate-agent runs on VPS host via cron (not container). See scripts/gate_cron_install.sh")
 
     sync_thread = threading.Thread(target=_periodic_sync, daemon=True)
     sync_thread.start()
