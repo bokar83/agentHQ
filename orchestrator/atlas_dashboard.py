@@ -793,3 +793,100 @@ def get_ideas() -> dict:
     """Top Ideas card: top-ranked active ideas sorted by priority score."""
     items = _fetch_ideas(limit=10)
     return {"items": items, "count": len(items)}
+
+
+def get_cost_report(days: int = 90) -> dict:
+    """
+    Full spend report for /atlas/cost page.
+
+    Returns:
+      openrouter:  {live, historical: [{day, usd_today, usd_week, usd_month, balance_usd}]}
+      elevenlabs:  {live_mtd, daily: [{day, usd, calls}]}
+      kie:         {live_credits, historical: [{day, credits}]}
+      summary:     {today_usd, week_usd, month_usd, lifetime_usd, balance_usd}
+    """
+    from spend_snapshot import _fetch_openrouter, get_historical, get_kie_historical
+
+    # --- OpenRouter live + historical ---
+    or_live: dict = {}
+    try:
+        or_live = _fetch_openrouter()
+    except Exception as e:
+        logger.warning(f"get_cost_report: OR live fetch failed: {e}")
+
+    or_hist = get_historical(days=days)
+
+    # --- ElevenLabs: live MTD + daily aggregation from cost_ledger ---
+    el_mtd = 0.0
+    el_daily: list = []
+    try:
+        from memory import _pg_conn
+        conn = _pg_conn()
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                """
+                SELECT date, ROUND(SUM(amount_usd)::numeric, 6) AS usd, COUNT(*) AS calls
+                  FROM cost_ledger
+                 WHERE tool = 'elevenlabs_tts'
+                   AND date >= CURRENT_DATE - %s
+                 GROUP BY date
+                 ORDER BY date DESC
+                """,
+                (days,),
+            )
+            el_daily = [{"day": str(r[0]), "usd": float(r[1] or 0), "calls": int(r[2] or 0)} for r in cur.fetchall()]
+
+            cur.execute(
+                """
+                SELECT COALESCE(SUM(amount_usd), 0)
+                  FROM cost_ledger
+                 WHERE tool = 'elevenlabs_tts'
+                   AND date >= date_trunc('month', CURRENT_DATE)::date
+                """
+            )
+            el_mtd = round(float(cur.fetchone()[0] or 0), 4)
+            cur.close()
+        finally:
+            conn.close()
+    except Exception as e:
+        logger.warning(f"get_cost_report: ElevenLabs fetch failed: {e}")
+
+    # --- Kie live balance + historical ---
+    kie_credits = None
+    try:
+        from kie_media import check_credits
+        kie_credits = float(check_credits())
+    except Exception as e:
+        logger.warning(f"get_cost_report: Kie live fetch failed: {e}")
+
+    kie_hist = get_kie_historical(days=days)
+
+    # --- Summary row (OpenRouter as LLM ground truth) ---
+    summary = {
+        "today_usd":    or_live.get("usd_today"),
+        "week_usd":     or_live.get("usd_week"),
+        "month_usd":    or_live.get("usd_month"),
+        "lifetime_usd": or_live.get("usd_lifetime"),
+        "balance_usd":  or_live.get("balance_usd"),
+        "el_mtd_usd":   el_mtd,
+        "kie_credits":  kie_credits,
+        "grand_mtd":    round((or_live.get("usd_month") or 0) + el_mtd, 2),
+    }
+
+    return {
+        "openrouter": {
+            "live":       or_live,
+            "historical": or_hist,
+        },
+        "elevenlabs": {
+            "live_mtd": el_mtd,
+            "daily":    el_daily,
+        },
+        "kie": {
+            "live_credits": kie_credits,
+            "historical":   kie_hist,
+        },
+        "summary": summary,
+        "days": days,
+    }

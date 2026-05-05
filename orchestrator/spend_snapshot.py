@@ -51,6 +51,14 @@ def _ensure_table(cur) -> None:
             UNIQUE(provider, day)
         )
     """)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS kie_billing (
+            id           SERIAL PRIMARY KEY,
+            day          DATE NOT NULL UNIQUE,
+            credits      NUMERIC(12,2),
+            ts           TIMESTAMPTZ DEFAULT NOW()
+        )
+    """)
 
 
 def _fetch_openrouter() -> dict:
@@ -180,6 +188,66 @@ def get_historical(days: int = 90) -> list[dict]:
         return []
 
 
+def take_kie_snapshot() -> dict:
+    """Snapshot Kie credit balance once per day into kie_billing."""
+    try:
+        from kie_media import check_credits
+        credits = check_credits()
+    except Exception as e:
+        logger.error(f"kie_snapshot: fetch failed: {e}")
+        return {}
+
+    today_mt = datetime.now(tz=timezone.utc).astimezone(
+        __import__("zoneinfo", fromlist=["ZoneInfo"]).ZoneInfo("America/Denver")
+    ).date()
+
+    try:
+        from memory import _pg_conn
+        conn = _pg_conn()
+        try:
+            cur = conn.cursor()
+            _ensure_table(cur)
+            cur.execute("""
+                INSERT INTO kie_billing (day, credits)
+                VALUES (%s, %s)
+                ON CONFLICT (day) DO UPDATE SET
+                    credits = EXCLUDED.credits,
+                    ts      = NOW()
+            """, (today_mt, credits))
+            conn.commit()
+            cur.close()
+            logger.info(f"kie_snapshot: saved {today_mt} credits={credits}")
+        finally:
+            conn.close()
+    except Exception as e:
+        logger.error(f"kie_snapshot: DB write failed: {e}")
+
+    return {"day": str(today_mt), "credits": credits}
+
+
+def get_kie_historical(days: int = 90) -> list[dict]:
+    """Return daily kie_billing rows newest-first for the last N days."""
+    try:
+        from memory import _pg_conn
+        conn = _pg_conn()
+        try:
+            cur = conn.cursor()
+            _ensure_table(cur)
+            cur.execute("""
+                SELECT day, credits FROM kie_billing
+                 WHERE day >= CURRENT_DATE - %s
+                 ORDER BY day DESC
+            """, (days,))
+            rows = cur.fetchall()
+            cur.close()
+            return [{"day": str(r[0]), "credits": float(r[1] or 0)} for r in rows]
+        finally:
+            conn.close()
+    except Exception as e:
+        logger.warning(f"get_kie_historical: {e}")
+        return []
+
+
 def _fetch_elevenlabs_mtd() -> float:
     """Sum cost_ledger elevenlabs_tts rows for current calendar month."""
     try:
@@ -208,6 +276,7 @@ def _fetch_elevenlabs_mtd() -> float:
 def spend_snapshot_tick() -> None:
     """Heartbeat callback: take snapshot and send Telegram summary."""
     result = take_snapshot()
+    kie_result = take_kie_snapshot()
     if not result:
         return
     try:
@@ -216,6 +285,7 @@ def spend_snapshot_tick() -> None:
         if chat_id:
             el_mtd = _fetch_elevenlabs_mtd()
             el_line = f"ElevenLabs MTD: ${el_mtd:.4f}\n" if el_mtd > 0 else ""
+            kie_line = f"Kie credits: {kie_result.get('credits', '?'):,.0f}\n" if kie_result else ""
             send_message(chat_id, (
                 f"SPEND SNAPSHOT ({result['day']})\n"
                 f"Today:    ${result['usd_today']:.2f}\n"
@@ -224,6 +294,7 @@ def spend_snapshot_tick() -> None:
                 f"Lifetime: ${result['usd_lifetime']:.2f}\n"
                 f"Balance:  ${result['balance_usd']:.2f}\n"
                 f"{el_line}"
+                f"{kie_line}"
             ))
     except Exception as e:
         logger.warning(f"spend_snapshot: Telegram notify failed: {e}")

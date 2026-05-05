@@ -932,6 +932,11 @@ class _LedgerEntryBody(_BaseModel):
     date: str | None = None
 
 
+@app.get("/atlas/cost")
+async def atlas_cost(days: int = 90, _auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_cost_report(days=days))
+
+
 @app.get("/atlas/ledger")
 async def atlas_ledger(days: int = 30, _auth=Depends(verify_chat_token)):
     return JSONResponse(_atd.get_cost_ledger(days=days))
