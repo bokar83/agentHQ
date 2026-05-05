@@ -19,12 +19,16 @@ from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, "/app")  # Docker container path
 
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
 from skills.apollo_skill.apollo_client import harvest_leads, STUDIO_ICP, STUDIO_ICP_TARGETED
-from orchestrator.db import get_crm_connection
+try:
+    from orchestrator.db import get_crm_connection
+except ModuleNotFoundError:
+    from db import get_crm_connection  # type: ignore  # Docker /app path
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
