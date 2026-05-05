@@ -176,6 +176,16 @@ Gate reads this before merging. Missing note = gate merges anyway but logs a war
 
 **Branch claim rule:** `claim(resource='branch:<name>')` signals to other agents that this branch is in-flight. Any agent checking before starting related work can see it is claimed and wait. Failure to claim does not block gate (fail-open), but is required discipline for multi-agent coordination.
 
+**Postgres for local Windows agents (required):** claim() requires Postgres on VPS. Local Windows agents MUST open an SSH tunnel before calling claim():
+
+```bash
+ssh -L 5432:localhost:5432 root@72.60.209.109 -N -f
+```
+
+Open once per session. All claim()/complete() calls then reach VPS Postgres transparently. VPS agents (CrewAI inside container) always have direct DB access.
+
+**Emergency fallback only (tunnel genuinely unavailable):** skip claim(), push with [READY] + [GATE-NOTE], note "no DB tunnel" in context field. Gate processes anyway (fail-open). This is not standard practice. Fix the tunnel before your next session.
+
 ### Emergency path
 
 No bypass exists. Send "PRIORITY: [description]" to Telegram; Gate processes within 60s. Boubacar may push manually from local if Gate is down. No agent equivalent exists.
