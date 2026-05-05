@@ -1,0 +1,98 @@
+repos:
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args:
+          - --baseline
+          - .secrets.baseline
+          - --exclude-files
+          - infrasctructure/\.env
+          - --exclude-files
+          - infrastructure/\.env
+        exclude: \.env$|^agent_outputs/|^logs/|^data/|^research-vault/|^output/|^workspace/
+
+  - repo: local
+    hooks:
+      - id: no-em-dashes
+        name: no em dashes in markdown
+        description: Boubacar's hard rule. Rewrite the sentence.
+        entry: python scripts/check_no_em_dashes.py
+        language: python
+        files: \.md$
+        exclude: ^zzzArchive/
+        types: [file]
+      - id: lint-and-index-skills
+        name: Lint and Index Skills
+        entry: python scripts/lint_and_index_skills.py
+        language: python
+        pass_filenames: false
+        always_run: true
+      - id: check-folder-purpose
+        name: Folder Governance (every top-level folder needs AGENTS.md or README.md)
+        description: Compass M0 governance enforcement. See docs/GOVERNANCE.md.
+        entry: python scripts/check_folder_purpose.py
+        language: python
+        pass_filenames: false
+        always_run: true
+      - id: check-memory-frontmatter
+        name: Memory Frontmatter (name/description/type required)
+        description: Compass M2. See docs/roadmap/compass.md.
+        entry: python scripts/check_memory_frontmatter.py
+        language: python
+        files: ^docs/memory/.*\.md$
+        exclude: ^docs/memory/(MEMORY\.md|MEMORY_ARCHIVE\.md)$
+        types: [file]
+      - id: check-session-log-updated
+        name: Roadmap Session Log (touched roadmap requires dated entry)
+        description: Compass M2. Bypass with SKIP_SESSION_LOG=1. See docs/AGENT_SOP.md Session End.
+        entry: python scripts/check_session_log_updated.py
+        language: python
+        files: ^docs/roadmap/[^/]+\.md$
+        exclude: ^docs/roadmap/(README|future-enhancements)\.md$
+        types: [file]
+      - id: check-rule-redundancy
+        name: Rule Redundancy (warn on duplicate rules across surfaces)
+        description: Compass M2 warn-only. Set RULE_REDUNDANCY_STRICT=1 to fail.
+        entry: python scripts/check_rule_redundancy.py
+        language: python
+        files: ^(docs/(AGENT_SOP|GOVERNANCE)\.md|docs/memory/.*\.md|.*AGENTS\.md)$
+        exclude: ^(zzzArchive/|docs/memory/(MEMORY\.md|MEMORY_ARCHIVE\.md))
+        types: [file]
+      - id: check-doc-size
+        name: Doc Size (rule docs have growth ceilings; roadmaps exempt)
+        description: Compass M2. Set DOC_SIZE_STRICT=1 to fail on warnings too.
+        entry: python scripts/check_doc_size.py
+        language: python
+        files: ^(docs/(AGENT_SOP|GOVERNANCE)\.md|docs/memory/.*\.md|.*AGENTS\.md)$
+        exclude: ^zzzArchive/
+        types: [file]
+      - id: check-retirement-candidates
+        name: Retirement Candidates (manual; surface 90+ day-stale rule files)
+        description: Compass M2 + M3. Run with `pre-commit run --hook-stage manual check-retirement-candidates --all-files`.
+        entry: python scripts/check_retirement_candidates.py
+        language: python
+        pass_filenames: false
+        always_run: true
+        stages: [manual]
+      - id: check-hook-registration
+        name: Hook Registration Guard (high-risk hooks need cost annotation)
+        description: Blocks UserPromptSubmit/PreToolUse additions without HOOK_MODEL/HOOK_COST_PER_FIRE/HOOK_FIRING_RATE annotation. See docs/notes/switch-provider-paused-2026-05-02.md.
+        entry: python scripts/check_hook_registration.py
+        language: python
+        pass_filenames: false
+        always_run: true
+      - id: check-no-provider-redirect
+        name: Provider Redirect Guard (block ANTHROPIC_BASE_URL in committed configs)
+        description: Prevents committing a non-Anthropic ANTHROPIC_BASE_URL. See docs/notes/switch-provider-paused-2026-05-02.md.
+        entry: python scripts/check_no_provider_redirect.py
+        language: python
+        pass_filenames: false
+        always_run: true
+      - id: validate-governance-manifest
+        name: Governance Manifest Drift (LLM-readable mirror of GOVERNANCE.md)
+        description: Compass M4. Fires only when GOVERNANCE.md or the manifest changes.
+        entry: python scripts/validate_governance_manifest.py
+        language: python
+        pass_filenames: false
+        files: ^docs/(GOVERNANCE\.md|governance\.manifest\.json)$
