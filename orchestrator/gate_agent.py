@@ -109,6 +109,32 @@ def _notify(message: str, urgent: bool = False) -> None:
         logger.warning("gate: notify failed: %s", exc)
 
 
+def _load_seen_conflicts() -> set[tuple[str, str, str]]:
+    """Load previously seen conflicts from DATA_DIR/gate_seen_conflicts.json."""
+    try:
+        p = DATA_DIR / "gate_seen_conflicts.json"
+        if not p.exists():
+            return set()
+        return {tuple(item) for item in json.loads(p.read_text()).get("conflicts", [])}
+    except Exception as exc:
+        logger.warning("gate: could not load seen conflicts: %s", exc)
+        return set()
+
+
+def _save_seen_conflicts(seen: set[tuple[str, str, str]]) -> None:
+    """Persist seen conflict set to DATA_DIR/gate_seen_conflicts.json."""
+    try:
+        p = DATA_DIR / "gate_seen_conflicts.json"
+        p.write_text(json.dumps({"conflicts": [list(c) for c in seen]}, indent=2))
+    except Exception as exc:
+        logger.warning("gate: could not save seen conflicts: %s", exc)
+
+
+def _clear_seen_for_branch(seen: set[tuple[str, str, str]], branch: str) -> None:
+    """Remove all conflict entries involving branch (it merged or was deleted)."""
+    seen.difference_update({c for c in seen if c[0] == branch or c[1] == branch})
+
+
 # ---------------------------------------------------------------------------
 # Git helpers
 # ---------------------------------------------------------------------------
@@ -255,6 +281,15 @@ def _push_main() -> tuple[bool, str]:
     return rc == 0, err
 
 
+def _test_merge(branch: str) -> bool:
+    """Return True if branch merges cleanly into current main (no commit made)."""
+    _git(["checkout", MAIN_BRANCH])
+    _git(["pull", "origin", MAIN_BRANCH])
+    rc, _, _ = _git(["merge", f"origin/{branch}", "--no-ff", "--no-commit"])
+    _git(["merge", "--abort"])
+    return rc == 0
+
+
 def _delete_remote_branch(branch: str) -> None:
     rc, _, err = _git(["push", "origin", "--delete", branch])
     if rc != 0:
@@ -395,19 +430,51 @@ def gate_tick() -> None:
         branches_with_files.append((branch, files))
         logger.info("gate: %s touches %d file(s)", branch, len(files))
 
-    # Conflict detection -- block branches only when the overlap is blocking.
+    # Conflict detection: test-merge each conflicting branch before blocking.
+    # Only truly unresolvable conflicts (git merge fails) block the branch.
     blocking_conflicts, nonblocking_conflicts = _detect_conflicts(branches_with_files)
+    seen_conflicts = _load_seen_conflicts()
     blocked: set[str] = set()
+
     for b1, b2, f in blocking_conflicts:
-        blocked.add(b1)
-        blocked.add(b2)
-        _notify(
-            f"CONFLICT: {b1} and {b2} both touch {f}. Both held. Review and resolve.",
-            urgent=True,
-        )
-        logger.warning("gate: conflict -- %s vs %s on %s", b1, b2, f)
+        key = (b1, b2, f)
+        can_b1 = _test_merge(b1)
+        can_b2 = _test_merge(b2)
+
+        if can_b1 and can_b2:
+            # Both merge cleanly -- file overlap is superficial, allow both
+            logger.info("gate: file overlap %s vs %s on %s -- both merge cleanly", b1, b2, f)
+        elif can_b1:
+            blocked.add(b2)
+            if key not in seen_conflicts:
+                _notify(f"CONFLICT: {b2} cannot merge cleanly (file: {f}). Held.", urgent=True)
+                seen_conflicts.add(key)
+                logger.warning("gate: true conflict -- %s blocked on %s", b2, f)
+        elif can_b2:
+            blocked.add(b1)
+            if key not in seen_conflicts:
+                _notify(f"CONFLICT: {b1} cannot merge cleanly (file: {f}). Held.", urgent=True)
+                seen_conflicts.add(key)
+                logger.warning("gate: true conflict -- %s blocked on %s", b1, f)
+        else:
+            blocked.add(b1)
+            blocked.add(b2)
+            if key not in seen_conflicts:
+                _notify(
+                    f"CONFLICT: {b1} and {b2} both have merge conflicts on {f}. Both held.",
+                    urgent=True,
+                )
+                seen_conflicts.add(key)
+                logger.warning("gate: true conflict -- %s vs %s on %s", b1, b2, f)
+
     for b1, b2, f in nonblocking_conflicts:
         logger.info("gate: nonblocking conflict -- %s vs %s on %s", b1, b2, f)
+
+    # Clear seen conflicts for branches that are no longer blocked
+    for branch in ready_branches:
+        if branch not in blocked:
+            _clear_seen_for_branch(seen_conflicts, branch)
+    _save_seen_conflicts(seen_conflicts)
 
     # Process non-blocked branches
     merged: list[str] = []
