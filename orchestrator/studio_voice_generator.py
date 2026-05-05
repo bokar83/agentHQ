@@ -145,6 +145,8 @@ def _elevenlabs_tts(
 
     drive_result = _upload_audio_to_drive(local_path, channel_id)
 
+    _log_elevenlabs_spend(plain_text, channel_id, title_slug)
+
     return {
         "audio_path": str(local_path),
         "drive_url": drive_result.get("webViewLink", ""),
@@ -312,6 +314,23 @@ def _slugify(text: str, max_len: int = 40) -> str:
     slug = "".join(c.lower() if c.isalnum() else "-" for c in text.strip())
     slug = "-".join(s for s in slug.split("-") if s)
     return slug[:max_len] or "untitled"
+
+
+def _log_elevenlabs_spend(text: str, channel_id: str, title_slug: str) -> None:
+    # eleven_multilingual_v2: $0.30 per 1,000 characters
+    chars = len(text)
+    cost_usd = round(chars * 0.00030, 6)
+    try:
+        from atlas_dashboard import add_cost_ledger_entry
+        add_cost_ledger_entry(
+            amount_usd=cost_usd,
+            tool="elevenlabs_tts",
+            category="tts",
+            project="studio",
+            description=f"{channel_id}/{title_slug} — {chars} chars",
+        )
+    except Exception as exc:
+        logger.warning("elevenlabs spend log failed: %s", exc)
 
 
 def _stub_result(title_slug: str, channel_id: str) -> dict[str, Any]:

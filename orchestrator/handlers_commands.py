@@ -5,7 +5,7 @@ One function per command, grouped by era:
 - Original ops commands (pre-autonomy): /cost, /projects, /status, /lessons,
   /purge-lesson, /scan-drive, /switch
 - Phase 0 autonomy rails:                /autonomy_status, /pause_autonomy,
-  /resume_autonomy, /spend
+  /resume_autonomy
 - Phase 1 approval queue:                /queue, /approve, /reject, /outcomes
 - Phase 2 heartbeat:                     /heartbeat_status, /trigger_heartbeat
 
@@ -163,51 +163,139 @@ def _cmd_cost(text: str, chat_id: str) -> bool:
     from memory import _pg_conn
     parts = text.strip().split(maxsplit=1)
     try:
-        days = int(parts[1]) if len(parts) > 1 else 7
+        days = int(parts[1]) if len(parts) > 1 else 30
     except ValueError:
-        days = 7
+        days = 30
     try:
-        conn = _pg_conn()
+        # 1. OpenRouter ground truth (CrewAI + all routed LLM calls)
+        or_today = or_week = or_month = or_lifetime = or_balance = None
         try:
-            cur = conn.cursor()
-            cur.execute(
-                """
-                SELECT
-                    COUNT(*) AS total_calls,
-                    ROUND(SUM(cost_usd)::numeric, 4) AS total_usd,
-                    ROUND(SUM(cost_usd) FILTER (WHERE ts > NOW() - INTERVAL '24 hours')::numeric, 4) AS today_usd,
-                    COUNT(DISTINCT council_run_id) FILTER (WHERE council_run_id IS NOT NULL) AS council_runs
-                FROM llm_calls
-                WHERE ts > NOW() - INTERVAL '%s days'
-                """,
-                (days,),
-            )
-            total_calls, total_usd, today_usd, council_runs = cur.fetchone()
-            cur.execute(
-                """
-                SELECT agent_name, COUNT(*) AS calls, ROUND(SUM(cost_usd)::numeric, 4) AS usd
-                FROM llm_calls
-                WHERE ts > NOW() - INTERVAL '%s days' AND agent_name IS NOT NULL
-                GROUP BY agent_name
-                ORDER BY usd DESC NULLS LAST
-                LIMIT 8
-                """,
-                (days,),
-            )
-            top = cur.fetchall()
-            cur.close()
-        finally:
-            conn.close()
-        lines = [
-            f"LLM spend (last {days} days):",
-            f"  ${total_usd or 0:.4f} total over {total_calls or 0} calls",
-            f"  ${today_usd or 0:.4f} in last 24h",
-            f"  {council_runs or 0} council runs",
-            "",
-            "Top agents by spend:",
-        ]
-        for agent, calls, usd in top:
-            lines.append(f"  ${usd or 0:.4f}  {agent}  ({calls} calls)")
+            from spend_snapshot import _fetch_openrouter
+            or_data = _fetch_openrouter()
+            or_today    = or_data["usd_today"]
+            or_week     = or_data["usd_week"]
+            or_month    = or_data["usd_month"]
+            or_lifetime = or_data["usd_lifetime"]
+            or_balance  = or_data["balance_usd"]
+        except Exception as e:
+            logger.warning(f"_cmd_cost: OpenRouter fetch failed: {e}")
+
+        # 2. Direct Anthropic SDK calls (council, etc.) not routed via OpenRouter
+        sdk_calls = sdk_usd = sdk_council = 0
+        top_agents = []
+        try:
+            conn = _pg_conn()
+            try:
+                cur = conn.cursor()
+                cur.execute(
+                    """
+                    SELECT
+                        COUNT(*),
+                        ROUND(SUM(cost_usd)::numeric, 4),
+                        COUNT(DISTINCT council_run_id) FILTER (WHERE council_run_id IS NOT NULL)
+                    FROM llm_calls
+                    WHERE ts > NOW() - INTERVAL '%s days'
+                    """,
+                    (days,),
+                )
+                row = cur.fetchone()
+                sdk_calls, sdk_usd, sdk_council = int(row[0] or 0), float(row[1] or 0), int(row[2] or 0)
+
+                cur.execute(
+                    """
+                    SELECT COALESCE(agent_name, crew_name, model, 'unknown') AS name,
+                           COUNT(*) AS calls,
+                           ROUND(SUM(cost_usd)::numeric, 4) AS usd
+                    FROM llm_calls
+                    WHERE ts > NOW() - INTERVAL '%s days'
+                    GROUP BY name
+                    ORDER BY usd DESC NULLS LAST
+                    LIMIT 6
+                    """,
+                    (days,),
+                )
+                top_agents = cur.fetchall()
+
+                # 3. ElevenLabs from cost_ledger
+                cur.execute(
+                    """
+                    SELECT
+                        COUNT(*),
+                        ROUND(SUM(amount_usd)::numeric, 4)                                                            AS period_usd,
+                        ROUND(SUM(amount_usd) FILTER (WHERE date >= CURRENT_DATE)::numeric, 4)                        AS today_usd,
+                        ROUND(SUM(amount_usd) FILTER (WHERE date >= date_trunc('month', CURRENT_DATE)::date)::numeric, 4) AS month_usd
+                    FROM cost_ledger
+                    WHERE tool = 'elevenlabs_tts'
+                      AND date >= CURRENT_DATE - INTERVAL '%s days'
+                    """,
+                    (days,),
+                )
+                el_row = cur.fetchone()
+                el_calls = int(el_row[0] or 0)
+                el_period = float(el_row[1] or 0)
+                el_today  = float(el_row[2] or 0)
+                el_month  = float(el_row[3] or 0)
+
+                cur.close()
+            finally:
+                conn.close()
+        except Exception as e:
+            logger.warning(f"_cmd_cost: DB fetch failed: {e}")
+            el_calls = el_period = el_today = el_month = 0
+
+        # 4. Kie credit balance (no spend history table yet)
+        kie_credits = None
+        try:
+            from kie_media import check_credits
+            kie_credits = check_credits()
+        except Exception:
+            pass
+
+        lines = [f"Spend report (last {days}d)", ""]
+
+        # OpenRouter headline
+        lines.append("LLM (OpenRouter -- ground truth)")
+        if or_today is not None:
+            lines.append(f"  Today:    ${or_today:.4f}")
+            lines.append(f"  Week:     ${or_week:.4f}")
+            lines.append(f"  Month:    ${or_month:.4f}")
+            lines.append(f"  Lifetime: ${or_lifetime:.2f}")
+            lines.append(f"  Balance:  ${or_balance:.2f}")
+        else:
+            lines.append("  (unavailable)")
+
+        # Direct SDK calls (council)
+        if sdk_calls > 0:
+            lines.append("")
+            lines.append(f"Direct SDK ({sdk_calls} calls, {sdk_council} council runs): ${sdk_usd:.4f}")
+            for name, calls, usd in top_agents:
+                lines.append(f"  ${usd or 0:.4f}  {name}  ({calls})")
+
+        # ElevenLabs
+        lines.append("")
+        lines.append("ElevenLabs TTS")
+        if el_calls > 0:
+            lines.append(f"  Period:   ${el_period:.4f}  ({el_calls} renders)")
+            lines.append(f"  Today:    ${el_today:.4f}")
+            lines.append(f"  MTD:      ${el_month:.4f}")
+        else:
+            lines.append("  $0.0000  (no renders yet)")
+
+        # Kie
+        lines.append("")
+        lines.append("Kie (kie.ai media)")
+        if kie_credits is not None:
+            lines.append(f"  Credits remaining: {kie_credits:,}")
+            lines.append("  (per-render spend not yet tracked)")
+        else:
+            lines.append("  (balance unavailable)")
+
+        # Grand total: OpenRouter MTD + ElevenLabs MTD
+        if or_month is not None:
+            grand = round(or_month + el_month, 2)
+            lines.append("")
+            lines.append(f"MTD TOTAL (OR + ElevenLabs): ${grand:.2f}")
+
         _send(chat_id, "\n".join(lines))
     except Exception as e:
         _send(chat_id, f"Could not load cost: {e}")
@@ -280,25 +368,6 @@ def _cmd_resume_autonomy(text: str, chat_id: str) -> bool:
     _send(chat_id, f"Autonomy resumed. ${snap.spent_today_usd:.4f} / ${snap.cap_usd:.2f} spent today.")
     return True
 
-
-def _cmd_spend(text: str, chat_id: str) -> bool:
-    if not text.lower().startswith("/spend"):
-        return False
-    from notifier import send_message as _send
-    from autonomy_guard import get_guard
-    g = get_guard()
-    snap = g.snapshot()
-    lines = [f"Autonomous spend today: ${snap.spent_today_usd:.4f} / ${snap.cap_usd:.2f}"]
-    lines.append(f"Remaining: ${snap.remaining_usd:.4f}")
-    if snap.per_crew:
-        lines.append("")
-        lines.append("By crew:")
-        for crew, usd in sorted(snap.per_crew.items(), key=lambda kv: -kv[1]):
-            lines.append(f"  {crew}: ${usd:.4f}")
-    else:
-        lines.append("(no autonomous calls yet today)")
-    _send(chat_id, "\n".join(lines))
-    return True
 
 
 # ══════════════════════════════════════════════════════════════
@@ -791,7 +860,6 @@ _COMMANDS = [
     _cmd_autonomy_status,
     _cmd_pause_autonomy,
     _cmd_resume_autonomy,
-    _cmd_spend,
     _cmd_queue,
     _cmd_approve,
     _cmd_reject,
