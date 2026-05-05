@@ -161,6 +161,7 @@ Good reformulations:
 - User says "run research on competitor X" → task_text = "research competitor X pricing and positioning"
 - User says "approve the queued post" → task_text = "fetch and approve queued content board post"
 - User says "write an email newsletter" → task_text = "draft email newsletter for this week"
+- User says "schedule it for today" → task_text = "schedule this post for today on LinkedIn" (sets date in Notion Content Board, does NOT publish)
 
 When forward_to_crew returns a result that contains "Confirm token:" or "Awaiting your tap":
   Reply: "Tap Confirm below to run this, or Cancel to drop it." Nothing more.
@@ -604,7 +605,30 @@ def _extract_reply(raw: str) -> str:
             parsed = json.loads(stripped)
             # M9 schema: {"reply": "...", "actions": [...]}
             if "reply" in parsed:
-                return (parsed["reply"] or "").strip()
+                reply_val = (parsed["reply"] or "").strip()
+                # Fix 1: double-wrap -- LLM sometimes returns {"reply": "{"reply": "..."}"}
+                if reply_val.startswith("{"):
+                    try:
+                        inner = json.loads(reply_val)
+                        if "reply" in inner:
+                            reply_val = (inner["reply"] or "").strip()
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+                # Fix 2: strip fake confirm JSON leaked into reply text (no real confirm: token)
+                import re as _re2
+                def _strip_fake_confirm(text: str) -> str:
+                    def _remove_if_fake(m: _re2.Match) -> str:
+                        try:
+                            blob = json.loads(m.group(0))
+                            cb = blob.get("callback_data", "")
+                            if isinstance(cb, str) and cb.startswith("confirm:"):
+                                return m.group(0)  # real confirm token, keep
+                        except Exception:
+                            pass
+                        return ""  # bare/fake confirm JSON, strip it
+                    return _re2.sub(r'\{[^{}]*"confirm"[^{}]*\}', _remove_if_fake, text).strip()
+                reply_val = _strip_fake_confirm(reply_val)
+                return reply_val
             # Fallback keys used by some crew outputs
             for key in ("text", "content", "message", "result", "output"):
                 if key in parsed and isinstance(parsed[key], str):
