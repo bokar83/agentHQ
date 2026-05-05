@@ -350,7 +350,7 @@ skills/signal-works-conversion/
 **What shipped:**
 
 - PDF: `workspace/articles/2026-04-28-saas-audit-assets/saas-audit.pdf` (built 2026-04-28, manually rendered via Chrome)
-- Drive link (public, anyone with link): `https://drive.google.com/file/d/132_DHAct81kC6Obhrksyixq9lFuCSYQD/view`
+- Drive link (public, anyone with link): `https://drive.google.com/file/d/1ctmqUjhxa5hBkIj47AMDPvgbJzXwkETd/view`
 - `templates/email/sw_t5.py`: SW Touch 5, Day 17 upsell. Subject: "Different angle: the software question". Niche-personalized. Links to Drive PDF. $500 audit CTA.
 - `skills/outreach/sequence_engine.py`: TOUCH_DAYS_SW extended to {1:0, 2:3, 3:7, 4:12, 5:17}. TEMPLATES['sw'] wired to sw_t5.
 
@@ -461,10 +461,14 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 
 ## Session Log
 
+### 2026-05-04: R2 Drive link corrected: fresh PDF re-uploaded, old file deleted
+
+Old Drive file 132_DHAct81kC6Obhrksyixq9lFuCSYQD deleted (broken render). Fresh upload from local disk. New ID: 1ctmqUjhxa5hBkIj47AMDPvgbJzXwkETd. sw_t5.py and harvest.md updated.
+
 ### 2026-05-04: R2 SHIPPED: SaaS Audit upsell wired into SW sequence
 
 PDF already existed (`workspace/articles/2026-04-28-saas-audit-assets/saas-audit.pdf`, built 2026-04-28).
-Uploaded to Google Drive (file ID `132_DHAct81kC6Obhrksyixq9lFuCSYQD`, public anyone-with-link).
+Uploaded to Google Drive (file ID `1ctmqUjhxa5hBkIj47AMDPvgbJzXwkETd`, public anyone-with-link).
 Built `templates/email/sw_t5.py`: Day 17 upsell, niche-personalized, links to Drive PDF, $500 flat CTA.
 Extended SW sequence from 4 to 5 touches (Day 17 added). TOUCH_DAYS_SW + TEMPLATES both updated.
 R2 milestone status flipped to SHIPPED.
