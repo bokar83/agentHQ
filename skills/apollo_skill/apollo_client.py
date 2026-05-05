@@ -124,21 +124,70 @@ CW_ICP_WIDENED = {
     "score_titles": ["owner", "founder", "ceo", "president", "managing partner", "principal"],
 }
 
+# SW_ICP (2026-05-05): Studio merged into SW. Same offer ($997 build + $497/mo
+# recurring). Full US, industry-agnostic, employees 1-50. Step up to 1-200
+# only if pool runs dry. SW T1 routes by has_website: audit (sw_t1) or build
+# (sw_t1_nosite, formerly studio_t1).
 SW_ICP = {
     "name": "signal_works",
     "person_locations": [
-        "Salt Lake City, Utah", "Provo, Utah", "Ogden, Utah",
-        "Sandy, Utah", "Murray, Utah", "West Jordan, Utah",
+        # Northeast
+        "New York, New York", "Brooklyn, New York", "Philadelphia, Pennsylvania",
+        "Boston, Massachusetts", "Washington, DC", "Baltimore, Maryland",
+        "Pittsburgh, Pennsylvania", "Hartford, Connecticut", "Providence, Rhode Island",
+        "Albany, New York", "Buffalo, New York",
+        # Southeast
+        "Atlanta, Georgia", "Charlotte, North Carolina", "Raleigh, North Carolina",
+        "Nashville, Tennessee", "Memphis, Tennessee", "Miami, Florida",
+        "Tampa, Florida", "Orlando, Florida", "Jacksonville, Florida",
+        "Richmond, Virginia", "Virginia Beach, Virginia", "Louisville, Kentucky",
+        "Columbia, South Carolina", "Greenville, South Carolina",
+        # South + Texas
+        "Dallas, Texas", "Houston, Texas", "Austin, Texas", "San Antonio, Texas",
+        "Fort Worth, Texas", "El Paso, Texas", "New Orleans, Louisiana",
+        "Oklahoma City, Oklahoma", "Tulsa, Oklahoma", "Little Rock, Arkansas",
+        # Midwest
+        "Chicago, Illinois", "Columbus, Ohio", "Indianapolis, Indiana",
+        "Detroit, Michigan", "Minneapolis, Minnesota", "Kansas City, Missouri",
+        "Cleveland, Ohio", "St. Louis, Missouri", "Milwaukee, Wisconsin",
+        "Cincinnati, Ohio", "Omaha, Nebraska", "Des Moines, Iowa",
+        "Grand Rapids, Michigan", "Madison, Wisconsin",
+        # Mountain + Southwest
+        "Denver, Colorado", "Phoenix, Arizona", "Scottsdale, Arizona",
+        "Tucson, Arizona", "Las Vegas, Nevada", "Albuquerque, New Mexico",
+        "Colorado Springs, Colorado", "Salt Lake City, Utah", "Provo, Utah",
+        "Ogden, Utah", "Sandy, Utah", "Murray, Utah", "West Jordan, Utah",
         "Lehi, Utah", "American Fork, Utah", "St. George, Utah",
+        "Boise, Idaho", "Reno, Nevada",
+        # West Coast
+        "Los Angeles, California", "San Diego, California", "San Francisco, California",
+        "Sacramento, California", "Fresno, California", "Oakland, California",
+        "Portland, Oregon", "Seattle, Washington", "Spokane, Washington",
     ],
-    "person_titles": ["Owner", "Founder", "CEO", "President", "Operator"],
+    "person_titles": [
+        "Owner", "Founder", "Co-Founder", "CEO", "President", "Operator",
+        "Proprietor", "Self-Employed", "Managing Partner", "Principal",
+        "Partner", "Director", "Managing Director", "General Manager",
+    ],
     "person_seniorities": _DECISION_MAKER_SENIORITIES,
-    "organization_num_employees_ranges": ["1,30"],
+    "organization_num_employees_ranges": ["1,50"],
     "score_industries": [
+        # Industry-agnostic. List acts as score boost, not filter.
         "roofing", "hvac", "plumbing", "dental", "pediatric", "chiropractic",
         "landscaping", "pest control", "cleaning", "electrical", "construction",
+        "photography", "videography", "design", "media", "creative",
+        "restaurant", "food", "beverage", "catering", "bakery",
+        "fitness", "wellness", "beauty", "salon", "spa", "aesthetics",
+        "real estate", "mortgage", "insurance", "financial",
+        "legal", "accounting", "consulting", "coaching",
+        "ecommerce", "retail", "fashion", "jewelry",
+        "healthcare", "medical",
+        "events", "wedding", "entertainment", "hospitality", "travel",
+        "education", "tutoring", "training",
+        "technology", "software", "agency", "marketing",
+        "automotive", "transportation", "logistics",
     ],
-    "score_titles": ["owner", "founder", "ceo", "president", "operator"],
+    "score_titles": ["owner", "founder", "ceo", "president", "operator", "partner", "principal"],
 }
 
 # Studio ICP: any business owner in the US + Canada who could benefit from a
