@@ -35,7 +35,8 @@ SMTP_PASS = os.environ.get("SMTP_PASS", "")
 REPORT_EMAILS = [
     os.environ.get("REPORT_EMAIL", "bokar83@gmail.com"),
     "boubacarbusiness@gmail.com",
-    "catalystworks.ai@gmail.com"
+    "catalystworks.ai@gmail.com",
+    "boubacar@catalystworks.consulting",
 ]
 
 # Remoat Config (Remote IDE Bridge)
@@ -742,6 +743,7 @@ def send_health_check_report(status: str, report_text: str, date: str) -> bool:
         "bokar83@gmail.com",
         "boubacarbusiness@gmail.com",
         "catalystworks.ai@gmail.com",
+        "boubacar@catalystworks.consulting",
     ]
     return send_email(subject, html_body, to_addresses=to_addresses, html=True)
 
