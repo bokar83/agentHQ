@@ -1,5 +1,32 @@
 {
   "permissions": {
+    "allow": [
+      "PowerShell(cd *)",
+      "PowerShell(Get-Content *)",
+      "PowerShell(Select-String *)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(Test-Path *)",
+      "PowerShell(git log *)",
+      "PowerShell(git status *)",
+      "PowerShell(git branch *)",
+      "PowerShell(git diff *)",
+      "PowerShell(git show *)",
+      "PowerShell(git stash list*)",
+      "PowerShell(Write-Output *)",
+      "mcp__plugin_context-mode_context-mode__ctx_batch_execute",
+      "mcp__plugin_context-mode_context-mode__ctx_search",
+      "mcp__plugin_github_github__get_file_contents",
+      "mcp__plugin_github_github__list_commits",
+      "mcp__plugin_github_github__list_branches",
+      "mcp__plugin_github_github__list_pull_requests",
+      "mcp__plugin_github_github__pull_request_read",
+      "Bash(ssh root@72.60.209.109 \"docker logs *)",
+      "Bash(ssh root@72.60.209.109 \"docker ps*)",
+      "Bash(ssh root@72.60.209.109 \"docker exec * env*)",
+      "Bash(ssh root@72.60.209.109 \"cat *)",
+      "Bash(ssh root@72.60.209.109 \"ls *)",
+      "Bash(ssh root@72.60.209.109 \"wc *)"
+    ],
     "deny": [
       "Read(./.env)",
       "Read(./.env.*)",
