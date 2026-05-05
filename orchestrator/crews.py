@@ -3297,6 +3297,129 @@ def build_design_review_crew(user_request: str) -> Crew:
     )
 
 
+def build_schedule_content_crew(user_request: str) -> Crew:
+    """
+    Crew for: schedule_content
+    Schedules a post to the Notion Content Board without Blotato/publishing.
+    Two modes:
+      1. Post exists in Content Board by title -> update Status=Queued + Scheduled Date
+      2. Post text provided inline -> create new Content Board record + set date
+    Pure code. No LLM agent. No external publish calls.
+    """
+    import re as _re
+    from datetime import date as _date, timedelta as _timedelta
+    from skills.forge_cli.notion_client import NotionClient
+
+    CONTENT_DB_ID = os.environ.get("FORGE_CONTENT_DB", "339bcf1a-3029-81d1-8377-dc2f2de13a20")
+    NOTION_SECRET = os.environ.get("NOTION_SECRET", "")
+    notion = NotionClient(secret=NOTION_SECRET)
+    msg = user_request.lower()
+
+    # ── Parse target date ────────────────────────────────────────────────────
+    target_date = _date.today().isoformat()
+    if "tomorrow" in msg:
+        target_date = (_date.today() + _timedelta(days=1)).isoformat()
+    elif "monday" in msg:
+        today = _date.today()
+        days_ahead = (0 - today.weekday()) % 7 or 7
+        target_date = (today + _timedelta(days=days_ahead)).isoformat()
+    else:
+        # Look for YYYY-MM-DD or "May 5" style dates
+        iso = _re.search(r'\d{4}-\d{2}-\d{2}', user_request)
+        if iso:
+            target_date = iso.group()
+
+    # ── Parse platform ────────────────────────────────────────────────────────
+    platform = []
+    if "linkedin" in msg:
+        platform.append("LinkedIn")
+    if " x " in msg or "twitter" in msg or "x post" in msg:
+        platform.append("X")
+
+    # ── Try to find existing Content Board record by title hint ──────────────
+    def _extract_title(props):
+        parts = props.get("Title", {}).get("title", [])
+        return "".join(p.get("plain_text", "") for p in parts)
+
+    title_hint = ""
+    quoted = _re.findall(r'["""]([^""""]+)["""]', user_request)
+    if quoted:
+        title_hint = quoted[0].strip()
+    else:
+        for marker in ("post titled ", "post about ", "variation 1", "variation 2"):
+            if marker in msg:
+                idx = msg.find(marker)
+                title_hint = user_request[idx + len(marker):].strip().split("\n")[0][:80]
+                break
+
+    matched_page = None
+    if title_hint:
+        try:
+            all_pages = notion.query_database(CONTENT_DB_ID)
+            for page in (all_pages or []):
+                t = _extract_title(page.get("properties", {}))
+                if title_hint.lower()[:30] in t.lower():
+                    matched_page = page
+                    break
+        except Exception as e:
+            logger.error(f"schedule_content: search failed: {e}")
+
+    from crewai import Agent, Task, Crew, Process
+
+    if matched_page:
+        # Update existing record
+        page_id = matched_page["id"]
+        try:
+            props = {"Status": {"select": {"name": "Queued"}},
+                     "Scheduled Date": {"date": {"start": target_date}}}
+            if platform:
+                props["Platform"] = {"multi_select": [{"name": p} for p in platform]}
+            notion.update_page(page_id, props)
+            title = _extract_title(matched_page.get("properties", {}))
+            result_text = (
+                f"Scheduled: \"{title}\"\n"
+                f"Date: {target_date} | Status: Queued"
+                + (f" | Platform: {', '.join(platform)}" if platform else "")
+            )
+        except Exception as e:
+            result_text = f"Failed to update Content Board: {e}"
+    else:
+        # Create new record with inline text as Draft body
+        try:
+            title_text = (title_hint or user_request[:80]).strip()
+            props = {
+                "Title": {"title": [{"text": {"content": title_text}}]},
+                "Status": {"select": {"name": "Queued"}},
+                "Scheduled Date": {"date": {"start": target_date}},
+            }
+            if platform:
+                props["Platform"] = {"multi_select": [{"name": p} for p in platform]}
+            notion.create_page(CONTENT_DB_ID, props)
+            result_text = (
+                f"Created and scheduled in Content Board:\n"
+                f"Title: \"{title_text}\"\n"
+                f"Date: {target_date} | Status: Queued"
+                + (f" | Platform: {', '.join(platform)}" if platform else "")
+            )
+        except Exception as e:
+            result_text = f"Failed to create Content Board record: {e}"
+
+    # Wrap result in a minimal agent+task so engine gets a standard Crew return
+    _agent = Agent(
+        role="Scheduler",
+        goal="Report the scheduling result to the user.",
+        backstory="Schedules content to Notion.",
+        llm="openai/gpt-4o-mini",
+        verbose=False,
+    )
+    _task = Task(
+        description=f"Report this result verbatim to the user:\n\n{result_text}",
+        expected_output=result_text,
+        agent=_agent,
+    )
+    return Crew(agents=[_agent], tasks=[_task], process=Process.sequential, verbose=False, memory=False)
+
+
 CREW_REGISTRY = {
     "website_crew":        build_website_crew,
     "app_crew":            build_app_crew,
@@ -3325,6 +3448,7 @@ CREW_REGISTRY = {
     "content_review_crew":        build_content_review_crew,
     "content_drive_crew":         build_content_push_to_drive_crew,
     "content_board_fetch_crew":   build_content_board_fetch_crew,
+    "schedule_content_crew":      build_schedule_content_crew,
     "doc_routing_crew":           build_doc_routing_crew,
     "design_review_crew":         build_design_review_crew,
     "media_crew":                 build_media_crew,
