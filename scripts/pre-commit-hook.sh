@@ -95,6 +95,20 @@ if [ -f scripts/check_no_provider_redirect.py ]; then
              "Remove or revert the redirect before committing."
 fi
 
+# 6. Docker doc-drift guard
+# When docker-compose.yml or Dockerfile changes, scan docs for stale claims about
+# the deploy model. If we removed a COPY or added a volume, old "code is baked"
+# rules in CLAUDE.md / AGENT_SOP.md / skill docs become lies.
+docker_changed=$(git diff --cached --name-only 2>/dev/null | grep -E '^(docker-compose\.ya?ml|orchestrator/Dockerfile)$' || true)
+if [ -n "$docker_changed" ]; then
+    stale_phrases='code is baked|baked into image|not volume-mounted|baked from the Dockerfile'
+    drift=$(grep -rEln "$stale_phrases" CLAUDE.md docs/AGENT_SOP.md skills/*/SKILL.md 2>/dev/null || true)
+    if [ -n "$drift" ]; then
+        fail "Docker config changed but stale 'code is baked' phrasing in: $drift" \
+             "Update those files to match new docker-compose.yml reality, then commit them in the SAME commit."
+    fi
+fi
+
 check_branch
 
 echo "Pre-commit checks passed."
