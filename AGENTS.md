@@ -149,10 +149,26 @@ Gate does NOT:
 Agent workflow:
 1. Claim your branch before starting: `claim(resource='branch:<name>', holder='<agent-id>', ttl_seconds=7200)`
 2. Write and test code locally on feature branch
-3. When done, final commit message MUST end with `[READY]`
+3. When done, final commit message MUST contain `[READY]` AND a `[GATE-NOTE: ...]` block
 4. Push to `origin/feature/<name>` (own branch only)
 5. Release branch claim: `complete(task_id)`
-6. Gate picks up branch on next 60s tick, reviews, merges, deploys
+6. Gate runs as host cron every 60s on VPS (not inside container). Picks up branch within 60s of push.
+
+**[GATE-NOTE] required format (every [READY] commit must include this):**
+
+```
+feat(x): description [READY]
+
+[GATE-NOTE: merge-target=main, branch=feature/my-branch, context=one sentence what changed and any risks]
+```
+
+Keys:
+- `merge-target`: branch to merge into (default: main if omitted)
+- `branch`: your branch name (for gate logging)
+- `context`: one sentence -- what changed, conflict risks, dependencies on other branches
+- `skip-tests`: true only if tests cannot run (explain why in context)
+
+Gate reads this before merging. Missing note = gate merges anyway but logs a warning. Wrong merge-target = gate holds and notifies Boubacar.
 
 **No Telegram. No /propose. No manual notification.** Gate watches GitHub automatically. Agents push and move on. Done.
 
