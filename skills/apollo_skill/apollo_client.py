@@ -473,6 +473,14 @@ def reveal_emails(apollo_ids: list[str]) -> list[dict]:
     results = []
     for i in range(0, len(new_ids), 10):
         chunk = new_ids[i:i + 10]
+        # Daily Apollo budget guard. Each bulk_match call costs up to 10 credits.
+        try:
+            from signal_works.pipeline_metrics import apollo_check_budget
+            if not apollo_check_budget(cost=len(chunk)):
+                logger.warning("Apollo daily budget exceeded -- aborting reveal_emails")
+                break
+        except Exception:
+            pass
         try:
             r = httpx.post(
                 f"{APOLLO_API_URL}/people/bulk_match",
@@ -482,8 +490,14 @@ def reveal_emails(apollo_ids: list[str]) -> list[dict]:
             )
             r.raise_for_status()
             resp = r.json()
-            credits_used = resp.get("credits_consumed", "?")
+            credits_used = resp.get("credits_consumed", 0)
             logger.info(f"  bulk_match: {len(chunk)} requested, credits_consumed={credits_used}")
+            try:
+                from signal_works.pipeline_metrics import log_apollo_credits
+                if isinstance(credits_used, int) and credits_used > 0:
+                    log_apollo_credits(credits_used, source="apollo_bulk_match")
+            except Exception:
+                pass
 
             for match in resp.get("matches", []):
                 email = match.get("email")

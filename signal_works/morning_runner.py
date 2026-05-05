@@ -88,6 +88,13 @@ def _main_body():
     logger.info(f"Daily outreach run: {datetime.now().strftime('%Y-%m-%d %H:%M MT')}")
     logger.info("=" * 60)
 
+    # Best-effort metrics logger. Never raises if DB is unavailable.
+    try:
+        from signal_works.pipeline_metrics import log_step
+    except Exception:
+        def log_step(*a, **kw):
+            pass
+
     bounce_nulled = 0
     sw_leads = 0
     sw_drafted = 0
@@ -107,21 +114,26 @@ def _main_body():
         from signal_works.bounce_scanner import run as bounce_scan
         bounce_nulled = bounce_scan(days=2)
         logger.info(f"  Done. {bounce_nulled} bounced emails nulled in DB.")
+        log_step("bounce_scan", succeeded=bounce_nulled)
     except Exception as e:
         logger.error(f"  Bounce scan failed: {e}")
+        log_step("bounce_scan", reason=f"error: {type(e).__name__}")
 
     # ── Step 2: Signal Works -- harvest leads ─────────────────────
-    logger.info("STEP 2: Signal Works lead harvest (target: 10 email leads)...")
+    logger.info("STEP 2: Signal Works lead harvest (target: 35 email leads)...")
     try:
         from signal_works.topup_leads import topup
         sw_leads = topup(minimum=35)
         logger.info(f"  Done. {sw_leads} Signal Works email leads ready.")
+        log_step("sw_harvest", attempted=35, succeeded=sw_leads)
     except Exception as e:
         logger.error(f"  Signal Works topup failed: {e}")
+        log_step("sw_harvest", attempted=35, reason=f"error: {type(e).__name__}")
 
     # ── Step 3: Signal Works -- 4-touch sequence (draft, manual review) ──
     if is_weekend:
         logger.info("STEP 3: SKIPPED on weekend (no SW sends Sat/Sun).")
+        log_step("sw_sequence", reason="weekend_skip")
     else:
         logger.info("STEP 3: Signal Works sequence T1-T4 (drafts, manual review)...")
         try:
@@ -129,27 +141,36 @@ def _main_body():
             sw_result = run_sequence("sw", dry_run=False, daily_limit=35)
             sw_drafted = sw_result.get("drafted", 0) + sw_result.get("sent", 0)
             logger.info(f"  Done. {sw_drafted} SW sequence drafts created.")
+            log_step("sw_sequence", attempted=35, succeeded=sw_drafted)
         except Exception as e:
             logger.error(f"  Signal Works sequence failed: {e}")
+            log_step("sw_sequence", attempted=35, reason=f"error: {type(e).__name__}")
 
     # ── Step 4: Catalyst Works -- Apollo lead topup ───────────────
     logger.info("STEP 4: Catalyst Works lead topup via Apollo (target: 20 leads, full US)...")
+    cw_leads = 0
     try:
         from signal_works.topup_cw_leads import topup_cw_leads
         cw_leads = topup_cw_leads(minimum=20)
         logger.info(f"  Done. {cw_leads} CW email leads ready.")
+        log_step("cw_harvest", attempted=20, succeeded=cw_leads)
     except Exception as e:
         logger.error(f"  CW Apollo topup failed: {e}")
+        log_step("cw_harvest", attempted=20, reason=f"error: {type(e).__name__}")
 
     # ── Step 4b: Studio -- Apollo lead topup (full US) ────────────
+    # NOTE 2026-05-05: Studio is being merged into SW. This step still fires
+    # for backward compat but will be removed in next session.
     studio_leads = 0
     logger.info("STEP 4b: Studio lead topup via Apollo (target: 25 leads, full US)...")
     try:
         from signal_works.topup_studio_leads import topup_studio_leads
         studio_leads = topup_studio_leads(minimum=25)
         logger.info(f"  Done. {studio_leads} Studio email leads ready.")
+        log_step("studio_harvest", attempted=25, succeeded=studio_leads)
     except Exception as e:
         logger.error(f"  Studio Apollo topup failed: {e}")
+        log_step("studio_harvest", attempted=25, reason=f"error: {type(e).__name__}")
 
     # ── Step 4.5: CW voice personalization (transcript-style-dna) ─
     voice_personalized = 0
@@ -159,14 +180,18 @@ def _main_body():
         # Match daily_limit of CW sequence so we never over-personalize
         voice_personalized = personalize_pending_leads(limit=15)
         logger.info(f"  Done. {voice_personalized} leads personalized.")
+        log_step("cw_voice_personalize", attempted=15, succeeded=voice_personalized,
+                 skipped=max(0, 15 - voice_personalized))
     except Exception as e:
         # Best-effort: a failure here must not block CW sequence from running
         # with template-only opens.
         logger.error(f"  Voice personalization failed (non-fatal): {e}")
+        log_step("cw_voice_personalize", attempted=15, reason=f"error: {type(e).__name__}")
 
     # ── Step 5: Catalyst Works -- 4-touch sequence (auto-send) ───
     if is_weekend:
         logger.info("STEP 5: SKIPPED on weekend (no CW sends Sat/Sun).")
+        log_step("cw_sequence", reason="weekend_skip")
     else:
         logger.info("STEP 5: Catalyst Works sequence T1-T5 (auto-send)...")
         try:
@@ -174,8 +199,10 @@ def _main_body():
             cw_result = run_sequence("cw", dry_run=False, daily_limit=15)
             cw_drafted = cw_result.get("drafted", 0)
             logger.info(f"  Done. {cw_drafted} CW emails drafted.")
+            log_step("cw_sequence", attempted=15, succeeded=cw_drafted)
         except Exception as e:
             logger.error(f"  CW sequence failed: {e}")
+            log_step("cw_sequence", attempted=15, reason=f"error: {type(e).__name__}")
 
 
     # Step 5b: SW gap fill -- CW shortfall covered by extra SW to hit 50 total
@@ -189,12 +216,15 @@ def _main_body():
                 _extra = _gap_result.get("drafted", 0)
                 sw_drafted += _extra
                 logger.info(f"  Done. {_extra} extra SW drafts. Total SW today: {sw_drafted}")
+                log_step("sw_gap_fill", attempted=_gap, succeeded=_extra)
             except Exception as e:
                 logger.error(f"  SW gap fill failed: {e}")
+                log_step("sw_gap_fill", attempted=_gap, reason=f"error: {type(e).__name__}")
 
     # ── Step 6: Studio -- web presence 4-touch sequence (auto-send) ──
     if is_weekend:
         logger.info("STEP 6: SKIPPED on weekend (no Studio sends Sat/Sun).")
+        log_step("studio_sequence", reason="weekend_skip")
     else:
         logger.info("STEP 6: Studio web presence sequence T1-T4 (auto-send)...")
         try:
@@ -202,8 +232,10 @@ def _main_body():
             studio_seq = run_sequence("studio", dry_run=False, daily_limit=15)
             studio_drafted = studio_seq.get("drafted", 0) or studio_seq.get("sent", 0)
             logger.info(f"  Done. {studio_drafted} Studio emails drafted.")
+            log_step("studio_sequence", attempted=15, succeeded=studio_drafted)
         except Exception as e:
             logger.error(f"  Studio sequence failed: {e}")
+            log_step("studio_sequence", attempted=15, reason=f"error: {type(e).__name__}")
 
     # ── Summary ───────────────────────────────────────────────────
     total = sw_drafted + cw_drafted + studio_drafted
@@ -219,6 +251,11 @@ def _main_body():
     logger.info(f"  TOTAL drafts in inbox:  {total}")
     if total > 0:
         logger.info("  Check boubacar@catalystworks.consulting Drafts -- ready to send.")
+    try:
+        from signal_works.pipeline_metrics import apollo_credits_used_today
+        logger.info(f"  Apollo credits used today: {apollo_credits_used_today()}")
+    except Exception:
+        pass
     logger.info("=" * 60)
 
     # ── Harvest Health Check ─────────────────────────────────────
