@@ -114,7 +114,7 @@ def _main_body():
     logger.info("STEP 2: Signal Works lead harvest (target: 10 email leads)...")
     try:
         from signal_works.topup_leads import topup
-        sw_leads = topup(minimum=10)
+        sw_leads = topup(minimum=35)
         logger.info(f"  Done. {sw_leads} Signal Works email leads ready.")
     except Exception as e:
         logger.error(f"  Signal Works topup failed: {e}")
@@ -126,7 +126,7 @@ def _main_body():
         logger.info("STEP 3: Signal Works sequence T1-T4 (drafts, manual review)...")
         try:
             from skills.outreach.sequence_engine import run_sequence
-            sw_result = run_sequence("sw", dry_run=False, daily_limit=10)
+            sw_result = run_sequence("sw", dry_run=False, daily_limit=35)
             sw_drafted = sw_result.get("drafted", 0)
             logger.info(f"  Done. {sw_drafted} SW sequence drafts created.")
         except Exception as e:
@@ -157,7 +157,7 @@ def _main_body():
     try:
         from signal_works.voice_personalizer import personalize_pending_leads
         # Match daily_limit of CW sequence so we never over-personalize
-        voice_personalized = personalize_pending_leads(limit=10)
+        voice_personalized = personalize_pending_leads(limit=15)
         logger.info(f"  Done. {voice_personalized} leads personalized.")
     except Exception as e:
         # Best-effort: a failure here must not block CW sequence from running
@@ -171,11 +171,26 @@ def _main_body():
         logger.info("STEP 5: Catalyst Works sequence T1-T5 (auto-send)...")
         try:
             from skills.outreach.sequence_engine import run_sequence
-            cw_result = run_sequence("cw", dry_run=False, daily_limit=10)
+            cw_result = run_sequence("cw", dry_run=False, daily_limit=15)
             cw_drafted = cw_result.get("drafted", 0)
             logger.info(f"  Done. {cw_drafted} CW emails drafted.")
         except Exception as e:
             logger.error(f"  CW sequence failed: {e}")
+
+
+    # Step 5b: SW gap fill -- CW shortfall covered by extra SW to hit 50 total
+    if not is_weekend:
+        _gap = 50 - sw_drafted - cw_drafted
+        if _gap > 0:
+            logger.info(f"STEP 5b: SW gap fill -- need {_gap} more to hit 50 total...")
+            try:
+                from skills.outreach.sequence_engine import run_sequence
+                _gap_result = run_sequence("sw", dry_run=False, daily_limit=_gap)
+                _extra = _gap_result.get("drafted", 0)
+                sw_drafted += _extra
+                logger.info(f"  Done. {_extra} extra SW drafts. Total SW today: {sw_drafted}")
+            except Exception as e:
+                logger.error(f"  SW gap fill failed: {e}")
 
     # ── Step 6: Studio -- web presence 4-touch sequence (auto-send) ──
     if is_weekend:
