@@ -155,19 +155,8 @@ def _ffmpeg_render(
 
     scenes = manifest["scenes"]
     audio_path = manifest.get("audio_path", "")
-    srt_path = manifest.get("srt_path", "")
-    intro_dur = float(manifest.get("intro_duration_sec", 3))
-    outro_dur = float(manifest.get("outro_duration_sec", 4))
     brand = manifest.get("brand", {})
-    title = manifest.get("title", "")
-    channel_name = brand.get("display_name", "")
     bg_color = brand.get("background_color", "#1E1433").lstrip("#")
-    primary_color = brand.get("primary_color", "#E8A020").lstrip("#")
-    font = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-
-    # Fallback font if brand font not available
-    if not Path(font).exists():
-        font = "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -190,40 +179,27 @@ def _ffmpeg_render(
 
             clip_paths.append(clip_out)
 
-        # Step 2: Intro title card
-        intro_path = tmp / "intro.mp4"
-        _render_title_card(
-            intro_path, intro_dur, fps, width, height,
-            title, bg_color, primary_color, font,
-        )
+        # Shorts format: no intro/outro cards, no burned captions.
+        # Scene clips concat directly. Narration starts at 0s.
+        # Captions delivered as separate SRT track (not burned in).
+        # Re-enable intro/outro + captions for long-form when that format ships.
 
-        # Step 3: Outro card
-        outro_path = tmp / "outro.mp4"
-        _render_outro_card(
-            outro_path, outro_dur, fps, width, height,
-            channel_name, bg_color, primary_color, font,
-        )
-
-        # Step 4: Concat all clips with crossfade transitions
-        all_clips = [intro_path] + clip_paths + [outro_path]
+        # Step 2: Concat scene clips only (no intro/outro)
         concat_path = tmp / "concat.mp4"
-        _concat_clips(all_clips, concat_path, scenes, fps)
+        _concat_clips(clip_paths, concat_path, scenes, fps)
 
-        # Step 5: Mix narration audio
+        # Step 3: Mix narration audio (no delay — no intro card)
         if audio_path and Path(audio_path).exists():
             mixed_path = tmp / "mixed.mp4"
-            _mix_audio(concat_path, audio_path, mixed_path, intro_dur)
+            _mix_audio(concat_path, audio_path, mixed_path, 0.0)
         else:
             mixed_path = concat_path
 
-        # Step 6: Burn SRT captions (or copy without)
-        if srt_path and Path(srt_path).exists() and Path(srt_path).stat().st_size > 10:
-            _burn_captions(mixed_path, srt_path, output_path, width, height, font, primary_color)
-        else:
-            subprocess.run(
-                ["ffmpeg", "-y", "-i", str(mixed_path), "-c", "copy", str(output_path)],
-                check=True, capture_output=True, timeout=300,
-            )
+        # Step 4: Copy to output (no burned captions)
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", str(mixed_path), "-c", "copy", str(output_path)],
+            check=True, capture_output=True, timeout=300,
+        )
 
 
 def _ffmpeg(cmd: list, timeout: int = 300) -> None:
