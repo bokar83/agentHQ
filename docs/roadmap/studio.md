@@ -166,6 +166,36 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 
 ---
 
+### M3.4: Scene Motion Upgrade , Ken Burns → Mixed Video ⏳ QUEUED (post-M3 first batch)
+
+**What:** Replace all-Ken-Burns scene rendering with a mixed-motion pipeline. Instead of every scene being a still image with zoompan, 2-3 scenes per Short get real video motion via Kai image-to-video (Seedance). Remaining scenes keep Ken Burns.
+
+**Why Ken Burns is the current baseline:** Ken Burns is fast, cheap ($0 extra per video), and deterministic. It works. But 7 sequential Ken Burns clips feel monotonous in motion even with varied directions (zoom_in, pan_left, etc.). Confirmed in first-fire review 2026-05-05.
+
+**Target behavior:**
+- Scene 0 (hook): image-to-video (Seedance) , most important scene, viewer retention hooks here
+- Scenes 1-4: Ken Burns (cheap, covers narration body)
+- Scene 5 (CTA/climax): image-to-video (Seedance) , emotional peak before outro
+- Scene 6 (bridge to outro): Ken Burns
+
+**Cost delta:** ~$0.08-0.12/video in Kai credits (2x Seedance calls). Acceptable at first-batch volume. Revisit at scale.
+
+**Effort:** ~4 hr. `studio_visual_generator.py` + `studio_render_publisher.py` changes only.
+
+**Implementation:**
+1. `studio_visual_generator.py`: return `{"type": "video", "source_url": ...}` for hook/climax scenes, `{"type": "image", ...}` for rest
+2. `studio_render_publisher.py`: `_ffmpeg_render()` , if `scene["type"] == "video"`, download and use directly instead of calling `_render_ken_burns_clip()`
+3. `studio_scene_builder.py`: add `motion_type` field per scene (hook → `video`, body → `image`, climax → `video`)
+
+**Trigger:** First batch of 15 Shorts reviewed. Ken Burns monotony confirmed as quality gap worth fixing. Decision: 2026-05-05.
+
+**Blockers:** None. M3 pipeline is already rendering successfully.
+
+**Branch:** `feat/studio-m3.4-scene-motion`
+**ETA:** 1 session (~4 hr).
+
+---
+
 ### M3.5: Channel Cloner Pipeline ⏳ QUEUED (post-M3)
 
 **What:** Reverse-engineer a successful YouTube channel's full surface (voice, scripts, visuals, thumbnails) and produce new content modeled after it. Same M3 production engine, different input shape: instead of trend-scout candidate → original script, the cloner takes 3-5 reference channels → style profile → script in that style → visuals matching the channel's aesthetic → thumbnails matching their grammar.
@@ -806,3 +836,30 @@ Source: taste-skill `imagegen-frontend-web` vocabulary. Absorb verdict: PROCEED 
 **M4 status:** All account IDs wired. Warm-up window is the remaining gate. Blotato publisher fires at 09:00 MT daily on `Status=scheduled AND ScheduledDate=today`.
 
 **Next:** Confirm first Short in Drive. Review quality. M4 warm-up window starts day 1 from first post.
+
+---
+
+### 2026-05-05: Branded channel cards shipped + scene motion upgrade planned
+
+**Session scope:** Caption removal, branded intro/outro cards built and deployed, pipeline production unblocked.
+
+**What shipped:**
+
+- Burned-in captions removed from ffmpeg pipeline. SRT sidecar delivered only. Source: Sankofa Council verdict + first-fire frame review (giant cyan text covered the image center, sync drifted).
+- 6 hyperframes-rendered branded channel cards (3 channels x intro + outro):
+  - Under the Baobab: baobab/Milky Way photo bg, gold circular logo, Cinzel Decorative font, pulse-glow outro animation
+  - AI Catalyst: energy vortex photo bg, violet circular logo, Space Grotesk font, draw-in + spin + counter-arc outro
+  - First Gen Money: linen texture photo bg, green circular logo with gold border, Plus Jakarta Sans, rising float + wealth particles outro
+- Cards deployed to `/app/workspace/assets/{intros,outros}/<channel>_{intro,outro}.mp4`
+- `studio_render_publisher.py` wired: ffmpeg concat prepends intro + appends outro per channel. Audio delayed by intro duration so narration starts after card.
+- Drive upload fix: `_upload_to_drive()` now passes `filename` + `mime_type` (was missing 2 required args, all renders had Drive upload silently fail).
+- Drive root folder fix: falls back to `GOOGLE_DRIVE_FOLDER_ID` env var (hardcoded fallback ID was 404).
+- QA `source_citation` skipped for `short (<60s)` length_target (no room in 55s scripts for citations, was blocking all AI Catalyst + First Gen Money candidates).
+- Scene density fix: `_WORDS_PER_SCENE` now scales with `target_duration_sec` (30 words/scene for shorts = 7 scenes vs. 1 scene from old 200-word constant).
+- Studio re-enabled. 15 scouted candidates queued for next production tick.
+
+**First render confirmed:** 3 videos in Drive with correct URLs. Notion updated to `scheduled`.
+
+**Ken Burns acknowledged as monotonous:** All 7 scenes per Short use Ken Burns zoompan. Functional but visually repetitive. Decision: keep for first batch, upgrade in M3.4. See new milestone above.
+
+**Next:** Monitor first batch (15 scouted candidates). Confirm Drive uploads land correctly. M4 warm-up day 1 starts from first post. M3.4 scene motion upgrade queued after first-batch review.
