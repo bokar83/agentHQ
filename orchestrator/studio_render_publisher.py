@@ -142,6 +142,19 @@ def _render_format(
     return output_path
 
 
+def _probe_duration(path: "Path") -> float:
+    """Return duration in seconds of a video file via ffprobe."""
+    try:
+        result = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "default=noprint_wrappers=1:nokey=1", str(path)],
+            capture_output=True, text=True, timeout=10,
+        )
+        return float(result.stdout.strip())
+    except Exception:
+        return 0.0
+
+
 def _ffmpeg_render(
     manifest: dict,
     output_path: Path,
@@ -150,21 +163,36 @@ def _ffmpeg_render(
     fps: int,
     fmt: str,
 ) -> None:
-    """Render MP4 from image scenes + audio using ffmpeg Ken Burns pipeline."""
+    """Render MP4 from image scenes + audio using ffmpeg Ken Burns pipeline.
+
+    Prepends channel intro and appends channel outro from static VPS assets.
+    No captions burned in � SRT delivered as sidecar only.
+    """
     import tempfile
 
     scenes = manifest["scenes"]
     audio_path = manifest.get("audio_path", "")
     brand = manifest.get("brand", {})
+    channel_id = brand.get("channel_id", "")
     bg_color = brand.get("background_color", "#1E1433").lstrip("#")
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Step 1: Build a clip for each scene (Ken Burns on image → scene_N.mp4)
-    clip_paths = []
+    intro_asset = _ASSETS_DIR / "intros" / f"{channel_id}_intro.mp4"
+    outro_asset = _ASSETS_DIR / "outros" / f"{channel_id}_outro.mp4"
+    has_intro = intro_asset.exists()
+    has_outro = outro_asset.exists()
+    if not has_intro:
+        logger.warning("render_publisher: intro asset missing for %s (%s)", channel_id, intro_asset)
+    if not has_outro:
+        logger.warning("render_publisher: outro asset missing for %s (%s)", channel_id, outro_asset)
+
+    intro_dur = _probe_duration(intro_asset) if has_intro else 0.0
+
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp = Path(tmpdir)
 
+        clip_paths = []
         for scene in scenes:
             img = scene.get("image_path", "")
             dur = float(scene.get("duration_sec", 8.0))
@@ -174,28 +202,26 @@ def _ffmpeg_render(
             if img and Path(img).exists():
                 _render_ken_burns_clip(img, clip_out, dur, fps, width, height, motion)
             else:
-                # Fallback: solid color clip
                 _render_color_clip(clip_out, dur, fps, width, height, bg_color)
 
             clip_paths.append(clip_out)
 
-        # Shorts format: no intro/outro cards, no burned captions.
-        # Scene clips concat directly. Narration starts at 0s.
-        # Captions delivered as separate SRT track (not burned in).
-        # Re-enable intro/outro + captions for long-form when that format ships.
+        all_clips = []
+        if has_intro:
+            all_clips.append(intro_asset)
+        all_clips.extend(clip_paths)
+        if has_outro:
+            all_clips.append(outro_asset)
 
-        # Step 2: Concat scene clips only (no intro/outro)
         concat_path = tmp / "concat.mp4"
-        _concat_clips(clip_paths, concat_path, scenes, fps)
+        _concat_clips(all_clips, concat_path, scenes, fps)
 
-        # Step 3: Mix narration audio (no delay — no intro card)
         if audio_path and Path(audio_path).exists():
             mixed_path = tmp / "mixed.mp4"
-            _mix_audio(concat_path, audio_path, mixed_path, 0.0)
+            _mix_audio(concat_path, audio_path, mixed_path, intro_dur)
         else:
             mixed_path = concat_path
 
-        # Step 4: Copy to output (no burned captions)
         subprocess.run(
             ["ffmpeg", "-y", "-i", str(mixed_path), "-c", "copy", str(output_path)],
             check=True, capture_output=True, timeout=300,

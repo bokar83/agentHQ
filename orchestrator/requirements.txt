@@ -1,8 +1,8 @@
 # agentsHQ Orchestrator — Python Dependencies
 
 # ── Core Framework ──────────────────────────────────────────────
-crewai[tools]>=0.80.0
-crewai-tools>=0.17.0
+crewai[tools]>=0.80.0,<2.0.0
+crewai-tools>=0.17.0,<2.0.0
 
 # ── API & Web ──────────────────────────────────────────────
 fastapi>=0.115.0
@@ -16,7 +16,7 @@ litellm>=1.0.0
 anthropic>=0.40.0,<1.0.0
 
 # ── Vector Memory ───────────────────────────────────────────
-qdrant-client>=1.10.0
+qdrant-client>=1.10.0,<2.0.0
 
 # ── Database ──────────────────────────────────────────────
 psycopg2-binary>=2.9.9
