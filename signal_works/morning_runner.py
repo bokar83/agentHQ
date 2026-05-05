@@ -220,6 +220,25 @@ def _main_body():
     if total > 0:
         logger.info("  Check boubacar@catalystworks.consulting Drafts -- ready to send.")
     logger.info("=" * 60)
+
+    # ── Harvest Health Check ─────────────────────────────────────
+    # Alert when below threshold even if total > 0. Prevents silent
+    # under-performance going unnoticed until the daily report email.
+    # Thresholds aligned with daily targets: SW=35, CW=15.
+    SW_THRESHOLD = 30
+    CW_THRESHOLD = 10
+    health_warnings = []
+    if not is_weekend:
+        if sw_drafted < SW_THRESHOLD:
+            health_warnings.append(f"SW drafts low: {sw_drafted}/{SW_THRESHOLD}")
+        if cw_drafted < CW_THRESHOLD:
+            health_warnings.append(f"CW drafts low: {cw_drafted}/{CW_THRESHOLD}")
+    if health_warnings:
+        msg = "agentsHQ morning runner: harvest below threshold.\n" + "\n".join(health_warnings)
+        msg += f"\nTotal drafts: {total}. Check /var/log/signal_works_morning.log."
+        _telegram_alert(msg)
+        logger.warning(f"Harvest health check: {'; '.join(health_warnings)}")
+
     return 0 if total > 0 else 1
 
 
