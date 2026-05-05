@@ -381,9 +381,11 @@ def _hunter_find_email(domain: str, first_name: str = "", last_name: str = "") -
         if first_name:
             return data.get("email")
         else:
-            # domain search — return first verified email
+            # domain search -- return first deliverable email.
+            # Hunter treats confidence >= 50 as deliverable. 70 was too strict
+            # and dropped ~60% of valid leads (2026-05-05 daily report: 0/7).
             emails = data.get("emails", [])
-            verified = [e for e in emails if e.get("confidence", 0) > 70]
+            verified = [e for e in emails if e.get("confidence", 0) > 50]
             return verified[0]["value"] if verified else None
 
     except Exception as e:
@@ -598,14 +600,39 @@ def discover_leads(query: str = "", count: int = DEFAULT_LEAD_COUNT) -> List[dic
                         lead["email"] = email
                 time.sleep(0.5)
 
-    # Step 5: Apollo fallback blocked on free plan — skipped
+    # Step 5: Apollo fallback for leads still missing email.
+    # 2026-05-05: enabled (we have a paid plan; CW pipeline already uses it).
+    # find_owner_by_company is a 1-credit Apollo call per company.
+    try:
+        from skills.apollo_skill.apollo_client import find_owner_by_company
+        apollo_attempts = 0
+        apollo_hits = 0
+        for lead in leads:
+            if lead.get("email") or not lead.get("company"):
+                continue
+            if apollo_attempts >= 30:  # cap per run to protect Apollo budget
+                break
+            city = lead.get("city") or lead.get("location") or ""
+            apollo_attempts += 1
+            try:
+                owner = find_owner_by_company(lead["company"], city)
+                if owner and owner.get("email"):
+                    lead["email"] = owner["email"]
+                    if not lead.get("name") and owner.get("name"):
+                        lead["name"] = owner["name"]
+                    apollo_hits += 1
+            except Exception as e:
+                logger.warning(f"Hunter: Apollo fallback failed for {lead.get('company')}: {e}")
+        logger.info(f"Hunter: Apollo fallback -- {apollo_hits}/{apollo_attempts} leads enriched")
+    except ImportError:
+        logger.warning("Hunter: apollo_client unavailable, skipping Apollo fallback")
+
     if len(leads) < 5:
         logger.warning(
-            f"Hunter: only {len(leads)} leads found after Serper + Hunter.io. "
-            "Apollo people-search requires a paid plan — upgrade at app.apollo.io to enable."
+            f"Hunter: only {len(leads)} leads found after Serper + Hunter.io + Apollo."
         )
 
-    logger.info(f"Hunter: Discovery complete — {len(leads)} leads found")
+    logger.info(f"Hunter: Discovery complete -- {len(leads)} leads found")
     return leads[:count]
 
 

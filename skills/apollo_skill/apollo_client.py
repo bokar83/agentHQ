@@ -537,7 +537,7 @@ def find_owner_by_company(name: str, city: str) -> dict | None:
         "organization_locations": [city] if city else [],
         "person_titles": _SW_OWNER_TITLES,
         "person_seniorities": _DECISION_MAKER_SENIORITIES,
-        "contact_email_status": ["verified"],
+        "contact_email_status": ["verified", "likely_to_engage"],
         "page": 1,
         "per_page": 5,
     }
