@@ -7,7 +7,7 @@ each with narration text, image prompt, video prompt, and timing.
 Visual prompts are enforced against brand.visual_style and
 brand.regional_motif_tags to prevent cultural mismatch (Sankofa risk).
 
-At ~200 words per scene for a 1500-word script = ~7-8 scenes.
+Scene density scales with target_duration_sec: 30 words/scene (shorts), 100 (medium), 200 (long).
 """
 from __future__ import annotations
 
@@ -18,7 +18,9 @@ from typing import Any
 
 logger = logging.getLogger("agentsHQ.studio_scene_builder")
 
-_WORDS_PER_SCENE = 200
+_WORDS_PER_SCENE_LONG = 200
+_WORDS_PER_SCENE_MEDIUM = 100
+_WORDS_PER_SCENE_SHORT = 30
 _SCENE_MARKER_RE = re.compile(r'\[SCENE:\s*([^\]]+)\]')
 
 
@@ -69,9 +71,18 @@ def build_scenes(
     # Extract LLM-provided scene hints from [SCENE: ...] markers
     scene_hints = _extract_scene_hints(full_text)
 
-    # Split text into ~200-word blocks, aligned to sentence boundaries
+    # Words per scene scales with target duration
+    target_dur = brand.get("target_duration_sec", 600)
+    if target_dur <= 60:
+        words_per_scene = _WORDS_PER_SCENE_SHORT
+    elif target_dur <= 180:
+        words_per_scene = _WORDS_PER_SCENE_MEDIUM
+    else:
+        words_per_scene = _WORDS_PER_SCENE_LONG
+
+    # Split text into word-count blocks, aligned to sentence boundaries
     clean_text = _SCENE_MARKER_RE.sub("", full_text).strip()
-    blocks = _split_into_blocks(clean_text, _WORDS_PER_SCENE)
+    blocks = _split_into_blocks(clean_text, words_per_scene)
 
     # Map word timestamps to blocks
     timed_blocks = _align_blocks_to_timestamps(blocks, timestamps, total_duration)
