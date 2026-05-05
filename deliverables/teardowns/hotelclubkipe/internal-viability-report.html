@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Internal Viability Report: Hotel Club de Kipe</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Georgia', serif; background: #0f0f0f; color: #e8e3d8; line-height: 1.7; }
+  .header { background: #1a1a1a; border-bottom: 3px solid #c9a84c; padding: 2rem 3rem; }
+  .header h1 { font-size: 1.1rem; color: #c9a84c; letter-spacing: 3px; text-transform: uppercase; font-family: 'Arial', sans-serif; }
+  .header h2 { font-size: 2.2rem; margin-top: 0.5rem; color: #fff; }
+  .header .date { color: #888; font-size: 0.9rem; margin-top: 0.5rem; font-family: 'Arial', sans-serif; }
+  .container { max-width: 900px; margin: 0 auto; padding: 2rem 3rem; }
+  .verdict-block { background: #1e3a1e; border: 2px solid #4caf50; border-radius: 8px; padding: 2rem; margin: 2rem 0; text-align: center; }
+  .verdict-block .verdict { font-size: 3rem; font-weight: 900; color: #4caf50; letter-spacing: 4px; font-family: 'Arial', sans-serif; }
+  .verdict-block .rationale { color: #b8d8b8; margin-top: 1rem; font-size: 1.05rem; }
+  .section { margin: 2.5rem 0; }
+  .section h3 { color: #c9a84c; font-size: 1.3rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem; margin-bottom: 1.2rem; font-family: 'Arial', sans-serif; letter-spacing: 1px; text-transform: uppercase; }
+  table { width: 100%; border-collapse: collapse; font-family: 'Arial', sans-serif; font-size: 0.9rem; }
+  th { background: #2a2a2a; color: #c9a84c; padding: 0.8rem 1rem; text-align: left; }
+  td { padding: 0.8rem 1rem; border-bottom: 1px solid #2a2a2a; }
+  td.score { font-weight: 700; color: #c9a84c; }
+  td.fail { color: #f44336; font-weight: 700; }
+  td.pass { color: #4caf50; font-weight: 700; }
+  td.partial { color: #ff9800; font-weight: 700; }
+  .total-row td { background: #2a2a2a; font-weight: 700; }
+  .score-box { background: #1a1a1a; border: 1px solid #c9a84c; border-radius: 8px; padding: 1.5rem; margin: 1.5rem 0; }
+  .score-box .big-score { font-size: 4rem; font-weight: 900; color: #c9a84c; font-family: 'Arial', sans-serif; }
+  .score-box .label { color: #888; font-family: 'Arial', sans-serif; font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; }
+  .fit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .fit-item { background: #1a1a1a; border-radius: 6px; padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
+  .fit-item .label { color: #aaa; font-size: 0.9rem; font-family: 'Arial', sans-serif; }
+  .fit-item .yes { color: #4caf50; font-weight: 700; font-family: 'Arial', sans-serif; }
+  .fit-item .no { color: #f44336; font-weight: 700; font-family: 'Arial', sans-serif; }
+  .red-flags { background: #1a0a0a; border: 1px solid #f44336; border-radius: 8px; padding: 1.5rem; }
+  .red-flags li { margin: 0.5rem 0 0.5rem 1.2rem; color: #e8b8b8; }
+  .scope-block { background: #1a1a2a; border: 1px solid #3a3a6a; border-radius: 8px; padding: 1.5rem; }
+  .scope-block .tier { font-size: 1.4rem; font-weight: 700; color: #8888ff; font-family: 'Arial', sans-serif; }
+  .scope-block .price { font-size: 1.8rem; font-weight: 900; color: #c9a84c; margin-top: 0.5rem; font-family: 'Arial', sans-serif; }
+  .inputs-needed { background: #1a1a1a; border-radius: 8px; padding: 1.5rem; }
+  .inputs-needed li { margin: 0.4rem 0 0.4rem 1.2rem; color: #ddd; }
+  .note { color: #888; font-size: 0.85rem; font-style: italic; margin-top: 0.5rem; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Internal Viability Report</h1>
+  <h2>Hotel Club de Kipe</h2>
+  <div class="date">Audit date: 2026-05-05 | Auditor: Claude Code | Audience: Boubacar only</div>
+</div>
+
+<div class="container">
+
+  <div class="verdict-block">
+    <div class="verdict">PURSUE</div>
+    <div class="rationale">This is a real hotel with real photos and a real client relationship -- not a cold prospect. Scope is a full rebuild contracted work, not a sales pitch. The site is 40% complete and functionally broken; rebuild is straightforward and high-value for the client.</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:2rem 0;">
+    <div class="score-box">
+      <div class="label">Weighted UX Score</div>
+      <div class="big-score">14</div>
+      <div class="note">/ 100. 9 of 10 dimensions fail.</div>
+    </div>
+    <div class="score-box">
+      <div class="label">SEO / AI Score</div>
+      <div class="big-score">3</div>
+      <div class="note">/ 10. Zero schema, no NAP, no OG tags.</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Weighted Score Breakdown</h3>
+    <table>
+      <tr>
+        <th>Dimension</th>
+        <th>Weight</th>
+        <th>Score</th>
+        <th>Notes</th>
+      </tr>
+      <tr>
+        <td>Brand clarity</td>
+        <td>20%</td>
+        <td class="score">4/20</td>
+        <td>Name clear, tagline generic, no authentic voice, hero is stock food photo</td>
+      </tr>
+      <tr>
+        <td>UX craft</td>
+        <td>20%</td>
+        <td class="score">3/20</td>
+        <td>14/100 UX score. JS crashes on load. Both booking paths broken. App-card layout.</td>
+      </tr>
+      <tr>
+        <td>SEO foundation</td>
+        <td>20%</td>
+        <td class="score">2/20</td>
+        <td>No meta desc, no schema, no OG, no NAP, no favicon, no canonical. Title only.</td>
+      </tr>
+      <tr>
+        <td>Market gap (opportunity)</td>
+        <td>20%</td>
+        <td class="score">16/20</td>
+        <td>Conakry boutique hotel market is massively underserved in search. First mover wins AI visibility.</td>
+      </tr>
+      <tr>
+        <td>AI search readiness</td>
+        <td>20%</td>
+        <td class="score">1/20</td>
+        <td>Zero schema. No FAQ. No citation-ready structure. Invisible to Perplexity/AI overviews.</td>
+      </tr>
+      <tr class="total-row">
+        <td><strong>TOTAL</strong></td>
+        <td></td>
+        <td class="score"><strong>26/100</strong></td>
+        <td>Below 40 threshold, but PURSUE overrides: this is existing client work, not a cold prospect viability score.</td>
+      </tr>
+    </table>
+    <p class="note" style="margin-top:1rem;">Score methodology applies to cold prospect qualification. HCK is a confirmed rebuild engagement -- the market gap score (16/20) is the signal that matters most for build quality.</p>
+  </div>
+
+  <div class="section">
+    <h3>Fit Signals</h3>
+    <div class="fit-grid">
+      <div class="fit-item">
+        <span class="label">Local service business</span>
+        <span class="yes">YES</span>
+      </div>
+      <div class="fit-item">
+        <span class="label">Phone number prominent</span>
+        <span class="no">NO</span>
+      </div>
+      <div class="fit-item">
+        <span class="label">Real photos exist</span>
+        <span class="yes">YES (21 room photos)</span>
+      </div>
+      <div class="fit-item">
+        <span class="label">Logo exists</span>
+        <span class="yes">YES</span>
+      </div>
+      <div class="fit-item">
+        <span class="label">Actual hotel (not stub)</span>
+        <span class="yes">YES</span>
+      </div>
+      <div class="fit-item">
+        <span class="label">Backend needed</span>
+        <span class="yes">YES (Supabase)</span>
+      </div>
+      <div class="fit-item">
+        <span class="label">Bilingual requirement</span>
+        <span class="yes">YES (FR primary)</span>
+      </div>
+      <div class="fit-item">
+        <span class="label">Inputs missing from client</span>
+        <span class="no">7 ITEMS PENDING</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Critical Gaps in Current Site</h3>
+    <table>
+      <tr><th>Gap</th><th>Status</th><th>Impact</th></tr>
+      <tr><td>JS crashes on page load</td><td class="fail">BROKEN</td><td>Site non-functional on load</td></tr>
+      <tr><td>WhatsApp number</td><td class="fail">EMPTY</td><td>Zero bookings possible</td></tr>
+      <tr><td>Contact form handler</td><td class="fail">MISSING</td><td>Messages go nowhere</td></tr>
+      <tr><td>Hero image</td><td class="fail">STOCK FOOD PHOTO</td><td>Not the hotel. Trust destroyed.</td></tr>
+      <tr><td>Rooms section</td><td class="fail">ABSENT</td><td>Primary conversion content missing</td></tr>
+      <tr><td>Gallery completeness</td><td class="partial">10/21 photos</td><td>Half the visual inventory hidden</td></tr>
+      <tr><td>Meta/OG/Schema</td><td class="fail">ALL ABSENT</td><td>Invisible in search + social</td></tr>
+      <tr><td>Pricing</td><td class="fail">NONE</td><td>No booking intent anchor</td></tr>
+      <tr><td>Backend / reservation system</td><td class="fail">NONE</td><td>No staff management, no inventory control</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <h3>Scope Estimate</h3>
+    <div class="scope-block">
+      <div class="tier">Catalyst Works Custom Build</div>
+      <div>Full frontend rebuild + Supabase backend + staff management system</div>
+      <div class="price">Custom Scoped</div>
+      <div style="margin-top:1rem;color:#aaa;font-size:0.9rem;">
+        <strong>Estimated effort:</strong> 40-60 hours total<br>
+        <strong>Frontend:</strong> 15-20h (hero, rooms, gallery, booking flow, i18n)<br>
+        <strong>Supabase schema + auth:</strong> 5-8h<br>
+        <strong>Staff backend UI:</strong> 15-20h (calendar, clients, invoices, admin panel)<br>
+        <strong>Real-time sync + end-to-end test:</strong> 5-8h<br>
+        <strong>Deploy (Hostinger):</strong> 2-3h
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Red Flags (Internal Only)</h3>
+    <div class="red-flags">
+      <ul>
+        <li>7 inputs still missing from client (pricing, WhatsApp number, real about copy, WhatsApp number, Maps Place ID, currency preference, staff emails, backend subdomain). Build can start on architecture but frontend copy will be placeholder until received.</li>
+        <li>Live site is offline (connection refused). Unknown whether Hostinger hosting is active. Must verify before deploy phase.</li>
+        <li>Client has no existing backend infrastructure. Supabase free tier appropriate but client needs to be onboarded to their own account.</li>
+        <li>Room pricing unknown. Invoice generator cannot be fully tested without at least placeholder pricing.</li>
+        <li>No Google Maps Place ID provided. Iframe currently uses text search query which may not resolve to correct property precisely.</li>
+        <li>Orange Money (Phase 2) and Stripe (Phase 3) payment integrations need architectural hooks now even though not built yet.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Inputs Needed Before Full Build</h3>
+    <div class="inputs-needed">
+      <ul>
+        <li>Room pricing per type (Standard / Mini Suite / Suite) in GNF and/or EUR</li>
+        <li>Real about text for the hotel (FR primary)</li>
+        <li>WhatsApp business number</li>
+        <li>Preferred currency display (GNF, EUR, or both)</li>
+        <li>Google Maps Place ID for Hotel Club de Kipe Conakry</li>
+        <li>Staff email addresses for initial backend accounts</li>
+        <li>Preferred backend URL (staff.hotelclubkipe.com or /staff/ subdirectory)</li>
+      </ul>
+      <p class="note">Architecture and Supabase schema can proceed without these. Frontend rooms section and invoice amounts need pricing before final UI.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Design Direction (from audit findings)</h3>
+    <p>Current orange-cream palette reads food delivery, not luxury hotel. Two credible directions:</p>
+    <br>
+    <p><strong>Option A: Dark Elegant</strong> - Navy/dark teal + gold + white. Comparable to European boutique hotel standard. Serif display font (Playfair Display or Cormorant). High contrast, premium.</p>
+    <br>
+    <p><strong>Option B: West African Boutique</strong> - Warm terracotta + deep green + cream + gold accents. Positions as authentic Guinean luxury. Distinctive vs. any European template look.</p>
+    <br>
+    <p>Recommendation: Option B. Differentiation is the market gap. No competitor owns "authentic West African boutique hotel" visually. Terracotta/green/gold with Cormorant Display for headlines is distinctive and premium without being a European clone.</p>
+  </div>
+
+</div>
+</body>
+</html>
