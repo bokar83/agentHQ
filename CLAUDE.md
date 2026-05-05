@@ -26,12 +26,16 @@ Full registry: `docs/roadmap/README.md`.
 
 ## Hard Rule: Task Table as Live Registry (2026-05-04)
 
-Every Claude Code session acting as a coding agent MUST update the coordination task table in real time. Not after. Not at the end. As work happens.
+Every Claude Code session MUST update the coordination task table in real time. Not after. Not at the end. As work happens. **This applies to ALL sessions — including direct (Boubacar-present) sessions — because multiple agents may run concurrently.**
+
+**Direct sessions** (Boubacar in the loop): claim branch at session start + claim each file before editing. Skip per-file [READY] commit and push — Boubacar controls when to push.
+
+**Coding agents** (spawned, autonomous): full protocol below including [READY] commit + push.
 
 ```python
 from skills.coordination import claim, complete
 
-# 1. Session start -- claim the branch
+# 1. Session start -- claim the branch (use 'branch:main' for direct sessions)
 branch_task = claim('branch:feature/<name>', '<agent-id>', ttl_seconds=7200)
 # If None: branch already claimed by another agent. Stop. Pick different task.
 
@@ -42,7 +46,7 @@ file_task = claim('file:<relative-path>', '<agent-id>', ttl_seconds=1800)
 # 3. After editing + committing the file
 complete(file_task['id'])
 
-# 4. All work done. Final commit MUST contain [READY].
+# 4. All work done. Final commit MUST contain [READY] (coding agents only).
 # complete() the branch claim, then push.
 complete(branch_task['id'])
 # git commit -m "feat(x): description [READY]"
