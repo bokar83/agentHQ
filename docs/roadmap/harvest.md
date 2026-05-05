@@ -184,7 +184,7 @@ skills/signal-works-conversion/
 
 ### R1c: website-teardown skill (one-trigger master diagnostic)
 
-**Status:** Skill scaffolded 2026-05-01. Ready to test on next prospect.
+**Status:** SHIPPED 2026-05-04. SKILL.md + both HTML report templates built and pushed on `feature/website-teardown`. Ready to test on next prospect.
 **Trigger:** Any teardown request now uses `/website-teardown` instead of manually invoking 4-5 separate skills.
 
 **What it is:** A thin orchestrator skill at `skills/website-teardown/SKILL.md` that chains `website-intelligence` (Phase 1 brand + Phase 2 competitors), `web-design-guidelines` (UX/accessibility audit), `seo-strategy` Mode 2 (full SEO/GEO audit), `kie_media` (before/after hero mockups), and `signal-works-conversion` (slider component) in a single 6-phase pipeline. No logic duplication. Every analytical step calls an existing skill.
@@ -345,10 +345,14 @@ skills/signal-works-conversion/
 
 ### R2: SaaS Audit offer live ($500 flat)
 
-**Status:** Not yet built. Unblocked now.
-**Trigger:** Can build immediately. Target: this week.
+**Status:** SHIPPED 2026-05-04.
 
-**What it is:** One-page PDF showing 5 common SMB SaaS tools (Zapier, HubSpot Starter, Monday.com, Calendly Pro, ActiveCampaign), their monthly cost, and what an agent replacement costs. Priced at $500 flat for the audit + replacement plan. Add as upsell sequence for Signal Works prospects who do not respond to the AI presence pitch.
+**What shipped:**
+
+- PDF: `workspace/articles/2026-04-28-saas-audit-assets/saas-audit.pdf` (built 2026-04-28, manually rendered via Chrome)
+- Drive link (public, anyone with link): `https://drive.google.com/file/d/132_DHAct81kC6Obhrksyixq9lFuCSYQD/view`
+- `templates/email/sw_t5.py`: SW Touch 5, Day 17 upsell. Subject: "Different angle: the software question". Niche-personalized. Links to Drive PDF. $500 audit CTA.
+- `skills/outreach/sequence_engine.py`: TOUCH_DAYS_SW extended to {1:0, 2:3, 3:7, 4:12, 5:17}. TEMPLATES['sw'] wired to sw_t5.
 
 **Why:** Buyer calculates ROI in 30 seconds. Fastest path to a cash transaction from cold email. No new infrastructure required.
 
@@ -456,6 +460,30 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 ---
 
 ## Session Log
+
+### 2026-05-04: R2 SHIPPED: SaaS Audit upsell wired into SW sequence
+
+PDF already existed (`workspace/articles/2026-04-28-saas-audit-assets/saas-audit.pdf`, built 2026-04-28).
+Uploaded to Google Drive (file ID `132_DHAct81kC6Obhrksyixq9lFuCSYQD`, public anyone-with-link).
+Built `templates/email/sw_t5.py`: Day 17 upsell, niche-personalized, links to Drive PDF, $500 flat CTA.
+Extended SW sequence from 4 to 5 touches (Day 17 added). TOUCH_DAYS_SW + TEMPLATES both updated.
+R2 milestone status flipped to SHIPPED.
+
+Branch: `feature/saas-audit-upsell` [READY].
+
+### 2026-05-04: R1c website-teardown skill SHIPPED
+
+`skills/website-teardown/` built and pushed on `feature/website-teardown` [READY].
+
+**What shipped:**
+
+- `skills/website-teardown/SKILL.md` - 6-phase thin orchestrator. Chains website-intelligence (Ph1), web-design-guidelines (Ph2), seo-strategy (Ph3), kie_media (Ph4), then writes both reports (Ph5-6). No logic duplication. Verification checklist + pricing reference included.
+- `skills/website-teardown/templates/internal-viability-report.html` - Dark-themed internal report. Verdict block (PURSUE/DROP), 5-dimension weighted score, hard stops, fit signals, price band, red flags, competitor table, research file links.
+- `skills/website-teardown/templates/client-teardown-report.html` - Light-themed client report. Gift framing (not audit framing). Findings with verify-in-60s instructions, competitor gaps, CSS drag-slider before/after, outcomes list, single CTA block. Zero internal framing.
+
+**Note on coordination claim:** Postgres not reachable from Windows dev session. Single agent, no contention risk. Branch claimed implicitly via git checkout -b.
+
+**Next:** run end-to-end against next SW prospect after Elevate. Confirm both reports generate, no internal leakage, em-dash sweep clean, slider renders.
 
 ### 2026-05-04: Design quality lift session SHIPPED - taste-skill absorbed, 4 skills upgraded, followup queue cleared
 
