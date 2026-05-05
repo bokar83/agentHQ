@@ -31,7 +31,10 @@ except ModuleNotFoundError:
 
 logger = logging.getLogger(__name__)
 DAILY_MINIMUM = 10  # Tier 1-2 default
-CIRCUIT_BREAKER_THRESHOLD = 5  # 5 consecutive double-fails -> disable Hunter
+CIRCUIT_BREAKER_THRESHOLD = 50  # 50 consecutive double-fails -> disable Hunter
+# Was 5. Raised 2026-05-05 because Apollo find_owner_by_company has ~0% hit rate
+# on local trades-SMBs (663 misses, 1 hit in one Phoenix/Vegas pass). Old threshold
+# tripped on lead 1-5 every run, killing Hunter.io fallback before it fired.
 
 
 def _telegram_alert(msg: str) -> None:
@@ -79,23 +82,41 @@ def _resolve_email(business: dict, hunter_disabled: bool) -> tuple[str, str, str
             logger.warning(f"_resolve_email: Firecrawl error on {website}: {e}")
 
     apollo = find_owner_by_company(business["business_name"], business.get("city", ""))
-    if not apollo:
-        return "", "", ""
-    if apollo.get("email"):
-        return apollo["email"], "apollo_strict", apollo.get("name") or ""
+    apollo_email = apollo.get("email") if apollo else None
+    apollo_name = (apollo.get("name") if apollo else "") or ""
+    apollo_domain = (apollo.get("domain") if apollo else "") or ""
 
-    if hunter_disabled or not apollo.get("domain"):
+    if apollo_email:
+        return apollo_email, "apollo_strict", apollo_name
+
+    # Hunter.io fallback. Try Apollo's domain first (better-formatted), then
+    # fall back to the website Serper already gave us. Apollo people DB has
+    # near-zero coverage of local trades-SMBs, so most calls reach this point
+    # with apollo=None. The website-domain path is the actual workhorse.
+    if hunter_disabled:
+        return "", "", ""
+
+    candidate_domain = apollo_domain
+    if not candidate_domain and website:
+        from urllib.parse import urlparse
+        try:
+            parsed = urlparse(website if website.startswith("http") else f"https://{website}")
+            candidate_domain = parsed.netloc.replace("www.", "")
+        except Exception:
+            candidate_domain = ""
+
+    if not candidate_domain:
         return "", "", ""
 
     try:
-        email = domain_search(apollo["domain"])
+        email = domain_search(candidate_domain)
         if email:
-            return email, "hunter_domain", apollo.get("name") or ""
+            return email, "hunter_domain", apollo_name
     except HunterCapReached:
         logger.warning("_resolve_email: Hunter cap reached, skipping for rest of run")
         raise
     except Exception as e:
-        logger.warning(f"_resolve_email: Hunter error on {apollo['domain']}: {e}")
+        logger.warning(f"_resolve_email: Hunter error on {candidate_domain}: {e}")
     return "", "", ""
 
 
