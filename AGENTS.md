@@ -126,6 +126,14 @@ Local (write + test) -> origin/feature/<name> -> gate_agent -> VPS
 
 Never skip a step. Never push untested code. Never edit VPS files directly.
 
+**Git hook (required on every machine):** The pre-commit framework was replaced 2026-05-05 with a no-stash hook that prevents silent branch switching and file reversion. Install once per machine:
+
+```bash
+cp scripts/pre-commit-hook.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+```
+
+Do NOT run `pre-commit install` -- it overwrites this hook with the old framework.
+
 ### The Gate
 
 All push/deploy/merge operations route through **the Gate** (currently Claude acting as gate agent; will become `orchestrator/gate_agent.py`).
