@@ -863,3 +863,21 @@ Source: taste-skill `imagegen-frontend-web` vocabulary. Absorb verdict: PROCEED 
 **Ken Burns acknowledged as monotonous:** All 7 scenes per Short use Ken Burns zoompan. Functional but visually repetitive. Decision: keep for first batch, upgrade in M3.4. See new milestone above.
 
 **Next:** Monitor first batch (15 scouted candidates). Confirm Drive uploads land correctly. M4 warm-up day 1 starts from first post. M3.4 scene motion upgrade queued after first-batch review.
+
+### 2026-05-05 (session 2) -- Bug chain found and fixed; full re-render queued
+
+**Bugs fixed in studio_render_publisher.py:**
+- Corrupted em-dash byte (0x97) in docstring caused UTF-8 SyntaxError; Python fell back to stale .pyc (old title-card code). Fixed: replaced with hyphen, deleted .pyc.
+- `_ASSETS_DIR` constant never defined despite being referenced at lines 181-182. Fixed: added `_ASSETS_DIR = Path(os.environ.get("STUDIO_ASSETS_DIR", "/app/workspace/assets"))`.
+- `_upload_to_drive()` called with 2 args; function requires 4. Fixed: added `local_path.name, "video/mp4"`.
+- QA `source_citation` skipped for `short (<60s)` length_target (was blocking all AI Catalyst + First Gen scripts).
+
+**All previous renders queued for re-render:**
+- 12 archived records + 1 Baobab record reset to `qa-passed` (Asset URL cleared).
+- 7 Under the Baobab + 6 First Gen Money = 13 in queue.
+- Old renders moved to `/app/workspace/renders/archive/2026-05-05/`.
+- AI Catalyst archived records stayed archived (scraped YouTube content, no scripts).
+
+**Pipeline now correct:** intro card + Ken Burns scenes + outro card + SRT sidecar. No burned captions. Drive upload working.
+
+**Next:** Confirm first re-render completes with intro/outro visible and no captions. Then M4 publisher warm-up.
