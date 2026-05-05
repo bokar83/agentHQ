@@ -184,6 +184,32 @@ The pause-to-commit ceremony is gone. Boubacar can let Claude (or any autonomous
 
 ## Session Log
 
+### 2026-05-04: Gate agent SHIPPED -- host cron, 19 tests green, live on VPS
+
+**What shipped:**
+
+- `orchestrator/gate_agent.py`: 60s heartbeat, sole entity that merges/pushes/deploys. Detects [READY] branches, conflict-checks file overlap, runs tests, auto-merges clean branches, notifies Telegram on conflict/failure only.
+- `orchestrator/contracts/gate.md`: signed autonomy contract (required by autonomy_guard).
+- `scripts/gate_cron_install.sh`: one-shot host cron installer.
+- `AGENTS.md`: hard rules (no agent push/deploy), [READY] sentinel, [GATE-NOTE] format, host-cron note.
+- `CLAUDE.md`: Gate mode rule + task table live registry rule.
+- Gate disabled in container heartbeat (no .git inside container). Moved to VPS host cron. Runs every 60s from `/etc/cron.d/gate-agent`. Telegram wired.
+
+**Key fixes during session:**
+- REPO_PATH -> DATA_DIR (Codex fix, 3 previous attempts failed without container FS inspection)
+- `_gate_enabled()` reads `crews.gate.enabled` not `gate.enabled` (wrong key)
+- Gate cron env vars wired: GATE_DATA_DIR=/root/agentsHQ/data, REPO_ROOT=/root/agentsHQ, Telegram tokens from .env
+
+**Lessons locked in memory:**
+- Inspect container FS before writing path code (`docker exec find /app`)
+- Use Codex for surgical fixes, not iterative self-edits under pressure
+- Define success criterion before deploy (`gate: tick start` in logs)
+- Write+stage+commit atomically -- Edit tool writes reverted by hook stash cycle
+
+**Gate verified:** `gate: nothing to process` firing every 60s. Telegram wired. Studio re-enabled. All 3 locations synced at f2acd29.
+
+**Next session:** handlers_chat.py double-wrap fix (agent has branch, needs [READY] push). Gate spec doc in docs/superpowers/specs/ (optional, design already in echo.md + AGENTS.md).
+
 ### 2026-05-04: M2.5 Push Gate specced, Sankofa + Karpathy councils ratified
 
 **What happened:**
