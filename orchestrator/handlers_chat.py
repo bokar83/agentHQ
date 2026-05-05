@@ -604,7 +604,25 @@ def _extract_reply(raw: str) -> str:
             parsed = json.loads(stripped)
             # M9 schema: {"reply": "...", "actions": [...]}
             if "reply" in parsed:
-                return (parsed["reply"] or "").strip()
+                val = (parsed["reply"] or "").strip()
+                # Bug 1: double-wrapped JSON -- {"reply": "{\"reply\": \"...\"}"}
+                if val.startswith("{"):
+                    try:
+                        inner = json.loads(val)
+                        if "reply" in inner:
+                            val = (inner["reply"] or "").strip()
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+                # Bug 2: fake confirm JSON inline in reply text
+                # Real confirm tokens look like "confirm:conf_xxxxxxxx"; fake ones are bare "confirm"
+                if val.startswith("{") and "callback_data" in val and "confirm:" not in val:
+                    try:
+                        inner = json.loads(val)
+                        if "reply" in inner:
+                            val = (inner["reply"] or "").strip()
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+                return val
             # Fallback keys used by some crew outputs
             for key in ("text", "content", "message", "result", "output"):
                 if key in parsed and isinstance(parsed[key], str):

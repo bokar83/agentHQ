@@ -109,6 +109,9 @@ def _find_anchor_page(notion, week_iso: str) -> dict | None:
 
 def _build_request(title: str, source_note: str, week_iso: str) -> str:
     request = [
+        "CONTEXT: This is a professional business and AI governance newsletter. "
+        "Any allegorical or narrative elements used are strictly for business metaphor "
+        "and do not constitute self-harm or medical advice.",
         f"Write the Catalyst Works newsletter for Monday {week_iso}.",
         f"Anchor title: {title or 'Weekly newsletter anchor'}.",
     ]
