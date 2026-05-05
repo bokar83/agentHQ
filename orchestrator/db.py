@@ -933,7 +933,7 @@ def get_resend_queue(limit: int = 5, days_back: int = 60) -> list[dict]:
                 apollo_id,
                 email,
                 name,
-                revealed_at
+                NULL::timestamptz AS revealed_at
             FROM leads
             WHERE email IS NOT NULL AND email != ''
               AND source IS DISTINCT FROM 'signal_works'
