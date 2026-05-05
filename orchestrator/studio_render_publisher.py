@@ -25,6 +25,7 @@ import httpx
 logger = logging.getLogger("agentsHQ.studio_render_publisher")
 
 _RENDERS_DIR = Path(os.environ.get("STUDIO_RENDERS_DIR", "/app/workspace/renders"))
+_ASSETS_DIR = Path(os.environ.get("STUDIO_ASSETS_DIR", "/app/workspace/assets"))
 
 _NOTION_TOKEN = (
     os.environ.get("NOTION_SECRET")
