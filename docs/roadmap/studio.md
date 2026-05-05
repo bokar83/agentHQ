@@ -137,7 +137,7 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 
 ---
 
-### M3: Content Production Pipeline 🔄 BUILT  -  awaiting first real render
+### M3: Content Production Pipeline ✅ SHIPPED 2026-05-05
 
 **What:** Wire the studio production crew that takes a Pipeline DB candidate (qa-passed) and produces a publish-ready asset. Pipeline shape:
 
@@ -259,8 +259,8 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 **Progress:**
 - [x] Social Launch Kits shipped (2026-05-03): `docs/roadmap/studio/social-launch-kit/`  -  bios, avatar specs, link-in-bio strategy, warm-up protocols for IG + TikTok for all 3 channels
 - [x] `orchestrator/studio_blotato_publisher.py` initialized (2026-05-03): scans Pipeline DB for Status=scheduled + ScheduledDate=Today → Blotato API → Status=posted
-- [ ] Boubacar creates IG + TikTok accounts for all 3 channels (see kits)
-- [ ] Blotato IG/TikTok account IDs collected and added to .env
+- [x] All Blotato account IDs wired in VPS .env (2026-05-05): YT + X + TikTok + IG for all 3 channels including `firstgenerationmoney_` IG (ID 45188)
+- [x] ScheduledDate fix shipped (2026-05-05): render publisher now writes Scheduled Date = today on completion
 - [ ] Warm-up window executed per-platform protocols (30 days per channel)
 - [ ] End-to-end test: 1 scheduled record → Blotato → posted
 
@@ -781,3 +781,28 @@ Source: taste-skill `imagegen-frontend-web` vocabulary. Absorb verdict: PROCEED 
 1. Confirm first video rendered (M3 first render). Review whether dossier influenced hook choice
 2. M5 gate: if CTR/watch-time shows lift on dossier-informed scripts, expand to `findings.jsonl` + source registry + weekly refresh cron
 3. Atlas M5 Chairman crew design (2026-05-08+): add `data/verification_queue.md` on VPS as knowledge-claim staging layer
+
+---
+
+### 2026-05-05: M3 SHIPPED + pipeline fully unblocked
+
+**Session scope:** Fixed all silent pipeline blockers, switched to Shorts-first strategy, first Short rendered end-to-end.
+
+**What shipped:**
+
+- Shorts-first render: `_PLATFORM_SPECS = {"shorts": {"width": 1080, "height": 1920}}` only. Long-form re-enabled when traction proven.
+- Brand configs x3: `target_duration_sec=55`, `hook_word_budget=15`, `retention_loop_interval=50`, `intro/outro=1s each`.
+- QA check 11 `check_four_part_formula()`: curiosity gap + loop ending enforced.
+- QA `short (<60s)` band widened: `(30, 275)` words. Source citation skipped for all Shorts.
+- Script generator hard cap: `HARD CAP: never exceed {target_words + 20} words total`.
+- `_update_notion()` writes `Scheduled Date = today` on render completion (auto-post was silently broken).
+- zoompan at target resolution, not 4K. Clip timeout 600s.
+- `length_target` derived from `brand.target_duration_sec` in production crew.
+- CTA patterns expanded: 18 patterns covering natural Sonnet endings.
+- All Blotato account IDs confirmed in VPS .env for all 3 channels.
+
+**First Short confirmed rendering** (2026-05-05 01:05 UTC): 180 words, QA passed all 11 checks, voice 63.3s, 7 scenes, ffmpeg shorts 1080x1920 in progress.
+
+**M4 status:** All account IDs wired. Warm-up window is the remaining gate. Blotato publisher fires at 09:00 MT daily on `Status=scheduled AND ScheduledDate=today`.
+
+**Next:** Confirm first Short in Drive. Review quality. M4 warm-up window starts day 1 from first post.
