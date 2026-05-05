@@ -536,6 +536,26 @@ function renderSpend(d) {
     ));
   }
 
+  // ElevenLabs TTS spend (from cost_ledger)
+  if (d.el_month_usd != null) {
+    const elDivider = el('div', { class: 'data-label' });
+    elDivider.textContent = 'ElevenLabs TTS';
+    elDivider.style.marginTop = '8px';
+    body.appendChild(elDivider);
+    body.appendChild(el('div', { class: 'data-row' },
+      el('span', { class: 'data-label' }, 'Today'),
+      el('span', { class: 'data-value' }, '$' + (d.el_today_usd || 0).toFixed(4)),
+    ));
+    body.appendChild(el('div', { class: 'data-row' },
+      el('span', { class: 'data-label' }, 'This Week'),
+      el('span', { class: 'data-value' }, '$' + (d.el_week_usd || 0).toFixed(4)),
+    ));
+    body.appendChild(el('div', { class: 'data-row' },
+      el('span', { class: 'data-label' }, 'Month to Date'),
+      el('span', { class: 'data-value' }, '$' + (d.el_month_usd || 0).toFixed(4) + (d.el_month_calls ? '  (' + d.el_month_calls + ' renders)' : '')),
+    ));
+  }
+
   const LEDGER_STALE_HOURS = 24;
   if (d.ledger_last_ts) {
     const last = new Date(d.ledger_last_ts);

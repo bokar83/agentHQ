@@ -180,6 +180,31 @@ def get_historical(days: int = 90) -> list[dict]:
         return []
 
 
+def _fetch_elevenlabs_mtd() -> float:
+    """Sum cost_ledger elevenlabs_tts rows for current calendar month."""
+    try:
+        from memory import _pg_conn
+        conn = _pg_conn()
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                """
+                SELECT COALESCE(SUM(amount_usd), 0)
+                  FROM cost_ledger
+                 WHERE tool = 'elevenlabs_tts'
+                   AND date >= date_trunc('month', CURRENT_DATE)::date
+                """
+            )
+            val = cur.fetchone()[0]
+            cur.close()
+            return round(float(val), 4)
+        finally:
+            conn.close()
+    except Exception as e:
+        logger.warning(f"spend_snapshot: elevenlabs MTD fetch failed: {e}")
+        return 0.0
+
+
 def spend_snapshot_tick() -> None:
     """Heartbeat callback: take snapshot and send Telegram summary."""
     result = take_snapshot()
@@ -189,13 +214,16 @@ def spend_snapshot_tick() -> None:
         from notifier import send_message
         chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
         if chat_id:
+            el_mtd = _fetch_elevenlabs_mtd()
+            el_line = f"ElevenLabs MTD: ${el_mtd:.4f}\n" if el_mtd > 0 else ""
             send_message(chat_id, (
                 f"SPEND SNAPSHOT ({result['day']})\n"
                 f"Today:    ${result['usd_today']:.2f}\n"
                 f"Week:     ${result['usd_week']:.2f}\n"
                 f"Month:    ${result['usd_month']:.2f}\n"
                 f"Lifetime: ${result['usd_lifetime']:.2f}\n"
-                f"Balance:  ${result['balance_usd']:.2f}"
+                f"Balance:  ${result['balance_usd']:.2f}\n"
+                f"{el_line}"
             ))
     except Exception as e:
         logger.warning(f"spend_snapshot: Telegram notify failed: {e}")

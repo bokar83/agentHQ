@@ -350,6 +350,40 @@ def _get_historical_comparisons() -> dict:
 MONTHLY_BUDGET_USD = 60.0
 
 
+def _fetch_elevenlabs_spend() -> dict:
+    """Pull ElevenLabs TTS spend from cost_ledger for today/week/month."""
+    try:
+        from memory import _pg_conn
+        conn = _pg_conn()
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                """
+                SELECT
+                  SUM(CASE WHEN date >= CURRENT_DATE THEN amount_usd ELSE 0 END)                AS today_usd,
+                  SUM(CASE WHEN date >= date_trunc('week',  CURRENT_DATE)::date THEN amount_usd ELSE 0 END) AS week_usd,
+                  SUM(CASE WHEN date >= date_trunc('month', CURRENT_DATE)::date THEN amount_usd ELSE 0 END) AS month_usd,
+                  COUNT(CASE WHEN date >= date_trunc('month', CURRENT_DATE)::date THEN 1 END)   AS month_calls
+                FROM cost_ledger
+                WHERE tool = 'elevenlabs_tts'
+                  AND date >= CURRENT_DATE - INTERVAL '90 days'
+                """
+            )
+            row = cur.fetchone()
+            cur.close()
+            return {
+                "el_today_usd":   round(float(row[0] or 0), 4),
+                "el_week_usd":    round(float(row[1] or 0), 4),
+                "el_month_usd":   round(float(row[2] or 0), 4),
+                "el_month_calls": int(row[3] or 0),
+            }
+        finally:
+            conn.close()
+    except Exception as e:
+        logger.warning(f"_fetch_elevenlabs_spend: {e}")
+        return {"el_today_usd": None, "el_week_usd": None, "el_month_usd": None, "el_month_calls": None}
+
+
 def get_spend() -> dict:
     """Spend card: today/week/month totals from both ledger and provider (ground truth).
 
@@ -363,6 +397,7 @@ def get_spend() -> dict:
     by_day = _spend_7d_by_day()
     provider = _fetch_provider_spend()
     historical = _get_historical_comparisons()
+    elevenlabs = _fetch_elevenlabs_spend()
     today_usd = max(snap.spent_today_usd, agg["today_usd"])
 
     # Pacing: provider_today vs daily share of $50/mo budget
@@ -397,6 +432,7 @@ def get_spend() -> dict:
         "daily_budget":     round(daily_budget, 4),
         "pacing_pct":       pacing_pct,
         "historical":       historical,
+        **elevenlabs,
     }
 
 
