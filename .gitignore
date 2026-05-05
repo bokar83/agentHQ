@@ -193,3 +193,4 @@ pytest_tmp_work/
 data/codex/
 configs/asset_vault.json
 CLAUDE.original.md
+my-video/
