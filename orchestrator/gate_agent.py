@@ -203,8 +203,13 @@ def _files_changed_vs_main(branch: str) -> list[str]:
 def _run_tests(branch: str) -> tuple[bool, str]:
     """Checkout branch in detached state, run pytest. Returns (passed, output)."""
     _git(["fetch", "origin", branch])
+    # Stash any local modifications so checkout doesn't refuse to overwrite them
+    rc_stash, stash_out, _ = _git(["stash", "push", "-u", "-m", "gate-test-stash"])
+    stashed = rc_stash == 0 and "No local changes" not in stash_out
     rc_co, _, err = _git(["checkout", f"origin/{branch}", "--detach"])
     if rc_co != 0:
+        if stashed:
+            _git(["stash", "pop"])
         return False, f"checkout failed: {err}"
     try:
         proc = subprocess.run(
@@ -220,8 +225,10 @@ def _run_tests(branch: str) -> tuple[bool, str]:
     except subprocess.TimeoutExpired:
         return False, "tests timed out (180s)"
     finally:
-        # Return to main
+        # Return to main and restore any stashed changes
         _git(["checkout", MAIN_BRANCH])
+        if stashed:
+            _git(["stash", "pop"])
 
 
 def _merge_branch(branch: str) -> tuple[bool, str]:
