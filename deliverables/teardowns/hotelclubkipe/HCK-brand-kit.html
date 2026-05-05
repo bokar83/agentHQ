@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hotel Club de Kipe -- Brand Kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* ---- CORE PALETTE (extracted from logo) ---- */
+  --gold:        #C9974A;   /* amber-gold filigree from logo */
+  --gold-light:  #E8BE7A;   /* highlight / hover state */
+  --gold-dark:   #9A6F28;   /* pressed / deep accent */
+  --ink:         #1A1208;   /* logo dark serif letterforms -- near-black with warm undertone */
+  --forest:      #1D3828;   /* deep Guinean green -- pool, lush gardens */
+  --forest-mid:  #2E5240;   /* mid green for UI surfaces */
+  --forest-light:#4A7A60;   /* icon / badge */
+  --cream:       #F7F2E8;   /* warm white -- parchment, not sterile */
+  --cream-mid:   #EDE5D4;   /* section alternates */
+  --stone:       #8C7B5E;   /* muted warm gray -- body text on light bg */
+
+  /* ---- TYPOGRAPHY ---- */
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body:    'Lato', Arial, sans-serif;
+
+  /* ---- SPACING SCALE ---- */
+  --space-xs:   0.25rem;
+  --space-sm:   0.5rem;
+  --space-md:   1rem;
+  --space-lg:   1.5rem;
+  --space-xl:   2.5rem;
+  --space-2xl:  4rem;
+  --space-3xl:  6rem;
+
+  /* ---- RADIUS ---- */
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  16px;
+  --radius-pill:999px;
+
+  /* ---- SHADOWS ---- */
+  --shadow-card: 0 4px 24px rgba(26, 18, 8, 0.12);
+  --shadow-hero: 0 8px 48px rgba(26, 18, 8, 0.24);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-body); background: var(--ink); color: var(--cream); line-height: 1.7; }
+
+/* ---- LAYOUT ---- */
+.kit-section { padding: var(--space-3xl) var(--space-xl); max-width: 1100px; margin: 0 auto; }
+.kit-section + .kit-section { border-top: 1px solid var(--forest-mid); }
+.kit-label { font-family: var(--font-body); font-size: 0.7rem; letter-spacing: 4px; text-transform: uppercase; color: var(--gold); margin-bottom: var(--space-lg); }
+.kit-title { font-family: var(--font-display); font-size: 2.8rem; font-weight: 400; color: var(--cream); margin-bottom: var(--space-xl); }
+
+/* ---- LOGO DISPLAY ---- */
+.logo-display { display: flex; align-items: center; gap: var(--space-xl); flex-wrap: wrap; }
+.logo-on-dark { background: var(--ink); padding: var(--space-xl); border-radius: var(--radius-md); border: 1px solid var(--forest-mid); }
+.logo-on-cream { background: var(--cream); padding: var(--space-xl); border-radius: var(--radius-md); }
+.logo-on-forest { background: var(--forest); padding: var(--space-xl); border-radius: var(--radius-md); }
+.logo-display img { height: 100px; width: auto; display: block; }
+.logo-note { font-size: 0.75rem; color: var(--stone); margin-top: var(--space-sm); font-family: var(--font-body); }
+
+/* ---- COLOR SWATCHES ---- */
+.swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--space-md); }
+.swatch { border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-card); }
+.swatch-color { height: 100px; }
+.swatch-info { padding: var(--space-md); background: #111; }
+.swatch-name { font-size: 0.8rem; font-weight: 700; color: var(--cream); font-family: var(--font-body); }
+.swatch-hex  { font-size: 0.75rem; color: var(--stone); font-family: monospace; margin-top: 2px; }
+.swatch-use  { font-size: 0.7rem; color: var(--gold); margin-top: var(--space-xs); }
+
+/* ---- TYPOGRAPHY SCALE ---- */
+.type-row { margin-bottom: var(--space-xl); border-bottom: 1px solid var(--forest-mid); padding-bottom: var(--space-xl); }
+.type-meta { font-family: monospace; font-size: 0.75rem; color: var(--stone); margin-bottom: var(--space-sm); }
+.t-hero      { font-family: var(--font-display); font-size: clamp(3rem, 6vw, 6rem); font-weight: 400; color: var(--cream); line-height: 1.05; letter-spacing: 0.02em; }
+.t-display   { font-family: var(--font-display); font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 400; color: var(--cream); line-height: 1.1; }
+.t-section   { font-family: var(--font-display); font-size: clamp(1.4rem, 2.5vw, 2rem); font-weight: 600; color: var(--gold); letter-spacing: 0.05em; text-transform: uppercase; }
+.t-subhead   { font-family: var(--font-body); font-size: 1rem; font-weight: 300; color: var(--gold-light); letter-spacing: 0.15em; text-transform: uppercase; }
+.t-body      { font-family: var(--font-body); font-size: 1rem; color: var(--cream-mid); line-height: 1.75; max-width: 65ch; }
+.t-caption   { font-family: var(--font-body); font-size: 0.8rem; color: var(--stone); letter-spacing: 0.08em; }
+.t-italic    { font-family: var(--font-display); font-style: italic; font-size: 1.5rem; color: var(--gold-light); }
+
+/* ---- UI COMPONENTS ---- */
+.component-grid { display: flex; flex-wrap: wrap; gap: var(--space-xl); align-items: flex-start; }
+
+/* Buttons */
+.btn-primary {
+  display: inline-block;
+  background: transparent;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  padding: 0.9rem 2.4rem;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: 0;
+  transition: background 0.25s, color 0.25s;
+}
+.btn-primary:hover { background: var(--gold); color: var(--ink); }
+
+.btn-filled {
+  display: inline-block;
+  background: var(--gold);
+  border: 1px solid var(--gold);
+  color: var(--ink);
+  padding: 0.9rem 2.4rem;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: 0;
+  transition: background 0.25s, color 0.25s;
+}
+.btn-filled:hover { background: var(--gold-light); border-color: var(--gold-light); }
+
+.btn-ghost {
+  display: inline-block;
+  background: transparent;
+  border: 1px solid rgba(232, 190, 122, 0.35);
+  color: var(--cream);
+  padding: 0.9rem 2.4rem;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: 0;
+  transition: border-color 0.25s, color 0.25s;
+}
+.btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+
+/* Room card */
+.room-card {
+  background: var(--forest);
+  border: 1px solid var(--forest-mid);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  width: 280px;
+  box-shadow: var(--shadow-card);
+}
+.room-card-img { width: 100%; height: 180px; background: linear-gradient(135deg, var(--forest-mid), var(--ink)); display: flex; align-items: center; justify-content: center; color: var(--stone); font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; }
+.room-card-body { padding: var(--space-lg); }
+.room-card-type { font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: var(--space-xs); }
+.room-card-name { font-family: var(--font-display); font-size: 1.3rem; color: var(--cream); margin-bottom: var(--space-sm); }
+.room-card-amenities { font-size: 0.78rem; color: var(--stone); margin-bottom: var(--space-lg); }
+.room-card-footer { display: flex; justify-content: space-between; align-items: center; }
+.room-card-price { font-family: var(--font-display); font-size: 1.1rem; color: var(--gold); }
+.room-card-price small { font-family: var(--font-body); font-size: 0.7rem; color: var(--stone); }
+
+/* Badge */
+.badge { display: inline-block; padding: 0.2rem 0.8rem; font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; }
+.badge-suite { background: var(--gold-dark); color: var(--gold-light); }
+.badge-mini  { background: var(--forest-mid); color: var(--cream); }
+.badge-avail { background: transparent; border: 1px solid var(--forest-light); color: var(--forest-light); }
+.badge-booked { background: transparent; border: 1px solid #8B3030; color: #C47070; }
+
+/* Nav preview */
+.nav-preview {
+  background: rgba(26, 18, 8, 0.95);
+  border-bottom: 1px solid rgba(201, 151, 74, 0.25);
+  backdrop-filter: blur(8px);
+  padding: 1.2rem 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: var(--radius-md);
+}
+.nav-logo-text { font-family: var(--font-display); font-size: 1.1rem; letter-spacing: 0.1em; color: var(--cream); }
+.nav-links-preview { display: flex; gap: 2rem; }
+.nav-links-preview a { font-family: var(--font-body); font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--stone); text-decoration: none; transition: color 0.2s; }
+.nav-links-preview a:hover { color: var(--gold); }
+.nav-lang { font-family: var(--font-body); font-size: 0.7rem; color: var(--gold); letter-spacing: 2px; }
+
+/* Hero preview */
+.hero-preview {
+  background: linear-gradient(rgba(26,18,8,0.55) 0%, rgba(29,56,40,0.4) 100%),
+              linear-gradient(135deg, var(--forest) 0%, var(--ink) 100%);
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  padding: var(--space-3xl) var(--space-xl);
+  border-radius: var(--radius-md);
+  position: relative;
+  overflow: hidden;
+}
+.hero-preview::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C9974A' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.6;
+}
+.hero-eyebrow { font-family: var(--font-body); font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); margin-bottom: var(--space-md); position: relative; }
+.hero-headline { font-family: var(--font-display); font-size: clamp(2rem, 5vw, 4rem); color: var(--cream); font-weight: 400; line-height: 1.1; margin-bottom: var(--space-md); position: relative; }
+.hero-sub { font-family: var(--font-body); font-weight: 300; font-size: 1rem; color: rgba(247,242,232,0.7); letter-spacing: 0.1em; margin-bottom: var(--space-xl); position: relative; }
+
+/* Section divider ornament */
+.ornament { text-align: center; color: var(--gold); font-size: 1.5rem; letter-spacing: 0.5rem; margin: var(--space-lg) 0; opacity: 0.6; }
+
+/* Availability badge */
+.availability-row { display: flex; gap: var(--space-sm); flex-wrap: wrap; }
+
+/* Motion spec */
+.motion-block { background: var(--forest); border-radius: var(--radius-md); padding: var(--space-xl); }
+.motion-item { display: flex; justify-content: space-between; padding: var(--space-sm) 0; border-bottom: 1px solid var(--forest-mid); font-size: 0.85rem; }
+.motion-item .prop { color: var(--stone); }
+.motion-item .val { color: var(--gold-light); font-family: monospace; }
+
+/* Responsive */
+@media (max-width: 700px) {
+  .kit-section { padding: var(--space-2xl) var(--space-lg); }
+  .swatch-grid { grid-template-columns: 1fr 1fr; }
+  .nav-links-preview { display: none; }
+  .component-grid { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<div style="background:var(--forest);padding:2rem 3rem;border-bottom:1px solid var(--forest-mid);">
+  <div style="max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:2rem;flex-wrap:wrap;">
+    <img src="../../../output/websites/hotelclubkipe-site/public/images/Logo Hotel Kipé.png" alt="Hotel Club de Kipe Logo" style="height:80px;width:auto;">
+    <div>
+      <div style="font-family:var(--font-body);font-size:0.7rem;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:0.5rem;">Brand Kit</div>
+      <div style="font-family:var(--font-display);font-size:2rem;color:var(--cream);">Hotel Club de Kipe</div>
+      <div style="font-family:var(--font-body);font-size:0.8rem;color:var(--stone);margin-top:0.3rem;">Conakry, Guinea &nbsp;|&nbsp; Brand Identity System &nbsp;|&nbsp; 2026</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LOGO USAGE ===== -->
+<div class="kit-section">
+  <div class="kit-label">01 -- Logo Usage</div>
+  <div class="logo-display">
+    <div>
+      <div class="logo-on-dark">
+        <img src="../../../output/websites/hotelclubkipe-site/public/images/Logo Hotel Kipé.png" alt="Logo on dark">
+      </div>
+      <div class="logo-note">Primary: ink background (preferred)</div>
+    </div>
+    <div>
+      <div class="logo-on-forest">
+        <img src="../../../output/websites/hotelclubkipe-site/public/images/Logo Hotel Kipé.png" alt="Logo on forest">
+      </div>
+      <div class="logo-note">Approved: forest green background</div>
+    </div>
+    <div>
+      <div class="logo-on-cream">
+        <img src="../../../output/websites/hotelclubkipe-site/public/images/Logo Hotel Kipé.png" alt="Logo on cream">
+      </div>
+      <div class="logo-note">Approved: cream/parchment background</div>
+    </div>
+  </div>
+  <div style="margin-top:2rem;background:var(--forest);border-radius:var(--radius-md);padding:1.5rem;border-left:3px solid #8B3030;">
+    <div style="color:#C47070;font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:0.5rem;">Hard Rules</div>
+    <ul style="color:var(--stone);font-size:0.9rem;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.4rem;">
+      <li>Never recolor the logo. Gold + dark ink only.</li>
+      <li>Minimum clear space: logo height / 2 on all sides</li>
+      <li>Minimum display size: 80px height (web), 25mm (print)</li>
+      <li>Never stretch, rotate, or add drop shadows to the logo</li>
+      <li>Never place on a busy photographic background without a solid backing panel</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ===== COLOR PALETTE ===== -->
+<div class="kit-section">
+  <div class="kit-label">02 -- Color Palette</div>
+
+  <div style="margin-bottom:2rem;">
+    <div style="font-family:var(--font-display);font-size:1.2rem;color:var(--gold);margin-bottom:1rem;">Primary</div>
+    <div class="swatch-grid">
+      <div class="swatch">
+        <div class="swatch-color" style="background:#C9974A;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Gold</div>
+          <div class="swatch-hex">--gold / #C9974A</div>
+          <div class="swatch-use">CTAs, borders, accents, filigree details</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#E8BE7A;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Gold Light</div>
+          <div class="swatch-hex">--gold-light / #E8BE7A</div>
+          <div class="swatch-use">Hover states, italic text, highlights</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#9A6F28;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Gold Dark</div>
+          <div class="swatch-hex">--gold-dark / #9A6F28</div>
+          <div class="swatch-use">Badge fills, pressed states, dividers</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#1A1208;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Ink</div>
+          <div class="swatch-hex">--ink / #1A1208</div>
+          <div class="swatch-use">Primary background, nav, footer</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:2rem;">
+    <div style="font-family:var(--font-display);font-size:1.2rem;color:var(--forest-light);margin-bottom:1rem;">Secondary</div>
+    <div class="swatch-grid">
+      <div class="swatch">
+        <div class="swatch-color" style="background:#1D3828;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Forest</div>
+          <div class="swatch-hex">--forest / #1D3828</div>
+          <div class="swatch-use">Section backgrounds, card surfaces</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#2E5240;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Forest Mid</div>
+          <div class="swatch-hex">--forest-mid / #2E5240</div>
+          <div class="swatch-use">Borders, dividers, input backgrounds</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#4A7A60;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Forest Light</div>
+          <div class="swatch-hex">--forest-light / #4A7A60</div>
+          <div class="swatch-use">Availability badge, icon color</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div style="font-family:var(--font-display);font-size:1.2rem;color:var(--cream-mid);margin-bottom:1rem;">Neutral</div>
+    <div class="swatch-grid">
+      <div class="swatch">
+        <div class="swatch-color" style="background:#F7F2E8;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Cream</div>
+          <div class="swatch-hex">--cream / #F7F2E8</div>
+          <div class="swatch-use">Heading text on dark, light section bg</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#EDE5D4;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Cream Mid</div>
+          <div class="swatch-hex">--cream-mid / #EDE5D4</div>
+          <div class="swatch-use">Body text on dark, alternate sections</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-color" style="background:#8C7B5E;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Stone</div>
+          <div class="swatch-hex">--stone / #8C7B5E</div>
+          <div class="swatch-use">Metadata, captions, labels, placeholders</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:2rem;background:var(--forest);border-radius:var(--radius-md);padding:1.5rem;">
+    <div style="color:var(--gold);font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:1rem;">Contrast Compliance</div>
+    <table style="width:100%;font-size:0.85rem;border-collapse:collapse;">
+      <tr style="border-bottom:1px solid var(--forest-mid);">
+        <td style="padding:0.5rem 0;color:var(--stone);">Gold #C9974A on Ink #1A1208</td>
+        <td style="color:#4ade80;font-weight:700;">7.1:1 PASS AA</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--forest-mid);">
+        <td style="padding:0.5rem 0;color:var(--stone);">Cream #F7F2E8 on Ink #1A1208</td>
+        <td style="color:#4ade80;font-weight:700;">15.8:1 PASS AA</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--forest-mid);">
+        <td style="padding:0.5rem 0;color:var(--stone);">Cream #F7F2E8 on Forest #1D3828</td>
+        <td style="color:#4ade80;font-weight:700;">9.4:1 PASS AA</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--forest-mid);">
+        <td style="padding:0.5rem 0;color:var(--stone);">Gold #C9974A on Forest #1D3828</td>
+        <td style="color:#4ade80;font-weight:700;">4.8:1 PASS AA</td>
+      </tr>
+      <tr>
+        <td style="padding:0.5rem 0;color:var(--stone);">Ink #1A1208 on Gold #C9974A (filled btn)</td>
+        <td style="color:#4ade80;font-weight:700;">7.1:1 PASS AA</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<!-- ===== TYPOGRAPHY ===== -->
+<div class="kit-section">
+  <div class="kit-label">03 -- Typography</div>
+
+  <div class="type-row">
+    <div class="type-meta">Hero Headline / Cormorant Garamond 400 / clamp(3rem, 6vw, 6rem) / tracking 0.02em</div>
+    <div class="t-hero">Hotel Club de Kipe</div>
+  </div>
+
+  <div class="type-row">
+    <div class="type-meta">Display / Cormorant Garamond 400 / clamp(2rem, 4vw, 3.5rem)</div>
+    <div class="t-display">Bienvenue au Club de Kipe</div>
+  </div>
+
+  <div class="type-row">
+    <div class="type-meta">Section Title / Cormorant Garamond 600 / clamp(1.4rem, 2.5vw, 2rem) / uppercase / tracking 0.05em / color: gold</div>
+    <div class="t-section">Nos Chambres</div>
+  </div>
+
+  <div class="type-row">
+    <div class="type-meta">Eyebrow / Lato 300 / 1rem / uppercase / tracking 0.15em / color: gold-light</div>
+    <div class="t-subhead">Conakry, Guinee</div>
+  </div>
+
+  <div class="type-row">
+    <div class="type-meta">Italic Quote / Cormorant Garamond italic 400 / 1.5rem / color: gold-light</div>
+    <div class="t-italic">"Un refuge elegant au coeur de Kipe"</div>
+  </div>
+
+  <div class="type-row">
+    <div class="type-meta">Body / Lato 400 / 1rem / line-height 1.75 / color: cream-mid / max-width 65ch</div>
+    <div class="t-body">Hotel Club de Kipe est un etablissement boutique situe dans le quartier residentiel de Kipe, a Conakry. Notre hotel offre 13 chambres elegamment amenagees, une piscine, un restaurant et un bar dans un cadre raffine.</div>
+  </div>
+
+  <div class="type-row" style="border:none;">
+    <div class="type-meta">Caption / Lato 400 / 0.8rem / tracking 0.08em / color: stone</div>
+    <div class="t-caption">Chambre 204 -- Suite superieure / Vue sur jardin / 2 personnes</div>
+  </div>
+
+  <div style="background:var(--forest);border-radius:var(--radius-md);padding:1.5rem;">
+    <div style="color:var(--gold);font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:1rem;">Type Rules</div>
+    <ul style="color:var(--stone);font-size:0.85rem;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.4rem;">
+      <li>All headlines: Cormorant Garamond. Never Poppins, Inter, or any sans-serif for display.</li>
+      <li>Body and UI copy: Lato only. Weight 300 (light) for eyebrows, 400 for body, 700 for labels/buttons.</li>
+      <li><strong style="color:var(--gold);">Francais = langue principale.</strong> Tout le contenu est ecrit en francais d'abord. L'anglais est un toggle secondaire pour les visiteurs internationaux.</li>
+      <li>Devise: FG (francais) / GNF (anglais). Format: 600 000 FG / 600 000 GNF.</li>
+      <li>No em dashes anywhere. Use colon or comma instead.</li>
+      <li>No uppercase body copy. Uppercase reserved for eyebrows, labels, nav only.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ===== UI COMPONENTS ===== -->
+<div class="kit-section">
+  <div class="kit-label">04 -- UI Components</div>
+
+  <div style="margin-bottom:3rem;">
+    <div style="font-family:var(--font-display);font-size:1.2rem;color:var(--gold);margin-bottom:1.5rem;">Buttons</div>
+    <div class="component-grid">
+      <div>
+        <a href="#" class="btn-filled">Reserver une chambre</a>
+        <div style="color:var(--stone);font-size:0.75rem;margin-top:0.5rem;">Primary CTA: filled gold</div>
+      </div>
+      <div>
+        <a href="#" class="btn-primary">Voir les disponibilites</a>
+        <div style="color:var(--stone);font-size:0.75rem;margin-top:0.5rem;">Secondary CTA: outlined gold</div>
+      </div>
+      <div>
+        <a href="#" class="btn-ghost">En savoir plus</a>
+        <div style="color:var(--stone);font-size:0.75rem;margin-top:0.5rem;">Tertiary: ghost on dark</div>
+      </div>
+    </div>
+    <div style="margin-top:1.5rem;background:var(--forest);padding:1rem;border-radius:var(--radius-sm);">
+      <div style="color:var(--stone);font-size:0.8rem;">Button rules: square corners (border-radius: 0). No pill/rounded buttons. Uppercase, Lato 700, letter-spacing 0.2em. Hover transitions 0.25s ease.</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:3rem;">
+    <div style="font-family:var(--font-display);font-size:1.2rem;color:var(--gold);margin-bottom:1.5rem;">Room Card</div>
+    <div class="component-grid">
+      <div class="room-card">
+        <div class="room-card-img">[ Photo chambre ]</div>
+        <div class="room-card-body">
+          <div class="room-card-type">Suite</div>
+          <div class="room-card-name">Chambre 204</div>
+          <div class="room-card-amenities">Climatisation &nbsp;|&nbsp; Wi-Fi &nbsp;|&nbsp; Vue jardin &nbsp;|&nbsp; 2 personnes</div>
+          <div class="room-card-footer">
+            <div class="room-card-price">A partir de <br><span style="font-size:1.4rem;">--- GNF</span> <small>/ nuit</small></div>
+            <a href="#" class="btn-filled" style="padding:0.6rem 1.2rem;font-size:0.7rem;">Reserver</a>
+          </div>
+        </div>
+      </div>
+      <div class="room-card">
+        <div class="room-card-img">[ Photo chambre ]</div>
+        <div class="room-card-body">
+          <div class="room-card-type">Mini Suite</div>
+          <div class="room-card-name">Chambre 201</div>
+          <div class="room-card-amenities">Climatisation &nbsp;|&nbsp; Wi-Fi &nbsp;|&nbsp; 2 personnes</div>
+          <div class="room-card-footer">
+            <div class="room-card-price">A partir de <br><span style="font-size:1.4rem;">--- GNF</span> <small>/ nuit</small></div>
+            <a href="#" style="padding:0.6rem 1.2rem;font-size:0.7rem;display:inline-block;background:transparent;border:1px solid #8B3030;color:#C47070;font-family:var(--font-body);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;">Non disponible</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:3rem;">
+    <div style="font-family:var(--font-display);font-size:1.2rem;color:var(--gold);margin-bottom:1.5rem;">Badges</div>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center;">
+      <span class="badge badge-suite">Suite</span>
+      <span class="badge badge-mini">Mini Suite</span>
+      <span class="badge badge-avail">Disponible</span>
+      <span class="badge badge-booked">Non disponible</span>
+    </div>
+    <div style="color:var(--stone);font-size:0.75rem;margin-top:0.8rem;">Square corners. Uppercase. Lato 700. Letter-spacing 2px.</div>
+  </div>
+
+  <div style="margin-bottom:3rem;">
+    <div style="font-family:var(--font-display);font-size:1.2rem;color:var(--gold);margin-bottom:1.5rem;">Navigation</div>
+    <div class="nav-preview">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <img src="../../../output/websites/hotelclubkipe-site/public/images/Logo Hotel Kipé.png" alt="Logo" style="height:36px;width:auto;">
+      </div>
+      <div class="nav-links-preview">
+        <a href="#">Chambres</a>
+        <a href="#">Galerie</a>
+        <a href="#">Services</a>
+        <a href="#">Contact</a>
+        <a href="#" style="color:var(--gold);">Reserver</a>
+      </div>
+      <div class="nav-lang">FR &nbsp;|&nbsp; EN &nbsp;<span style="color:var(--stone);font-size:0.6rem;">(FR primaire)</span></div>
+    </div>
+    <div style="color:var(--stone);font-size:0.75rem;margin-top:0.8rem;">Nav: ink background at 95% opacity, gold bottom border at 25% opacity, backdrop-blur(8px). Logo left, links center, lang toggle right.</div>
+  </div>
+</div>
+
+<!-- ===== HERO PREVIEW ===== -->
+<div class="kit-section">
+  <div class="kit-label">05 -- Hero Pattern</div>
+  <div class="hero-preview">
+    <div class="hero-eyebrow">Conakry, Guinee &nbsp;&#9671;&nbsp; Depuis 2019</div>
+    <div class="hero-headline">Hotel Club<br><em style="font-style:italic;color:var(--gold-light);">de Kipe</em></div>
+    <div class="hero-sub">Votre refuge elegant au coeur de Kipe</div>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;position:relative;">
+      <a href="#" class="btn-filled">Reserver une chambre</a>
+      <a href="#" class="btn-ghost">Decouvrir nos chambres</a>
+    </div>
+  </div>
+  <div style="color:var(--stone);font-size:0.8rem;margin-top:1rem;">Hero rule: full-bleed hotel photo + dark gradient overlay (rgba 0.5-0.6). Min-height 85vh desktop, 75vh tablet, 60vh mobile. Never below 480px. Eyebrow in gold, headline in Cormorant italic + regular mix, subtitle in light Lato.</div>
+</div>
+
+<!-- ===== MOTION ===== -->
+<div class="kit-section">
+  <div class="kit-label">06 -- Motion Spec</div>
+  <div class="motion-block">
+    <div class="motion-item"><span class="prop">Default transition</span><span class="val">0.25s ease</span></div>
+    <div class="motion-item"><span class="prop">Entrance animation</span><span class="val">opacity: 0 to 1, translateY(20px) to 0, 0.6s ease-out</span></div>
+    <div class="motion-item"><span class="prop">Easing (allowed)</span><span class="val">ease, ease-out, cubic-bezier(0.4, 0, 0.2, 1)</span></div>
+    <div class="motion-item"><span class="prop">Easing (banned)</span><span class="val">bounce / overshoot / spring -- no cubic-bezier with values above 1</span></div>
+    <div class="motion-item"><span class="prop">Animation properties</span><span class="val">transform, opacity only. Never animate width/height/top/left.</span></div>
+    <div class="motion-item"><span class="prop">Hover: cards</span><span class="val">translateY(-4px), box-shadow increase, 0.25s ease</span></div>
+    <div class="motion-item"><span class="prop">Hover: buttons</span><span class="val">background color swap, 0.25s ease. No scale.</span></div>
+    <div class="motion-item"><span class="prop">Scroll reveal</span><span class="val">Intersection Observer, threshold 0.15, once: true</span></div>
+    <div class="motion-item" style="border:none;"><span class="prop">Respect prefers-reduced-motion</span><span class="val">@media (prefers-reduced-motion: reduce) -- all transitions: 0ms</span></div>
+  </div>
+</div>
+
+<!-- ===== SPACING + LAYOUT ===== -->
+<div class="kit-section">
+  <div class="kit-label">07 -- Spacing and Layout</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;flex-wrap:wrap;">
+    <div>
+      <div style="color:var(--gold);font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:1rem;">Spacing Scale</div>
+      <div style="display:flex;flex-direction:column;gap:0.5rem;">
+        <div style="display:flex;align-items:center;gap:1rem;"><div style="width:4px;height:1rem;background:var(--gold);"></div><span style="font-family:monospace;font-size:0.8rem;color:var(--stone);">--space-xs: 0.25rem (4px)</span></div>
+        <div style="display:flex;align-items:center;gap:1rem;"><div style="width:8px;height:1rem;background:var(--gold);"></div><span style="font-family:monospace;font-size:0.8rem;color:var(--stone);">--space-sm: 0.5rem (8px)</span></div>
+        <div style="display:flex;align-items:center;gap:1rem;"><div style="width:16px;height:1rem;background:var(--gold);"></div><span style="font-family:monospace;font-size:0.8rem;color:var(--stone);">--space-md: 1rem (16px)</span></div>
+        <div style="display:flex;align-items:center;gap:1rem;"><div style="width:24px;height:1rem;background:var(--gold);"></div><span style="font-family:monospace;font-size:0.8rem;color:var(--stone);">--space-lg: 1.5rem (24px)</span></div>
+        <div style="display:flex;align-items:center;gap:1rem;"><div style="width:40px;height:1rem;background:var(--gold);"></div><span style="font-family:monospace;font-size:0.8rem;color:var(--stone);">--space-xl: 2.5rem (40px)</span></div>
+        <div style="display:flex;align-items:center;gap:1rem;"><div style="width:64px;height:1rem;background:var(--gold);"></div><span style="font-family:monospace;font-size:0.8rem;color:var(--stone);">--space-2xl: 4rem (64px)</span></div>
+        <div style="display:flex;align-items:center;gap:1rem;"><div style="width:96px;height:1rem;background:var(--gold);"></div><span style="font-family:monospace;font-size:0.8rem;color:var(--stone);">--space-3xl: 6rem (96px)</span></div>
+      </div>
+    </div>
+    <div>
+      <div style="color:var(--gold);font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:1rem;">Layout Rules</div>
+      <ul style="color:var(--stone);font-size:0.85rem;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.5rem;">
+        <li>Max container width: 1200px</li>
+        <li>Section padding: var(--space-3xl) vertical</li>
+        <li>No border-radius on sections (full-bleed only)</li>
+        <li>Radius on: cards (--radius-sm, 4px), images (--radius-sm), modals (--radius-md, 8px)</li>
+        <li>Body text max-width: 65ch</li>
+        <li>Touch targets: 44px minimum</li>
+        <li>Grid: CSS grid, 12-column base, gap: var(--space-lg)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GOOGLE MAPS ===== -->
+<div class="kit-section">
+  <div class="kit-label">08 -- Location Data (verified)</div>
+  <div style="background:var(--forest);border-radius:var(--radius-md);padding:1.5rem;display:grid;grid-template-columns:1fr 1fr;gap:2rem;">
+    <div>
+      <div style="color:var(--gold);font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:0.8rem;">Contact</div>
+      <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.9rem;color:var(--cream-mid);">
+        <div><span style="color:var(--stone);">Nom:</span> Hotel Club de Kipe</div>
+        <div><span style="color:var(--stone);">Adresse:</span> Kipe Dadyah, Commune de Ratoma, Conakry, Guinee</div>
+        <div><span style="color:var(--stone);">Tel:</span> +224 669 69 99 99</div>
+        <div><span style="color:var(--stone);">WhatsApp:</span> +224 669 00 09 99</div>
+        <div><span style="color:var(--stone);">Facebook:</span> Club de Kipe</div>
+      </div>
+    </div>
+    <div>
+      <div style="color:var(--gold);font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:0.8rem;">Maps Integration</div>
+      <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.85rem;font-family:monospace;color:var(--cream-mid);">
+        <div><span style="color:var(--stone);">Place ID:</span> ChIJe1CBqx7XHA8RzlkOonktpek</div>
+        <div><span style="color:var(--stone);">Lat:</span> 9.5991875</div>
+        <div><span style="color:var(--stone);">Lng:</span> -13.6505625</div>
+        <div style="margin-top:0.5rem;color:var(--stone);font-family:var(--font-body);font-size:0.75rem;">Use Place ID in Maps embed for precise pin. Not text query.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center;padding:3rem;color:var(--stone);font-size:0.8rem;font-family:var(--font-body);border-top:1px solid var(--forest-mid);">
+  Hotel Club de Kipe &nbsp;|&nbsp; Brand Kit v1.0 &nbsp;|&nbsp; 2026-05-05 &nbsp;|&nbsp; Catalyst Works Consulting
+</div>
+
+</body>
+</html>
