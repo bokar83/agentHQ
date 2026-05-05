@@ -543,9 +543,9 @@ def run_qa(text: str, niche: str, length_target: str = "long (3-15m)",
             notion_id: str = "", channel: str = "", title: str = "") -> QAReport:
     """Run all 11 checks. Returns QAReport with per-check pass/fail."""
     report = QAReport(notion_id=notion_id, channel=channel, title=title)
-    # Source citation check skipped for storytelling niches (folktales, parenting stories)
-    if niche in _STORYTELLING_NICHES:
-        citation_check = QACheckResult("source_citation", True, f"skipped for storytelling niche '{niche}'")
+    # Source citation check skipped for storytelling niches and shorts (no room for citations in 55s)
+    if niche in _STORYTELLING_NICHES or length_target == "short (<60s)":
+        citation_check = QACheckResult("source_citation", True, f"skipped for '{niche}'/'{length_target}'")
     else:
         citation_check = check_source_citation(text)
     report.checks = [
