@@ -1,13 +1,16 @@
 """
 signal_works/hunter_client.py
 =============================
-Hunter.io domain-search wrapper. Last-resort fallback for SW email
-resolution when Firecrawl AND Apollo strict-match both fail.
+Hunter.io domain-search wrapper. Primary fallback for SW email
+resolution when Firecrawl scrape fails or Apollo has no record.
 
 Cost protection:
-  - Hard daily cap: 5 calls per process lifetime (HUNTER_MAX_SEARCHES_PER_DAY env override)
+  - Daily cap: 200 calls per process lifetime (HUNTER_MAX_SEARCHES_PER_DAY env override)
   - Caller catches HunterCapReached to short-circuit and fire Telegram alert
   - 429 (rate limit) returns None gracefully, no crash
+  - Was 5/run -- raised 2026-05-05 because it killed the only working SW
+    fallback path. Apollo people DB has near-zero coverage of trades-SMBs,
+    so Hunter is the actual workhorse, not the last resort.
 """
 import logging
 import os
@@ -17,7 +20,13 @@ import httpx
 logger = logging.getLogger(__name__)
 
 HUNTER_API_URL = "https://api.hunter.io/v2/domain-search"
+# Was {"owner","founder","ceo","executive","c_suite"} only -- too narrow for
+# trades-SMBs where the owner is often tagged generic or has no seniority field.
+# Now: owner-tier first, fallback to manager/director/senior, then ANY email
+# at the domain (since trade businesses with 1-5 employees often have one
+# email and that one IS the decision maker).
 _OWNER_SENIORITIES = {"owner", "founder", "ceo", "executive", "c_suite"}
+_FALLBACK_SENIORITIES = {"manager", "director", "senior", "vp"}
 
 _call_count = 0
 
@@ -27,7 +36,7 @@ class HunterCapReached(Exception):
 
 
 def _max_calls() -> int:
-    return int(os.environ.get("HUNTER_MAX_SEARCHES_PER_DAY", "5"))
+    return int(os.environ.get("HUNTER_MAX_SEARCHES_PER_DAY", "200"))
 
 
 def reset_daily_counter() -> None:
@@ -70,14 +79,43 @@ def domain_search(domain: str) -> str | None:
         return None
 
     emails = resp.json().get("data", {}).get("emails", [])
+    if not emails:
+        logger.info(f"hunter_client: no emails at {domain}")
+        return None
+
+    # Try owner-tier first.
     owner_emails = [
         e for e in emails
         if (e.get("seniority") or "").lower() in _OWNER_SENIORITIES
         and e.get("value")
+        and e.get("confidence", 0) >= 50
     ]
-    if not owner_emails:
-        logger.info(f"hunter_client: no owner-tier email at {domain}")
-        return None
+    if owner_emails:
+        owner_emails.sort(key=lambda e: e.get("confidence", 0), reverse=True)
+        return owner_emails[0]["value"]
 
-    owner_emails.sort(key=lambda e: e.get("confidence", 0), reverse=True)
-    return owner_emails[0]["value"]
+    # Fallback: manager/director/senior tier.
+    fallback_emails = [
+        e for e in emails
+        if (e.get("seniority") or "").lower() in _FALLBACK_SENIORITIES
+        and e.get("value")
+        and e.get("confidence", 0) >= 50
+    ]
+    if fallback_emails:
+        fallback_emails.sort(key=lambda e: e.get("confidence", 0), reverse=True)
+        logger.info(f"hunter_client: fallback-tier email used at {domain}")
+        return fallback_emails[0]["value"]
+
+    # Last resort: any deliverable email at the domain. Trade-SMBs with 1-5
+    # employees often have a single inbox (info@, jeremy@) that IS the owner.
+    any_emails = [
+        e for e in emails
+        if e.get("value") and e.get("confidence", 0) >= 50
+    ]
+    if any_emails:
+        any_emails.sort(key=lambda e: e.get("confidence", 0), reverse=True)
+        logger.info(f"hunter_client: any-tier email used at {domain}")
+        return any_emails[0]["value"]
+
+    logger.info(f"hunter_client: no deliverable email at {domain}")
+    return None
