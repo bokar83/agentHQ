@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import subprocess
 import time
 import urllib.parse
@@ -72,6 +73,12 @@ AUTO_APPROVE_PREFIXES = (
     "templates/",
     "configs/",
 )
+
+# File overlaps in these paths are informational and should not block branch processing.
+CONFLICT_NONBLOCKING = {
+    "docs/SKILLS_INDEX.md",
+    "docs/handoff/",
+}
 
 # Telegram notify
 _BOT_TOKEN = os.environ.get("ORCHESTRATOR_TELEGRAM_BOT_TOKEN", "")
@@ -203,9 +210,9 @@ def _files_changed_vs_main(branch: str) -> list[str]:
 def _run_tests(branch: str) -> tuple[bool, str]:
     """Checkout branch in detached state, run pytest. Returns (passed, output)."""
     _git(["fetch", "origin", branch])
-    # Stash any local modifications so checkout doesn't refuse to overwrite them
+    # Stash any local modifications so checkout does not refuse to overwrite them
     rc_stash, stash_out, _ = _git(["stash", "push", "-u", "-m", "gate-test-stash"])
-    stashed = rc_stash == 0 and "No local changes" not in stash_out
+    stashed = rc_stash == 0 and stash_out.strip() != "" and "No local changes to save" not in stash_out
     rc_co, _, err = _git(["checkout", f"origin/{branch}", "--detach"])
     if rc_co != 0:
         if stashed:
@@ -283,15 +290,25 @@ def _deploy_vps() -> tuple[bool, str]:
 # Conflict detection
 # ---------------------------------------------------------------------------
 
-def _detect_conflicts(branches_with_files: list[tuple[str, list[str]]]) -> list[tuple[str, str, str]]:
-    """Find pairs of branches touching the same file. Returns list of (branch_a, branch_b, file)."""
-    conflicts = []
+def _is_nonblocking_conflict(path: str) -> bool:
+    return any(path.startswith(prefix) for prefix in CONFLICT_NONBLOCKING)
+
+
+def _detect_conflicts(
+    branches_with_files: list[tuple[str, list[str]]],
+) -> tuple[list[tuple[str, str, str]], list[tuple[str, str, str]]]:
+    """Find branch pairs touching the same file, split into blocking and nonblocking conflicts."""
+    blocking_conflicts = []
+    nonblocking_conflicts = []
     for i, (b1, files1) in enumerate(branches_with_files):
         for b2, files2 in branches_with_files[i + 1:]:
             overlap = set(files1) & set(files2)
             for f in overlap:
-                conflicts.append((b1, b2, f))
-    return conflicts
+                if _is_nonblocking_conflict(f):
+                    nonblocking_conflicts.append((b1, b2, f))
+                else:
+                    blocking_conflicts.append((b1, b2, f))
+    return blocking_conflicts, nonblocking_conflicts
 
 
 # ---------------------------------------------------------------------------
@@ -378,10 +395,10 @@ def gate_tick() -> None:
         branches_with_files.append((branch, files))
         logger.info("gate: %s touches %d file(s)", branch, len(files))
 
-    # Conflict detection -- block ALL involved branches
-    conflicts = _detect_conflicts(branches_with_files)
+    # Conflict detection -- block branches only when the overlap is blocking.
+    blocking_conflicts, nonblocking_conflicts = _detect_conflicts(branches_with_files)
     blocked: set[str] = set()
-    for b1, b2, f in conflicts:
+    for b1, b2, f in blocking_conflicts:
         blocked.add(b1)
         blocked.add(b2)
         _notify(
@@ -389,6 +406,8 @@ def gate_tick() -> None:
             urgent=True,
         )
         logger.warning("gate: conflict -- %s vs %s on %s", b1, b2, f)
+    for b1, b2, f in nonblocking_conflicts:
+        logger.info("gate: nonblocking conflict -- %s vs %s on %s", b1, b2, f)
 
     # Process non-blocked branches
     merged: list[str] = []
@@ -452,6 +471,10 @@ def gate_tick() -> None:
         "merged": merged,
         "failed": [{"branch": b, "reason": r[:200]} for b, r in failed],
         "blocked_conflicts": list(blocked),
+        "nonblocking_conflicts": [
+            {"branches": [b1, b2], "file": f}
+            for b1, b2, f in nonblocking_conflicts
+        ],
         "held_high_risk": held_high_risk,
     }
     logger.info(
