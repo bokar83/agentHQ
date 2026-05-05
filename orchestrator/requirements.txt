@@ -13,7 +13,7 @@ pydantic[email]>=2.8.0
 # ── LLM & Embeddings ──────────────────────────────────────────
 openai>=1.40.0
 litellm>=1.0.0
-anthropic>=0.40.0
+anthropic>=0.40.0,<1.0.0
 
 # ── Vector Memory ───────────────────────────────────────────
 qdrant-client>=1.10.0
