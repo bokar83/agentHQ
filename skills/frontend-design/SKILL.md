@@ -12,6 +12,18 @@ description: >
 
 ---
 
+## HARD RULES (learned in production — 2026-05-05)
+
+**Video hero backgrounds must be footage-only.** Pitch reels with burned-in text (HyperFrames MP4s) bleed text overlays through any dark overlay at any usable opacity. At .28 opacity reel copy competed with headline; at .14 still visible on lower sections. Rule: video backgrounds = footage-only. If text overlays exist in the video, do not use it as a background — use it as a standalone proof asset instead.
+
+**Canvas animation > video background for Signal Works pages.** The canvas signal-wave particle system animates cleanly at any opacity and has no text bleed risk. Always preferred over video for SW hero sections.
+
+**GSAP scroll reveal: never start at opacity:0 in static contexts.** Elements with `gsap.from({opacity:0})` are invisible to screenshot tools, headless browsers, and slow JS loads. Default: elements visible, JS adds hide class only. Confirmed bug pattern: multiple iterations of 997.html appeared blank in Playwright screenshots due to this.
+
+**Run the ui-ux-pro-max design system generator before writing any UI code.** `python3 ~/.claude/skills/ui-ux-pro-max/scripts/search.py "<keywords>" --design-system` takes 5 seconds and prevents generic output. Non-negotiable for any new page build.
+
+---
+
 ## ⛔ COMPILED CRAFT SYSTEM: READ THIS BEFORE EVERYTHING ELSE
 
 This skill uses the **Humanized Standard Compiled Craft architecture**.
