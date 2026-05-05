@@ -2094,7 +2094,7 @@ def build_hunter_crew(user_request: str) -> Crew:
     Hunter Crew — daily lead prospecting engine.
 
     Pipeline:
-      1. discover_leads  → Serper LinkedIn dork + local business + Firecrawl + Hunter.io + Apollo fallback
+      1. harvest_apollo_leads -> Apollo paid-plan primary discovery
       2. save_to_crm     → add_lead() for each result
       3. scoreboard      → report today's stats
 
@@ -2108,7 +2108,9 @@ def build_hunter_crew(user_request: str) -> Crew:
             f"INDUSTRIES: Legal, Accounting, Marketing Agency, HVAC, Plumbing, Roofing.\n"
             f"LOCATIONS: Salt Lake City, Provo, Orem, Lehi, Murray, Sandy.\n"
             f"TITLES: Owner, Founder, CEO, President, Managing Partner.\n"
-            f"ACTION: Call discover_leads with the user's query override if provided. "
+            f"ACTION: Call harvest_apollo_leads first with target=20 and pipeline='sw'. "
+            f"Only call discover_leads as fallback if Apollo returns fewer than 20 leads, "
+            f"using the user's query override if provided. "
             f"For every lead returned, call add_lead to save it to the CRM. "
             f"Collect phone, email, LinkedIn URL, company, and title for each lead.\n"
             f"USER REQUEST: {user_request}\n\n"

@@ -1235,6 +1235,52 @@ class UtahProspectingTool(BaseTool):
         return json.dumps(results, indent=2)
 
 
+class ApolloLeadHarvestTool(BaseTool):
+    """Apollo-based primary lead harvest for Growth Hunter."""
+    name: str = "harvest_apollo_leads"
+    description: str = (
+        "Primary Apollo paid-plan lead discovery. "
+        "Inputs: target int, pipeline string ('sw', 'cw', or 'studio'). "
+        "Runs the matching Signal Works topup harvester and returns a compact summary."
+    )
+
+    def _run(self, target: int = 20, pipeline: str = "sw") -> str:
+        try:
+            target = int(target or 20)
+        except (TypeError, ValueError):
+            target = 20
+
+        key = (pipeline or "sw").strip().lower()
+        harvesters = {
+            "sw": ("Signal Works", "signal_works.topup_leads", "topup"),
+            "cw": ("Catalyst Works", "signal_works.topup_cw_leads", "topup_cw_leads"),
+            "studio": ("Studio", "signal_works.topup_studio_leads", "topup_studio_leads"),
+        }
+        if key not in harvesters:
+            return f"Error: unknown Apollo pipeline '{pipeline}'. Use 'sw', 'cw', or 'studio'."
+
+        label, module_name, function_name = harvesters[key]
+        try:
+            module = __import__(module_name, fromlist=[function_name])
+            topup_fn = getattr(module, function_name)
+            count = topup_fn(minimum=target)
+            return json.dumps(
+                {
+                    "tool": "harvest_apollo_leads",
+                    "pipeline": key,
+                    "pipeline_label": label,
+                    "target": target,
+                    "count": count,
+                    "summary": [
+                        f"{label} Apollo harvest returned {count} email lead(s) for target {target}."
+                    ],
+                },
+                indent=2,
+            )
+        except Exception as e:
+            return f"Error running Apollo harvest for pipeline '{key}': {e}"
+
+
 class CRMRevealEmailTool(BaseTool):
     """On-demand email reveal for a named lead via Hunter.io then Apollo."""
     name: str = "reveal_email"
@@ -1605,6 +1651,7 @@ NOTION_TASK_TOOLS = [NotionQueryTasksTool()]
 # These are convenience bundles used in agents.py
 
 voice_polisher_tool = VoicePolisherTool()
+harvest_apollo_leads = ApolloLeadHarvestTool()
 prospecting_tool = UtahProspectingTool()
 class CRMMarkOutreachSentTool(BaseTool):
     """Marks leads as messaged after you manually send their Gmail drafts."""
@@ -2313,6 +2360,6 @@ VALIDATION_TOOLS = [ValidateOutputTool()]
 WRITING_TOOLS = [file_writer, SaveOutputTool(), voice_polisher_tool, BeehiivCreateDraftTool()]
 CODE_TOOLS = [t for t in [code_interpreter, file_writer, file_reader, SaveOutputTool(), CLIHubSearchTool(), launch_vercel_tool] if t is not None]
 ORCHESTRATION_TOOLS = [EscalateTool(), ProposeNewAgentTool(), QueryMemoryTool(), scoreboard_tool, CLIHubSearchTool(), GitHubRepoTool(), GitHubIssueTool(), GitHubFileTool(), NotionSearchTool(), NotionPageTool(), launch_vercel_tool, SpawnJobTool()] + VERCEL_TOOLS + NOTION_STYLING_TOOLS + FORGE_TOOLS + GWS_TOOLS
-HUNTER_TOOLS = [prospecting_tool, crm_add_tool, crm_log_tool, crm_reveal_tool, enrich_leads_tool, scoreboard_tool, QueryMemoryTool(), NotionPageTool(), forge_pipeline_tool, forge_log_tool]
+HUNTER_TOOLS = [harvest_apollo_leads, prospecting_tool, crm_add_tool, crm_log_tool, crm_reveal_tool, enrich_leads_tool, scoreboard_tool, QueryMemoryTool(), NotionPageTool(), forge_pipeline_tool, forge_log_tool]
 OUTREACH_TOOLS = [crm_uncontacted_tool, crm_reveal_tool, crm_log_tool, scoreboard_tool, crm_mark_sent_tool]
 HYPERFRAMES_TOOLS = [t for t in [hyperframes_tool] if t is not None]

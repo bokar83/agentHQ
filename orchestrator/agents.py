@@ -842,11 +842,8 @@ def build_hunter_agent() -> Agent:
         ),
         backstory=(
             "You are a relentless revenue prospector for Catalyst Works Consulting. "
-            "Your pipeline: Serper LinkedIn dorking to find owner profiles → "
-            "Serper local business search for phone and website → "
-            "Firecrawl to scrape websites for direct contact info → "
-            "Hunter.io to fill in missing emails → "
-            "Apollo as the primary enrichment engine for high-confidence contact data. "
+            "Your pipeline: Apollo paid plan as primary discovery for verified contact data -> "
+            "Hunter.io plus Firecrawl as fallback for SMBs Apollo cannot reach. "
             "You automatically reveal emails for every lead found — no more pending placeholders. "
             "You log every lead to Supabase CRM via add_lead and report results clearly "
             "to ensure immediate outreach can begin."
