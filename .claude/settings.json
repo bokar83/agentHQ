@@ -50,5 +50,18 @@
       "Bash(ssh root@* psql * -c \"DROP:*)",
       "Bash(ssh root@* psql * -c \"TRUNCATE:*)"
     ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash $CLAUDE_PROJECT_DIR/scripts/session_start_audit.sh"
+          }
+        ]
+      }
+    ]
   }
 }

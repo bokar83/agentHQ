@@ -194,3 +194,18 @@ data/codex/
 configs/asset_vault.json
 CLAUDE.original.md
 my-video/
+
+# Repo-root scratch artifacts (screenshots, temp images, scratch files)
+# Real deliverables go in deliverables/ -- iterations + temp work stay out of root.
+/sw-*.png
+/screenshot-*.png
+/screenshot*.png
+/scratch-*.png
+/scratch-*.html
+/temp-*.png
+/temp-*.html
+/test-*.png
+/iteration-*.png
+/*.tmp.png
+/*.draft.html
+/*.draft.png
