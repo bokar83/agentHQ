@@ -10,7 +10,7 @@ repos:
           - infrasctructure/\.env
           - --exclude-files
           - infrastructure/\.env
-        exclude: \.env$
+        exclude: \.env$|^agent_outputs/|^logs/|^data/|^research-vault/|^output/|^workspace/
 
   - repo: local
     hooks:
