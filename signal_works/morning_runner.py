@@ -33,7 +33,7 @@ load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 def _telegram_alert(msg: str) -> None:
     """Best-effort Telegram alert. Never raises -- failure here must not crash the runner."""
     token = os.getenv("ORCHESTRATOR_TELEGRAM_BOT_TOKEN")
-    chat_id = os.getenv("TELEGRAM_CHAT_ID")
+    chat_id = os.getenv("TELEGRAM_CHAT_ID") or os.getenv("OWNER_TELEGRAM_CHAT_ID")
     if not token or not chat_id:
         return
     try:
@@ -127,7 +127,7 @@ def _main_body():
         try:
             from skills.outreach.sequence_engine import run_sequence
             sw_result = run_sequence("sw", dry_run=False, daily_limit=35)
-            sw_drafted = sw_result.get("drafted", 0)
+            sw_drafted = sw_result.get("drafted", 0) + sw_result.get("sent", 0)
             logger.info(f"  Done. {sw_drafted} SW sequence drafts created.")
         except Exception as e:
             logger.error(f"  Signal Works sequence failed: {e}")
