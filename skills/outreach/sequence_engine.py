@@ -467,7 +467,7 @@ def run_sequence(pipeline: str, dry_run: bool = False, daily_limit: int = 10) ->
     total_failed = 0
     results = []
 
-    max_touch = 5 if pipeline == "cw" else 4
+    max_touch = 5 if pipeline in ("cw", "sw") else 4
     for touch in range(1, max_touch + 1):
         if total_sent + total_failed >= daily_limit:
             break

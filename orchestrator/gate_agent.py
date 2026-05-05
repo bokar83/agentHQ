@@ -190,12 +190,13 @@ def _branch_is_claimed(branch: str) -> bool:
 
 
 def _files_changed_vs_main(branch: str) -> list[str]:
-    """Files changed on branch vs main."""
-    rc, out, _ = _git([
+    """Files changed on branch vs main. Returns empty list on failure (logged)."""
+    rc, out, err = _git([
         "diff", "--name-only",
         f"origin/{MAIN_BRANCH}...origin/{branch}",
     ])
     if rc != 0:
+        logger.warning("gate: could not diff %s vs main: %s", branch, err)
         return []
     return [f for f in out.splitlines() if f.strip()]
 
@@ -208,8 +209,12 @@ def _run_tests(branch: str) -> tuple[bool, str]:
 
 def _merge_branch(branch: str) -> tuple[bool, str]:
     """Merge branch into local main. Returns (success, error)."""
-    _git(["checkout", MAIN_BRANCH])
-    _git(["pull", "origin", MAIN_BRANCH])
+    rc_co, _, err_co = _git(["checkout", MAIN_BRANCH])
+    if rc_co != 0:
+        return False, f"checkout main failed: {err_co}"
+    rc_pull, _, err_pull = _git(["pull", "origin", MAIN_BRANCH])
+    if rc_pull != 0:
+        return False, f"pull main failed: {err_pull}"
     rc, _, err = _git(["merge", f"origin/{branch}", "--no-ff",
                         "-m", f"merge({branch}): gate auto-merge -- tests green, no conflicts"])
     if rc != 0:
@@ -299,7 +304,8 @@ def _gate_enabled() -> bool:
             return False
         state = json.loads(state_path.read_text())
         return bool(state.get("crews", {}).get("gate", {}).get("enabled", False))
-    except Exception:
+    except Exception as exc:
+        logger.warning("gate: could not read autonomy_state.json: %s", exc)
         return False
 
 

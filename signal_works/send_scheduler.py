@@ -71,10 +71,12 @@ MAX_DELAY = 480   # 8 min
 
 # Subject keywords to identify which pipeline a draft belongs to
 PIPE_KEYWORDS = {
-    "sw":     ["invisible on ChatGPT", "ChatGPT", "customers find", "SaaS audit"],
-    "cw":     ["margin", "SaaS", "constraint", "Something I thought", "closing the loop"],
-    "studio": ["searching AI", "website is missing", "1,500 website", "Closing the loop"],
+    "sw":     ["invisible on ChatGPT", "ChatGPT", "customers find", "SaaS audit upsell"],
+    "cw":     ["margin", "closing the loop on", "constraint", "Something I thought"],
+    "studio": ["searching AI", "website is missing", "1,500 website"],
 }
+# Evaluation order: sw checked before cw so "SaaS audit" (sw-specific) never matches cw "SaaS"
+PIPE_ORDER = ["sw", "studio", "cw"]
 
 
 def _get_access_token() -> str:
@@ -189,7 +191,7 @@ def run_batch(pipeline: str = "all", batch_size: int = None,
     Fetch Gmail drafts and send up to batch_size per pipeline,
     with randomized delays between individual sends.
     """
-    pipelines = ["sw", "cw", "studio"] if pipeline == "all" else [pipeline]
+    pipelines = PIPE_ORDER if pipeline == "all" else [pipeline]
 
     token = _get_access_token()
     all_drafts = _list_drafts(token)
