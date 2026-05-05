@@ -1,13 +1,14 @@
 """
 skills/outreach/sequence_engine.py
 ===================================
-4-touch email sequence engine for CW and SW pipelines.
+5-touch email sequence engine for CW and SW pipelines.
 
-Touch schedule:
+Touch schedule (SW):
   T1 = Day 0  (first contact)
   T2 = Day 3
   T3 = Day 7
-  T4 = Day 12
+  T4 = Day 12 (breakup)
+  T5 = Day 17 (SaaS audit upsell, different angle for non-responders)
 
 Rules:
   - AUTO_SEND_CW / AUTO_SEND_SW env vars control send vs draft
@@ -40,10 +41,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 logger = logging.getLogger(__name__)
 
-# SW: 4 touches at Day 0/3/7/12
+# SW: 5 touches at Day 0/3/7/12/17 (T5 = SaaS audit upsell for non-responders)
 # CW: 5 touches at Day 0/6/9/14/19 (T2 = SaaS PDF value-add)
 # Studio: 4 touches at Day 0/5/11/18 (website + AI presence angle)
-TOUCH_DAYS_SW = {1: 0, 2: 3, 3: 7, 4: 12}
+TOUCH_DAYS_SW = {1: 0, 2: 3, 3: 7, 4: 12, 5: 17}
 TOUCH_DAYS_CW = {1: 0, 2: 6, 3: 9, 4: 14, 5: 19}
 TOUCH_DAYS_STUDIO = {1: 0, 2: 5, 3: 11, 4: 18}
 
@@ -70,6 +71,7 @@ TEMPLATES = {
         2: "templates.email.sw_t2",
         3: "templates.email.sw_t3",
         4: "templates.email.sw_t4",
+        5: "templates.email.sw_t5",
     },
     "studio": {
         1: "templates.email.studio_t1",
