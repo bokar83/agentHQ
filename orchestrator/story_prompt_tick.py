@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 import os
 import random
-from datetime import datetime, date
+from datetime import datetime
 
 import pytz
 
@@ -24,40 +24,69 @@ TIMEZONE = os.environ.get("HEARTBEAT_TIMEZONE", "America/Denver")
 STORY_QUEUE_MIN = int(os.environ.get("STORY_QUEUE_MIN", "5"))
 CONTENT_DB_ID = os.environ.get("FORGE_CONTENT_DB", "339bcf1a-3029-81d1-8377-dc2f2de13a20")
 
+# Each prompt is (question, channels) where channels is a list of tags.
+# BB=Boubacar Personal, FGM=First Gen Money, UTB=Under the Baobab, AIC=AI Catalyst
 STORY_PROMPTS = [
     # MOMENTS OF FRICTION
-    "What happened this week that annoyed you but also confirmed something you already believed?",
-    "Name a conversation you had recently where you said something you had not planned to say. What was it?",
-    "When was the last time you were the only person in the room who saw something clearly but said nothing?",
+    ("What happened this week that annoyed you but also confirmed something you already believed?",
+     ["BB", "AIC"]),
+    ("Name a conversation you had recently where you said something you had not planned to say. What was it?",
+     ["BB", "UTB"]),
+    ("When was the last time you were the only person in the room who saw something clearly but said nothing?",
+     ["BB", "AIC"]),
     # ORIGIN WOUNDS
-    "What is one thing you watched your parents do with money that you swore you would never do — and then did anyway?",
-    "What is something you believed about success before you left West Africa that America quietly dismantled?",
-    "There is a version of you from five years ago that would not recognize your current life. What would surprise him most?",
+    ("What is one thing you watched your parents do with money that you swore you would never do — and then did anyway?",
+     ["FGM", "UTB"]),
+    ("What is something you believed about success before you left West Africa that America quietly dismantled?",
+     ["UTB", "FGM", "BB"]),
+    ("There is a version of you from five years ago that would not recognize your current life. What would surprise him most?",
+     ["BB", "UTB"]),
     # THE GAP BETWEEN PUBLIC AND PRIVATE
-    "What are you telling clients to do right now that you have not fully done yourself?",
-    "What does your calendar say about you that you would not want a client to see?",
-    "What business decision are you sitting on right now that you already know the answer to but have not made yet?",
+    ("What are you telling clients to do right now that you have not fully done yourself?",
+     ["BB", "AIC"]),
+    ("What does your calendar say about you that you would not want a client to see?",
+     ["BB"]),
+    ("What business decision are you sitting on right now that you already know the answer to but have not made yet?",
+     ["BB", "FGM"]),
     # THE UTAH REALITY
-    "Describe a moment in Utah where you felt completely out of place. What did you do with that feeling?",
-    "What assumption did someone make about you in a professional setting recently that they would never have made in Dakar or Dubai?",
-    "What does it cost you — practically, emotionally — to be building this firm here, in this place, right now?",
+    ("Describe a moment in Utah where you felt completely out of place. What did you do with that feeling?",
+     ["UTB", "BB"]),
+    ("What assumption did someone make about you in a professional setting recently that they would never have made in Dakar or Dubai?",
+     ["UTB", "BB"]),
+    ("What does it cost you — practically, emotionally — to be building this firm here, in this place, right now?",
+     ["BB", "UTB", "FGM"]),
     # BUILDER HONESTY
-    "What part of Catalyst Works is not working yet that you have not told anyone?",
-    "What would you build differently if you were starting today with the same money but everything you know now?",
-    "What is a service you offer that you secretly know is undersold — and one that you quietly know is not ready?",
+    ("What part of Catalyst Works is not working yet that you have not told anyone?",
+     ["BB"]),
+    ("What would you build differently if you were starting today with the same money but everything you know now?",
+     ["BB", "FGM", "AIC"]),
+    ("What is a service you offer that you secretly know is undersold — and one that you quietly know is not ready?",
+     ["BB"]),
     # THE LONG GAME
-    "What are you building this for? Not the pitch answer. The 2am answer.",
-    "Who are you trying to prove something to? Have you admitted that to yourself?",
-    "What would it mean to you if Catalyst Works did not exist in three years? Be specific.",
+    ("What are you building this for? Not the pitch answer. The 2am answer.",
+     ["BB", "UTB", "FGM"]),
+    ("Who are you trying to prove something to? Have you admitted that to yourself?",
+     ["BB", "UTB"]),
+    ("What would it mean to you if Catalyst Works did not exist in three years? Be specific.",
+     ["BB", "FGM"]),
     # SMALL MOMENTS, BIG SIGNAL
-    "What is something small that happened this week that no one would write an article about, but that you have not stopped thinking about?",
-    "Finish this sentence without editing yourself: Nobody talks about how hard it is to...",
+    ("What is something small that happened this week that no one would write an article about, but that you have not stopped thinking about?",
+     ["BB", "UTB", "AIC", "FGM"]),
+    ("Finish this sentence without editing yourself: Nobody talks about how hard it is to...",
+     ["BB", "UTB", "FGM"]),
 ]
+
+CHANNEL_LABELS = {
+    "BB":  "Boubacar Personal (LinkedIn + X)",
+    "FGM": "First Gen Money (X + IG + TikTok + YouTube)",
+    "UTB": "Under the Baobab (X + IG + TikTok + YouTube)",
+    "AIC": "AI Catalyst (X + IG + TikTok + YouTube)",
+}
 
 _last_prompt: str | None = None
 
 
-def _count_story_ideas(notion) -> int:
+def _count_story_ideas(notion) -> int:  # type: ignore[no-untyped-def]
     """Count Content Board records with Status=Idea and Content Type=Story."""
     try:
         posts = notion.query_database(
@@ -75,26 +104,28 @@ def _count_story_ideas(notion) -> int:
         return STORY_QUEUE_MIN  # fail-safe: assume queue is fine, don't spam
 
 
-def _pick_prompt() -> str:
+def _pick_prompt() -> tuple:
     global _last_prompt
-    candidates = [p for p in STORY_PROMPTS if p != _last_prompt]
-    chosen = random.choice(candidates)
-    _last_prompt = chosen
-    return chosen
+    candidates = [(q, c) for q, c in STORY_PROMPTS if q != _last_prompt]
+    chosen_q, chosen_c = random.choice(candidates)
+    _last_prompt = chosen_q
+    return chosen_q, chosen_c
 
 
-def _send_prompt(prompt: str, reason: str) -> None:
+def _send_prompt(prompt: str, channels: list, reason: str) -> None:
     try:
-        from notifier import send_message
+        from notifier import send_message  # type: ignore[import]
         chat_id = os.environ.get("OWNER_TELEGRAM_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID")
         if not chat_id:
             logger.warning("story_prompt: no Telegram chat_id configured")
             return
+        channel_hint = " | ".join(CHANNEL_LABELS[c] for c in channels if c in CHANNEL_LABELS)
         msg = (
-            f"Story prompt ({reason}):\n\n"
+            f"Story prompt:\n\n"
             f"{prompt}\n\n"
+            f"Could feed: {channel_hint}\n\n"
             f"Reply with whatever comes to mind. Raw is better. "
-            f"LéGroit will shape it into a post when you are ready."
+            f"LéGroit saves it and suggests channel routing when you are ready to post."
         )
         send_message(str(chat_id), msg)
         logger.info(f"story_prompt: sent prompt [{prompt[:60]}...] reason={reason}")
@@ -108,7 +139,8 @@ def story_prompt_scheduled_tick() -> None:
         return
     tz = pytz.timezone(TIMEZONE)
     today = datetime.now(tz).strftime("%A")
-    _send_prompt(_pick_prompt(), reason=f"scheduled {today}")
+    prompt, channels = _pick_prompt()
+    _send_prompt(prompt, channels, reason=f"scheduled {today}")
 
 
 def story_prompt_sparse_tick() -> None:
@@ -127,7 +159,8 @@ def story_prompt_sparse_tick() -> None:
         count = _count_story_ideas(notion)
         if count < STORY_QUEUE_MIN:
             logger.info(f"story_prompt: Story queue sparse ({count} < {STORY_QUEUE_MIN}), sending prompt")
-            _send_prompt(_pick_prompt(), reason=f"queue sparse ({count} ideas)")
+            prompt, channels = _pick_prompt()
+            _send_prompt(prompt, channels, reason=f"queue sparse ({count} ideas)")
         else:
             logger.debug(f"story_prompt: Story queue healthy ({count} ideas), skipping")
     except Exception as e:
