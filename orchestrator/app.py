@@ -402,6 +402,29 @@ async def chat_token(req: ChatTokenRequest):
 
 
 # ══════════════════════════════════════════════════════════════
+# Dream: memory consolidation reply-window registration
+# ══════════════════════════════════════════════════════════════
+
+@app.post("/dream/register-window")
+async def dream_register_window(request: Request):
+    """
+    Called by scripts/dream.py (local) after sending a proposal to Telegram.
+    Registers the Telegram message_id so handle_dream_reply() can intercept
+    the owner's approve/reject reply.
+    """
+    body = await request.json()
+    msg_id = body.get("msg_id")
+    if not msg_id:
+        raise HTTPException(status_code=400, detail="msg_id required")
+    from state import _DREAM_WINDOWS
+    import time, os
+    chat_id = os.environ.get("OWNER_TELEGRAM_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID", "")
+    _DREAM_WINDOWS[int(msg_id)] = {"chat_id": chat_id, "ts_sent": time.time()}
+    logger.info(f"Dream reply window registered for msg_id={msg_id}")
+    return {"ok": True}
+
+
+# ══════════════════════════════════════════════════════════════
 # Task execution routes (auth-gated)
 # ══════════════════════════════════════════════════════════════
 

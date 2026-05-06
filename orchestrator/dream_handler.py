@@ -16,8 +16,6 @@ Wired into:
 import logging
 import os
 import shutil
-import subprocess
-import threading
 import time
 from datetime import datetime
 from pathlib import Path
@@ -64,66 +62,19 @@ def _get_chat_id() -> str:
     return os.environ.get("OWNER_TELEGRAM_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID", "")
 
 
-def _run_dream_scan(chat_id: str, n_sessions: int) -> None:
-    """Background thread: run dream.py scan, send proposal to Telegram."""
-    _send(chat_id, "Dream scan started. Analyzing memory store + recent commits... (1-3 min)")
-
-    # Call dream.py as subprocess so it runs with its own imports/paths
-    repo_root = Path(__file__).parent.parent
-    dream_script = repo_root / "scripts" / "dream.py"
-
-    try:
-        result = subprocess.run(
-            ["python", str(dream_script), "--sessions", str(n_sessions)],
-            capture_output=True, text=True, timeout=300,
-            cwd=str(repo_root),
-        )
-        if result.returncode != 0:
-            _send(chat_id, f"Dream scan failed:\n{result.stderr[-1000:]}")
-            return
-    except subprocess.TimeoutExpired:
-        _send(chat_id, "Dream scan timed out (>5 min). Try again with fewer --sessions.")
-        return
-    except Exception as e:
-        _send(chat_id, f"Dream scan error: {e}")
-        return
-
-    # Read and send proposal
-    if not PROPOSAL_FILE.exists():
-        _send(chat_id, "Dream scan complete but no proposal file found. Check logs.")
-        return
-
-    proposal = PROPOSAL_FILE.read_text(encoding="utf-8")
-
-    # Send summary (first 3000 chars) + instructions
-    summary = proposal[:3000]
-    if len(proposal) > 3000:
-        summary += f"\n\n[...{len(proposal)-3000} more chars. Full proposal in memory/dream-output/PROPOSAL.md]"
-
-    instructions = (
-        "\n\n---\nReply to THIS message with:\n"
-        "  approve\n"
-        "  reject\n"
-        "  approve except feedback_x.md, project_y.md"
-    )
-
-    msg_id = _send(chat_id, summary + instructions)
-
-    if msg_id:
-        _DREAM_WINDOWS[msg_id] = {
-            "chat_id": chat_id,
-            "ts_sent": time.time(),
-        }
-        logger.info(f"Dream proposal sent, window registered for msg_id={msg_id}")
-    else:
-        logger.error("Failed to get msg_id for dream proposal — reply detection won't work")
-        _send(chat_id, "Warning: could not register reply window. Use /dream approve or /dream reject as fallback.")
-
-
 def run_dream_async(chat_id: str, n_sessions: int = 30) -> None:
-    """Start dream scan in background thread."""
-    t = threading.Thread(target=_run_dream_scan, args=(chat_id, n_sessions), daemon=True)
-    t.start()
+    """
+    Memory files live on the local machine, not the VPS container.
+    Instruct Boubacar to run the scan locally — dream.py sends the
+    proposal to Telegram directly once it completes.
+    """
+    _send(
+        chat_id,
+        f"To start a dream scan, run locally:\n\n"
+        f"  python scripts/dream.py --sessions {n_sessions}\n\n"
+        f"Claude will scan your memory store and send the proposal here.\n"
+        f"You'll then reply approve / reject / approve except X, Y to this chat."
+    )
 
 
 def evict_expired_dream_windows() -> None:
@@ -133,7 +84,7 @@ def evict_expired_dream_windows() -> None:
         del _DREAM_WINDOWS[mid]
 
 
-def handle_dream_reply(text: str, chat_id: str, first_word: str, reply_to_msg_id: int | None) -> bool:
+def handle_dream_reply(text: str, chat_id: str, _first_word: str, reply_to_msg_id: int | None) -> bool:
     """
     Check if this message is a reply to a pending dream proposal.
     Returns True if handled (caller should return early).
