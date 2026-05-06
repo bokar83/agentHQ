@@ -348,17 +348,19 @@ def _concat_clips(clips: list[Path], out: Path, scenes: list[dict], fps: int) ->
 
 def _mix_audio(video: Path, audio: Path, out: Path, audio_delay: float) -> None:
     # Delay audio by intro_duration so narration starts after title card.
-    # apad silences audio during the outro card. No -shortest so the full
-    # video length (intro + scenes + outro) is preserved.
+    # Probe video duration so apad knows when to stop (avoids infinite pad).
+    # No -shortest — video is longer than audio (outro card plays after narration).
+    video_dur = _probe_duration(video)
     _ffmpeg([
         "-i", str(video),
         "-i", str(audio),
         "-map", "0:v",
         "-map", "1:a",
-        "-filter:a", f"adelay={int(audio_delay * 1000)}|{int(audio_delay * 1000)},apad",
+        "-filter:a", f"adelay={int(audio_delay * 1000)}|{int(audio_delay * 1000)},apad=whole_dur={video_dur:.3f}",
         "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+        "-t", str(video_dur),
         str(out),
-    ], timeout=300)
+    ], timeout=600)
 
 
 def _burn_captions(video: Path, srt: Path, out: Path, w: int, h: int, font: str, fg: str) -> None:
