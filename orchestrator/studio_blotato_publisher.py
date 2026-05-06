@@ -148,6 +148,17 @@ def _prop_text(record: dict, name: str) -> str:
     return ""
 
 
+def _prop_list(record: dict, name: str) -> list[str]:
+    """Extract list of names from a Notion multi_select property."""
+    prop = record.get("properties", {}).get(name, {})
+    ptype = prop.get("type", "")
+    if ptype == "multi_select":
+        return [opt.get("name", "") for opt in prop.get("multi_select", []) if opt.get("name")]
+    # fallback: treat single select as list of one
+    single = _prop_text(record, name)
+    return [single] if single else []
+
+
 def _query_db(notion, db_id: str, filter_obj: dict) -> list[dict]:
     """Query a Notion database with a filter."""
     return notion.query_database(db_id, filter_obj=filter_obj)
@@ -240,120 +251,127 @@ def studio_blotato_publisher_tick(dry_run: bool = False) -> dict:
     for rec in records:
         page_id = rec["id"]
         channel = _prop_text(rec, PROP_CHANNEL)
-        platform = _prop_text(rec, PROP_PLATFORM)
+        platforms = _prop_list(rec, PROP_PLATFORM)
         draft = _prop_text(rec, PROP_DRAFT)
         asset_url = _prop_text(rec, PROP_ASSET_URL)
 
-        account_id = _account_id_for(channel, platform)
-        if not account_id:
-            env_key = _env_key_for(channel, platform)
-            logger.warning(
-                f"STUDIO PUBLISHER: skip {page_id} ({channel}/{platform}) — "
-                f"{env_key} not set"
-            )
-            summaries.append(f"⏭️ {channel}/{platform}: no account ID ({env_key} not set)")
+        if not platforms:
+            logger.warning(f"STUDIO PUBLISHER: skip {page_id} ({channel}) — Platform field empty")
+            summaries.append(f"⏭️ {channel}: Platform field empty")
             skipped += 1
             continue
 
         if not draft and not asset_url:
             logger.warning(f"STUDIO PUBLISHER: skip {page_id} — no Draft and no Asset URL")
-            summaries.append(f"⏭️ {channel}/{platform}: missing Draft + Asset URL")
+            summaries.append(f"⏭️ {channel}: missing Draft + Asset URL")
             skipped += 1
             continue
 
         text = draft or f"New content from {channel}."
         media_urls = [asset_url] if asset_url else []
 
-        if dry_run:
-            logger.info(
-                f"STUDIO PUBLISHER [DRY RUN]: {page_id} ({channel}/{platform}) "
-                f"account={account_id} text_len={len(text)} media={media_urls}"
-            )
-            summaries.append(f"🔍 [DRY RUN] {channel}/{platform}: would publish (account={account_id})")
-            continue
+        # Flip status once before iterating platforms (idempotency guard).
+        if not dry_run:
+            try:
+                _flip_status(notion, page_id, "rendering")
+            except Exception as e:
+                logger.error(f"STUDIO PUBLISHER: cannot flip {page_id} to publishing: {e}")
+                skipped += 1
+                continue
 
-        # Step b: idempotency flip before API call.
-        try:
-            _flip_status(notion, page_id, "rendering")
-        except Exception as e:
-            logger.error(f"STUDIO PUBLISHER: cannot flip {page_id} to publishing: {e}")
-            skipped += 1
-            continue
+        for platform in platforms:
+            account_id = _account_id_for(channel, platform)
+            if not account_id:
+                env_key = _env_key_for(channel, platform)
+                logger.warning(
+                    f"STUDIO PUBLISHER: skip {page_id} ({channel}/{platform}) — "
+                    f"{env_key} not set"
+                )
+                summaries.append(f"⏭️ {channel}/{platform}: no account ID ({env_key} not set)")
+                skipped += 1
+                continue
 
-        # Step c: publish.
-        blotato_platform = NOTION_TO_BLOTATO_PLATFORM.get(platform, platform.lower())
-        try:
-            submission_id = publisher.publish(
-                text=text,
-                account_id=account_id,
-                platform=blotato_platform,
-                media_urls=media_urls,
-            )
-        except Exception as e:
-            logger.error(f"STUDIO PUBLISHER: publish error {page_id} ({channel}/{platform}): {e}")
-            _flip_status(notion, page_id, "publish-failed")
-            _write_props(notion, page_id, {
-                PROP_QA_NOTES: {"rich_text": [{"text": {"content": f"Publish error: {e}"}}]},
-            })
-            _send_telegram(f"❌ Studio Publisher: {channel}/{platform} — {e}")
-            summaries.append(f"❌ {channel}/{platform}: publish error — {e}")
-            failed += 1
-            continue
+            if dry_run:
+                logger.info(
+                    f"STUDIO PUBLISHER [DRY RUN]: {page_id} ({channel}/{platform}) "
+                    f"account={account_id} text_len={len(text)} media={media_urls}"
+                )
+                summaries.append(f"🔍 [DRY RUN] {channel}/{platform}: would publish (account={account_id})")
+                continue
 
-        # Step d: persist submission ID.
-        try:
-            _write_props(notion, page_id, {
-                PROP_SUBMISSION_ID: {"rich_text": [{"text": {"content": submission_id}}]},
-            })
-        except Exception as e:
-            logger.warning(f"STUDIO PUBLISHER: could not write submission_id {page_id}: {e}")
+            # Step c: publish.
+            blotato_platform = NOTION_TO_BLOTATO_PLATFORM.get(platform, platform.lower())
+            try:
+                submission_id = publisher.publish(
+                    text=text,
+                    account_id=account_id,
+                    platform=blotato_platform,
+                    media_urls=media_urls,
+                )
+            except Exception as e:
+                logger.error(f"STUDIO PUBLISHER: publish error {page_id} ({channel}/{platform}): {e}")
+                _send_telegram(f"❌ Studio Publisher: {channel}/{platform} — {e}")
+                summaries.append(f"❌ {channel}/{platform}: publish error — {e}")
+                failed += 1
+                continue
 
-        # Step e: poll.
-        try:
-            result = publisher.poll_until_terminal(submission_id)
-        except Exception as e:
-            logger.error(f"STUDIO PUBLISHER: poll error {submission_id}: {e}")
-            _send_telegram(
-                f"⚠️ Studio Publisher: {channel}/{platform} poll error — {e}. "
-                f"Record left in publishing."
-            )
-            continue
+            # Step d: persist submission ID.
+            try:
+                _write_props(notion, page_id, {
+                    PROP_SUBMISSION_ID: {"rich_text": [{"text": {"content": submission_id}}]},
+                })
+            except Exception as e:
+                logger.warning(f"STUDIO PUBLISHER: could not write submission_id {page_id}: {e}")
 
-        if result.ok:
-            posted_date = datetime.now(timezone.utc).date().isoformat()
-            props_update: dict = {
-                PROP_STATUS: {"select": {"name": "published"}},
-                PROP_POSTED_DATE: {"date": {"start": posted_date}},
-            }
-            if result.public_url:
-                props_update[PROP_POSTED_URL] = {"url": result.public_url}
-            _write_props(notion, page_id, props_update)
-            published += 1
-            summaries.append(
-                f"✅ {channel}/{platform}: posted in {result.elapsed_sec:.1f}s "
-                f"— {result.public_url or 'no URL'}"
-            )
-            logger.info(
-                f"STUDIO PUBLISHER: {page_id} ({channel}/{platform}) "
-                f"posted in {result.elapsed_sec:.1f}s"
-            )
-        elif result.status == "failed":
-            _flip_status(notion, page_id, "publish-failed")
-            _write_props(notion, page_id, {
-                PROP_QA_NOTES: {"rich_text": [{"text": {"content": f"Blotato failed: {result.error_message}"}}]},
-            })
-            _send_telegram(
-                f"❌ Studio Publisher: {channel}/{platform} failed — {result.error_message}"
-            )
-            summaries.append(f"❌ {channel}/{platform}: Blotato failed — {result.error_message}")
-            failed += 1
-        else:
-            # Timeout: leave in publishing for next tick TTL check.
-            logger.warning(
-                f"STUDIO PUBLISHER: {page_id} ({channel}/{platform}) "
-                f"poll timeout — left in publishing"
-            )
-            summaries.append(f"⏱️ {channel}/{platform}: poll timeout — left in publishing")
+            # Step e: poll.
+            try:
+                result = publisher.poll_until_terminal(submission_id)
+            except Exception as e:
+                logger.error(f"STUDIO PUBLISHER: poll error {submission_id}: {e}")
+                _send_telegram(
+                    f"⚠️ Studio Publisher: {channel}/{platform} poll error — {e}. "
+                    f"Record left in publishing."
+                )
+                continue
+
+            if result.ok:
+                posted_date = datetime.now(timezone.utc).date().isoformat()
+                props_update: dict = {
+                    PROP_POSTED_DATE: {"date": {"start": posted_date}},
+                }
+                if result.public_url:
+                    props_update[PROP_POSTED_URL] = {"url": result.public_url}
+                _write_props(notion, page_id, props_update)
+                published += 1
+                summaries.append(
+                    f"✅ {channel}/{platform}: posted in {result.elapsed_sec:.1f}s "
+                    f"— {result.public_url or 'no URL'}"
+                )
+                logger.info(
+                    f"STUDIO PUBLISHER: {page_id} ({channel}/{platform}) "
+                    f"posted in {result.elapsed_sec:.1f}s"
+                )
+            elif result.status == "failed":
+                _write_props(notion, page_id, {
+                    PROP_QA_NOTES: {"rich_text": [{"text": {"content": f"Blotato failed: {result.error_message}"}}]},
+                })
+                _send_telegram(
+                    f"❌ Studio Publisher: {channel}/{platform} failed — {result.error_message}"
+                )
+                summaries.append(f"❌ {channel}/{platform}: Blotato failed — {result.error_message}")
+                failed += 1
+            else:
+                # Timeout: leave in publishing for next tick TTL check.
+                logger.warning(
+                    f"STUDIO PUBLISHER: {page_id} ({channel}/{platform}) "
+                    f"poll timeout — left in publishing"
+                )
+                summaries.append(f"⏱️ {channel}/{platform}: poll timeout — left in publishing")
+
+        # After all platforms: flip to published if any succeeded, else publish-failed.
+        if not dry_run:
+            final_status = "published" if published > 0 else "publish-failed"
+            _flip_status(notion, page_id, final_status)
 
     summary = {
         "date": today,
