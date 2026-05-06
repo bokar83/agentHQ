@@ -723,11 +723,138 @@ class GWSGmailSearchTool(BaseTool):
             return f"gmail_search failed: {e}"
 
 
+class GWSGmailSendHTMLMeTool(BaseTool):
+    name: str = "gmail_send_html_me"
+    description: str = (
+        "Directly send a beautifully formatted HTML email to Boubacar Barry "
+        "(to BOTH boubacar@catalystworks.consulting and bokar83@gmail.com) without creating a draft. "
+        "Input: JSON with 'subject' (str), 'body' (plain text or markdown representation of the content), "
+        "and 'html_body' (HTML representation with proper styling, headers, and paragraphs). "
+        "Optional: 'account' (email address to send from — defaults to bokar83@gmail.com; "
+        "can use 'boubacar@catalystworks.consulting' for business-toned notifications)."
+    )
+    def _run(self, input_data: str) -> str:
+        try:
+            import base64
+            from email.mime.multipart import MIMEMultipart
+            from email.mime.text import MIMEText
+            data = json.loads(input_data) if isinstance(input_data, str) else input_data
+            account = data.get("account")
+            
+            subject = data.get("subject", "agentsHQ Notification")
+            body_text = data.get("body", "Please view this email in an HTML-compatible client.")
+            html_content = data.get("html_body") or data.get("body") or ""
+            
+            # If html_content does not look like raw HTML, wrap it in a beautiful, premium design template
+            is_raw_html = (
+                html_content.strip().startswith("<")
+                and ("<html>" in html_content.lower() or "<body" in html_content.lower() or "<div" in html_content.lower() or "<p" in html_content.lower())
+            )
+            
+            if not is_raw_html:
+                # Convert basic linebreaks to HTML
+                formatted_html = html_content.replace("\r\n", "\n").replace("\n", "<br>")
+                html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+    body {{
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        line-height: 1.6;
+        color: #334155;
+        background-color: #f8fafc;
+        margin: 0;
+        padding: 40px 20px;
+    }}
+    .container {{
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+    }}
+    .header {{
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        padding: 32px 24px;
+        text-align: left;
+        border-bottom: 1px solid #e2e8f0;
+    }}
+    .header h1 {{
+        color: #ffffff;
+        font-size: 20px;
+        font-weight: 600;
+        margin: 0;
+        letter-spacing: -0.025em;
+    }}
+    .content {{
+        padding: 32px 24px;
+        font-size: 15px;
+    }}
+    .content p {{
+        margin-top: 0;
+        margin-bottom: 16px;
+    }}
+    .footer {{
+        background-color: #f1f5f9;
+        padding: 20px 24px;
+        font-size: 12px;
+        color: #64748b;
+        border-top: 1px solid #e2e8f0;
+        text-align: center;
+    }}
+</style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>agentsHQ Notification</h1>
+        </div>
+        <div class="content">
+            <p>{formatted_html}</p>
+        </div>
+        <div class="footer">
+            Sent automatically by agentsHQ to Boubacar Barry.<br>
+            © 2026 Catalyst Works Consulting.
+        </div>
+    </div>
+</body>
+</html>"""
+
+            recipients = ["boubacar@catalystworks.consulting", "bokar83@gmail.com"]
+            
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = subject
+            msg["To"] = ", ".join(recipients)
+            if account:
+                msg["From"] = account
+            
+            msg.attach(MIMEText(body_text, "plain", "utf-8"))
+            msg.attach(MIMEText(html_content, "html", "utf-8"))
+            
+            raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
+            
+            result = _gws_request(
+                "post",
+                "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
+                account=account,
+                json={"raw": raw},
+            )
+            msg_id = result.get("id", "")
+            from_label = account or _GWS_DEFAULT_ACCOUNT
+            return f"HTML Email sent directly to {', '.join(recipients)} (id: {msg_id}) from {from_label} with subject '{subject}'"
+        except Exception as e:
+            return f"gmail_send_html_me failed: {e}"
+
+
 gws_calendar_list_tool = GWSCalendarListTool()
 gws_calendar_create_tool = GWSCalendarCreateTool()
 gws_calendar_delete_tool = GWSCalendarDeleteTool()
 gws_gmail_draft_tool = GWSGmailCreateDraftTool()
 gws_gmail_search_tool = GWSGmailSearchTool()
+gws_gmail_send_html_me_tool = GWSGmailSendHTMLMeTool()
 
 class GWSDriveSearchTool(BaseTool):
     """Search for files in the agentsHQ Google Drive folder."""
@@ -890,6 +1017,7 @@ GWS_TOOLS = [
     gws_calendar_delete_tool,
     gws_gmail_draft_tool,
     gws_gmail_search_tool,
+    gws_gmail_send_html_me_tool,
     gws_drive_search_tool,
     gws_drive_list_tool,
     gws_drive_create_tool,
