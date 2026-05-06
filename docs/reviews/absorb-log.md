@@ -4,6 +4,8 @@ Schema: `YYYY-MM-DD | source | verdict | placement | leverage type`
 
 Verdicts: `PROCEED` | `DON'T PROCEED` | `ARCHIVE-AND-NOTE`
 
+2026-05-06 | https://x.com/itsolelehmann/status/2051373618727469152 | PROCEED | enhance skills/sankofa | continuous-improvement
+
 2026-05-04 | https://github.com/czlonkowski/n8n-mcp | PROCEED (install-only) | MCP install (n8n-mcp) + harvest R-automation skill planned | producing-motion
 2026-05-04 | X-thread @eng_khairallah1 6-phase agency model | PROCEED | new skill skills/cw-automation-engagement (v1 = Phase 3 only) | producing-motion
 2026-05-04 | https://github.com/Leonxlnx/taste-skill | PROCEED | enhance skills/frontend-design | continuous-improvement
@@ -33,3 +35,4 @@ Leverage types: `producing-motion` | `founder-time-reduction` | `continuous-impr
 2026-05-04 | https://github.com/context-labs/halo | ARCHIVE-AND-NOTE | archive | none: no agentsHQ harness emits OTel JSONL traces today; prerequisite missing; HALO ships its own skills/claude/SKILL.md; revisit when Atlas heartbeat or Studio pipeline is instrumented + 50+ traces collected
 2026-05-06 | https://x.com/denohawari/status/2051631168567885892 | PROCEED | enhance skills/seo-strategy (GEO Mode 3) + new-tool skills/ctq-social/references/long-form-authority-post-pattern.md | producing-motion (SW client deliverables + CW content board) + continuous-improvement (seo-strategy)
 2026-05-06 | https://x.com/danwestworld/status/2051647065340465423 | PROCEED | new tool skills/boub_voice_mastery/references/brand-spine-audit.md | producing-motion + continuous-improvement
+2026-05-06 | https://x.com/i/status/2039269234253934811 | PROCEED (partial) | new tool skills/coordination/references/agent-delegation-pattern.md | producing-motion (Atlas) + continuous-improvement (coordination ledger)
