@@ -97,20 +97,23 @@ def _account_id_for(channel: str, platform: str) -> Optional[str]:
     e.g. BLOTATO_BAOBAB_INSTAGRAM_ACCOUNT_ID, BLOTATO_YT_BAOBAB_ACCOUNT_ID
     YouTube uses YT prefix per existing .env convention.
     """
+    # Notion multi_select names may come back in any case — normalize.
+    platform_norm = {k.lower(): k for k in _PLATFORM_CODE}.get(platform.lower(), platform)
     ch = _CHANNEL_CODE.get(channel)
-    pl = _PLATFORM_CODE.get(platform)
+    pl = _PLATFORM_CODE.get(platform_norm)
     if not ch or not pl:
         return None
-    if platform == "YouTube":
+    if platform_norm == "YouTube":
         return os.environ.get(f"BLOTATO_YT_{ch}_ACCOUNT_ID")
     return os.environ.get(f"BLOTATO_{ch}_{pl}_ACCOUNT_ID")
 
 
 def _env_key_for(channel: str, platform: str) -> str:
     """Return the env var name for this channel x platform pair."""
+    platform_norm = {k.lower(): k for k in _PLATFORM_CODE}.get(platform.lower(), platform)
     ch = _CHANNEL_CODE.get(channel, "?")
-    pl = _PLATFORM_CODE.get(platform, "?")
-    return f"BLOTATO_{pl}_{ch}_ACCOUNT_ID"
+    pl = _PLATFORM_CODE.get(platform_norm, "?")
+    return f"BLOTATO_{ch}_{pl}_ACCOUNT_ID"
 
 
 def _today_str() -> str:
