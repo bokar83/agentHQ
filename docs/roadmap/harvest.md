@@ -450,16 +450,86 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 
 ---
 
+### R-newsletter: The Weekly Signal distribution flywheel
+
+**Status:** LIVE. Issue 3 sent 2026-05-07.
+**Platform:** Listmonk v6.1.0 (self-hosted, `mail.srv1040886.hstgr.cloud`) — Beehiiv replaced (Enterprise-only send gating).
+**List ID:** 3. **List UUID:** `e78a3008-c023-4eb5-a03f-f4202bf7ce8c`.
+
+**What shipped (2026-05-06 session):**
+
+- Listmonk deployed + wired into orchestrator/beehiiv.py as primary send path
+- Issue 3 written (shadow AI, CTQ 9/10), designed (email HTML + web archive), sent
+- Archive pages live at `catalystworks.consulting/signal` (index + `/signal/issue-3`)
+- Style guide at `docs/styleguides/newsletter.md` — canonical source of truth for all agents
+- API orchestrator user token (plaintext in users.password) + LISTMONK_API_TOKEN env var
+
+**Growth path:** 500 subscribers → Substack mirror. Paid tier when monetization-ready.
+
+**Why this is harvest:** Signal fuels CW discovery call pipeline. Each issue = one qualified touchpoint for 497-3500 tier buyers. Compounding SEO asset at `/signal`.
+
+**Upcoming (12-week cycle):**
+
+- Issue 4 anchor topic: Boubacar confirms Sunday 18:00 MT via Telegram
+- AI Exposure Score assessment promoted via Signal (humanatwork.ai lead magnet)
+- Beehiiv subscriber migration to Listmonk (one-time CSV import)
+
+---
+
+### R-brand-guides: CW / SW / Studio brand guide audit and rebuild
+
+**Status:** Queued. Target: Week 7 (complete by 2026-06-17).
+**Trigger:** Dedicated brand session. Skills to reference: `frontend-design`, `ui-ux-pro-max`, `design-audit`.
+
+**Scope:** CW, SW (geolisted.co), Studio (3 channels), humanatwork.ai — consistency audit, token alignment, guide rebuild. Colors may change if consistency requires it.
+
+**Why:** Multiple assets in production with divergent palettes and no single source of truth. One week of work now prevents months of visual debt.
+
+---
+
 ## Cross-References
 
 - Pipeline playbook: `docs/playbooks/pipeline-building-playbook.md`
 - Memory: `project_pipeline_playbook.md`, `project_outreach_playbook.md`, `project_discovery_call_system.md`, `feedback_no_client_engagements_yet.md`, `feedback_facilitator_not_hero.md`
 - Skills: `cold-outreach`, `local_crm`, `apollo_skill`, `hunter_skill`
-- Catalyst Works site: `output/websites/catalystworks-site/`
 
 ---
 
 ## Session Log
+
+### 2026-05-06 — Traffic Strategy + Newsletter Infrastructure
+
+**Completed:**
+
+- **Studio batch send:** successfully marked 50 morning drafts (15 Catalyst Works + 35 Signal Works) as sent/messaged in Supabase and fully synced all 50 to Notion CRM Leads database via autonomous agentsHQ `mark_outreach_sent` crew.
+- Full asset inventory (54 rows) in Notion Forge 2.0 Asset Register + Weekly Asset Review ritual + New Asset Rule gate
+- Hotel Club de Kipe full rebuild spec at `docs/handoff/hotelclubkipe-rebuild-prompt.md`
+- Traffic strategy Sankofa-reviewed for 3 assets: geolisted.co (SW $997), catalystworks.consulting (CW $3,500), calculatorz.tools (AdSense)
+- Marketing plan email sent to both addresses
+- Listmonk deployed as Beehiiv replacement; Issue 3 written, designed, sent, archived
+- Newsletter style guide written (`docs/styleguides/newsletter.md`)
+- Master Calendar built in Notion Forge 2.0 (28 rows, Cycle 1 May 6 - Jul 29)
+- 12-Week Year + Smart Brevity saved to memory as core execution principles
+- Brand guide audit task queued (R-brand-guides, Week 7)
+
+**Week 1 execution queue (May 6-12):**
+
+1. Apply for Work Elevated HR Conference CFP [Boubacar action — utahworkelevated.com]
+2. Build /hvac /roofing /dental pages on geolisted.co
+3. calculatorz.tools: schema fix (46 pages) + state variants + Date/Time + Conversion categories
+4. Finish HVAC pitch reel (publish by May 9)
+5. Route 35+ worker/fear posts (humanatwork.ai / X / Archive)
+6. Delete 15 junk Content Board records
+7. Contact Utah SHRM chapter for webinar slot
+
+**Next session priorities:**
+
+- **Monitor tomorrow's Studio draft generation batch.** If it matches today's success, we are fully ready to flip the automation switch (`AUTO_SEND_CW=true` and `AUTO_SEND_SW=true` in VPS `.env`) for SW and CW.
+- Content board cleanup (15 deletes, 30+ collapse, route worker/fear posts)
+- geolisted.co trade pages (/hvac /roofing /dental)
+- Rod follow-up + case study documentation after first SW engagement
+
+---
 
 ### 2026-05-04: R2 Drive link corrected: fresh PDF re-uploaded, old file deleted
 
