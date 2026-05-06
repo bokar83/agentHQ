@@ -142,19 +142,25 @@ def _format_proposal_preview(row: QueueRow) -> str:
     p = row.payload or {}
     title = p.get("title", "")
     platform = p.get("platform", "")
-    post_text = p.get("text") or p.get("body") or p.get("content") or p.get("draft") or ""
-    post_text = post_text.strip()
+    hook = (p.get("hook_preview") or p.get("hook") or "").strip()
+    post_text = (p.get("text") or p.get("body") or p.get("content") or p.get("draft") or "").strip()
 
     platform_label = f" [{platform}]" if platform else ""
-    body_section = post_text if post_text else "(no body)"
 
-    return (
-        f"Queue #{row.id}{platform_label}: {title}\n"
-        f"---\n"
-        f"{body_section}\n"
-        f"---\n"
-        f"Approve to schedule. Enhance to queue for rewrite. Edit: reply 'edit: <new text>'."
-    )
+    # Show hook as the lead line — enough to judge the post at a glance.
+    # Full body follows so Boubacar can read the whole thing if he wants.
+    lines = [f"Queue #{row.id}{platform_label}: {title}", "---"]
+    if hook:
+        lines.append(f"Hook: {hook[:200]}")
+        lines.append("")
+    if post_text:
+        lines.append(post_text)
+    else:
+        lines.append("(no body)")
+    lines.append("---")
+    lines.append("Approve to schedule. Enhance to queue for rewrite. Edit: reply 'edit: <new text>'.")
+
+    return "\n".join(lines)
 
 
 def get(queue_id: int) -> Optional[QueueRow]:

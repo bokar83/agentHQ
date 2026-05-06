@@ -356,8 +356,10 @@ def _pipeline_summary(rows: list, today_iso: str) -> str:
             platforms = r.get("platform", [])
             pf = platforms[0] if platforms else "?"
             title = (r.get("title") or r.get("hook") or "untitled")[:55]
+            hook = (r.get("hook") or "")[:100]
+            hook_suffix = f"\n    {hook}" if hook else ""
             if sd == today_iso:
-                today_posts.append(f"  {pf}: {title}")
+                today_posts.append(f"  {pf}: {title}{hook_suffix}")
             elif today_iso < sd <= week_end:
                 today_posts_label = date.fromisoformat(sd).strftime("%a %b %-d")
                 week_posts.append(f"  {today_posts_label} — {title} ({pf})")
