@@ -18,7 +18,7 @@ CTQ (Content Quality Control) is a minimum two-pass Sankofa Council review proce
 Each target is a lens the Council applies. Boubacar states the active target at session start. Default is the full set below when no target is specified.
 
 | Target | What it checks |
-|--------|---------------|
+| ------ | -------------- |
 | **AI Guru / Hiring Signal** | Does this show Boubacar as someone an org would hire as an AI leader? Does it signal practitioner depth, not just commentary? |
 | **Voice Authenticity** | Does this sound like Boubacar -- direct, earned, opinionated, zero hedging? Or does it sound like a thought leadership bot? |
 | **Hook Power** | Would this stop a scroll? Judged against the best hooks on LinkedIn/X right now, not just "a good opening line." |
@@ -34,7 +34,7 @@ Each target is a lens the Council applies. Boubacar states the active target at 
 Each voice reviews independently with no knowledge of what the others said.
 
 | Voice | Role | What they look for |
-|-------|------|--------------------|
+| ----- | ---- | ------------------ |
 | **Contrarian** | Finds the flaw | What is weak, generic, or AI-sounding. What does not earn its place. |
 | **First Principles** | Strips to the bone | What is this post actually trying to do? Does every sentence serve that job? |
 | **Expansionist** | Finds the missed opportunity | What emotional truth is buried? What human moment is missing? |
@@ -47,7 +47,7 @@ After all five report, the **Chairman** synthesizes: convergence points, diverge
 
 ## The Process -- Minimum Two Passes
 
-```
+```text
 Pass 1: Full Council review of the raw draft
          Chairman delivers verdict + rewrite directive
          Rewrite produced with explanation of every change
@@ -74,6 +74,7 @@ The best hooks do one of three things:
 Judge every hook against those three. "A good opening line" is not enough. It must stop a scroll.
 
 **Red flags in hooks:**
+
 - Opens with an abstract noun ("Strategy", "Leadership", "AI")
 - States a category error without making it felt
 - Could have been written by anyone
@@ -90,6 +91,7 @@ The best CTAs for Boubacar's posts do one of these:
 4. **Leave a thought they cannot shake** -- not a question, a statement that provokes
 
 **Hard rules:**
+
 - No yes/no questions -- people answer privately and scroll past
 - No survey questions ("What's your experience with...?")
 - No weak rhetorical setups that telegraph the pitch
@@ -116,6 +118,7 @@ From the BouB Voice Mastery profile:
 Boubacar Barry is a diagnostic problem-solver using eight lenses equally. He is NOT a TOC consultant. He is NOT a framework vendor. He is someone who has built AI into his own operation first and now brings that to others.
 
 Posts targeting AI leadership roles must signal:
+
 - Practitioner depth (he has built things, not just observed them)
 - Strategic clarity (he sees what others miss)
 - Calm authority (the framework exists, he is not reacting)
@@ -126,7 +129,7 @@ The line "I know because I built one. Mine first." is the model for how to signa
 
 ## Output Format for Every Pass
 
-```
+```text
 ## CTQ Pass [N] -- [Voice Name]
 Verdict: [score or label]
 [2-4 sentences max. Specific. No praise without evidence. No critique without a fix.]
@@ -149,6 +152,7 @@ Rewrite directive: [one clear instruction]
 ## When to End the CTQ Session
 
 Stop when ALL of these are true:
+
 - Viral score 9/10 or above from the Chairman
 - Hook passes the scroll-stop test
 - CTA lands as mirror, wit, or wisdom (not a question)
@@ -169,11 +173,51 @@ If Boubacar says "post it" before 9/10 -- that is his call. Respect it and updat
 
 ---
 
-## Fabricated Story Gate (MANDATORY — runs before Pass 1)
+## Story Review (replaces standard CTQ for Content Type=Story posts)
+
+Story posts are NOT scored against the standard CTQ rubric. They follow a different review.
+
+**Story Review has one job:** Protect the raw voice while shaping the post for impact.
+
+**Pass 1 -- Story Review:**
+
+Ask three questions only:
+
+1. Is the opening moment specific enough that the reader can picture it? If not, ask Boubacar for one more detail. Do not invent one.
+2. Does the post stay in the scene or does it drift into framework/explanation? Cut anything that explains what Boubacar should have felt or learned.
+3. Does the last line land as a statement the reader will remember? If it ends with a question, rewrite it as a statement.
+
+**What NOT to do in Story Review:**
+
+- Do not polish the grammar into smoothness -- rough edges are intentional
+- Do not add context the reader "needs" -- trust the reader
+- Do not add a lesson or a takeaway unless Boubacar put one in the raw input
+- Do not run Hook Audit or CTA Audit scoring -- story posts earn attention differently
+- Do not fabricate additional details to make the scene richer
+
+**Story Review output format:**
+
+```text
+Story Review Pass 1
+Scene clarity: [sharp / needs one detail]
+Stays in scene: [yes / drifts at: quote the drifting line]
+Last line: [lands / rewrite suggestion]
+Draft: [full post -- minimal changes only]
+What changed: [one line per change, only if changed]
+```
+
+**When to end Story Review:**
+
+Scene is specific. Post stays in the moment. Last line is a statement. Done. No viral score. No Chairman synthesis. Boubacar approves and it posts.
+
+---
+
+## Fabricated Story Gate (MANDATORY -- runs before Pass 1)
 
 Before any CTQ pass begins, scan the draft for fabricated anecdotes attributed to Boubacar.
 
 **Red flags:**
+
 - Named clients or characters Boubacar has not confirmed ("Marco called me at 2 AM", "I met Sarah at a logistics firm")
 - Specific dollar figures tied to a client story with no sourced citation
 - "Last quarter I..." or "One of my clients..." followed by a scene Boubacar did not provide
@@ -182,6 +226,7 @@ Before any CTQ pass begins, scan the draft for fabricated anecdotes attributed t
 **Rule:** If ANY fabricated story is found, STOP. Do not proceed to Pass 1.
 
 **Action:**
+
 1. Flag the exact sentences that are fabricated
 2. Ask Boubacar: "Is this a real story? If yes, confirm details. If no, I'll rewrite as an explicit hypothetical or remove it."
 3. Only proceed once the story is either confirmed real or rewritten as clearly hypothetical ("Imagine a COO who..." not "I met a COO who...")
@@ -193,7 +238,7 @@ Before any CTQ pass begins, scan the draft for fabricated anecdotes attributed t
 ## Common Mistakes
 
 | Mistake | Fix |
-|---------|-----|
+| ------- | --- |
 | Fabricated client story attributed to Boubacar | Stop. Flag. Confirm or rewrite as explicit hypothetical before any other review. |
 | Ending with a yes/no question | Replace with a mirror statement or wit that stings |
 | Framework explanation in the body | Embed knowledge in a scene, cut the explanation |
