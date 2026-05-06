@@ -56,6 +56,19 @@ After all five voices speak, deliver a forced verdict.
 
 ---
 
+## DEAD-PROJECT MODE
+
+**Trigger:** Decision involves money, time commitment, hiring, launching, or any irreversible resource allocation — OR Boubacar appends "premortem this" to the invoke.
+
+**Frame shift:** It is 6 months from now. This plan is dead. Every voice speaks in retrospective tense — not "this could fail" but "this failed, here is why."
+
+**Per-voice retrospective mandate:**
+- THE CONTRARIAN: name the chain of events that killed it. Start from the moment it became unfixable.
+- THE FIRST PRINCIPLES THINKER: name the single assumption that was wrong from the start. The one nobody wrote down.
+- THE OUTSIDER: describe what an outside observer saw coming that insiders ignored.
+- THE EXPANSIONIST: name what was never tried that would have saved it.
+- THE EXECUTOR: name the earliest warning sign that was visible but ignored, and the exact week it appeared.
+
 ## Output Rules
 
 - No voice may be softened, skipped, or made to agree prematurely
