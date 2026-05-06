@@ -55,6 +55,16 @@ Classify into one of these domains using `voice-domains.json`:
 
 ## Step 4 - Draft the Skill
 
+**Atomic section contract (enforced before any draft ships):** Every skill draft must include all five sections below with no skipping. A draft missing any section is incomplete and must not be handed off.
+
+| Section | What it must contain |
+|---------|----------------------|
+| **Trigger** | Exact phrases or conditions that activate the skill. No vague "use when helpful." |
+| **Inputs** | What the agent needs before starting (URLs, file paths, user-stated context). |
+| **Procedure** | Numbered steps. Each step is one atomic action. No compound steps. |
+| **Output Contract** | Exact format of what gets produced (file path, structure, length limits). |
+| **Failure Modes** | Named anti-patterns this skill must not produce. At least two. |
+
 Write a first draft following the standard SKILL.md format:
 - YAML frontmatter: `name`, `description` (use writing-skills CSO rules - description = triggering conditions only, "Use when...")
 - Clear overview

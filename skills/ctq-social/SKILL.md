@@ -127,6 +127,19 @@ The line "I know because I built one. Mine first." is the model for how to signa
 
 ---
 
+## Platform Declaration (runs before Pass 1)
+
+State the platform before any review begins. Format determines output structure.
+
+| Platform | Format rule |
+|----------|-------------|
+| LinkedIn | Paragraph line breaks. Max 1300 chars for short posts; 3000 for long-form. |
+| X (single post) | Under 280 characters. No trailing hashtags. |
+| X (thread) | Numbered tweets (1/, 2/, ...). Each tweet standalone-readable. Hook tweet under 200 chars. |
+| Article | No character limit. SCQA structure preferred (Situation → Complication → Question → Answer). |
+
+If platform is not declared by Boubacar, ask once before proceeding.
+
 ## Output Format for Every Pass
 
 ```text

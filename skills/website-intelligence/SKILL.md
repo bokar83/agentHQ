@@ -66,7 +66,7 @@ Once the user provides the key, help them configure it:
          "command": "npx",
          "args": ["-y", "firecrawl-mcp"],
          "env": {
-           "FIRECRAWL_API_KEY": "fc-THEIR_KEY_HERE"
+           "FIRECRAWL_API_KEY": "fc-THEIR_KEY_HERE"  # pragma: allowlist secret
          }
        }
      }
@@ -192,6 +192,16 @@ For each of the top 5 scoring sites, use Firecrawl to scrape and extract:
 - **Site architecture**: number of pages, nav structure, depth
 - **Conversion strategy**: primary CTA, lead capture method, social proof placement
 
+**Source trust scoring (apply to every claim used in the report):**
+Every competitor finding and cited data point gets two scores before it enters the report:
+
+| Score | What it measures | Exclude threshold |
+|-------|-----------------|-------------------|
+| Reliability 1-5 | Is this observable fact (5) or inference/hearsay (1)? | < 3: label "weak evidence" or cut |
+| Bias 1-5 | Is the source self-reporting (1) or third-party verified (5)? | < 3: label "unverified" or cut |
+
+Exclude any claim from the executive summary or recommendations section if its Reliability score is below 3, unless explicitly labeled as weak evidence. This prevents the report from presenting "their hero copy says X" and "a review site says X" as equivalent evidence.
+
 **Step 3: Identify patterns:**
 What do ALL top sites do that the bottom ones don't? Find the 3-5 patterns
 that separate elite from average.
@@ -199,6 +209,8 @@ that separate elite from average.
 **Save output as:** `research/02-competitor-analysis.md`
 
 Include a comparison table and a clear "Patterns of the Top 10%" section.
+
+**Anti-bloat completion constraint:** The competitor analysis file must contain no missing critical competitor facts, no filler, no repeated framing across competitors, and no observations without a Reliability score. Every claim either has evidence or is cut. A finding that could apply to any competitor without reading their specific scraped content is filler — rewrite or remove it.
 
 ---
 

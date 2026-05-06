@@ -69,6 +69,16 @@ Pre-build checklist:
 - [ ] Credentials scoped: never ask for production API keys before sandbox test passes
 - [ ] Template search done: `search_templates({query: '<task keyword>'})` - check before building from scratch
 
+**Automation brief (write this before touching n8n-mcp tools):**
+
+```
+Goal:    <one sentence — what outcome does the client get?>
+Steps:   1. <first atomic action> → 2. <next> → 3. <next> ...
+Tools:   <app/service per step, e.g. Gmail → Airtable → Slack>
+```
+
+This brief is the contract between discovery and build. If the brief is vague, the n8n workflow will be vague. Write it before any template search. Avoid vague instructions like "process the data" — every step must name a concrete action and a concrete system.
+
 Build protocol:
 1. `search_templates` - find closest match (2,352 available)
 2. `search_nodes` for each service the client uses

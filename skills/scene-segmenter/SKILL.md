@@ -67,6 +67,7 @@ Optional flags:
 - No em-dashes or en-dashes in any output field. Enforced in prompt + post-process scrub (same pattern as transcript-style-dna).
 - Image prompts are anchored to the script_excerpt content, not generic.
 - Video prompts describe motion only, not new visual elements (the still anchors the scene).
+- **Non-generic enforcement gate:** If an `image_prompt` or `video_prompt` repeats the prior scene's prompt without new evidence from `script_excerpt`, mark that scene `FAIL` and regenerate before returning output. A scene is FAIL if the prompt could apply to any scene in the script without reading its `script_excerpt`.
 
 ## Files
 

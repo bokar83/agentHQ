@@ -379,11 +379,30 @@ def _run_pending_email_jobs():
         logger.error(f"EMAIL JOB: runner failed: {e}")
 
 
-def _run_morning_digest():
-    """7am MT: Telegram digest of autonomy state.
+def _consume_sw_run_complete() -> dict | None:
+    """Drain the latest sw:run-complete work item enqueued by morning_runner.
 
-    Phase 0 version is minimal -- just autonomy snapshot + crew flags.
-    Later phases will enrich this with proposal queue summary, etc.
+    Design ref: skills/coordination/references/agent-delegation-pattern.md
+    Returns the payload dict if one was waiting, else None.
+    """
+    try:
+        from skills.coordination import claim_next, complete
+        task = claim_next(kind="sw:run-complete", holder="scheduler/digest", ttl_seconds=300)
+        if task is None:
+            return None
+        payload = task.get("payload", {})
+        complete(task["id"])
+        return payload
+    except Exception as e:
+        logger.warning(f"DIGEST: sw:run-complete consume failed (non-fatal): {e}")
+        return None
+
+
+def _run_morning_digest():
+    """7am MT: Telegram digest of autonomy state + SW outreach run summary.
+
+    Drains sw:run-complete queue item (enqueued by morning_runner) and
+    prepends outreach stats to the digest message.
     """
     try:
         from autonomy_guard import get_guard
@@ -393,6 +412,18 @@ def _run_morning_digest():
 
         today = datetime.now(pytz.timezone(TIMEZONE)).strftime("%A %Y-%m-%d")
         lines = [f"agentsHQ morning digest, {today}", ""]
+
+        # SW outreach run summary (from morning_runner delegation)
+        sw_run = _consume_sw_run_complete()
+        if sw_run:
+            lines.append(f"Outreach: {sw_run.get('total', 0)} drafts "
+                         f"(SW={sw_run.get('sw_drafted', 0)}, CW={sw_run.get('cw_drafted', 0)}) "
+                         f"| {sw_run.get('sw_leads', 0)} leads harvested "
+                         f"| {sw_run.get('bounce_nulled', 0)} bounces cleared")
+        else:
+            lines.append("Outreach: no run summary queued (morning_runner may not have fired yet)")
+        lines.append("")
+
         if summary["killed"]:
             lines.append(f"Autonomy is KILLED: {summary['killed_reason']}")
         else:
