@@ -134,7 +134,7 @@ def _render_format(
 
     logger.info("render_publisher: ffmpeg rendering %s (%dx%d@%d)", fmt, w, h, fps)
     try:
-        _ffmpeg_render(manifest, output_path, w, h, fps, fmt)
+        _ffmpeg_render(manifest, output_path, w, h, fps, fmt, channel_id)
     except Exception as exc:
         logger.error("render_publisher: %s render failed: %s", fmt, exc)
         return None
@@ -163,6 +163,7 @@ def _ffmpeg_render(
     height: int,
     fps: int,
     fmt: str,
+    channel_id: str | None = None,
 ) -> None:
     """Render MP4 from image scenes + audio using ffmpeg Ken Burns pipeline.
 
@@ -174,7 +175,7 @@ def _ffmpeg_render(
     scenes = manifest["scenes"]
     audio_path = manifest.get("audio_path", "")
     brand = manifest.get("brand", {})
-    channel_id = brand.get("channel_id", "")
+    channel_id = channel_id or brand.get("channel_id", "")
     bg_color = brand.get("background_color", "#1E1433").lstrip("#")
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
