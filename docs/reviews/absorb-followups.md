@@ -4,6 +4,7 @@ Schema: `YYYY-MM-DD | placement | leverage type | next action | target date`
 
 PROCEED verdicts append here automatically. PROCEED without a follow-up entry is incomplete.
 
+2026-05-06 | new script scripts/dream.py | founder-time-reduction | Run first dream on current memory store; verify dedup + stale project archiving works; wire to Stop hook or scheduled agent | 2026-05-13
 2026-05-06 | enhance skills/sankofa | continuous-improvement | verify DEAD-PROJECT MODE surfaces unique failure mode on first high-stakes /sankofa run | 2026-06-06
 
 2026-05-04 | new skill skills/cw-automation-engagement | producing-motion | SHIPPED 2026-05-04: full v1 built (all 6 phases, pricing, n8n-mcp quick ref, case study template, acceptance criterion at top of file). Verify: first engagement scoped+priced using skill by 2026-07-04. | 2026-05-18

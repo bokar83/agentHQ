@@ -4,6 +4,7 @@ Schema: `YYYY-MM-DD | source | verdict | placement | leverage type`
 
 Verdicts: `PROCEED` | `DON'T PROCEED` | `ARCHIVE-AND-NOTE`
 
+2026-05-06 | https://platform.claude.com/docs/en/managed-agents/dreams | PROCEED (self-build) | new script scripts/dream.py — local Dreams equivalent using Anthropic SDK | founder-time-reduction + continuous-improvement
 2026-05-06 | https://x.com/itsolelehmann/status/2051373618727469152 | PROCEED | enhance skills/sankofa | continuous-improvement
 
 2026-05-04 | https://github.com/czlonkowski/n8n-mcp | PROCEED (install-only) | MCP install (n8n-mcp) + harvest R-automation skill planned | producing-motion

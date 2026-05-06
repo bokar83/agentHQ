@@ -1,0 +1,45 @@
+{
+  "avg_sentence_length": 8.1,
+  "sentence_length_distribution": {
+    "p25": 5,
+    "p50": 7,
+    "p75": 11
+  },
+  "hook_patterns": [
+    "contrarian",
+    "observation",
+    "command"
+  ],
+  "vocabulary_markers": [
+    "constraint",
+    "hidden factory",
+    "motion without momentum",
+    "diagnostic",
+    "the performance of governance",
+    "avoidable labor",
+    "clarity"
+  ],
+  "tone_signals": [
+    "plainspoken",
+    "confrontational",
+    "reflective",
+    "urgent"
+  ],
+  "cadence": "punchy",
+  "signature_moves": [
+    "Short declarative reframe followed by a harder truth (e.g., 'It felt like leadership. It was actually just exhausting.')",
+    "Naming the invisible cost before offering the diagnostic question (hidden factory, queue time, handoff lag)",
+    "Ending a section with a single compressed imperative or verdict ('Find the constraint. Everything else gets cleaner.')"
+  ],
+  "confidence": "high",
+  "opener_line": "You are not behind on AI. You have a process the automation will accelerate -- and that is the real diagnostic.",
+  "_measured": {
+    "avg": 8.1,
+    "p25": 5,
+    "p50": 7,
+    "p75": 11,
+    "n": 144
+  },
+  "_target_context": "Boubacar Barry ,  founder of Catalyst Works Consulting, AI automation advisor for SMBs, 1stGen West African founder (Guinea + US), builds AI into his own operation first, contrarian on AI hype",
+  "_n_refs": 10
+}
