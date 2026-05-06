@@ -346,15 +346,16 @@ def _concat_clips(clips: list[Path], out: Path, scenes: list[dict], fps: int) ->
 
 
 def _mix_audio(video: Path, audio: Path, out: Path, audio_delay: float) -> None:
-    # Delay audio by intro_duration so narration starts after title card
+    # Delay audio by intro_duration so narration starts after title card.
+    # apad silences audio during the outro card. No -shortest so the full
+    # video length (intro + scenes + outro) is preserved.
     _ffmpeg([
         "-i", str(video),
         "-i", str(audio),
         "-map", "0:v",
         "-map", "1:a",
-        "-filter:a", f"adelay={int(audio_delay * 1000)}|{int(audio_delay * 1000)}",
+        "-filter:a", f"adelay={int(audio_delay * 1000)}|{int(audio_delay * 1000)},apad",
         "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
-        "-shortest",
         str(out),
     ], timeout=300)
 
@@ -425,6 +426,12 @@ def _update_notion(notion_id: str, asset_url: str, dry_run: bool) -> bool:
                     "Status": {"select": {"name": "scheduled"}},
                     "Asset URL": {"url": asset_url or None},
                     "Scheduled Date": {"date": {"start": datetime.now(timezone.utc).strftime("%Y-%m-%d")}},
+                    "Platform": {"multi_select": [
+                        {"name": "x"},
+                        {"name": "Instagram"},
+                        {"name": "tiktok"},
+                        {"name": "YouTube"},
+                    ]},
                 }
             },
             timeout=15,
