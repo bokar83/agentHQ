@@ -370,7 +370,6 @@ def mark_outreach_sent() -> dict:
             SELECT id, name, email
             FROM leads
             WHERE email_drafted_at IS NOT NULL
-              AND last_contacted_at IS NULL
               AND LOWER(status) = 'new'
             ORDER BY email_drafted_at ASC
         """)

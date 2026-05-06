@@ -212,6 +212,18 @@ Scene is specific. Post stays in the moment. Last line is a statement. Done. No 
 
 ---
 
+## Brand Spine Gate (MANDATORY -- runs before Pass 1, after Fabricated Story Gate)
+
+Three diagnostic tests. Any "no" = rewrite before passing to Council.
+
+1. Could anyone with Boubacar's niche have written this? (If yes: not earned enough — ground in a specific anchor)
+2. Does this draw from a win, failure, contrarian position, or value Boubacar has actually lived? (If no: synthesized best practice — flag and anchor it)
+3. Does this make it obvious what specific problem CW solves and for whom? (If no: add one grounding line)
+
+Reference: `skills/boub_voice_mastery/references/brand-spine-audit.md` for full values list and earned anchors.
+
+---
+
 ## Fabricated Story Gate (MANDATORY -- runs before Pass 1)
 
 Before any CTQ pass begins, scan the draft for fabricated anecdotes attributed to Boubacar.

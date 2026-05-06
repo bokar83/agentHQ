@@ -258,6 +258,28 @@ def _main_body():
         pass
     logger.info("=" * 60)
 
+    # ── Step 7: Reserve Works daily paper trade nudge (weekdays only) ─
+    if not is_weekend:
+        rw_msg = (
+            "RW paper trade check-in\n\n"
+            "Log today's wheel candidate (or 'skipped -- reason').\n"
+            "Ticker / action / score / why. 60 seconds.\n\n"
+            "Gate 4: 30 closed trades with journal. You need this to clear Tier 0."
+        )
+        try:
+            from orchestrator.notifier import send_message, send_email
+            chat_id = os.getenv("TELEGRAM_CHAT_ID") or os.getenv("OWNER_TELEGRAM_CHAT_ID", "")
+            if chat_id:
+                send_message(chat_id, rw_msg)
+            send_email(
+                subject=f"RW paper trade nudge -- {datetime.now().strftime('%Y-%m-%d')}",
+                body=rw_msg,
+                to_addresses=["bokar83@gmail.com"],
+            )
+            logger.info("  RW nudge sent (Telegram + email).")
+        except Exception as e:
+            logger.warning(f"  RW nudge failed (non-fatal): {e}")
+
     # ── Harvest Health Check ─────────────────────────────────────
     # Alert when below threshold even if total > 0. Prevents silent
     # under-performance going unnoticed until the daily report email.

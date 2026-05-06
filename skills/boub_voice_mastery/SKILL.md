@@ -50,3 +50,18 @@ Based on your instructions:
     - No filler. 
     - Lead with the "WOW" moment.
     - Connect operational constraints to financial/human outcomes.
+
+## Earned Insight Gate (MANDATORY — runs after Fabricated Story Gate)
+
+Every post must draw from at least one item in `skills/boub_voice_mastery/references/brand-spine-audit.md`. Synthesized best practices with no personal anchor FAIL this gate.
+
+Before proceeding with voice polish, ask: **which earned anchor does this post draw from?**
+
+- Cultural bridge (African/American duality, built-from-scratch identity)
+- Failure anchor (misplaced trust, wasted potential, hurt people around him)
+- Contrarian anchor (AI is a tool, not savior/devil — humans still own the wheel)
+- Values anchor (authenticity without performance, truth over comfort, joy as resistance, faith/family/Guinea+US first)
+
+If the answer is "none — this is a general best practice or synthesized insight," STOP. Flag it: "This post contains nothing only Boubacar could have said. Ground it in one of his earned anchors or cut it."
+
+**Why:** AI can replicate polish and even voice patterns. It cannot replicate Boubacar's specific lived experience. Posts that pass voice checks but contain no earned anchor are indistinguishable from AI content in a trust-scarce market.
