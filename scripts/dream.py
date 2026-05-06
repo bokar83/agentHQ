@@ -21,6 +21,7 @@ import json
 import shutil
 import argparse
 import subprocess
+import requests
 from pathlib import Path
 from datetime import datetime
 
@@ -40,6 +41,42 @@ APPROVAL_FILE = OUTPUT_DIR / "APPROVAL.txt"
 
 MODEL = "claude-opus-4-7"
 MAX_TOKENS = 16000
+
+# ── Telegram ──────────────────────────────────────────────────────────────────
+
+def _tg_send(text: str) -> int | None:
+    """Send message to owner Telegram chat. Returns message_id or None."""
+    token = os.environ.get("ORCHESTRATOR_TELEGRAM_BOT_TOKEN") or os.environ.get("TELEGRAM_BOT_TOKEN", "")
+    chat_id = os.environ.get("OWNER_TELEGRAM_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID", "")
+    if not token or not chat_id:
+        return None
+    chunks = [text[i:i+4000] for i in range(0, len(text), 4000)]
+    last_id = None
+    for chunk in chunks:
+        try:
+            resp = requests.post(
+                f"https://api.telegram.org/bot{token}/sendMessage",
+                json={"chat_id": chat_id, "text": chunk},
+                timeout=10,
+            )
+            if resp.ok:
+                last_id = resp.json().get("result", {}).get("message_id")
+        except Exception:
+            pass
+    return last_id
+
+
+def _tg_register_window(msg_id: int) -> None:
+    """Tell the orchestrator container to register a dream reply window for msg_id."""
+    vps_url = os.environ.get("ORCHESTRATOR_URL", "http://72.60.209.109:8000")
+    try:
+        requests.post(
+            f"{vps_url}/dream/register-window",
+            json={"msg_id": msg_id},
+            timeout=5,
+        )
+    except Exception:
+        pass  # non-fatal — /dream approve fallback still works
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -223,10 +260,25 @@ Then run: python scripts/dream.py --apply
 
     print(f"\nProposal written to: {PROPOSAL_FILE}")
     print(f"Proposed file changes in: {OUTPUT_DIR}")
-    print("\nNext steps:")
-    print("  1. Read dream-output/PROPOSAL.md")
-    print("  2. Create dream-output/APPROVAL.txt with: APPROVE / REJECT / APPROVE EXCEPT <files>")
-    print("  3. python scripts/dream.py --apply")
+
+    # Send to Telegram
+    summary = result.get("proposal", "(no proposal)")[:3000]
+    if len(result.get("proposal", "")) > 3000:
+        summary += f"\n\n[...truncated. Full proposal in PROPOSAL.md]"
+    tg_text = (
+        summary
+        + "\n\n---\nReply to THIS message with:\n"
+        "  approve\n"
+        "  reject\n"
+        "  approve except feedback_x.md, project_y.md"
+    )
+    msg_id = _tg_send(tg_text)
+    if msg_id:
+        _tg_register_window(msg_id)
+        print(f"Proposal sent to Telegram (msg_id={msg_id}). Reply to approve/reject.")
+    else:
+        print("Telegram not configured or send failed.")
+        print("Fallback: create dream-output/APPROVAL.txt then run --apply")
 
 
 # ── Step 4: Apply on Approval ─────────────────────────────────────────────────
