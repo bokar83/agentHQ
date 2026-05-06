@@ -99,7 +99,6 @@ def _main_body():
     sw_leads = 0
     sw_drafted = 0
     cw_drafted = 0
-    studio_drafted = 0
 
     # Weekday gate: harvest every day, but only send Mon-Fri.
     # Saturday=5, Sunday=6. Uses local time of the runner (orc-crewai container).
@@ -158,20 +157,6 @@ def _main_body():
         logger.error(f"  CW Apollo topup failed: {e}")
         log_step("cw_harvest", attempted=20, reason=f"error: {type(e).__name__}")
 
-    # ── Step 4b: Studio -- Apollo lead topup (full US) ────────────
-    # NOTE 2026-05-05: Studio is being merged into SW. This step still fires
-    # for backward compat but will be removed in next session.
-    studio_leads = 0
-    logger.info("STEP 4b: Studio lead topup via Apollo (target: 25 leads, full US)...")
-    try:
-        from signal_works.topup_studio_leads import topup_studio_leads
-        studio_leads = topup_studio_leads(minimum=25)
-        logger.info(f"  Done. {studio_leads} Studio email leads ready.")
-        log_step("studio_harvest", attempted=25, succeeded=studio_leads)
-    except Exception as e:
-        logger.error(f"  Studio Apollo topup failed: {e}")
-        log_step("studio_harvest", attempted=25, reason=f"error: {type(e).__name__}")
-
     # ── Step 4.5: CW voice personalization (transcript-style-dna) ─
     voice_personalized = 0
     logger.info("STEP 4.5: Voice-personalize today's CW leads (transcript-style-dna)...")
@@ -221,24 +206,8 @@ def _main_body():
                 logger.error(f"  SW gap fill failed: {e}")
                 log_step("sw_gap_fill", attempted=_gap, reason=f"error: {type(e).__name__}")
 
-    # ── Step 6: Studio -- web presence 4-touch sequence (auto-send) ──
-    if is_weekend:
-        logger.info("STEP 6: SKIPPED on weekend (no Studio sends Sat/Sun).")
-        log_step("studio_sequence", reason="weekend_skip")
-    else:
-        logger.info("STEP 6: Studio web presence sequence T1-T4 (auto-send)...")
-        try:
-            from skills.outreach.sequence_engine import run_sequence
-            studio_seq = run_sequence("studio", dry_run=False, daily_limit=15)
-            studio_drafted = studio_seq.get("drafted", 0) or studio_seq.get("sent", 0)
-            logger.info(f"  Done. {studio_drafted} Studio emails drafted.")
-            log_step("studio_sequence", attempted=15, succeeded=studio_drafted)
-        except Exception as e:
-            logger.error(f"  Studio sequence failed: {e}")
-            log_step("studio_sequence", attempted=15, reason=f"error: {type(e).__name__}")
-
     # ── Summary ───────────────────────────────────────────────────
-    total = sw_drafted + cw_drafted + studio_drafted
+    total = sw_drafted + cw_drafted
     logger.info("=" * 60)
     logger.info(f"Run complete:")
     logger.info(f"  Bounces cleared:        {bounce_nulled}")
@@ -246,8 +215,6 @@ def _main_body():
     logger.info(f"  SW drafts created:      {sw_drafted}")
     logger.info(f"  CW leads personalized:  {voice_personalized}")
     logger.info(f"  CW outreach drafts:     {cw_drafted}")
-    logger.info(f"  Studio leads harvested: {studio_leads}")
-    logger.info(f"  Studio outreach drafts: {studio_drafted}")
     logger.info(f"  TOTAL drafts in inbox:  {total}")
     if total > 0:
         logger.info("  Check boubacar@catalystworks.consulting Drafts -- ready to send.")
@@ -257,6 +224,29 @@ def _main_body():
     except Exception:
         pass
     logger.info("=" * 60)
+
+    # ── Delegation: enqueue run summary for downstream consumers ──────
+    # Design ref: skills/coordination/references/agent-delegation-pattern.md
+    # Kind: sw:run-complete — downstream agents can claim_next("sw:run-complete")
+    # to trigger follow-up work (digest posting, anomaly review, etc.)
+    # Pure addition: never blocks, never raises.
+    try:
+        from skills.coordination import enqueue
+        enqueue(
+            kind="sw:run-complete",
+            payload={
+                "date": datetime.now().strftime("%Y-%m-%d"),
+                "sw_drafted": sw_drafted,
+                "cw_drafted": cw_drafted,
+                "total": total,
+                "sw_leads": sw_leads,
+                "bounce_nulled": bounce_nulled,
+                "is_weekend": is_weekend,
+            },
+        )
+        logger.info("DELEGATION: sw:run-complete enqueued for downstream consumers.")
+    except Exception as _e:
+        logger.warning(f"DELEGATION: enqueue failed (non-fatal): {_e}")
 
     # ── Step 7: Reserve Works daily paper trade nudge (weekdays only) ─
     if not is_weekend:

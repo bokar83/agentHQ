@@ -65,3 +65,15 @@ Before proceeding with voice polish, ask: **which earned anchor does this post d
 If the answer is "none — this is a general best practice or synthesized insight," STOP. Flag it: "This post contains nothing only Boubacar could have said. Ground it in one of his earned anchors or cut it."
 
 **Why:** AI can replicate polish and even voice patterns. It cannot replicate Boubacar's specific lived experience. Posts that pass voice checks but contain no earned anchor are indistinguishable from AI content in a trust-scarce market.
+
+## Voice Review Output Contract
+
+Every voice review must produce output in exactly three layers — no exceptions, no prose dumps:
+
+1. **Issues found** — specific lines or patterns that fail a gate (quote the offending text)
+2. **Fixes to make** — exact rewrites or directives (not suggestions)
+3. **Summary** — only when there are 3+ issues; one sentence; what changed and why
+
+No layer is skippable except Summary when issues < 3. This prevents open-ended "here are some thoughts" outputs that send Boubacar back into the content without a clear action path.
+
+**Why:** AI can replicate polish and even voice patterns. It cannot replicate Boubacar's specific lived experience. Posts that pass voice checks but contain no earned anchor are indistinguishable from AI content in a trust-scarce market.

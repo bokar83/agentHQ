@@ -1,8 +1,7 @@
 # Agent-to-Agent Delegation Pattern
 
-**Unlock condition:** This doc earns its place when one Atlas agent cites it as the
-design reference for its first `enqueue`→`claim_next` handoff. Delete if unused after
-2 sessions.
+**Shipped:** morning_runner.py enqueues `sw:run-complete` after every run (2026-05-06).
+Pattern is live. Downstream agents consume via `claim_next("sw:run-complete")`.
 
 ---
 
