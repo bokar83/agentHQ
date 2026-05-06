@@ -166,6 +166,10 @@ class BlotatoPublisher:
         # Handle case variants (Notion stores lowercase: "x", "tiktok").
         _canon = {k.lower(): v for k, v in NOTION_TO_BLOTATO_PLATFORM.items()}
         bp = _canon.get(platform.lower(), platform).lower()
+
+        # X/Twitter hard cap: 280 chars. Truncate with ellipsis.
+        if bp == "twitter" and len(text) > 280:
+            text = text[:277] + "..."
         if bp not in SUPPORTED_PLATFORMS:
             raise ValueError(
                 f"unsupported platform {platform!r} "
