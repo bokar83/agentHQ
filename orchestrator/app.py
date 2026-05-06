@@ -264,18 +264,12 @@ async def startup_event():
         tz_now = __import__("pytz").timezone(os.environ.get("HEARTBEAT_TIMEZONE", "America/Denver"))
         today_wd = __import__("datetime").datetime.now(tz_now).weekday()  # 0=Mon, 1=Tue, 3=Thu
 
-        # Register Tue (weekday=1) and Thu (weekday=3) 08:00 scheduled sends.
+        # Fires daily at 17:00 MT; tick function gates to Tue/Thu only.
         _heartbeat.register_wake(
-            "story-prompt-tuesday",
+            "story-prompt-scheduled",
             crew_name="story-prompt",
             callback=story_prompt_scheduled_tick,
-            at="08:00",
-        )
-        _heartbeat.register_wake(
-            "story-prompt-thursday",
-            crew_name="story-prompt",
-            callback=story_prompt_scheduled_tick,
-            at="08:00",
+            at="17:00",
         )
         # Sparse-queue check every 6 hours.
         _heartbeat.register_wake(

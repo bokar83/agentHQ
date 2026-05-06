@@ -134,13 +134,16 @@ def _send_prompt(prompt: str, channels: list, reason: str) -> None:
 
 
 def story_prompt_scheduled_tick() -> None:
-    """Fires on Tue/Thu schedule. Always sends a prompt."""
+    """Fires daily at 17:00 MT but only sends on Tuesday (weekday=1) and Thursday (weekday=3)."""
     if os.environ.get("STORY_PROMPTS_ENABLED", "1") == "0":
         return
     tz = pytz.timezone(TIMEZONE)
-    today = datetime.now(tz).strftime("%A")
+    now = datetime.now(tz)
+    if now.weekday() not in (1, 3):  # 1=Tuesday, 3=Thursday
+        logger.debug(f"story_prompt: skipping scheduled prompt on {now.strftime('%A')}")
+        return
     prompt, channels = _pick_prompt()
-    _send_prompt(prompt, channels, reason=f"scheduled {today}")
+    _send_prompt(prompt, channels, reason=f"scheduled {now.strftime('%A')}")
 
 
 def story_prompt_sparse_tick() -> None:
