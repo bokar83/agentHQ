@@ -163,7 +163,9 @@ class BlotatoPublisher:
             raise ValueError("account_id must be non-empty")
 
         # Normalize platform name (accept either Notion-side or Blotato-side).
-        bp = NOTION_TO_BLOTATO_PLATFORM.get(platform, platform).lower()
+        # Handle case variants (Notion stores lowercase: "x", "tiktok").
+        _canon = {k.lower(): v for k, v in NOTION_TO_BLOTATO_PLATFORM.items()}
+        bp = _canon.get(platform.lower(), platform).lower()
         if bp not in SUPPORTED_PLATFORMS:
             raise ValueError(
                 f"unsupported platform {platform!r} "
@@ -174,6 +176,16 @@ class BlotatoPublisher:
         target = {"targetType": bp}
         if bp == "linkedin" and page_id:
             target["pageId"] = page_id
+        if bp == "tiktok":
+            target.update({
+                "privacyLevel": "PUBLIC_TO_EVERYONE",
+                "disabledComments": False,
+                "disabledDuet": False,
+                "disabledStitch": False,
+                "isBrandedContent": False,
+                "isYourBrand": False,
+                "isAiGenerated": True,
+            })
 
         body = {
             "post": {

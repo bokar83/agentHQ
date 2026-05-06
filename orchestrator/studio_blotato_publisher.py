@@ -303,7 +303,9 @@ def studio_blotato_publisher_tick(dry_run: bool = False) -> dict:
                 continue
 
             # Step c: publish.
-            blotato_platform = NOTION_TO_BLOTATO_PLATFORM.get(platform, platform.lower())
+            # Normalize platform case before lookup (Notion stores lowercase).
+            platform_canonical = {k.lower(): k for k in NOTION_TO_BLOTATO_PLATFORM}.get(platform.lower(), platform)
+            blotato_platform = NOTION_TO_BLOTATO_PLATFORM.get(platform_canonical, platform.lower())
             try:
                 submission_id = publisher.publish(
                     text=text,
