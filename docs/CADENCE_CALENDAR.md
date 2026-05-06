@@ -41,7 +41,7 @@ Last updated: 2026-04-29
 |---|---|---|---|---|
 | Sunday | 18:00 | Pre-scout Telegram nudge (NEW, planned) | Telegram nudge | YES light: confirms readiness for Monday |
 | Sunday | 13:00 | Model review agent (Haiku scorer, 4 candidates, 3 seeds) | Background | No (proposes via approval_queue if change > 3 pts) |
-| Monday | 06:00 | Studio Trend Scout fires (9 niches: 6 CW + 3 Studio) | Background -> Telegram | YES: approve/reject candidates within window |
+| Monday | 05:30 | Studio Trend Scout fires (9 niches: 6 CW + 3 Studio) | Background -> Telegram | YES: approve/reject candidates within window |
 | Monday | 06:00-11:30 | Newsletter anchor approval window | YES | Approve one CW candidate as Weekly Signal anchor |
 | Monday | 11:30 | Fallback Telegram nudge if no anchor approved (NEW, planned) | Telegram nudge | YES: reply with topic by 14:00 MT or issue slips |
 | Monday | 12:00 | newsletter_crew auto-fires (NEW, planned) | Background -> Telegram | YES: review draft + thumbnail |
