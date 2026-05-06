@@ -331,6 +331,56 @@ def _pick_top_candidate(candidates: list, recent_posts: list) -> Optional[dict]:
 # Main callback
 # ═════════════════════════════════════════════════════════════════════════════
 
+def _pipeline_summary(rows: list, today_iso: str) -> str:
+    """Build a pipeline summary string for the morning message.
+
+    Shows:
+    - TODAY: posts auto-firing via Blotato (Status=Queued, ScheduledDate=today)
+    - THIS WEEK: posts scheduled in next 7 days
+    - BACKLOG: count of Ready posts waiting to be scheduled
+    """
+    from datetime import date, timedelta
+    today = date.fromisoformat(today_iso)
+    week_end = (today + timedelta(days=7)).isoformat()
+
+    today_posts = []
+    week_posts = []
+    ready_count = 0
+
+    for r in rows:
+        sd = r.get("scheduled_date", "")
+        status = r.get("status", "")
+        if status == "Ready" and not sd:
+            ready_count += 1
+        elif status == "Queued" and sd:
+            platforms = r.get("platform", [])
+            pf = platforms[0] if platforms else "?"
+            title = (r.get("title") or r.get("hook") or "untitled")[:55]
+            if sd == today_iso:
+                today_posts.append(f"  {pf}: {title}")
+            elif today_iso < sd <= week_end:
+                today_posts_label = date.fromisoformat(sd).strftime("%a %b %-d")
+                week_posts.append(f"  {today_posts_label} — {title} ({pf})")
+
+    lines = []
+    if today_posts:
+        lines.append("TODAY (auto-posting via Blotato):")
+        lines.extend(today_posts)
+    else:
+        lines.append("TODAY: nothing scheduled to auto-post.")
+
+    if week_posts:
+        lines.append("")
+        lines.append("THIS WEEK:")
+        lines.extend(week_posts[:5])
+        if len(week_posts) > 5:
+            lines.append(f"  ...and {len(week_posts) - 5} more")
+
+    lines.append("")
+    lines.append(f"BACKLOG: {ready_count} Ready posts waiting to be scheduled.")
+    return "\n".join(lines)
+
+
 def griot_morning_tick() -> None:
     """
     Heartbeat callback. Runs every morning when the griot-morning wake fires
@@ -395,6 +445,17 @@ def griot_morning_tick() -> None:
             f"after_dedup={len(candidates)} recent_posts={len(recent_posts)}"
         )
 
+        # Build pipeline summary (always send, even if backlog empty).
+        try:
+            from notifier import send_message
+            chat_id = os.environ.get("OWNER_TELEGRAM_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID")
+            if chat_id:
+                day_name = now.strftime("%A")
+                summary = _pipeline_summary(rows, today_iso)
+                send_message(chat_id, f"Good morning. Content pipeline for {day_name} {today_iso}.\n\n{summary}")
+        except Exception as e:
+            logger.warning(f"griot_morning_tick: pipeline summary send failed: {e}")
+
         # Skip 3: empty backlog.
         if not candidates:
             result_summary = "skip: empty candidate backlog"
@@ -402,7 +463,7 @@ def griot_morning_tick() -> None:
                 from notifier import send_message
                 chat_id = os.environ.get("OWNER_TELEGRAM_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID")
                 if chat_id:
-                    msg = "Griot: no Ready drafts without a scheduled date. Backlog empty."
+                    msg = "No Ready drafts to propose. Add posts to the Content Board to refill the backlog."
                     if dedup_dropped:
                         msg += f" ({dedup_dropped} already proposed in last {CANDIDATE_DEDUP_DAYS} days)"
                     send_message(chat_id, msg)
