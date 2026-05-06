@@ -529,6 +529,13 @@ def handle_callback_query(update: dict) -> bool:
             except Exception:
                 pass
 
+    elif cb_data.startswith("dream:"):
+        try:
+            from dream_handler import handle_dream_callback
+            handle_dream_callback(cb_data, cb_id, cb_chat_id)
+        except Exception as e:
+            logger.warning(f"callback_query dream handling error: {e}")
+
     return True
 
 
