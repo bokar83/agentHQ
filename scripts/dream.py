@@ -66,6 +66,36 @@ def _tg_send(text: str) -> int | None:
     return last_id
 
 
+def _tg_send_with_buttons(text: str) -> int | None:
+    """Send proposal with ✅ Approve / ❌ Reject inline buttons. Returns message_id."""
+    token = os.environ.get("ORCHESTRATOR_TELEGRAM_BOT_TOKEN") or os.environ.get("TELEGRAM_BOT_TOKEN", "")
+    chat_id = os.environ.get("OWNER_TELEGRAM_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID", "")
+    if not token or not chat_id:
+        return None
+    chunks = [text[i:i+4000] for i in range(0, len(text), 4000)]
+    last_id = None
+    for i, chunk in enumerate(chunks):
+        payload: dict = {"chat_id": chat_id, "text": chunk}
+        # Only attach buttons to last chunk
+        if i == len(chunks) - 1:
+            payload["reply_markup"] = {
+                "inline_keyboard": [[
+                    {"text": "✅ Approve", "callback_data": "dream:approve"},
+                    {"text": "❌ Reject",  "callback_data": "dream:reject"},
+                ]]
+            }
+        try:
+            r = requests.post(
+                f"https://api.telegram.org/bot{token}/sendMessage",
+                json=payload, timeout=10,
+            )
+            if r.ok:
+                last_id = r.json().get("result", {}).get("message_id")
+        except Exception:
+            pass
+    return last_id
+
+
 def _tg_register_window(msg_id: int) -> None:
     """Tell the orchestrator container to register a dream reply window for msg_id."""
     vps_url = os.environ.get("ORCHESTRATOR_URL", "http://72.60.209.109:8000")
@@ -265,17 +295,15 @@ Then run: python scripts/dream.py --apply
     summary = result.get("proposal", "(no proposal)")[:3000]
     if len(result.get("proposal", "")) > 3000:
         summary += f"\n\n[...truncated. Full proposal in PROPOSAL.md]"
-    tg_text = (
-        summary
-        + "\n\n---\nReply to THIS message with:\n"
-        "  approve\n"
-        "  reject\n"
-        "  approve except feedback_x.md, project_y.md"
-    )
-    msg_id = _tg_send(tg_text)
+    tg_text = summary + "\n\n---\nTap a button or reply: approve / reject / approve except X, Y"
+    msg_id = _tg_send_with_buttons(tg_text)
     if msg_id:
+        # Write .pending so VPS knows a proposal exists (survives container restart)
+        PENDING_FILE = OUTPUT_DIR / ".pending"
+        chat_id = os.environ.get("OWNER_TELEGRAM_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID", "")
+        PENDING_FILE.write_text(chat_id, encoding="utf-8")
         _tg_register_window(msg_id)
-        print(f"Proposal sent to Telegram (msg_id={msg_id}). Reply to approve/reject.")
+        print(f"Proposal sent to Telegram with buttons (msg_id={msg_id}).")
     else:
         print("Telegram not configured or send failed.")
         print("Fallback: create dream-output/APPROVAL.txt then run --apply")
