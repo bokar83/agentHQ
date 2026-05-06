@@ -190,6 +190,12 @@ class BlotatoPublisher:
                 "isYourBrand": False,
                 "isAiGenerated": True,
             })
+        if bp == "youtube":
+            target.update({
+                "title": text[:100].split("\n")[0],
+                "privacyStatus": "public",
+                "shouldNotifySubscribers": True,
+            })
 
         body = {
             "post": {
