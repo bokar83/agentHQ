@@ -881,3 +881,45 @@ Source: taste-skill `imagegen-frontend-web` vocabulary. Absorb verdict: PROCEED 
 **Pipeline now correct:** intro card + Ken Burns scenes + outro card + SRT sidecar. No burned captions. Drive upload working.
 
 **Next:** Confirm first re-render completes with intro/outro visible and no captions. Then M4 publisher warm-up.
+
+---
+
+### 2026-05-06: Storytelling infrastructure — Studio content sourcing upgraded
+
+**Session scope:** Not a Studio build session. Strategic decision made that affects Studio content sourcing.
+
+**Decision: Story-first content strategy adopted across all channels.**
+
+Boubacar's lived experiences and raw observations are the primary content source for all channels — not trend-scouted topics. Studio channels are now downstream consumers of the same story signals that feed Boubacar's personal LinkedIn/X.
+
+**What this means for Studio:**
+- `Content Type=Story + Status=Idea` entries on the Content Board are available as script briefs for all 3 Studio channels
+- One lived moment → multiple channel adaptations (FGM = financial angle, UTB = diaspora/identity angle, AIC = AI practitioner angle)
+- Channel routing is flexible — Boubacar confirms which channels a story feeds, LéGroit proposes, nothing is pre-wired
+- Story posts are X-primary for personal brand; Studio channels adapt to short-form video format
+
+**Not yet built:**
+- Studio crew does not yet pull from `Content Type=Story` entries — still uses trend-scouted candidates only
+- Wiring story entries → Studio script generation is next Studio milestone
+
+**Channel + Blotato account map confirmed:**
+
+| Channel | Platform | Blotato ID |
+|---|---|---|
+| First Gen Money | X (@FirstGenMoney_) | 17661 |
+| First Gen Money | Instagram | 45188 |
+| First Gen Money | TikTok | 40994 |
+| First Gen Money | YouTube | 35698 |
+| Under the Baobab | X (@UnderTheBaobab_) | 17650 |
+| Under the Baobab | Instagram | 45174 |
+| Under the Baobab | TikTok | 40989 |
+| Under the Baobab | YouTube | 35697 |
+| AI Catalyst | X (@boubacarbarry — shared) | 17065 |
+| AI Catalyst | Instagram | 45176 |
+| AI Catalyst | TikTok | 40987 |
+| AI Catalyst | YouTube | 35696 |
+
+**Next Studio session:**
+1. Wire Studio script crew to pull `Content Type=Story + Status=Idea` as candidate briefs (alongside trend-scouted topics)
+2. Story → multi-channel adaptation: one entry generates 3 scripts (FGM/UTB/AIC lenses)
+3. M4 warm-up: confirm first batch of renders posted and tracking engagement

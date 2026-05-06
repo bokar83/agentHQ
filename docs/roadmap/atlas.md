@@ -1927,3 +1927,60 @@ OpenRouter ground-truth spend now visible on the Atlas dashboard. Hero Spend Pac
 **Build gate:** When M5 Chairman crew is being designed (2026-05-08+). Not before.
 
 **Next:** M5 (Chairman / L5 Learning) gate opens 2026-05-08. When designing the Chairman crew, add `verification_queue.md` as the claim-staging layer before any agent output is promoted to a scoring mutation.
+
+---
+
+### 2026-05-06: Auto-publisher unblocked + storytelling infrastructure shipped
+
+**Session scope:** Live content pipeline fixes, AI Governance campaign audit, cornerstone article production, storytelling infrastructure build.
+
+**Auto-publisher fix:**
+- Root cause: `BLOTATO_LINKEDIN_ACCOUNT_ID` was empty in `.env` (value existed only inside a comment line)
+- Fix: extracted value `19365` (Boubacar Barry LinkedIn personal account), set in `.env`, restarted container
+- Confirmed: next heartbeat tick picked up 2 queued LinkedIn posts correctly
+- Full Blotato account map documented (13 accounts across LinkedIn, X, IG, TikTok, YouTube for all 4 channels)
+
+**AI Governance campaign (24 posts) — CTQ audit:**
+- All 12 LI + 12 X posts audited against CTQ + Voice rules
+- 5 posts fixed: throat-clear openers, garbled lines, AI phrase "earned the point", double-frame hypothetical
+- All 24 posts confirmed clean, Queued, scheduled May 6-30 (Mon/Wed/Fri cadence)
+
+**4 backlog posts (Ready status) — audit + repair:**
+- Fabricated "Marco" client story found and archived before it could ship
+- 2 incomplete drafts finished (AI tool reviews, AI stack accountability posts)
+- Post 1 trailing DM-style CTA removed; Post 4 hashtag soup stripped
+
+**Fabricated Story Gate — new systemic safeguard:**
+- Hard-stop gate added to `ctq-social` and `boub_voice_mastery` skills
+- Gate runs before any CTQ pass: named characters + invented dollar figures = full stop, confirmation required from Boubacar
+- Committed to GitHub (`a1f63ef`)
+
+**Cornerstone article — "The Illusion of Compliance":**
+- Sankofa Council 2-pass CTQ: Pass 1 scored 6.5/10, Pass 2 scored 9/10
+- Key structural rewrites: hypothetical moved to opening (stakes before prescription), framework subheads became claims, closing survey question replaced with "That is the entire difference"
+- Header image generated via GPT Image 2 (West African executive, POLICY GAP badge, golden hour, Clay tones) — `workspace/media/images/2026-Q2/`
+- Published to LinkedIn (`https://www.linkedin.com/pulse/illusion-compliance-why-your-ai-policy-template-liability-barry-5ggsc/`) and X (`https://x.com/boubacarbarry/status/2052027988192248124`)
+- "First AI Decision" article (May 1) — LinkedIn + X URLs also written to Notion (were missing)
+
+**Storytelling infrastructure — new capability:**
+- `Story` added as Content Type to Notion Content Board schema
+- `Only I` post format documented in `styleguide_master.md` — X-primary, opens on lived moment, statement endings, no framework
+- Story Review process added to `ctq-social` — replaces standard CTQ scoring for Story posts
+- `story_prompt_tick.py` created: 20 prompts (Tue/Thu 17:00 MT via Telegram + 6h sparse check if queue < 5)
+- `notion_capture` crew updated: detects story signals from any input, saves to Content Board as `Content Type=Story`, suggests channel routing as options (not hard-wired)
+- Channel map: BB (Boubacar Personal), FGM (First Gen Money), UTB (Under the Baobab), AIC (AI Catalyst)
+- Committed to `feature/gws-email-rules-update` (`770b938`, `15eb85c`, `dde463a`) — awaiting gate merge
+
+**Commits this session:** `a1f63ef` (fabrication gate), `770b938` (story infra), `15eb85c` (channel mapping), `dde463a` (17:00 schedule + Tue/Thu gating)
+
+**Branch state:** `feature/gws-email-rules-update` is 3 commits ahead of `main` — gate needs to process.
+
+**What is NOT yet done:**
+- Studio crew not yet wired to pull `Content Type=Story + Status=Idea` entries as script briefs
+- LéGroit theme detection across sessions (flag recurring phrases → weekly Signal Brief) — designed, not built
+- Atlas dashboard OpenRouter balance sparkline (M13 follow-up) — deferred
+
+**Next session:**
+1. Gate: merge `feature/gws-email-rules-update` to main
+2. Wire Studio crew to Story entries on Content Board (one story → multiple channel scripts)
+3. LéGroit theme detection — reads session patterns, surfaces as weekly Signal Brief with draft posts
