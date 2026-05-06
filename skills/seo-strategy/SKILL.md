@@ -3286,3 +3286,108 @@ Use these severity levels consistently:
 - **Think like a site owner.** The report should be understandable by someone who is not an SEO expert. Explain WHY each issue matters.
 - **Be honest about limitations.** For Mode 2, this audit is based on HTML analysis only. It cannot measure actual page speed, backlink profile, or real search rankings. Note these limitations in the executive summary.
 - **Self-hosting awareness.** When auditing self-hosted sites, pay extra attention to server configuration issues that managed hosting would handle automatically (caching, compression, security headers, SSL).
+
+---
+
+# MODE 3: GEO (Generative Engine Optimization)
+
+**Trigger phrases:** "rank on ChatGPT", "show up in ChatGPT", "rank on AI", "AI discovery", "LLM SEO", "GEO", "generative engine optimization", "get mentioned by AI", "ChatGPT visibility", "rank on Perplexity", "rank on Claude", "AI search ranking", "AI-first SEO"
+
+**What this mode does:** Audits or creates content strategy to maximize brand/page visibility inside AI-generated answers (ChatGPT, Perplexity, Claude, Gemini). Different from Google SEO: LLMs reward clarity, topic coverage breadth, and cross-site mention density -- not keyword density or backlink raw count.
+
+**Disclaimer on external claims:** GEO is a fast-moving, under-researched field. Vendor-published conversion multipliers and revenue figures cited in blog posts and sales content are unverified. Apply the framework below; do not repeat third-party metrics as facts to clients.
+
+---
+
+## Mode 3 Step 0: Intake
+
+Ask the user:
+
+1. **Brand or page to optimize** -- URL, brand name, or topic
+2. **Target query type** -- What question should AI answer with this brand? (e.g., "best project management tool for small teams", "how to file an LLC in Utah")
+3. **Current AI presence** -- Have they tested their brand name or target query in ChatGPT / Perplexity? What comes back?
+4. **Content asset inventory** -- Do they have existing blog posts, case studies, landing pages? How many?
+5. **Off-site mentions** -- Are they currently mentioned in guest posts, podcasts, press, forums, or directories?
+
+---
+
+## Mode 3 Framework: Three Structural Principles
+
+GEO ranking relies on three compounding layers. Each layer builds on the previous. Skip one and the others underperform.
+
+### Layer 1: Answer-First Architecture
+
+LLMs rank content that gives direct, clear answers in the first 50-100 words. Dense, buried answers are skipped.
+
+**Structure for any GEO-optimized page:**
+- First 50 words: direct answer to the primary question (no preamble, no "in this article")
+- Next 100-200 words: mechanism and reasoning (why it works, how it works)
+- Remainder: supporting evidence, comparisons, FAQ, what-not-to-do
+
+**Audit questions:**
+- Does the page answer the target question within the first two sentences?
+- Is the answer self-contained (readable without context from the rest of the page)?
+- Are headers phrased as questions or as direct declarative statements?
+
+**Output for client:** Score each content piece 0-3 on answer-first compliance. Flag rewrites needed.
+
+---
+
+### Layer 2: Topic Surface Coverage
+
+LLMs build authority signals by pattern-matching across many sources. A brand that covers one angle of a topic looks like a partial source. A brand that covers every angle looks authoritative.
+
+**Coverage mapping process:**
+1. Pick a core topic (e.g., "LLM SEO", "project management for remote teams")
+2. Break it into: definition, how-to, comparison, use cases, mistakes, advanced tactics, case studies
+3. Audit existing content: which angles are covered, which are missing
+4. Prioritize gaps by query volume signal (Reddit thread density, Quora question count, FAQ autocomplete)
+
+**Minimum viable coverage per topic:**
+- What is X?
+- How to do X?
+- X vs alternatives
+- Common mistakes with X
+- X for [specific audience segment]
+
+**Output for client:** Topic coverage matrix -- rows = angles, columns = existing pages. Red = missing. Green = covered. Priority list of content to create.
+
+---
+
+### Layer 3: Entity Velocity
+
+Even with strong content, LLMs ask: is this brand mentioned elsewhere? Cross-site mention density tied to a specific topic is the off-page GEO signal.
+
+**Three entity velocity levers:**
+1. **External mentions** -- Guest posts, podcast appearances, case studies on other platforms, founder interviews, directory listings. Each mention should tie the brand name to the same core topic consistently.
+2. **Referenceable assets** -- Original data, named frameworks, contrarian takes, unique terminology. LLMs prefer content with original intellectual property they can attribute.
+3. **Message consistency** -- Same definitions, same terminology, same frameworks across all channels. Inconsistent messaging dilutes the topic-brand association.
+
+**Audit questions:**
+- How many external pages mention this brand in connection with the target topic?
+- Does the brand have any named frameworks or original data points?
+- Is the core message identical across website, social, and off-site content?
+
+**Output for client:** Entity audit -- mention count, message consistency score, top-priority distribution channels.
+
+---
+
+## Mode 3 Output Format
+
+Produce a GEO Audit Report as HTML with three tabs:
+
+**Tab 1 -- Current AI Visibility**
+- Test results from ChatGPT and Perplexity for the target query (if the user has run these tests, include their screenshots or transcripts; if not, note the test to run)
+- Gap summary: where is the brand invisible that it should be visible?
+
+**Tab 2 -- GEO Action Plan**
+- Layer 1 content rewrites needed (list URLs + specific fix)
+- Layer 2 content gaps (coverage matrix, priority order)
+- Layer 3 entity velocity targets (top 5 distribution channels, top 2 referenceable asset ideas)
+
+**Tab 3 -- 30/60/90 Day Roadmap**
+- Days 1-30: Layer 1 rewrites + 10-15 answer-first pieces on validated pain points
+- Days 31-60: Layer 2 full topic coverage -- systematically fill the coverage matrix
+- Days 61-90: Layer 3 entity velocity -- guest posts, podcast pitches, referenceable asset creation
+
+Each tab includes a priority rank (High / Medium / Low) and estimated effort (hours).

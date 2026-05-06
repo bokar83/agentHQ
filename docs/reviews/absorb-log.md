@@ -31,3 +31,5 @@ Leverage types: `producing-motion` | `founder-time-reduction` | `continuous-impr
 
 2026-05-04 | https://x.com/i/status/2050905447796998368 | PROCEED | new-tool skills/kie_media/references/channel-launch-doctrine.md | producing-motion (Studio)
 2026-05-04 | https://github.com/context-labs/halo | ARCHIVE-AND-NOTE | archive | none: no agentsHQ harness emits OTel JSONL traces today; prerequisite missing; HALO ships its own skills/claude/SKILL.md; revisit when Atlas heartbeat or Studio pipeline is instrumented + 50+ traces collected
+2026-05-06 | https://x.com/denohawari/status/2051631168567885892 | PROCEED | enhance skills/seo-strategy (GEO Mode 3) + new-tool skills/ctq-social/references/long-form-authority-post-pattern.md | producing-motion (SW client deliverables + CW content board) + continuous-improvement (seo-strategy)
+2026-05-06 | https://x.com/danwestworld/status/2051647065340465423 | PROCEED | new tool skills/boub_voice_mastery/references/brand-spine-audit.md | producing-motion + continuous-improvement
