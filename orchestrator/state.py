@@ -32,6 +32,11 @@ _PUBLISH_BRIEF_WINDOWS: dict = {}
 # confirm_token -> dict: action, payload, session_key, ts_created (epoch). TTL 5 min.
 _confirm_store: dict = {}
 
+# Dream memory consolidation windows.
+# telegram_msg_id (int) -> dict: chat_id (str), ts_sent (float). TTL 24h.
+# Set when dream proposal is sent. Cleared on approve/reject reply.
+_DREAM_WINDOWS: dict = {}
+
 # Serializes git writes when multiple background jobs try to save outputs
 # at the same time. Used by saver.py via the shadow entrypoint.
 _git_lock = threading.Lock()

@@ -845,6 +845,53 @@ def _cmd_task_add(text: str, chat_id: str) -> bool:
 
 
 # ══════════════════════════════════════════════════════════════
+# Dream: memory consolidation
+# ══════════════════════════════════════════════════════════════
+
+def _cmd_dream(text: str, chat_id: str) -> bool:
+    if not text.lower().startswith("/dream"):
+        return False
+    import sys, pathlib
+    sys.path.insert(0, str(pathlib.Path(__file__).parent))
+    from notifier import send_message as _send
+    from dream_handler import run_dream_async, _apply_decision, PROPOSAL_FILE
+
+    parts = text.strip().split()
+
+    # /dream approve [except x, y]
+    if len(parts) >= 2 and parts[1].lower() == "approve":
+        excluded: set = set()
+        if len(parts) >= 4 and parts[2].lower() == "except":
+            excluded = {f.strip() for f in " ".join(parts[3:]).split(",") if f.strip()}
+        _apply_decision("APPROVE", excluded, chat_id)
+        return True
+
+    # /dream reject
+    if len(parts) >= 2 and parts[1].lower() == "reject":
+        _apply_decision("REJECT", set(), chat_id)
+        return True
+
+    # /dream status
+    if len(parts) >= 2 and parts[1].lower() == "status":
+        if PROPOSAL_FILE.exists():
+            summary = PROPOSAL_FILE.read_text(encoding="utf-8")[:1500]
+            _send(chat_id, f"Active dream proposal:\n\n{summary}")
+        else:
+            _send(chat_id, "No active dream proposal. Run /dream to start a new scan.")
+        return True
+
+    # /dream [N] — run scan (optional session count)
+    n_sessions = 30
+    if len(parts) >= 2:
+        try:
+            n_sessions = int(parts[1])
+        except ValueError:
+            pass
+    run_dream_async(chat_id, n_sessions=n_sessions)
+    return True
+
+
+# ══════════════════════════════════════════════════════════════
 # Dispatcher (order matters: longest prefix first to avoid collisions)
 # ══════════════════════════════════════════════════════════════
 
@@ -853,6 +900,7 @@ def _cmd_task_add(text: str, chat_id: str) -> bool:
 # unique prefixes so order within the Phase 0 group does not matter. /status
 # has a guard against /status_foo inside its own handler.
 _COMMANDS = [
+    _cmd_dream,
     _cmd_task_add,
     _cmd_heartbeat_status,
     _cmd_trigger_heartbeat,

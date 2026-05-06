@@ -33,6 +33,7 @@ from handlers_approvals import (
     APPROVE_ALIASES,
     REJECT_ALIASES,
 )
+from dream_handler import handle_dream_reply
 from handlers_chat import run_chat, run_chat_with_buttons, handle_feedback
 from handlers_commands import dispatch_command
 from handlers_doc import handle_doc_emoji
@@ -138,6 +139,10 @@ async def process_telegram_update(update: dict) -> None:
 
     # 4.5 Atlas M1: reply 'posted'/'skip' to a publish-brief message
     if handle_publish_reply(text, chat_id, first_word, reply_to_msg_id):
+        return
+
+    # 4.6 Dream: approve/reject reply to memory consolidation proposal
+    if handle_dream_reply(text, chat_id, first_word, reply_to_msg_id):
         return
 
     # 5. Naked fallback: yes confirm / no confirm (with doc-routing precedence)
