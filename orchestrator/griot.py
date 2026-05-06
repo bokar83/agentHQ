@@ -458,6 +458,22 @@ def griot_morning_tick() -> None:
         except Exception as e:
             logger.warning(f"griot_morning_tick: pipeline summary send failed: {e}")
 
+
+        # Ops digest: pipeline metrics + spend + execution cycle tasks.
+        try:
+            tg_ops, html_ops = _ops_digest_text()
+            if tg_ops and chat_id:
+                send_message(chat_id, tg_ops)
+            if html_ops:
+                from notifier import send_email
+                send_email(
+                    subject="agentsHQ Morning Digest -- " + today_iso,
+                    body=html_ops,
+                    html=True,
+                )
+        except Exception as exc:
+            logger.warning("griot_morning_tick: ops digest failed (non-fatal): " + str(exc))
+
         # Morning tick is awareness-only. No proposal sent on schedule.
         # To get a proposal, ask Griot on-demand: "send me a post to work on".
         result_summary = f"pipeline summary sent. backlog={len(candidates)} ready posts."
@@ -585,3 +601,111 @@ def record_content_approval(
         cur.close()
     except Exception as e:
         logger.warning(f"griot: record_content_approval failed (non-fatal): {e}")
+
+
+# =============================================================================
+# Morning Ops Digest  (added 2026-05-06)
+# Appends pipeline metrics + spend summary to the morning Telegram message
+# and sends an HTML email to both addresses.
+# =============================================================================
+
+def _ops_digest_text() -> tuple[str, str]:
+    """
+    Build (telegram_block, html_body) for the ops digest.
+    Returns empty strings on any failure -- never raises.
+    """
+    import datetime as _dt
+    today = _dt.date.today().isoformat()
+
+    lines_tg = []   # plain text for Telegram
+    lines_html = [] # HTML rows
+
+    # -- Pipeline metrics (yesterday's morning runner result) --
+    try:
+        from signal_works.pipeline_metrics import _conn as _pm_conn
+        conn = _pm_conn()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT step, attempted, succeeded, skipped, reason
+            FROM pipeline_metrics
+            WHERE run_date = CURRENT_DATE
+            ORDER BY id ASC
+        """)
+        rows = cur.fetchall()
+        conn.close()
+        if rows:
+            lines_tg.append("OUTREACH (today):")
+            for r in rows:
+                step = r["step"] if hasattr(r, "__getitem__") else r[0]
+                att  = r["attempted"]  if hasattr(r, "__getitem__") else r[1]
+                suc  = r["succeeded"]  if hasattr(r, "__getitem__") else r[2]
+                lines_tg.append(f"  {step}: {suc}/{att} succeeded")
+                lines_html.append(f"<tr><td>{step}</td><td>{suc}/{att}</td></tr>")
+    except Exception as e:
+        logger.warning(f"_ops_digest_text: pipeline_metrics failed: {e}")
+
+    # -- Spend (MTD from atlas_dashboard) --
+    try:
+        from atlas_dashboard import _spend_aggregates
+        spend = _spend_aggregates()
+        mtd = spend.get("month_usd") or 0
+        wtd = spend.get("week_usd") or 0
+        today_usd = spend.get("today_usd") or 0
+        lines_tg.append(f"\nSPEND: today=${today_usd:.2f}  WTD=${wtd:.2f}  MTD=${mtd:.2f}")
+        lines_html.append(f'<tr><td><b>Spend today</b></td><td>${today_usd:.2f}</td></tr>')
+        lines_html.append(f'<tr><td><b>Spend WTD</b></td><td>${wtd:.2f}</td></tr>')
+        lines_html.append(f'<tr><td><b>Spend MTD</b></td><td>${mtd:.2f}</td></tr>')
+    except Exception as e:
+        logger.warning(f"_ops_digest_text: spend failed: {e}")
+
+    # -- Execution Cycle: top 3 tasks due this week --
+    try:
+        import urllib.request, urllib.parse, json, os as _os
+        notion_key = _os.environ.get("NOTION_SECRET") or _os.environ.get("NOTION_API_KEY", "")
+        ec_db_id = "358bcf1a-3029-81ad-ace1-fd12c452ea11"
+        import datetime as _dt2
+        week_end = (_dt2.date.today() + _dt2.timedelta(days=7)).isoformat()
+        body = json.dumps({
+            "filter": {"and": [
+                {"property": "Status", "select": {"does_not_equal": "Done"}},
+                {"property": "Due Date", "date": {"on_or_before": week_end}},
+            ]},
+            "sorts": [{"property": "Due Date", "direction": "ascending"}],
+            "page_size": 3,
+        }).encode()
+        req = urllib.request.Request(
+            f"https://api.notion.com/v1/databases/{ec_db_id}/query",
+            data=body,
+            headers={
+                "Authorization": f"Bearer {notion_key}",
+                "Notion-Version": "2022-06-28",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        resp = json.loads(urllib.request.urlopen(req, timeout=10).read())
+        tasks = resp.get("results", [])
+        if tasks:
+            lines_tg.append("\nEXECUTION (due this week):")
+            lines_html.append('<tr><td colspan="2"><b>Due this week</b></td></tr>')
+            for t in tasks:
+                props = t.get("properties", {})
+                title_arr = props.get("Name", {}).get("title", [])
+                title = title_arr[0]["plain_text"] if title_arr else "untitled"
+                due_obj = props.get("Due Date", {}).get("date") or {}
+                due = due_obj.get("start", "?")
+                lines_tg.append(f"  {due}: {title[:60]}")
+                lines_html.append(f"<tr><td>{due}</td><td>{title[:80]}</td></tr>")
+    except Exception as e:
+        logger.warning(f"_ops_digest_text: execution_cycle failed: {e}")
+
+    tg_block = "\n".join(lines_tg)
+    html_body = f"""<!DOCTYPE html>
+<html><body style="font-family:sans-serif;max-width:600px;margin:auto">
+<h2 style="color:#1a1a1a">agentsHQ Morning Digest &mdash; {today}</h2>
+<table style="width:100%;border-collapse:collapse">
+{"".join(f'<tr style="border-bottom:1px solid #eee">{r}</tr>' if not r.startswith("<tr") else r for r in lines_html)}
+</table>
+<p style="color:#888;font-size:12px">agentsHQ &bull; auto-generated</p>
+</body></html>"""
+    return tg_block, html_body
