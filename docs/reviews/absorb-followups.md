@@ -4,6 +4,8 @@ Schema: `YYYY-MM-DD | placement | leverage type | next action | target date`
 
 PROCEED verdicts append here automatically. PROCEED without a follow-up entry is incomplete.
 
+2026-05-06 | enhance skills/sankofa | continuous-improvement | verify DEAD-PROJECT MODE surfaces unique failure mode on first high-stakes /sankofa run | 2026-06-06
+
 2026-05-04 | new skill skills/cw-automation-engagement | producing-motion | SHIPPED 2026-05-04: full v1 built (all 6 phases, pricing, n8n-mcp quick ref, case study template, acceptance criterion at top of file). Verify: first engagement scoped+priced using skill by 2026-07-04. | 2026-05-18
 2026-05-04 | enhance skills/frontend-design | continuous-improvement | SHIPPED 2026-05-04: Kie prompt block rewritten (6-field template: composition anchor / background mode / hero scale / anti-slop prohibition + 3 worked examples). design-audit.md created (80+ items). Step 5 wired. Karpathy P4 WARN: verify on next live site build. | 2026-05-07
 2026-05-04 | enhance skills/kie_media | continuous-improvement | SHIPPED 2026-05-04: Studio Art Direction section added (6-field prompt template, per-channel palette anchors for Under the Baobab / AI Catalyst / 1stGen Money, anti-slop prohibitions per channel, 3 worked examples, Ken Burns still rule). | n/a
@@ -26,3 +28,4 @@ PROCEED verdicts append here automatically. PROCEED without a follow-up entry is
 2026-05-04 | new-tool skills/kie_media/references/channel-launch-doctrine.md | producing-motion (Studio) | agent cites channel-launch-doctrine.md at next Studio channel launch + outputs 30-day posting schedule using 4-part formula | 2026-06-04
 2026-05-06 | enhance skills/seo-strategy + new-tool skills/ctq-social/references/ | producing-motion + continuous-improvement | GEO Mode 3 shipped (seo-strategy); long-form authority post pattern shipped (ctq-social reference) | DONE 2026-05-06
 2026-05-06 | new tool skills/boub_voice_mastery/references/brand-spine-audit.md | producing-motion + continuous-improvement | CHECKPOINT: Boubacar completes brand spine audit (Step 1 values + Step 2 anchors). THEN: (1) add earned-insight gate rule to boub-voice-mastery SKILL.md, (2) add 3-diagnostic-test check to ctq-social SKILL.md. FOLLOW-ON: propagate spine to cold-outreach + website-teardown | 2026-05-13
+2026-05-06 | new tool skills/coordination/references/agent-delegation-pattern.md | producing-motion + continuous-improvement | Wire first enqueue->claim_next handoff in one Atlas agent (morning_runner or studio_render_publisher) citing agent-delegation-pattern.md as design ref | 2026-05-13
