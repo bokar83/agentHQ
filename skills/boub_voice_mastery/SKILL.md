@@ -26,6 +26,22 @@ The agent using this skill is tasked with searching the web for:
 - "Common AI writing cliches"
 - "Boubacar Barry writing style prompts"
 
+## HARD GATE: No Fabricated Stories (check this first, before any other review)
+
+Before touching voice or style, scan for anecdotes attributed to Boubacar that he did not provide.
+
+**Red flags:**
+- Named characters in first-person scenes Boubacar did not describe ("I met Marco...", "A client called me at 2 AM...")
+- Invented dollar figures tied to a client story
+- "Last quarter I..." or "One of my clients..." followed by a fabricated scene
+- Hypotheticals written in first person as if lived experience
+
+**If found:** Stop. Flag exact sentences. Do not polish. Do not rewrite voice. Ask Boubacar to confirm or replace with an explicit hypothetical before proceeding.
+
+**Why:** One false story attributed to Boubacar by name destroys the practitioner credibility the entire brand is built on.
+
+---
+
 ## Voice Profile: Boubacar Barry
 Based on your instructions:
 - **Tone**: Direct, Principle-based, Insightful.
