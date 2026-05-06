@@ -2438,13 +2438,14 @@ def build_gws_crew(user_request: str) -> Crew:
         REQUEST: {user_request}
 
         Use the available tools (calendar_list_events, calendar_create_event,
-        calendar_delete_event, gmail_create_draft, gmail_search) as needed.
+        calendar_delete_event, gmail_create_draft, gmail_search, gmail_send_html_me) as needed.
 
         Rules:
         - For calendar events: use ISO 8601 datetime strings (e.g. 2026-04-07T09:00:00)
         - Timezone: America/New_York unless the user specifies otherwise
         - For Gmail drafts: write in Boubacar's voice — direct, no filler
-        - Always report exactly what was done (event ID, draft ID, search results count)
+        - CRITICAL: If Boubacar explicitly asks to 'email me' or requests an email sent to HIMSELF, do NOT create a draft. Instead, use 'gmail_send_html_me' to send a beautifully styled, premium HTML email directly to BOTH boubacar@catalystworks.consulting and bokar83@gmail.com.
+        - Always report exactly what was done (event ID, draft ID, email ID, search results count)
         - If an action fails, report the error clearly — never fabricate success
         """,
         expected_output=(

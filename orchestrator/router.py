@@ -225,7 +225,10 @@ TASK_TYPES = {
     },
     "gws_task": {
         "description": "Google Workspace automation (Gmail/Calendar)",
-        "keywords": ["calendar", "add event", "check schedule", "gmail", "draft email", "search email"],
+        "keywords": [
+            "calendar", "add event", "check schedule", "gmail", "draft email", "search email",
+            "email me", "send me an email", "send email to me", "email me the", "email me a"
+        ],
         "crew": "gws_crew",
     },
     "chat": {
