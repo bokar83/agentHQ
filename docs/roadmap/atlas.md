@@ -1984,3 +1984,52 @@ OpenRouter ground-truth spend now visible on the Atlas dashboard. Hero Spend Pac
 1. Gate: merge `feature/gws-email-rules-update` to main
 2. Wire Studio crew to Story entries on Content Board (one story → multiple channel scripts)
 3. LéGroit theme detection — reads session patterns, surfaces as weekly Signal Brief with draft posts
+
+
+### 2026-05-06 (Morning) - Platform Infrastructure and DX Maintenance Shipped
+
+**What was done:**
+- GWS Email Integration: Refactored agents.py and GWS task templates in crews.py to allow personal 'email me' updates to skip the default draft-only pipeline and directly send styled HTML emails to boubacar@catalystworks.consulting and bokar83@gmail.com. Outbound marketing and CRM workflows remain gated by drafts.
+- Resolved Walkthrough Reload Loop: Renamed the walkthrough file to break the VSCode focus-stealing refresh loop and restore clean developer editor focus.
+- Resolved MCP Timeouts: Pre-installed GitHub and Notion MCP servers globally and updated local mcp_config.json configuration to use direct node script invocations. This bypassed latent npx -y dynamic lookup delays, solving the context deadline exceeded startup connection error.
+- Automated Claude CLI Maintenance: Force-purged 160.17 MB of crashed, bloated CLI conversational logs. Registered a daily silent Windows Scheduled Task named CleanClaudeCache with a dynamic USERPROFILE path to run clean_claude_cache.py (with 14-day safety sprint buffer and 2 MB file size limit).
+
+**Commits this session:** Local edits and background scripts verified; configs updated in place on local machine.
+
+**Branch state:** Local machine and Antigravity layer updated; local repository and configuration are fully sync-ready.
+
+**What is NOT yet done:**
+- Expand the automatic cleaner to system-wide log rotations and pytest tmp folder purges.
+
+**Next session:**
+1. Monitor GWS direct sending behavior on personal update requests.
+2. Verify that MCP connections continue to launch instantly on editor startup.
+
+---
+
+### 2026-05-06 (session close): Studio activation handoff + final fixes
+
+**Additional fixes shipped after exec summary:**
+
+- `studio_story_bridge.py` — reads `Content Type=Story + Status=Idea` from Content Board every 6h, classifies channel fit (FGM/UTB/AIC) via LLM, seeds Pipeline DB. Idempotent.
+- `griot_signal_brief.py` — Monday 09:00 MT. Reads 7-day story entries + chat messages, extracts top 3 recurring themes, sends Signal Brief to Telegram with draft post per theme.
+- `crews.py` — notion_capture now sends Telegram confirmation when story signal saved ("Story signal saved: [title] — Could feed: [channels] — Reply 'draft it' when ready")
+- `skills/ctq-social/SKILL.md` — lint fixed, synced to repo
+- Committed `54c5f39`, deployed to VPS
+
+**Studio investigation findings:**
+
+- Pipeline DB has 13 `qa-passed` records but they are scraped foreign YouTube content (Tamil-language, other channels). NOT our scripts.
+- `production_tick` logs "0 qa-passed candidates" — filter mismatch bug suspected in `_fetch_qa_passed_candidates()`
+- 1 `scheduled` record exists with no Asset URL — foreign content, not ours
+- Studio has NEVER completed a full end-to-end production run with our own scripts
+- Activation prompt written and handed off to a parallel session for resolution today
+
+**Hunter + Apollo status:** Both confirmed on paid tiers as of 2026-05-06. Pipeline is NOT broken.
+
+**Final main SHA:** `54c5f39`
+
+**Next session (if Studio session doesn't resolve it):**
+1. Verify Studio activation: check Pipeline DB for our own qa-passed content with Asset URLs
+2. Confirm first Shorts posted on all 3 channels (UTB, FGM, AIC)
+3. M4 warm-up day 1 counter starts from first successful post
