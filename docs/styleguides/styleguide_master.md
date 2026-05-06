@@ -80,6 +80,49 @@ Output is Catalyst Works branded if the request contains any of: "catalyst works
 
 ---
 
+## The "Only I" Post Format (Story-First Content)
+
+This is Boubacar's highest-leverage content type. It cannot be written by anyone else. It cannot be generated from research. It comes only from lived experience.
+
+**When to use:** X-primary, LinkedIn secondary. Maximum two per week. Never fabricated. Never hypothetical.
+
+**Structure:**
+
+1. Open with one specific moment only Boubacar has lived. One sentence. No setup.
+2. Stay in the moment. What was happening. What he noticed. What it felt like. No framework yet.
+3. The insight arrives on its own — implied by the scene, not explained after it.
+4. End on a statement, never a question. The last line is the one people screenshot.
+
+**Examples of the opening move:**
+
+Not: "Entrepreneurship is hard. Here is what I learned."
+
+Yes: "I drove forty minutes to a meeting in Provo last Tuesday. The prospect spent the first ten minutes explaining why AI was just a trend. I did not correct him. I just asked what his clients were asking about."
+
+Not: "Building a firm from scratch taught me about resilience."
+
+Yes: "There was a week in February where I had no clients, no revenue, and a pitch deck I'd rewritten eleven times. I sent it anyway."
+
+**What makes it work:**
+
+- The reader is IN the moment before they know what the post is about
+- The why behind the insight is Boubacar's specific context, not a transferable principle
+- Vulnerability is not performed — it is present because the scene is real
+- Nobody can replicate it because nobody else was there
+
+**What kills it:**
+
+- Adding "here is what I learned" — the lesson should arrive, not be announced
+- Generalizing at the end ("and that is why leadership matters")
+- Making the scene a setup for a framework
+- Polishing out the rough edges — rawness is the point
+
+**Content Type tag:** `Story` on the Notion Content Board. These posts skip the normal CTQ scoring rubric and go through the Story Review instead (see CTQ skill).
+
+**Signal input:** Boubacar feeds raw story material via Telegram to the Ideas queue (Status=Idea, Content Type=Story). LéGroit reads these entries before proposing any Story post. The raw thought is the brief. The agent shapes it — it does not invent it.
+
+---
+
 ## The Boubacar Voice: 5 Rules That Apply Across All Formats
 
 ### Rule 1: Conclusion first, evidence second

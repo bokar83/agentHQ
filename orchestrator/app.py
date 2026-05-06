@@ -256,6 +256,38 @@ async def startup_event():
     except Exception as e:
         logger.warning(f"provider-probe wake registration failed (non-fatal): {e}")
 
+    # Story prompt engine: Tue/Thu 08:00 MT + sparse-queue trigger.
+    try:
+        import heartbeat as _heartbeat
+        from story_prompt_tick import story_prompt_scheduled_tick, story_prompt_sparse_tick
+
+        tz_now = __import__("pytz").timezone(os.environ.get("HEARTBEAT_TIMEZONE", "America/Denver"))
+        today_wd = __import__("datetime").datetime.now(tz_now).weekday()  # 0=Mon, 1=Tue, 3=Thu
+
+        # Register Tue (weekday=1) and Thu (weekday=3) 08:00 scheduled sends.
+        _heartbeat.register_wake(
+            "story-prompt-tuesday",
+            crew_name="story-prompt",
+            callback=story_prompt_scheduled_tick,
+            at="08:00",
+        )
+        _heartbeat.register_wake(
+            "story-prompt-thursday",
+            crew_name="story-prompt",
+            callback=story_prompt_scheduled_tick,
+            at="08:00",
+        )
+        # Sparse-queue check every 6 hours.
+        _heartbeat.register_wake(
+            "story-prompt-sparse",
+            crew_name="story-prompt",
+            callback=story_prompt_sparse_tick,
+            every="6h",
+        )
+        logger.info("HEARTBEAT: story-prompt wakes registered (Tue/Thu 08:00 + 6h sparse check)")
+    except Exception as e:
+        logger.warning(f"story-prompt wake registration failed (non-fatal): {e}")
+
     # Telegram polling in the background (hardened loop in handlers.py).
     asyncio.create_task(telegram_polling_loop())
     logger.info("Telegram Polling Loop scheduled.")
