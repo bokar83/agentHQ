@@ -230,6 +230,7 @@ services:
       - ./data:/app/data
       - ./workspace/studio-cards/channel_cards:/app/workspace/assets/intros:ro
       - ./workspace/studio-cards/channel_cards:/app/workspace/assets/outros:ro
+      - ./workspace/renders:/app/workspace/renders
     depends_on:
       postgres:
         condition: service_healthy
