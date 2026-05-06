@@ -3278,6 +3278,28 @@ Use these severity levels consistently:
 
 ---
 
+## Mode 2 GEO Addendum (runs after every full site audit)
+
+**Always append this section to the Mode 2 HTML report.** Google SEO and AI search visibility are separate signals. A site can rank on Google and be invisible in ChatGPT/Perplexity. Audit both every time.
+
+**Answer-First Architecture scan:**
+- Does the homepage answer "what does this business do" within the first 50 words?
+- Are key service/product pages structured: direct answer first, mechanism second, evidence third?
+- Are headers phrased as questions or declarative statements rather than creative labels?
+
+**Topic Surface Coverage scan:**
+- Does the site cover: What is X, How X works, X vs alternatives, common mistakes with X?
+- Flag missing angles as "GEO content gaps" — prioritized by estimated query frequency.
+
+**Entity Velocity scan:**
+- Does the brand have a named framework, original data, or unique methodology it owns?
+- Is the brand mentioned on external sites in connection with its core topic?
+- Is there a content channel (blog, newsletter, podcast) that can host answer-first pieces?
+
+**Output:** Add a "GEO Readiness" tab to the Mode 2 HTML report with: score (0-10), top 3 quick wins, top 2 content gaps to fill first, and top 2 entity velocity recommendations.
+
+---
+
 ## Important Principles (Both Modes)
 
 - **Be specific, not generic.** Every finding should reference actual content, URLs, or text. Never say "some pages have issues" — say exactly which pages and what the issue is.
