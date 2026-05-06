@@ -245,6 +245,30 @@ Fix everything directly. Output a numbered list of fixes applied.
 
 ---
 
+## Phase 4b: GEO Addendum (runs after Phase 4, every time)
+
+**Always run this phase.** AI search visibility compounds over time. Starting GEO-clean is cheaper than retrofitting.
+
+**Follow `seo-strategy` Mode 3 (GEO) for full framework. Quick checklist for new builds:**
+
+**Answer-First Architecture check:**
+- Does the homepage hero answer "what does this business do" in the first 50 words?
+- Are service/product pages structured: direct answer first, mechanism second, evidence third?
+- Are H2/H3 headers phrased as questions or declarative statements (not creative labels)?
+
+**Topic Surface Coverage check:**
+- Does the site have at least one page covering each of: What is X, How X works, X vs alternatives?
+- Flag missing angles as "GEO content gaps" in the deliverable.
+
+**Entity Velocity starter:**
+- Does the site have a named framework, original data point, or unique methodology the brand owns?
+- Is there a blog or resources section that can host answer-first content?
+- Recommend top 2 distribution channels for this business type (e.g., Reddit communities, podcast circuit, industry directories).
+
+Output: append a "GEO Readiness" section to the SEO audit report with: score (0-10), top 3 quick wins, and top 2 content gaps to fill first.
+
+---
+
 ## Delivery Checklist
 
 Before calling this done:
