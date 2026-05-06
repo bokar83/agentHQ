@@ -45,13 +45,19 @@ class NotionClient:
         return self._request("patch", f"pages/{page_id}", json={"properties": properties})
 
     def query_database(self, database_id: str, filter_obj: Optional[Dict] = None, sorts: Optional[List] = None) -> List[Dict]:
-        payload = {}
+        payload: Dict = {"page_size": 100}
         if filter_obj:
             payload["filter"] = filter_obj
         if sorts:
             payload["sorts"] = sorts
-        result = self._request("post", f"databases/{database_id}/query", json=payload)
-        return result.get("results", [])
+        all_results: List[Dict] = []
+        while True:
+            result = self._request("post", f"databases/{database_id}/query", json=payload)
+            all_results.extend(result.get("results", []))
+            if not result.get("has_more"):
+                break
+            payload["start_cursor"] = result["next_cursor"]
+        return all_results
 
     def get_page(self, page_id: str) -> Dict:
         return self._request("get", f"pages/{page_id}")
