@@ -8,7 +8,7 @@
 
 The goal is to keep the human-in-loop column short and predictable. Anything that creeps onto that list without a real reason should be automated or removed.
 
-Last updated: 2026-04-29
+Last updated: 2026-05-06
 
 ---
 
