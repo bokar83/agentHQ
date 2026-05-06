@@ -3333,6 +3333,48 @@ def build_design_review_crew(user_request: str) -> Crew:
     )
 
 
+def build_griot_propose_crew(user_request: str) -> Crew:
+    """On-demand Griot proposal. Calls griot.griot_propose_on_demand() and
+    returns the result as a task output. No LLM needed — pure Python execution.
+    """
+    from agents import build_notion_capture_agent
+    agent = build_notion_capture_agent()
+
+    # Detect platform filter from request
+    req_lower = user_request.lower()
+    if "linkedin" in req_lower:
+        platform_filter = "LinkedIn"
+    elif " x " in req_lower or "twitter" in req_lower or req_lower.endswith(" x"):
+        platform_filter = "X"
+    else:
+        platform_filter = None
+
+    platform_note = f" (filtered to {platform_filter})" if platform_filter else ""
+
+    task = Task(
+        description=(
+            f"The user wants Griot to propose a post for review{platform_note}.\n\n"
+            f"Call this Python function and return its result:\n"
+            f"  from griot import griot_propose_on_demand\n"
+            f"  result = griot_propose_on_demand(platform_filter={repr(platform_filter)})\n"
+            f"  return result\n\n"
+            f"The function picks the best Ready post from the Content Board, sends it to "
+            f"Telegram with Approve/Enhance/Reject buttons, and returns a status string. "
+            f"Report the result to the user exactly as returned."
+        ),
+        expected_output="Status string confirming which post was sent for review, or an error message.",
+        agent=agent,
+    )
+
+    return Crew(
+        agents=[agent],
+        tasks=[task],
+        process=Process.sequential,
+        verbose=False,
+        memory=False,
+    )
+
+
 def build_schedule_content_crew(user_request: str) -> Crew:
     """
     Crew for: schedule_content
@@ -3484,6 +3526,7 @@ CREW_REGISTRY = {
     "content_review_crew":        build_content_review_crew,
     "content_drive_crew":         build_content_push_to_drive_crew,
     "content_board_fetch_crew":   build_content_board_fetch_crew,
+    "griot_propose_crew":          build_griot_propose_crew,
     "schedule_content_crew":      build_schedule_content_crew,
     "doc_routing_crew":           build_doc_routing_crew,
     "design_review_crew":         build_design_review_crew,
