@@ -272,6 +272,17 @@ TASK_TYPES = {
                      "post review", "check my posts", "voice check", "run content review"],
         "crew": "content_review_crew",
     },
+    "griot_propose": {
+        "description": "On-demand: Griot picks the best Ready post and sends it to Telegram for review (Approve/Enhance/Reject)",
+        "keywords": [
+            "send me a post", "send me a post to work on", "give me a post",
+            "ready to work on content", "let's work on linkedin", "let's work on x posts",
+            "let's work on content", "give me something to review", "send me something to review",
+            "send me content to review", "ready to review posts", "pull a post for me",
+            "propose a post", "griot propose", "what should i post",
+        ],
+        "crew": "griot_propose_crew",
+    },
     "schedule_content": {
         "description": "Schedule a post to the Notion Content Board with a date. Does NOT publish to social media.",
         "keywords": [

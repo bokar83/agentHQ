@@ -456,53 +456,10 @@ def griot_morning_tick() -> None:
         except Exception as e:
             logger.warning(f"griot_morning_tick: pipeline summary send failed: {e}")
 
-        # Skip 3: empty backlog.
-        if not candidates:
-            result_summary = "skip: empty candidate backlog"
-            try:
-                from notifier import send_message
-                chat_id = os.environ.get("OWNER_TELEGRAM_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID")
-                if chat_id:
-                    msg = "No Ready drafts to propose. Add posts to the Content Board to refill the backlog."
-                    if dedup_dropped:
-                        msg += f" ({dedup_dropped} already proposed in last {CANDIDATE_DEDUP_DAYS} days)"
-                    send_message(chat_id, msg)
-            except Exception as ne:
-                logger.warning(f"griot_morning_tick: empty-backlog notify failed: {ne}")
-            return
-
-        # Pick + enqueue.
-        top = _pick_top_candidate(candidates, recent_posts)
-        if top is None:
-            result_summary = "skip: picker returned None"
-            return
-
-        payload = {
-            "notion_id": top["notion_id"],
-            "title": top["title"],
-            "platform": top["platform"][0] if top["platform"] else None,
-            "arc_phase": top["arc_phase"],
-            "arc_priority": top["arc_priority"],
-            "total_score": top["total_score"],
-            "hook_preview": (top.get("hook") or "")[:280],
-            "text": (top.get("draft") or ""),  # full post body for Telegram preview
-            "why_chosen": top.get("why_chosen", ""),
-            "score": top.get("score"),
-        }
-
-        try:
-            from approval_queue import enqueue
-            row = enqueue(
-                crew_name="griot",
-                proposal_type="post_candidate",
-                payload=payload,
-                outcome_id=outcome_id,
-            )
-            result_summary = f"proposed: {top['title'][:80]} (queue #{row.id})"
-            logger.info(f"griot_morning_tick: enqueued {row.id} for {top['title'][:60]}")
-        except Exception as e:
-            result_summary = f"enqueue_failed: {e}"
-            logger.error(f"griot_morning_tick: enqueue failed: {e}")
+        # Morning tick is awareness-only. No proposal sent on schedule.
+        # To get a proposal, ask Griot on-demand: "send me a post to work on".
+        result_summary = f"pipeline summary sent. backlog={len(candidates)} ready posts."
+        logger.info(f"griot_morning_tick: summary sent, {len(candidates)} candidates available on demand")
 
     finally:
         # Close the outcome row, even on exception.
@@ -512,6 +469,76 @@ def griot_morning_tick() -> None:
                 complete_task(outcome_id, result_summary=result_summary, total_cost_usd=0.0)
             except Exception as e:
                 logger.warning(f"griot_morning_tick: complete_task failed: {e}")
+
+
+# =============================================================================
+# On-demand proposal (triggered by Boubacar asking for a post to review)
+# =============================================================================
+
+def griot_propose_on_demand(platform_filter: Optional[str] = None) -> str:
+    """Pick the best candidate from the Ready backlog and send it to Telegram
+    with Approve / Enhance / Reject buttons.
+
+    Called when Boubacar says "send me a post to work on", "let's work on
+    LinkedIn content", "give me something to review", etc.
+
+    platform_filter: optional "LinkedIn" or "X" to narrow the pick.
+    Returns a status string for the caller to relay.
+    """
+    tz = pytz.timezone(TIMEZONE)
+    now = datetime.now(tz)
+    today_iso = now.date().isoformat()
+
+    try:
+        from skills.forge_cli.notion_client import NotionClient
+        notion_secret = os.environ.get("NOTION_SECRET") or os.environ.get("NOTION_API_KEY")
+        notion = NotionClient(secret=notion_secret)
+        rows = _fetch_board_rows(notion)
+    except Exception as e:
+        return f"Cannot reach Notion: {e}"
+
+    candidates_all, recent_posts = _split_pool(rows, today_iso)
+    candidates = [c for c in candidates_all if not _candidate_already_proposed(c["notion_id"])]
+
+    # Apply platform filter if requested.
+    if platform_filter:
+        pf = platform_filter.strip().title()
+        candidates = [c for c in candidates if pf in (c.get("platform") or [])]
+
+    if not candidates:
+        return (
+            f"Backlog empty{' for ' + platform_filter if platform_filter else ''}. "
+            f"No Ready posts without a scheduled date. Add content to the Content Board."
+        )
+
+    top = _pick_top_candidate(candidates, recent_posts)
+    if top is None:
+        return "Picker returned no candidate. Check Content Board."
+
+    payload = {
+        "notion_id": top["notion_id"],
+        "title": top["title"],
+        "platform": top["platform"][0] if top["platform"] else None,
+        "arc_phase": top["arc_phase"],
+        "arc_priority": top["arc_priority"],
+        "total_score": top["total_score"],
+        "hook_preview": (top.get("hook") or "")[:280],
+        "text": (top.get("draft") or ""),
+        "why_chosen": top.get("why_chosen", ""),
+        "score": top.get("score"),
+    }
+
+    try:
+        from approval_queue import enqueue
+        row = enqueue(
+            crew_name="griot",
+            proposal_type="post_candidate",
+            payload=payload,
+            outcome_id=None,
+        )
+        return f"Sent post #{row.id} for review: {top['title'][:60]}"
+    except Exception as e:
+        return f"Enqueue failed: {e}"
 
 
 # =============================================================================
