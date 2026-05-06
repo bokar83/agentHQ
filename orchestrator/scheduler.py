@@ -466,19 +466,19 @@ def _run_morning_digest():
 
 
 def _morning_digest_loop():
-    """Background thread: fires _run_morning_digest once per day in the 07:00 MT hour.
+    """Background thread: fires _run_morning_digest once per day at 07:20 MT.
 
-    Self-debouncing: any sample taken between 07:00:00 and 07:59:59 triggers
+    Self-debouncing: any sample taken between 07:20:00 and 07:59:59 triggers
     one fire per calendar day (via last_fire_date). Sleeping 60s between
     samples is plenty.
     """
     tz = pytz.timezone(TIMEZONE)
-    logger.info(f"DIGEST: thread started (07:00 {TIMEZONE})")
+    logger.info(f"DIGEST: thread started (07:20 {TIMEZONE})")
     last_fire_date = None
     while True:
         try:
             now = datetime.now(tz)
-            if now.hour == 7 and last_fire_date != now.date():
+            if now.hour == 7 and now.minute >= 20 and last_fire_date != now.date():
                 _run_morning_digest()
                 last_fire_date = now.date()
             time.sleep(60)
@@ -570,7 +570,7 @@ def start_scheduler():
     except Exception as e:
         logger.error(f"AUTO_PUBLISHER: wake registration failed ({e}); continuing without auto-publish", exc_info=True)
 
-    # Studio M1: trend scout tick. Runs daily at 06:00 MT. Scans configured
+    # Studio M1: trend scout tick. Runs daily at 06:30 MT. Scans configured
     # niches (Under the Baobab, AI Catalyst, First Generation Money) for
     # viral content patterns via YouTube Data API, scores by view velocity,
     # writes top picks to Studio Pipeline DB, sends Telegram brief.
@@ -583,7 +583,7 @@ def start_scheduler():
             "studio-trend-scout",
             crew_name="studio",
             callback=studio_trend_scout_tick,
-            at="06:00",
+            at="06:30",
         )
     except Exception as e:
         logger.error(f"STUDIO_TREND_SCOUT: wake registration failed ({e}); continuing without trend scout", exc_info=True)
