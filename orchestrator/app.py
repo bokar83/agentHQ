@@ -282,6 +282,34 @@ async def startup_event():
     except Exception as e:
         logger.warning(f"story-prompt wake registration failed (non-fatal): {e}")
 
+    # Studio story bridge: seeds Story entries from Content Board into Pipeline DB every 6h.
+    try:
+        import heartbeat as _heartbeat
+        from studio_story_bridge import studio_story_bridge_tick
+        _heartbeat.register_wake(
+            "studio-story-bridge",
+            crew_name="studio",
+            callback=studio_story_bridge_tick,
+            every="6h",
+        )
+        logger.info("HEARTBEAT: studio-story-bridge registered (every 6h)")
+    except Exception as e:
+        logger.warning(f"studio-story-bridge wake registration failed (non-fatal): {e}")
+
+    # Griot Signal Brief: weekly Monday 09:00 MT theme detection + draft posts.
+    try:
+        import heartbeat as _heartbeat
+        from griot_signal_brief import griot_signal_brief_tick
+        _heartbeat.register_wake(
+            "griot-signal-brief",
+            crew_name="griot",
+            callback=griot_signal_brief_tick,
+            at="09:00",
+        )
+        logger.info("HEARTBEAT: griot-signal-brief registered (Monday 09:00 MT)")
+    except Exception as e:
+        logger.warning(f"griot-signal-brief wake registration failed (non-fatal): {e}")
+
     # Telegram polling in the background (hardened loop in handlers.py).
     asyncio.create_task(telegram_polling_loop())
     logger.info("Telegram Polling Loop scheduled.")
