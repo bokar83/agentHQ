@@ -90,7 +90,8 @@ def render_and_publish(
             logger.warning("render_publisher: %s render missing for %s", fmt, channel_id)
 
     primary_url = renders.get("shorts", renders.get("long_form", {})).get("drive_url", "")
-    notion_updated = _update_notion(notion_id, primary_url, dry_run)
+    x_caption = _generate_x_caption(composition, brand, dry_run)
+    notion_updated = _update_notion(notion_id, primary_url, dry_run, x_caption=x_caption)
     _notify_telegram(channel_id, notion_id, renders, dry_run, title=title)
     _notify_email(channel_id, notion_id, renders, dry_run)
 
@@ -406,10 +407,55 @@ def _upload_render(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# X caption generation
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _generate_x_caption(composition: dict, brand: dict, dry_run: bool) -> str:
+    """Generate a ≤240-char X-specific caption via LLM. Falls back to empty string."""
+    if dry_run:
+        return ""
+    title = composition.get("title", "")
+    hook = composition.get("hook", "")
+    channel_name = brand.get("display_name", "")
+    prompt = (
+        f"Write a punchy X (Twitter) caption for this short video. "
+        f"Max 240 characters including hashtags. No em-dashes. Direct, human, no fluff.\n\n"
+        f"Channel: {channel_name}\n"
+        f"Video title: {title}\n"
+        f"Hook: {hook}\n\n"
+        f"Output ONLY the caption text, nothing else."
+    )
+    try:
+        import httpx as _httpx
+        api_key = os.environ.get("OPENROUTER_API_KEY", "")
+        if not api_key:
+            return ""
+        resp = _httpx.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            json={
+                "model": "anthropic/claude-haiku-4-5",
+                "max_tokens": 100,
+                "messages": [{"role": "user", "content": prompt}],
+            },
+            timeout=20,
+        )
+        caption = resp.json()["choices"][0]["message"]["content"].strip()
+        # Hard cap at 240
+        if len(caption) > 240:
+            caption = caption[:237] + "..."
+        logger.info("render_publisher: X caption generated (%d chars)", len(caption))
+        return caption
+    except Exception as exc:
+        logger.warning("render_publisher: X caption generation failed: %s", exc)
+        return ""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Notion update
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _update_notion(notion_id: str, asset_url: str, dry_run: bool) -> bool:
+def _update_notion(notion_id: str, asset_url: str, dry_run: bool, *, x_caption: str = "") -> bool:
     if dry_run:
         logger.info("[dry_run] render_publisher: Notion update skipped for %s", notion_id)
         return True
@@ -417,6 +463,19 @@ def _update_notion(notion_id: str, asset_url: str, dry_run: bool) -> bool:
         logger.warning("render_publisher: Notion update skipped (missing token or id)")
         return False
     try:
+        props: dict = {
+            "Status": {"select": {"name": "scheduled"}},
+            "Asset URL": {"url": asset_url or None},
+            "Scheduled Date": {"date": {"start": datetime.now(timezone.utc).strftime("%Y-%m-%d")}},
+            "Platform": {"multi_select": [
+                {"name": "x"},
+                {"name": "Instagram"},
+                {"name": "tiktok"},
+                {"name": "YouTube"},
+            ]},
+        }
+        if x_caption:
+            props["X Caption"] = {"rich_text": [{"text": {"content": x_caption[:240]}}]}
         resp = httpx.patch(
             f"https://api.notion.com/v1/pages/{notion_id}",
             headers={
@@ -424,19 +483,7 @@ def _update_notion(notion_id: str, asset_url: str, dry_run: bool) -> bool:
                 "Notion-Version": "2022-06-28",
                 "Content-Type": "application/json",
             },
-            json={
-                "properties": {
-                    "Status": {"select": {"name": "scheduled"}},
-                    "Asset URL": {"url": asset_url or None},
-                    "Scheduled Date": {"date": {"start": datetime.now(timezone.utc).strftime("%Y-%m-%d")}},
-                    "Platform": {"multi_select": [
-                        {"name": "x"},
-                        {"name": "Instagram"},
-                        {"name": "tiktok"},
-                        {"name": "YouTube"},
-                    ]},
-                }
-            },
+            json={"properties": props},
             timeout=15,
         )
         resp.raise_for_status()
