@@ -2033,3 +2033,32 @@ OpenRouter ground-truth spend now visible on the Atlas dashboard. Hero Spend Pac
 1. Verify Studio activation: check Pipeline DB for our own qa-passed content with Asset URLs
 2. Confirm first Shorts posted on all 3 channels (UTB, FGM, AIC)
 3. M4 warm-up day 1 counter starts from first successful post
+
+---
+
+### 2026-05-06 (session final): Griot unified + pagination bug fixed
+
+**Critical bug fixed:**
+- `NotionClient.query_database()` was silently truncating at 100 records — no pagination.
+- Content Board has >100 records. auto_publisher, griot, story_bridge, signal_brief were all blind to anything past record #100.
+- Fix: loop on `has_more` + `next_cursor` until all pages fetched. Commit `3ab3fb8`.
+- Posts [LI] Post 1 + [X] Post 1 fired immediately after fix deployed.
+
+**Griot unified as social media command center:**
+- `publish_brief` retired as separate wake — merged pipeline summary into `griot_morning_tick`
+- Morning message (07:00 MT): pipeline summary only (today's auto-posts + week ahead + backlog count + hook per post). No buttons, no action needed.
+- On-demand proposals: "send me a post to work on" → Griot picks best Ready candidate, sends with Approve/Enhance/Reject buttons. No scheduled proposal trigger.
+- `griot_propose_on_demand()` added to griot.py. `griot_propose` task type + `build_griot_propose_crew` wired.
+- Proposal preview now shows Hook as lead line before full body.
+
+**publish_brief changes:**
+- Removed "Tap to publish" LinkedIn/X share intent URL — auto_publisher handles posting
+- Removed "Reply posted/skip" instruction — no longer needed
+- Retired as heartbeat wake — Griot morning message replaces it entirely
+
+**Final main SHA:** `9d48347`
+
+**Next session priorities:**
+1. Verify Studio activation (parallel session working on it)
+2. Confirm pagination fix didn't break any existing tests
+3. M4 warm-up: confirm first Studio Shorts posted on all 3 channels
