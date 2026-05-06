@@ -168,21 +168,15 @@ def _format_full_brief(today_iso: str, day_name: str, posts: list) -> list:
     for i, post in enumerate(posts, 1):
         body = post["draft"] or post["hook"] or "(no draft body)"
         platform = post["platform"]
-        publish_url = _publish_url(platform, body)
 
         lines = [
             f"{i}. {platform}: {post['title'][:80]}",
             "",
             body,
             "",
+            "Auto-posts via Blotato at next slot. No action needed.",
+            f"Notion: https://www.notion.so/{post['notion_id'].replace('-', '')}",
         ]
-        if publish_url:
-            lines.append(f"Tap to publish: {publish_url}")
-        else:
-            lines.append(f"(no share URL for platform {platform})")
-        lines.append("Reply `posted` or `skip` to mark this post.")
-        lines.append("")
-        lines.append(f"Notion: https://www.notion.so/{post['notion_id'].replace('-', '')}")
         messages.append("\n".join(lines))
     return messages
 
