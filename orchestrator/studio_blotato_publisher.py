@@ -71,6 +71,7 @@ PROP_POSTED_DATE = "Posted Date"
 PROP_POSTED_URL = "Posted URL"
 PROP_SUBMISSION_ID = "Submission ID"
 PROP_QA_NOTES = "QA notes"
+PROP_X_CAPTION = "X Caption"
 
 # Channel name → env-var channel code.
 _CHANNEL_CODE: dict[str, str] = {
@@ -256,6 +257,7 @@ def studio_blotato_publisher_tick(dry_run: bool = False) -> dict:
         channel = _prop_text(rec, PROP_CHANNEL)
         platforms = _prop_list(rec, PROP_PLATFORM)
         draft = _prop_text(rec, PROP_DRAFT)
+        x_caption = _prop_text(rec, PROP_X_CAPTION)
         asset_url = _prop_text(rec, PROP_ASSET_URL)
 
         if not platforms:
@@ -270,7 +272,7 @@ def studio_blotato_publisher_tick(dry_run: bool = False) -> dict:
             skipped += 1
             continue
 
-        text = draft or f"New content from {channel}."
+        default_text = draft or f"New content from {channel}."
         media_urls = [asset_url] if asset_url else []
 
         # Flip status once before iterating platforms (idempotency guard).
@@ -283,6 +285,13 @@ def studio_blotato_publisher_tick(dry_run: bool = False) -> dict:
                 continue
 
         for platform in platforms:
+            # Use X Caption for X/Twitter; fall back to draft for all others.
+            platform_lower = platform.lower()
+            if platform_lower in ("x", "twitter") and x_caption:
+                text = x_caption
+            else:
+                text = default_text
+
             account_id = _account_id_for(channel, platform)
             if not account_id:
                 env_key = _env_key_for(channel, platform)
