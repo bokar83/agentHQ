@@ -2,6 +2,8 @@
   "channel_id": "ai_catalyst",
   "display_name": "AI Catalyst",
   "voice_id": "KuCymRJ2M5Gs5LQIAbwJ",
+  "voice_id_male": "KuCymRJ2M5Gs5LQIAbwJ",
+  "voice_id_female": "KuCymRJ2M5Gs5LQIAbwJ",
   "tts_fallback": "kie_tts",
   "primary_color": "#2D1B8E",
   "accent_color": "#F26419",
