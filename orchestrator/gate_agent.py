@@ -325,6 +325,10 @@ def gate_tick() -> None:
         logger.debug("gate: disabled (gate.enabled=false in autonomy_state.json)")
         return
 
+    if not (REPO_DIR / ".git").exists():
+        logger.debug("gate: no .git at %s -- not a git repo (container context?), skipping", REPO_DIR)
+        return
+
     logger.info("gate: tick start")
 
     if not _fetch():
