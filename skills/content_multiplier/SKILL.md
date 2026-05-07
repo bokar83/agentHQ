@@ -17,6 +17,32 @@ ONE approved source → 9 atomic content pieces. Boubacar's lens, Boubacar's voi
 
 The remix mode is the difference between throwing away an unverifiable source and salvaging the salvageable concept. Boubacar's framing 2026-05-07: "the reason to go out there and get these ideas is not always cloning and copying word for word, but it's also generating ideas and using that as a spark to create something new and unique."
 
+## HARD RULES (lessons locked 2026-05-07)
+
+1. **Personal accounts NEVER auto-publish.** AIC X = `@boubacarbarry` (Boubacar's personal). AIC LinkedIn = his personal. Multiplier output to LinkedIn / X piece types lands as `Status=Idea` always. Only `video-UTB`, `video-1stGen`, `video-AIC` pieces auto-promote to `Status=Ready`. Faceless brand video posts to faceless brand accounts. Everything else = Griot promotes manually.
+
+2. **Cap pieces at 4. Floor at 1. Never force.** Lens classifier returns `recommended_piece_types` ranked. Crew honors ranking, truncates to `PIECE_CAP=4`. A thin source that yields 1 strong piece returns 1 piece. Forcing 9 every time produced repetition tax that killed iter 2-3 quality.
+
+3. **Voice + CTQ + brand-spine + voice-fingerprint are LOADED, not name-dropped.** A prompt that says "see skills/boub_voice_mastery/SKILL.md" is a string mention. Sonnet ignores it. Always load body verbatim via `_load_skill_md(name, env_var, fallback)` and embed with explicit delimiters (`=== BOUBACAR VOICE PROFILE START === ... === END ===`). Cache at module init.
+
+4. **Voice fingerprint markers (hidden factory, motion without momentum, the seam) are signature MOVES, not boilerplate.** Use sparingly. Anti-repetition scan: same marker in 2+ pieces of same run → drop duplicate. Brand-spine anchors (Guinea, white family, two worlds) are CONTEXT — inform the writing, almost never named directly.
+
+5. **Faceless channels (UTB / 1stGen) get NO biographical content.** No "I" first-person. Third-person storyteller (UTB) or teacher (1stGen) voice. Voice cadence rules apply, signature phrases banned. AIC = light POV (a consultant who has watched ops). Boubacar-personal = full voice + lived-experience access.
+
+6. **Channel routing:**
+   - UTB / 1stGen = video script ONLY (faceless brand, video-only)
+   - AIC = full personal-piece set + video-AIC
+   - Boubacar-personal = same as AIC minus video-AIC
+   - UTB-only or 1stGen-only sources NEVER produce LinkedIn / X / quote / newsletter
+
+7. **The 3-letter acronym for First Generation Money is BANNED in any output.** Always "1stGen" or "1stGen Money". CTQ filter blocks the literal (built from char-join so source itself never contains it). Channel code = `1stGen`.
+
+8. **Diversity penalty is mandatory.** First piece fires solo (sets anchor hook). Remaining pieces fire in parallel WITH diversity context (prior hooks visible). Pieces returning literal `SKIP_NO_NEW_ANGLE` are dropped, not paraphrased.
+
+9. **Path resolution must handle 3 layouts.** Local-dev (`<repo>/orchestrator/...`), container-mounted (`/app/orchestrator/...`), container-baked (`/app/...`). `_resolve_skill_dir` tries env var override → repo-relative → `/app/skills` → orchestrator-relative. Same pattern for SKILL.md loading.
+
+10. **Edit-time bar is the success criterion, not voice-clone perfection.** Boubacar's bar 2026-05-07: "70-80% voice fidelity = ship. Iter 4 graded ~76% = ship." Per-piece edit cost ~30-60s vs writing from scratch ~3-5min. Net-positive draft engine. Do NOT spend a session chasing 95% fidelity at the cost of M3.7.3 wiring.
+
 ## When to use
 
 Auto-fires on:
