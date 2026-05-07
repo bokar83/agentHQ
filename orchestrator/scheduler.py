@@ -265,6 +265,18 @@ def _run_daily_harvest():
     except Exception as e:
         logger.error(f"CRON: Critical failure in daily harvest: {e}")
 
+
+def _run_social_analytics():
+    """Daily refresh of social media post metrics and logging."""
+    logger.info("CRON: Starting Daily Social Analytics Refresh...")
+    try:
+        from social_analytics import run_pull_social_analytics
+        result = run_pull_social_analytics()
+        logger.info(f"CRON: Social Analytics refresh complete: {result}")
+    except Exception as e:
+        logger.error(f"CRON: Social Analytics refresh failed: {e}")
+
+
 def _scheduler_loop():
     """
     Check the time every minute and trigger if it matches the target.
@@ -286,6 +298,7 @@ def _scheduler_loop():
                 _run_kpi_refresh()
                 _run_notion_sync()
                 _run_daily_harvest()
+                _run_social_analytics()
                 last_run_date = now.date()
 
         # NotebookLM digest at 08:30 AM MT
