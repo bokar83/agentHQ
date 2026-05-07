@@ -504,6 +504,7 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 - **Studio batch send:** successfully marked 50 morning drafts (15 Catalyst Works + 35 Signal Works) as sent/messaged in Supabase and fully synced all 50 to Notion CRM Leads database via autonomous agentsHQ `mark_outreach_sent` crew.
 - Full asset inventory (54 rows) in Notion Forge 2.0 Asset Register + Weekly Asset Review ritual + New Asset Rule gate
 - Hotel Club de Kipe full rebuild spec at `docs/handoff/hotelclubkipe-rebuild-prompt.md`
+- **HCK staff portal BUILT + PUSHED 2026-05-07** — login, dashboard (weekly 12-room grid), monthly calendar, clients, invoices (print + history + cancel/archive with notes), admin (settings + tarifs). Supabase live. RLS fixed. Repo: bokar83/hotelclubkipe-site. Go-live pending: delete TEST_ data, deploy to Hostinger, wire public booking form.
 - Traffic strategy Sankofa-reviewed for 3 assets: geolisted.co (SW $997), catalystworks.consulting (CW $3,500), calculatorz.tools (AdSense)
 - Marketing plan email sent to both addresses
 - Listmonk deployed as Beehiiv replacement; Issue 3 written, designed, sent, archived
