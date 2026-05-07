@@ -29,23 +29,54 @@ import psycopg2.extras
 
 
 def _connect():
+    import logging
+    logger = logging.getLogger("agentsHQ.coordination")
     dsn = (
         os.environ.get("TEST_COORD_DSN")
         or os.environ.get("POSTGRES_DSN")
         or os.environ.get("SUPABASE_DB_URL")
     )
-    if dsn:
-        return psycopg2.connect(dsn)
     host = os.environ.get("POSTGRES_HOST")
     user = os.environ.get("POSTGRES_USER")
     pw = os.environ.get("POSTGRES_PASSWORD")
     db = os.environ.get("POSTGRES_DB")
-    if host and user and pw and db:
-        return psycopg2.connect(host=host, user=user, password=pw, dbname=db)
-    raise RuntimeError(
-        "Set TEST_COORD_DSN, POSTGRES_DSN, or all of "
-        "POSTGRES_HOST/USER/PASSWORD/DB"
-    )
+
+    def _try_conn():
+        if dsn:
+            return psycopg2.connect(dsn)
+        if host and user and pw and db:
+            return psycopg2.connect(host=host, user=user, password=pw, dbname=db)
+        raise RuntimeError(
+            "Set TEST_COORD_DSN, POSTGRES_DSN, or all of "
+            "POSTGRES_HOST/USER/PASSWORD/DB"
+        )
+
+    try:
+        return _try_conn()
+    except psycopg2.OperationalError as exc:
+        is_local = False
+        if dsn and ("localhost" in dsn or "127.0.0.1" in dsn):
+            is_local = True
+        elif host and (host == "localhost" or host == "127.0.0.1"):
+            is_local = True
+
+        if os.name == "nt" and is_local:
+            try:
+                import subprocess
+                import time
+                logger.info("Local Postgres connection failed. Attempting to auto-establish SSH tunnel to VPS...")
+                subprocess.Popen(
+                    ["ssh", "-L", "5432:localhost:5432", "root@72.60.209.109", "-N", "-f", "-o", "ExitOnForwardFailure=yes"],
+                    shell=True,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
+                )
+                time.sleep(2.0)
+                return _try_conn()
+            except Exception as tunnel_exc:
+                logger.warning("SSH auto-tunnel attempt failed: %s", tunnel_exc)
+                raise exc
+        raise exc
 
 
 def init_schema() -> None:
