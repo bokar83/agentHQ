@@ -208,7 +208,9 @@ def add_lead(lead_data: dict) -> int:
         conn.close()
 
         log_interaction(lead_id, 'discovery', f"Lead found via {lead_data.get('source', 'Hunter')}")
-        _sync_lead_to_notion(lead_data, lead_id)
+        # Notion CRM live write bypassed (severing in progress)
+        logger.info(f"Notion CRM live write bypassed for lead: {lead_data.get('name')} (severing in progress)")
+        # _sync_lead_to_notion(lead_data, lead_id)
         return lead_id
 
     except Exception as e:
@@ -392,10 +394,11 @@ def mark_outreach_sent() -> dict:
         cur.close()
         conn.close()
 
-        # Sync each lead to Notion
-        notion_date = now.strftime("%Y-%m-%d")
-        for r in rows:
-            _sync_lead_status_to_notion(r["name"], "contacted", notion_date)
+        # Sync each lead to Notion - bypassed (severing in progress)
+        # notion_date = now.strftime("%Y-%m-%d")
+        # for r in rows:
+        #     _sync_lead_status_to_notion(r["name"], "contacted", notion_date)
+        logger.info(f"Notion CRM status sync bypassed for {len(rows)} leads (severing in progress)")
 
         return {"marked": len(rows), "leads": rows}
     except Exception as e:

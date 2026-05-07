@@ -30,6 +30,9 @@ TARGET_HOUR = 6
 TARGET_MINUTE = 0
 TIMEZONE = os.environ.get("GENERIC_TIMEZONE", "America/Denver")
 
+# Subprocess creation flags to suppress console window flashing on Windows
+SUBPROCESS_FLAGS = 0x08000000 if sys.platform == "win32" else 0
+
 def _send_telegram_alert(message: str):
     """Send a Telegram message to the owner as a dead-man's switch alert."""
     try:
@@ -296,7 +299,8 @@ def _scheduler_loop():
             if last_run_date != now.date():
                 _run_quote_rotation()
                 _run_kpi_refresh()
-                _run_notion_sync()
+                # Notion CRM sync bypassed (severing in progress)
+                # _run_notion_sync()
                 _run_daily_harvest()
                 _run_social_analytics()
                 last_run_date = now.date()
@@ -375,6 +379,7 @@ def _run_pending_email_jobs():
                     text=True,
                     timeout=30,
                     env={**os.environ},
+                    creationflags=SUBPROCESS_FLAGS,
                 )
                 if result.returncode != 0:
                     error_msg = (result.stderr or result.stdout or "unknown error")[:500]
@@ -755,8 +760,10 @@ def start_scheduler():
     sync_thread = threading.Thread(target=_periodic_sync, daemon=True)
     sync_thread.start()
 
-    listen_thread = threading.Thread(target=_listen_for_supabase_changes, daemon=True)
-    listen_thread.start()
+    # Notion CRM listen_thread bypassed (severing in progress)
+    # listen_thread = threading.Thread(target=_listen_for_supabase_changes, daemon=True)
+    # listen_thread.start()
+    logger.info("LISTEN: Supabase leads change listener thread bypassed (severing in progress).")
 
     if os.environ.get("DRIVE_WATCH_ENABLED", "false").lower() == "true":
         drive_watch_thread = threading.Thread(target=_drive_watch_loop, daemon=True)
@@ -784,8 +791,8 @@ def _periodic_sync():
         if now.hour in notion_sync_hours:
             last = last_notion_sync_date.get(now.hour)
             if last != now.date():
-                logger.info(f"NOTION SYNC: Scheduled sync at {now.hour:02d}:00 MT")
-                _run_notion_sync()
+                logger.info(f"NOTION SYNC: Scheduled sync at {now.hour:02d}:00 MT bypassed (severing in progress)")
+                # _run_notion_sync()
                 last_notion_sync_date[now.hour] = now.date()
 
 
@@ -900,6 +907,7 @@ def _run_drive_watch(scan_all: bool = False):
             ["gws", "drive", "files", "list", "--params", _json.dumps(query_params)],
             capture_output=True, text=True, timeout=30,
             env={**os.environ},
+            creationflags=SUBPROCESS_FLAGS,
         )
         raw = list_result.stdout.strip()
         if not raw:
@@ -977,6 +985,7 @@ def _run_drive_watch(scan_all: bool = False):
                         ["gws", "drive", "files", "export", "--params", _json.dumps(export_params)],
                         capture_output=True, text=True, timeout=30,
                         env={**os.environ},
+                        creationflags=SUBPROCESS_FLAGS,
                     )
                     extracted_text = (export_result.stdout or "")[:2000]
                 except Exception as e:
