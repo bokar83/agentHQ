@@ -151,14 +151,14 @@ def _run_cw_until(target: int, dry_run: bool = False) -> int:
     CW topup_cw_leads.topup_cw() already requires email (line 108-109),
     so all saves count toward the email target.
     """
-    from signal_works.topup_cw_leads import topup_cw
+    from signal_works.topup_cw_leads import topup_cw_leads
     before = _count_today_cw_with_email()
     needed = max(0, target - before)
     if needed == 0:
         logger.info(f"CW already at {before}/{target} with email. Skipping.")
         return 0
     logger.info(f"CW: have {before}/{target} with email. Hunting {needed} more...")
-    saved = topup_cw(minimum=needed, dry_run=dry_run)
+    saved = topup_cw_leads(minimum=needed, dry_run=dry_run)
     after = _count_today_cw_with_email()
     delta = max(0, after - before)
     logger.info(f"CW: ran for {needed}, saved {saved} email-verified")
