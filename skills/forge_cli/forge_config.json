@@ -1,0 +1,16 @@
+{
+  "quotes_callout_id": "774fca87-237d-4633-b896-8c634637f178",
+  "streak_callout_id": "4c9c82dc-003e-463d-a67c-b6e61a7961c7",
+  "motivation_callout_id": "d36f2944-cfd0-425f-953f-36daa06d51b8",
+  "phase_callout_id": "7db9f962-94ea-4c1b-ba85-38ca53186986",
+  "week_grid_ids": {
+    "monday": "9bbfcb39-1970-4efb-8d88-a4269ba72d15",
+    "tuesday": "c0b7cfe4-49ce-438b-b4d1-87c46fc36dde",
+    "wednesday": "8a6c6ee1-0c56-4c75-a156-ba71bd0455cc",
+    "thursday": "8574f0f3-04e7-4f50-8343-87e6e59fc7d6",
+    "friday": "37d160f3-8f58-4907-9997-b9f3f6fa5efc"
+  },
+  "system_config_db_id": "339bcf1a-3029-817c-8875-ce0cbd13bc71",
+  "weekly_review_template_id": "339bcf1a-3029-81a2-9794-ec78fb5839ba",
+  "monthly_review_template_id": "339bcf1a-3029-819a-a298-f33eb858dd0a"
+}
