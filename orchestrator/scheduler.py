@@ -299,8 +299,6 @@ def _scheduler_loop():
             if last_run_date != now.date():
                 _run_quote_rotation()
                 _run_kpi_refresh()
-                # Notion CRM sync bypassed (severing in progress)
-                # _run_notion_sync()
                 _run_daily_harvest()
                 _run_social_analytics()
                 last_run_date = now.date()
@@ -329,22 +327,6 @@ def _run_supabase_sync():
             logger.info(f"Sync: moved {synced} fallback lead(s) to Supabase.")
     except Exception as e:
         logger.error(f"Supabase sync failed: {e}")
-
-
-def _run_notion_sync():
-    """
-    Sync all Supabase leads into the Notion CRM Leads database.
-    Triggered by Supabase LISTEN/NOTIFY on lead changes, with 10am/1pm MT fallback.
-    """
-    try:
-        import sys
-        if "/app" not in sys.path:
-            sys.path.insert(0, "/app")
-        from db import sync_supabase_to_notion
-        synced = sync_supabase_to_notion()
-        logger.info(f"NOTION SYNC: {synced} lead(s) synced to Notion CRM.")
-    except Exception as e:
-        logger.error(f"NOTION SYNC: Failed: {e}")
 
 
 def _run_pending_email_jobs():
@@ -760,11 +742,6 @@ def start_scheduler():
     sync_thread = threading.Thread(target=_periodic_sync, daemon=True)
     sync_thread.start()
 
-    # Notion CRM listen_thread bypassed (severing in progress)
-    # listen_thread = threading.Thread(target=_listen_for_supabase_changes, daemon=True)
-    # listen_thread.start()
-    logger.info("LISTEN: Supabase leads change listener thread bypassed (severing in progress).")
-
     if os.environ.get("DRIVE_WATCH_ENABLED", "false").lower() == "true":
         drive_watch_thread = threading.Thread(target=_drive_watch_loop, daemon=True)
         drive_watch_thread.start()
@@ -776,57 +753,11 @@ def start_scheduler():
 def _periodic_sync():
     """
     Run Supabase fallback sync every 30 minutes (local Postgres -> Supabase).
-    Run Notion CRM sync at 10am and 1pm MT as scheduled fallback.
-    Primary Notion sync is triggered by Supabase LISTEN notifications.
     """
-    tz = pytz.timezone(TIMEZONE)
-    notion_sync_hours = {10, 13}  # 10am and 1pm MT
-    last_notion_sync_date = {}  # hour -> date last synced
-
     while True:
-        time.sleep(60)  # check every minute
+        time.sleep(60)
         _run_supabase_sync()
 
-        now = datetime.now(tz)
-        if now.hour in notion_sync_hours:
-            last = last_notion_sync_date.get(now.hour)
-            if last != now.date():
-                logger.info(f"NOTION SYNC: Scheduled sync at {now.hour:02d}:00 MT bypassed (severing in progress)")
-                # _run_notion_sync()
-                last_notion_sync_date[now.hour] = now.date()
-
-
-def _listen_for_supabase_changes():
-    """
-    Listen on the Supabase 'leads_changed' channel via Postgres LISTEN/NOTIFY.
-    Triggers a Notion sync whenever a lead is inserted or updated.
-    Reconnects automatically on failure.
-    """
-    import select as _select
-    import sys
-    if "/app" not in sys.path:
-        sys.path.insert(0, "/app")
-
-    logger.info("LISTEN: Starting Supabase leads change listener.")
-    while True:
-        try:
-            from db import get_crm_connection
-            conn = get_crm_connection()
-            conn.set_isolation_level(0)  # autocommit required for LISTEN
-            cur = conn.cursor()
-            cur.execute("LISTEN leads_changed;")
-            logger.info("LISTEN: Subscribed to leads_changed channel.")
-
-            while True:
-                if _select.select([conn], [], [], 60)[0]:
-                    conn.poll()
-                    while conn.notifies:
-                        notify = conn.notifies.pop(0)
-                        logger.info(f"LISTEN: leads_changed notification received: {notify.payload}")
-                        _run_notion_sync()
-        except Exception as e:
-            logger.error(f"LISTEN: Supabase listener error: {e}. Reconnecting in 30s.")
-            time.sleep(30)
 
 # ---------------------------------------------------------------------------
 # Drive Watch -- NotebookLM document ingestion poller

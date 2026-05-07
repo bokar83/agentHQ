@@ -547,6 +547,44 @@ Answer two questions before writing any code:
 
 ---
 
+### M19: Atlas CRM Dashboard (`/crm`) ⏳ QUEUED
+
+**What:** Replace the (sunset) Notion CRM Leads database with a native Atlas-page sales board, served at `/crm`. Pulls directly from Supabase `leads` table. Read + lightweight write (status updates, notes append). No external sync.
+
+**Why:** Notion CRM Leads sync was severed on 2026-05-07 (sync code deleted from `crm_tool.py`, `scheduler.py`, `db.py`; parity audit at `docs/audits/notion_sever_parity_2026-05-07.md`). Supabase is now the sole system of record for leads. Atlas needs a visual surface so Boubacar (and crews) can see the pipeline without cracking open psql.
+
+**Endpoints (proposed):**
+
+- `GET /atlas/crm/board` → pipeline counts by status + "leads needing outreach today" list
+- `GET /atlas/crm/leads/<id>` → single-lead detail (interactions timeline)
+- `POST /atlas/crm/leads/<id>/note` → append free-text note
+- `POST /atlas/crm/leads/<id>/status` → status transition with audit row
+
+**"Needs outreach today" predicate (proposed, confirm before build):**
+
+```sql
+WHERE status = 'new'
+   OR (status IN ('messaged', 'replied')
+       AND last_contacted_at < NOW() - INTERVAL '7 days')
+```
+
+**Success criteria:**
+
+- P50 latency `<200ms` on `/atlas/crm/board`
+- Row count on board matches `SELECT COUNT(*) FROM leads`
+- CRM block wired into morning_digest (counts + today's outreach list)
+
+**Trigger gate:**
+
+1. Notion CRM DB archived (manual, by Boubacar, in Notion UI)
+2. Predicate for "needs outreach today" confirmed
+3. No new Notion-only orphans surfaced post-2026-05-07 audit
+
+**Branch:** `feat/atlas-m19-crm-dashboard` (create when gate clears)
+**ETA:** 0.5 day endpoint + 0.5 day morning_digest wire-in.
+
+---
+
 ## Descoped Items
 
 These are explicit "do not build" decisions with reasons, so we don't relitigate.

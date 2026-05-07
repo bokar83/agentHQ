@@ -548,25 +548,25 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 
 ---
 
-### R-notion-sever: Severing Notion-Supabase CRM Link and Archiving Notion DB (Active)
+### R-notion-sever: Severing Notion-Supabase CRM Link and Archiving Notion DB (Sync Code Deleted)
 
-**Status:** In Progress (Active Writes Deactivated 2026-05-07)
+**Status:** Sync code DELETED 2026-05-07. Supabase = sole CRM system of record.
 **Trigger:** Notion API performance slowdowns, full-table scan delays, and sync timeouts.
 
 **Milestones & Tasks:**
-- `[ ]` **Build Standalone CRM Dashboard in Atlas (Step 2)** — Create an elegant, premium, and interactive HTML CRM view in the local Atlas UI.
-  - Design dynamic list and Kanban boards for leads.
-  - Implement fast, client-side filtering and real-time state updates using Supabase data.
-  - Adhere to "Humanized Standard" styling with smooth micro-animations.
-- `[ ]` **Sunset & Archive Notion Leads Database (Step 3)** — Prepare the Notion dashboard pages for transition.
-  - Archive the existing entries from the Notion CRM database.
-  - Keep Notion dashboard pages unmodified for now, eventually deleting the database entirely once the Atlas visual dashboard is mature.
-- `[ ]` **Clean up Decommissioned Code (Step 4)** — Safely remove old Notion helper functions (`_sync_lead_to_notion`, `_sync_lead_status_to_notion`) and any unused scheduler methods to avoid code bloat.
+
+- `[x]` **Step 1 — Sever live writes (2026-05-07).** Bypass guards landed in `crm_tool.py`, `scheduler.py`, `db.py`.
+- `[x]` **Step 2 — Delete sync code (2026-05-07).** Removed `_sync_lead_to_notion`, `_sync_lead_status_to_notion`, `_run_notion_sync`, `_listen_for_supabase_changes`, `sync_supabase_to_notion`. No flag, no commented blocks, no zombie functions. Single source of truth: Supabase.
+- `[x]` **Step 3 — Parity audit (2026-05-07).** Ran `scripts/reconcile_leads_one_shot.py` inside `orc-crewai`. Report at `docs/audits/notion_sever_parity_2026-05-07.md`. Findings: 0 Notion-only orphans (no backfill needed). 1,670 Supabase-only leads (expected post-sever). 2,024 status drift rows (Notion stale because writes were already off — also expected, no action).
+- `[ ]` **Step 4 — Archive Notion CRM DB (manual, by Boubacar).** Archive in Notion UI when ready. Eventually delete entirely.
+- `[ ]` **Step 5 — Build replacement Atlas `/crm` dashboard.** Tracked as **Atlas M19** (`docs/roadmap/atlas.md`). No longer blocking sever.
 
 **Success Criterion:**
-- Notion API timeouts completely eliminated from daily outreach operations.
-- High-craft, performant, and interactive CRM dashboard successfully integrated into the local Atlas UI.
-- All Notion Leads database pages cleanly archived and deleted.
+
+- ✅ Zero Notion API write traffic from CRM Leads code path.
+- ✅ Supabase confirmed sole system of record (parity audit).
+- ⏳ Notion CRM DB archived in Notion UI (manual).
+- ⏳ Atlas `/crm` dashboard live (tracked under Atlas M19).
 
 ---
 
@@ -579,6 +579,19 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 ---
 
 ## Session Log
+
+### 2026-05-07 — Notion CRM Sync DELETED + Parity Audit + Atlas M19 Queued
+
+**Completed (later session, post-Sankofa + Karpathy review):**
+
+- **Deleted lead-sync code outright** (rejected the multi-week phased plan; collapsed to one-day cleanup):
+  - `skills/local_crm/crm_tool.py`: removed `_sync_lead_to_notion`, `_sync_lead_status_to_notion`, `_notion_headers`, `_NOTION_DB_ID/_NOTION_API/_NOTION_VERSION` constants, `import httpx`, `import os`, all bypass-log lines.
+  - `orchestrator/scheduler.py`: removed `_run_notion_sync`, `_listen_for_supabase_changes`, listen_thread spawn block, `notion_sync_hours`/`last_notion_sync_date` from `_periodic_sync`, all commented-out callsites.
+  - `orchestrator/db.py`: removed `sync_supabase_to_notion` (entire 184-line function).
+  - `orchestrator/tools.py`: cleaned stale "auto-sync to Notion" docstring on `CRMAddLeadTool`.
+- **Parity audit:** Wrote `scripts/reconcile_leads_one_shot.py` (in repo, not scratch). Ran inside `orc-crewai` container. Report committed: `docs/audits/notion_sever_parity_2026-05-07.md`. **Result: 0 Notion-only orphans, 1,670 Supabase-only (expected), 2,024 status drift (expected, Notion stale).**
+- **Atlas M19 queued:** New milestone "Atlas CRM Dashboard (`/crm`)" added to `docs/roadmap/atlas.md`. Replaces Notion CRM as the visual sales board. Trigger gate: Notion DB archived + predicate confirmed.
+- **No flag, no phased migration, no compatibility shim.** Supabase is now the sole CRM system of record. Code no longer references Notion CRM Leads DB at all.
 
 ### 2026-05-07 — Severing Notion CRM Sync & System Lockout Resolution
 

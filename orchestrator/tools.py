@@ -24,6 +24,10 @@ import sys
 import json
 import logging
 import subprocess
+import sys
+
+# Subprocess creation flags to suppress console window flashing on Windows
+SUBPROCESS_FLAGS = 0x08000000 if sys.platform == "win32" else 0
 import httpx
 from datetime import datetime
 from typing import Any, Optional
@@ -172,6 +176,7 @@ class LaunchVercelAppTool(BaseTool):
                 text=True,
                 cwd=base_dir,
                 timeout=300,
+                creationflags=SUBPROCESS_FLAGS,
             )
             if result.returncode != 0:
                 error_msg = f"Error launching app:\nSTDOUT: {result.stdout}\nSTDERR: {result.stderr}"
@@ -1441,10 +1446,10 @@ class CRMRevealEmailTool(BaseTool):
 
 
 class CRMAddLeadTool(BaseTool):
-    """Adds a newly discovered lead to Supabase and syncs to Notion."""
+    """Adds a newly discovered lead to Supabase."""
     name: str = "add_lead"
     description: str = (
-        "Add a discovered lead to the Supabase CRM and auto-sync to Notion CRM Leads. "
+        "Add a discovered lead to the Supabase CRM. "
         "Input: JSON dict with name, company, title, location, linkedin_url, industry, source. "
         "Also logs a discovery interaction in lead_interactions automatically."
     )
@@ -1939,7 +1944,8 @@ class QueryAudienceEngineTool(BaseTool):
             result = subprocess.run(
                 [NLM_BIN, "query", "notebook", AUDIENCE_ENGINE_NOTEBOOK_ID, question,
                  "--json"],
-                capture_output=True, text=True, env=env, timeout=120
+                capture_output=True, text=True, env=env, timeout=120,
+                creationflags=SUBPROCESS_FLAGS,
             )
             if result.returncode != 0:
                 err = result.stderr.strip()
