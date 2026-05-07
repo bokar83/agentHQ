@@ -85,6 +85,27 @@ Follows the same pattern as websites:
 - `boubacarbarry-site`, `catalystworks-site` → websites
 - `attire-inspo-app`, `budget-tracker-app` → apps
 
+## Token Auth (no interactive login)
+
+When `vercel login` is unavailable (CI, sandbox, VPS), use token auth:
+
+```bash
+# NEVER pass as --token flag (exposed in shell history)
+export VERCEL_TOKEN=$(grep '^VERCEL_TOKEN=' .env | cut -d= -f2-)
+vercel deploy -y --no-wait
+```
+
+If `VERCEL_ORG_ID` + `VERCEL_PROJECT_ID` are both set, no linking step needed.
+
+## Managing Env Vars
+
+```bash
+echo "value" | vercel env add VAR_NAME --scope <team-slug>
+vercel env ls --scope <team-slug>
+vercel env pull --scope <team-slug>   # pull to local .env
+vercel env rm VAR_NAME --scope <team-slug> -y
+```
+
 ## Troubleshooting
 
 **Token not found:** Check that `VERCEL_TOKEN=...` exists in `$AGENTS_ROOT/.env`
@@ -94,3 +115,5 @@ Follows the same pattern as websites:
 **Vercel link fails:** Try running `vercel login --token $VERCEL_TOKEN` manually, then retry
 
 **Push rejected:** SSH key may not be set up for GitHub. Run `gh auth setup-git` to configure HTTPS fallback
+
+**Build failure:** `vercel logs <deployment-url>` — common causes: missing deps, missing env vars, wrong framework in `vercel.json`

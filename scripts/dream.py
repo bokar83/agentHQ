@@ -419,6 +419,8 @@ def main():
     parser = argparse.ArgumentParser(description="Local Dreams-style memory consolidation")
     parser.add_argument("--apply", action="store_true",
                         help="Implement approved proposal")
+    parser.add_argument("--reject", action="store_true",
+                        help="Discard current proposal, clear dream-output/")
     parser.add_argument("--status", action="store_true",
                         help="Show current proposal status")
     parser.add_argument("--sessions", type=int, default=30, metavar="N",
@@ -427,6 +429,12 @@ def main():
 
     if args.apply:
         run_apply()
+    elif args.reject:
+        if OUTPUT_DIR.exists():
+            shutil.rmtree(OUTPUT_DIR)
+            print("Dream rejected. dream-output/ cleared. Memory store unchanged.")
+        else:
+            print("No active proposal to reject.")
     elif args.status:
         run_status()
     else:
