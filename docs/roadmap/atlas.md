@@ -15,20 +15,18 @@
 
 ## Session-Start Cheat Block (read this first)
 
-Last session ended **2026-04-25 (evening)**. State at close:
+Last session ended **2026-05-06 (evening)**. State at close:
 
-- **Three-way nsync at `75e1c71`** (local + origin + VPS)
-- **M1 SHIPPED**, **M2 SHIPPED**, both verified live in container
-- **M7 split** into M7a (decision spike, prep at `docs/roadmap/atlas/m7a-decision-spike.md`) + M7b (build, blocked on M7a)
-- **Scheduled remote agent** `trig_015aDdXmiTAowm1HVkwQydnT` armed for 2026-04-27 09:00 MT, writes `docs/handoff/2026-04-27-atlas-m1-verification.md`
-- **Studio roadmap** (`docs/roadmap/studio.md`) is sibling project, runs in a SEPARATE Claude Code instance; do not pivot here
+- **Three-way nsync at `d83ad45`** (local + origin -- VPS pull pending Gate)
+- **Morning digest extended:** `griot_morning_tick` now sends outreach metrics + spend today/WTD/MTD + top 3 Execution Cycle tasks via Telegram + HTML email every weekday morning
+- **Skill portfolio reduced:** 74 -> 68 skills. 6 archived (deploy-to-vercel, vercel-cli-with-tokens, cold-outreach, banner-design, slides, linkedin_mvm). 6 agent-internal SKILL.md descriptions fixed.
+- **Hard rule added to memory:** grep orchestrator + signal_works before archiving any skills directory
 
 **Default next moves (in priority order):**
 
-1. Read `docs/handoff/2026-04-27-atlas-m1-verification.md` if Monday has passed
-2. Manual VPS check: `ssh root@agentshq.boubacarbarry.com 'docker logs orc-crewai --since 6h | grep -E "publish_brief|griot_morning"'`
-3. M7a if Boubacar signed up for the Blotato trial (decision matrix in m7a doc)
-4. M3-M6 only when their date/data triggers hit (see milestone block)
+1. Verify morning digest fires correctly tomorrow at 07:30 MT (check Telegram + email)
+2. If digest missing: `docker logs orc-crewai | grep griot_morning` on VPS
+3. M18 HALO unlock: instrument Atlas heartbeat with tracing.py + 50 traces by 2026-05-18
 
 **Do not start a new milestone without reading the latest Session Log entry below.**
 
@@ -2106,3 +2104,27 @@ OpenRouter ground-truth spend now visible on the Atlas dashboard. Hero Spend Pac
 1. Verify Studio activation (parallel session working on it)
 2. Confirm pagination fix didn't break any existing tests
 3. M4 warm-up: confirm first Studio Shorts posted on all 3 channels
+
+### 2026-05-06 (evening): Sankofa skill audit + morning digest upgrade
+
+**Sankofa Council + 30-day pattern audit ran.** Reviewed all memory entries, 80+ handoff docs, 74 skills, VPS scripts and cron jobs.
+
+**Morning digest upgraded (`orchestrator/griot.py`):**
+- `_ops_digest_text()` function added. Fires inside `griot_morning_tick()` after content pipeline summary.
+- Telegram: second block with outreach step results (SW/CW), spend today/WTD/MTD, top 3 Execution Cycle tasks due this week.
+- HTML email: same ops data sent to bokar83@gmail.com + boubacar@catalystworks.consulting via `notifier.send_email(html=True)`.
+- Data sources: `pipeline_metrics` table, `atlas_dashboard._spend_aggregates()`, Notion EC DB `358bcf1a`.
+- Commit `10244ea` on VPS.
+
+**Skill portfolio: 74 -> 68:**
+- 6 archived to `zzzArchive/2026-05-06-skill-consolidation/`: deploy-to-vercel, vercel-cli-with-tokens, cold-outreach, banner-design, slides, linkedin_mvm.
+- cold-outreach reply-first rules + 3/5-day sequence merged into hormozi-lead-gen.
+- vercel-launch absorbs token auth + env var sections from archived Vercel skills.
+- 6 "stub" skill directories (outreach, forge_cli, email_enrichment, github_skill, local_crm, notion_skill) had active Python imports -- kept, SKILL.md descriptions updated to say "Agent-internal only."
+- Hard rule added to memory: grep orchestrator + signal_works before archiving any skill directory.
+
+**Final main SHA:** `d83ad45`
+
+**Next session priorities:**
+1. Verify morning digest fires tomorrow 07:30 MT (Telegram + email)
+2. M18 HALO: instrument heartbeat with tracing.py + 50 traces by 2026-05-18
