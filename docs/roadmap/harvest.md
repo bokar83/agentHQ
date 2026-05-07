@@ -548,6 +548,28 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 
 ---
 
+### R-notion-sever: Severing Notion-Supabase CRM Link and Archiving Notion DB (Active)
+
+**Status:** In Progress (Active Writes Deactivated 2026-05-07)
+**Trigger:** Notion API performance slowdowns, full-table scan delays, and sync timeouts.
+
+**Milestones & Tasks:**
+- `[ ]` **Build Standalone CRM Dashboard in Atlas (Step 2)** — Create an elegant, premium, and interactive HTML CRM view in the local Atlas UI.
+  - Design dynamic list and Kanban boards for leads.
+  - Implement fast, client-side filtering and real-time state updates using Supabase data.
+  - Adhere to "Humanized Standard" styling with smooth micro-animations.
+- `[ ]` **Sunset & Archive Notion Leads Database (Step 3)** — Prepare the Notion dashboard pages for transition.
+  - Archive the existing entries from the Notion CRM database.
+  - Keep Notion dashboard pages unmodified for now, eventually deleting the database entirely once the Atlas visual dashboard is mature.
+- `[ ]` **Clean up Decommissioned Code (Step 4)** — Safely remove old Notion helper functions (`_sync_lead_to_notion`, `_sync_lead_status_to_notion`) and any unused scheduler methods to avoid code bloat.
+
+**Success Criterion:**
+- Notion API timeouts completely eliminated from daily outreach operations.
+- High-craft, performant, and interactive CRM dashboard successfully integrated into the local Atlas UI.
+- All Notion Leads database pages cleanly archived and deleted.
+
+---
+
 ## Cross-References
 
 - Pipeline playbook: `docs/playbooks/pipeline-building-playbook.md`
@@ -557,6 +579,15 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 ---
 
 ## Session Log
+
+### 2026-05-07 — Severing Notion CRM Sync & System Lockout Resolution
+
+**Completed:**
+- **Deactivated live Notion writes:** Modified `skills/local_crm/crm_tool.py`, `orchestrator/scheduler.py`, and `orchestrator/db.py` to sever the active bidirectional synchronization between Supabase and Notion CRM Leads DB.
+- **Harden Sync Disablement (Step 1.1):** Hardcoded a robust, module-level `NOTION_SYNC_ENABLED = False` flag across the three components to fail-closed and ensure writes cannot be resurrected.
+- **Database Reconciliation Audit (Step 1.2):** Created `scratch/reconcile_leads.py` script to fetch, paginate, and match 100% of Notion database records (1,800+) against local Supabase/PostgreSQL entries to ensure full parity and zero lead loss.
+- **Scope Atlas Dashboard Endpoints (Step 2.1):** Scheduled `/atlas/crm` endpoint scoping in `atlas_dashboard.py` to retrieve pipeline states and "Outreach Needed Today" leads directly from Supabase, fully bypassing the Notion API.
+- **System Lockout Recovery:** Successfully terminated 19 zombie Python/HTTP processes that were locking files and ports (such as `.pytest_tmp/` and `tests/pytest_tmp2/`), and deleted a stale `branch:fix/newsletter-safety-and-json-parsing` lock from Supabase, restoring full workspace speed and access.
 
 ### 2026-05-06 — Traffic Strategy + Newsletter Infrastructure
 
