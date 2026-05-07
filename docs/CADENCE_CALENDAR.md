@@ -20,6 +20,7 @@ Last updated: 2026-05-06
 | 06:00 | KPI refresh | Background | No | scheduler.py daily cron |
 | 06:00 | Notion lead sync (Supabase -> Notion CRM, ~960 leads) | Background | No | scheduler.py daily cron |
 | 06:00 | Daily Lead Harvest (hunter_crew, Utah SMB sweep) | Background | No | scheduler.py daily cron |
+| 06:00 | Social Media Engagement Refresh (X & LinkedIn metrics) | Background | No | scheduler.py daily cron |
 | 06:00 | NLM registry export (Postgres -> Sheets) | Background | No | VPS crontab |
 | 07:00 | heartbeat-morning self-test ping | Background | No | scheduler.py |
 | 13:00 | heartbeat-midday self-test ping | Background | No | scheduler.py |
