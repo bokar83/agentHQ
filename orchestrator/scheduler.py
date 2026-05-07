@@ -215,7 +215,7 @@ def _run_daily_harvest():
     log_for_remoat("\U0001f680 Starting Daily Ignition (Lead Harvest)...", "PROGRESS")
     logger.info("CRON: Starting Daily Lead Harvest...")
 
-    task_request = "Find 20 high-intent Utah service SMB leads (Law, Accounting, Agencies, Trades) for Catalyst Works."
+    task_request = "Find 20 high-intent US service SMB leads (Law, Accounting, Agencies, Trades, HVAC, Roofing, Plumbing) for Catalyst Works. Focus on owner-run businesses with 1-50 employees. Must include verified email."
 
     try:
         # 1. Run the crew
