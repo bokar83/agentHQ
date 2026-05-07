@@ -82,7 +82,12 @@ def _count_today_with_email() -> int:
 
 
 def _count_today_sw_with_email() -> int:
-    """Count SW leads (lead_type='website_prospect' OR source LIKE 'sw_%') created today with email."""
+    """Count SW leads created today with email.
+
+    SW saves with source='signal_works' OR source='serper_linkedin' for SMB
+    google-maps harvests. CW saves with source='apollo_cw' OR source LIKE 'apollo_%'
+    OR email_source IN ('apollo_fresh','cw_resend'). Anything not CW = SW.
+    """
     try:
         from orchestrator.db import get_crm_connection
     except ModuleNotFoundError:
@@ -96,7 +101,9 @@ def _count_today_sw_with_email() -> int:
             SELECT COUNT(*) AS n FROM leads
             WHERE created_at::date = (NOW() AT TIME ZONE 'UTC')::date
               AND email IS NOT NULL AND email != ''
-              AND (lead_type = 'website_prospect' OR source LIKE 'sw_%' OR source LIKE 'serper_%' OR source = 'google_maps')
+              AND COALESCE(source, '') NOT LIKE 'apollo_%'
+              AND COALESCE(source, '') NOT IN ('cw_resend')
+              AND COALESCE(email_source, '') NOT IN ('apollo_fresh', 'cw_resend')
             """
         )
         row = cur.fetchone()
@@ -106,7 +113,10 @@ def _count_today_sw_with_email() -> int:
 
 
 def _count_today_cw_with_email() -> int:
-    """Count CW leads (source LIKE 'apollo_%' OR source = 'cw_resend') created today with email."""
+    """Count CW leads created today with email.
+
+    CW saves with source='apollo_cw' OR email_source IN ('apollo_fresh','cw_resend').
+    """
     try:
         from orchestrator.db import get_crm_connection
     except ModuleNotFoundError:
@@ -120,7 +130,11 @@ def _count_today_cw_with_email() -> int:
             SELECT COUNT(*) AS n FROM leads
             WHERE created_at::date = (NOW() AT TIME ZONE 'UTC')::date
               AND email IS NOT NULL AND email != ''
-              AND (source LIKE 'apollo_%' OR source = 'cw_resend')
+              AND (
+                COALESCE(source, '') LIKE 'apollo_%'
+                OR COALESCE(source, '') = 'cw_resend'
+                OR COALESCE(email_source, '') IN ('apollo_fresh', 'cw_resend')
+              )
             """
         )
         row = cur.fetchone()
