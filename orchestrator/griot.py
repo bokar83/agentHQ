@@ -336,6 +336,7 @@ def _pipeline_summary(rows: list, today_iso: str) -> str:
 
     Shows:
     - TODAY: posts auto-firing via Blotato (Status=Queued, ScheduledDate=today)
+    - NEXT: earliest upcoming Queued day so user sees pipeline isn't dry
     - THIS WEEK: posts scheduled in next 7 days
     - BACKLOG: count of Ready posts waiting to be scheduled
     """
@@ -345,6 +346,7 @@ def _pipeline_summary(rows: list, today_iso: str) -> str:
 
     today_posts = []
     week_posts = []
+    upcoming_by_date: dict = {}
     ready_count = 0
 
     for r in rows:
@@ -361,8 +363,11 @@ def _pipeline_summary(rows: list, today_iso: str) -> str:
             if sd == today_iso:
                 today_posts.append(f"  {pf}: {title}{hook_suffix}")
             elif today_iso < sd <= week_end:
-                today_posts_label = date.fromisoformat(sd).strftime("%a %b %-d")
-                week_posts.append(f"  {today_posts_label} — {title} ({pf})")
+                today_posts_label = date.fromisoformat(sd).strftime("%a %b %d").replace(" 0", " ")
+                week_posts.append(f"  {today_posts_label} -- {title} ({pf})")
+            if sd > today_iso:
+                upcoming_by_date.setdefault(sd, 0)
+                upcoming_by_date[sd] += 1
 
     lines = []
     if today_posts:
@@ -370,6 +375,11 @@ def _pipeline_summary(rows: list, today_iso: str) -> str:
         lines.extend(today_posts)
     else:
         lines.append("TODAY: nothing scheduled to auto-post.")
+        if upcoming_by_date:
+            next_sd = min(upcoming_by_date.keys())
+            next_count = upcoming_by_date[next_sd]
+            next_label = date.fromisoformat(next_sd).strftime("%a %b %d").replace(" 0", " ")
+            lines.append(f"NEXT: {next_label} ({next_count} post{'s' if next_count != 1 else ''} queued)")
 
     if week_posts:
         lines.append("")

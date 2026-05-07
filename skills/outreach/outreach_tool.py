@@ -37,6 +37,10 @@ _mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_mod)
 SUBJECT = _mod.SUBJECT
 TEMPLATE = _mod.BODY
+# Confidence-aware builder. When present, outreach_tool uses this so the
+# greeting drops on low-confidence first-name extractions (gkirz/jsmith
+# pattern). See test_first_name_extraction.py for the rule set.
+_BUILD_BODY = getattr(_mod, "build_body", None)
 
 OUTREACH_ACCOUNT = "catalystworks.ai@gmail.com"
 
@@ -269,14 +273,40 @@ def run_outreach(contact_all: bool = False) -> dict:
     skipped = 0
     results = []
 
+    # Lazy import: confidence-aware first-name extraction lives in
+    # sequence_engine. Import here to avoid circulars at module load.
+    try:
+        from skills.outreach.sequence_engine import _extract_first_name
+    except Exception:
+        _extract_first_name = None
+
     for lead in leads:
         email = lead.get("email", "").strip()
         name = lead.get("name", "").strip()
         company = lead.get("company", "").strip()
         industry = lead.get("industry", "Other")
-        first_name = name.split()[0] if name else "there"
 
-        body = TEMPLATE.format(first_name=first_name)
+        # Use confidence-aware extraction so emails like gkirz@... drop the
+        # greeting instead of producing "Hi Gkirz,". Falls back to the old
+        # naive split only if extractor unavailable.
+        if _extract_first_name is not None:
+            first_name, first_name_confidence = _extract_first_name({
+                "name": name,
+                "email": email,
+                "source": lead.get("source") or "",
+                "first_name": lead.get("first_name") or "",
+            })
+        else:
+            first_name = name.split()[0] if name else "there"
+            first_name_confidence = "low"
+
+        if _BUILD_BODY is not None:
+            body = _BUILD_BODY({
+                "first_name": first_name,
+                "first_name_confidence": first_name_confidence,
+            })
+        else:
+            body = TEMPLATE.format(first_name=first_name)
         draft_id = _create_draft(email, SUBJECT, body)
         if draft_id:
             _log_and_update(lead["id"], SUBJECT, lead_name=name)
