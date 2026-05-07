@@ -303,3 +303,11 @@ Boubacar reframed M5 immediately after M4 closed: both attire-inspo-app and sign
 Three tasks, all done: (1) `.gitmodules` URL flipped from `attire-inspo-app.git` to `signal-works-demo-hvac.git` to match the live checkout. (2) attire-inspo-app code (`app/`, `components/`, `lib/`, `public/`, package files, configs, dotfiles) copied from `output/` root to `output/apps/attire-inspo-app/` (initial plan was `workspace/aminoa/` but `workspace/` is gitignored; Boubacar reframed to keep it simple: apps in `output/apps/`, websites in `output/websites/`). (3) `output-folder-anatomy.md` and `repo-structure.md` updated to reflect resolved state.
 
 **Compass status post-M5: M0 + M1 + M2 + M4 + M5 SHIPPED. M3 ARMED for 2026-08-02. No queued milestones. Compass scaffolding + enforcement layer + LLM-readable mirror + structural reconciliation all complete.** What remains long-term: the M3 quarterly purge will fire on its own; future Compass work (renaming `output/` to disambiguate from `outputs/`/`agent_outputs/`, raising MEMORY.md cap, etc.) becomes a fresh milestone if/when needed.
+
+### 2026-05-06 (evening): Skill portfolio governance audit
+
+Sankofa Council 30-day audit run. Governance finding: skill directories with stub SKILL.md files may contain active Python imported by orchestrator. Six directories (outreach, forge_cli, email_enrichment, github_skill, local_crm, notion_skill) were nearly archived but caught by import grep. Hard rule added to memory and AGENT_SOP candidate: "grep orchestrator + signal_works before archiving any skill directory."
+
+Skill count: 74 -> 68. SKILLS_INDEX regenerated. Archive manifest at `zzzArchive/2026-05-06-skill-consolidation/MANIFEST.md`.
+
+No Compass milestone changes. This is a governance integrity note.

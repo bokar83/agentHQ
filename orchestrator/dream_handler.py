@@ -177,6 +177,12 @@ def handle_dream_callback(cb_data: str, cb_id: str, chat_id: str) -> bool:
     action = cb_data.split(":", 1)[1]
 
     if action == "approve":
+        # Write APPROVAL.txt so --apply doesn't require manual file creation
+        try:
+            PENDING_FILE.parent.mkdir(parents=True, exist_ok=True)
+            (PENDING_FILE.parent / "APPROVAL.txt").write_text("APPROVE", encoding="utf-8")
+        except Exception:
+            pass
         answer_callback_query(cb_id, "Approved! Run apply locally.")
         send_message(chat_id,
             "Dream APPROVED.\n\n"
@@ -186,6 +192,10 @@ def handle_dream_callback(cb_data: str, cb_id: str, chat_id: str) -> bool:
         return True
 
     if action == "reject":
+        try:
+            (PENDING_FILE.parent / "APPROVAL.txt").write_text("REJECT", encoding="utf-8")
+        except Exception:
+            pass
         answer_callback_query(cb_id, "Rejected.")
         send_message(chat_id,
             "Dream REJECTED. Run locally to discard:\n"
