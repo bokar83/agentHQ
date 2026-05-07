@@ -539,22 +539,37 @@ def enrich_missing_emails(limit: int = 999) -> dict:
             else:
                 _write_note(conn, lead_id, f"[{today}] Enriched — no email found after scraping.")
 
+        # ── Step 2b: Hunter domain_search ────────────────────────
+        # Primary paid tool. Use company website domain found in step 1.
+        # Hunter has 2000 searches/mo on Starter; call it before Prospeo.
+        if not has_email and website:
+            try:
+                from signal_works.hunter_client import domain_search as _hunter_domain_search, HunterCapReached
+                from urllib.parse import urlparse as _urlparse
+                _parsed = _urlparse(website if website.startswith("http") else f"https://{website}")
+                _domain = _parsed.netloc.replace("www.", "")
+                if _domain:
+                    _hunter_email = _hunter_domain_search(_domain)
+                    if _hunter_email:
+                        _save_email(conn, lead_id, _hunter_email)
+                        has_email = True
+                        found_email = _hunter_email
+                        logger.info(f"Enrichment: Hunter found {_hunter_email} at {_domain}")
+                        _write_note(conn, lead_id, f"[{today}] Enriched — email found via Hunter domain search: {_hunter_email}")
+            except HunterCapReached:
+                logger.warning("Enrichment: Hunter daily cap reached, skipping for rest of enrichment run")
+            except Exception as _he:
+                logger.warning(f"Enrichment: Hunter error for {company}: {_he}")
+
         # ── Step 3: Prospeo fallback ─────────────────────────────
-        is_priority = bool(lead.get("priority"))
+        # Only fires if Hunter and scrape both failed. Costs credits.
         if not has_email:
             prospeo = _prospeo_enrich(
                 name=name,
                 company=company,
                 linkedin_url=linkedin_url or None,
-                want_phone=False,
+                want_phone=True,
             ) or {"email": None, "phone": None, "error": "none_returned"}
-            if not prospeo.get("email") and is_priority and not has_phone:
-                prospeo = _prospeo_enrich(
-                    name=name,
-                    company=company,
-                    linkedin_url=linkedin_url or None,
-                    want_phone=True,
-                ) or {"email": None, "phone": None, "error": "none_returned"}
             if prospeo.get("email"):
                 _save_email(conn, lead_id, prospeo["email"])
                 has_email = True
