@@ -176,6 +176,19 @@ def topup(minimum: int = DAILY_MINIMUM, dry_run: bool = False) -> int:
                     )
                     hunter_disabled = True
                     breaker_alert_sent = True
+
+                # Locked 2026-05-07: phone-only/website-only leads still get saved
+                # for the manual-review queue but DO NOT count toward email target.
+                # email_source flagged so dashboard can filter.
+                if biz.get("phone") or biz.get("website_url"):
+                    biz["email"] = ""
+                    biz["business_display_name"] = biz.get("name", "")
+                    flag = "phone_only" if biz.get("phone") and not biz.get("website_url") else (
+                        "website_only" if biz.get("website_url") and not biz.get("phone") else "phone_and_website"
+                    )
+                    biz["email_source"] = flag
+                    _save_lead(biz, dry_run)
+                    logger.info(f"topup: [skip-count] saved {flag} lead -> {biz.get('business_name', '?')}")
                 continue
 
             consecutive_double_fails = 0
