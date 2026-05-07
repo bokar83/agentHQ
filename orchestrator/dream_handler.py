@@ -165,22 +165,32 @@ def _apply_decision(decision: str, excluded: set, chat_id: str) -> None:
 def handle_dream_callback(cb_data: str, cb_id: str, chat_id: str) -> bool:
     """
     Handle dream:approve / dream:reject button taps from handle_callback_query.
-    Returns True if handled.
+
+    Memory files live on the local machine, not the VPS. The bot can't apply
+    changes directly. Instead: dismiss the button, send a message with the
+    decision so it's logged in chat, then instruct local apply.
     """
-    from notifier import answer_callback_query
+    from notifier import answer_callback_query, send_message
     if not cb_data.startswith("dream:"):
         return False
 
     action = cb_data.split(":", 1)[1]
 
     if action == "approve":
-        answer_callback_query(cb_id, "Approving dream...")
-        _apply_decision("APPROVE", set(), chat_id)
+        answer_callback_query(cb_id, "Approved! Run apply locally.")
+        send_message(chat_id,
+            "Dream APPROVED.\n\n"
+            "Run locally to apply:\n"
+            "  python scripts/dream.py --apply"
+        )
         return True
 
     if action == "reject":
-        answer_callback_query(cb_id, "Dream rejected.")
-        _apply_decision("REJECT", set(), chat_id)
+        answer_callback_query(cb_id, "Rejected.")
+        send_message(chat_id,
+            "Dream REJECTED. Run locally to discard:\n"
+            "  python scripts/dream.py --reject"
+        )
         return True
 
     return False

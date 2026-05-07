@@ -183,6 +183,14 @@ Sign-off: Name only. No signature block, no logo, no hype.
 - "Quick question..."
 - Asking before giving.
 
+**agentsHQ cold email rules (binding for SW + CW pipelines):**
+
+- **Reply-first model:** Optimize for the micro-commitment (a reply), not the booking. Calendly goes in the follow-up, NEVER in the cold email.
+- **Single template:** Universal copy, no industry branching. Template lives in `templates/email/cold_outreach.py`. Edit only that file -- all tools import from it.
+- **Plain text only:** No HTML, no signature blocks.
+- **Follow-up sequence:** Follow-up 1 (3 days after no reply) = short bump. Follow-up 2 (5 days after that) = value add or breakup line. Calendly link goes here.
+- **Full pipeline context:** LinkedIn prospecting, events, BNI, follow-up system in `docs/playbooks/pipeline-building-playbook.md`.
+
 ---
 
 ### 4.3 Posting / Free Content Playbook
