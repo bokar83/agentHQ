@@ -238,19 +238,42 @@ def _opening(lead: dict) -> str:
     city = lead.get("city", "your city")
     score = lead.get("ai_score", 0)
     owner = (lead.get("owner_name") or "").strip()
-    # Fallback: use first word of business name only if it looks like a person's name
-    # (capitalized, not a generic word like "the", "a", "roofing", "dental", etc.)
-    _generic = {"the", "a", "an", "dental", "roofing", "hvac", "air", "heating",
-                "cooling", "pediatric", "family", "services", "llc", "inc", "co",
-                "modern", "professional", "elite", "quality", "best", "top", "pro",
-                "utah", "salt", "lake", "city", "valley", "action", "power",
-                "powerful", "easy", "ez", "mountain", "summit", "apex", "peak",
-                "west", "east", "north", "south", "central", "local", "premier"}
-    if not owner:
-        first_word = name.split()[0] if name.split() else ""
-        if first_word and first_word.lower() not in _generic and first_word[0].isupper():
-            owner = first_word
-    greeting = f"Hi {owner}," if owner else "Hi,"
+    email = (lead.get("email") or "").strip()
+
+    # Confidence-aware greeting: drop "Hi <Name>," and use generic "Hi," when
+    # owner_name looks like initial+lastname (gkirz/jsmith pattern) or when
+    # only a single-token surname is known. Falls back to legacy heuristics
+    # if the extractor cannot be imported.
+    greeting = "Hi,"
+    try:
+        from skills.outreach.sequence_engine import _extract_first_name
+        # Use Apollo owner_name when present (treat as cw-source so 2+ token
+        # names pass through). When absent, _extract_first_name will parse
+        # the email local-part and apply the gkirz heuristic.
+        proxy_lead = {
+            "name": owner,
+            "email": email,
+            "source": "apollo_sw" if owner else "signal_works",
+        }
+        first_name, conf = _extract_first_name(proxy_lead)
+        if conf == "high" and first_name and first_name != "there":
+            greeting = f"Hi {first_name},"
+    except Exception:
+        # Legacy path: only greet by name if owner_name was provided AND
+        # contains a plausible person token (not a generic business word).
+        _generic = {"the", "a", "an", "dental", "roofing", "hvac", "air", "heating",
+                    "cooling", "pediatric", "family", "services", "llc", "inc", "co",
+                    "modern", "professional", "elite", "quality", "best", "top", "pro",
+                    "utah", "salt", "lake", "city", "valley", "action", "power",
+                    "powerful", "easy", "ez", "mountain", "summit", "apex", "peak",
+                    "west", "east", "north", "south", "central", "local", "premier"}
+        if not owner:
+            first_word = name.split()[0] if name.split() else ""
+            if first_word and first_word.lower() not in _generic and first_word[0].isupper():
+                owner = first_word
+        # Require multi-token owner OR allowlisted shape; otherwise drop.
+        if owner and len(owner.split()) >= 2:
+            greeting = f"Hi {owner.split()[0]},"
 
     # Voice personalization short-circuit: if upstream populated a voice line
     # via skills.transcript-style-dna, use it. Falls through to templates if absent.
