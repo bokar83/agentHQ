@@ -28,7 +28,7 @@ Auto-fires on:
 Manual call:
 ```python
 from content_multiplier_crew import multiply_source
-multiply_source(source_url="https://...", source_type="auto", target_channels=["LinkedIn","X","UTB","FGM","AIC"])
+multiply_source(source_url="https://...", source_type="auto", target_channels=["LinkedIn","X","UTB","1stGen","AIC"])
 ```
 
 ## What it produces (9 pieces per run)
@@ -41,7 +41,7 @@ multiply_source(source_url="https://...", source_type="auto", target_channels=["
 | 4 | Direct angle | LinkedIn | 400-800 chars | Boubacar (mirrors source thesis) |
 | 5 | Adjacent angle | LinkedIn | 400-800 chars | Boubacar (related but distinct POV) |
 | 6 | Contrarian angle | LinkedIn or X thread | 400-800 chars | Boubacar (twist or counter) |
-| 7 | Video script | UTB / FGM / AIC (matched) | 55s short, 130-160 words | faceless channel voice |
+| 7 | Video script | UTB / 1stGen / AIC (matched) | 55s short, 130-160 words | faceless channel voice |
 | 8 | Quote card | IG/X visual | 1 line + image prompt | source-attributed if external |
 | 9 | Newsletter section | The Forge newsletter | 200-400 chars | Boubacar |
 
@@ -84,7 +84,7 @@ Lens classifier (Haiku) picks 2-3 per source. Each piece uses 1-2 lenses to fram
 
 4. CTQ FILTER (existing skills/ctq-social/SKILL.md)
    - Drop pieces that fail Sankofa Council 5-voice check
-   - Drop pieces that violate hard rules (no em-dashes, no FGM acronym, no fabricated stories, verified stats only)
+   - Drop pieces that violate hard rules (no em-dashes, no banned-acronym for 1stGen Money, no fabricated stories, verified stats only)
    → kept_pieces
 
 5. WRITE NOTION (Content Board DB 339bcf1a-3029-81d1-8377-dc2f2de13a20)
@@ -92,7 +92,7 @@ Lens classifier (Haiku) picks 2-3 per source. Each piece uses 1-2 lenses to fram
    - Status=Idea (initial)
    - multiplier_run_id (group key for batch review)
    - source_trend_id (backref to original scouted record)
-   - piece_type (LI-long | X-thread | X-single | direct | adjacent | contrarian | video-UTB | video-FGM | video-AIC | quote | newsletter)
+   - piece_type (LI-long | X-thread | X-single | direct | adjacent | contrarian | video-UTB | video-1stGen | video-AIC | quote | newsletter)
    - draft body
    - hook (first line)
 
@@ -107,7 +107,7 @@ Lens classifier (Haiku) picks 2-3 per source. Each piece uses 1-2 lenses to fram
 
 Pulled from MEMORY.md hard personal rules:
 - Never em-dash (`--` or ` - `). Rewrite the sentence.
-- Never "FGM" — always "1stGen" or "1stGen Money" in piece body
+- The 3-letter acronym for First Generation Money is BANNED (it means female genital mutilation). Always write "1stGen" or "1stGen Money" in piece bodies, prompts, code identifiers, and Notion records.
 - Never fabricated client stories, never invented quotes
 - Verified stats only — every stat needs source URL stored alongside
 - No Loom proposals, no coffee/alcohol props
@@ -135,13 +135,13 @@ Cap enforced at crew level: hard fail if estimated cost exceeds $0.50. Logged to
 |---|---|
 | Title | piece hook (first line) |
 | Status | Idea (initial) |
-| Platform | LinkedIn / X / UTB / FGM / AIC (single value per piece) |
+| Platform | LinkedIn / X / UTB / 1stGen / AIC (single value per piece) |
 | Topic | source's niche tag |
 | Draft | full piece body |
 | Hook | first line repeat |
 | Source URL | original trend URL |
 | Multiplier Run ID | grouping key |
-| Piece Type | LI-long | X-thread | X-single | direct | adjacent | contrarian | video-UTB | video-FGM | video-AIC | quote | newsletter |
+| Piece Type | LI-long | X-thread | X-single | direct | adjacent | contrarian | video-UTB | video-1stGen | video-AIC | quote | newsletter |
 | Created From | source_trend_notion_page_id |
 
 ## Failure modes

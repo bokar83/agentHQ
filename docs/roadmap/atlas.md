@@ -2010,7 +2010,7 @@ OpenRouter ground-truth spend now visible on the Atlas dashboard. Hero Spend Pac
 - Story Review process added to `ctq-social` — replaces standard CTQ scoring for Story posts
 - `story_prompt_tick.py` created: 20 prompts (Tue/Thu 17:00 MT via Telegram + 6h sparse check if queue < 5)
 - `notion_capture` crew updated: detects story signals from any input, saves to Content Board as `Content Type=Story`, suggests channel routing as options (not hard-wired)
-- Channel map: BB (Boubacar Personal), FGM (First Gen Money), UTB (Under the Baobab), AIC (AI Catalyst)
+- Channel map: BB (Boubacar Personal), 1stGen (First Gen Money), UTB (Under the Baobab), AIC (AI Catalyst)
 - Committed to `feature/gws-email-rules-update` (`770b938`, `15eb85c`, `dde463a`) — awaiting gate merge
 
 **Commits this session:** `a1f63ef` (fabrication gate), `770b938` (story infra), `15eb85c` (channel mapping), `dde463a` (17:00 schedule + Tue/Thu gating)
@@ -2053,7 +2053,7 @@ OpenRouter ground-truth spend now visible on the Atlas dashboard. Hero Spend Pac
 
 **Additional fixes shipped after exec summary:**
 
-- `studio_story_bridge.py` — reads `Content Type=Story + Status=Idea` from Content Board every 6h, classifies channel fit (FGM/UTB/AIC) via LLM, seeds Pipeline DB. Idempotent.
+- `studio_story_bridge.py` — reads `Content Type=Story + Status=Idea` from Content Board every 6h, classifies channel fit (1stGen/UTB/AIC) via LLM, seeds Pipeline DB. Idempotent.
 - `griot_signal_brief.py` — Monday 09:00 MT. Reads 7-day story entries + chat messages, extracts top 3 recurring themes, sends Signal Brief to Telegram with draft post per theme.
 - `crews.py` — notion_capture now sends Telegram confirmation when story signal saved ("Story signal saved: [title] — Could feed: [channels] — Reply 'draft it' when ready")
 - `skills/ctq-social/SKILL.md` — lint fixed, synced to repo
@@ -2073,7 +2073,7 @@ OpenRouter ground-truth spend now visible on the Atlas dashboard. Hero Spend Pac
 
 **Next session (if Studio session doesn't resolve it):**
 1. Verify Studio activation: check Pipeline DB for our own qa-passed content with Asset URLs
-2. Confirm first Shorts posted on all 3 channels (UTB, FGM, AIC)
+2. Confirm first Shorts posted on all 3 channels (UTB, 1stGen, AIC)
 3. M4 warm-up day 1 counter starts from first successful post
 
 ---

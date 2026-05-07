@@ -36,7 +36,7 @@ What to do INSTEAD:
 
 Hard rules (apply always):
 - Never em-dash. Use period or comma. Rewrite if rhythm needs a pause.
-- Never "FGM". Always "1stGen" or "1stGen Money".
+- The 3-letter acronym for First Generation Money is BANNED. Always write "1stGen" or "1stGen Money".
 - Never invented client stories, fabricated quotes, unsourced stats.
 - No Loom. No coffee or alcohol props. No coaching-buzzword hooks.
 - Smart Brevity: lead with the news, bold first sentence, cut filler.
@@ -162,7 +162,7 @@ Return body only.
 
 ---
 
-## Piece 7 (remix): Studio video script (UTB | FGM | AIC)
+## Piece 7 (remix): Studio video script (UTB | 1stGen | AIC)
 
 Write ONE 55-second short-form video script for {{channel}}.
 
@@ -174,7 +174,7 @@ Constraints:
 - 130-160 words total
 - 5-8 scene beats, each 1-3 sentences
 - First sentence = hook
-- Faceless brand voice (UTB storyteller, FGM teacher, AIC analyst)
+- Faceless brand voice (UTB storyteller, 1stGen teacher, AIC analyst)
 - No "according to", no source attribution
 - Close with single CTA OR clean takeaway
 

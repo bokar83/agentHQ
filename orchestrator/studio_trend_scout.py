@@ -2,7 +2,7 @@
 studio_trend_scout.py - Content Intelligence Scout (Phase 1).
 
 Daily heartbeat (Mon-Sat) that scans niches for relevant content picks:
-  - 3 Studio niches (UTB/FGM/AIC) via YouTube Data API v3 -- DAILY
+  - 3 Studio niches (UTB/1stGen/AIC) via YouTube Data API v3 -- DAILY
   - 6 Catalyst Works niches via Serper news search -- Mon/Wed/Fri only
   - Sunday: skip everything (Sabbath)
 
@@ -879,7 +879,7 @@ def studio_trend_scout_tick() -> None:
     now = datetime.now(tz)
 
     # Cadence (changed 2026-05-07):
-    #   Studio niches (UTB/FGM/AIC) -- DAILY, including weekends
+    #   Studio niches (UTB/1stGen/AIC) -- DAILY, including weekends
     #   CW niches (6 personal-brand niches) -- Mon/Wed/Fri only
     # Per-niche skip happens inside the scout loop via _is_niche_due_today.
     # Sunday: skip everything per Boubacar's Sabbath rule.

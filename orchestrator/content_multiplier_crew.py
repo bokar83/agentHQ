@@ -22,6 +22,31 @@ ROOT_DIR = ORCH_DIR.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
+
+def _resolve_skill_dir() -> Path:
+    """Find skills/content_multiplier across local-dev, container-baked, and
+    container-mounted layouts.
+
+    Local dev: file lives at <repo>/orchestrator/content_multiplier_crew.py;
+      skills at <repo>/skills/content_multiplier.
+    Container mounted (correct): /app/orchestrator/content_multiplier_crew.py;
+      skills at /app/skills/content_multiplier.
+    Container baked (Dockerfile COPY of orchestrator/*.py to /app/):
+      /app/content_multiplier_crew.py; skills mounted at /app/skills.
+      ROOT_DIR resolves to / which is wrong; fall through to /app.
+    """
+    override = os.environ.get("CONTENT_MULTIPLIER_SKILL_DIR")
+    candidates = []
+    if override:
+        candidates.append(Path(override))
+    candidates.append(ROOT_DIR / "skills" / "content_multiplier")
+    candidates.append(Path("/app") / "skills" / "content_multiplier")
+    candidates.append(ORCH_DIR / "skills" / "content_multiplier")
+    for candidate in candidates:
+        if (candidate / "prompts" / "lens_classifier.md").exists():
+            return candidate
+    return candidates[1]
+
 logger = logging.getLogger("agentsHQ.content_multiplier_crew")
 
 CONTENT_DB_ID = "339bcf1a-3029-81d1-8377-dc2f2de13a20"
@@ -35,7 +60,7 @@ SONNET_OUTPUT_USD_PER_TOKEN = 15e-6
 CTQ_REJECT_RE = re.compile(r"(\s--\s|\s\u2014\s|\s\u2013\s)")
 BANNED_WORDS = ("Loom", "fabricated", "one weird trick")
 
-SKILL_DIR = ROOT_DIR / "skills" / "content_multiplier"
+SKILL_DIR = _resolve_skill_dir()
 LENS_PROMPT_PATH = SKILL_DIR / "prompts" / "lens_classifier.md"
 PIECE_PROMPT_PATH = SKILL_DIR / "prompts" / "piece_generator.md"
 REMIX_PIECE_PROMPT_PATH = SKILL_DIR / "prompts" / "remix_piece_generator.md"
@@ -314,9 +339,22 @@ def _channel_fit(lens: dict[str, Any], target_channels: list[str] | None) -> lis
 
 
 def build_piece_plans(lens: dict[str, Any], target_channels: list[str] | None = None) -> list[PiecePlan]:
+    """Channel-aware piece routing.
+
+    UTB and 1stGen are FACELESS brand channels: video script ONLY. No LinkedIn,
+    no X, no newsletter, no quote card.
+    AIC and Boubacar-personal can produce LinkedIn long, X thread, X single,
+    direct/adjacent/contrarian angles, quote card, and newsletter section.
+    AIC also produces a video script for the AIC channel itself.
+    """
     fit = set(_channel_fit(lens, target_channels))
     plans: list[PiecePlan] = []
-    if "Boubacar-personal" in fit:
+
+    # Personal-style pieces (LinkedIn / X / angles) require AIC or Boubacar-personal fit.
+    # UTB-only or 1stGen-only sources never produce these.
+    can_personal = "Boubacar-personal" in fit or "AIC" in fit
+
+    if can_personal:
         plans.extend(
             [
                 PiecePlan(1, "LI-long", "LinkedIn"),
@@ -327,7 +365,9 @@ def build_piece_plans(lens: dict[str, Any], target_channels: list[str] | None = 
                 PiecePlan(6, "contrarian", "LinkedIn"),
             ]
         )
-    for channel in ("UTB", "FGM", "AIC"):
+
+    # Video scripts: one per matched faceless channel (UTB, 1stGen) or AIC.
+    for channel in ("UTB", "1stGen", "AIC"):
         if channel in fit:
             plans.append(
                 PiecePlan(
@@ -338,7 +378,12 @@ def build_piece_plans(lens: dict[str, Any], target_channels: list[str] | None = 
                     channel_slug=channel.lower(),
                 )
             )
-    plans.extend([PiecePlan(8, "quote", "X"), PiecePlan(9, "newsletter", "Newsletter")])
+
+    # Quote card + newsletter only when there is a Boubacar-personal or AIC
+    # surface that can carry them. UTB and 1stGen are video-only brands.
+    if can_personal:
+        plans.extend([PiecePlan(8, "quote", "X"), PiecePlan(9, "newsletter", "Newsletter")])
+
     return plans
 
 
@@ -384,14 +429,55 @@ def _generate_one_piece(
         temperature=0.7,
         max_tokens=800,
     )
-    body = _llm_content(response)
+    body = _strip_code_fences(_llm_content(response))
     return GeneratedPiece(plan=plan, body=body, hook=_extract_hook(body))
 
 
+def _strip_code_fences(text: str) -> str:
+    """Remove leading/trailing markdown code fences from an LLM response.
+
+    Sonnet sometimes wraps the formatted output in triple-backticks. The fence
+    leaks into Title extraction (record titled '```') and clutters the Draft
+    body. Strip them so the hook is the real first line.
+    """
+    if not text:
+        return ""
+    cleaned = text.strip()
+    if cleaned.startswith("```"):
+        first_newline = cleaned.find("\n")
+        if first_newline != -1:
+            cleaned = cleaned[first_newline + 1:]
+        else:
+            cleaned = cleaned[3:]
+    if cleaned.rstrip().endswith("```"):
+        cleaned = cleaned.rstrip()
+        cleaned = cleaned[: -3].rstrip()
+    return cleaned.strip()
+
+
 def _extract_hook(body: str) -> str:
-    for line in (body or "").splitlines():
+    cleaned = _strip_code_fences(body)
+    for line in cleaned.splitlines():
         line = line.strip()
-        if line:
+        if not line:
+            continue
+        # Drop label-only lines like "HOOK (0-2s):" that prefix the actual hook.
+        if line.endswith(":") and len(line) < 40:
+            continue
+        # Strip leading label like "HOOK (0-2s): <text>" -> "<text>"
+        if ":" in line and line.split(":", 1)[0].strip().isupper():
+            tail = line.split(":", 1)[1].strip()
+            if tail:
+                return tail[:200]
+            continue
+        # Strip leading "HEADLINE: " prefix
+        for prefix in ("HEADLINE:", "QUOTE:", "BODY:"):
+            if line.upper().startswith(prefix):
+                tail = line[len(prefix):].strip()
+                if tail:
+                    return tail[:200]
+                break
+        else:
             return line[:200]
     return "Content multiplier draft"
 
@@ -404,8 +490,12 @@ def ctq_reject_reason(
 ) -> str | None:
     if CTQ_REJECT_RE.search(text or ""):
         return "dash pattern"
-    if "FGM" in (text or "") and "1stGen" not in (text or ""):
-        return "FGM acronym"
+    # Block the banned acronym (the 3-letter that means female genital mutilation).
+    # Boubacar's hard rule: always "1stGen" or "1stGen Money" in copy.
+    # Built from char join so the source itself never contains the literal.
+    _banned_acronym = "F" + "G" + "M"
+    if _banned_acronym in (text or "") and "1stGen" not in (text or ""):
+        return "banned acronym"
     lowered = (text or "").lower()
     for word in BANNED_WORDS:
         if word.lower() in lowered:
@@ -530,15 +620,21 @@ def _write_piece_to_notion(
             f"{draft}"
         )
 
-    topic_values = [str(x) for x in lens.get("lenses") or []][:3]
     props: dict[str, Any] = {}
     # Remix mode never writes the source URL into the Notion record body.
     source_url_value = doc.source_url if source_treatment == "verbatim" else ""
+    # Platform is a multi_select on the Content Board (LinkedIn, X, YouTube,
+    # Newsletter, etc.). Send as multi even though each piece targets one
+    # platform.
+    platform_value = _multi([piece.plan.platform]) if piece.plan.platform else _multi([])
+    # Topic is an Apollo-style multi_select with controlled options. Lens
+    # names will not match the existing option list, so we skip writing
+    # them here. The lens names live in the prepended Draft body header
+    # for now; future extension can map lens to Topic options.
     candidates = {
         "Title": _title(piece.hook),
         "Status": _select("Idea"),
-        "Platform": _select(piece.plan.platform),
-        "Topic": _multi(topic_values),
+        "Platform": platform_value,
         "Draft": _rich_text(draft),
         "Hook": _rich_text(piece.hook),
         "Source URL": _url(source_url_value),

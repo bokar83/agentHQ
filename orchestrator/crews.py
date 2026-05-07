@@ -2560,7 +2560,7 @@ def build_notion_capture_crew(user_request: str) -> Crew:
             f"     Source Note='Signal input from Boubacar — raw story material. "
             f"Do not polish without his input. Channel routing TBD by Boubacar.'\n"
             f"   - In the confirmation message, suggest which channels this story COULD feed "
-            f"(BB=Boubacar Personal, FGM=First Gen Money, UTB=Under the Baobab, AIC=AI Catalyst) "
+            f"(BB=Boubacar Personal, 1stGen=First Gen Money, UTB=Under the Baobab, AIC=AI Catalyst) "
             f"based on the content — but make clear this is a suggestion, not a decision. "
             f"Boubacar routes it when ready.\n"
             f"   - Skip impact/effort scoring. Stories are not scored.\n"

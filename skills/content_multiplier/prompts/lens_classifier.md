@@ -32,7 +32,7 @@ Return STRICT JSON:
   "unique_angle": "<one sentence — what's NOT said but should be>",
   "contrarian_read": "<one sentence — strongest counter or twist>",
   "who_is_stuck": "<one sentence — which role/person feels this pain>",
-  "channel_fit": ["<UTB|FGM|AIC|Boubacar-personal>", "..."],
+  "channel_fit": ["<UTB|1stGen|AIC|Boubacar-personal>", "..."],
   "skip_reason": "<empty string if usable, else 1-line reason to skip>"
 }
 ```
@@ -41,7 +41,7 @@ Rules:
 - Pick lenses by relevance, not by completeness. 2 is fine. 3 max.
 - `channel_fit` lists which downstream channels this source can feed:
   - UTB = African folktales, oral wisdom, generational lessons
-  - FGM = first-gen wealth, immigrant money, breaking poverty cycles
+  - 1stGen = first-gen wealth, immigrant money, breaking poverty cycles
   - AIC = AI displacement, AI strategy for SMBs/operators, careers
   - Boubacar-personal = anything Boubacar can take a public POV on (ops, governance, consulting, JTBD, TOC, etc.)
 - A source can fit multiple channels. List all that apply.
