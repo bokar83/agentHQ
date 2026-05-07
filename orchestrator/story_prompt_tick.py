@@ -25,7 +25,7 @@ STORY_QUEUE_MIN = int(os.environ.get("STORY_QUEUE_MIN", "5"))
 CONTENT_DB_ID = os.environ.get("FORGE_CONTENT_DB", "339bcf1a-3029-81d1-8377-dc2f2de13a20")
 
 # Each prompt is (question, channels) where channels is a list of tags.
-# BB=Boubacar Personal, FGM=First Gen Money, UTB=Under the Baobab, AIC=AI Catalyst
+# BB=Boubacar Personal, 1stGen=First Gen Money, UTB=Under the Baobab, AIC=AI Catalyst
 STORY_PROMPTS = [
     # MOMENTS OF FRICTION
     ("What happened this week that annoyed you but also confirmed something you already believed?",
@@ -36,9 +36,9 @@ STORY_PROMPTS = [
      ["BB", "AIC"]),
     # ORIGIN WOUNDS
     ("What is one thing you watched your parents do with money that you swore you would never do — and then did anyway?",
-     ["FGM", "UTB"]),
+     ["1stGen", "UTB"]),
     ("What is something you believed about success before you left West Africa that America quietly dismantled?",
-     ["UTB", "FGM", "BB"]),
+     ["UTB", "1stGen", "BB"]),
     ("There is a version of you from five years ago that would not recognize your current life. What would surprise him most?",
      ["BB", "UTB"]),
     # THE GAP BETWEEN PUBLIC AND PRIVATE
@@ -47,38 +47,38 @@ STORY_PROMPTS = [
     ("What does your calendar say about you that you would not want a client to see?",
      ["BB"]),
     ("What business decision are you sitting on right now that you already know the answer to but have not made yet?",
-     ["BB", "FGM"]),
+     ["BB", "1stGen"]),
     # THE UTAH REALITY
     ("Describe a moment in Utah where you felt completely out of place. What did you do with that feeling?",
      ["UTB", "BB"]),
     ("What assumption did someone make about you in a professional setting recently that they would never have made in Dakar or Dubai?",
      ["UTB", "BB"]),
     ("What does it cost you — practically, emotionally — to be building this firm here, in this place, right now?",
-     ["BB", "UTB", "FGM"]),
+     ["BB", "UTB", "1stGen"]),
     # BUILDER HONESTY
     ("What part of Catalyst Works is not working yet that you have not told anyone?",
      ["BB"]),
     ("What would you build differently if you were starting today with the same money but everything you know now?",
-     ["BB", "FGM", "AIC"]),
+     ["BB", "1stGen", "AIC"]),
     ("What is a service you offer that you secretly know is undersold — and one that you quietly know is not ready?",
      ["BB"]),
     # THE LONG GAME
     ("What are you building this for? Not the pitch answer. The 2am answer.",
-     ["BB", "UTB", "FGM"]),
+     ["BB", "UTB", "1stGen"]),
     ("Who are you trying to prove something to? Have you admitted that to yourself?",
      ["BB", "UTB"]),
     ("What would it mean to you if Catalyst Works did not exist in three years? Be specific.",
-     ["BB", "FGM"]),
+     ["BB", "1stGen"]),
     # SMALL MOMENTS, BIG SIGNAL
     ("What is something small that happened this week that no one would write an article about, but that you have not stopped thinking about?",
-     ["BB", "UTB", "AIC", "FGM"]),
+     ["BB", "UTB", "AIC", "1stGen"]),
     ("Finish this sentence without editing yourself: Nobody talks about how hard it is to...",
-     ["BB", "UTB", "FGM"]),
+     ["BB", "UTB", "1stGen"]),
 ]
 
 CHANNEL_LABELS = {
     "BB":  "Boubacar Personal (LinkedIn + X)",
-    "FGM": "First Gen Money (X + IG + TikTok + YouTube)",
+    "1stGen": "First Gen Money (X + IG + TikTok + YouTube)",
     "UTB": "Under the Baobab (X + IG + TikTok + YouTube)",
     "AIC": "AI Catalyst (X + IG + TikTok + YouTube)",
 }

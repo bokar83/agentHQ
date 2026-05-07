@@ -42,26 +42,67 @@ def test_lens_classify_parses_json(monkeypatch):
     mock_llm.call_llm.assert_called_once()
 
 
-def test_piece_routing_channel_aware():
+def test_piece_routing_utb_only_video_only():
+    """UTB is faceless video-only. No LinkedIn, X, quote, or newsletter."""
     import content_multiplier_crew as crew
 
-    lens = {"channel_fit": ["UTB", "AIC"]}
+    lens = {"channel_fit": ["UTB"]}
     plans = crew.build_piece_plans(lens)
+    piece_types = [p.piece_type for p in plans]
 
-    assert [p.piece_type for p in plans] == ["video-UTB", "video-AIC", "quote", "newsletter"]
-    assert all(p.number not in (1, 2, 3, 4, 5, 6) for p in plans)
+    assert piece_types == ["video-UTB"]
 
 
-def test_piece_routing_personal_plus_fgm_target_filter():
+def test_piece_routing_1stgen_only_video_only():
+    """1stGen Money is faceless video-only. No personal-style pieces."""
     import content_multiplier_crew as crew
 
-    lens = {"channel_fit": ["Boubacar-personal", "FGM", "UTB"]}
-    plans = crew.build_piece_plans(lens, target_channels=["Boubacar-personal", "FGM"])
+    lens = {"channel_fit": ["1stGen"]}
+    plans = crew.build_piece_plans(lens)
+    piece_types = [p.piece_type for p in plans]
+
+    assert piece_types == ["video-1stGen"]
+
+
+def test_piece_routing_aic_full_set():
+    """AIC fits everything: personal pieces + video + quote + newsletter."""
+    import content_multiplier_crew as crew
+
+    lens = {"channel_fit": ["AIC"]}
+    plans = crew.build_piece_plans(lens)
     piece_types = [p.piece_type for p in plans]
 
     assert piece_types[:6] == ["LI-long", "X-thread", "X-single", "direct", "adjacent", "contrarian"]
-    assert "video-FGM" in piece_types
-    assert "video-UTB" not in piece_types
+    assert "video-AIC" in piece_types
+    assert "quote" in piece_types
+    assert "newsletter" in piece_types
+
+
+def test_piece_routing_personal_plus_utb_target_filter():
+    """Boubacar-personal + UTB fit yields personal pieces + UTB video only."""
+    import content_multiplier_crew as crew
+
+    lens = {"channel_fit": ["Boubacar-personal", "UTB"]}
+    plans = crew.build_piece_plans(lens, target_channels=["Boubacar-personal", "UTB"])
+    piece_types = [p.piece_type for p in plans]
+
+    assert piece_types[:6] == ["LI-long", "X-thread", "X-single", "direct", "adjacent", "contrarian"]
+    assert "video-UTB" in piece_types
+    assert "video-1stGen" not in piece_types
+    assert "quote" in piece_types
+    assert "newsletter" in piece_types
+
+
+def test_piece_routing_utb_plus_1stgen_no_carriers():
+    """UTB + 1stGen alone yields ONLY two video scripts. No quote/newsletter
+    because there is no Boubacar-personal or AIC surface to carry them."""
+    import content_multiplier_crew as crew
+
+    lens = {"channel_fit": ["UTB", "1stGen"]}
+    plans = crew.build_piece_plans(lens)
+    piece_types = [p.piece_type for p in plans]
+
+    assert sorted(piece_types) == sorted(["video-UTB", "video-1stGen"])
 
 
 def test_ctq_regex_and_word_filters():
@@ -69,7 +110,9 @@ def test_ctq_regex_and_word_filters():
 
     assert crew.ctq_reject_reason("Bad -- dash") == "dash pattern"
     assert crew.ctq_reject_reason("Bad \u2014 dash") == "dash pattern"
-    assert crew.ctq_reject_reason("FGM is here") == "FGM acronym"
+    # The 3-letter banned acronym must be blocked.
+    banned = "F" + "G" + "M"
+    assert crew.ctq_reject_reason(f"{banned} is here") == "banned acronym"
     assert crew.ctq_reject_reason("1stGen Money is here") is None
     assert crew.ctq_reject_reason("Use Loom for this") == "banned word: Loom"
     assert crew.ctq_reject_reason("This one weird trick works") == "banned word: one weird trick"

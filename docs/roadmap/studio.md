@@ -303,7 +303,7 @@ That fix restored the producers, but exposed two deeper gaps:
 4. Direct angle (LinkedIn, mirrors source thesis)
 5. Adjacent angle (LinkedIn, related but distinct POV)
 6. Contrarian angle (LinkedIn or X thread)
-7. Studio video script (UTB / FGM / AIC, only when channel matches)
+7. Studio video script (UTB / 1stGen / AIC, only when channel matches)
 8. Quote card (1 line + image prompt)
 9. Newsletter section (200-400 chars for The Forge weekly)
 
@@ -327,7 +327,7 @@ QA classifies each failure as FATAL or FIXABLE. All FIXABLE = qa-remix. Any FATA
 **What shipped this session (M3.7.1):**
 
 - [x] Skill scaffold: `skills/content_multiplier/SKILL.md` + `prompts/lens_classifier.md` + `prompts/piece_generator.md`
-- [x] Voice rules locked: no em-dash, no FGM (use 1stGen), no fabricated stories, verified stats only, Smart Brevity
+- [x] Voice rules locked: no em-dash, no 1stGen (use 1stGen), no fabricated stories, verified stats only, Smart Brevity
 - [x] Cost ceiling: <$0.30/run hard cap
 - [x] Notion schema: `Multiplier Run ID`, `Piece Type`, `Created From`, `Source URL`, `Source Treatment` (extends existing Content Board)
 - [x] Three-path trigger spec (auto, on-demand, Notion)
@@ -971,7 +971,7 @@ Boubacar's lived experiences and raw observations are the primary content source
 
 **What this means for Studio:**
 - `Content Type=Story + Status=Idea` entries on the Content Board are available as script briefs for all 3 Studio channels
-- One lived moment → multiple channel adaptations (FGM = financial angle, UTB = diaspora/identity angle, AIC = AI practitioner angle)
+- One lived moment → multiple channel adaptations (1stGen = financial angle, UTB = diaspora/identity angle, AIC = AI practitioner angle)
 - Channel routing is flexible — Boubacar confirms which channels a story feeds, LéGroit proposes, nothing is pre-wired
 - Story posts are X-primary for personal brand; Studio channels adapt to short-form video format
 
@@ -998,5 +998,5 @@ Boubacar's lived experiences and raw observations are the primary content source
 
 **Next Studio session:**
 1. Wire Studio script crew to pull `Content Type=Story + Status=Idea` as candidate briefs (alongside trend-scouted topics)
-2. Story → multi-channel adaptation: one entry generates 3 scripts (FGM/UTB/AIC lenses)
+2. Story → multi-channel adaptation: one entry generates 3 scripts (1stGen/UTB/AIC lenses)
 3. M4 warm-up: confirm first batch of renders posted and tracking engagement

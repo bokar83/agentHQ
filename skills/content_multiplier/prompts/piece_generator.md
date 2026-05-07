@@ -10,7 +10,7 @@ You are writing for Boubacar Barry. Reference his voice profile in `skills/boub_
 
 Hard rules (any violation = reject the piece, do NOT publish):
 - Never em-dash. Use period or comma. If the rhythm needs a pause, rewrite the sentence.
-- Never "FGM". Always "1stGen" or "1stGen Money".
+- The 3-letter acronym for First Generation Money is BANNED. Always write "1stGen" or "1stGen Money".
 - Never invented client stories, fabricated quotes, or unsourced statistics. If you can't verify a stat, drop it.
 - No Loom. No coffee or alcohol props. No coaching-buzzword hooks ("growth hacks", "this one weird trick").
 - Smart Brevity: lead with the news, bold first sentence, cut filler.
@@ -141,7 +141,7 @@ Return body only.
 
 ---
 
-## Piece 7: Studio video script (UTB | FGM | AIC)
+## Piece 7: Studio video script (UTB | 1stGen | AIC)
 
 Write ONE 55-second short-form video script for {{channel}}.
 
@@ -154,8 +154,8 @@ Constraints:
 - 130-160 words total (55 sec at 200 WPM is ~165 words; leave breathing room)
 - 5-8 scene beats, each 1-3 sentences
 - First sentence = hook. Stops the scroll in <2 sec.
-- Faceless: no "I" in personal mode. UTB uses storyteller voice. FGM uses teacher voice. AIC uses analyst voice.
-- No Boubacar persona on UTB or FGM (faceless brands)
+- Faceless: no "I" in personal mode. UTB uses storyteller voice. 1stGen uses teacher voice. AIC uses analyst voice.
+- No Boubacar persona on UTB or 1stGen (faceless brands)
 - AIC may reference Boubacar by name if topic warrants
 - Close with single CTA OR clean takeaway. No "subscribe" beg.
 - No music or SFX cues — those are added later
