@@ -79,11 +79,55 @@ Lead pipeline went from 0/50 emails (yesterday morning report) to 27/29 fresh le
 
 ## Next session must start here
 
-1. Check Telegram for harvest_until_target completion alert. If 50/50 hit → wire to scheduler cron. If stalled → diagnose ladder exhaustion (likely SW geography or CW Apollo coverage).
-2. Run live harvest tomorrow morning at 06:00 MT. Confirm 50/50 in Notion CRM Leads dashboard.
-3. Boubacar posts LinkedIn post 1 ("What your team is not telling you") morning of 5/8.
-4. Site-wide first-name scrub on remaining UI surfaces (separate commit, surgical).
+**Critical bug to fix FIRST:** `topup_cw_leads` early-exits when `_count_ready_cw_leads(conn) >= minimum` on line 98-99 of `signal_works/topup_cw_leads.py`. Today's run: 41 existing undrafted leads → CW pull skipped, harvest stalled at 31/50.
+
+The fix: add a `force_fresh` parameter or call `harvest_leads()` regardless of ready count when called from `harvest_until_target`. Otherwise we will perpetually short-circuit CW once existing residue exceeds 15.
+
+Recommended pattern:
+
+```python
+def topup_cw_leads(minimum: int = DAILY_MINIMUM, dry_run: bool = False, force_fresh: bool = False) -> int:
+    ...
+    ready = _count_ready_cw_leads(conn)
+    if ready >= minimum and not force_fresh:
+        return ready
+    # else proceed to harvest_leads()
+```
+
+Then `harvest_until_target._run_cw_until` passes `force_fresh=True`.
+
+After that fix:
+
+1. Re-run harvest manually. Confirm 50/50 hit. Telegram should fire success alert.
+2. If 50/50 holds, wire to scheduler.py 06:00 MT cron (replace existing `_run_daily_harvest` Apollo+enrichment chain with `harvest_until_target.harvest_until_target()`).
+3. Boubacar posts LinkedIn post 1 ("What your team is not telling you") morning of 5/8 from Notion queue.
+4. Site-wide first-name scrub on remaining UI surfaces (signal.html, ai-data-audit.html, og-image.html, _worker.js, studio_t1.py). Separate commit, surgical.
 5. Phase 3 measurement day 2026-05-13: baseline vs treatment cohort reply rates, site capture rate delta, LinkedIn post DM count.
+
+## Files changed this session
+
+agentsHQ commits:
+- e0d7ed5 — Wire Hunter into enrichment + fix garbage domain bug
+- 467259b — Apollo two-step + Hunter 3-tier server filters
+- 5cdc7d2 — RCA handoff doc 0-email incident
+- 2cc9711 — Thesis-led CW T1 + harvest-until-50 daily target
+- f2b15fe — Roadmap R1g milestone + handoff + LI posts 2/3
+- 2491bb1 — Fix CW import name (topup_cw → topup_cw_leads)
+- bf74a9e — Hunter skill SKILL.md captures 2026-05-07 lessons
+- cb36c2e — Fix SW/CW count queries to match actual source values
+
+catalystworks-site commits (pushed to main):
+- 9101fc1 — Thesis block + memo signoff with handwritten signature
+- 3d17e86 — Right-aligned signoff + Option B letter-style fonts (Spectral)
+
+Skills updated:
+- skills/hunter_skill/SKILL.md (HARD RULES extended with Apollo two-step, Hunter 3-tier, paid-tools-both-paths, 50/day target)
+
+Memory files saved:
+- feedback_enrichment_hunter_not_wired.md
+- feedback_no_loom.md
+- feedback_first_name_only.md
+- feedback_already_have_answers.md
 
 ## Today's metrics (snapshot 2026-05-07 noon MT)
 
