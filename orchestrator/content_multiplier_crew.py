@@ -68,6 +68,63 @@ REMIX_PIECE_PROMPT_PATH = SKILL_DIR / "prompts" / "remix_piece_generator.md"
 VALID_MODES = ("verbatim", "remix", "auto")
 
 
+def _resolve_skill_md_path(skill_name: str, env_var: str) -> Path | None:
+    """Locate a skills/<name>/SKILL.md across local-dev, container-mounted,
+    and container-baked layouts."""
+    override = os.environ.get(env_var)
+    candidates = []
+    if override:
+        candidates.append(Path(override))
+    candidates.append(ROOT_DIR / "skills" / skill_name / "SKILL.md")
+    candidates.append(Path("/app") / "skills" / skill_name / "SKILL.md")
+    candidates.append(ORCH_DIR / "skills" / skill_name / "SKILL.md")
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def _load_skill_md(skill_name: str, env_var: str, fallback: str = "") -> str:
+    """Read a skill's SKILL.md body (frontmatter stripped). Returns fallback
+    string when the file is unreachable so the crew does not block."""
+    path = _resolve_skill_md_path(skill_name, env_var)
+    if path is None:
+        return fallback
+    try:
+        text = path.read_text(encoding="utf-8")
+    except Exception:
+        return fallback
+    # Strip YAML frontmatter.
+    if text.startswith("---"):
+        end = text.find("\n---", 3)
+        if end != -1:
+            text = text[end + 4:]
+    return text.strip()
+
+
+VOICE_PROFILE = _load_skill_md(
+    "boub_voice_mastery",
+    "BOUB_VOICE_PROFILE_PATH",
+    fallback=(
+        "Boubacar voice rules: direct, opinionated, specific. No em-dash. "
+        "No buzzwords. No fabricated stories. Lead with the news. "
+        "Use periods, not pauses. Prefer concrete numbers and named examples."
+    ),
+)
+
+CTQ_RULES = _load_skill_md(
+    "ctq-social",
+    "CTQ_SOCIAL_PATH",
+    fallback=(
+        "Hook stops the scroll: name something the reader felt but never said, "
+        "paint a workplace scene, or make a claim that demands they keep reading. "
+        "CTA holds up a mirror, ends on wit that stings, or drops a quotable line. "
+        "No yes/no questions. No survey questions. No weak rhetoric. "
+        "Voice: direct, earned, opinionated, zero hedging."
+    ),
+)
+
+
 @dataclass(frozen=True)
 class SourceDoc:
     title: str
@@ -412,7 +469,8 @@ def _generate_one_piece(
         "extracted_text": doc.extracted_text[:6000],
         "lens_brief": _lens_brief_text(lens),
         "source_excerpt": doc.extracted_text[:6000],
-        "voice_profile": "Use Boubacar voice rules from the repository voice profile.",
+        "voice_profile": VOICE_PROFILE,
+        "ctq_rules": CTQ_RULES,
         "channel": plan.channel or "",
         "channel_slug": plan.channel_slug or "",
         # Remix-specific substitutions. Empty in verbatim mode.
@@ -455,30 +513,30 @@ def _strip_code_fences(text: str) -> str:
     return cleaned.strip()
 
 
+_LABEL_RE = re.compile(
+    r"^(HOOK|BEAT\s*\d+|CLOSE|HEADLINE|QUOTE|BODY|ATTRIBUTION|"
+    r"IMAGE_PROMPT|PALETTE|VARIATION\s*\d+)\b[^:]*:\s*",
+    re.IGNORECASE,
+)
+
+
 def _extract_hook(body: str) -> str:
     cleaned = _strip_code_fences(body)
-    for line in cleaned.splitlines():
-        line = line.strip()
+    for raw_line in cleaned.splitlines():
+        line = raw_line.strip()
         if not line:
             continue
         # Drop label-only lines like "HOOK (0-2s):" that prefix the actual hook.
-        if line.endswith(":") and len(line) < 40:
+        if line.endswith(":") and len(line) < 60:
             continue
-        # Strip leading label like "HOOK (0-2s): <text>" -> "<text>"
-        if ":" in line and line.split(":", 1)[0].strip().isupper():
-            tail = line.split(":", 1)[1].strip()
+        # Strip a known label prefix like "HOOK (0-2s):" or "HEADLINE:".
+        match = _LABEL_RE.match(line)
+        if match:
+            tail = line[match.end():].strip()
             if tail:
                 return tail[:200]
             continue
-        # Strip leading "HEADLINE: " prefix
-        for prefix in ("HEADLINE:", "QUOTE:", "BODY:"):
-            if line.upper().startswith(prefix):
-                tail = line[len(prefix):].strip()
-                if tail:
-                    return tail[:200]
-                break
-        else:
-            return line[:200]
+        return line[:200]
     return "Content multiplier draft"
 
 
