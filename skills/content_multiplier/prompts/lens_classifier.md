@@ -33,6 +33,7 @@ Return STRICT JSON:
   "contrarian_read": "<one sentence — strongest counter or twist>",
   "who_is_stuck": "<one sentence — which role/person feels this pain>",
   "channel_fit": ["<UTB|1stGen|AIC|Boubacar-personal>", "..."],
+  "recommended_piece_types": ["<piece_type>", "<piece_type>", "..."],
   "skip_reason": "<empty string if usable, else 1-line reason to skip>"
 }
 ```
@@ -40,10 +41,15 @@ Return STRICT JSON:
 Rules:
 - Pick lenses by relevance, not by completeness. 2 is fine. 3 max.
 - `channel_fit` lists which downstream channels this source can feed:
-  - UTB = African folktales, oral wisdom, generational lessons
-  - 1stGen = first-gen wealth, immigrant money, breaking poverty cycles
+  - UTB = African folktales, oral wisdom, generational lessons (video script ONLY)
+  - 1stGen = first-gen wealth, immigrant money, breaking poverty cycles (video script ONLY)
   - AIC = AI displacement, AI strategy for SMBs/operators, careers
   - Boubacar-personal = anything Boubacar can take a public POV on (ops, governance, consulting, JTBD, TOC, etc.)
+- `recommended_piece_types`: ranked list, BEST FIT FIRST. Aim for 1-4 pieces total. NEVER recommend more than 4. Quality over volume. If a thin source only yields one strong piece, recommend ONE. Never force pieces just to fill the slate.
+  - Available types for AIC + Boubacar-personal: LI-long, X-thread, X-single, direct, adjacent, contrarian, quote, newsletter
+  - Available types for matched Studio channels: video-UTB, video-1stGen, video-AIC
+  - Faceless brands (UTB, 1stGen) ONLY produce their video. Never recommend LI/X/quote/newsletter for them.
+  - Recommend the angles that are MOST DIFFERENT from each other. If two pieces would say the same thing in different platforms, recommend only one.
 - A source can fit multiple channels. List all that apply.
 - `skip_reason` non-empty = source is junk (spam, wrong language, fabricated, off-brand). Crew will reject.
 - No prose outside JSON.

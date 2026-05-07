@@ -102,15 +102,45 @@ def _load_skill_md(skill_name: str, env_var: str, fallback: str = "") -> str:
     return text.strip()
 
 
-VOICE_PROFILE = _load_skill_md(
-    "boub_voice_mastery",
-    "BOUB_VOICE_PROFILE_PATH",
-    fallback=(
-        "Boubacar voice rules: direct, opinionated, specific. No em-dash. "
-        "No buzzwords. No fabricated stories. Lead with the news. "
-        "Use periods, not pauses. Prefer concrete numbers and named examples."
-    ),
-)
+def _load_voice_profile_with_references() -> str:
+    """Load voice SKILL.md + key reference files (brand-spine-audit,
+    voice-fingerprint) so Sonnet sees the FULL voice spec including
+    Boubacar's earned anchors, signature moves, and vocabulary markers --
+    not just the meta-rules in SKILL.md."""
+    parts = []
+    skill_md = _load_skill_md(
+        "boub_voice_mastery",
+        "BOUB_VOICE_PROFILE_PATH",
+        fallback=(
+            "Boubacar voice rules: direct, opinionated, specific. No em-dash. "
+            "No buzzwords. No fabricated stories. Lead with the news."
+        ),
+    )
+    parts.append(skill_md)
+
+    # Pull the earned-anchor library from references/ if available.
+    ref_files = [
+        "skills/boub_voice_mastery/references/brand-spine-audit.md",
+        "skills/boub_voice_mastery/references/voice-fingerprint.md",
+    ]
+    for rel in ref_files:
+        for root in (ROOT_DIR, Path("/app"), ORCH_DIR):
+            candidate = root / rel
+            if candidate.exists():
+                try:
+                    text = candidate.read_text(encoding="utf-8").strip()
+                    if text.startswith("---"):
+                        end = text.find("\n---", 3)
+                        if end != -1:
+                            text = text[end + 4:].strip()
+                    parts.append(f"\n\n## Reference: {rel}\n\n{text}")
+                except Exception:
+                    pass
+                break
+    return "\n".join(parts)
+
+
+VOICE_PROFILE = _load_voice_profile_with_references()
 
 CTQ_RULES = _load_skill_md(
     "ctq-social",
@@ -395,53 +425,94 @@ def _channel_fit(lens: dict[str, Any], target_channels: list[str] | None) -> lis
     return fit
 
 
-def build_piece_plans(lens: dict[str, Any], target_channels: list[str] | None = None) -> list[PiecePlan]:
-    """Channel-aware piece routing.
+PIECE_CAP = 4
+PIECE_FLOOR = 1
 
-    UTB and 1stGen are FACELESS brand channels: video script ONLY. No LinkedIn,
-    no X, no newsletter, no quote card.
-    AIC and Boubacar-personal can produce LinkedIn long, X thread, X single,
-    direct/adjacent/contrarian angles, quote card, and newsletter section.
-    AIC also produces a video script for the AIC channel itself.
+# Auto-promote-eligible piece types post to FACELESS brand accounts only
+# (UTB / 1stGen / AIC YouTube + TikTok + Instagram). They go to Notion as
+# Status=Ready, allowing auto_publisher / griot_scheduler to schedule them
+# without manual approval.
+#
+# Every OTHER piece type (LI-long, X-thread, X-single, direct, adjacent,
+# contrarian, quote, newsletter) lands on Boubacar's PERSONAL LinkedIn / X
+# accounts. Those always stay as Status=Idea so Griot or Boubacar promotes
+# them manually. Boubacar's hard rule 2026-05-07: nothing auto-posts to his
+# personal social accounts.
+AUTO_PROMOTE_PIECE_TYPES = frozenset({
+    "video-UTB",
+    "video-1stGen",
+    "video-AIC",
+})
+
+
+def _initial_status_for_piece_type(piece_type: str) -> str:
+    return "Ready" if piece_type in AUTO_PROMOTE_PIECE_TYPES else "Idea"
+
+
+def build_piece_plans(lens: dict[str, Any], target_channels: list[str] | None = None) -> list[PiecePlan]:
+    """Channel-aware piece routing with quality-driven count.
+
+    UTB and 1stGen are FACELESS brand channels: video script ONLY.
+    AIC + Boubacar-personal carry the personal pieces.
+
+    Cap at PIECE_CAP (4). Floor at PIECE_FLOOR (1). Lens classifier returns
+    `recommended_piece_types` ranked by fit; crew honors that ranking and
+    truncates to the cap. Never force 9 pieces from a thin source.
     """
     fit = set(_channel_fit(lens, target_channels))
-    plans: list[PiecePlan] = []
-
-    # Personal-style pieces (LinkedIn / X / angles) require AIC or Boubacar-personal fit.
-    # UTB-only or 1stGen-only sources never produce these.
     can_personal = "Boubacar-personal" in fit or "AIC" in fit
 
+    # Map every possible piece type to a PiecePlan. The lens classifier picks
+    # which subset to actually produce.
+    catalog: dict[str, PiecePlan] = {}
     if can_personal:
-        plans.extend(
-            [
-                PiecePlan(1, "LI-long", "LinkedIn"),
-                PiecePlan(2, "X-thread", "X"),
-                PiecePlan(3, "X-single", "X"),
-                PiecePlan(4, "direct", "LinkedIn"),
-                PiecePlan(5, "adjacent", "LinkedIn"),
-                PiecePlan(6, "contrarian", "LinkedIn"),
-            ]
-        )
-
-    # Video scripts: one per matched faceless channel (UTB, 1stGen) or AIC.
+        catalog["LI-long"] = PiecePlan(1, "LI-long", "LinkedIn")
+        catalog["X-thread"] = PiecePlan(2, "X-thread", "X")
+        catalog["X-single"] = PiecePlan(3, "X-single", "X")
+        catalog["direct"] = PiecePlan(4, "direct", "LinkedIn")
+        catalog["adjacent"] = PiecePlan(5, "adjacent", "LinkedIn")
+        catalog["contrarian"] = PiecePlan(6, "contrarian", "LinkedIn")
+        catalog["quote"] = PiecePlan(8, "quote", "X")
+        catalog["newsletter"] = PiecePlan(9, "newsletter", "Newsletter")
     for channel in ("UTB", "1stGen", "AIC"):
         if channel in fit:
-            plans.append(
-                PiecePlan(
-                    7,
-                    f"video-{channel}",
-                    channel,
-                    channel=channel,
-                    channel_slug=channel.lower(),
-                )
+            catalog[f"video-{channel}"] = PiecePlan(
+                7, f"video-{channel}", channel,
+                channel=channel, channel_slug=channel.lower(),
             )
 
-    # Quote card + newsletter only when there is a Boubacar-personal or AIC
-    # surface that can carry them. UTB and 1stGen are video-only brands.
-    if can_personal:
-        plans.extend([PiecePlan(8, "quote", "X"), PiecePlan(9, "newsletter", "Newsletter")])
+    if not catalog:
+        return []
 
-    return plans
+    # Lens classifier may pre-rank piece types. Honor the ranking; otherwise
+    # fall back to a sane default ordering.
+    recommended = lens.get("recommended_piece_types") or []
+    ordered: list[PiecePlan] = []
+    seen: set[str] = set()
+    for piece_type in recommended:
+        plan = catalog.get(piece_type)
+        if plan and piece_type not in seen:
+            ordered.append(plan)
+            seen.add(piece_type)
+    # Fill from default order if classifier under-recommended.
+    default_order = [
+        "video-UTB", "video-1stGen", "video-AIC",
+        "LI-long", "X-thread", "direct", "adjacent", "contrarian",
+        "X-single", "newsletter", "quote",
+    ]
+    for piece_type in default_order:
+        plan = catalog.get(piece_type)
+        if plan and piece_type not in seen and len(ordered) < PIECE_CAP:
+            ordered.append(plan)
+            seen.add(piece_type)
+
+    # Cap and floor.
+    if len(ordered) > PIECE_CAP:
+        ordered = ordered[:PIECE_CAP]
+    if not ordered:
+        # Emergency floor: at least one piece if the catalog had anything.
+        ordered = [next(iter(catalog.values()))]
+    return ordered
 
 
 def _lens_brief_text(lens: dict[str, Any]) -> str:
@@ -455,6 +526,7 @@ def _generate_one_piece(
     cost_guard: CostGuard,
     mode: str = "verbatim",
     remix_notes: dict[str, Any] | None = None,
+    diversity_context: str = "",
 ) -> GeneratedPiece:
     from llm_helpers import call_llm
 
@@ -479,6 +551,20 @@ def _generate_one_piece(
         "fixable_strips": "; ".join(remix_notes.get("fixable_strips") or []),
     }
     user = _substitute(user_template, values)
+    if diversity_context:
+        user = (
+            f"{user}\n\n"
+            f"=== DIVERSITY CONSTRAINT ===\n"
+            f"You are writing piece {plan.number} ({plan.piece_type}). The other "
+            f"pieces from this run already lead with these hooks:\n"
+            f"{diversity_context}\n"
+            f"Your piece MUST take a meaningfully different angle. Do not "
+            f"reuse the same hook, the same example, or the same closing "
+            f"phrase. Different anchor (cultural bridge / failure / "
+            f"contrarian / values), different specific example, different "
+            f"close. If the only honest piece is a paraphrase of the others, "
+            f"return the literal string SKIP_NO_NEW_ANGLE and nothing else."
+        )
     prompt_for_cost = system + "\n\n" + user
     cost_guard.reserve_sonnet(prompt_for_cost, output_tokens=800)
     response = call_llm(
@@ -579,32 +665,70 @@ def _generate_pieces_parallel(
     mode: str = "verbatim",
     remix_notes: dict[str, Any] | None = None,
 ) -> tuple[list[GeneratedPiece], list[dict[str, str]]]:
+    """Generate pieces with diversity awareness.
+
+    Pattern: piece 1 fires solo (sets the anchor hook + angle). Remaining
+    pieces fire in parallel but each receives the prior hooks as a
+    DIVERSITY CONSTRAINT. Pieces that return SKIP_NO_NEW_ANGLE are dropped
+    instead of producing paraphrase. Cap and floor enforced upstream by
+    build_piece_plans.
+    """
     plans = build_piece_plans(lens, target_channels)
     generated: list[GeneratedPiece] = []
     dropped: list[dict[str, str]] = []
     forbidden_strips = (remix_notes or {}).get("fixable_strips") or []
     forbidden_url = doc.source_url if mode == "remix" else None
+
+    if not plans:
+        return generated, dropped
+
+    def _check_and_collect(plan: PiecePlan, piece: GeneratedPiece) -> bool:
+        if piece.body.strip() == "SKIP_NO_NEW_ANGLE":
+            dropped.append({"piece_type": plan.piece_type, "reason": "skipped: no new angle"})
+            return False
+        reason = ctq_reject_reason(
+            piece.body,
+            mode=mode,
+            forbidden_strips=forbidden_strips,
+            forbidden_url=forbidden_url,
+        )
+        if reason:
+            dropped.append({"piece_type": plan.piece_type, "reason": reason})
+            return False
+        generated.append(piece)
+        return True
+
+    # Piece 1 fires solo to set the anchor hook + angle.
+    first_plan = plans[0]
+    try:
+        first_piece = _generate_one_piece(doc, lens, first_plan, cost_guard, mode, remix_notes)
+        _check_and_collect(first_plan, first_piece)
+    except Exception as exc:
+        logger.exception("content multiplier piece failed: %s", first_plan.piece_type)
+        dropped.append({"piece_type": first_plan.piece_type, "reason": str(exc)})
+
+    if len(plans) == 1:
+        return generated, dropped
+
+    # Remaining pieces fire in parallel with diversity context.
+    diversity_lines = "\n".join(
+        f"- piece {p.plan.number} ({p.plan.piece_type}): {p.hook[:160]}"
+        for p in generated
+    )
+    rest_plans = plans[1:]
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         future_map = {
             executor.submit(
-                _generate_one_piece, doc, lens, plan, cost_guard, mode, remix_notes
+                _generate_one_piece, doc, lens, plan, cost_guard, mode,
+                remix_notes, diversity_lines,
             ): plan
-            for plan in plans
+            for plan in rest_plans
         }
         for future in concurrent.futures.as_completed(future_map):
             plan = future_map[future]
             try:
                 piece = future.result()
-                reason = ctq_reject_reason(
-                    piece.body,
-                    mode=mode,
-                    forbidden_strips=forbidden_strips,
-                    forbidden_url=forbidden_url,
-                )
-                if reason:
-                    dropped.append({"piece_type": plan.piece_type, "reason": reason})
-                else:
-                    generated.append(piece)
+                _check_and_collect(plan, piece)
             except Exception as exc:
                 logger.exception("content multiplier piece failed: %s", plan.piece_type)
                 dropped.append({"piece_type": plan.piece_type, "reason": str(exc)})
@@ -691,7 +815,7 @@ def _write_piece_to_notion(
     # for now; future extension can map lens to Topic options.
     candidates = {
         "Title": _title(piece.hook),
-        "Status": _select("Idea"),
+        "Status": _select(_initial_status_for_piece_type(piece.plan.piece_type)),
         "Platform": platform_value,
         "Draft": _rich_text(draft),
         "Hook": _rich_text(piece.hook),
