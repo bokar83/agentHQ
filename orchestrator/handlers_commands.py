@@ -973,6 +973,29 @@ def _cmd_dream(text: str, chat_id: str) -> bool:
     return True
 
 
+
+# ══════════════════════════════════════════════════════════════
+# SW pipeline trigger
+# ══════════════════════════════════════════════════════════════
+
+def _cmd_sw(text: str, chat_id: str) -> bool:
+    if text.lower().strip() not in ('/sw',):
+        return False
+    from notifier import send_message as _send
+    _send(chat_id, 'SW pipeline fired. Lead harvest + enrichment running (~2 min).')
+
+    def _do_sw():
+        try:
+            from scheduler import _run_daily_harvest
+            _run_daily_harvest()
+            _send(chat_id, 'SW harvest complete. Check Telegram report.')
+        except Exception as e:
+            logger.error(f'/sw error: {e}')
+            _send(chat_id, f'SW pipeline failed: {e}')
+
+    threading.Thread(target=_do_sw, daemon=True).start()
+    return True
+
 # ══════════════════════════════════════════════════════════════
 # Dispatcher (order matters: longest prefix first to avoid collisions)
 # ══════════════════════════════════════════════════════════════
@@ -996,6 +1019,7 @@ _COMMANDS = [
     _cmd_approve,
     _cmd_reject,
     _cmd_outcomes,
+    _cmd_sw,
     _cmd_scan_drive,
     _cmd_lessons,
     _cmd_purge_lesson,
