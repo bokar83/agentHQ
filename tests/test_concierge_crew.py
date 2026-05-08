@@ -47,3 +47,37 @@ def test_fetch_recent_errors_returns_empty_on_ssh_failure():
         lines = cc.fetch_recent_errors(hours=24)
 
     assert lines == []
+
+
+def test_group_by_signature_deduplicates_same_error():
+    """Two lines with same normalized text become one group."""
+    import concierge_crew as cc
+
+    lines = [
+        "2026-05-08 01:00:00 [ERROR] griot_tick: NoneType 'get' uuid=abc123",
+        "2026-05-08 02:00:00 [ERROR] griot_tick: NoneType 'get' uuid=def456",
+        "2026-05-08 03:00:00 [ERROR] studio_tick: connection refused",
+    ]
+    groups = cc.group_by_signature(lines)
+
+    assert len(groups) == 2
+    sigs = [g["signature"] for g in groups]
+    assert len(set(sigs)) == 2
+    counts = {g["signature"]: g["count"] for g in groups}
+    griot_sig = next(s for s in sigs if "griot" in s)
+    assert counts[griot_sig] == 2
+
+
+def test_group_by_signature_strips_timestamps_and_uuids():
+    """Normalized signature has no timestamps or UUIDs."""
+    import concierge_crew as cc
+
+    lines = [
+        "2026-05-08T12:34:56 [ERROR] worker: task uuid=550e8400-e29b-41d4-a716-446655440000 failed",
+    ]
+    groups = cc.group_by_signature(lines)
+
+    assert len(groups) == 1
+    sig = groups[0]["signature"]
+    assert "2026" not in sig
+    assert "550e8400" not in sig
