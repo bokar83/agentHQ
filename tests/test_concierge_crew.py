@@ -30,7 +30,7 @@ def test_fetch_recent_errors_returns_lines_from_log():
     mock_client.open_sftp.return_value.__exit__ = MagicMock(return_value=False)
 
     with patch("concierge_crew._ssh_client", return_value=mock_client):
-        lines = cc.fetch_recent_errors(hours=24)
+        lines = cc.fetch_recent_errors()
 
     assert len(lines) == 3  # 2 ERROR lines + 1 Traceback line
     assert any("[ERROR]" in l for l in lines)
@@ -44,7 +44,7 @@ def test_fetch_recent_errors_returns_empty_on_ssh_failure():
     import paramiko
 
     with patch("concierge_crew._ssh_client", side_effect=paramiko.SSHException("timeout")):
-        lines = cc.fetch_recent_errors(hours=24)
+        lines = cc.fetch_recent_errors()
 
     assert lines == []
 

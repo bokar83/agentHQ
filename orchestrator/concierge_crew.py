@@ -40,10 +40,12 @@ def _ssh_client():
     return client
 
 
-def fetch_recent_errors(hours: int = 24) -> list[str]:
-    """Pull error lines from error_monitor.log on VPS via SFTP.
+def fetch_recent_errors() -> list[str]:
+    """Pull all error lines from error_monitor.log on VPS via SFTP.
 
-    Returns list of matching log lines. Empty list on SSH failure (non-fatal).
+    Reads the full log file. Caller uses group_by_signature + 7-day dedup
+    in enqueue_proposals to avoid re-processing known errors.
+    Returns empty list on SSH failure (non-fatal).
     """
     import paramiko
 
@@ -76,6 +78,7 @@ _UUID_RE = re.compile(
 )
 _HEX_ID_RE = re.compile(r"\b[0-9a-f]{16,}\b", re.IGNORECASE)
 _LINE_NUMBER_RE = re.compile(r", line \d+")
+_PARAM_ID_RE = re.compile(r"\buuid=[a-f0-9A-F]+\b")
 
 
 def _normalize(line: str) -> str:
@@ -84,7 +87,7 @@ def _normalize(line: str) -> str:
     s = _UUID_RE.sub("<uuid>", s)
     s = _HEX_ID_RE.sub("<hexid>", s)
     s = _LINE_NUMBER_RE.sub(", line <N>", s)
-    s = re.sub(r"\buuid=[a-f0-9A-F]+\b", "uuid=<id>", s)
+    s = _PARAM_ID_RE.sub("uuid=<id>", s)
     return s.strip()
 
 
