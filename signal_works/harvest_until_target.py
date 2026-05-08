@@ -172,7 +172,7 @@ def _run_cw_until(target: int, dry_run: bool = False) -> int:
         logger.info(f"CW already at {before}/{target} with email. Skipping.")
         return 0
     logger.info(f"CW: have {before}/{target} with email. Hunting {needed} more...")
-    saved = topup_cw_leads(minimum=needed, dry_run=dry_run)
+    saved = topup_cw_leads(minimum=needed, dry_run=dry_run, force_fresh=True)
     after = _count_today_cw_with_email()
     delta = max(0, after - before)
     logger.info(f"CW: ran for {needed}, saved {saved} email-verified")

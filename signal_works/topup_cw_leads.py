@@ -82,11 +82,15 @@ def _save_cw_lead(conn, lead: dict) -> bool:
         return False
 
 
-def topup_cw_leads(minimum: int = DAILY_MINIMUM, dry_run: bool = False) -> int:
+def topup_cw_leads(minimum: int = DAILY_MINIMUM, dry_run: bool = False, force_fresh: bool = False) -> int:
     """Hybrid CW lead topup: 5 fresh from Apollo (widened ICP) + 5 resends.
 
-    If resend queue returns fewer than 5, top up the gap from Apollo so we
-    always hit `minimum`.
+    Args:
+        minimum: target leads to ensure ready in DB.
+        dry_run: walk pipeline without saving.
+        force_fresh: skip the ready>=minimum short-circuit. Used by
+            harvest_until_target when we want guaranteed daily injection
+            even if undrafted residue exists.
     """
     conn = get_crm_connection()
     try:
@@ -94,8 +98,8 @@ def topup_cw_leads(minimum: int = DAILY_MINIMUM, dry_run: bool = False) -> int:
     except Exception as e:
         logger.warning(f"topup_cw_leads: ensure_leads_columns failed: {e}")
     ready = _count_ready_cw_leads(conn)
-    logger.info(f"CW topup: {ready} ready leads (target: {minimum})")
-    if ready >= minimum:
+    logger.info(f"CW topup: {ready} ready leads (target: {minimum}, force_fresh={force_fresh})")
+    if ready >= minimum and not force_fresh:
         return ready
 
     target_fresh = 5
