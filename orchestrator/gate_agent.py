@@ -268,14 +268,54 @@ def _deploy_vps() -> tuple[bool, str]:
 # Conflict detection
 # ---------------------------------------------------------------------------
 
+def _files_differ(branch_a: str, branch_b: str, file_path: str) -> bool:
+    """True iff branch_a and branch_b have meaningfully different content for file_path.
+
+    Ignores line-ending-only diffs (CRLF vs LF) and ignores whitespace-only diffs.
+    Coding agents on Windows write CRLF, Linux VPS writes LF — same content gets flagged
+    as a conflict by naive set-overlap detection. This function strips that false positive.
+    """
+    # `git diff --quiet --ignore-all-space --ignore-blank-lines` returns 0 if no diff
+    # (after ignoring whitespace + blanks), 1 if diffs exist.
+    try:
+        proc = subprocess.run(
+            [
+                "git", "diff", "--quiet",
+                "--ignore-all-space", "--ignore-blank-lines",
+                f"origin/{branch_a}", f"origin/{branch_b}",
+                "--", file_path,
+            ],
+            cwd=str(REPO_DIR),
+            capture_output=True,
+            timeout=30,
+        )
+        return proc.returncode != 0
+    except (subprocess.TimeoutExpired, OSError) as exc:
+        # If diff fails for any reason, fall back to assuming a real conflict (safe default)
+        logger.warning("gate: _files_differ check failed for %s on %s vs %s: %s -- assuming conflict", file_path, branch_a, branch_b, exc)
+        return True
+
+
 def _detect_conflicts(branches_with_files: list[tuple[str, list[str]]]) -> list[tuple[str, str, str]]:
-    """Find pairs of branches touching the same file. Returns list of (branch_a, branch_b, file)."""
+    """Find pairs of branches with REAL content conflicts on the same file.
+
+    Two branches "conflict" only if they both touch the same file AND the file content
+    diverges between them (after ignoring whitespace / line endings). File overlap alone
+    is not a conflict — both branches may have rebased/merged the same upstream commit
+    and contain identical content for that path.
+    """
     conflicts = []
     for i, (b1, files1) in enumerate(branches_with_files):
         for b2, files2 in branches_with_files[i + 1:]:
             overlap = set(files1) & set(files2)
             for f in overlap:
-                conflicts.append((b1, b2, f))
+                if _files_differ(b1, b2, f):
+                    conflicts.append((b1, b2, f))
+                else:
+                    logger.info(
+                        "gate: %s and %s both touch %s but content matches -- not a conflict",
+                        b1, b2, f,
+                    )
     return conflicts
 
 
