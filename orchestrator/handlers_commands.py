@@ -974,6 +974,54 @@ def _cmd_dream(text: str, chat_id: str) -> bool:
 
 
 
+
+# ══════════════════════════════════════════════════════════════
+# On-demand digest + publish triggers
+# ══════════════════════════════════════════════════════════════
+
+def _cmd_digest(text: str, chat_id: str) -> bool:
+    if text.lower().strip() != '/digest':
+        return False
+    owner_id = os.environ.get('OWNER_TELEGRAM_CHAT_ID', '')
+    from notifier import send_message as _send
+    if owner_id and str(chat_id) != str(owner_id):
+        _send(chat_id, 'Not authorized.')
+        return True
+    _send(chat_id, 'Digest firing. Full morning report incoming (~30s).')
+
+    def _do_digest():
+        try:
+            from scheduler import _run_morning_digest
+            _run_morning_digest()
+        except Exception as e:
+            logger.error(f'/digest error: {e}')
+            _send(chat_id, f'Digest failed: {e}')
+
+    threading.Thread(target=_do_digest, daemon=True).start()
+    return True
+
+
+def _cmd_publish(text: str, chat_id: str) -> bool:
+    if text.lower().strip() != '/publish':
+        return False
+    owner_id = os.environ.get('OWNER_TELEGRAM_CHAT_ID', '')
+    from notifier import send_message as _send
+    if owner_id and str(chat_id) != str(owner_id):
+        _send(chat_id, 'Not authorized.')
+        return True
+    _send(chat_id, 'Auto-publisher tick fired.')
+
+    def _do_publish():
+        try:
+            from auto_publisher import auto_publisher_tick
+            auto_publisher_tick()
+        except Exception as e:
+            logger.error(f'/publish error: {e}')
+            _send(chat_id, f'Publish tick failed: {e}')
+
+    threading.Thread(target=_do_publish, daemon=True).start()
+    return True
+
 # ══════════════════════════════════════════════════════════════
 # SW pipeline trigger
 # ══════════════════════════════════════════════════════════════
@@ -1019,6 +1067,8 @@ _COMMANDS = [
     _cmd_approve,
     _cmd_reject,
     _cmd_outcomes,
+    _cmd_digest,
+    _cmd_publish,
     _cmd_sw,
     _cmd_scan_drive,
     _cmd_lessons,
