@@ -310,6 +310,20 @@ async def startup_event():
     except Exception as e:
         logger.warning(f"griot-signal-brief wake registration failed (non-fatal): {e}")
 
+    # Chairman weekly: Monday 06:00 MT scoring weight review + mutation proposals.
+    try:
+        import heartbeat as _heartbeat
+        from chairman_crew import chairman_weekly_tick
+        _heartbeat.register_wake(
+            "chairman-weekly",
+            crew_name="chairman",
+            callback=chairman_weekly_tick,
+            at="06:00",
+        )
+        logger.info("HEARTBEAT: chairman-weekly registered (Monday 06:00 MT)")
+    except Exception as e:
+        logger.warning(f"chairman-weekly wake registration failed (non-fatal): {e}")
+
     # Telegram polling in the background (hardened loop in handlers.py).
     asyncio.create_task(telegram_polling_loop())
     logger.info("Telegram Polling Loop scheduled.")

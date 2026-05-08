@@ -64,6 +64,28 @@ SCORING_WEIGHTS = {
 RECENCY_WINDOW_DAYS = 7
 ARC_PHASE_WINDOW_DAYS = 3
 
+
+def _load_scoring_weights() -> dict:
+    """Return SCORING_WEIGHTS merged with any agent_config overrides.
+
+    Chairman crew writes overrides via agent_config.set_config() using keys
+    GRIOT_<UPPER_KEY> (e.g. GRIOT_TOPIC_OVERLAP_PENALTY). This is called once
+    per tick so DB hits stay O(1) per tick, not O(candidates).
+    """
+    weights = dict(SCORING_WEIGHTS)
+    try:
+        from agent_config import get_config
+        for wk, wv in weights.items():
+            override = get_config(f"GRIOT_{wk.upper()}")
+            if override is not None:
+                try:
+                    weights[wk] = type(wv)(override)
+                except (ValueError, TypeError):
+                    logger.warning(f"griot: invalid agent_config override GRIOT_{wk.upper()}={override!r}, using default")
+    except Exception as e:
+        logger.warning(f"griot: _load_scoring_weights agent_config lookup failed ({e}), using defaults")
+    return weights
+
 # Idempotency window: skip if a successful griot outcome already fired within this.
 DOUBLE_FIRE_GUARD_HOURS = 20
 
@@ -242,9 +264,9 @@ def _split_pool(rows: list, today_iso: str) -> tuple:
     return candidates, recent_posts
 
 
-def _score_candidate(cand: dict, recent_posts: list, next_arc_priority: Optional[float]) -> tuple:
+def _score_candidate(cand: dict, recent_posts: list, next_arc_priority: Optional[float], weights: Optional[dict] = None) -> tuple:
     """Return (score, score_breakdown_str) for one candidate."""
-    w = SCORING_WEIGHTS
+    w = weights if weights is not None else SCORING_WEIGHTS
     breakdown = []
 
     # Base score from Notion.
@@ -314,10 +336,11 @@ def _pick_top_candidate(candidates: list, recent_posts: list) -> Optional[dict]:
     """
     if not candidates:
         return None
+    weights = _load_scoring_weights()
     next_arc = _min_unused_arc_priority(candidates, recent_posts)
     scored = []
     for cand in candidates:
-        score, breakdown = _score_candidate(cand, recent_posts, next_arc)
+        score, breakdown = _score_candidate(cand, recent_posts, next_arc, weights=weights)
         scored.append((score, cand.get("arc_priority") if cand.get("arc_priority") is not None else 999, cand, breakdown))
     scored.sort(key=lambda x: (-x[0], x[1]))
     score, _tiebreak, top, breakdown = scored[0]
