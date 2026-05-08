@@ -46,6 +46,15 @@ Fallback to generic hook (no ChatGPT prompt) when niche cannot be resolved.
 
 **Daily target = 50 emails (locked 2026-05-07):** SW=35 + CW=15 = 50 verified emails/day floor. `signal_works/harvest_until_target.py` runs SW + CW topups in retry-until-target loop with stall detection. Phone-only / website-only leads still saved with `email_source` flag (`phone_only` / `website_only` / `phone_and_website`) but excluded from 50-count. Hunter daily cap raised 200 → 400 to support volume.
 
+**topup_cw_leads.force_fresh (added 2026-05-08):** `topup_cw_leads` early-exits when `_count_ready_cw_leads(conn) >= minimum`. This starves daily CW injection when undrafted residue accumulates (e.g., 41 existing leads → CW skipped → harvest stalls at 31/50). Fix: `force_fresh=True` bypasses the short-circuit. `harvest_until_target._run_cw_until` passes `force_fresh=True`. Default `force_fresh=False` preserves existing callers. Merged commit `2efb37c`. Validated: CW 0/15 → 15/15 same day.
+
+**Harvest run via docker exec -d (2026-05-08):** SW harvest takes 8-12 min. Running synchronously via `docker exec orc-crewai bash -c '...'` over SSH times out at ~3 min (exit 137 = exec session killed, NOT OOM). Use detached exec for any harvest run expected >2 min:
+```bash
+ssh root@72.60.209.109 "docker exec -d orc-crewai bash -c 'cd /app && python -m signal_works.harvest_until_target --target 50 --sw-target 35 --cw-target 15 >> /tmp/harvest.log 2>&1'"
+# Monitor: docker exec orc-crewai tail -20 /tmp/harvest.log
+# Or watch Telegram for ✅ Daily harvest complete
+```
+
 **Calendly:** Use `calendly.com/boubacarbarry/signal-works-discovery-call`. Never `catalystworks` (404).
 
 **Docker deploy:** Code dirs (signal_works/skills/templates/orchestrator) are volume-mounted as of 2026-05-05. Deploy = `git pull && docker compose up -d orchestrator` (~10 sec). Rebuild ONLY when `requirements.txt` changes.

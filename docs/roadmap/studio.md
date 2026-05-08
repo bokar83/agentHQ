@@ -1000,3 +1000,19 @@ Boubacar's lived experiences and raw observations are the primary content source
 1. Wire Studio script crew to pull `Content Type=Story + Status=Idea` as candidate briefs (alongside trend-scouted topics)
 2. Story → multi-channel adaptation: one entry generates 3 scripts (1stGen/UTB/AIC lenses)
 3. M4 warm-up: confirm first batch of renders posted and tracking engagement
+
+---
+
+## Session log 2026-05-08 — Studio cards v2 + production pipeline fix
+
+**Studio cards rebuilt (all 6 intros/outros):**
+- Root cause of bad renders: comps used `<template>` wrapper (standalone files must NOT), wordmarks at `bottom: 9-24%` (too low), animations overran clip duration (tagline finishing at 4.3s in a 4s clip), package.json scripts pinned to `hyperframes@0.4.44` while `node_modules/` had `0.5.0-alpha.15`
+- Fixed: standalone `<body>`-direct comps, `top: 50% translateY(-50%)` wordmarks, animation completes by 2.5s with 1.5s hold, scripts pinned to alpha.15
+- Render path: per-comp standalone via `workspace/studio-cards-test/` scratch dir on VPS. Renders deployed to `workspace/studio-cards/channel_cards/*.mp4`. v1 archived to `_archive/*_v1_2026-05-07.mp4`
+
+**Production pipeline unblocked:**
+- Root cause of 0-candidate ticks: `scheduler.py:613` used bare `from studio_production_crew import` which loaded `/app/studio_production_crew.py` (baked image copy, stale) instead of `/app/orchestrator/studio_production_crew.py` (volume-mounted, current). Baked copy returned 0 candidates.
+- Fix: `from orchestrator.studio_production_crew import studio_production_tick` — merged via `fix/studio-production-import`
+- Result: 11 qa-passed candidates processed on next tick. First two renders confirmed in logs: 1stGen Money + Under the Baobab both rendered, Notion updated, emails sent.
+
+**Confirmed working end-to-end:** brand_config loads → intro/outro MP4s found via bind-mount → ffmpeg render → Drive upload → Notion → scheduled status → email to both addresses.

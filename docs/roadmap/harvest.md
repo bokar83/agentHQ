@@ -633,7 +633,8 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 - **Monitor tomorrow's Studio draft generation batch.** If it matches today's success, we are fully ready to flip the automation switch (`AUTO_SEND_CW=true` and `AUTO_SEND_SW=true` in VPS `.env`) for SW and CW.
 - Content board cleanup (15 deletes, 30+ collapse, route worker/fear posts)
 - geolisted.co trade pages (/hvac /roofing /dental)
-- Rod follow-up + case study documentation after first SW engagement
+- [x] Rod follow-up completed 2026-05-07 (first touch sent; awaiting reply)
+- [ ] Rod case study documentation after first SW engagement (upon reply/conversion)
 
 ---
 
