@@ -135,7 +135,7 @@ Respond with JSON only. No explanation, no markdown.
 def propose_fix(group: dict) -> dict:
     """Call Claude Haiku to propose a fix for one error group.
 
-    Returns {summary, severity, proposed_fix}. Falls back to safe defaults
+    Returns {summary, severity, triage_note}. Falls back to safe defaults
     if the model returns unparseable output.
     """
     prompt = _PROPOSE_PROMPT.format(
