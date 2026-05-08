@@ -594,37 +594,42 @@ WHERE status = 'new'
 
 **Why:** ~$480/yr for a service that does one thing we can do ourselves. Full control over retry logic, rate limits, error handling, and future platform support. No third-party outage risk.
 
-**Platform API status (research gate — verify before build):**
+**Research completed 2026-05-08. Findings:**
 
-| Platform | API path | Auth | Notes |
-|---|---|---|---|
-| X (Twitter) | `POST /2/tweets` (v2) | OAuth 2.0 PKCE or Bearer | Video upload: chunked media upload v1.1 endpoint required |
-| Instagram | Meta Graph API `/{ig-user-id}/media` + `/{id}/publish` | OAuth 2.0 + long-lived token | Reels need `media_type=REELS`, must host video at public URL |
-| TikTok | Content Posting API `POST /v2/post/publish/video/init` | OAuth 2.0 | Business/Creator account required; direct-post or inbox flow |
-| YouTube | YouTube Data API v3 `videos.insert` | OAuth 2.0 | Resumable upload; quota: 10,000 units/day free |
-| LinkedIn | UGC Posts API `POST /ugcPosts` | OAuth 2.0 | Video upload: register + upload + post flow |
+| Platform | Verdict | Blocker |
+|---|---|---|
+| YouTube | **EASY** | One-time browser OAuth per channel; free quota 10k units/day (~6 uploads/day, we use ~1.5/day); indefinite refresh tokens once app verified |
+| Instagram | **MEDIUM** | Must switch channels to Business accounts; Meta app review for `instagram_business_content_publish` (~7-14 days); 2-step container+publish flow; public URL required (Drive usercontent already works) |
+| X/Twitter | **HARD — DO NOT REPLACE** | Free tier: 34 media FINALIZE calls/24h total — hit by midday at studio volume. Basic tier = $200/mo. Blotato at $29/mo is cheaper. |
+| TikTok | **HARD — DO NOT REPLACE** | `video.publish` scope requires manual TikTok approval (weeks, uncertain outcome). Only alternative is Inbox/draft mode (creator must manually publish) — defeats zero-touch goal. |
+| LinkedIn | **HARD — DO NOT REPLACE** | 60-day access tokens with no silent refresh on personal profiles. Community Management API (required for refresh tokens) needs registered legal org approval. Blotato absorbs this entirely. |
 
-**Trigger gate (ALL required before build starts):**
-1. Spike each platform API: confirm auth flow works end-to-end for X + Instagram + YouTube (TikTok and LinkedIn optional in v1)
-2. Confirm OAuth token refresh can be automated without user interaction (long-lived tokens or refresh token rotation)
-3. Verify X video upload works (chunked media endpoint is v1.1, separate from v2 tweet endpoint)
-4. Cost model: confirm $0 for all 5 platforms at our volume (<100 posts/mo)
+**Key insight:** Blotato's real value is not the API calls — it is the OAuth token store. X, TikTok, and LinkedIn have expiry/approval constraints that make self-hosting expensive or blocked. YouTube and Instagram are genuinely replaceable.
+
+**Revised scope:**
+
+- **v1 (worth building):** YouTube + Instagram native adapters only. Drop-in behind same interface as `BlotatoPublisher`. Saves ~$15-20/mo if we can downgrade Blotato to X/TikTok/LinkedIn only tier — or confirms Blotato is still needed and we cancel the research.
+- **v2 (monitor):** X native if X raises Basic tier price or we hit rate limits at scale. LinkedIn if we get Community Management API access.
+- **TikTok:** stay on Blotato indefinitely or evaluate Creator Marketplace API when it matures.
+
+**Trigger gate (revised):**
+1. Confirm Instagram channels are switched to Business accounts (manual, Boubacar)
+2. Submit Meta app for `instagram_business_content_publish` review
+3. Set up Google Cloud project + YouTube OAuth app, submit for verification
+4. Implement `YouTubeAdapter` + `InstagramAdapter` with parallel-run against Blotato for 2 weeks
+5. If parity confirmed: downgrade or cancel Blotato plan depending on X/TikTok/LinkedIn volume
 
 **Scope v1 (ship when gate clears):**
-- `orchestrator/social_publisher.py` — platform-agnostic publisher, same interface as `BlotatoPublisher`
-- Per-platform adapters: `XAdapter`, `InstagramAdapter`, `YouTubeAdapter`
-- Token store: encrypted credentials in `.env` (refresh tokens per account per platform)
-- Drop-in replacement: `studio_blotato_publisher.py` switches publisher with one import change
-- Cancel Blotato subscription after 30-day parallel run validates parity
-
-**Scope v2 (future):**
-- TikTok + LinkedIn adapters
-- Per-platform analytics pull (views, likes, reach → Notion Pipeline DB)
+- `orchestrator/social_publisher.py` — platform-agnostic publisher, same `publish(text, account_id, platform, media_urls)` interface
+- `YouTubeAdapter` — resumable upload + video metadata
+- `InstagramAdapter` — public URL container + poll + publish two-step
+- Token store: refresh tokens in `.env`, auto-refresh before expiry via scheduled check
+- `studio_blotato_publisher.py` — route YouTube + Instagram to native adapters; X/TikTok/LinkedIn remain on Blotato
 
 **Branch:** `feat/atlas-m20-native-publisher` (create when gate clears)
-**ETA:** 2-3 days for v1 (X + IG + YT). Gate spike: 2h.
-**Cost savings:** ~$480/yr → $0 (platform APIs are free at our volume)
-**Trigger date:** Research spike — schedule after M19 CRM ships or in parallel if bandwidth allows.
+**ETA:** 2 days for YouTube + Instagram adapters. Meta app review: async (~2 weeks).
+**Cost savings:** Unclear until Blotato plan audit — may save $10-20/mo or justify full cancel if X volume drops.
+**Trigger date:** After M19 CRM ships. Instagram Business account switch is the critical path item — do that first (5 min per channel in Instagram app).
 
 ---
 
