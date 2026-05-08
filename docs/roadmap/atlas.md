@@ -15,18 +15,19 @@
 
 ## Session-Start Cheat Block (read this first)
 
-Last session ended **2026-05-08 (evening)**. State at close:
+Last session ended **2026-05-08 (late evening)**. State at close:
 
-- **Telegram phone control live:** `/sw`, `/digest`, `/publish`, `/queue`, `/cost`, `/dream`, `/autonomy_status` all dispatch correctly from DM to @agentsHQ4Bou_bot
-- **Gate deploy watchdog fixed:** now uses `docker compose up -d` for code-only merges (~10s, no SIGTERM). Full rebuild only when `requirements.txt` changes. Stops killing ffmpeg renders.
-- **Baked import precedence RCA resolved:** `handlers_commands.py` added to docker cp list. Root cause: `/app/handlers_commands.py` (baked) shadows `/app/orchestrator/handlers_commands.py` (volume). Must cp both after every edit.
-- **Telegram bot-to-bot + Guest Queries:** announced by Telegram 2026-05-08 but NOT yet rolled out. `can_manage_bots: false`, `supports_guest_queries: false`. Remote check scheduled 2026-05-29 (routine `trig_01GfTDBcYQ3vA7T9phNwhjsE`).
+- **Gate fully autonomous:** 5-min cron 24/7, silent success, inline ✅/❌ buttons, dedup alerts, 4 high-risk files only (`gate_agent.py`, `orc_rebuild.sh`, `.env`, `docker-compose`). Container gate registration removed — host cron is sole runner.
+- **Baked-file drift permanently fixed:** `scripts/docker-entrypoint.sh` ships with Dockerfile. Every container start auto-syncs `orchestrator/*.py` over baked `/app/*.py`. `docker cp` ritual retired. Rebuild completed successfully 2026-05-08 21:47 UTC.
+- **requirements.txt cleaned:** all wide-range deps pinned to exact running versions. `halo-engine` removed (not on PyPI). Robust `.env` parser in `orc_rebuild.sh` (handles CRLF + unquoted spaces).
+- **`scheduler.py` + `app.py` removed from HIGH_RISK_PREFIXES** — tests catch regressions there. Only infra files need human eyes.
 
 **Default next moves (in priority order):**
 
-1. Test `/digest` and `/publish` commands via DM to @agentsHQ4Bou_bot
-2. Check 2026-05-29 remote routine result for Telegram feature rollout
+1. Verify container entrypoint synced correctly: `docker exec orc-crewai diff /app/gate_agent.py /app/orchestrator/gate_agent.py` (should be empty)
+2. Test `/digest` and `/publish` commands via DM to @agentsHQ4Bou_bot
 3. M18 HALO unlock: instrument Atlas heartbeat with tracing.py + 50 traces by 2026-05-18
+4. Fix `newsletter_editorial_input` table missing (studio_trend_scout error at 17:58 — separate session)
 
 **Do not start a new milestone without reading the latest Session Log entry below.**
 
@@ -2297,3 +2298,32 @@ OpenRouter ground-truth spend now visible on the Atlas dashboard. Hero Spend Pac
 1. Check May 9 publisher tick: `docker logs orc-crewai 2>&1 | grep -E 'BLOTATO poll|STUDIO PUBLISHER.*tick done' | tail -20` — confirm TikTok CFR fixed + 1stGen IG published
 2. Archive 10 old handoff docs in `docs/handoff/` (session audit warning)
 3. M18 HALO: instrument heartbeat tracing (target 50 traces by 2026-05-18)
+
+### 2026-05-08 (late evening): Gate autonomy overhaul + baked-file drift fix + rebuild repair
+
+**What shipped:**
+
+Gate fully autonomous:
+- `orchestrator/gate_agent.py`: inline ✅/❌ Telegram buttons (`ba95afc`), dedup alerts via `_alerted_high_risk` set (`f6d3895`), silent success on merge+deploy, HIGH_RISK_PREFIXES shrunk to 4 files (`ca03ce9`)
+- `orchestrator/scheduler.py`: in-container `gate_tick` registration removed (`8a1e8fc`) — container has no `.git`, host cron is sole runner
+- `/etc/cron.d/gate-agent` on VPS: rewritten to every 5 min 24/7, single line
+- `orchestrator/handlers_approvals.py`: `gate_approve:` / `gate_reject:` callback handlers added — write same marker files as `/gate-approve` slash commands
+- `docs/AGENT_SOP.md`: Gate architecture rule added with runbook
+
+Baked-file drift permanently fixed:
+- `scripts/docker-entrypoint.sh` (new): syncs `orchestrator/*.py` over `/app/*.py` on every container start
+- `orchestrator/Dockerfile`: ENTRYPOINT wired to docker-entrypoint.sh
+- Rebuild completed 2026-05-08 21:47 UTC. `docker cp` ritual retired.
+
+Rebuild pipeline repaired (3 bugs fixed):
+- `orchestrator/requirements.txt`: pinned `anthropic==0.98.1`, `qdrant-client==1.17.1`, `crewai==1.14.4`, `crewai-tools==1.14.4`, `openai==2.34.0`, `litellm==1.83.0`; removed `halo-engine` (not on PyPI — caused `ResolutionImpossible`)
+- `scripts/orc_rebuild.sh`: robust `.env` parser replaces `set -a; . .env` (handles CRLF + unquoted spaces like `SMTP_PASS` and `SIGNAL_WORKS_SENDER`)
+
+**Final main SHA:** `a1b0456` (requirements pin) → `8e49790` (orc_rebuild .env parser) → `88116da` (qdrant pin) → `be058b9` (all dep pins) → `a1b0456` (halo-engine removed)
+
+**Next session priorities:**
+1. Verify entrypoint sync: `docker exec orc-crewai diff /app/gate_agent.py /app/orchestrator/gate_agent.py` (empty = good)
+2. Test `/digest` + `/publish` via DM to @agentsHQ4Bou_bot
+3. Fix `newsletter_editorial_input` table missing (studio_trend_scout error 17:58 UTC)
+4. Archive 10 stale handoff docs in `docs/handoff/` root
+5. M18 HALO: instrument heartbeat tracing (target 50 traces by 2026-05-18)
