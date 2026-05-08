@@ -138,7 +138,18 @@ def save_to_drive(title: str, task_type: str, content: str) -> str:
             raise ImportError("google-api-python-client not installed")
         media = MediaInMemoryUpload(content.encode("utf-8"), mimetype="text/markdown", resumable=False)
         result = service.files().create(body=metadata, media_body=media, fields="id,webViewLink").execute()
+        file_id = result.get("id", "")
         url = result.get("webViewLink", "")
+        # Grant anyone-with-link reader so Notion / external clients can open the URL.
+        # See AGENT_SOP "Drive files in outgoing surfaces" rule and orchestrator/drive_publish.py.
+        if file_id:
+            try:
+                service.permissions().create(  # type: ignore[attr-defined]
+                    fileId=file_id,
+                    body={"role": "reader", "type": "anyone", "allowFileDiscovery": False},
+                ).execute()
+            except Exception as perm_err:
+                logger.warning(f"Drive public-perm grant failed for {file_id}: {perm_err}")
         logger.info(f"Drive save: {url}")
         return url
     except Exception as e:
