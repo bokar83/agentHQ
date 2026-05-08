@@ -15,7 +15,7 @@
 
 ## Session-Start Cheat Block (read this first)
 
-Last session ended **2026-05-08 (late evening)**. State at close:
+Last session ended **2026-05-08 (MCP stack audit)**. State at close:
 
 - **Gate fully autonomous:** 5-min cron 24/7, silent success, inline ✅/❌ buttons, dedup alerts, 4 high-risk files only (`gate_agent.py`, `orc_rebuild.sh`, `.env`, `docker-compose`). Container gate registration removed — host cron is sole runner.
 - **Baked-file drift permanently fixed:** `scripts/docker-entrypoint.sh` ships with Dockerfile. Every container start auto-syncs `orchestrator/*.py` over baked `/app/*.py`. `docker cp` ritual retired. Rebuild completed successfully 2026-05-08 21:47 UTC.
@@ -2346,3 +2346,18 @@ Rebuild pipeline repaired (3 bugs fixed):
 3. Fix `newsletter_editorial_input` table missing (studio_trend_scout error 17:58 UTC)
 4. Archive 10 stale handoff docs in `docs/handoff/` root
 5. M18 HALO: instrument heartbeat tracing (target 50 traces by 2026-05-18)
+
+### 2026-05-08: MCP Stack Audit + Plugin Fixes
+
+**What shipped:**
+
+- Telegram MCP fixed: `npx tsx server.ts` replaces broken `bun run`, stale `.in_use/` locks cleared, `TELEGRAM_BOT_TOKEN` env added to `.mcp.json` and `settings.json`
+- context7 + playwright `.mcp.json` fixed: missing `mcpServers` wrapper added, both servers cached and registered in `settings.json` mcpServers directly
+- context-mode: registered as `ctx-mode` in `settings.json` mcpServers (plugin loader fails on Windows; direct node path bypasses it, 2.4s init, 11 tools)
+- sequential-thinking MCP added: `@modelcontextprotocol/server-sequential-thinking` in `settings.json` mcpServers; `NODE_TLS_REJECT_UNAUTHORIZED=0` already in env enables download
+- caveman-shrink removed: was registered with no upstream arg → always failed; removed from `.claude.json` project mcpServers
+- Disabled plugins: `code-simplifier`, `ralph-loop`, `typescript-lsp` (no active use)
+- MCP health monitor built: `~/.claude/hooks/mcp-health-check.py` wired into SessionStart; creates baseline on first run, sends Telegram alert on new failures, logs to `~/.claude/logs/mcp-health-YYYY-MM-DD.log`
+- MCP Stack Evolution milestone added to atlas.md (6 roadmap items with when/why)
+- context-mode rule added to `AGENT_SOP.md` and `CLAUDE.md`
+- `docs/reviews/absorb-followups.md` line 16 marked DONE (context-mode install)

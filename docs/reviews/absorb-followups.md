@@ -13,7 +13,7 @@ PROCEED verdicts append here automatically. PROCEED without a follow-up entry is
 
 2026-05-04 | enhance skills/memory + Atlas autonomy infra | continuous-improvement | Run MemPalace pilot: venv install + sweep 30d transcripts + validate 5 recall queries (correct drawer top-3) before wiring MCP | 2026-05-11
 
-2026-05-03 | infrastructure install | continuous-improvement | run `/plugin marketplace add mksglu/context-mode` + `/plugin install context-mode@context-mode` + ctx-doctor verify | 2026-05-06
+2026-05-03 | infrastructure install | continuous-improvement | run `/plugin marketplace add mksglu/context-mode` + `/plugin install context-mode@context-mode` + ctx-doctor verify | 2026-05-06 | DONE 2026-05-08: installed 1.0.111, ctx-doctor passes, registered as ctx-mode in settings.json mcpServers (plugin loader fails but direct path works)
 2026-05-03 | infrastructure install (rtk) | Atlas autonomy infra | inside WSL2: `curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh && rtk init -g`, restart Claude Code, run `rtk gain` after 5 sessions to verify savings | 2026-05-07
 
 ---
