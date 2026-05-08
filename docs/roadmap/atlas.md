@@ -651,6 +651,25 @@ These are explicit "do not build" decisions with reasons, so we don't relitigate
 
 ---
 
+## MCP Stack Evolution
+
+Roadmap items for MCP/plugin stack. Not immediate — document when/why so we don't re-research.
+
+| Item | Why add | When | Notes |
+|---|---|---|---|
+| **Brave Search MCP** (`@modelcontextprotocol/server-brave-search`) | Web search inside Claude without leaving session. Serper is wired in orchestrator but not as MCP. | When outreach research needs real-time web lookups that Serper skill can't serve fast enough. | Needs `BRAVE_API_KEY`. Free tier 2k/mo. |
+| **Memory MCP** (official Anthropic `@modelcontextprotocol/server-memory`) | Persistent cross-session KV store via MCP tool calls. | Evaluate after auto-memory system hits limits (>200-line MEMORY.md index). For now our file-based memory is sufficient. | Competes with existing auto-memory — needs side-by-side eval before install. |
+| **Filesystem MCP** (`@modelcontextprotocol/server-filesystem`) | Explicit file access grant per-directory for agent sessions that shouldn't have full Bash. | When spawning agents that need read-only codebase access without Bash permissions. | Scoped to specific dirs only. |
+| **Fetch MCP** (`@modelcontextprotocol/server-fetch`) | Lightweight URL fetch without Playwright overhead. | When needing simple HTML scrapes without full browser (lead research, SW prospect lookup). | Already covered by WebFetch tool — low priority. |
+| **PDF MCP** (`pdf-extract-mcp` or similar) | Extract text from PDFs for proposal analysis, contract review. | When PDF ingestion becomes a recurring workflow (e.g. client contract review for CW). | Evaluate at first real PDF workflow need. |
+| **Local file indexer** (e.g. `@modelcontextprotocol/server-sqlite`) | Query agentsHQ SQLite DBs (coordination tasks, pipeline state) via MCP. | When coordination DB queries from agent sessions are slow or brittle via Bash. | Low priority — direct Python access works fine today. |
+
+**Already installed (2026-05-08):**
+
+- `sequential-thinking` — `@modelcontextprotocol/server-sequential-thinking`, wired in `settings.json` mcpServers.
+
+---
+
 ## Cross-References
 
 - **Memory:** `project_autonomy_layer.md` (per-phase shipping artifacts), `feedback_inspect_notion_schema_first.md`, `feedback_substrate_gates_before_callbacks.md`

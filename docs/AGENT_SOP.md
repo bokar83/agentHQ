@@ -81,6 +81,16 @@ Every folder in agentsHQ has a purpose. If it does not, it is a candidate for ar
 
 **Multi-agent work:** apply `skills/boubacar-skill-creator/references/context-budget-discipline.md` - four-tier degradation model (PEAK/GOOD/DEGRADING/POOR), read-depth-by-window table, early warning signs. Apply `skills/boubacar-skill-creator/references/gates-taxonomy.md` for any workflow with subagents or review loops.
 
+## Context-Mode Rule
+
+**Use `/ctx` before any multi-file exploration.** context-mode saves ~40% context vs manual file reads by running commands in a sandbox and returning only summaries.
+
+- Any `git log`, `git diff`, log reads, test runs, docker inspect → `ctx_execute` not Bash
+- Any large file read for analysis (not editing) → `ctx_execute_file` not Read
+- Any Playwright snapshot → `browser_snapshot(filename)` → `ctx_index(path)` → `ctx_search`
+
+MCP server registered in `settings.json` mcpServers. If tools unavailable, restart Claude Code.
+
 ## Codex-First Rule
 
 **Default to Codex for all implementation work.** Codex is faster, more surgical, and keeps the main Claude Code context clean. Claude Code handles planning, architecture decisions, Council review, and Notion writes. Codex handles the actual code.

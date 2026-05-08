@@ -57,6 +57,10 @@ Skipping any step breaks multi-agent coordination. Gate checks the task table be
 
 **No Telegram. No /propose. No manual signal to gate.** Push feature branch with [READY] commit. Gate watches GitHub every 60s and handles everything. Agent moves on immediately after push.
 
+## Context-Mode (installed 2026-05-08)
+
+Use `/ctx` before any multi-file exploration. Saves ~40% context vs manual reads. See `docs/AGENT_SOP.md` Context-Mode Rule for full routing table. MCP registered in `~/.claude/settings.json` mcpServers.
+
 ## Caveman (installed 2026-05-03)
 
 Caveman plugin installed via `irm .../install.ps1 | iex`. Reduces output tokens ~65%, auto-activates every session via SessionStart hook.
