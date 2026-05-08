@@ -269,3 +269,10 @@ def run_concierge_sweep() -> dict:
         enqueued,
     )
     return {"lines_found": len(lines), "groups_found": len(groups), "enqueued": enqueued}
+
+
+if __name__ == "__main__":
+    import json as _json
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    result = run_concierge_sweep()
+    print(_json.dumps(result, indent=2))
