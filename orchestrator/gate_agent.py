@@ -354,6 +354,36 @@ def _gate_enabled() -> bool:
         return False
 
 
+def _approval_marker_path(branch: str, decision: str) -> Path:
+    """Path to the approve/reject marker for a branch."""
+    return DATA_DIR / "gate_approvals" / (branch.replace("/", "__") + f".{decision}.json")
+
+
+def _check_approval(branch: str) -> str:
+    """
+    Return 'approve', 'reject', or 'pending' based on marker files written by
+    /gate-approve and /gate-reject Telegram slash commands. Markers are consumed
+    (deleted) when read so each approval is single-use.
+    """
+    approve_marker = _approval_marker_path(branch, "approve")
+    reject_marker = _approval_marker_path(branch, "reject")
+    if approve_marker.exists():
+        try:
+            approve_marker.unlink()
+        except OSError:
+            pass
+        logger.info("gate: %s approved via marker", branch)
+        return "approve"
+    if reject_marker.exists():
+        try:
+            reject_marker.unlink()
+        except OSError:
+            pass
+        logger.info("gate: %s rejected via marker", branch)
+        return "reject"
+    return "pending"
+
+
 def _write_gate_log(entry: dict) -> None:
     """Append one JSONL entry to data/gate_log.jsonl (persists across rebuilds)."""
     try:
@@ -429,14 +459,25 @@ def gate_tick() -> None:
         if branch in blocked:
             continue
 
-        # High-risk files need explicit approval
+        # High-risk files need explicit approval. Check for marker file first
+        # (written by /gate-approve or /gate-reject Telegram command). If no marker,
+        # send instruction message and hold.
         if _is_high_risk(files) and not _is_auto_approvable(files):
-            held_high_risk.append(branch)
-            _notify(
-                f"REVIEW NEEDED: {branch} touches high-risk files ({', '.join(f for f in files if any(f.startswith(p) for p in HIGH_RISK_PREFIXES))}). Tap to approve.",
-                urgent=True,
-            )
-            continue
+            decision = _check_approval(branch)
+            if decision == "reject":
+                _notify(f"Gate rejection processed: {branch} held without merge.")
+                continue
+            if decision != "approve":
+                held_high_risk.append(branch)
+                hr_files = [f for f in files if any(f.startswith(p) for p in HIGH_RISK_PREFIXES)]
+                _notify(
+                    f"REVIEW NEEDED: {branch} touches high-risk files ({', '.join(hr_files)}). "
+                    f"Reply '/gate-approve {branch}' to approve, '/gate-reject {branch}' to discard.",
+                    urgent=True,
+                )
+                continue
+            # Approved — fall through to test + merge below
+            logger.info("gate: %s approval granted, proceeding to test + merge", branch)
 
         # Run tests
         passed, test_output = _run_tests(branch)
