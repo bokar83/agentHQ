@@ -239,3 +239,33 @@ def enqueue_proposals(proposals: list[dict]) -> int:
             logger.error("concierge_crew: enqueue failed for sig=%s: %s", sig[:60], exc)
 
     return enqueued
+
+
+def run_concierge_sweep() -> dict:
+    """Entry point for the heartbeat. Runs full triage pipeline.
+
+    Returns summary: {lines_found, groups_found, enqueued}.
+    """
+    logger.info("concierge_crew: sweep start")
+
+    lines = fetch_recent_errors()
+    if not lines:
+        logger.info("concierge_crew: no errors found, sweep done")
+        return {"lines_found": 0, "groups_found": 0, "enqueued": 0}
+
+    groups = group_by_signature(lines)
+    logger.info("concierge_crew: %d lines -> %d groups", len(lines), len(groups))
+
+    proposals = []
+    for group in groups:
+        fix = propose_fix(group)
+        proposals.append({**group, **fix})
+
+    enqueued = enqueue_proposals(proposals)
+    logger.info(
+        "concierge_crew: sweep done lines=%d groups=%d enqueued=%d",
+        len(lines),
+        len(groups),
+        enqueued,
+    )
+    return {"lines_found": len(lines), "groups_found": len(groups), "enqueued": enqueued}
