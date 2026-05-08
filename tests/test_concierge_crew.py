@@ -81,3 +81,52 @@ def test_group_by_signature_strips_timestamps_and_uuids():
     sig = groups[0]["signature"]
     assert "2026" not in sig
     assert "550e8400" not in sig
+
+
+def test_propose_fix_returns_expected_shape():
+    """propose_fix returns dict with summary, severity, proposed_fix."""
+    import concierge_crew as cc
+
+    group = {
+        "signature": "[ERROR] griot_tick: NoneType 'get'",
+        "count": 3,
+        "samples": ["2026-05-08 [ERROR] griot_tick: NoneType 'get'"],
+    }
+
+    fake_response = MagicMock()
+    fake_response.content = [MagicMock(text='{"summary": "griot NoneType", "severity": "med", "proposed_fix": "Add null check"}')]
+
+    mock_client = MagicMock()
+    mock_client.messages.create.return_value = fake_response
+
+    with patch("concierge_crew.anthropic.Anthropic", return_value=mock_client):
+        result = cc.propose_fix(group)
+
+    assert result["summary"] == "griot NoneType"
+    assert result["severity"] in ("low", "med", "high")
+    assert isinstance(result["proposed_fix"], str)
+    assert len(result["proposed_fix"]) > 0
+
+
+def test_propose_fix_handles_malformed_json():
+    """If Haiku returns non-JSON, propose_fix returns fallback dict."""
+    import concierge_crew as cc
+
+    group = {
+        "signature": "[ERROR] unknown: crash",
+        "count": 1,
+        "samples": ["[ERROR] unknown: crash"],
+    }
+
+    fake_response = MagicMock()
+    fake_response.content = [MagicMock(text="Sorry I cannot help with that.")]
+
+    mock_client = MagicMock()
+    mock_client.messages.create.return_value = fake_response
+
+    with patch("concierge_crew.anthropic.Anthropic", return_value=mock_client):
+        result = cc.propose_fix(group)
+
+    assert "summary" in result
+    assert "severity" in result
+    assert "proposed_fix" in result

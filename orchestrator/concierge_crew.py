@@ -6,11 +6,12 @@ signature, proposes fixes via Claude Haiku, enqueues to approval_queue.
 """
 from __future__ import annotations
 
+import anthropic
+import json
 import logging
 import os
 import re
-from datetime import datetime, timezone
-from typing import Optional
+from typing import cast
 
 logger = logging.getLogger("agentsHQ.concierge_crew")
 
@@ -106,3 +107,60 @@ def group_by_signature(lines: list[str]) -> list[dict]:
     ]
     groups.sort(key=lambda g: g["count"], reverse=True)
     return groups
+
+
+_HAIKU_MODEL = "claude-haiku-4-5-20251001"
+_PROPOSE_PROMPT = """\
+You are an ops engineer triaging a production error. Given this error signature and sample lines, return ONLY valid JSON with exactly these keys:
+- "summary": one sentence describing the error (max 80 chars)
+- "severity": one of "low", "med", "high"
+- "proposed_fix": one concrete action to fix or investigate (max 120 chars)
+
+Error signature:
+{signature}
+
+Sample lines (up to 3):
+{samples}
+
+Respond with JSON only. No explanation, no markdown.
+"""
+
+
+def propose_fix(group: dict) -> dict:
+    """Call Claude Haiku to propose a fix for one error group.
+
+    Returns {summary, severity, proposed_fix}. Falls back to safe defaults
+    if the model returns unparseable output.
+    """
+    prompt = _PROPOSE_PROMPT.format(
+        signature=group["signature"][:300],
+        samples="\n".join(group["samples"])[:500],
+    )
+
+    client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", ""))
+    try:
+        response = client.messages.create(
+            model=_HAIKU_MODEL,
+            max_tokens=200,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = cast(anthropic.types.TextBlock, response.content[0]).text.strip()
+        if text.startswith("```"):
+            text = re.sub(r"^```[a-z]*\n?", "", text)
+            text = text.rstrip("`").strip()
+        result = json.loads(text)
+        severity = result.get("severity", "med")
+        if severity not in ("low", "med", "high"):
+            severity = "med"
+        return {
+            "summary": str(result.get("summary", group["signature"][:80])),
+            "severity": severity,
+            "proposed_fix": str(result.get("proposed_fix", "Investigate logs manually.")),
+        }
+    except Exception as exc:
+        logger.warning("concierge_crew: Haiku parse failed (%s), using fallback", exc)
+        return {
+            "summary": group["signature"][:80],
+            "severity": "med",
+            "proposed_fix": "Investigate logs manually.",
+        }
