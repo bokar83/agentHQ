@@ -228,10 +228,15 @@ if [ ! -f "$REPO_ROOT/.env" ]; then
   exit 1
 fi
 log "sourcing .env"
-sed -i 's/\r//' "$REPO_ROOT/.env"  # strip CRLF -- Windows editors add it
-set -a
-. "$REPO_ROOT/.env"
-set +a
+# Use python-dotenv logic: handles CRLF, quoted values, spaces, comments
+# Plain `set -a; . .env` chokes on unquoted spaces (e.g. "SMTP_PASS=foo bar")
+while IFS= read -r line || [ -n "$line" ]; do
+  line="${line%%$'\r'}"          # strip CRLF
+  [[ "$line" =~ ^#.*$ ]] && continue   # skip comments
+  [[ "$line" =~ ^[[:space:]]*$ ]] && continue  # skip blank
+  [[ "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]] || continue  # must be KEY=
+  export "$line" 2>/dev/null || true   # export; ignore errors on bad lines
+done < "$REPO_ROOT/.env"
 
 # Step 5: build + up
 log "docker compose build orchestrator..."
