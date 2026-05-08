@@ -550,6 +550,36 @@ def handle_callback_query(update: dict) -> bool:
         except Exception as e:
             logger.warning(f"callback_query dream handling error: {e}")
 
+    elif cb_data.startswith("gate_approve:") or cb_data.startswith("gate_reject:"):
+        try:
+            import json as _json
+            import pathlib
+            from datetime import datetime, timezone
+            from notifier import answer_callback_query, send_message
+            action, branch = cb_data.split(":", 1)
+            decision = "approve" if action == "gate_approve" else "reject"
+            repo_root = pathlib.Path(os.environ.get("REPO_ROOT", "/app"))
+            marker_dir = pathlib.Path(os.environ.get("GATE_DATA_DIR", str(repo_root / "data"))) / "gate_approvals"
+            marker_dir.mkdir(parents=True, exist_ok=True)
+            marker_name = branch.replace("/", "__") + f".{decision}.json"
+            marker_path = marker_dir / marker_name
+            marker_path.write_text(_json.dumps({
+                "branch": branch,
+                "decision": decision,
+                "approved_by": cb_sender_id,
+                "ts": datetime.now(timezone.utc).isoformat(),
+            }, indent=2), encoding="utf-8")
+            label = "Approved" if decision == "approve" else "Rejected"
+            answer_callback_query(cb_id, f"{label}: {branch}")
+            send_message(cb_chat_id, f"Gate {decision} queued for `{branch}`. Processes on next tick (~60s).")
+        except Exception as e:
+            logger.warning(f"callback_query gate_approve/reject handling error: {e}")
+            try:
+                from notifier import answer_callback_query
+                answer_callback_query(cb_id, f"Error: {e}")
+            except Exception:
+                pass
+
     return True
 
 

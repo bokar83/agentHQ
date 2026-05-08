@@ -106,6 +106,40 @@ def _notify(message: str, urgent: bool = False) -> None:
         logger.warning("gate: notify failed: %s", exc)
 
 
+def _notify_gate_review(branch: str, hr_files: list[str]) -> None:
+    """Send Gate review alert with inline ✅/❌ buttons instead of slash-command text."""
+    if not _BOT_TOKEN or not _CHAT_ID:
+        logger.warning("gate: Telegram not configured, skipping notify")
+        return
+    try:
+        from notifier import send_message_with_buttons
+        text = (
+            f"GATE ALERT: REVIEW NEEDED\n"
+            f"Branch: {branch}\n"
+            f"High-risk files: {', '.join(hr_files)}"
+        )
+        # callback_data must be ≤64 bytes; branch names are typically short
+        approve_cb = f"gate_approve:{branch}"
+        reject_cb = f"gate_reject:{branch}"
+        if len(approve_cb.encode()) > 64 or len(reject_cb.encode()) > 64:
+            # Fallback to text command if branch name too long
+            _notify(
+                f"REVIEW NEEDED: {branch} touches high-risk files ({', '.join(hr_files)}). "
+                f"Reply '/gate-approve {branch}' to approve, '/gate-reject {branch}' to discard.",
+                urgent=True,
+            )
+            return
+        buttons = [[("✅ Approve", approve_cb), ("❌ Reject", reject_cb)]]
+        send_message_with_buttons(_CHAT_ID, text, buttons)
+    except Exception as exc:
+        logger.warning("gate: _notify_gate_review failed: %s", exc)
+        _notify(
+            f"REVIEW NEEDED: {branch} touches high-risk files ({', '.join(hr_files)}). "
+            f"Reply '/gate-approve {branch}' to approve, '/gate-reject {branch}' to discard.",
+            urgent=True,
+        )
+
+
 # ---------------------------------------------------------------------------
 # Git helpers
 # ---------------------------------------------------------------------------
@@ -470,11 +504,7 @@ def gate_tick() -> None:
             if decision != "approve":
                 held_high_risk.append(branch)
                 hr_files = [f for f in files if any(f.startswith(p) for p in HIGH_RISK_PREFIXES)]
-                _notify(
-                    f"REVIEW NEEDED: {branch} touches high-risk files ({', '.join(hr_files)}). "
-                    f"Reply '/gate-approve {branch}' to approve, '/gate-reject {branch}' to discard.",
-                    urgent=True,
-                )
+                _notify_gate_review(branch, hr_files)
                 continue
             # Approved — fall through to test + merge below
             logger.info("gate: %s approval granted, proceeding to test + merge", branch)
