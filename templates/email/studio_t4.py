@@ -12,7 +12,7 @@ _GREETING_HIGH = "Hi {first_name},\n\n"
 
 _BODY_HOOK = """Last email from me on this thread.
 
-If the timing isn't right or this isn't a priority, no hard feelings — I'll stop reaching out.
+If the timing isn't right or this isn't a priority, no hard feelings. I'll stop reaching out.
 
 One last ask: if you know someone who's been meaning to get their business online or fix a website that's not pulling its weight, I'd be grateful for the introduction. I make the process easy and fast, and I don't waste people's time.
 

@@ -12,7 +12,7 @@ _GREETING_HIGH = "Hi {first_name},\n\n"
 
 _BODY_HOOK = """Reached out a couple times. Last one, I promise.
 
-I'll be direct: most of the business owners I work with waited too long to fix their web presence. They watched competitors who got online first take market share that's now very hard to reclaim — especially with AI search changing how people discover local businesses.
+I'll be direct: most of the business owners I work with waited too long to fix their web presence. They watched competitors who got online first take market share that's now very hard to reclaim. AI search is changing how people discover local businesses, and the gap widens fast.
 
 What $1,500 buys you with me:
 - A fast, modern, mobile-first website
