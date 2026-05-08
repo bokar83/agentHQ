@@ -85,7 +85,7 @@ def test_group_by_signature_strips_timestamps_and_uuids():
 
 
 def test_propose_fix_returns_expected_shape():
-    """propose_fix returns dict with summary, severity, proposed_fix."""
+    """propose_fix returns dict with summary, severity, triage_note."""
     import concierge_crew as cc
 
     group = {
