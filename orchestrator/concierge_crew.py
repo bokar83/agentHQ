@@ -137,7 +137,15 @@ def propose_fix(group: dict) -> dict:
         samples="\n".join(group["samples"])[:500],
     )
 
-    client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", ""))
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        logger.error("concierge_crew: ANTHROPIC_API_KEY not set, skipping propose_fix")
+        return {
+            "summary": group["signature"][:80],
+            "severity": "med",
+            "proposed_fix": "Investigate logs manually.",
+        }
+    client = anthropic.Anthropic(api_key=api_key)
     try:
         response = client.messages.create(
             model=_HAIKU_MODEL,
@@ -145,9 +153,9 @@ def propose_fix(group: dict) -> dict:
             messages=[{"role": "user", "content": prompt}],
         )
         text = cast(anthropic.types.TextBlock, response.content[0]).text.strip()
-        if text.startswith("```"):
+        if "```" in text:
             text = re.sub(r"^```[a-z]*\n?", "", text)
-            text = text.rstrip("`").strip()
+            text = re.sub(r"\n?```$", "", text).strip()
         result = json.loads(text)
         severity = result.get("severity", "med")
         if severity not in ("low", "med", "high"):
