@@ -50,7 +50,7 @@ pypdf>=4.0.0
 notebooklm-mcp-cli>=0.5.0
 
 # ── Observability / HALO M18 ──────────────────────────────────────────────
-halo-engine>=0.1.0
+# halo-engine: not yet on PyPI -- add when M18 ships
 
 # ── Testing ──────────────────────────────────────────────
 pytest>=8.0.0
