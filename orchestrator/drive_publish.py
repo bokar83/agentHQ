@@ -233,6 +233,60 @@ def audit_email_template_pdfs() -> list[dict]:
     return findings
 
 
+def audit_studio_pipeline_videos(notion_secret: str, pipeline_db_id: str) -> list[dict]:
+    """Scan Studio Pipeline DB for Drive Asset URLs and ensure all are public.
+
+    Returns list of {page_id, file_id, was_public, made_public, error} dicts.
+    Call from CLI: python -m orchestrator.drive_publish audit-videos
+    """
+    import httpx as _httpx
+
+    findings: list[dict] = []
+    token = _access_token()
+
+    headers = {"Authorization": f"Bearer {notion_secret}", "Notion-Version": "2022-06-28",
+                "Content-Type": "application/json"}
+    has_more = True
+    cursor = None
+    while has_more:
+        body: dict = {"page_size": 100}
+        if cursor:
+            body["start_cursor"] = cursor
+        resp = _httpx.post(
+            f"https://api.notion.com/v1/databases/{pipeline_db_id}/query",
+            headers=headers,
+            json=body,
+            timeout=30,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        has_more = data.get("has_more", False)
+        cursor = data.get("next_cursor")
+
+        for page in data.get("results", []):
+            page_id = page["id"]
+            asset_prop = page.get("properties", {}).get("Asset URL", {})
+            asset_url = asset_prop.get("url") or ""
+            if not asset_url:
+                continue
+            m = DRIVE_FILE_RE.search(asset_url)
+            if not m:
+                continue
+            file_id = m.group(1)
+            try:
+                already_public = not ensure_public(file_id, token=token)
+                findings.append({
+                    "page_id": page_id, "file_id": file_id,
+                    "was_public": already_public, "made_public": not already_public,
+                })
+            except Exception as e:
+                findings.append({
+                    "page_id": page_id, "file_id": file_id,
+                    "was_public": None, "made_public": False, "error": str(e),
+                })
+    return findings
+
+
 if __name__ == "__main__":
     import sys
 
@@ -245,6 +299,24 @@ if __name__ == "__main__":
             if r.get("public") is False:
                 any_private = True
         sys.exit(2 if any_private else 0)
+    elif len(sys.argv) > 1 and sys.argv[1] == "audit-videos":
+        import os
+        secret = os.environ.get("NOTION_SECRET") or os.environ.get("NOTION_API_KEY") or ""
+        db_id = os.environ.get("NOTION_STUDIO_PIPELINE_DB_ID", "34ebcf1a-3029-8140-a565-f7c26fe9de86")
+        if not secret:
+            print("ERROR: NOTION_SECRET not set")
+            sys.exit(1)
+        results = audit_studio_pipeline_videos(secret, db_id)
+        for r in results:
+            if r.get("error"):
+                print(f"ERROR   {r['page_id']} {r['file_id']} — {r['error']}")
+            elif r.get("made_public"):
+                print(f"FIXED   {r['page_id']} {r['file_id']}")
+            else:
+                print(f"OK      {r['page_id']} {r['file_id']}")
+        fixed = sum(1 for r in results if r.get("made_public"))
+        print(f"\n{fixed} file(s) made public out of {len(results)} Drive assets found.")
+        sys.exit(0)
     else:
-        print("usage: python -m orchestrator.drive_publish audit")
+        print("usage: python -m orchestrator.drive_publish audit|audit-videos")
         sys.exit(1)

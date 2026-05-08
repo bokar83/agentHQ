@@ -45,8 +45,22 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+import re
 from datetime import date, datetime, timezone
 from typing import Optional
+
+_DRIVE_FILE_ID_RE = re.compile(r"drive\.google\.com/file/d/([A-Za-z0-9_-]+)")
+
+
+def _drive_file_id(url: str) -> str | None:
+    """Extract Drive file ID from a Drive URL, or None if not a Drive URL."""
+    m = _DRIVE_FILE_ID_RE.search(url or "")
+    return m.group(1) if m else None
+
+
+def _to_direct_download_url(file_id: str) -> str:
+    """Convert Drive file ID to a direct-download URL Blotato can fetch."""
+    return f"https://drive.usercontent.google.com/download?id={file_id}&export=download&confirm=t"
 
 logger = logging.getLogger("agentsHQ.studio_blotato_publisher")
 
@@ -273,7 +287,24 @@ def studio_blotato_publisher_tick(dry_run: bool = False) -> dict:
             continue
 
         default_text = draft or f"New content from {channel}."
-        media_urls = [asset_url] if asset_url else []
+
+        # Ensure Drive asset is publicly readable and convert to direct-download URL.
+        # Drive webViewLink (/view) requires auth and Blotato cannot access it.
+        resolved_asset_url = asset_url
+        if asset_url:
+            drive_id = _drive_file_id(asset_url)
+            if drive_id:
+                try:
+                    from orchestrator.drive_publish import ensure_public
+                    made_public = ensure_public(drive_id)
+                    if made_public:
+                        logger.info(f"STUDIO PUBLISHER: Drive file {drive_id} made public")
+                    resolved_asset_url = _to_direct_download_url(drive_id)
+                    logger.info(f"STUDIO PUBLISHER: asset URL resolved to direct-download for {drive_id}")
+                except Exception as e:
+                    logger.warning(f"STUDIO PUBLISHER: could not ensure Drive file public {drive_id}: {e}")
+
+        media_urls = [resolved_asset_url] if resolved_asset_url else []
 
         # Flip status once before iterating platforms (idempotency guard).
         if not dry_run:
