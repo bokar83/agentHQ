@@ -282,6 +282,83 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 
 ---
 
+### M3.7: Content Multiplier with Remix QA 🔄 IN PROGRESS (started 2026-05-07)
+
+**What:** Take ONE approved source (article, YouTube video, post, PDF, raw text) and generate 9 atomic content pieces aligned to Boubacar's voice and the 8 diagnostic lenses. Pieces route to LinkedIn, X, and matching Studio channel video scripts. QA can route a source three ways: passed (use verbatim), remix (strip unverifiable bits, keep concept, write Boubacar's original take), or failed (truly off-brand).
+
+**Why this milestone exists:**
+
+On 2026-05-06 the content idea pipeline was unified into Griot. The unification deploy left 3 silently-broken wakes (`story_prompt_tick`, `studio_story_bridge`, `griot_signal_brief`) — Dockerfile didn't COPY new files. Result: zero new ideas surfaced for review on 2026-05-07. Discovery via session 2026-05-07. Fix shipped via docker cp + restart same session.
+
+That fix restored the producers, but exposed two deeper gaps:
+
+1. Trend scout produces ~6 picks/run, but each pick = one video idea, not multiple content pieces. "Approve one trend → multiplier extracts every angle across LinkedIn, X, video scripts, newsletter, quote cards." This milestone closes that gap.
+
+2. QA was binary (pass/fail). When a source had a fabricated quote or unsourced stat, it got trashed even when the underlying CONCEPT was strong. Boubacar's framing (2026-05-07): "the reason to go out there and get these ideas is not always cloning and copying word for word, but it's also generating ideas and using that as a spark to create something new and unique." Remix QA strips the bits we can't verify and keeps the salvageable angle.
+
+**Pieces per run (9):**
+1. LinkedIn long post (600-1400 chars, Boubacar voice)
+2. X thread (3-7 tweets)
+3. X single punchy (<280)
+4. Direct angle (LinkedIn, mirrors source thesis)
+5. Adjacent angle (LinkedIn, related but distinct POV)
+6. Contrarian angle (LinkedIn or X thread)
+7. Studio video script (UTB / 1stGen / AIC, only when channel matches)
+8. Quote card (1 line + image prompt)
+9. Newsletter section (200-400 chars for The Forge weekly)
+
+Channel-aware skip: African folktale source skips pieces 1-6 if no Boubacar angle, generates piece 7 as UTB script. AI displacement source generates 1-6 + AIC script. Cross-pollination allowed.
+
+**Three trigger paths:**
+- Auto: `scout_approve:` Telegram callback fires multiplier crew automatically
+- Manual: `/multiply <url>` slash command in webchat OR "multiply this: <url>" natural language
+- Notion: drop URL into Content Board with Status=Multiply, 5-min heartbeat picks it up
+
+**The 8 lenses** (from AGENT_SOP): TOC, JTBD, Lean, Behavioral Economics, Systems Thinking, Design Thinking, Org Development, AI Strategy. Lens classifier (Haiku) picks 2-3 most relevant per source. Each piece uses 1-2 lenses to frame. Never name the lens in output.
+
+**Three QA verdicts** (added 2026-05-07):
+
+- `qa-passed`: source verified, can be cited verbatim. Multiplier runs in `mode=verbatim`.
+- `qa-remix`: source has unverifiable elements (fabricated quotes, unsourced stats, unattributed claims) BUT the underlying concept is salvageable. Multiplier runs in `mode=remix`: strips the unverifiable bits, uses the concept as ideation spark, generates Boubacar's original take with NO source citation.
+- `qa-failed`: source has fatal failures (banned phrases, fabricated client stories, off-channel niche mismatch, copyrighted phrases). Trashed.
+
+QA classifies each failure as FATAL or FIXABLE. All FIXABLE = qa-remix. Any FATAL = qa-failed. Zero failures = qa-passed.
+
+**What shipped this session (M3.7.1):**
+
+- [x] Skill scaffold: `skills/content_multiplier/SKILL.md` + `prompts/lens_classifier.md` + `prompts/piece_generator.md`
+- [x] Voice rules locked: no em-dash, no 1stGen (use 1stGen), no fabricated stories, verified stats only, Smart Brevity
+- [x] Cost ceiling: <$0.30/run hard cap
+- [x] Notion schema: `Multiplier Run ID`, `Piece Type`, `Created From`, `Source URL`, `Source Treatment` (extends existing Content Board)
+- [x] Three-path trigger spec (auto, on-demand, Notion)
+- [x] Three-verdict QA spec (passed | remix | failed) with FATAL/FIXABLE failure classification
+- [x] Trend scout cadence split: Studio niches daily, CW niches Mon/Wed/Fri, Sun off (code edited in studio_trend_scout.py, deploys with M3.7 commit)
+
+**What's left (M3.7.2 — Codex working 2026-05-07):**
+
+- [ ] `orchestrator/content_multiplier_crew.py` with verbatim/remix/auto modes
+- [ ] `orchestrator/studio_qa_crew.py` refactor: 3-state verdict + FATAL/FIXABLE tagging
+- [ ] `skills/content_multiplier/prompts/remix_classifier.md` + `remix_piece_generator.md`
+- [ ] Tests: `test_content_multiplier.py` (all 3 modes) + `test_studio_qa_remix.py` (FATAL/FIXABLE logic)
+
+**What's left (M3.7.3 — next session):**
+
+- [ ] Wire `scout_approve:` callback in handlers_approvals.py to fire crew
+- [ ] Add `/multiply` router intent
+- [ ] Heartbeat wake `multiplier-tick` every 5m for Status=Multiply Notion records
+- [ ] Bulk Telegram review handler (`multiplier_approve_all:` / `multiplier_per_piece:` / `multiplier_reject_all:`)
+- [ ] Notion schema extension: add `Multiplier Run ID` (rich_text), `Piece Type` (select), `Source Treatment` (select), `QA Verdict` (select) properties
+- [ ] Sankofa Council CTQ filter integration (deferred from v1 for speed)
+
+**Cost:** ~$0.20-0.30/run × ~10-15 runs/week (more with 3x scout cadence) = $3-5/week.
+
+**Trigger:** none -- proceed in parallel with M4 (publish pipeline). M3.7 produces ideas; M4 publishes assets. Independent.
+**Blockers:** none for M3.7.2 build. M3.7.3 wiring needs M3.7.2 verified working first.
+**Branch:** `feat/studio-m3-7-content-multiplier`
+**ETA:** 1 session for M3.7.2 (Codex crew + qa refactor + remix prompts), 1 session for M3.7.3 (wiring + Notion schema + Sankofa CTQ).
+
+---
+
 ### M4: Multi-Channel Publish Pipeline 🔄 IN PROGRESS
 
 **What:** Auto-publish from Studio Pipeline DB to the platform on Scheduled Date. Default path: Blotato Creator at $97/mo (verified live 2026-04-25), supports YouTube + IG + TikTok + Threads + LinkedIn + X + FB + Pinterest, 5,000 AI credits/mo, 40 social accounts.
@@ -894,7 +971,7 @@ Boubacar's lived experiences and raw observations are the primary content source
 
 **What this means for Studio:**
 - `Content Type=Story + Status=Idea` entries on the Content Board are available as script briefs for all 3 Studio channels
-- One lived moment → multiple channel adaptations (FGM = financial angle, UTB = diaspora/identity angle, AIC = AI practitioner angle)
+- One lived moment → multiple channel adaptations (1stGen = financial angle, UTB = diaspora/identity angle, AIC = AI practitioner angle)
 - Channel routing is flexible — Boubacar confirms which channels a story feeds, LéGroit proposes, nothing is pre-wired
 - Story posts are X-primary for personal brand; Studio channels adapt to short-form video format
 
@@ -921,5 +998,5 @@ Boubacar's lived experiences and raw observations are the primary content source
 
 **Next Studio session:**
 1. Wire Studio script crew to pull `Content Type=Story + Status=Idea` as candidate briefs (alongside trend-scouted topics)
-2. Story → multi-channel adaptation: one entry generates 3 scripts (FGM/UTB/AIC lenses)
+2. Story → multi-channel adaptation: one entry generates 3 scripts (1stGen/UTB/AIC lenses)
 3. M4 warm-up: confirm first batch of renders posted and tracking engagement

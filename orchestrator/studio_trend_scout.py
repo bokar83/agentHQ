@@ -1,9 +1,10 @@
 """
 studio_trend_scout.py - Content Intelligence Scout (Phase 1).
 
-Monday-only heartbeat that scans 9 niches for relevant content picks:
-  - 3 Studio niches via YouTube Data API v3 (view velocity scoring)
-  - 6 Catalyst Works niches via Serper news search
+Daily heartbeat (Mon-Sat) that scans niches for relevant content picks:
+  - 3 Studio niches (UTB/1stGen/AIC) via YouTube Data API v3 -- DAILY
+  - 6 Catalyst Works niches via Serper news search -- Mon/Wed/Fri only
+  - Sunday: skip everything (Sabbath)
 
 Each pick goes through a single Haiku classifier call (fit 1-5, medium,
 first line, unique angle). Low-fit picks (<=2) are dropped silently.
@@ -877,9 +878,14 @@ def studio_trend_scout_tick() -> None:
     tz = pytz.timezone(TIMEZONE)
     now = datetime.now(tz)
 
-    # Monday-only gate (weekday 0 = Monday)
-    if now.weekday() != 0:
-        logger.debug("studio_trend_scout: not Monday, skipping")
+    # Cadence (changed 2026-05-07):
+    #   Studio niches (UTB/1stGen/AIC) -- DAILY, including weekends
+    #   CW niches (6 personal-brand niches) -- Mon/Wed/Fri only
+    # Per-niche skip happens inside the scout loop via _is_niche_due_today.
+    # Sunday: skip everything per Boubacar's Sabbath rule.
+    weekday = now.weekday()  # Mon=0, Sun=6
+    if weekday == 6:
+        logger.info("studio_trend_scout: Sunday Sabbath, skipping all niches")
         return
 
     today = now.date().isoformat()
@@ -896,7 +902,8 @@ def studio_trend_scout_tick() -> None:
         pass  # If we can't check the marker, run anyway
 
     seeds = _load_seeds()
-    logger.info(f"studio_trend_scout: Monday tick start, {len(seeds)} niches configured")
+    weekday_name = now.strftime("%A")
+    logger.info(f"studio_trend_scout: {weekday_name} tick start, {len(seeds)} niches configured")
 
     # Open Notion client
     try:
@@ -918,7 +925,18 @@ def studio_trend_scout_tick() -> None:
     skipped_count = 0
     cw_picks_written: list[TrendCandidate] = []
 
+    # CW personal-brand niches run Mon/Wed/Fri only (weekdays 0,2,4).
+    # Studio niches (Under the Baobab, AI Catalyst, First Gen Money) run daily Mon-Sat.
+    cw_due_today = weekday in (0, 2, 4)
+
     for niche_tag, niche_config in seeds.items():
+        niche_dest = niche_config.get("destination", "Studio Pipeline")
+        if niche_dest == "Content Board" and not cw_due_today:
+            logger.info(
+                f"studio_trend_scout: skipping CW niche '{niche_tag}' "
+                f"(weekday={weekday}, only fires Mon/Wed/Fri)"
+            )
+            continue
         try:
             picks = scout_niche(niche_tag, niche_config)
         except Exception as e:

@@ -577,17 +577,23 @@ _SW_OWNER_TITLES = ["Owner", "Founder", "CEO", "President", "Operator"]
 def find_owner_by_company(name: str, city: str) -> dict | None:
     """Find an owner-tier email at a small business by company name + city.
 
-    Uses mixed_people/api_search filtered by q_organization_name +
-    organization_locations + owner-tier titles, then reveal_emails on the
-    top match. Same shape as harvest_leads, scoped to one company.
+    Two-step pattern (Apollo docs require it for company-name lookup):
+      1. mixed_companies/search with q_organization_name -> get organization_id(s)
+      2. mixed_people/api_search with organization_ids -> people at that org
+      3. reveal_emails on top match
+
+    Prior version sent q_organization_name to mixed_people/api_search, which
+    silently ignores unknown params and returns owners-anywhere-in-city
+    (663:1 miss ratio). q_organization_name is only valid on the
+    Organization Search endpoint.
 
     Returns:
-      None if Apollo returns no candidates for this company at all.
-      {"domain": str, "email": None, "name": None} if a person was found
-        but reveal returned no email (caller can fall back to Hunter).
+      None if Apollo returns no organization or no people at the org.
+      {"domain": str, "email": None, "name": None} if person found but
+        reveal returned no email (caller can fall back to Hunter).
       {"domain": str, "email": str, "name": str} on full success.
 
-    Cost: 0 credits if no match, ~1 credit per reveal on match.
+    Cost: ~1 credit for org search + 1 credit per reveal on match.
     """
     try:
         headers = _headers()
@@ -595,33 +601,63 @@ def find_owner_by_company(name: str, city: str) -> dict | None:
         logger.warning(f"find_owner_by_company: {e}")
         return None
 
-    payload = {
+    # Step 1: Organization Search - find org_id(s) by company name
+    org_payload = {
         "q_organization_name": name,
         "organization_locations": [city] if city else [],
-        "person_titles": _SW_OWNER_TITLES,
-        "person_seniorities": _DECISION_MAKER_SENIORITIES,
-        "contact_email_status": ["verified", "likely_to_engage"],
+        "organization_num_employees_ranges": ["1,50"],
         "page": 1,
         "per_page": 5,
     }
     try:
+        org_r = httpx.post(
+            f"{APOLLO_API_URL}/mixed_companies/search",
+            json=org_payload, headers=headers, timeout=20,
+        )
+        org_r.raise_for_status()
+        body = org_r.json()
+        orgs = body.get("organizations") or body.get("accounts") or []
+    except Exception as e:
+        logger.warning(f"find_owner_by_company: org search failed for {name}: {e}")
+        return None
+
+    if not orgs:
+        logger.info(f"find_owner_by_company: no Apollo org match for {name} in {city}")
+        return None
+
+    org_ids = [o["id"] for o in orgs[:3] if o.get("id")]
+    primary_domain = orgs[0].get("primary_domain") or orgs[0].get("website_url") or ""
+    if not org_ids:
+        return {"domain": primary_domain, "email": None, "name": None}
+
+    # Step 2: People Search scoped by organization_ids (free, no credit)
+    people_payload = {
+        "organization_ids": org_ids,
+        "person_titles": _SW_OWNER_TITLES,
+        "person_seniorities": _DECISION_MAKER_SENIORITIES,
+        "contact_email_status": ["verified", "likely_to_engage"],
+        "page": 1,
+        "per_page": 10,
+    }
+    try:
         r = httpx.post(
             f"{APOLLO_API_URL}/mixed_people/api_search",
-            json=payload, headers=headers, timeout=20,
+            json=people_payload, headers=headers, timeout=20,
         )
         r.raise_for_status()
         people = r.json().get("people", [])
     except Exception as e:
-        logger.warning(f"find_owner_by_company: search failed for {name}: {e}")
-        return None
+        logger.warning(f"find_owner_by_company: people search failed for {name}: {e}")
+        return {"domain": primary_domain, "email": None, "name": None}
 
     if not people:
-        logger.info(f"find_owner_by_company: no people match at {name} in {city}")
-        return None
+        logger.info(f"find_owner_by_company: org found but no owner-tier people at {name}")
+        return {"domain": primary_domain, "email": None, "name": None}
 
     candidate = people[0]
-    domain = (candidate.get("organization") or {}).get("primary_domain") or ""
+    domain = (candidate.get("organization") or {}).get("primary_domain") or primary_domain
 
+    # Step 3: Reveal email
     revealed = reveal_emails([candidate["id"]])
     if revealed and revealed[0].get("email"):
         person = revealed[0]
@@ -631,4 +667,4 @@ def find_owner_by_company(name: str, city: str) -> dict | None:
             "name": person.get("name", ""),
         }
 
-    return {"domain": domain, "email": None, "name": None}
+    return {"domain": domain, "email": None, "name": candidate.get("name", "")}

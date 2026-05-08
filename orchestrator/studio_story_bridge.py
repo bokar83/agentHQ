@@ -6,7 +6,7 @@ Runs on a heartbeat tick (every 6h). Reads Content Board records where:
   Status = Idea
 
 For each, creates one Pipeline DB record per Studio channel the story maps to
-(FGM, UTB, AIC) based on a lightweight LLM channel-fit classification.
+(1stGen, UTB, AIC) based on a lightweight LLM channel-fit classification.
 
 Marks the Content Board record with Source Note update so it is not re-seeded.
 Idempotent: checks for existing Pipeline DB record with matching source before
@@ -32,7 +32,7 @@ _CONTENT_DB_ID = os.environ.get("FORGE_CONTENT_DB", "339bcf1a-3029-81d1-8377-dc2
 _PIPELINE_DB_ID = os.environ.get("NOTION_STUDIO_PIPELINE_DB_ID", "34ebcf1a-3029-8140-a565-f7c26fe9de86")
 
 CHANNEL_MAP = {
-    "FGM": {
+    "1stGen": {
         "channel": "First Gen Money",
         "niche": "first-gen-money",
         "lens": "financial literacy, wealth-building, first-gen immigrant financial reality, class mobility",
@@ -115,11 +115,11 @@ def _classify_channels(title: str, body: str) -> list[str]:
             f"You are classifying a personal story/observation for channel fit.\n\n"
             f"Story:\nTitle: {title}\n{body[:800]}\n\n"
             f"Available channels:\n"
-            f"FGM (First Gen Money): {CHANNEL_MAP['FGM']['lens']}\n"
+            f"1stGen (First Gen Money): {CHANNEL_MAP['1stGen']['lens']}\n"
             f"UTB (Under the Baobab): {CHANNEL_MAP['UTB']['lens']}\n"
             f"AIC (AI Catalyst): {CHANNEL_MAP['AIC']['lens']}\n\n"
             f"Which channels does this story fit? A story can fit multiple channels.\n"
-            f"Reply with ONLY a comma-separated list of codes, e.g.: FGM,UTB\n"
+            f"Reply with ONLY a comma-separated list of codes, e.g.: 1stGen,UTB\n"
             f"If it fits none, reply: NONE"
         )
         resp = litellm.completion(

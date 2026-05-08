@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signature mockups · Elevate audit memo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --ink:#1a1714;
+  --ink-soft:#3a3530;
+  --ink-mute:#6e6862;
+  --rule:#cbc6be;
+  --rule-soft:#e3dfd8;
+  --paper:#f7f4ee;
+  --paper-edge:#efeae1;
+  --accent:#7a2e1a;
+  --highlight:#f0e7d6;
+}
+
+html{ background:var(--paper-edge) }
+body{
+  font-family:'Source Serif 4', Georgia, serif;
+  font-optical-sizing:auto;
+  background:var(--paper-edge);
+  color:var(--ink);
+  line-height:1.55;
+  font-size:11pt;
+  padding:48px 24px 96px;
+}
+
+.guide{
+  max-width:760px;
+  margin:0 auto 32px;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10pt;
+  letter-spacing:.06em;
+  color:var(--ink-mute);
+  text-transform:uppercase;
+  text-align:center;
+}
+.guide strong{ color:var(--ink); font-weight:600 }
+
+.lab{
+  max-width:760px;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+
+.card{
+  background:var(--paper);
+  padding:48px 56px;
+  position:relative;
+}
+.card::before{
+  content:attr(data-label);
+  position:absolute;
+  top:14px;left:20px;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:8.5pt;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  color:var(--accent);
+  font-weight:500;
+}
+.card.recommended{
+  outline:2px solid var(--accent);
+  outline-offset:0;
+}
+.card.recommended::after{
+  content:'WHAT YOU ASKED FOR';
+  position:absolute;
+  top:14px;right:20px;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:8.5pt;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--accent);
+  font-weight:600;
+}
+
+.card .pre-rule{
+  border-top:1px solid var(--rule);
+  padding-top:32px;
+  margin-top:8px;
+}
+
+/* ================== OPTION A : Minimal — name + signature only ================== */
+.opt-a .sig-img{
+  display:block;
+  width:200px;
+  height:auto;
+  margin-bottom:-14px;
+  margin-left:-8px;
+  mix-blend-mode:multiply;
+}
+.opt-a .typed{
+  font-size:11pt;
+  font-weight:600;
+  color:var(--ink);
+  letter-spacing:0;
+}
+
+/* ================== OPTION B : Sig + email line ================== */
+.opt-b .sig-img{
+  display:block;
+  width:200px;
+  height:auto;
+  margin-bottom:-14px;
+  margin-left:-8px;
+  mix-blend-mode:multiply;
+}
+.opt-b .typed{
+  font-size:11pt;
+  font-weight:600;
+  color:var(--ink);
+  letter-spacing:0;
+  margin-bottom:2px;
+}
+.opt-b .email{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9pt;
+  color:var(--ink-mute);
+  letter-spacing:.02em;
+}
+
+/* ================== OPTION C : Right-aligned editorial ================== */
+.opt-c{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+}
+.opt-c .pre-rule{
+  border-top:none;
+  padding-top:0;
+  margin-top:0;
+  width:100%;
+  display:flex;
+  justify-content:flex-end;
+}
+.opt-c .stack{
+  text-align:right;
+}
+.opt-c .sig-img{
+  display:block;
+  width:220px;
+  height:auto;
+  margin-bottom:-10px;
+  margin-left:auto;
+  mix-blend-mode:multiply;
+}
+.opt-c .typed{
+  font-size:11pt;
+  font-weight:600;
+  color:var(--ink);
+  margin-bottom:2px;
+}
+.opt-c .email{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9pt;
+  color:var(--ink-mute);
+  letter-spacing:.02em;
+}
+.opt-c .rule-above{
+  width:240px;
+  height:1px;
+  background:var(--rule);
+  margin-bottom:24px;
+}
+
+/* ================== OPTION D : Inline closing + signature (most personal) ================== */
+.opt-d .closing-line{
+  font-size:11.25pt;
+  line-height:1.7;
+  color:var(--ink);
+  margin-bottom:24px;
+  max-width:60ch;
+}
+.opt-d .sig-img{
+  display:block;
+  width:200px;
+  height:auto;
+  margin-bottom:-14px;
+  margin-left:-8px;
+  mix-blend-mode:multiply;
+}
+.opt-d .typed{
+  font-size:10.5pt;
+  font-weight:500;
+  color:var(--ink-mute);
+  letter-spacing:0;
+  font-family:'IBM Plex Mono', monospace;
+}
+
+@media (max-width:760px){
+  .card{ padding:36px 22px }
+  .opt-c{ align-items:flex-start }
+  .opt-c .pre-rule, .opt-c .stack{ text-align:left }
+  .opt-c .sig-img{ margin-left:-8px }
+  .opt-c .rule-above{ margin-left:0 }
+}
+</style>
+</head>
+<body>
+
+<p class="guide">
+  Three signature-block options. <strong>Option A</strong> matches what you asked for. Boubacar + signature only.<br>
+  <strong>B and C</strong> add one editorial layer each.
+</p>
+
+<div class="lab">
+
+  <!-- ============ OPTION A — MINIMAL (REQUESTED) ============ -->
+  <section class="card opt-a recommended" data-label="Option A">
+    <div class="pre-rule">
+      <img class="sig-img" src="assets/signature.png" alt="Boubacar">
+      <div class="typed">Boubacar</div>
+    </div>
+  </section>
+
+  <!-- ============ OPTION B — SIGNATURE + EMAIL ============ -->
+  <section class="card opt-b" data-label="Option B · plus email line">
+    <div class="pre-rule">
+      <img class="sig-img" src="assets/signature.png" alt="Boubacar">
+      <div class="typed">Boubacar</div>
+      <div class="email">boubacar@catalystworks.consulting</div>
+    </div>
+  </section>
+
+  <!-- ============ OPTION C — RIGHT-ALIGNED EDITORIAL ============ -->
+  <section class="card opt-c" data-label="Option C · right-aligned editorial">
+    <div class="pre-rule">
+      <div class="stack">
+        <div class="rule-above"></div>
+        <img class="sig-img" src="assets/signature.png" alt="Boubacar">
+        <div class="typed">Boubacar</div>
+        <div class="email">boubacar@catalystworks.consulting</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ OPTION D — CLOSING LINE + SIGNATURE (BONUS) ============ -->
+  <section class="card opt-d" data-label="Option D · letter-style with closing line">
+    <p class="closing-line">If any of this lands, I am around for a fifteen-minute call to walk the punch-list. If not, this is yours to keep.</p>
+    <img class="sig-img" src="assets/signature.png" alt="Boubacar">
+    <div class="typed">boubacar@catalystworks.consulting</div>
+  </section>
+
+</div>
+
+</body>
+</html>

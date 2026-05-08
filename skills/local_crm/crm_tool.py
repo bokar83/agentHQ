@@ -2,139 +2,16 @@
 crm_tool.py — Catalyst Growth Engine CRM
 =========================================
 Direct database interface for lead tracking.
-All data stored in Supabase (leads, lead_interactions).
+Supabase is the sole system of record (leads, lead_interactions).
 Agents use these functions to move prospects through the pipeline.
 
 Pipeline statuses: new → messaged → replied → booked → paid
-
-On every add_lead() call:
-  1. Lead saved to Supabase leads table
-  2. Discovery interaction logged to lead_interactions
-  3. Notion CRM Leads database synced automatically (REST API)
 """
 
-import os
 import logging
 from datetime import datetime
 
-import httpx
-
 logger = logging.getLogger(__name__)
-
-# Notion CRM Leads database (agentsHQ > CRM Leads)
-_NOTION_DB_ID = "619a842a-0e04-4cb3-8d17-19ec67c130f0"
-_NOTION_API = "https://api.notion.com/v1"
-_NOTION_VERSION = "2022-06-28"
-
-
-def _notion_headers() -> dict:
-    token = os.environ.get("NOTION_SECRET", "")
-    return {
-        "Authorization": f"Bearer {token}",
-        "Notion-Version": _NOTION_VERSION,
-        "Content-Type": "application/json",
-    }
-
-
-def _sync_lead_status_to_notion(lead_name: str, status: str, contacted_date: str) -> bool:
-    """
-    Update an existing Notion CRM lead's Status and Last Contacted date.
-    Looks up the page by Name. Fails silently so CRM write is never blocked.
-    """
-    try:
-        r = httpx.post(
-            f"{_NOTION_API}/databases/{_NOTION_DB_ID}/query",
-            headers=_notion_headers(),
-            json={"filter": {"property": "Name", "title": {"equals": lead_name}}},
-            timeout=15,
-        )
-        if r.status_code != 200 or not r.json().get("results"):
-            logger.warning(f"Notion status sync: '{lead_name}' not found ({r.status_code})")
-            return False
-        page_id = r.json()["results"][0]["id"]
-        u = httpx.patch(
-            f"{_NOTION_API}/pages/{page_id}",
-            headers=_notion_headers(),
-            json={"properties": {
-                "Status": {"select": {"name": status}},
-                "Last Contacted": {"date": {"start": contacted_date}},
-            }},
-            timeout=15,
-        )
-        if u.status_code == 200:
-            logger.info(f"Notion status sync: '{lead_name}' -> {status}")
-            return True
-        logger.warning(f"Notion status sync failed for '{lead_name}' ({u.status_code})")
-        return False
-    except Exception as e:
-        logger.warning(f"Notion status sync error (non-blocking): {e}")
-        return False
-
-
-def _sync_lead_to_notion(lead_data: dict, lead_id: int) -> bool:
-    """
-    Create a page in the Notion CRM Leads database for a new lead.
-    Fires after Supabase insert. Fails silently so CRM write is never blocked.
-    """
-    try:
-        industry_options = {
-            "Legal", "Accounting", "Marketing Agency", "HVAC", "Plumbing", "Roofing"
-        }
-        industry = lead_data.get("industry", "Other")
-        if industry not in industry_options:
-            industry = "Other"
-
-        source_options = {"Hunter", "Apollo", "Manual", "LinkedIn", "Serper",
-                          "CatalystWorks.Consulting", "BoubacarBarry.com"}
-        source = lead_data.get("source", "Hunter")
-        if source not in source_options:
-            source = "Manual"
-
-        status_map = {
-            "new": "new", "messaged": "contacted", "contacted": "contacted",
-            "replied": "replied", "meeting": "meeting", "booked": "meeting",
-            "closed": "closed", "paid": "closed", "disqualified": "disqualified",
-        }
-        status = status_map.get(lead_data.get("status", "new"), "new")
-
-        props = {
-            "Name": {"title": [{"text": {"content": lead_data.get("name", "")}}]},
-            "Company": {"rich_text": [{"text": {"content": lead_data.get("company", "")}}]},
-            "Title": {"rich_text": [{"text": {"content": lead_data.get("title", "")}}]},
-            "Location": {"rich_text": [{"text": {"content": lead_data.get("location", "")}}]},
-            "Industry": {"select": {"name": industry}},
-            "Source": {"select": {"name": source}},
-            "Status": {"select": {"name": status}},
-            "Lead Date": {"date": {"start": datetime.utcnow().strftime("%Y-%m-%d")}},
-        }
-        if lead_data.get("email"):
-            props["Email"] = {"email": lead_data["email"]}
-        if lead_data.get("phone"):
-            props["Phone"] = {"phone_number": lead_data["phone"]}
-        if lead_data.get("linkedin_url"):
-            props["LinkedIn"] = {"url": lead_data["linkedin_url"]}
-        if lead_data.get("notes"):
-            props["Notes"] = {"rich_text": [{"text": {"content": str(lead_data["notes"])[:2000]}}]}
-
-        payload = {
-            "parent": {"database_id": _NOTION_DB_ID},
-            "properties": props,
-        }
-        resp = httpx.post(
-            f"{_NOTION_API}/pages",
-            headers=_notion_headers(),
-            json=payload,
-            timeout=10,
-        )
-        if resp.status_code in (200, 201):
-            logger.info(f"Notion sync: lead '{lead_data.get('name')}' added (Supabase ID {lead_id}).")
-            return True
-        else:
-            logger.warning(f"Notion sync failed ({resp.status_code}): {resp.text[:200]}")
-            return False
-    except Exception as e:
-        logger.warning(f"Notion sync error (non-blocking): {e}")
-        return False
 
 
 def _get_conn():
@@ -208,7 +85,6 @@ def add_lead(lead_data: dict) -> int:
         conn.close()
 
         log_interaction(lead_id, 'discovery', f"Lead found via {lead_data.get('source', 'Hunter')}")
-        _sync_lead_to_notion(lead_data, lead_id)
         return lead_id
 
     except Exception as e:
@@ -360,7 +236,6 @@ def mark_outreach_sent() -> dict:
       - status = 'new'
 
     Sets status = 'messaged' and last_contacted_at = now for each.
-    Also syncs each lead to Notion (status -> contacted, Last Contacted -> today).
     Returns: { "marked": int, "leads": [{"id", "name", "email"}] }
     """
     try:
@@ -391,11 +266,6 @@ def mark_outreach_sent() -> dict:
         conn.commit()
         cur.close()
         conn.close()
-
-        # Sync each lead to Notion
-        notion_date = now.strftime("%Y-%m-%d")
-        for r in rows:
-            _sync_lead_status_to_notion(r["name"], "contacted", notion_date)
 
         return {"marked": len(rows), "leads": rows}
     except Exception as e:

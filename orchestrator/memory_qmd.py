@@ -9,6 +9,10 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
+import sys
+
+# Subprocess creation flags to suppress console window flashing on Windows
+SUBPROCESS_FLAGS = 0x08000000 if sys.platform == "win32" else 0
 
 logger = logging.getLogger(__name__)
 _RESULT_RE = re.compile(r"^(?P<file>.+?):(?P<line>\d+):\s*(?P<snippet>.*)$")
@@ -44,6 +48,7 @@ def qmd_search(query: str, index_dir: str = None, top_k: int = 5) -> list[dict]:
             text=True,
             timeout=180,
             check=False,
+            creationflags=SUBPROCESS_FLAGS,
         )
         if result.returncode != 0 or not result.stdout.strip():
             return []

@@ -12,7 +12,7 @@ All tools call this file:
   from templates.email.cold_outreach import SUBJECT, BODY
 """
 
-SUBJECT = "Where is your margin actually going?"
+SUBJECT = "What your team is not telling you"
 
 # Greeting is rendered conditionally based on first_name_confidence.
 # Low confidence (no usable name) drops the greeting entirely. Cold-email
@@ -20,17 +20,15 @@ SUBJECT = "Where is your margin actually going?"
 # reply rates. See feedback_no_greeting_when_unknown.md for full rationale.
 _GREETING_HIGH = "Hi {first_name},\n\n"
 
-_BODY_HOOK = """Most businesses aren't losing margin to bad strategy. They're losing it to one bottleneck: a handoff, an approval loop, a pricing gap quietly taxing everything downstream.
+_BODY_HOOK = """Most consultants will tell you the bottleneck is in your strategy.
 
-The frustrating part: it's almost always findable. And almost always fixable faster than people expect.
+Most of the time it is not. The biggest constraint I see in SMBs is that the founder cannot get straight answers from the people closest to them. Performance replaces truth. Loyalty replaces honesty. By the time the numbers tell the story, the team has been protecting the founder from it for six months.
 
-I'm Boubacar Barry, founder of Catalyst Works. I spent 15 years working with leadership teams across three continents watching the same pattern repeat: the thing slowing the business down is rarely what anyone is looking at.
-
-What I do differently: I don't hand you a report. I find the constraint and build a clear, executable path to removing it. One that the people running the business can actually use without me in the room.
+I am Boubacar, founder of Catalyst Works. I spent 15 years inside leadership teams across three continents watching the same loop. I have been on both sides of it. The lesson cost me people I cared about.
 
 One question before I ask for anything:
 
-Is there a place in your operation right now where work slows down or disappears that you haven't been able to fully fix?
+Is there a place in your operation where work slows down or disappears, and the people you trust most have not given you a clean explanation?
 
 If yes, worth a reply.
 

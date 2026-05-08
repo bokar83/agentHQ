@@ -547,6 +547,44 @@ Answer two questions before writing any code:
 
 ---
 
+### M19: Atlas CRM Dashboard (`/crm`) ⏳ QUEUED
+
+**What:** Replace the (sunset) Notion CRM Leads database with a native Atlas-page sales board, served at `/crm`. Pulls directly from Supabase `leads` table. Read + lightweight write (status updates, notes append). No external sync.
+
+**Why:** Notion CRM Leads sync was severed on 2026-05-07 (sync code deleted from `crm_tool.py`, `scheduler.py`, `db.py`; parity audit at `docs/audits/notion_sever_parity_2026-05-07.md`). Supabase is now the sole system of record for leads. Atlas needs a visual surface so Boubacar (and crews) can see the pipeline without cracking open psql.
+
+**Endpoints (proposed):**
+
+- `GET /atlas/crm/board` → pipeline counts by status + "leads needing outreach today" list
+- `GET /atlas/crm/leads/<id>` → single-lead detail (interactions timeline)
+- `POST /atlas/crm/leads/<id>/note` → append free-text note
+- `POST /atlas/crm/leads/<id>/status` → status transition with audit row
+
+**"Needs outreach today" predicate (proposed, confirm before build):**
+
+```sql
+WHERE status = 'new'
+   OR (status IN ('messaged', 'replied')
+       AND last_contacted_at < NOW() - INTERVAL '7 days')
+```
+
+**Success criteria:**
+
+- P50 latency `<200ms` on `/atlas/crm/board`
+- Row count on board matches `SELECT COUNT(*) FROM leads`
+- CRM block wired into morning_digest (counts + today's outreach list)
+
+**Trigger gate:**
+
+1. Notion CRM DB archived (manual, by Boubacar, in Notion UI)
+2. Predicate for "needs outreach today" confirmed
+3. No new Notion-only orphans surfaced post-2026-05-07 audit
+
+**Branch:** `feat/atlas-m19-crm-dashboard` (create when gate clears)
+**ETA:** 0.5 day endpoint + 0.5 day morning_digest wire-in.
+
+---
+
 ## Descoped Items
 
 These are explicit "do not build" decisions with reasons, so we don't relitigate.
@@ -2010,7 +2048,7 @@ OpenRouter ground-truth spend now visible on the Atlas dashboard. Hero Spend Pac
 - Story Review process added to `ctq-social` — replaces standard CTQ scoring for Story posts
 - `story_prompt_tick.py` created: 20 prompts (Tue/Thu 17:00 MT via Telegram + 6h sparse check if queue < 5)
 - `notion_capture` crew updated: detects story signals from any input, saves to Content Board as `Content Type=Story`, suggests channel routing as options (not hard-wired)
-- Channel map: BB (Boubacar Personal), FGM (First Gen Money), UTB (Under the Baobab), AIC (AI Catalyst)
+- Channel map: BB (Boubacar Personal), 1stGen (First Gen Money), UTB (Under the Baobab), AIC (AI Catalyst)
 - Committed to `feature/gws-email-rules-update` (`770b938`, `15eb85c`, `dde463a`) — awaiting gate merge
 
 **Commits this session:** `a1f63ef` (fabrication gate), `770b938` (story infra), `15eb85c` (channel mapping), `dde463a` (17:00 schedule + Tue/Thu gating)
@@ -2053,7 +2091,7 @@ OpenRouter ground-truth spend now visible on the Atlas dashboard. Hero Spend Pac
 
 **Additional fixes shipped after exec summary:**
 
-- `studio_story_bridge.py` — reads `Content Type=Story + Status=Idea` from Content Board every 6h, classifies channel fit (FGM/UTB/AIC) via LLM, seeds Pipeline DB. Idempotent.
+- `studio_story_bridge.py` — reads `Content Type=Story + Status=Idea` from Content Board every 6h, classifies channel fit (1stGen/UTB/AIC) via LLM, seeds Pipeline DB. Idempotent.
 - `griot_signal_brief.py` — Monday 09:00 MT. Reads 7-day story entries + chat messages, extracts top 3 recurring themes, sends Signal Brief to Telegram with draft post per theme.
 - `crews.py` — notion_capture now sends Telegram confirmation when story signal saved ("Story signal saved: [title] — Could feed: [channels] — Reply 'draft it' when ready")
 - `skills/ctq-social/SKILL.md` — lint fixed, synced to repo
@@ -2073,7 +2111,7 @@ OpenRouter ground-truth spend now visible on the Atlas dashboard. Hero Spend Pac
 
 **Next session (if Studio session doesn't resolve it):**
 1. Verify Studio activation: check Pipeline DB for our own qa-passed content with Asset URLs
-2. Confirm first Shorts posted on all 3 channels (UTB, FGM, AIC)
+2. Confirm first Shorts posted on all 3 channels (UTB, 1stGen, AIC)
 3. M4 warm-up day 1 counter starts from first successful post
 
 ---
