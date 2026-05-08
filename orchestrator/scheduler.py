@@ -507,14 +507,6 @@ def start_scheduler():
     digest_thread.start()
     logger.info("DIGEST: morning digest thread registered")
 
-
-    # Telegram inbound poll (v1: owner DM → log + echo)
-    try:
-        import telegram_inbound
-        telegram_inbound.start()
-    except Exception as e:
-        logger.error(f'TGINBOUND: start failed ({e}); continuing without inbound', exc_info=True)
-
     # Phase 2: heartbeat scheduler
     try:
         import heartbeat as _heartbeat
