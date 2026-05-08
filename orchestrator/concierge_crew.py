@@ -13,6 +13,9 @@ import os
 import re
 from typing import cast
 
+import skills.coordination as coordination
+import approval_queue
+
 logger = logging.getLogger("agentsHQ.concierge_crew")
 
 _VPS_HOST = "72.60.209.109"
@@ -117,7 +120,7 @@ _PROPOSE_PROMPT = """\
 You are an ops engineer triaging a production error. Given this error signature and sample lines, return ONLY valid JSON with exactly these keys:
 - "summary": one sentence describing the error (max 80 chars)
 - "severity": one of "low", "med", "high"
-- "proposed_fix": one concrete action to fix or investigate (max 120 chars)
+- "triage_note": one concrete action to fix or investigate (max 120 chars)
 
 Error signature:
 {signature}
@@ -146,7 +149,7 @@ def propose_fix(group: dict) -> dict:
         return {
             "summary": group["signature"][:80],
             "severity": "med",
-            "proposed_fix": "Investigate logs manually.",
+            "triage_note": "Investigate logs manually.",
         }
     client = anthropic.Anthropic(api_key=api_key)
     try:
@@ -166,12 +169,73 @@ def propose_fix(group: dict) -> dict:
         return {
             "summary": str(result.get("summary", group["signature"][:80])),
             "severity": severity,
-            "proposed_fix": str(result.get("proposed_fix", "Investigate logs manually.")),
+            "triage_note": str(result.get("triage_note", "Investigate logs manually.")),
         }
     except Exception as exc:
         logger.warning("concierge_crew: Haiku parse failed (%s), using fallback", exc)
         return {
             "summary": group["signature"][:80],
             "severity": "med",
-            "proposed_fix": "Investigate logs manually.",
+            "triage_note": "Investigate logs manually.",
         }
+
+
+_DEDUP_WINDOW_SECS = 7 * 24 * 3600  # 7 days
+
+
+def enqueue_proposals(proposals: list[dict]) -> int:
+    """Enqueue proposals not seen in the last 7 days.
+
+    Uses coordination.recent_completed(kind='concierge-fix') for dedup.
+    Returns count of newly enqueued proposals.
+    """
+    try:
+        recent = coordination.recent_completed(
+            kind="concierge-fix",
+            since_seconds=_DEDUP_WINDOW_SECS,
+            limit=500,
+        )
+    except Exception as exc:
+        logger.warning("concierge_crew: coordination lookup failed: %s", exc)
+        recent = []
+
+    seen_sigs: set[str] = set()
+    for task in recent:
+        payload = task.get("payload") or {}
+        sig = payload.get("signature")
+        if sig:
+            seen_sigs.add(sig)
+
+    enqueued = 0
+    for proposal in proposals:
+        sig = proposal["signature"]
+        if sig in seen_sigs:
+            logger.info("concierge_crew: dedup skip sig=%s", sig[:60])
+            continue
+
+        payload = {
+            "signature": sig,
+            "count": proposal["count"],
+            "samples": proposal["samples"],
+            "summary": proposal["summary"],
+            "severity": proposal["severity"],
+            "triage_note": proposal["triage_note"],
+        }
+
+        try:
+            row = approval_queue.enqueue(
+                crew_name="concierge",
+                proposal_type="concierge-fix",
+                payload=payload,
+            )
+            logger.info(
+                "concierge_crew: enqueued queue#%s sig=%s severity=%s",
+                row.id,
+                sig[:60],
+                proposal["severity"],
+            )
+            enqueued += 1
+        except Exception as exc:
+            logger.error("concierge_crew: enqueue failed for sig=%s: %s", sig[:60], exc)
+
+    return enqueued
