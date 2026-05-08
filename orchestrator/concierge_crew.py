@@ -67,3 +67,42 @@ def fetch_recent_errors(hours: int = 24) -> list[str]:
         if _ERROR_PATTERN.search(line):
             lines.append(line)
     return lines
+
+
+_UUID_RE = re.compile(
+    r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+    re.IGNORECASE,
+)
+_HEX_ID_RE = re.compile(r"\b[0-9a-f]{16,}\b", re.IGNORECASE)
+_LINE_NUMBER_RE = re.compile(r", line \d+")
+
+
+def _normalize(line: str) -> str:
+    """Strip timestamps, UUIDs, line numbers, hex IDs for signature comparison."""
+    s = _TIMESTAMP_RE.sub("", line)
+    s = _UUID_RE.sub("<uuid>", s)
+    s = _HEX_ID_RE.sub("<hexid>", s)
+    s = _LINE_NUMBER_RE.sub(", line <N>", s)
+    s = re.sub(r"\buuid=[a-f0-9A-F]+\b", "uuid=<id>", s)
+    return s.strip()
+
+
+def group_by_signature(lines: list[str]) -> list[dict]:
+    """Deduplicate error lines by normalized signature.
+
+    Returns list of dicts: {signature, count, samples: [str, ...]}.
+    Ordered by descending count.
+    """
+    from collections import defaultdict
+
+    buckets: dict[str, list[str]] = defaultdict(list)
+    for line in lines:
+        sig = _normalize(line)
+        buckets[sig].append(line)
+
+    groups = [
+        {"signature": sig, "count": len(samples), "samples": samples[:3]}
+        for sig, samples in buckets.items()
+    ]
+    groups.sort(key=lambda g: g["count"], reverse=True)
+    return groups
