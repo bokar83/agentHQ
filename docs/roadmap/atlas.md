@@ -76,7 +76,7 @@ Reviewed Anthropic's Dreams API (managed-agents research preview). Dreams solves
 | L2 Schedule | ✅ LIVE | 5-min wake. Queue #3 scheduled for Monday 2026-04-27. |
 | L3 Publish | ✅ LIVE | M7b SHIPPED 2026-04-25. Auto-publisher tick fires every 5 min via Blotato API ($20.30/mo Skool-discounted). Time-of-day slots (LI 07/11/12 MT, X 07/11/14 MT). Mon-Sat cadence, skip Sun. Past-due stagger (max 4/tick). publish_brief still sends Telegram digest as audit; auto_publisher does the actual posting. |
 | L4 Reconcile | ✅ LIVE | Reply 'posted' or 'skip' to publish-brief Telegram message; Notion Status flips, task_outcomes written. Shipped 2026-04-25 (M1). |
-| L5 Learn | ❌ OPEN | Blocked: needs ≥14 days of L4 data. Earliest viable 2026-05-08. |
+| L5 Learn | ✅ LIVE | M5 Chairman Crew shipped 2026-05-08. chairman-weekly fires Monday 06:00 MT. enabled=false dry_run=true on VPS. First real tick: next Monday (6 outcomes in DB, need 7). |
 
 **Infrastructure live:**
 - 6 heartbeat wakes registered, all firing on schedule
@@ -174,29 +174,32 @@ Reviewed Anthropic's Dreams API (managed-agents research preview). Dreams solves
 
 ---
 
-### M4: Concierge Crew (Phase 4 proper) ⏳ TRIGGER-GATED
+### M4: Concierge Crew (Phase 4 proper) ✅ SHIPPED 2026-05-08
 
-**What:** LLM-powered error triage crew. Reads VPS logs, groups errors by signature, uses Haiku to propose fixes, enqueues to approval_queue.
+**What:** LLM-powered error triage crew. Reads VPS logs, groups errors by signature, uses Haiku to propose triage notes, enqueues to approval_queue.
 
 **Why:** error_monitor.sh (shell cron, shipped Phase 3.75) is the smoke alarm. Concierge is the firefighter.
 
-**Trigger gate:** ≥3 error_monitor.sh alerts in a single week, OR 2026-05-08, whichever comes first.
-**Blockers:** Need real error data. Currently 19h of silence on error_monitor.log.
-**Branch:** `feat/concierge-autonomous`
-**ETA:** 2-3 hr when triggered.
+**Shipped:** `feat/concierge-autonomous` pushed [READY] at `6f9ef63`. Gate will merge to main.
+
+**Files:** `orchestrator/concierge_crew.py`, `tests/test_concierge_crew.py` (10 tests passing), `orchestrator/app.py` (heartbeat every 6h).
+
+**Key decision:** payload key is `triage_note` not `proposed_fix` -- no automated remediation, honest framing.
+
+**Deploy after Gate merge:** `git pull && docker compose up -d orchestrator`. Manual test: `docker exec orc-crewai python -m orchestrator.concierge_crew`
 
 ---
 
-### M5: Chairman Crew (Phase 5, L5 Learning Loop) ⏳ TRIGGER-GATED
+### M5: Chairman Crew (Phase 5, L5 Learning Loop) ✅ SHIPPED 2026-05-08
 
 **What:** Weekly oversight crew. Reads approval_queue + task_outcomes, identifies patterns (rejection reasons, scoring drift, topic overlap), proposes mutations to scoring weights or leGriot prompts, enqueues to approval_queue.
 
 **Why:** L5 closes the loop. Without it, scoring weights and prompts ossify.
 
-**Trigger gate:** ≥14 days of approval_queue + task_outcomes data accumulated. Earliest viable 2026-05-08.
-**Blockers:** M1 shipping (provides task_outcomes data); 14 days of pipeline operation.
-**Branch:** `feat/chairman-learning-loop`
-**ETA:** 3-4 hr when triggered.
+**Shipped:** 2026-05-08. Branch `feat/chairman-learning-loop` merged to main.
+**Files:** `orchestrator/chairman_crew.py`, `orchestrator/contracts/chairman.md`, `orchestrator/tests/test_chairman_crew.py`. Patched `griot.py` (_load_scoring_weights), `handlers_approvals.py` (apply_mutation wired to all 3 approval paths), `app.py` (chairman-weekly heartbeat).
+**VPS state:** chairman-weekly registered, enabled=false dry_run=true. 6 outcomes in DB -- need 7 for first real run. First tick: Mon 2026-05-11.
+**Before enabling:** 2 dry-run Monday ticks + sign contracts/chairman.md.
 
 ---
 
@@ -2166,3 +2169,24 @@ OpenRouter ground-truth spend now visible on the Atlas dashboard. Hero Spend Pac
 **Next session priorities:**
 1. Verify morning digest fires tomorrow 07:30 MT (Telegram + email)
 2. M18 HALO: instrument heartbeat with tracing.py + 50 traces by 2026-05-18
+
+### 2026-05-08 -- M5 Chairman Crew (L5 Learning Loop) shipped + concierge PR merged
+
+**What shipped:**
+- `chairman_crew.py`: fetch_outcomes (queries approval_queue directly for boubacar_feedback_tag), analyse_patterns, propose_mutations (Sonnet claude-sonnet-4-6, max 1000 tokens), enqueue_proposals (dedup per field via status=pending check), apply_mutation wired to all 3 approval paths in handlers_approvals.py (_maybe_apply_mutation helper)
+- `griot.py`: _load_scoring_weights() reads GRIOT_* agent_config overrides at tick start; _pick_top_candidate passes merged weights to _score_candidate. Loop now actually closes on approval.
+- `app.py`: chairman-weekly heartbeat registered (Monday 06:00 MT, gates internally on weekday check)
+- `contracts/chairman.md`: autonomy contract skeleton (pending 2 dry-run ticks + sign-off)
+- 21 tests green. Merged to main, deployed to VPS via docker cp to /app/ (baked image path).
+
+**Codex catch (same session):** apply_mutation was defined but never called from any runtime path. Wired in same session -- loop would have been broken without it.
+
+**Concierge PR #32** also merged: app.py conflict resolved (kept both chairman-weekly + concierge-sweep heartbeat blocks). VPS scheduler.py had stale conflict markers -- accepted origin/main.
+
+**VPS state:** chairman-weekly + concierge-sweep both confirmed in startup logs. 6 griot outcomes in DB -- MIN_OUTCOMES=7, chairman will skip Mon 2026-05-11 (1 short), fire Mon 2026-05-18 if data accumulates.
+
+**Next session priorities:**
+1. Mon 2026-05-11: verify chairman tick runs (even if skip due to insufficient data -- check logs)
+2. Mon 2026-05-18: verify first real chairman analysis + proposal enqueued to approval_queue
+3. After 2 dry-run ticks: sign contracts/chairman.md + flip enabled=true in autonomy_state.json
+4. M18 HALO: instrument heartbeat tracing (target 50 traces by 2026-05-18)
