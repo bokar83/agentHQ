@@ -33,7 +33,42 @@ so the user has deliverables at every stage.
 
 6. **No em-dashes in any output.** Site HTML, CSS, JS, source generators: scrub before declaring done.
 
-These rules were learned the hard way on the Elevate Roofing pilot (2026-04-30, see `_archive/v1-boring-template/` in that project for what NOT to ship).
+7. **Audit one-pager and competitive report ship as live HTML links, never as PDF attachments.** Headless-Chrome PDF prints break page flow (orphaned sections, blown letterspacing, ugly page breaks), inflate email size, look "salesy", and pinch-zoom badly on mobile. Deploy each report to Vercel as its own URL and send the link in the email. Keep the HTML print-styled in case the prospect chooses to print, but never ship a `.pdf` attachment in the first touch. Learned on Elevate Roofing pilot (2026-05-07): generated PDF was 7 pages of orphaned sections, half-empty page 1, blown hero spacing. Live HTML link `https://auditdeploy.vercel.app/` looked clean and matched the demo site link as a peer-share gesture.
+
+8. **Reports look like REPORTS, not WEBSITES, AND ship as MOBILE-FIRST scrolling card stacks (not desktop A4 prints).** Audit reports, scorecards, and competitive analyses are consultant memos in browser format AND most prospects read them on phone first. Desktop dense-prose memo (1,200 words) loses busy business owners by finding 02. Phone delivery surface = scrolling card stack with bullets, screenshots, traffic-light dots, ranked findings, single CTA. Bar is "Stripe Atlas guide on a phone" + "McKinsey memo on desktop", served from same URL with deep-dive accordion linking to the full desktop memo at `/full/`.
+
+   **Required memo anatomy (every audit, every prospect):**
+   - **Document slug** at top corner: `Doc CW-A-YYYY-MM-DD · Confidential · For recipient only` in mono caps. Functional, not decorative. No /R or /v2 suffixes unless meaningful.
+   - **Memo header** with five fields: To / From / Date / Re / Length. Mono labels, serif values. Date is dual-stamped: `Prepared <original date> · Reviewed <send date>` so the prospect sees both that the audit predates outreach and that data is fresh.
+   - **From field uses first name only:** `From: Boubacar, Catalyst Works Consulting`. Never "Boubacar Barry" in From — that doubles with the signature later. (See `reference_boubacar_signature.md` in memory for full first-name-only rule.)
+   - **Single brand in chrome.** Catalyst Works only. Signal Works is a service inside it; do not stack both names in the slug or header.
+   - **Executive summary block** in plain typography (no dark gradient card, no radial overlays). One paragraph. One `<strong>` highlight if you must. No CTA buttons.
+   - **Numbered findings as prose**, not card grids. `01. <Finding head>` / body / italic citation block with `Why it matters: ...`. Each finding gets a single mono tag line for `Lift +X to Y% · Fix: <duration>`. No octagonal stat tiles.
+   - **Tables for scorecards and comparisons**, never card grids. SEO scorecard = 3-column table (Signal / Status / What it does). Competitor comparison = 3-column table. The column-header row uses mono caps; bodies stay serif.
+   - **Plan section as prose paragraphs**, one per phase. Each phase: mono kicker (`Month 1`) + serif subhead (`Stop the leak`) + one paragraph of prose deliverables. Not a 3-column pricing-tier grid.
+   - **Closing line** as prose, not as a button. `If any of this lands, I am around for a 15-minute call. If not, this is yours to keep.` Set off by hairline rules above and below.
+   - **Signature block (Option D from Elevate v3, 2026-05-07):** scanned wet-ink signature image (`<img class="sig-img" src="assets/signature.png" alt="Boubacar">` at 200px wide, `mix-blend-mode: multiply`, slight negative top-margin so the typed name tucks under the scrawl) + typed first name (`Boubacar` in serif semibold) + email caption (`boubacar@catalystworks.consulting` in IBM Plex Mono 9pt). Three lines, three roles: gesture, record, contact. Cap at three references to the sender per signature block.
+   - **Methodology footnote** at the very bottom: how you scored, where the data came from, citation list, explicit out-of-scope. Hairline rule above. 9pt serif. No memo ships without one.
+
+   **Required typography:**
+   - Body face: `Source Serif 4` with `font-optical-sizing: auto` and `font-feature-settings: "onum","liga","kern"`. Not Instrument Serif (that's display). Not DM Sans (that's training-data slop).
+   - Mono face for labels, slugs, scorecard headers, finding tag lines: `IBM Plex Mono`. Never use the body face caps-spaced for labels.
+   - Body size 11.25pt. Line-height 1.5 to 1.55 (NOT 1.62 — too loose for editorial memo). Column max-width 720px on desktop.
+
+   **Banned in memo format (each one drops you back to "looks like a website"):**
+   - Hero with `clamp()` h1 + italic accent
+   - Dark "verdict" or "CTA" cards with radial-gradient overlays
+   - Identical card grids (services-section reflex)
+   - Side-stripe colored borders >1px on cards or sections
+   - Italic-orange accent overused as `<em>` color (caught >3 times = problem)
+   - Buttons in the closing position (closing is prose)
+   - Triple-billed sender name (caught on Elevate v2: italic script-mark + typed full name + brand line — kill two of three)
+   - Footer with 4 columns of links
+   - Mid-document "Trusted by" logo strip
+
+   **Method:** when generating any new audit memo from this skill, copy the structural shell of `d:/Ai_Sandbox/agentsHQ/projects/elevate-built-oregon/audit-one-pager.html` (Elevate v3) as the reference template. That file is the canonical Signal Works memo. Score against `design-audit` skill before sending; bar is ≥17/20. Lower than 17 = rework, do not ship.
+
+These rules were learned the hard way on the Elevate Roofing pilot (2026-04-30 v1 web template scored 11/20 → 2026-05-07 v3 memo rebuild scored 17/20).
 
 ---
 
@@ -214,11 +249,18 @@ Include a comparison table and a clear "Patterns of the Top 10%" section.
 
 ---
 
-## PHASE 3: Competitive Analysis Report (PDF-Ready HTML)
+## PHASE 3: Competitive Analysis Report (Live HTML Link)
 
-This is a **client-facing deliverable**: a polished, print-ready HTML report.
+This is a **client-facing deliverable**: a polished HTML report deployed to Vercel and shared as a live link. **Never sent as a PDF attachment** (see HARD RULE #7).
 
-**Build it as a beautiful HTML page** (not markdown) styled for printing to PDF.
+**Build it as a beautiful HTML page** (not markdown). Print styles are optional for prospects who choose to print themselves, but the deliverable shipped to the prospect is the URL, not a `.pdf` file.
+
+**Deploy step (mandatory before sending to prospect):**
+
+1. Stage the report file as `index.html` in a clean folder (e.g. `_audit_deploy/index.html`).
+2. `vercel --prod --yes --scope <team-scope>` from that folder.
+3. Confirm `curl -skI -o /dev/null -w "%{http_code}\n" <url>` returns `200` (not `401`: team-SSO custom domains gate the URL, use the auto-generated `*.vercel.app` alias instead).
+4. Send the link in the outreach email alongside the demo-site link. Two URLs, no attachments.
 
 For the exact HTML/CSS reference, see `references/process-overview.html`: this is the design
 language to follow: warm paper tones, Instrument Serif + DM Sans, subtle grain texture, elegant

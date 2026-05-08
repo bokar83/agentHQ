@@ -34,6 +34,10 @@ import urllib.request
 import json
 from pathlib import Path
 from typing import Optional
+import sys
+
+# Subprocess creation flags to suppress console window flashing on Windows
+SUBPROCESS_FLAGS = 0x08000000 if sys.platform == "win32" else 0
 
 logger = logging.getLogger("agentsHQ.gate_agent")
 
@@ -113,6 +117,7 @@ def _git(args: list[str], cwd: Optional[Path] = None) -> tuple[int, str, str]:
         capture_output=True,
         text=True,
         check=False,
+        creationflags=SUBPROCESS_FLAGS,
     )
     return proc.returncode, proc.stdout.strip(), proc.stderr.strip()
 
