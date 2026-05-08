@@ -81,6 +81,9 @@ AUTO_APPROVE_PREFIXES = (
 _BOT_TOKEN = os.environ.get("ORCHESTRATOR_TELEGRAM_BOT_TOKEN", "")
 _CHAT_ID = os.environ.get("OWNER_TELEGRAM_CHAT_ID", "")
 
+# Tracks branches already alerted this process lifetime to suppress repeat notifications
+_alerted_high_risk: set[str] = set()
+
 
 # ---------------------------------------------------------------------------
 # Notification
@@ -499,14 +502,18 @@ def gate_tick() -> None:
         if _is_high_risk(files) and not _is_auto_approvable(files):
             decision = _check_approval(branch)
             if decision == "reject":
+                _alerted_high_risk.discard(branch)
                 _notify(f"Gate rejection processed: {branch} held without merge.")
                 continue
             if decision != "approve":
                 held_high_risk.append(branch)
-                hr_files = [f for f in files if any(f.startswith(p) for p in HIGH_RISK_PREFIXES)]
-                _notify_gate_review(branch, hr_files)
+                if branch not in _alerted_high_risk:
+                    hr_files = [f for f in files if any(f.startswith(p) for p in HIGH_RISK_PREFIXES)]
+                    _notify_gate_review(branch, hr_files)
+                    _alerted_high_risk.add(branch)
                 continue
             # Approved — fall through to test + merge below
+            _alerted_high_risk.discard(branch)
             logger.info("gate: %s approval granted, proceeding to test + merge", branch)
 
         # Run tests
