@@ -48,7 +48,7 @@ def fetch_recent_errors(hours: int = 24) -> list[str]:
 
     try:
         client = _ssh_client()
-    except (paramiko.SSHException, OSError) as exc:
+    except Exception as exc:
         logger.warning("concierge_crew: SSH connect failed (skipping sweep): %s", exc)
         return []
 
