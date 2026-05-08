@@ -192,3 +192,43 @@ def test_enqueue_proposals_enqueues_new_signature():
     assert payload["signature"] == "[ERROR] fresh: boom"
     assert payload["severity"] == "high"
     assert "triage_note" in payload
+
+
+def test_run_concierge_sweep_end_to_end():
+    """Full sweep: fetch -> group -> propose -> enqueue, returns summary dict."""
+    import concierge_crew as cc
+
+    fake_lines = [
+        "2026-05-08 [ERROR] griot_tick: NoneType 'get'",
+        "2026-05-08 [ERROR] griot_tick: NoneType 'get'",
+        "2026-05-08 [ERROR] studio_tick: connection refused",
+    ]
+    fake_proposal = {
+        "summary": "griot NoneType",
+        "severity": "med",
+        "triage_note": "Add null check before .get()",
+    }
+    mock_row = MagicMock()
+    mock_row.id = 7
+
+    with patch("concierge_crew.fetch_recent_errors", return_value=fake_lines):
+        with patch("concierge_crew.propose_fix", return_value=fake_proposal):
+            with patch("concierge_crew.coordination.recent_completed", return_value=[]):
+                with patch("concierge_crew.approval_queue.enqueue", return_value=mock_row):
+                    result = cc.run_concierge_sweep()
+
+    assert result["lines_found"] == 3
+    assert result["groups_found"] == 2
+    assert result["enqueued"] == 2
+
+
+def test_run_concierge_sweep_returns_zero_on_no_errors():
+    """Empty log returns zeroed summary, no proposals enqueued."""
+    import concierge_crew as cc
+
+    with patch("concierge_crew.fetch_recent_errors", return_value=[]):
+        result = cc.run_concierge_sweep()
+
+    assert result["lines_found"] == 0
+    assert result["groups_found"] == 0
+    assert result["enqueued"] == 0
