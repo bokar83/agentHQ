@@ -848,6 +848,88 @@ def _cmd_task_add(text: str, chat_id: str) -> bool:
 # Dream: memory consolidation
 # ══════════════════════════════════════════════════════════════
 
+def _cmd_gate_approve(text: str, chat_id: str) -> bool:
+    """
+    /gate-approve <branch> — approve a Gate-held high-risk branch for merge.
+
+    Writes a marker file under data/gate_approvals/. Gate's next tick reads markers,
+    matches against held branches, runs tests + merges + pushes main + deploys.
+    Auth: chat_id must equal OWNER_TELEGRAM_CHAT_ID.
+    Async by design — does not block the bot handler with a slow merge.
+    """
+    if not text.lower().startswith("/gate-approve"):
+        return False
+    import os, json, pathlib
+    from datetime import datetime, timezone
+    from notifier import send_message as _send
+
+    owner_id = os.environ.get("OWNER_TELEGRAM_CHAT_ID", "")
+    if owner_id and str(chat_id) != str(owner_id):
+        _send(chat_id, "Not authorized. Gate approvals require owner chat.")
+        return True
+
+    parts = text.strip().split(maxsplit=1)
+    if len(parts) < 2 or not parts[1].strip():
+        _send(chat_id, "Usage: /gate-approve <branch-name>")
+        return True
+
+    branch = parts[1].strip()
+    repo_root = pathlib.Path(os.environ.get("REPO_ROOT", "/app"))
+    marker_dir = pathlib.Path(os.environ.get("GATE_DATA_DIR", str(repo_root / "data"))) / "gate_approvals"
+    marker_dir.mkdir(parents=True, exist_ok=True)
+
+    marker_name = branch.replace("/", "__") + ".approve.json"
+    marker_path = marker_dir / marker_name
+    marker_path.write_text(json.dumps({
+        "branch": branch,
+        "decision": "approve",
+        "approved_by": str(chat_id),
+        "ts": datetime.now(timezone.utc).isoformat(),
+    }, indent=2), encoding="utf-8")
+
+    _send(chat_id, f"Gate approval queued for {branch}. Will process on next tick (within 60s).")
+    return True
+
+
+def _cmd_gate_reject(text: str, chat_id: str) -> bool:
+    """
+    /gate-reject <branch> — reject a Gate-held branch. Writes a reject marker so
+    Gate clears the held state without merging.
+    """
+    if not text.lower().startswith("/gate-reject"):
+        return False
+    import os, json, pathlib
+    from datetime import datetime, timezone
+    from notifier import send_message as _send
+
+    owner_id = os.environ.get("OWNER_TELEGRAM_CHAT_ID", "")
+    if owner_id and str(chat_id) != str(owner_id):
+        _send(chat_id, "Not authorized. Gate approvals require owner chat.")
+        return True
+
+    parts = text.strip().split(maxsplit=1)
+    if len(parts) < 2 or not parts[1].strip():
+        _send(chat_id, "Usage: /gate-reject <branch-name>")
+        return True
+
+    branch = parts[1].strip()
+    repo_root = pathlib.Path(os.environ.get("REPO_ROOT", "/app"))
+    marker_dir = pathlib.Path(os.environ.get("GATE_DATA_DIR", str(repo_root / "data"))) / "gate_approvals"
+    marker_dir.mkdir(parents=True, exist_ok=True)
+
+    marker_name = branch.replace("/", "__") + ".reject.json"
+    marker_path = marker_dir / marker_name
+    marker_path.write_text(json.dumps({
+        "branch": branch,
+        "decision": "reject",
+        "rejected_by": str(chat_id),
+        "ts": datetime.now(timezone.utc).isoformat(),
+    }, indent=2), encoding="utf-8")
+
+    _send(chat_id, f"Gate rejection queued for {branch}. Branch will be left untouched.")
+    return True
+
+
 def _cmd_dream(text: str, chat_id: str) -> bool:
     if not text.lower().startswith("/dream"):
         return False
@@ -900,6 +982,8 @@ def _cmd_dream(text: str, chat_id: str) -> bool:
 # unique prefixes so order within the Phase 0 group does not matter. /status
 # has a guard against /status_foo inside its own handler.
 _COMMANDS = [
+    _cmd_gate_approve,  # must come before _cmd_approve (longer prefix)
+    _cmd_gate_reject,   # must come before _cmd_reject (longer prefix)
     _cmd_dream,
     _cmd_task_add,
     _cmd_heartbeat_status,
