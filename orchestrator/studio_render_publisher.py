@@ -342,7 +342,7 @@ def _concat_clips(clips: list[Path], out: Path, scenes: list[dict], fps: int) ->
     _ffmpeg([
         "-f", "concat", "-safe", "0", "-i", str(list_file),
         "-c:v", "libx264", "-preset", "fast", "-crf", "20",
-        "-pix_fmt", "yuv420p", "-an",
+        "-pix_fmt", "yuv420p", "-r", str(fps), "-vsync", "cfr", "-an",
         str(out),
     ], timeout=300)
 
