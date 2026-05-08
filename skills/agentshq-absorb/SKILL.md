@@ -452,3 +452,4 @@ Below that, four collapsed `<details>` sections: **What it is** (Phase 2 dossier
 | Reporting STATIC-CLEAN as "safe" | Always show the disclaimer: "Runtime payloads not checked." STATIC-CLEAN means no obvious static patterns found, not that the code is trustworthy. |
 | SUSPICIOUS verdict with no pattern attribution | Every SUSPICIOUS or BLOCKED verdict must show exact `file:line - matched pattern`. Opaque status labels create friction without protection. |
 | Bypassing BLOCKED via workaround | BLOCKED is a hard stop. No clone. No install. No override path. Surface the finding to Boubacar and stop. |
+| Executing implausible numbers without checking | Any numeric input that looks like a typo (498 hours, 4800 lines, $9999) — push back and confirm before executing. Example: "498 hours" was meant to be "48 hours". Rule: if a number is >10x the reasonable range for the request, ask once before acting. |
