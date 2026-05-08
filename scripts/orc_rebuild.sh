@@ -228,6 +228,7 @@ if [ ! -f "$REPO_ROOT/.env" ]; then
   exit 1
 fi
 log "sourcing .env"
+sed -i 's/\r//' "$REPO_ROOT/.env"  # strip CRLF -- Windows editors add it
 set -a
 . "$REPO_ROOT/.env"
 set +a
