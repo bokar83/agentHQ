@@ -26,7 +26,7 @@ docs/engagements/<client-shortname>/
 ├── engagement-brief.md       (created at kickoff)
 ├── session-notes.md          (append-only journal)
 ├── deliverable-tracker.md    (updated as commitments are made)
-└── closeout-memo.md          (created at end)
+└── closeout-memo.html        (created at end — HTML, client-facing)
 ```
 
 **Client shortname rule:** lowercase, hyphenated, recognizable. Use the client company name, not a codename. Examples: `westridge-logistics`, `acme-trucking`, `forge-partners`. If the engagement is with a person not tied to a company, use first-last (`mike-jensen`).
@@ -78,9 +78,9 @@ Status values are tight: `not started`, `drafting`, `in review`, `shipped`, `lat
 
 When something goes `late`, the next session-notes entry must include a one-line reason. This is the lightweight version of MITAR :  Monitor, Investigate, Take Action, Report :  without the enterprise weight.
 
-### 4. Closeout Memo (`closeout-memo.md`)
+### 4. Closeout Memo (`closeout-memo.html`)
 
-Created within 5 days of last session. Pull `closeout-meeting` pattern.
+Created within 5 days of last session. Pull `closeout-meeting` pattern. **Produce as HTML** (human-facing deliverable shared with the client). Internal artifacts above stay `.md`.
 
 Three sections only:
 

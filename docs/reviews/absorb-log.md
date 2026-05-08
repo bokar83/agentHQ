@@ -39,3 +39,5 @@ Leverage types: `producing-motion` | `founder-time-reduction` | `continuous-impr
 2026-05-06 | https://x.com/i/status/2039269234253934811 | PROCEED (partial) | new tool skills/coordination/references/agent-delegation-pattern.md | producing-motion (Atlas) + continuous-improvement (coordination ledger)
 
 2026-05-08 | https://telegram.org/blog/ai-bot-revolution-11-new-features | PROCEED | new orchestrator module orchestrator/telegram_inbound.py (v1: inbound long-poll, single branch: owner DM triggers orchestrator action) + enable Guest Queries on agentsHQ4Bou_bot via BotFather | producing-motion (Atlas autonomy) + founder-time-reduction
+2026-05-08 | https://github.com/oscarsterling/claude-telegram-remote | DON'T PROCEED | n/a | none — macOS+tmux only, incompatible with Windows/Antigravity stack
+2026-05-08 | <https://x.com/i/status/2052809885763747935> | PROCEED | hard rule docs/AGENT_SOP.md + enhance skills/engagement-ops (closeout-memo .md → .html) | continuous-improvement + producing-motion
