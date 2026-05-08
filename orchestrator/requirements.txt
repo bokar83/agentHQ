@@ -1,8 +1,8 @@
 # agentsHQ Orchestrator — Python Dependencies
 
 # ── Core Framework ──────────────────────────────────────────────
-crewai[tools]>=0.80.0,<2.0.0
-crewai-tools>=0.17.0,<2.0.0
+crewai[tools]==1.14.4
+crewai-tools==1.14.4
 
 # ── API & Web ──────────────────────────────────────────────
 fastapi>=0.115.0
@@ -11,8 +11,8 @@ httpx>=0.27.0
 pydantic[email]>=2.8.0
 
 # ── LLM & Embeddings ──────────────────────────────────────────
-openai>=1.40.0,<3.0.0
-litellm>=1.0.0,<2.0.0
+openai==2.34.0
+litellm==1.83.0
 anthropic==0.98.1
 
 # ── Vector Memory ───────────────────────────────────────────

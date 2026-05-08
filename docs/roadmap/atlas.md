@@ -15,17 +15,17 @@
 
 ## Session-Start Cheat Block (read this first)
 
-Last session ended **2026-05-06 (evening)**. State at close:
+Last session ended **2026-05-08 (evening)**. State at close:
 
-- **Three-way nsync at `d83ad45`** (local + origin -- VPS pull pending Gate)
-- **Morning digest extended:** `griot_morning_tick` now sends outreach metrics + spend today/WTD/MTD + top 3 Execution Cycle tasks via Telegram + HTML email every weekday morning
-- **Skill portfolio reduced:** 74 -> 68 skills. 6 archived (deploy-to-vercel, vercel-cli-with-tokens, cold-outreach, banner-design, slides, linkedin_mvm). 6 agent-internal SKILL.md descriptions fixed.
-- **Hard rule added to memory:** grep orchestrator + signal_works before archiving any skills directory
+- **Telegram phone control live:** `/sw`, `/digest`, `/publish`, `/queue`, `/cost`, `/dream`, `/autonomy_status` all dispatch correctly from DM to @agentsHQ4Bou_bot
+- **Gate deploy watchdog fixed:** now uses `docker compose up -d` for code-only merges (~10s, no SIGTERM). Full rebuild only when `requirements.txt` changes. Stops killing ffmpeg renders.
+- **Baked import precedence RCA resolved:** `handlers_commands.py` added to docker cp list. Root cause: `/app/handlers_commands.py` (baked) shadows `/app/orchestrator/handlers_commands.py` (volume). Must cp both after every edit.
+- **Telegram bot-to-bot + Guest Queries:** announced by Telegram 2026-05-08 but NOT yet rolled out. `can_manage_bots: false`, `supports_guest_queries: false`. Remote check scheduled 2026-05-29 (routine `trig_01GfTDBcYQ3vA7T9phNwhjsE`).
 
 **Default next moves (in priority order):**
 
-1. Verify morning digest fires correctly tomorrow at 07:30 MT (check Telegram + email)
-2. If digest missing: `docker logs orc-crewai | grep griot_morning` on VPS
+1. Test `/digest` and `/publish` commands via DM to @agentsHQ4Bou_bot
+2. Check 2026-05-29 remote routine result for Telegram feature rollout
 3. M18 HALO unlock: instrument Atlas heartbeat with tracing.py + 50 traces by 2026-05-18
 
 **Do not start a new milestone without reading the latest Session Log entry below.**
