@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "orchestrator"))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 def test_fetch_recent_errors_returns_lines_from_log():
@@ -94,7 +95,7 @@ def test_propose_fix_returns_expected_shape():
     }
 
     fake_response = MagicMock()
-    fake_response.content = [MagicMock(text='{"summary": "griot NoneType", "severity": "med", "proposed_fix": "Add null check"}')]
+    fake_response.content = [MagicMock(text='{"summary": "griot NoneType", "severity": "med", "triage_note": "Add null check"}')]
 
     mock_client = MagicMock()
     mock_client.messages.create.return_value = fake_response
@@ -104,8 +105,8 @@ def test_propose_fix_returns_expected_shape():
 
     assert result["summary"] == "griot NoneType"
     assert result["severity"] in ("low", "med", "high")
-    assert isinstance(result["proposed_fix"], str)
-    assert len(result["proposed_fix"]) > 0
+    assert isinstance(result["triage_note"], str)
+    assert len(result["triage_note"]) > 0
 
 
 def test_propose_fix_handles_malformed_json():
@@ -129,4 +130,65 @@ def test_propose_fix_handles_malformed_json():
 
     assert "summary" in result
     assert "severity" in result
-    assert "proposed_fix" in result
+    assert "triage_note" in result
+
+
+def test_enqueue_proposals_skips_seen_signatures():
+    """Signature seen in last 7 days is not re-enqueued."""
+    import concierge_crew as cc
+
+    proposals = [
+        {
+            "signature": "[ERROR] known: crash",
+            "count": 2,
+            "samples": ["[ERROR] known: crash"],
+            "summary": "known crash",
+            "severity": "med",
+            "triage_note": "Check logs.",
+        }
+    ]
+
+    existing_task = {
+        "id": "abc",
+        "kind": "concierge-fix",
+        "payload": {"signature": "[ERROR] known: crash"},
+    }
+
+    with patch("concierge_crew.coordination.recent_completed", return_value=[existing_task]):
+        with patch("concierge_crew.approval_queue.enqueue") as mock_enqueue:
+            enqueued = cc.enqueue_proposals(proposals)
+
+    mock_enqueue.assert_not_called()
+    assert enqueued == 0
+
+
+def test_enqueue_proposals_enqueues_new_signature():
+    """New signature (not in recent_completed) is enqueued once."""
+    import concierge_crew as cc
+
+    proposals = [
+        {
+            "signature": "[ERROR] fresh: boom",
+            "count": 1,
+            "samples": ["[ERROR] fresh: boom"],
+            "summary": "fresh boom",
+            "severity": "high",
+            "triage_note": "Restart service.",
+        }
+    ]
+
+    mock_row = MagicMock()
+    mock_row.id = 99
+
+    with patch("concierge_crew.coordination.recent_completed", return_value=[]):
+        with patch("concierge_crew.approval_queue.enqueue", return_value=mock_row) as mock_enqueue:
+            enqueued = cc.enqueue_proposals(proposals)
+
+    assert enqueued == 1
+    call_kwargs = mock_enqueue.call_args
+    assert call_kwargs[1]["crew_name"] == "concierge"
+    assert call_kwargs[1]["proposal_type"] == "concierge-fix"
+    payload = call_kwargs[1]["payload"]
+    assert payload["signature"] == "[ERROR] fresh: boom"
+    assert payload["severity"] == "high"
+    assert "triage_note" in payload
