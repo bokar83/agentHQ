@@ -75,6 +75,10 @@ tmp/
 # ── Compiled binaries / local tools ─────────────────────────
 tools/
 
+# ── Sandbox Codex artifacts (large binaries, never version) ──
+sandbox/*.bundle
+sandbox/*.zip
+
 # ── detect-secrets baseline ───────────────────────────────────
 .secrets.baseline
 
