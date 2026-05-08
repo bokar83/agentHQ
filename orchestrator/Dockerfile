@@ -60,6 +60,12 @@ COPY configs/ configs/
 # Create required directories
 RUN mkdir -p /app/outputs /app/logs /app/outputs/proposals /app/outputs/council
 
+# Entrypoint: syncs volume-mounted orchestrator/*.py over baked /app/*.py
+# on every container start. Eliminates silent import-precedence drift.
+# See scripts/docker-entrypoint.sh for details.
+COPY scripts/docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
 # Expose the FastAPI port
 EXPOSE 8000
 
@@ -70,4 +76,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 # Run the service. Flipped from orchestrator:app to app:app on 2026-04-24
 # as part of the shadow module backport. orchestrator.py stays in the
 # image as a rollback reference for at least one week after the flip.
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "info"]
