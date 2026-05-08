@@ -324,6 +324,20 @@ async def startup_event():
     except Exception as e:
         logger.warning(f"chairman-weekly wake registration failed (non-fatal): {e}")
 
+    # M4: Concierge Crew -- LLM error triage, every 6h.
+    try:
+        import heartbeat as _heartbeat
+        from concierge_crew import run_concierge_sweep as _concierge_sweep
+        _heartbeat.register_wake(
+            "concierge-sweep",
+            crew_name="concierge",
+            callback=_concierge_sweep,
+            every="6h",
+        )
+        logger.info("HEARTBEAT: concierge-sweep registered (every 6h)")
+    except Exception as e:
+        logger.warning(f"concierge-sweep wake registration failed (non-fatal): {e}")
+
     # Telegram polling in the background (hardened loop in handlers.py).
     asyncio.create_task(telegram_polling_loop())
     logger.info("Telegram Polling Loop scheduled.")
