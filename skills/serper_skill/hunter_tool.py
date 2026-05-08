@@ -588,14 +588,14 @@ def discover_leads(query: str = "", count: int = DEFAULT_LEAD_COUNT) -> List[dic
                 if email:
                     lead["email"] = email
                 time.sleep(0.5)
-            # For any lead with a non-LinkedIn URL, try Hunter domain search
-            elif lead.get("linkedin_url") and "linkedin.com" not in lead.get("linkedin_url", ""):
-                domain = _extract_domain(lead["linkedin_url"])
-                if domain:
+            # For any lead with a company name but no website, look up domain via Serper
+            elif lead.get("company") and not lead.get("email"):
+                company_domain = _serper_find_company_domain(lead["company"])
+                if company_domain:
                     name_parts = lead.get("name", "").split()
                     first = name_parts[0] if name_parts else ""
                     last = name_parts[-1] if len(name_parts) > 1 else ""
-                    email = _hunter_find_email(domain, first, last)
+                    email = _hunter_find_email(company_domain, first, last)
                     if email:
                         lead["email"] = email
                 time.sleep(0.5)

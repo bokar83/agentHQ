@@ -38,7 +38,13 @@ Fallback to generic hook (no ChatGPT prompt) when niche cannot be resolved.
 
 **Hunter.io tier:** MUST be on paid Starter ($49/mo) or higher. Free tier (50/mo) was exhausted 2026-05-05 and produced 0 SW emails for ~24 hours. Check quota at session start when investigating "0 emails" reports: `curl -s "https://api.hunter.io/v2/account?api_key=$KEY"`.
 
-**Apollo limitation:** `find_owner_by_company` has near-zero hit rate for local trades-SMBs (663 misses, 1 hit in one Phoenix/Vegas pass). Apollo people DB is corporate-biased. SW workhorse = Serper -> website domain extract -> Hunter domain_search.
+**Apollo limitation:** `find_owner_by_company` had near-zero hit rate (663 misses, 1 hit) until 2026-05-07 fix. Root cause: was sending `q_organization_name` to `mixed_people/api_search` which Apollo silently ignores (param only valid on Organization Search endpoint). Fixed via two-step pattern: `mixed_companies/search` → `organization_ids[]` → `mixed_people/api_search`. Hit rate now 25-50% on Apollo-known orgs. Apollo people DB still corporate-biased — SW workhorse remains Serper Maps → website domain → Hunter domain_search.
+
+**Hunter domain_search (rewritten 2026-05-07):** 3-tier server-side filter cascade is the right pattern. T1: `type=personal + seniority=executive + department=executive` (confidence ≥80). T2: senior fallback. T3: any deliverable ≥60. Each tier costs 1 credit but only fires on miss. Live test: 7/8 hit rate on real SMB domains (vs ~12% before). Filtering client-side after `limit=10` wastes credits and returns generic role mailboxes (info@, sales@) instead of owner emails.
+
+**Wire paid tools to BOTH harvest + enrichment paths.** 2026-05-07 incident: Hunter Starter ($49/mo) was wired in `topup_leads.py` but never called from `enrich_missing_emails`. Result: 0/50 emails despite paid plan. Lesson: when adding any paid email finder, audit BOTH `signal_works/topup_leads.py:_resolve_email()` AND `skills/email_enrichment/enrichment_tool.py:enrich_missing_emails()`. If one is missing the tool, wire it.
+
+**Daily target = 50 emails (locked 2026-05-07):** SW=35 + CW=15 = 50 verified emails/day floor. `signal_works/harvest_until_target.py` runs SW + CW topups in retry-until-target loop with stall detection. Phone-only / website-only leads still saved with `email_source` flag (`phone_only` / `website_only` / `phone_and_website`) but excluded from 50-count. Hunter daily cap raised 200 → 400 to support volume.
 
 **Calendly:** Use `calendly.com/boubacarbarry/signal-works-discovery-call`. Never `catalystworks` (404).
 

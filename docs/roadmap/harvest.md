@@ -62,13 +62,28 @@ Target: $5K MRR by June 2026. Possible framings to choose from:
 
 ### R1: First Signal Works contract (trigger: email reply converts)
 
-**Status:** In progress. Email pipeline live. First contract target 2026-05-02. **Elevate Roofing & Construction (Rod, Medford OR) is the live R1 conversion attempt.**
+**Status:** In progress. **First-touch SENT 2026-05-07 to Rod (Elevate Roofing & Construction, Medford OR)** with two URLs (demo site + mobile-first audit brief). Awaiting reply.
+
+**Send event log (2026-05-07):**
+
+- **Demo site:** https://site-phi-silk-71.vercel.app/
+- **Audit brief (mobile-first card stack):** https://auditdeploy.vercel.app/ (18/20 design-audit @ 375px)
+- **Full desktop memo:** https://auditdeploy.vercel.app/full/ (19/20 design-audit @ 1280px, linked from mobile accordion)
+- **Email subject:** "Long time, Rod. Built you a thing."
+- **Recipient:** rod@elevatebuiltoregon.com (scraped from Elevate site footer; status unconfirmed but only available channel)
+- **Channels touched:** LinkedIn DM (sent 2026-04-30 as part of 3-warm-DM batch with Brody Horton + Rich Hoopes, no reply at 7-day mark), email (2026-05-07 with full deliverable)
+- **Voice:** peer-to-peer warm reconnect, BYU friend dynamic, zero price talk, mailto reply CTA only
+- **Hold rule:** 7 days minimum before any follow-up. One light bump max if no reply by 2026-05-14. Then drop.
+
+**Warm DM trio context (2026-04-30 → 2026-05-07):** Rod is one of 3 dormant-warm LinkedIn reach-outs sent 2026-04-30 evening. As of 2026-05-07, all 3 are at zero replies. Per Hormozi 4-row diagnostic "3 sent / 0 replies" = audit personalization + list quality. Operator interpretation: dormant-warm DM without a deliverable is throwing a coin in a fountain. Rod escalated today by adding the deliverable; Brody Horton and Rich Hoopes remain pending decision (default: light bump 2026-05-10 if no other action). Full state in `project_warm_dm_trio_2026-04-30.md`.
 
 **Actions before this milestone closes:**
 
-- **A/B TEST PAUSED (2026-04-28):** All leads get Variant A (original score framing). Variant B code preserved in `email_builder.py` with `AB_TEST_ACTIVE = False`. Re-enable after 2026-05-12 once SW sequence performance data exists. To activate: flip `AB_TEST_ACTIVE = True` and define reply-rate criterion before sending.
-- Follow up on any inbox reply within 24 hours
-- Close at Signal Works Tier 1 pricing ($500 setup + $497/month)
+- Watch inbox + LinkedIn for Rod reply (24-hr response SLA on any reply)
+- **A/B TEST PAUSED (2026-04-28):** All leads get Variant A (original score framing). Variant B code preserved in `email_builder.py` with `AB_TEST_ACTIVE = False`. Re-enable after 2026-05-12 once SW sequence performance data exists.
+- If Rod replies yes → 15-min walkthrough → close at Signal Works Tier 1 ($500 setup + $497/month) OR friend pricing per `MESSAGE_TO_ROD.md`
+- If no reply by 2026-05-14: send single light bump (max 1 follow-up). Drop after.
+- If Rod converts: lock canonical SW audit template (already saved to `reference_sw_audit_template_canonical.md`) as the v1 reusable for SW prospect #2.
 
 **Success criterion:** Signed contract + first payment received.
 
@@ -487,15 +502,105 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 
 ---
 
+### R1g: Enrichment pipeline rebuild + harvest-until-50 + thesis launch (2026-05-07)
+
+**Status:** SHIPPED 2026-05-07.
+
+**What broke:** Daily lead harvest produced 0/50 emails on 2026-05-06 morning report. Two compounding bugs:
+1. `enrich_missing_emails` never called Hunter (paid Starter $49/mo, 2000 searches, completely unwired).
+2. `discover_leads` Step 4 extracted domain from `linkedin_url` field, hitting `play.google.com` and `instagram.com` → returning `thom@google.com`, `jefferynelson@instagram.com` as "owner emails."
+
+**Phase 1 surgical fixes (committed 467259b + e0d7ed5):**
+- `apollo_client.find_owner_by_company` rewritten as two-step org→people. Was sending `q_organization_name` to `mixed_people/api_search` which Apollo silently ignores. Now: `mixed_companies/search` → `organization_ids[]` → `mixed_people/api_search`. Result: 663:1 miss → 25-50% on Apollo-known orgs.
+- `hunter_client.domain_search` rewritten with three-tier server-side filter cascade. T1: `type=personal + seniority=executive + department=executive` (confidence ≥80). T2: senior fallback. T3: any deliverable ≥60.
+- `enrich_missing_emails` wires Hunter as step 2b after scrape, before Prospeo.
+- Bad LinkedIn-URL-as-domain bug fixed in `discover_leads` Step 4 elif branch.
+
+**Phase 2 daily target = 50 emails (committed 2cc9711):**
+- `signal_works/harvest_until_target.py` (new): loops SW + CW topup until 50 email-verified leads saved or 3 passes / stall detected. SW=35, CW=15.
+- `topup_leads.py` modified: phone-only / website-only leads still saved with `email_source` flag, excluded from 50-count.
+- Hunter daily cap raised 200 → 400.
+- Telegram alert on completion (success or ladder-exhausted).
+
+**Thesis launch (truth-loop):**
+- Brand spine failure anchor: founder cannot get straight answers from people closest to them.
+- Site: thesis block above offer card on catalystworks.consulting (committed + merged to main 3d17e86).
+- Memo signoff: handwritten signature image + right-aligned letter format, full Spectral typography.
+- CW T1 hook rewritten (`cold_outreach.py`). Subject: "What your team is not telling you".
+- 3 LinkedIn posts queued in Notion Content Board: 5/8 (truth-loop story), 5/9 (AI without truth-loop), 5/12 (cultural bridge / language).
+
+**Today's snapshot (2026-05-07 noon MT):**
+- Total leads in DB: 2,545
+- With verified email: 423 (was 422 before manual run, +27 today's harvest)
+- Today's hit rate: 27/29 fresh leads (93%). Was 0/50 yesterday morning.
+
+**Memory rules saved:**
+- `feedback_enrichment_hunter_not_wired.md` — paid tools must be wired to BOTH harvest + enrichment paths.
+- `feedback_no_loom.md` — never propose Loom.
+- `feedback_first_name_only.md` — content uses "Boubacar", not "Boubacar Barry".
+- `feedback_already_have_answers.md` — grep codebase before asking strategic Qs.
+
+**Success criterion (2026-05-13 measurement day):**
+- Harvest-until-50 hits 50/50 daily for 5 consecutive days.
+- Site capture rate ≥ 1.2x baseline OR flat (drop = revert thesis block).
+- CW T1 reply rate on new-cohort leads (added 2026-05-08+) ≥ baseline at Day 6 with n≥30.
+- LinkedIn post 1 produces ≥1 DM that becomes a Signal Session conversation.
+
+---
+
+### R-notion-sever: Severing Notion-Supabase CRM Link and Archiving Notion DB (Sync Code Deleted)
+
+**Status:** Sync code DELETED 2026-05-07. Supabase = sole CRM system of record.
+**Trigger:** Notion API performance slowdowns, full-table scan delays, and sync timeouts.
+
+**Milestones & Tasks:**
+
+- `[x]` **Step 1 — Sever live writes (2026-05-07).** Bypass guards landed in `crm_tool.py`, `scheduler.py`, `db.py`.
+- `[x]` **Step 2 — Delete sync code (2026-05-07).** Removed `_sync_lead_to_notion`, `_sync_lead_status_to_notion`, `_run_notion_sync`, `_listen_for_supabase_changes`, `sync_supabase_to_notion`. No flag, no commented blocks, no zombie functions. Single source of truth: Supabase.
+- `[x]` **Step 3 — Parity audit (2026-05-07).** Ran `scripts/reconcile_leads_one_shot.py` inside `orc-crewai`. Report at `docs/audits/notion_sever_parity_2026-05-07.md`. Findings: 0 Notion-only orphans (no backfill needed). 1,670 Supabase-only leads (expected post-sever). 2,024 status drift rows (Notion stale because writes were already off — also expected, no action).
+- `[ ]` **Step 4 — Archive Notion CRM DB (manual, by Boubacar).** Archive in Notion UI when ready. Eventually delete entirely.
+- `[ ]` **Step 5 — Build replacement Atlas `/crm` dashboard.** Tracked as **Atlas M19** (`docs/roadmap/atlas.md`). No longer blocking sever.
+
+**Success Criterion:**
+
+- ✅ Zero Notion API write traffic from CRM Leads code path.
+- ✅ Supabase confirmed sole system of record (parity audit).
+- ⏳ Notion CRM DB archived in Notion UI (manual).
+- ⏳ Atlas `/crm` dashboard live (tracked under Atlas M19).
+
+---
+
 ## Cross-References
 
 - Pipeline playbook: `docs/playbooks/pipeline-building-playbook.md`
-- Memory: `project_pipeline_playbook.md`, `project_outreach_playbook.md`, `project_discovery_call_system.md`, `feedback_no_client_engagements_yet.md`, `feedback_facilitator_not_hero.md`
-- Skills: `cold-outreach`, `local_crm`, `apollo_skill`, `hunter_skill`
+- Memory: `project_pipeline_playbook.md`, `project_outreach_playbook.md`, `project_discovery_call_system.md`, `feedback_no_client_engagements_yet.md`, `feedback_facilitator_not_hero.md`, `feedback_enrichment_hunter_not_wired.md`, `feedback_first_name_only.md`, `feedback_no_loom.md`
+- Skills: `cold-outreach`, `local_crm`, `apollo_skill`, `hunter_skill`, `boub_voice_mastery`, `ctq-social`
 
 ---
 
 ## Session Log
+
+### 2026-05-07 — Notion CRM Sync DELETED + Parity Audit + Atlas M19 Queued
+
+**Completed (later session, post-Sankofa + Karpathy review):**
+
+- **Deleted lead-sync code outright** (rejected the multi-week phased plan; collapsed to one-day cleanup):
+  - `skills/local_crm/crm_tool.py`: removed `_sync_lead_to_notion`, `_sync_lead_status_to_notion`, `_notion_headers`, `_NOTION_DB_ID/_NOTION_API/_NOTION_VERSION` constants, `import httpx`, `import os`, all bypass-log lines.
+  - `orchestrator/scheduler.py`: removed `_run_notion_sync`, `_listen_for_supabase_changes`, listen_thread spawn block, `notion_sync_hours`/`last_notion_sync_date` from `_periodic_sync`, all commented-out callsites.
+  - `orchestrator/db.py`: removed `sync_supabase_to_notion` (entire 184-line function).
+  - `orchestrator/tools.py`: cleaned stale "auto-sync to Notion" docstring on `CRMAddLeadTool`.
+- **Parity audit:** Wrote `scripts/reconcile_leads_one_shot.py` (in repo, not scratch). Ran inside `orc-crewai` container. Report committed: `docs/audits/notion_sever_parity_2026-05-07.md`. **Result: 0 Notion-only orphans, 1,670 Supabase-only (expected), 2,024 status drift (expected, Notion stale).**
+- **Atlas M19 queued:** New milestone "Atlas CRM Dashboard (`/crm`)" added to `docs/roadmap/atlas.md`. Replaces Notion CRM as the visual sales board. Trigger gate: Notion DB archived + predicate confirmed.
+- **No flag, no phased migration, no compatibility shim.** Supabase is now the sole CRM system of record. Code no longer references Notion CRM Leads DB at all.
+
+### 2026-05-07 — Severing Notion CRM Sync & System Lockout Resolution
+
+**Completed:**
+- **Deactivated live Notion writes:** Modified `skills/local_crm/crm_tool.py`, `orchestrator/scheduler.py`, and `orchestrator/db.py` to sever the active bidirectional synchronization between Supabase and Notion CRM Leads DB.
+- **Harden Sync Disablement (Step 1.1):** Hardcoded a robust, module-level `NOTION_SYNC_ENABLED = False` flag across the three components to fail-closed and ensure writes cannot be resurrected.
+- **Database Reconciliation Audit (Step 1.2):** Created `scratch/reconcile_leads.py` script to fetch, paginate, and match 100% of Notion database records (1,800+) against local Supabase/PostgreSQL entries to ensure full parity and zero lead loss.
+- **Scope Atlas Dashboard Endpoints (Step 2.1):** Scheduled `/atlas/crm` endpoint scoping in `atlas_dashboard.py` to retrieve pipeline states and "Outreach Needed Today" leads directly from Supabase, fully bypassing the Notion API.
+- **System Lockout Recovery:** Successfully terminated 19 zombie Python/HTTP processes that were locking files and ports (such as `.pytest_tmp/` and `tests/pytest_tmp2/`), and deleted a stale `branch:fix/newsletter-safety-and-json-parsing` lock from Supabase, restoring full workspace speed and access.
 
 ### 2026-05-06 — Traffic Strategy + Newsletter Infrastructure
 

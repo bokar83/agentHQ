@@ -306,16 +306,62 @@ def _looks_like_business(token: str) -> bool:
     return low in _BUSINESS_TOKENS or low in _LOCATION_TOKENS
 
 
+# Common 4-7 char first names that begin with two consonants. Used to keep
+# these as HIGH confidence even though the consonant-consonant heuristic
+# below would otherwise flag them as initial+lastname patterns.
+# Source: top US/UK first names from SSA + ONS that match the cons-cons shape.
+_COMMON_CC_FIRST_NAMES = {
+    "scott", "chris", "brian", "bryan", "glenn", "frank", "frans", "fred",
+    "grant", "grace", "blake", "brent", "brett", "brock", "brody", "bruce",
+    "clark", "claire", "craig", "drew", "drake", "dwight", "flynn", "ian",
+    "jack", "jake", "jared", "jay", "joel", "jon", "kris", "kyle", "lane",
+    "lex", "luke", "mason", "max", "miles", "neil", "noah", "owen", "phil",
+    "phelps", "quinn", "reed", "reese", "rhett", "rhys", "rich", "rick",
+    "ryan", "sean", "seth", "shane", "shawn", "skylar", "stan", "stephan",
+    "steve", "stuart", "tate", "todd", "trace", "trent", "trey", "troy",
+    "tyler", "vaughn", "wade", "wayne", "wes", "will", "wyatt",
+}
+
+
+def _looks_like_initial_plus_lastname(local: str) -> bool:
+    """Detect 'gkirz', 'jsmith', 'mhall' pattern: single first-letter initial
+    glued to a surname. These render as 'Hi Gkirz' which is wrong, so the
+    caller should drop confidence to 'low' and skip the greeting.
+
+    Heuristic: local-part has no separator, length 4-7, AND
+      - first 2 chars are both consonants, AND
+      - chars[1:] looks like a standalone surname (>=3 chars with a vowel
+        within the first 3 positions).
+    Allowlist of common cons-cons first names (Scott, Chris, Brian) escapes
+    the rule so we don't over-flag legitimate names.
+    """
+    if not local or len(local) < 4 or len(local) > 7:
+        return False
+    if local in _COMMON_CC_FIRST_NAMES:
+        return False
+    vowels = set("aeiouy")
+    if local[0] in vowels or local[1] in vowels:
+        return False  # first 2 chars must be consonant-consonant
+    rest = local[1:]
+    if len(rest) < 3:
+        return False
+    if not any(c in vowels for c in rest[:3]):
+        return False  # rest must look pronounceable (vowel within first 3 chars)
+    return True
+
+
 def _first_name_from_email(email: str) -> tuple[str, str]:
     """Parse a plausible first name from the local-part of an email.
 
     Returns (name, confidence) where confidence is "high" or "low":
-      scott@commroof.com    -> ("Scott", "high")  -- short, clean, no separator needed
+      scott@commroof.com    -> ("Scott", "high")  -- allowlisted cons-cons name
       john.smith@x.com      -> ("John", "high")   -- dotted = clearly first.last
       jeff-campbell@x.com   -> ("Jeff", "high")   -- dashed = clearly first-last
       drmarcus@x.com        -> ("Marcus", "high") -- prefix stripped
-      robsnow@x.com         -> ("Robsnow", "low") -- no separator, > 6 chars = mashed handle
-      lgrow@x.com           -> ("Lgrow", "low")   -- no separator, looks like initial+last
+      gkirz@x.com           -> ("Gkirz", "low")   -- initial+lastname pattern
+      jsmith@x.com          -> ("Jsmith", "low")  -- initial+lastname pattern
+      robsnow@x.com         -> ("Robsnow", "low") -- > 6 chars no separator
+      lgrow@x.com           -> ("Lgrow", "low")   -- initial+lastname pattern
       j.smith@x.com         -> ("", "low")        -- single letter unreliable
       info@x.com            -> ("", "low")        -- role inbox
       ""                    -> ("", "low")
@@ -346,15 +392,21 @@ def _first_name_from_email(email: str) -> tuple[str, str]:
     # Confidence rules:
     # - HIGH if the local-part had a separator (john.smith, jeff-campbell)
     # - HIGH if a prefix was stripped (drmarcus -> Marcus is intentional)
+    # - LOW if the local-part looks like initial+lastname (gkirz, jsmith, mhall)
     # - HIGH if the local-part is short and looks like just a first name (scott, paul)
     # - LOW if the local-part is long (>6 chars) with no separator, suggesting
     #   firstinitial+lastname mash (lgrow, robsnow, mjohnson)
     if has_separator or prefix_stripped:
         return name, "high"
+    # Initial+lastname catches the gkirz/jsmith/mhall pattern explicitly, even
+    # when local is short. Without this guard, "gkirz" passes the <=6 length
+    # check below and renders as "Hi Gkirz".
+    if _looks_like_initial_plus_lastname(local):
+        return name, "low"
     # No-separator locals: a short local (<=6 chars) is usually a clean first
     # name (paul, scott, brian, andrew, jordan, jodd). A longer local is
-    # usually firstinitial+lastname mashed together (lgrow, robsnow, mhall)
-    # which renders awkwardly in a greeting -- so flag LOW and skip greeting.
+    # usually firstinitial+lastname mashed together which renders awkwardly
+    # in a greeting -- so flag LOW and skip greeting.
     if len(local) <= 6:
         return name, "high"
     return name, "low"
