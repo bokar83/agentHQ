@@ -58,14 +58,14 @@ PROTECTED_BRANCHES = {
 # Branch prefixes gate skips (archive already handled)
 SKIP_PREFIXES = ("archive/",)
 
-# Files requiring explicit Boubacar approval before merge
+# Files requiring explicit Boubacar approval before merge.
+# Keep this list SHORT -- only truly dangerous files. Tests catch regressions
+# in scheduler.py / app.py; those were removed 2026-05-08 to reduce noise.
 HIGH_RISK_PREFIXES = (
-    "orchestrator/scheduler.py",
-    "orchestrator/gate_agent.py",
-    "orchestrator/app.py",
-    "scripts/orc_rebuild.sh",
-    ".env",
-    "docker-compose",
+    "orchestrator/gate_agent.py",  # gate modifying itself
+    "scripts/orc_rebuild.sh",       # deploy script
+    ".env",                          # secrets
+    "docker-compose",               # container topology
 )
 
 # Auto-approve scopes (no LLM review needed, just tests)
@@ -544,10 +544,9 @@ def gate_tick() -> None:
 
         # Deploy VPS
         deploy_ok, deploy_out = _deploy_vps()
-        if deploy_ok:
-            _notify(f"Merged + deployed: {', '.join(merged)}")
-        else:
+        if not deploy_ok:
             _notify(f"Merged {merged} but VPS deploy failed: {deploy_out[:300]}", urgent=True)
+        # Silent on success -- Boubacar only needs messages for failures/reviews
 
         # Clean up merged branches
         for branch in merged:
