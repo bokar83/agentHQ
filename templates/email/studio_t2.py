@@ -20,9 +20,9 @@ What I look at:
 - Whether your business shows up when someone asks ChatGPT to recommend a service like yours in your city
 - Whether your contact/booking flow is losing you leads
 
-Most business owners I talk to are surprised by what I find. The problems are almost always fixable — and usually faster than expected.
+Most business owners I talk to are surprised by what I find. The problems are almost always fixable, and usually faster than expected.
 
-Want me to run it? Just reply with your website URL (or let me know if you don't have one — that's useful information too).
+Want me to run it? Just reply with your website URL. If you don't have one, let me know. That's useful information too.
 
 Boubacar
 catalystworks.consulting

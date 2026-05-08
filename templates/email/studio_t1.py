@@ -25,9 +25,7 @@ def _subject(lead: dict) -> str:
 
 SUBJECT = "Your customers are searching AI now, not Google"  # static fallback
 
-_GREETING_HIGH = "Hi {first_name},
-
-"
+_GREETING_HIGH = "Hi {first_name},\n\n"
 
 _BODY_HOOK = """Quick question: when someone types your business name into ChatGPT or Google's AI overview, what shows up?
 
