@@ -38,37 +38,16 @@ confirm orchestrator logs show message received + dispatched + action fired.
 
 ---
 
-## What is NOT done (explicit)
+## SUPERSEDED 2026-05-08 (same session)
 
-- `orchestrator/telegram_inbound.py` not written yet
-- Poll tick not wired into main.py / scheduler
-- Guest Queries not enabled on either bot
-- Bot-to-bot coordination branch not built
-- SW lead qualification branch not built
-- `skills/atlas/SKILL.md` not updated (deferred until module ships)
+**telegram_inbound.py was built, tested, and reverted.** Root cause: `handlers.py:247` already contains `telegram_polling_loop()` — a full production-grade inbound handler with `process_telegram_update()` 9-step dispatch (auth, slash commands, approvals, feedback, classify). Building a second poller on the same token would cause duplicate message consumption and missed updates.
 
----
+**Actual outcome:** Inbound was already live. Built slash commands on top instead: `/sw`, `/digest`, `/publish` added to `handlers_commands.py` and verified working.
 
-## Open questions
-
-- Where in orchestrator scheduler does the poll tick live? Check `orchestrator/main.py`
-  and existing tick pattern (e.g., `griot_morning_tick`) before writing new module.
-- What action fires on owner DM in v1? Simplest: log to container stdout + echo
-  via notifier back to Boubacar (loopback confirm). Define before coding.
-
----
-
-## Next session must start here
-
-1. Read `orchestrator/main.py` and one existing tick (e.g., `griot_morning_tick`)
-   to understand the scheduler pattern.
-2. Write `orchestrator/telegram_inbound.py` — single branch: poll getUpdates,
-   filter for `chat_id == OWNER_TELEGRAM_CHAT_ID`, log + echo back via notifier.
-3. Register poll tick in scheduler (same pattern as existing ticks).
-4. Deploy: `git pull && docker compose up -d orchestrator` on VPS.
-5. Verify: DM @agentsHQ4Bou_bot → confirm logs + loopback message received.
-6. If verified: update `skills/atlas/SKILL.md` with inbound surface docs.
-7. Only after v1 verified: open BotFather and enable Guest Queries.
+**Remaining open:**
+- Guest Queries: not rolled out. Check scheduled 2026-05-10T21:27Z via routine `trig_01GfTDBcYQ3vA7T9phNwhjsE`.
+- Bot-to-bot: `can_manage_bots: false` — not rolled out.
+- `skills/atlas/SKILL.md` inbound surface docs: deferred, not needed since no new module shipped.
 
 ---
 
