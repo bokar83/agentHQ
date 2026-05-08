@@ -21,7 +21,7 @@ If your situation changes, my calendar is always open: https://calendly.com/boub
 Thanks for your time.
 
 Boubacar
-catalystworks.consulting
+geolisted.co
 
 Reply STOP to opt out"""
 
