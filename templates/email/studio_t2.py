@@ -25,7 +25,7 @@ Most business owners I talk to are surprised by what I find. The problems are al
 Want me to run it? Just reply with your website URL. If you don't have one, let me know. That's useful information too.
 
 Boubacar
-catalystworks.consulting
+geolisted.co
 
 Reply STOP to opt out"""
 

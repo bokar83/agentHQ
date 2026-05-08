@@ -28,7 +28,7 @@ If now isn't the right time, I get it. But if you're thinking about it, I'd rath
 Book a free 15-minute call: https://calendly.com/boubacarbarry/signal-works-discovery-call
 
 Boubacar
-catalystworks.consulting
+geolisted.co
 
 Reply STOP to opt out"""
 
