@@ -2273,3 +2273,27 @@ OpenRouter ground-truth spend now visible on the Atlas dashboard. Hero Spend Pac
 1. Decide whether to start M4 Concierge or M5 Chairman first (both gates open).
 2. Confirm `feature/first-name-scrub` branch from email-polish agent merged cleanly via gate.
 3. Optional: verify next morning runner draft batch uses fixed templates (run 13:00 UTC tomorrow).
+
+### 2026-05-08 (evening): Blotato RCA — Drive URL permissions + TikTok CFR fix + M20 added
+
+**Root cause found + fixed:** Studio publisher sending Drive `webViewLink` as Blotato `mediaUrls`. Files were private → Blotato got 403/HTML → "Failed to read media metadata" on 100% of YouTube/TikTok/Instagram posts since launch. X/LinkedIn worked because they had no media attachments.
+
+**What shipped:**
+- `orchestrator/studio_blotato_publisher.py`: `_drive_file_id()` + `_to_direct_download_url()` helpers; `ensure_public()` + usercontent URL conversion before every `publish()` call. Commit `7a03dd1`.
+- `orchestrator/drive_publish.py`: `audit_studio_pipeline_videos()` + `audit-videos` CLI. 14/15 Pipeline DB Drive assets were private — all fixed. Commit `7a03dd1`.
+- `orchestrator/studio_render_publisher.py`: `-r {fps} -vsync cfr` added to `_concat_clips` ffmpeg concat command. Fixes TikTok "Unsupported frame rate" rejection (VFR renders). Commit `31a1fe6`.
+- `~/.claude/skills/rca/SKILL.md`: Blotato publisher added to Phase 0 triage table. Known Pitfalls section added with 4 incident patterns.
+- `~/.claude/skills/tab-shutdown/SKILL.md`: Step 1b added — roadmap + task update required at every shutdown.
+
+**Backlog:** 8 publish-failed records reset to scheduled, staggered 2/day May 8-11 (account warming protocol).
+
+**Validated live:** X ✅ 12s, Instagram ✅ 60s, YouTube ✅ 13s. TikTok CFR fix deployed — validates on next render cycle (May 9).
+
+**M20 added:** Native Social Publisher to replace Blotato. Full platform API research completed. Verdict: YouTube + Instagram replaceable; X/TikTok/LinkedIn stay on Blotato due to cost/approval blockers. Decision: keep Blotato, revisit M20 in 2-3 weeks after more usage data. All-or-nothing replacement only (no split routing).
+
+**Final main SHA:** `c0b473b`
+
+**Next session priorities:**
+1. Check May 9 publisher tick: `docker logs orc-crewai 2>&1 | grep -E 'BLOTATO poll|STUDIO PUBLISHER.*tick done' | tail -20` — confirm TikTok CFR fixed + 1stGen IG published
+2. Archive 10 old handoff docs in `docs/handoff/` (session audit warning)
+3. M18 HALO: instrument heartbeat tracing (target 50 traces by 2026-05-18)
