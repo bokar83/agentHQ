@@ -588,6 +588,46 @@ WHERE status = 'new'
 
 ---
 
+### M20: Native Social Publisher — Replace Blotato ⏳ RESEARCH-GATED
+
+**What:** Replace Blotato ($40/mo) with a self-hosted publisher that calls platform APIs directly. Blotato is a pass-through relay — all it does is proxy our payloads to X, Instagram, TikTok, YouTube, and LinkedIn OAuth endpoints. We already hold the content, captions, and scheduling logic. The relay adds cost and a failure surface with no unique value.
+
+**Why:** ~$480/yr for a service that does one thing we can do ourselves. Full control over retry logic, rate limits, error handling, and future platform support. No third-party outage risk.
+
+**Platform API status (research gate — verify before build):**
+
+| Platform | API path | Auth | Notes |
+|---|---|---|---|
+| X (Twitter) | `POST /2/tweets` (v2) | OAuth 2.0 PKCE or Bearer | Video upload: chunked media upload v1.1 endpoint required |
+| Instagram | Meta Graph API `/{ig-user-id}/media` + `/{id}/publish` | OAuth 2.0 + long-lived token | Reels need `media_type=REELS`, must host video at public URL |
+| TikTok | Content Posting API `POST /v2/post/publish/video/init` | OAuth 2.0 | Business/Creator account required; direct-post or inbox flow |
+| YouTube | YouTube Data API v3 `videos.insert` | OAuth 2.0 | Resumable upload; quota: 10,000 units/day free |
+| LinkedIn | UGC Posts API `POST /ugcPosts` | OAuth 2.0 | Video upload: register + upload + post flow |
+
+**Trigger gate (ALL required before build starts):**
+1. Spike each platform API: confirm auth flow works end-to-end for X + Instagram + YouTube (TikTok and LinkedIn optional in v1)
+2. Confirm OAuth token refresh can be automated without user interaction (long-lived tokens or refresh token rotation)
+3. Verify X video upload works (chunked media endpoint is v1.1, separate from v2 tweet endpoint)
+4. Cost model: confirm $0 for all 5 platforms at our volume (<100 posts/mo)
+
+**Scope v1 (ship when gate clears):**
+- `orchestrator/social_publisher.py` — platform-agnostic publisher, same interface as `BlotatoPublisher`
+- Per-platform adapters: `XAdapter`, `InstagramAdapter`, `YouTubeAdapter`
+- Token store: encrypted credentials in `.env` (refresh tokens per account per platform)
+- Drop-in replacement: `studio_blotato_publisher.py` switches publisher with one import change
+- Cancel Blotato subscription after 30-day parallel run validates parity
+
+**Scope v2 (future):**
+- TikTok + LinkedIn adapters
+- Per-platform analytics pull (views, likes, reach → Notion Pipeline DB)
+
+**Branch:** `feat/atlas-m20-native-publisher` (create when gate clears)
+**ETA:** 2-3 days for v1 (X + IG + YT). Gate spike: 2h.
+**Cost savings:** ~$480/yr → $0 (platform APIs are free at our volume)
+**Trigger date:** Research spike — schedule after M19 CRM ships or in parallel if bandwidth allows.
+
+---
+
 ## Descoped Items
 
 These are explicit "do not build" decisions with reasons, so we don't relitigate.
