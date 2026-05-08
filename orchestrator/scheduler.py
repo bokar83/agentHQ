@@ -610,7 +610,7 @@ def start_scheduler():
     # Default state: studio.enabled=False; flip on after M3 VPS deploy.
     try:
         import heartbeat as _heartbeat
-        from studio_production_crew import studio_production_tick
+        from orchestrator.studio_production_crew import studio_production_tick
         _heartbeat.register_wake(
             "studio-production",
             crew_name="studio",
