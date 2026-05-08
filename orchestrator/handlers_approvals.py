@@ -47,6 +47,19 @@ POSTED_ALIASES = {"posted", "published", "done"}
 SKIP_ALIASES = {"skip", "skipped", "pass"}
 
 
+def _maybe_apply_mutation(qrow) -> None:
+    """If qrow is a chairman weight-mutation proposal, call apply_mutation() to persist it."""
+    if qrow is None:
+        return
+    if qrow.crew_name != "chairman" or qrow.proposal_type != "weight-mutation":
+        return
+    try:
+        from chairman_crew import apply_mutation
+        apply_mutation(qrow.id, qrow.payload or {})
+    except Exception as e:
+        logger.error(f"_maybe_apply_mutation: failed for queue #{qrow.id}: {e}")
+
+
 def _build_button(label: str, callback_data: str) -> dict:
     """Build a Telegram inline-keyboard button dict. Asserts 64-byte callback_data limit."""
     assert len(callback_data.encode()) <= 64, f"callback_data too long: {callback_data!r}"
@@ -275,6 +288,7 @@ def handle_callback_query(update: dict) -> bool:
             qrow = _aq_get(qid)
             if qrow and qrow.status == "pending":
                 _aq_approve(qid, note=None)
+                _maybe_apply_mutation(qrow)
                 answer_callback_query(cb_id, f"Approved #{qid}")
                 send_message(cb_chat_id, f"Queue #{qid}: approved.")
             elif qrow:
@@ -706,6 +720,7 @@ def handle_approval_reply(text: str, chat_id: str, first_word: str, reply_to_msg
             return True
         if first_word in APPROVE_ALIASES:
             _aq_approve(qrow.id, note=None)
+            _maybe_apply_mutation(qrow)
             _send(chat_id, f"Queue #{qrow.id}: approved.")
             return True
         if first_word in REJECT_ALIASES:
@@ -785,6 +800,7 @@ def handle_naked_approval(text: str, chat_id: str, first_word: str, reply_to_msg
     text_lower_full = text.strip().lower()
     if text_lower_full == "yes confirm":
         _aq_approve(pending.id, note=None)
+        _maybe_apply_mutation(pending)
         _send(chat_id, f"Queue #{pending.id}: approved.")
         return True
     if text_lower_full == "no confirm":
