@@ -2190,3 +2190,41 @@ OpenRouter ground-truth spend now visible on the Atlas dashboard. Hero Spend Pac
 2. Mon 2026-05-18: verify first real chairman analysis + proposal enqueued to approval_queue
 3. After 2 dry-run ticks: sign contracts/chairman.md + flip enabled=true in autonomy_state.json
 4. M18 HALO: instrument heartbeat tracing (target 50 traces by 2026-05-18)
+
+### 2026-05-08: Drive-link public-perm rule + email-template lint pass
+
+**What shipped:**
+
+- `orchestrator/drive_publish.py` (new): `publish_public_file`, `update_public_file`, `ensure_public`, `audit_email_template_pdfs`. Single helper for "upload to Drive AND grant anyone-with-link reader" so no email outreach ever ships an owner-only Drive URL again. Also CLI: `python -m orchestrator.drive_publish audit` (exit 2 if any private).
+- `orchestrator/saver.py`: every Drive upload now grants `anyone reader` immediately after `files.create`. Same rule, second auth path (googleapiclient vs httpx).
+- AGENT_SOP Hard Rule added (after gws Drive rule): Drive files in outgoing surfaces must be public.
+- Memory: `feedback_drive_pdfs_must_be_public.md` + index entry.
+- `templates/email/studio_t1.py`: repaired unterminated `_GREETING_HIGH` literal that would have ImportError'd the entire Studio cohort. Today's morning runner had zero Studio leads queued, so the bug was never exercised.
+- `templates/email/studio_t2/t3/t4.py`: removed 4 em dashes, sentences rewritten per the no-em-dash rule.
+- Replaced the rendered SaaS-Audit PDF on Drive (file ID `1GQ3rCelBy83YaPf0AYVuaWf5LAE5k4O4`) with the corrected version Boubacar dropped in Downloads. URL preserved (content swap, not new file). Verified `1ctmqUjhxa5hBkIj47AMDPvgbJzXwkETd` (sw_t5 PDF) was already public.
+
+**Caught + averted:**
+
+- cw_t2 Drive URL was owner-only at draft creation time (07:14 MT). Permission grant at 10:18 MT (before any send). `AUTO_SEND_CW=false` and `AUTO_SEND_SW=false` mean today's 50 drafts (35 SW + 15 CW) sit in Gmail awaiting Boubacar's manual review; URL is now public when recipients click.
+- studio_t1 syntax error would have crashed the Studio cohort import. No Studio leads in today's queue masked the bug. Fixed before tomorrow's run.
+
+**Gate flow:**
+
+- `feat/drive-pdfs-public-helper` pushed with `[READY]`. Gate auto-merged on next sweep (commit `99ab510` on main). VPS pulled, container running fixed studio_t1.
+
+**Handoff sent:**
+
+- `feature/first-name-scrub` branch handed off to second agent. Two corrections: drop "Boubacar Barry" in studio_t1 body (first-name-only rule), change Studio template footers from `catalystworks.consulting` to `geolisted.co` (matches sw_t* templates and the actual product the prospect is being sold).
+
+**Trigger gates passed today (not started, scoped for separate sessions):**
+
+- **M4 Concierge Crew**: gate cleared (2026-05-08). 2-3 hr build when started. Needs real error data from `error_monitor.log`.
+- **M5 Chairman Crew (L5 Learning)**: gate cleared (2026-05-08, ≥14 days of approval_queue + task_outcomes data). 3-4 hr build when started.
+
+**Final main SHA:** `99ab510`
+
+**Next session priorities:**
+
+1. Decide whether to start M4 Concierge or M5 Chairman first (both gates open).
+2. Confirm `feature/first-name-scrub` branch from email-polish agent merged cleanly via gate.
+3. Optional: verify next morning runner draft batch uses fixed templates (run 13:00 UTC tomorrow).
