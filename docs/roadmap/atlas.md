@@ -15,12 +15,13 @@
 
 ## Session-Start Cheat Block (read this first)
 
-Last session ended **2026-05-08 (Architectural Patterns absorb)**. State at close:
+Last session ended **2026-05-08 (jcode absorb + Atlas gap analysis + M21/M9d/M8b milestones)**. State at close:
 
 - **Gate fully autonomous:** 5-min cron 24/7, silent success, inline ✅/❌ buttons, dedup alerts, 4 high-risk files only (`gate_agent.py`, `orc_rebuild.sh`, `.env`, `docker-compose`). Container gate registration removed — host cron is sole runner.
 - **Baked-file drift permanently fixed:** `scripts/docker-entrypoint.sh` ships with Dockerfile. Every container start auto-syncs `orchestrator/*.py` over baked `/app/*.py`. `docker cp` ritual retired. Rebuild completed successfully 2026-05-08 21:47 UTC.
-- **requirements.txt cleaned:** all wide-range deps pinned to exact running versions. `halo-engine` removed (not on PyPI). Robust `.env` parser in `orc_rebuild.sh` (handles CRLF + unquoted spaces).
-- **`scheduler.py` + `app.py` removed from HIGH_RISK_PREFIXES** — tests catch regressions there. Only infra files need human eyes.
+- **Completion Report Policy now a hard rule in AGENT_SOP.md:** All Atlas agents must close each prompted turn with outcome + changes + validation + blockers. "Done" alone is invalid.
+- **New milestones named (trigger-gated):** M21 (overnight ambient), M9d (deep memory garden), M8b (live agent graph). Each has explicit trigger conditions — do not start until gates clear.
+- **jcode absorbed (ARCHIVE-AND-NOTE):** Rust CLI competitor, not installable due to Claude Code contract mismatch. Architectural reference only. Revisit if VPS RAM becomes bottleneck for Atlas swarm.
 
 **Default next moves (in priority order):**
 
@@ -28,6 +29,7 @@ Last session ended **2026-05-08 (Architectural Patterns absorb)**. State at clos
 2. Test `/digest` and `/publish` commands via DM to @agentsHQ4Bou_bot
 3. M18 HALO unlock: instrument Atlas heartbeat with tracing.py + 50 traces by 2026-05-18
 4. Fix `newsletter_editorial_input` table missing (studio_trend_scout error at 17:58 — separate session)
+5. **[GATED] LangGraph checkpoint-sqlite for coding agent:** Pattern doc at `docs/patterns/langgraph-checkpoint-pattern.md`. Pre-condition: orchestrator must have at least one LangGraph StateGraph (none today — all crews are CrewAI). Trigger when first LangGraph graph is built: wire `SqliteSaver` per pattern doc + verify crash-resume on VPS. Do not add `langgraph-checkpoint-sqlite` to requirements.txt before pre-condition met.
 
 **Do not start a new milestone without reading the latest Session Log entry below.**
 
@@ -652,6 +654,76 @@ WHERE status = 'new'
 **ETA:** 2 days for YouTube + Instagram adapters. Meta app review: async (~2 weeks).
 **Cost savings:** Unclear until Blotato plan audit — may save $10-20/mo or justify full cancel if X volume drops.
 **Trigger date:** After M19 CRM ships. Instagram Business account switch is the critical path item — do that first (5 min per channel in Instagram app).
+
+---
+
+### M21: Overnight Ambient Mode (Atlas Phase 7) ⏳ NOT NAMED — FUTURE
+
+**What:** A single background agent that runs on the VPS during idle hours (no active user sessions). It does three things in one pass: (1) Gardens — consolidates memory, deduplicates, prunes weak/stale entries; (2) Scouts — analyzes recent session logs, git history, and roadmap to find incomplete work; (3) Works — completes small proactive tasks Boubacar would approve without prompting (e.g. archiving old handoff docs, drafting a session summary, queuing a morning digest).
+
+**Why:** Atlas currently requires a user-present session to make progress. An overnight loop makes Atlas genuinely autonomous — it improves itself between sessions. jcode has shipped this as `jcode-overnight-core` (2026-01-27). That design is the reference implementation.
+
+**Key constraints from jcode reference:**
+- Single-instance lock — only one ambient agent ever runs simultaneously
+- Interactive-preempts-ambient — if Boubacar opens a session, ambient stops immediately
+- Self-scheduled wake — agent picks its own next wake time based on workload, not a fixed cron interval
+- Resource ceiling — hard caps on CPU time and API spend per cycle (e.g. 10 min wall-clock, $0.50 max)
+- Subscription-first — uses strongest available model, not cheapest
+
+**Trigger gate:**
+1. Atlas M18 HALO loop is live (observability baseline required before ambient work is meaningful)
+2. At least 30 consecutive days of stable daily orchestrator runs (no silent failures)
+3. Memory system is hitting limits or Chairman crew is losing context across sessions
+
+**Branch:** `feat/atlas-m21-overnight-ambient` (create when gate clears)
+**Reference:** jcode `docs/AMBIENT_MODE.md` + `docs/MEMORY_ARCHITECTURE.md` Phase 8 (Ambient Garden)
+
+---
+
+### M9d: Deep Memory Garden ⏳ TRIGGER-GATED
+
+**What:** Upgrade Atlas cross-session memory from shallow compression (M9c: Haiku summarizes, injects into system prompt) to full graph-based consolidation: deduplication of semantically similar memories, contradiction detection and resolution, fact verification against current codebase state, confidence decay with category-specific half-lives, retroactive extraction from crashed/missed sessions, and cluster reorganization.
+
+**Why:** M9c is a compression shortcut — it reduces context size but does not improve memory quality. Over time, MEMORY.md accumulates stale facts, duplicates, and contradictions that no current mechanism cleans up. jcode's Ambient Garden (shipped in MEMORY_ARCHITECTURE.md Phase 8) is the reference design.
+
+**Confidence decay half-lives to adopt (from jcode):**
+
+| Memory Type | Half-life | Rationale |
+| --- | --- | --- |
+| Correction | 365 days | User corrections are high value |
+| Preference | 90 days | Preferences may evolve |
+| Fact | 30 days | Codebase facts go stale |
+| Procedure | 60 days | Procedures change less often |
+| Inferred | 7 days | Low-confidence inferences |
+
+**Trigger gate:**
+1. MEMORY.md index exceeds 200 lines OR duplicate entries detected by grep
+2. Chairman crew reports context confusion across sessions (lost prior decisions)
+3. M21 overnight ambient mode is live (garden runs as an ambient task, not a user-triggered script)
+
+**Branch:** `feat/atlas-m9d-memory-garden` (create when gate clears)
+**Reference:** jcode `docs/MEMORY_ARCHITECTURE.md` Phases 5-8
+
+---
+
+### M8b: Atlas Mission Control — Live Agent Graph ⏳ TRIGGER-GATED
+
+**What:** Upgrade the Atlas dashboard (/atlas) from a static ops panel (M8, shipped) to a live swarm visibility layer: real-time graph of active agents showing topology (coordinator, worktree managers, leaf agents), communication edges (DM, channel, broadcast), per-node status (idle/running/blocked/failed), current task or intent per node, and plan DAG with checkpoint badges and critical-path highlighting.
+
+**Why:** When Atlas runs 3+ concurrent agents (M6 Hunter Crew or any swarm scenario), the current static dashboard gives no visibility into which agents are running, which are blocked, or where the critical path is. jcode's swarm TUI widgets (swarm graph + plan DAG widget) are the reference design — both update continuously from event streams.
+
+**Three-tier agent status read (to implement alongside graph):**
+- Lock-free status snapshot: always available even when target agent is busy
+- Short activity feed: tool calls with intent + brief results
+- Full context read: explicit, heavy, used sparingly to avoid context bloat
+
+**Trigger gate:**
+1. M6 Hunter Crew ships (first multi-agent scenario that would benefit from live graph)
+2. At least one incident where a blocked agent was not discovered until session end
+3. Atlas coordination ledger (`skills/coordination/`) emits structured lifecycle events (not just claim/complete rows)
+
+**Branch:** `feat/atlas-m8b-live-agent-graph` (create when gate clears)
+**Reference:** jcode `docs/SWARM_ARCHITECTURE.md` UI section + Communication topology
 
 ---
 
@@ -2390,5 +2462,31 @@ Rebuild pipeline repaired (3 bugs fixed):
 - Absorbed AlphaSignal article "Four Agent Orchestration Patterns" (May 2026). Benchmark: hierarchical = 0.929 F1 at 60.7% of reflexive cost.
 - Added "Architectural Patterns" section to `docs/roadmap/atlas.md` with 4 crew pattern mappings (gate=hierarchical, studio=sequential, chairman=reflexive, griot=parallel fan-out) + decision guide for L4/L5 design work.
 - Logged to `docs/reviews/absorb-log.md` + followup marked DONE in `docs/reviews/absorb-followups.md`.
+
+### 2026-05-08: Gap Analysis — jcode reference (absorb ARCHIVE-AND-NOTE)
+
+Source: <https://github.com/1jehuang/jcode> (Rust coding agent CLI, v0.12.0, MIT).
+Docs read: SWARM_ARCHITECTURE.md, MEMORY_ARCHITECTURE.md, AMBIENT_MODE.md.
+Purpose: map jcode's shipped capabilities against Atlas milestones to surface gaps.
+
+| jcode Crate / Capability | Atlas Milestone | Atlas Status | Gap / Notes |
+| --- | --- | --- | --- |
+| **jcode-swarm-core** — coordinator + worktree manager + agent roles; plan as server-level DAG scoped by swarm_id; lifecycle states (spawned/ready/running/blocked/completed/failed/stopped/crashed); agent-to-agent DM + channel + broadcast; plan update proposal/approval flow | M6 Hunter Crew; future multi-agent Atlas work | TRIGGER-GATED (M6); no swarm primitives planned | MISSING. Atlas has coordination ledger (claim/complete) but no plan-as-DAG, no coordinator role, no worktree manager, no lifecycle state machine. jcode's swarm is far more structured than Atlas's current task table. Key design to borrow: coordinator-only spawn/stop authority; completion report policy (require outcome + changes + validation, not just "done"); recovery handoffs (retry/reassign/replace/salvage). |
+| **Swarm comms: DMs, channels, shared context keys, status snapshot vs summary vs full-context read (three distinct operations)** | Atlas agent messaging (informal) | No native agent-to-agent messaging | MISSING. Atlas agents communicate only via Telegram or Notion. jcode's three-tier read (lock-free status snapshot / short activity feed / full context read on demand) is the right pattern to avoid context bloat — directly relevant to Atlas L5 Chairman crew design. |
+| **Swarm TUI widgets: real-time graph of agents + plan DAG with checkpoint badges** | M8 Atlas Mission Control dashboard | SHIPPED (static dashboard) | PLANNED (not named). Atlas M8 is a static ops dashboard. jcode's swarm graph widget (live agent topology + plan DAG + critical path) is what Atlas Mission Control should evolve toward for multi-agent visibility. Worth naming as M8b or M8 v2 scope. |
+| **jcode-overnight-core** — ambient mode: gardens memory graph, scouts sessions + git history, does proactive work; self-schedules next wake; adaptive resource limits; single agent at a time; interactive sessions preempt ambient | No Atlas milestone for overnight/ambient runs | NOT NAMED | MISSING. Atlas has no overnight autonomy primitive. jcode's ambient mode is the closest shipped reference to what Atlas needs for unsupervised nightly runs. Key constraints to borrow: single-instance lock, interactive-preempts-ambient, self-scheduled wake (not fixed cron), resource ceiling (CPU + API budget caps). |
+| **Ambient Garden (overnight-core sub-feature)** — memory consolidation during idle cycles: merge similar entries, detect contradictions, prune weak memories, verify facts against codebase, retroactive session extraction | M9c cross-session memory compressor (30-min inactivity, Haiku summarizes) | SHIPPED (M9c) | PARTIAL. Atlas M9c does shallow compression (Haiku summarizes, injects into system prompt). jcode's garden does deep structural work: dedup, contradiction resolution, fact verification against codebase, cluster reorganization. Atlas's M9c is a compression shortcut; jcode's garden is the real thing. Worth a named M9d or M18 sub-task. |
+| **jcode-memory-types** — graph-based memory: Memory/Tag/Cluster nodes; HasTag/InCluster/RelatesTo/Supersedes/Contradicts/DerivedFrom edges; BFS cascade retrieval; confidence decay with category-specific half-lives; provenance tracking (UserStated/UserCorrected/Observed/Inferred/Extracted); feedback loops (boost on use, decay on rejection) | Auto-memory (MEMORY.md + memory/ files); Architectural Decision 2026-05-06 (DEFER Dreams API) | SHIPPED (file-based); graph-based DEFERRED | GAP. Atlas deferred graph-based memory because file-based was sufficient. jcode has shipped the full graph (petgraph DiGraph, cascade BFS, confidence decay, provenance chains). If Atlas hits MEMORY.md scale limits or needs cross-agent memory sharing, jcode's schema is the reference implementation. Confidence decay half-lives (Correction 365d / Preference 90d / Fact 30d / Procedure 60d / Inferred 7d) are directly adoptable. |
+| **jcode-compaction-core** — cross-session context compaction | M9c (Haiku 30-min inactivity compressor) | SHIPPED (M9c) | PARTIAL. M9c does session-level compression. jcode-compaction-core is a dedicated crate implying more sophisticated multi-session compaction strategy. Inspect crate when Atlas hits context-limit pain in long-running Chairman sessions. |
+| **Completion Report Policy** — agents must end each prompted turn with outcome + changes + validation + blockers; "done" alone is not a valid report | No formal policy in Atlas | NOT NAMED | MISSING. Atlas agents (studio, griot, hunter, chairman) have no completion report contract. Ships as a one-line addition to AGENT_SOP.md or coordination skill. High leverage: prevents silent failures and "done" stubs. |
+| **Intent field on tool calls** — short preemptive summary of what a tool is about to do; feeds activity feed | No Atlas equivalent | NOT NAMED | LOW PRIORITY. Nice UX for dashboard visibility; not blocking any Atlas milestone. |
+
+**Summary of actionable gaps (ranked by leverage):**
+
+1. **Completion Report Policy** — zero-code, ships as an AGENT_SOP.md hard rule. Every Atlas agent must close each turn with outcome/changes/validation/blockers. Do this session or next.
+2. **Overnight ambient mode** — no Atlas milestone names this. If Atlas is to run unsupervised, this is the missing primitive. Name it as a future milestone (M21 or Atlas Phase 7). Key constraint from jcode: single-instance + interactive-preempts + self-scheduled wake.
+3. **Swarm coordinator/lifecycle state machine** — relevant when Atlas runs 3+ concurrent agents. Not a current pain point (M6 is trigger-gated). Name as M6 design input when M6 unblocks.
+4. **Deep memory garden (M9d or M18 sub-task)** — Atlas M9c is shallow. jcode's ambient garden is the full design. Name when MEMORY.md hits scale or Chairman crew starts losing context across sessions.
+5. **Three-tier agent status read** — lock-free snapshot / summary feed / full context on demand. Relevant when Atlas dashboard adds live agent view (M8 v2).
 
 **Next:** No new Atlas work this session. Refer to previous session's next moves.

@@ -4,6 +4,9 @@ Schema: `YYYY-MM-DD | source | verdict | placement | leverage type`
 
 Verdicts: `PROCEED` | `DON'T PROCEED` | `ARCHIVE-AND-NOTE`
 
+2026-05-08 | <https://github.com/TauricResearch/TradingAgents> | ARCHIVE-AND-NOTE | docs/patterns/langgraph-checkpoint-pattern.md (pattern extracted) | continuous-improvement (Atlas — checkpoint-sqlite wiring for coding agent crash-resume)
+2026-05-08 | <https://github.com/ruvnet/ruflo> | ARCHIVE-AND-NOTE | docs/atlas/ (deferred) | continuous-improvement
+
 2026-05-08 | https://github.com/virattt/dexter | ARCHIVE-AND-NOTE | archive | none — financial research agent (SEC filings, balance sheets, income statements, Buffett/Munger philosophy, WhatsApp+CLI delivery, 24.9k stars); revisit if CW moves upmarket to mid-market clients needing pre-call company profiling OR Guinea government pipeline reactivates; Atlas note: WhatsApp+CLI multi-channel delivery pattern worth studying independently of financial use case
 2026-05-08 | alphasignalai.substack.com/p/four-agent-orchestration-patterns | PROCEED | enhance docs/roadmap/atlas.md (Architectural Patterns section) | continuous-improvement
 
@@ -47,3 +50,4 @@ Leverage types: `producing-motion` | `founder-time-reduction` | `continuous-impr
 2026-05-08 | https://github.com/oscarsterling/claude-telegram-remote | DON'T PROCEED | n/a | none — macOS+tmux only, incompatible with Windows/Antigravity stack
 2026-05-08 | <https://x.com/i/status/2052809885763747935> | PROCEED | hard rule docs/AGENT_SOP.md + enhance skills/engagement-ops (closeout-memo .md → .html) | continuous-improvement + producing-motion
 2026-05-08 | <https://github.com/anthropics/financial-services> | ARCHIVE-AND-NOTE | n/a | none — FSI verticals (IB/PE/equity research/wealth mgmt), no active CW/SW/Studio/Atlas producing motion. Reference reads when active: plugins/vertical-plugins/financial-analysis/skills/skill-creator/references/ (skill authoring patterns for boubacar-skill-creator) + scripts/orchestrate.py (handoff_request allowlist+schema pattern for Atlas subagent routing).
+2026-05-08 | <https://github.com/1jehuang/jcode> | ARCHIVE-AND-NOTE | archive | none — Rust-native coding agent CLI (TUI, multi-model, swarm, 14ms startup, 167MB RAM/session vs Claude Code 387MB); agentsHQ stack is built on Claude Code contracts (hooks, skills, Skill tool, coordination); contract mismatch blocks install; real value = architectural reference for Atlas (overnight-core, swarm-core, compaction-core); REVISIT WHEN VPS RAM is demonstrated bottleneck for Atlas swarm sessions; follow-up: Atlas gap analysis via jcode arch docs by 2026-05-15
