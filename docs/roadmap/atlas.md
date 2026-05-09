@@ -2491,6 +2491,24 @@ Purpose: map jcode's shipped capabilities against Atlas milestones to surface ga
 
 **Next:** No new Atlas work this session. Refer to previous session's next moves.
 
+### 2026-05-08: Ruflo absorb — ARCHIVE-AND-NOTE + CLAUDE.md improvements shipped
+
+Source: <https://github.com/ruvnet/ruflo> (multi-agent orchestration for Claude Code, 98 agents, MCP, hooks, agent federation, HNSW memory, ed25519 witness/verification).
+Verdict: ARCHIVE-AND-NOTE. Tool itself competes with agentsHQ's core surface — not absorbed.
+
+**What transferred (shipped this session):**
+
+- `CLAUDE.md` — Agent Role Authority table (Gate / Coding agent / Direct session, explicit authority + hard limits per role)
+- `CLAUDE.md` — Concurrency Rule ("1 message = all related operations"; never poll after spawning agents)
+- `docs/AGENT_SOP.md` — Both rules propagated so VPS coding agents see them
+- `skills/coordination/SKILL.md` — Cross-reference pointer to role authority table
+
+**Deferred to Atlas Phase 2 (gated):**
+
+Gate commit integrity witness pattern. Ruflo uses ed25519 + marker-based integrity attestation (sha256(gitCommit + ':ruflo-witness/v1') seed, verified at runtime). Directly applicable to Gate merge queue: [READY] commits currently have no integrity check beyond branch name + task table claim. Ruflo's witness pattern is a concrete design model.
+
+**Pre-condition before building:** Gate must be running stably for 30+ days with no false-merge incidents. Do not add attestation complexity before the baseline is solid.
+
 ### 2026-05-08: TradingAgents absorb — ARCHIVE-AND-NOTE
 
 Source: <https://github.com/TauricResearch/TradingAgents> (71k stars, v0.2.4, LangGraph multi-agent trading framework).

@@ -57,6 +57,29 @@ Skipping any step breaks multi-agent coordination. Gate checks the task table be
 
 **No Telegram. No /propose. No manual signal to gate.** Push feature branch with [READY] commit. Gate watches GitHub every 60s and handles everything. Agent moves on immediately after push.
 
+## Agent Role Authority (2026-05-08)
+
+Every session has exactly ONE role. Read this table at session start. Do not do the other role's work.
+
+| Role | Authority | Hard limits |
+|------|-----------|-------------|
+| **Gate** | Merge to main, push to VPS, approve/reject [READY] branches | Refuses all other work until queue clear |
+| **Coding agent** (spawned) | Edit files, commit to feature branch, push feature branch | Never push to main, never deploy, never merge |
+| **Direct session** (Boubacar present) | Edit files, claim tasks, coordinate — Boubacar controls push | Never push without explicit "push it" instruction |
+
+If unsure which role: check whether Boubacar explicitly assigned Gate duty. If not, treat as direct session.
+
+## Concurrency Rule (2026-05-08)
+
+**1 message = all related operations.** Batch independent tool calls in a single response. Never serially call tools that could run in parallel.
+
+- Batch ALL file reads in ONE message
+- Spawn ALL subagents in ONE message with `run_in_background: true`
+- Batch ALL file edits that don't depend on each other in ONE message
+- After spawning subagents: do NOT poll for status. Wait for completion notifications.
+
+**Never continuously check status after spawning agents — wait for results.**
+
 ## Context-Mode (installed 2026-05-08)
 
 Use `/ctx` before any multi-file exploration. Saves ~40% context vs manual reads. See `docs/AGENT_SOP.md` Context-Mode Rule for full routing table. MCP registered in `~/.claude/settings.json` mcpServers.

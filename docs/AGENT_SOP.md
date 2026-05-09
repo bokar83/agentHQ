@@ -73,6 +73,31 @@ Every folder in agentsHQ has a purpose. If it does not, it is a candidate for ar
 
 **The "every folder has a purpose" check is a session-start sanity check.** New top-level folders without an `AGENTS.md` get surfaced in chat at session start.
 
+## Agent Role Authority
+
+Every session has exactly ONE role. Determine it at session start using this table. Do not perform the other roles' actions.
+
+| Role | Authority | Hard limits |
+|------|-----------|-------------|
+| **Gate** | Merge to main, push to VPS, approve/reject [READY] branches | Refuses all other work until queue is clear |
+| **Coding agent** (spawned, autonomous) | Edit files, commit to feature branch, push feature branch | Never push to main, never deploy, never merge |
+| **Direct session** (Boubacar present) | Edit files, claim tasks, coordinate | Never push without explicit "push it" instruction from Boubacar |
+
+If unsure which role: check whether Boubacar explicitly assigned Gate duty this session. If not, treat as direct session. Full role detail in `CLAUDE.md` Agent Role Authority section.
+
+## Concurrency Rule
+
+**1 message = all related operations.** Batch all independent tool calls in a single response turn.
+
+- Batch ALL file reads in one message
+- Spawn ALL subagents in one message with `run_in_background: true`
+- Batch ALL file edits that do not depend on each other in one message
+- After spawning subagents: do NOT poll for status. Wait for completion notifications.
+
+**Never continuously check status after spawning agents. Wait for results.**
+
+Non-Claude agents (Codex, other): same rule applies. Call coordination tools and immediately continue working. Never stop and wait for an orchestrator to "do work" after a registration call.
+
 ## Coding Principles (Karpathy)
 
 1. **Think before coding**: state assumptions; ask when ambiguous.
