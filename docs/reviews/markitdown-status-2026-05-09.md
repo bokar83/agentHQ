@@ -20,10 +20,7 @@
 ## Action Taken
 
 Opened draft PR against main: `draft(markitdown): wrapper from /agentshq-absorb followup`
-
-Files in PR:
-- `scripts/markitdown_helper.py`: minimal wrapper exposing `convert_to_markdown(path)` and `__main__` CLI
-- `orchestrator/requirements.txt`: one-line addition of `markitdown`
+PR: https://github.com/bokar83/agentHQ/pull/33
 
 ## Next Steps
 
