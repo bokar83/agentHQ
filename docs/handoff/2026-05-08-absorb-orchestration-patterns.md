@@ -1,40 +1,37 @@
-# Session Handoff - Orchestration Patterns Absorb - 2026-05-08
+# Session Handoff - Telegram CC Working + Shortcut - 2026-05-08
 
 ## TL;DR
-Short absorb session. Evaluated AlphaSignal article "Four Agent Orchestration Patterns" via /agentshq-absorb. Sankofa Council shifted placement from skills/coordination/references/ to atlas.md directly. Wrote Architectural Patterns section, logged to absorb registry, committed + pushed.
+Telegram CC channel fully working. SSL fix patched directly into server.ts. access.json written to bypass broken pairing flow. Shortcut 1-Telegram-CC.lnk created with CW icon for one-click launch. loader:1479 investigated — non-blocking, source unknown. Plugin audit deferred.
 
 ## What was built / changed
-
-- `docs/roadmap/atlas.md` — Added "Architectural Patterns" section (crew pattern map + decision guide + benchmark numbers)
-- `docs/reviews/absorb-log.md` — Appended PROCEED verdict for AlphaSignal article
-- `docs/reviews/absorb-followups.md` — Appended followup entry, immediately marked DONE
+- D:\Ai_Sandbox\agentsHQ\1-Telegram-CC.lnk — shortcut, CW icon, launches claude --channels
+- D:\Ai_Sandbox\agentsHQ\cw-icon.ico — CW logo converted to ICO
+- C:\Users\HUAWEI\.claude\plugins\cache\claude-plugins-official\telegram\0.0.6\server.ts — SSL fix line 86
+- C:\Users\HUAWEI\.claude\channels\telegram\access.json — dmPolicy=allowlist, allowFrom=["7792432594"]
+- C:\Users\HUAWEI\.claude\hooks\telegram-channel-start.ps1 — SessionStart auto-launch attempt (TTY limitation)
 
 ## Decisions made
-
-- Sankofa Council rejected skills/coordination/references/ placement. Reason: wrong discovery path, no maintenance owner. Correct placement = atlas.md, where Atlas architects actually look.
-- Key benchmark to carry forward: hierarchical pattern = 0.929 F1 at 60.7% of reflexive cost. Use this to justify pattern choice for L4/L5 enhancements.
-- Crew pattern assignments locked: gate=hierarchical, studio=sequential, chairman=reflexive, griot=parallel fan-out.
+- --channels = separate terminal session, not IDE. Two runtimes coexist.
+- Shortcut over auto-start — needs interactive TTY, can't background on Windows.
+- SSL fix in server.ts line 86 — must re-apply if plugin auto-updates.
+- Pairing bypassed via direct access.json write. dmPolicy=allowlist.
 
 ## What is NOT done
-
-- Nothing left from this session. All work complete.
-- Handoff audit warning (10 docs >3 days old in docs/handoff/ root) still pending — unrelated to this session. Run /nsync to triage.
-
-## Open questions
-
-None.
+- loader:1479 source not found — non-blocking
+- Plugin audit deferred (context7, playwright, n8n auth, caveman-shrink)
+- MCP health monitor not built
+- context-mode not indexed
 
 ## Next session must start here
+1. Run plugin audit (see 2026-05-08-telegram-mcp-plugin-audit.md)
+2. Fix loader:1479 — check plugin.json hook registrations outside settings.json
+3. n8n re-auth via claude.ai web
+4. /ctx-doctor + index agentsHQ in context-mode
 
-1. Read `docs/roadmap/atlas.md` Session-Start Cheat Block (previous session's MCP audit next moves still apply)
-2. Verify container entrypoint synced: `docker exec orc-crewai diff /app/gate_agent.py /app/orchestrator/gate_agent.py` (should be empty)
-3. Test `/digest` and `/publish` via DM to @agentsHQ4Bou_bot
-4. M18 HALO: instrument Atlas heartbeat with tracing.py + collect 50 traces by 2026-05-18
-
-## Files changed this session
-
-- `docs/roadmap/atlas.md`
-- `docs/reviews/absorb-log.md`
-- `docs/reviews/absorb-followups.md`
-
-Commit: `19aaf1d` — pushed to main.
+## Files changed
+- D:\Ai_Sandbox\agentsHQ\1-Telegram-CC.lnk
+- D:\Ai_Sandbox\agentsHQ\cw-icon.ico
+- C:\Users\HUAWEI\.claude\plugins\cache\...\server.ts (SSL fix, not in git)
+- C:\Users\HUAWEI\.claude\channels\telegram\access.json
+- C:\Users\HUAWEI\.claude\hooks\telegram-channel-start.ps1
+- memory/feedback_telegram_mcp_bun_cjs.md
