@@ -15,7 +15,7 @@
 
 ## Session-Start Cheat Block (read this first)
 
-Last session ended **2026-05-08 (jcode absorb + Atlas gap analysis + M21/M9d/M8b milestones)**. State at close:
+Last session ended **2026-05-08 (TradingAgents absorb — ARCHIVE-AND-NOTE, checkpoint pattern extracted)**. State at close:
 
 - **Gate fully autonomous:** 5-min cron 24/7, silent success, inline ✅/❌ buttons, dedup alerts, 4 high-risk files only (`gate_agent.py`, `orc_rebuild.sh`, `.env`, `docker-compose`). Container gate registration removed — host cron is sole runner.
 - **Baked-file drift permanently fixed:** `scripts/docker-entrypoint.sh` ships with Dockerfile. Every container start auto-syncs `orchestrator/*.py` over baked `/app/*.py`. `docker cp` ritual retired. Rebuild completed successfully 2026-05-08 21:47 UTC.
@@ -2490,3 +2490,16 @@ Purpose: map jcode's shipped capabilities against Atlas milestones to surface ga
 5. **Three-tier agent status read** — lock-free snapshot / summary feed / full context on demand. Relevant when Atlas dashboard adds live agent view (M8 v2).
 
 **Next:** No new Atlas work this session. Refer to previous session's next moves.
+
+### 2026-05-08: TradingAgents absorb — ARCHIVE-AND-NOTE
+
+Source: <https://github.com/TauricResearch/TradingAgents> (71k stars, v0.2.4, LangGraph multi-agent trading framework).
+Verdict: ARCHIVE-AND-NOTE. Zero trading domain relevance. One transferable artifact extracted.
+
+**What transferred:** LangGraph SqliteSaver checkpoint wiring pattern. Extracted to `docs/patterns/langgraph-checkpoint-pattern.md`. Covers: per-task SQLite DB, deterministic thread_id, context manager, crash-resume, clear-on-success, conditional routing, debate loop counter.
+
+**What did NOT transfer:** analyst crews, bull/bear debate agents, portfolio manager, yfinance/backtrader integration — entire trading domain.
+
+**Atlas task added (GATED):** Wire checkpoint-sqlite into coding agent pipeline. Pre-condition: orchestrator must have ≥1 LangGraph StateGraph (none today — all CrewAI). Do not add dependency before pre-condition met.
+
+**Key finding:** orchestrator is 100% CrewAI. No LangGraph graphs exist. Checkpoint wiring is future work, not today's work.
