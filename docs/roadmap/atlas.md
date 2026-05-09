@@ -15,7 +15,7 @@
 
 ## Session-Start Cheat Block (read this first)
 
-Last session ended **2026-05-08 (MCP stack audit)**. State at close:
+Last session ended **2026-05-08 (Architectural Patterns absorb)**. State at close:
 
 - **Gate fully autonomous:** 5-min cron 24/7, silent success, inline ✅/❌ buttons, dedup alerts, 4 high-risk files only (`gate_agent.py`, `orc_rebuild.sh`, `.env`, `docker-compose`). Container gate registration removed — host cron is sole runner.
 - **Baked-file drift permanently fixed:** `scripts/docker-entrypoint.sh` ships with Dockerfile. Every container start auto-syncs `orchestrator/*.py` over baked `/app/*.py`. `docker cp` ritual retired. Rebuild completed successfully 2026-05-08 21:47 UTC.
@@ -64,6 +64,27 @@ Reviewed Anthropic's Dreams API (managed-agents research preview). Dreams solves
 
 **Reopen condition:** If Atlas adopts Anthropic-hosted sessions or memory stores (e.g., for agent-to-agent memory sharing or cross-VPS persistence), Dreams becomes the cleanup mechanism. Request access at that point.
 **Logged:** 2026-05-06. Next Atlas session should run `python scripts/dream.py` as first action.
+
+---
+
+## Architectural Patterns (2026-05-08)
+
+Reference: AlphaSignal benchmarks across 10,000 SEC filings, five LLMs. Key finding: **hierarchical achieves 0.929 F1 at 60.7% of reflexive cost** — near-max accuracy without the scale ceiling.
+
+**Pattern map for agentsHQ crews:**
+
+| Crew | Pattern | Rationale |
+|---|---|---|
+| Gate agent | Hierarchical Supervisor-Worker | Cheap model pre-screens low-risk branches; premium model handles edge cases only |
+| Studio pipeline | Sequential Pipeline | Fixed chain (script → segments → image → video → upload); predictable, token-efficient, high daily volume |
+| Chairman crew (L5 Learn) | Reflexive Self-Correcting Loop | Low-volume, high-stakes; 3-round revision before proposing scoring mutations; cost acceptable |
+| Griot / content board | Parallel Fan-Out with Merge | Independent topic workers fire simultaneously; merge agent reconciles into ranked candidates |
+
+**Decision guide for L4 and L5 enhancements:**
+- High volume (>25k tasks/day) or cost-constrained: Sequential or Hierarchical. Never Reflexive.
+- Accuracy-critical, low volume (errors unacceptable): Reflexive (up to 2.3x cost multiplier).
+- Need smart model routing (cheap for simple, premium for complex): Hierarchical.
+- Independent subtasks, latency-critical: Parallel Fan-Out.
 
 ---
 
@@ -2361,3 +2382,13 @@ Rebuild pipeline repaired (3 bugs fixed):
 - MCP Stack Evolution milestone added to atlas.md (6 roadmap items with when/why)
 - context-mode rule added to `AGENT_SOP.md` and `CLAUDE.md`
 - `docs/reviews/absorb-followups.md` line 16 marked DONE (context-mode install)
+
+### 2026-05-08: Architectural Patterns section added
+
+**What shipped:**
+
+- Absorbed AlphaSignal article "Four Agent Orchestration Patterns" (May 2026). Benchmark: hierarchical = 0.929 F1 at 60.7% of reflexive cost.
+- Added "Architectural Patterns" section to `docs/roadmap/atlas.md` with 4 crew pattern mappings (gate=hierarchical, studio=sequential, chairman=reflexive, griot=parallel fan-out) + decision guide for L4/L5 design work.
+- Logged to `docs/reviews/absorb-log.md` + followup marked DONE in `docs/reviews/absorb-followups.md`.
+
+**Next:** No new Atlas work this session. Refer to previous session's next moves.

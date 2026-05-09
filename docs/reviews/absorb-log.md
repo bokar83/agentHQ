@@ -4,7 +4,10 @@ Schema: `YYYY-MM-DD | source | verdict | placement | leverage type`
 
 Verdicts: `PROCEED` | `DON'T PROCEED` | `ARCHIVE-AND-NOTE`
 
+2026-05-08 | alphasignalai.substack.com/p/four-agent-orchestration-patterns | PROCEED | enhance docs/roadmap/atlas.md (Architectural Patterns section) | continuous-improvement
+
 2026-05-06 | https://platform.claude.com/docs/en/managed-agents/dreams | PROCEED (self-build) | new script scripts/dream.py — local Dreams equivalent using Anthropic SDK | founder-time-reduction + continuous-improvement
+2026-05-08 | https://x.com/i/status/2052368125480354000 | ARCHIVE-AND-NOTE | archive | none — Teamly product ad, 3-rule framework not novel vs agentsHQ's existing stack
 2026-05-06 | https://x.com/itsolelehmann/status/2051373618727469152 | PROCEED | enhance skills/sankofa | continuous-improvement
 
 2026-05-04 | https://github.com/czlonkowski/n8n-mcp | PROCEED (install-only) | MCP install (n8n-mcp) + harvest R-automation skill planned | producing-motion
