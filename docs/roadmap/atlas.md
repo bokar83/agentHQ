@@ -15,13 +15,14 @@
 
 ## Session-Start Cheat Block (read this first)
 
-Last session ended **2026-05-08 (TradingAgents absorb — ARCHIVE-AND-NOTE, checkpoint pattern extracted)**. State at close:
+Last session ended **2026-05-08 (claw-code absorb — ARCHIVE-AND-NOTE, 3 deliverables shipped)**. State at close:
 
 - **Gate fully autonomous:** 5-min cron 24/7, silent success, inline ✅/❌ buttons, dedup alerts, 4 high-risk files only (`gate_agent.py`, `orc_rebuild.sh`, `.env`, `docker-compose`). Container gate registration removed — host cron is sole runner.
 - **Baked-file drift permanently fixed:** `scripts/docker-entrypoint.sh` ships with Dockerfile. Every container start auto-syncs `orchestrator/*.py` over baked `/app/*.py`. `docker cp` ritual retired. Rebuild completed successfully 2026-05-08 21:47 UTC.
 - **Completion Report Policy now a hard rule in AGENT_SOP.md:** All Atlas agents must close each prompted turn with outcome + changes + validation + blockers. "Done" alone is invalid.
 - **New milestones named (trigger-gated):** M21 (overnight ambient), M9d (deep memory garden), M8b (live agent graph). Each has explicit trigger conditions — do not start until gates clear.
-- **jcode absorbed (ARCHIVE-AND-NOTE):** Rust CLI competitor, not installable due to Claude Code contract mismatch. Architectural reference only. Revisit if VPS RAM becomes bottleneck for Atlas swarm.
+- **claw-code absorbed (ARCHIVE-AND-NOTE):** Rust Claude Code reimplementation, viral star-farm repo (190K stars in 38 days). SUSPICIOUS v3-7. Phase 0 all-no — we already run Claude Code natively. 3 deliverables extracted: mock_llm_service.py, Gate context-burn roadmap task (item 6 above), clawhip absorb ticket (2026-05-15).
+- **Gate context-burn fix queued (atlas.md item 6):** Gate currently burns LLM context every 5 min regardless of queue state. Target: dumb Python cron, LLM only on READY branch. Clawhip absorb must run first.
 
 **Default next moves (in priority order):**
 
@@ -30,6 +31,7 @@ Last session ended **2026-05-08 (TradingAgents absorb — ARCHIVE-AND-NOTE, chec
 3. M18 HALO unlock: instrument Atlas heartbeat with tracing.py + 50 traces by 2026-05-18
 4. Fix `newsletter_editorial_input` table missing (studio_trend_scout error at 17:58 — separate session)
 5. **[GATED] LangGraph checkpoint-sqlite for coding agent:** Pattern doc at `docs/patterns/langgraph-checkpoint-pattern.md`. Pre-condition: orchestrator must have at least one LangGraph StateGraph (none today — all crews are CrewAI). Trigger when first LangGraph graph is built: wire `SqliteSaver` per pattern doc + verify crash-resume on VPS. Do not add `langgraph-checkpoint-sqlite` to requirements.txt before pre-condition met.
+6. **[ATLAS ARCH] Refactor Gate from Claude session polling to dumb Python cron:** Gate currently runs inside a Claude Code session with LLM context open every 5 min regardless of queue state. This burns context budget on empty-queue ticks. Target architecture: pure Python cron loop (`scripts/gate_poll.py`) polls GitHub for READY branches + checks task table — zero LLM cost. LLM context opens ONLY when a READY branch needs arbitration. Estimated savings: ~85% of current Gate LLM spend on idle nights/weekends. Pre-condition: none. Success criterion: Gate cron runs 24h on VPS with zero LLM calls on empty-queue ticks, verified via spend tracking. See `docs/patterns/` reference: claw-code PHILOSOPHY.md — "notification routing pushed outside agent context window." Trigger: next Gate maintenance window.
 
 **Do not start a new milestone without reading the latest Session Log entry below.**
 
@@ -2521,3 +2523,37 @@ Verdict: ARCHIVE-AND-NOTE. Zero trading domain relevance. One transferable artif
 **Atlas task added (GATED):** Wire checkpoint-sqlite into coding agent pipeline. Pre-condition: orchestrator must have ≥1 LangGraph StateGraph (none today — all CrewAI). Do not add dependency before pre-condition met.
 
 **Key finding:** orchestrator is 100% CrewAI. No LangGraph graphs exist. Checkpoint wiring is future work, not today's work.
+
+
+### 2026-05-08: claw-code absorb — ARCHIVE-AND-NOTE + 3 deliverables shipped
+
+Source: <https://github.com/ultraworkers/claw-code> (Rust reimplementation of Claude Code CLI, 190K stars in 38 days — viral star-farm stunt, SUSPICIOUS v3-7).
+
+Verdict: ARCHIVE-AND-NOTE. Phase 0 all-no: we already run Claude Code natively. No gap.
+
+**Security scan:** SUSPICIOUS v3-7. created_at 2026-03-31 (38 days old), 190,758 stars, 109,787 forks. Static scan clean (pure Rust, no postinstall hooks, no exfil patterns). Repo credibility low; code itself is clean.
+
+**What was extracted (3 deliverables, not 8):**
+
+Sankofa + Karpathy both rejected the 8-pattern proposal. Cut to 3:
+
+1. **`orchestrator/tests/mock_llm_service.py`** — pytest fixture that intercepts `select_by_capability` / `get_llm` with scripted scenario responses. Zero OpenRouter calls. 3 smoke tests included. Drop `mock_llm` fixture into any test file.
+
+2. **Atlas item 6 (Gate context-burn fix)** — Gate currently runs inside Claude session with LLM context open every 5 min regardless of queue state. Target: dumb Python cron (`scripts/gate_poll.py`), LLM context opens only on READY branch detection. Estimated ~85% Gate LLM spend reduction on idle periods. Pre-condition: absorb clawhip first.
+
+3. **`absorb-followups.md` clawhip ticket** — `/agentshq-absorb https://github.com/Yeachan-Heo/clawhip` queued 2026-05-15. clawhip is the event router that keeps notifications outside agent context (isomorphic to our Telegram + Gate). Implementation of the exact architecture Gate refactor needs. Must run before Gate refactor starts.
+
+**Key architectural insight (PHILOSOPHY.md):** "notification routing pushed outside agent context window so agents stay focused on implementation." agentsHQ Gate violates this. Named and queued.
+
+**Dropped patterns (with reasons):**
+- Recovery recipes: Rust enum variants model CLI errors, not VPS/container/git failures
+- Lane events: full 83K implementation, not a pattern; build for CrewAI when Atlas telemetry is actually scoped
+- Trust resolver: wrong shape — Gate's trust question (is this branch legit?) ≠ claw-code's (is this file in workspace?)
+- Conversation compaction: Anthropic SDK already has this natively
+- Structured init output: no consuming skill today
+
+**Files touched this session:**
+- `docs/reviews/absorb-log.md` — claw-code verdict appended
+- `docs/reviews/absorb-followups.md` — clawhip ticket appended
+- `docs/roadmap/atlas.md` — item 6 added, session block updated, this log entry
+- `orchestrator/tests/mock_llm_service.py` — new file

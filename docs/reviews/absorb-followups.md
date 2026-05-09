@@ -6,6 +6,8 @@ PROCEED verdicts append here automatically. PROCEED without a follow-up entry is
 
 2026-05-08 | enhance docs/roadmap/atlas.md | continuous-improvement | Add "Architectural Patterns" section: 4 crew mappings (gate=hierarchical, studio=sequential, chairman=reflexive, griot=parallel) + benchmark (hierarchical 0.929 F1 at 60.7% reflexive cost) before L4 Reconcile implementation | 2026-05-15 | DONE 2026-05-08: section written at docs/roadmap/atlas.md, decision guide + crew map live
 
+2026-05-08 | absorb-followup: Yeachan-Heo/clawhip | continuous-improvement (Atlas) | Run /agentshq-absorb https://github.com/Yeachan-Heo/clawhip — event router that keeps notifications outside agent context windows (isomorphic to agentsHQ Telegram notifier + Gate). claw-code PHILOSOPHY.md names it as the layer that solved the context-burn problem. This is the implementation of the architecture Atlas Gate refactor (atlas.md item 6) should mirror. Absorb before Gate refactor starts. | 2026-05-15
+
 2026-05-06 | new script scripts/dream.py | founder-time-reduction | Run first dream on current memory store; verify dedup + stale project archiving works; wire to Stop hook or scheduled agent | 2026-05-13
 2026-05-06 | enhance skills/sankofa | continuous-improvement | verify DEAD-PROJECT MODE surfaces unique failure mode on first high-stakes /sankofa run | 2026-06-06
 
