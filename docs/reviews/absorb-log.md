@@ -8,6 +8,7 @@ Verdicts: `PROCEED` | `DON'T PROCEED` | `ARCHIVE-AND-NOTE`
 
 2026-05-06 | https://platform.claude.com/docs/en/managed-agents/dreams | PROCEED (self-build) | new script scripts/dream.py — local Dreams equivalent using Anthropic SDK | founder-time-reduction + continuous-improvement
 2026-05-08 | https://x.com/i/status/2052368125480354000 | ARCHIVE-AND-NOTE | archive | none — Teamly product ad, 3-rule framework not novel vs agentsHQ's existing stack
+2026-05-08 | https://printingpress.dev (mvanhorn/cli-printing-press + printing-press-library) | ARCHIVE-AND-NOTE | archive | none today — factory promising for auto-generating CLIs from existing API specs (Apollo/Hunter/Blotato), but no agent currently makes raw calls a cached CLI would fix; PoC required before absorb
 2026-05-06 | https://x.com/itsolelehmann/status/2051373618727469152 | PROCEED | enhance skills/sankofa | continuous-improvement
 
 2026-05-04 | https://github.com/czlonkowski/n8n-mcp | PROCEED (install-only) | MCP install (n8n-mcp) + harvest R-automation skill planned | producing-motion
@@ -44,3 +45,4 @@ Leverage types: `producing-motion` | `founder-time-reduction` | `continuous-impr
 2026-05-08 | https://telegram.org/blog/ai-bot-revolution-11-new-features | PROCEED | new orchestrator module orchestrator/telegram_inbound.py (v1: inbound long-poll, single branch: owner DM triggers orchestrator action) + enable Guest Queries on agentsHQ4Bou_bot via BotFather | producing-motion (Atlas autonomy) + founder-time-reduction
 2026-05-08 | https://github.com/oscarsterling/claude-telegram-remote | DON'T PROCEED | n/a | none — macOS+tmux only, incompatible with Windows/Antigravity stack
 2026-05-08 | <https://x.com/i/status/2052809885763747935> | PROCEED | hard rule docs/AGENT_SOP.md + enhance skills/engagement-ops (closeout-memo .md → .html) | continuous-improvement + producing-motion
+2026-05-08 | <https://github.com/anthropics/financial-services> | ARCHIVE-AND-NOTE | n/a | none — FSI verticals (IB/PE/equity research/wealth mgmt), no active CW/SW/Studio/Atlas producing motion. Reference reads when active: plugins/vertical-plugins/financial-analysis/skills/skill-creator/references/ (skill authoring patterns for boubacar-skill-creator) + scripts/orchestrate.py (handoff_request allowlist+schema pattern for Atlas subagent routing).
