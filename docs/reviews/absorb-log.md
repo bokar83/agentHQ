@@ -4,6 +4,7 @@ Schema: `YYYY-MM-DD | source | verdict | placement | leverage type`
 
 Verdicts: `PROCEED` | `DON'T PROCEED` | `ARCHIVE-AND-NOTE`
 
+2026-05-08 | https://github.com/virattt/dexter | ARCHIVE-AND-NOTE | archive | none — financial research agent (SEC filings, balance sheets, income statements, Buffett/Munger philosophy, WhatsApp+CLI delivery, 24.9k stars); revisit if CW moves upmarket to mid-market clients needing pre-call company profiling OR Guinea government pipeline reactivates; Atlas note: WhatsApp+CLI multi-channel delivery pattern worth studying independently of financial use case
 2026-05-08 | alphasignalai.substack.com/p/four-agent-orchestration-patterns | PROCEED | enhance docs/roadmap/atlas.md (Architectural Patterns section) | continuous-improvement
 
 2026-05-06 | https://platform.claude.com/docs/en/managed-agents/dreams | PROCEED (self-build) | new script scripts/dream.py — local Dreams equivalent using Anthropic SDK | founder-time-reduction + continuous-improvement
