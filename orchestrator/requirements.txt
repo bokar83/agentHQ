@@ -46,6 +46,7 @@ google-auth>=2.29.0
 
 # ── Document Processing ──────────────────────────────────────
 pypdf>=4.0.0
+markitdown>=0.0.1
 
 # ── NotebookLM ───────────────────────────────────────────
 notebooklm-mcp-cli>=0.5.0
