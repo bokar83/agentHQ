@@ -48,29 +48,24 @@ def _pick_response(messages: list[dict]) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Mock LLM object returned by get_llm()
+# Pytest fixture — drop into any test module
 # ---------------------------------------------------------------------------
 
-def _make_mock_llm(model_id: str = "anthropic/claude-haiku-4.5", temperature: float = 0.3):
-    llm = MagicMock()
-    llm.model = model_id
-    llm.temperature = temperature
+class _MockLLM:
+    """Callable LLM stand-in. Returns scripted responses based on message content."""
 
-    def _call(messages, **kwargs):
+    def __init__(self, model_id: str = "anthropic/claude-haiku-4.5", temperature: float = 0.3):
+        self.model = model_id
+        self.temperature = temperature
+
+    def __call__(self, messages, **kwargs):
+        text = _pick_response(messages if isinstance(messages, list) else [])
         response = MagicMock()
-        response.content = _pick_response(messages)
-        response.choices = [MagicMock(message=MagicMock(content=response.content))]
+        response.content = text
+        response.choices = [MagicMock(message=MagicMock(content=text))]
         response.usage = MagicMock(prompt_tokens=10, completion_tokens=20, total_tokens=30)
         return response
 
-    llm.call = _call
-    llm.__call__ = _call
-    return llm
-
-
-# ---------------------------------------------------------------------------
-# Pytest fixture — drop into any test module
-# ---------------------------------------------------------------------------
 
 @pytest.fixture
 def mock_llm():
@@ -79,13 +74,13 @@ def mock_llm():
     No OpenRouter calls are made.
     """
     mock_model_id = "anthropic/claude-haiku-4.5"
-    mock_instance = _make_mock_llm(mock_model_id)
+    instance = _MockLLM(mock_model_id)
 
     with (
         patch("agents.select_by_capability", return_value=mock_model_id),
-        patch("agents.get_llm", return_value=mock_instance),
+        patch("agents.get_llm", return_value=instance),
     ):
-        yield mock_instance
+        yield instance
 
 
 # ---------------------------------------------------------------------------
