@@ -1044,6 +1044,139 @@ def _cmd_sw(text: str, chat_id: str) -> bool:
     threading.Thread(target=_do_sw, daemon=True).start()
     return True
 
+# ── Memory commands (/remember, /query) ───────────────────────────────────────
+
+def _send_memory(chat_id: str, msg: str) -> None:
+    from notifier import send_message
+    send_message(chat_id, msg)
+
+
+def _memory_write(model):
+    from orchestrator.memory_store import write
+    return write(model)
+
+
+def _memory_query_text(text: str, **kwargs):
+    from orchestrator.memory_store import query_text
+    return query_text(text, **kwargs)
+
+
+def _memory_query_filter(**kwargs):
+    from orchestrator.memory_store import query_filter
+    return query_filter(**kwargs)
+
+
+def _memory_synthesize(rows: list, question: str) -> str:
+    from llm_helpers import call_llm
+    rows_text = "\n\n".join(
+        f"[{r['category']}] {r.get('title') or ''}\n{r['content'][:400]}"
+        for r in rows[:15]
+    )
+    prompt = f"""You are the agentsHQ memory query agent.
+
+Question: {question}
+
+Memory records:
+{rows_text}
+
+Answer the question using only the provided records. Be direct and specific.
+If no records are relevant, say so plainly. No padding."""
+    response = call_llm(
+        messages=[{"role": "user", "content": prompt}],
+        model="anthropic/claude-haiku-4-5",
+        max_tokens=600,
+        temperature=0.3,
+    )
+    return response.choices[0].message.content.strip()
+
+
+def _cmd_remember(text: str, chat_id: str) -> bool:
+    if not text.lower().startswith("/remember"):
+        return False
+    parts = text.strip().split(maxsplit=1)
+    if len(parts) < 2 or not parts[1].strip():
+        _send_memory(chat_id, "Usage: /remember <text>\nExample: /remember Build roofing page for SW soon")
+        return True
+    content = parts[1].strip()
+    from orchestrator.memory_models import Idea
+    model = Idea(
+        title=content[:100],
+        context="Captured via Telegram /remember",
+        pipeline="general",
+        priority="soon",
+        source="telegram",
+    )
+    row_id = _memory_write(model)
+    if row_id:
+        _send_memory(chat_id, f"Saved to memory (id={row_id}). Query with: /query {content[:40]}")
+    else:
+        _send_memory(chat_id, "Saved locally (DB write failed silently — check logs).")
+    return True
+
+
+def _cmd_query(text: str, chat_id: str) -> bool:
+    if not text.lower().startswith("/query"):
+        return False
+    parts = text.strip().split(maxsplit=1)
+    if len(parts) < 2 or not parts[1].strip():
+        _send_memory(chat_id, (
+            "Usage:\n"
+            "  /query <natural language question>\n"
+            "  /query --filter category=<cat>\n"
+            "  /query --filter pipeline=<pipe>\n"
+            "  /query --filter entity=<entity_ref>\n\n"
+            "Examples:\n"
+            "  /query tell me about Elevate Roofing\n"
+            "  /query --filter category=hard_rule"
+        ))
+        return True
+
+    query_str = parts[1].strip()
+
+    if query_str.startswith("--filter"):
+        filter_str = query_str[len("--filter"):].strip()
+        kwargs = {}
+        for token in filter_str.split():
+            if "=" in token:
+                k, v = token.split("=", 1)
+                k = k.strip()
+                if k == "category":
+                    kwargs["category"] = v.strip()
+                elif k == "pipeline":
+                    kwargs["pipeline"] = v.strip()
+                elif k == "entity":
+                    kwargs["entity_ref"] = v.strip()
+        rows = _memory_query_filter(**kwargs)
+        if not rows:
+            _send_memory(chat_id, "No records found for that filter.")
+            return True
+        lines = [f"Found {len(rows)} record(s):"]
+        for r in rows[:10]:
+            title = r.get("title") or r["category"]
+            snippet = r["content"][:120].replace("\n", " ")
+            lines.append(f"• [{r['category']}] {title}: {snippet}")
+        _send_memory(chat_id, "\n".join(lines))
+        return True
+
+    rows = _memory_query_text(query_str)
+    if not rows:
+        _send_memory(chat_id, f"No memory records found for: {query_str}")
+        return True
+
+    try:
+        answer = _memory_synthesize(rows, query_str)
+        _send_memory(chat_id, answer)
+    except Exception as e:
+        logger.warning(f"/query LLM synthesis failed, returning raw rows: {e}")
+        lines = [f"(synthesis unavailable) Top {min(5, len(rows))} records:"]
+        for r in rows[:5]:
+            title = r.get("title") or r["category"]
+            snippet = r["content"][:150].replace("\n", " ")
+            lines.append(f"• [{r['category']}] {title}: {snippet}")
+        _send_memory(chat_id, "\n".join(lines))
+    return True
+
+
 # ══════════════════════════════════════════════════════════════
 # Dispatcher (order matters: longest prefix first to avoid collisions)
 # ══════════════════════════════════════════════════════════════
@@ -1131,6 +1264,8 @@ _COMMANDS = [
     _cmd_reject,
     _cmd_outcomes,
     _cmd_callsheet,
+    _cmd_remember,
+    _cmd_query,
     _cmd_digest,
     _cmd_publish,
     _cmd_sw,
