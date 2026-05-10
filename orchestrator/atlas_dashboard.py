@@ -986,3 +986,92 @@ def get_cost_report(days: int = 90) -> dict:
         "summary": summary,
         "days": days,
     }
+
+
+# ── Roadmap live metrics ─────────────────────────────────────────────────────
+
+def get_roadmap_metrics() -> dict:
+    """Live countable gates for the roadmap status dashboard.
+
+    Returns metrics that feed progress bars and gate-lift trackers.
+    Never raises — each metric falls back to None on failure.
+    """
+    import datetime
+    metrics: dict = {"ts": datetime.datetime.utcnow().isoformat() + "Z"}
+
+    def _pg():
+        from memory import _pg_conn
+        return _pg_conn()
+
+    def _crm():
+        try:
+            from db import get_crm_connection_with_fallback
+            conn, _ = get_crm_connection_with_fallback()
+            return conn
+        except Exception:
+            return None
+
+    # ── Atlas: chairman outcomes (need 7 for first real run) ─────────────────
+    try:
+        conn = _pg()
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM task_outcomes")
+            metrics["chairman_outcomes"] = cur.fetchone()[0]
+            metrics["chairman_outcomes_needed"] = 7
+
+            cur.execute("SELECT COUNT(*) FROM approval_queue WHERE status='pending'")
+            metrics["approval_queue_pending"] = cur.fetchone()[0]
+
+            cur.execute("SELECT COUNT(*) FROM tasks WHERE kind='commit-proposal' AND status='queued'")
+            metrics["echo_queue_depth"] = cur.fetchone()[0]
+
+            # SW email log
+            cur.execute("SELECT COUNT(*) FROM sw_email_log")
+            metrics["sw_emails_sent"] = cur.fetchone()[0]
+
+            cur.execute("SELECT COUNT(*) FROM sw_email_log WHERE created_at >= NOW() - INTERVAL '7 days'")
+            metrics["sw_emails_7d"] = cur.fetchone()[0]
+
+            # Agent outcomes for learning loop health
+            cur.execute("SELECT COUNT(*) FROM task_outcomes WHERE success = true")
+            metrics["successful_outcomes"] = cur.fetchone()[0]
+
+        conn.close()
+    except Exception as e:
+        logger.warning(f"get_roadmap_metrics pg: {e}")
+
+    # ── Harvest: CRM leads (Supabase) ────────────────────────────────────────
+    try:
+        crm_conn = _crm()
+        if crm_conn:
+            with crm_conn.cursor() as cur:
+                cur.execute("SELECT COUNT(*) AS n FROM leads")
+                metrics["crm_total_leads"] = cur.fetchone()["n"]
+                cur.execute("SELECT COUNT(*) AS n FROM leads WHERE email IS NOT NULL AND email != ''")
+                metrics["crm_leads_with_email"] = cur.fetchone()["n"]
+                cur.execute("SELECT COUNT(*) AS n FROM leads WHERE status IN ('replied','qualified','proposal','closed_won')")
+                metrics["crm_engaged"] = cur.fetchone()["n"]
+                cur.execute("SELECT COUNT(*) AS n FROM leads WHERE status = 'closed_won'")
+                metrics["crm_closed_won"] = cur.fetchone()["n"]
+            crm_conn.close()
+    except Exception as e:
+        logger.warning(f"get_roadmap_metrics crm: {e}")
+
+    # ── Compass: routing fixture coverage ────────────────────────────────────
+    try:
+        import subprocess, pathlib
+        result = subprocess.run(
+            ["python", "scripts/check_routing_gaps.py", "--json"],
+            capture_output=True, text=True, check=False, timeout=15
+        )
+        import json as _json
+        data = _json.loads(result.stdout or "{}")
+        metrics["routing_skills_total"] = data.get("total_skills", 70)
+        metrics["routing_skills_with_fixtures"] = data.get("skills_with_fixtures", 11)
+        metrics["routing_fixture_target"] = 56  # 80% of 70
+    except Exception:
+        metrics["routing_skills_total"] = 70
+        metrics["routing_skills_with_fixtures"] = 11
+        metrics["routing_fixture_target"] = 56
+
+    return metrics

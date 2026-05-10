@@ -1121,6 +1121,11 @@ async def atlas_crm_board(_auth=Depends(verify_chat_token)):
     return JSONResponse(_atd.get_crm_board())
 
 
+@app.get("/atlas/roadmap-metrics")
+async def atlas_roadmap_metrics(_auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_roadmap_metrics())
+
+
 @app.post("/atlas/crm/leads/{lead_id}/status")
 async def atlas_crm_lead_status(lead_id: int, body: _CrmStatusBody, _auth=Depends(verify_chat_token)):
     result = _atd.set_lead_status(lead_id, body.status)
