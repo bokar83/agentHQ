@@ -6,7 +6,9 @@
 
 **Architecture:** Three new orchestrator files (agent, brief generator, cron entry point) + one small addition to auto_publisher.py routing. Notion gets two new fields on Griot DB and four new fields on Studio Pipeline DB. Telegram gate: Boubacar replies 1/2/3/all/skip to a candidate menu every 2 days.
 
-**Tech Stack:** Python 3.11, Notion API (existing client), Telegram bot (existing notifier), Anthropic SDK (claude-sonnet-4-6), HyperFrames CLI (npx hyperframes), FFmpeg (existing), Google Drive upload (existing `_upload_to_drive`), Blotato (existing auto_publisher).
+**Tech Stack:** Python 3.11, Notion API (existing client), Telegram bot (existing notifier), Anthropic SDK (claude-sonnet-4-6), HyperFrames CLI (`npx hyperframes init` + `render`), Google Drive upload (existing `_upload_to_drive`), Blotato (existing auto_publisher).
+
+**Key constraint (validated Phase 0):** HyperFrames renders from an HTML project directory — NOT a JSON brief file. The generator must: (1) `npx hyperframes init <tmpdir> --non-interactive`, (2) write `index.html` composition into that dir, (3) `npx hyperframes render` from that dir. Project dir is deleted after upload.
 
 ---
 
@@ -14,7 +16,7 @@
 
 | File | Action | Responsibility |
 |---|---|---|
-| `orchestrator/hyperframe_brief_generator.py` | Create | LLM: post text → HyperFrames brief JSON |
+| `orchestrator/hyperframe_brief_generator.py` | Create | LLM: post text → HTML composition string; scaffold + render project dir |
 | `orchestrator/hyperframe_boost_agent.py` | Create | Main orchestration: query → Telegram → render loop |
 | `orchestrator/hyperframe_boost_cron.py` | Create | Cron entry point, logging |
 | `orchestrator/auto_publisher.py` | Modify | Add YouTube Shorts routing for hyperframe-boost 9:16 records |
@@ -30,48 +32,37 @@
 
 Open Griot content board in Notion. Find any Draft/Queued personal post with total_score > 70. Copy its full text.
 
-- [ ] **Step 2: Hand-craft a brief JSON**
-
-Create `/tmp/test_brief.json`:
-```json
-{
-  "purpose": "Inspire 1stGen founders to bet on themselves",
-  "duration": 30,
-  "aspect_ratio": "9:16",
-  "mood_style": "bold, direct, minimal",
-  "brand_palette": ["#0A0A0A", "#FFFFFF", "#C8B560"],
-  "typography": {"headline": "Inter Bold", "body": "Inter Regular"},
-  "scenes": [
-    {"id": "hook", "duration": 4, "text": "The biggest mistake I made building my first company.", "visual": "bold text on dark bg, slow zoom"},
-    {"id": "s1", "duration": 8, "text": "I waited for permission that was never coming.", "visual": "text reveal line by line"},
-    {"id": "s2", "duration": 10, "text": "Nobody hands 1stGen founders a roadmap.", "visual": "kinetic type, white on black"},
-    {"id": "cta", "duration": 8, "text": "Follow for the playbook they never gave us.", "visual": "brand color accent, logo end card"}
-  ],
-  "audio": {"type": "background_music", "mood": "cinematic lo-fi", "volume": 0.3},
-  "caption_tone": "direct",
-  "transitions": "cut",
-  "asset_paths": []
-}
-```
-
-- [ ] **Step 3: Render 9:16**
+- [ ] **Step 2: Scaffold a test project and write 9:16 composition**
 
 ```bash
-cd /root/agentsHQ
-npx hyperframes render --brief /tmp/test_brief.json --output /tmp/test_9x16.mp4
+cd /tmp && npx hyperframes init hf-boost-test --non-interactive
 ```
 
-Expected: `/tmp/test_9x16.mp4` created, no FFmpeg errors in stdout.
+Then write `index.html` into `/tmp/hf-boost-test/` with width=1080, height=1920 (9:16), 30s duration, 4 scenes: hook, s1, s2, cta. See Task 1 Step 3 for the exact HTML template the generator produces.
+
+- [ ] **Step 3: Lint + render 9:16**
+
+```bash
+cd /tmp/hf-boost-test
+npx hyperframes lint        # must be 0 errors
+npx hyperframes render --quality draft --output /tmp/test_9x16.mp4
+ls -lh /tmp/test_9x16.mp4  # expect ~800K-2MB MP4
+```
+
+Expected: file exists, no render errors.
 
 - [ ] **Step 4: Render 1:1**
 
 ```bash
-# Edit test_brief.json aspect_ratio to "1:1" first
-sed -i 's/"9:16"/"1:1"/' /tmp/test_brief.json
-npx hyperframes render --brief /tmp/test_brief.json --output /tmp/test_1x1.mp4
+# Update index.html: change data-width="1080" data-height="1080", viewport to width=1080,height=1080
+# Then re-render:
+npx hyperframes render --quality draft --output /tmp/test_1x1.mp4
+ls -lh /tmp/test_1x1.mp4
 ```
 
 Expected: `/tmp/test_1x1.mp4` created.
+
+> **Note:** Phase 0 render (9:16) already validated on VPS 2026-05-10. Produced 946K MP4. Chain confirmed working.
 
 - [ ] **Step 5: Upload to Drive**
 
@@ -114,58 +105,79 @@ I spent 3 years waiting for permission that was never coming.
 The playbook exists — you have to build it yourself.
 If you're building without a safety net, follow for the real talk."""
 
-def test_brief_has_required_fields():
-    from orchestrator.hyperframe_brief_generator import HyperframeBriefGenerator
-    gen = HyperframeBriefGenerator()
-    
-    mock_response = MagicMock()
-    mock_response.content = [MagicMock(text='{"purpose":"inspire","duration":30,"aspect_ratio":"9:16","mood_style":"bold","brand_palette":["#0A0A0A"],"typography":{"headline":"Inter Bold","body":"Inter Regular"},"scenes":[{"id":"hook","duration":5,"text":"hook","visual":"text"},{"id":"s1","duration":10,"text":"body","visual":"text"},{"id":"cta","duration":5,"text":"cta","visual":"text"}],"audio":{"type":"background_music","mood":"cinematic","volume":0.3},"caption_tone":"direct","transitions":"cut","asset_paths":[]}')]
-    
-    with patch('anthropic.Anthropic') as mock_anthropic:
-        mock_client = MagicMock()
-        mock_anthropic.return_value = mock_client
-        mock_client.messages.create.return_value = mock_response
-        
-        brief = gen.generate(SAMPLE_POST, aspect_ratio="9:16")
-    
-    required = ["purpose","duration","aspect_ratio","mood_style","brand_palette",
-                "typography","scenes","audio","caption_tone","transitions","asset_paths"]
-    for field in required:
-        assert field in brief, f"Missing field: {field}"
+SAMPLE_HTML_9x16 = """<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>* { margin:0; padding:0; } html,body { width:1080px; height:1920px; background:#0A0A0A; }</style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="30" data-width="1080" data-height="1920">
+      <div id="hook" data-start="0" data-duration="5" data-track-index="1">Hook text</div>
+      <div id="s1" data-start="5" data-duration="8" data-track-index="1">Body text</div>
+      <div id="s2" data-start="13" data-duration="9" data-track-index="1">Body text 2</div>
+      <div id="cta" data-start="22" data-duration="8" data-track-index="1">Follow us</div>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.from("#hook", { opacity: 0, duration: 0.6 }, 0);
+      tl.set("#hook", { opacity: 0 }, 5.00);
+      tl.from("#cta", { opacity: 0, duration: 0.6 }, 22);
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>"""
 
-def test_brief_has_hook_and_cta_scenes():
-    from orchestrator.hyperframe_brief_generator import HyperframeBriefGenerator
-    gen = HyperframeBriefGenerator()
-    
-    mock_response = MagicMock()
-    mock_response.content = [MagicMock(text='{"purpose":"inspire","duration":30,"aspect_ratio":"9:16","mood_style":"bold","brand_palette":["#0A0A0A"],"typography":{"headline":"Inter Bold","body":"Inter"},"scenes":[{"id":"hook","duration":5,"text":"hook","visual":"text"},{"id":"s1","duration":15,"text":"body","visual":"text"},{"id":"cta","duration":10,"text":"follow","visual":"text"}],"audio":{"type":"background_music","mood":"cinematic","volume":0.3},"caption_tone":"direct","transitions":"cut","asset_paths":[]}')]
-    
-    with patch('anthropic.Anthropic') as mock_anthropic:
-        mock_client = MagicMock()
-        mock_anthropic.return_value = mock_client
-        mock_client.messages.create.return_value = mock_response
-        
-        brief = gen.generate(SAMPLE_POST, aspect_ratio="9:16")
-    
-    scene_ids = [s["id"] for s in brief["scenes"]]
-    assert "hook" in scene_ids
-    assert "cta" in scene_ids
+SAMPLE_HTML_1x1 = SAMPLE_HTML_9x16.replace("height=1920", "height=1080").replace(
+    "height:1920px", "height:1080px").replace('data-height="1920"', 'data-height="1080"')
 
-def test_brief_aspect_ratio_passed_through():
+
+def test_generate_returns_html_string():
     from orchestrator.hyperframe_brief_generator import HyperframeBriefGenerator
     gen = HyperframeBriefGenerator()
-    
     mock_response = MagicMock()
-    mock_response.content = [MagicMock(text='{"purpose":"inspire","duration":30,"aspect_ratio":"1:1","mood_style":"bold","brand_palette":["#0A0A0A"],"typography":{"headline":"Inter Bold","body":"Inter"},"scenes":[{"id":"hook","duration":5,"text":"hook","visual":"text"},{"id":"cta","duration":5,"text":"cta","visual":"text"}],"audio":{"type":"background_music","mood":"cinematic","volume":0.3},"caption_tone":"direct","transitions":"cut","asset_paths":[]}')]
-    
+    mock_response.content = [MagicMock(text=SAMPLE_HTML_9x16)]
     with patch('anthropic.Anthropic') as mock_anthropic:
         mock_client = MagicMock()
         mock_anthropic.return_value = mock_client
         mock_client.messages.create.return_value = mock_response
-        
-        brief = gen.generate(SAMPLE_POST, aspect_ratio="1:1")
-    
-    assert brief["aspect_ratio"] == "1:1"
+        html = gen.generate(SAMPLE_POST, aspect_ratio="9:16")
+    assert isinstance(html, str)
+    assert "<!doctype html" in html.lower()
+
+def test_generate_strips_markdown_fences():
+    from orchestrator.hyperframe_brief_generator import HyperframeBriefGenerator
+    gen = HyperframeBriefGenerator()
+    mock_response = MagicMock()
+    mock_response.content = [MagicMock(text=f"```html\n{SAMPLE_HTML_9x16}\n```")]
+    with patch('anthropic.Anthropic') as mock_anthropic:
+        mock_client = MagicMock()
+        mock_anthropic.return_value = mock_client
+        mock_client.messages.create.return_value = mock_response
+        html = gen.generate(SAMPLE_POST, aspect_ratio="9:16")
+    assert not html.startswith("```")
+    assert "<!doctype html" in html.lower()
+
+def test_generate_uses_correct_dimensions_9x16():
+    from orchestrator.hyperframe_brief_generator import HyperframeBriefGenerator
+    gen = HyperframeBriefGenerator()
+    mock_response = MagicMock()
+    mock_response.content = [MagicMock(text=SAMPLE_HTML_9x16)]
+    with patch('anthropic.Anthropic') as mock_anthropic:
+        mock_client = MagicMock()
+        mock_anthropic.return_value = mock_client
+        mock_client.messages.create.return_value = mock_response
+        captured_prompt = []
+        def capture(*args, **kwargs):
+            captured_prompt.append(kwargs.get("messages", [{}])[0].get("content", ""))
+            return mock_response
+        mock_client.messages.create.side_effect = capture
+        gen.generate(SAMPLE_POST, aspect_ratio="9:16")
+    assert "1080" in captured_prompt[0]
+    assert "1920" in captured_prompt[0]
 ```
 
 - [ ] **Step 2: Run to confirm failure**
@@ -182,38 +194,42 @@ Expected: `ImportError: No module named 'orchestrator.hyperframe_brief_generator
 Create `orchestrator/hyperframe_brief_generator.py`:
 
 ```python
-import json
 import os
+import subprocess
+import tempfile
+import shutil
 import anthropic
 
-SYSTEM_PROMPT = """You convert social media posts into HyperFrames video briefs.
-Output ONLY valid JSON matching this exact structure — no markdown, no explanation:
-{
-  "purpose": "one sentence describing what this video should make the viewer feel or do",
-  "duration": 30,
-  "aspect_ratio": "<provided>",
-  "mood_style": "bold, direct, minimal",
-  "brand_palette": ["#0A0A0A", "#FFFFFF", "#C8B560"],
-  "typography": {"headline": "Inter Bold", "body": "Inter Regular"},
-  "scenes": [
-    {"id": "hook", "duration": 4, "text": "<punchy opening line>", "visual": "bold text on dark bg, slow zoom"},
-    {"id": "s1", "duration": 10, "text": "<core point 1>", "visual": "text reveal line by line"},
-    {"id": "s2", "duration": 8, "text": "<core point 2>", "visual": "kinetic type"},
-    {"id": "cta", "duration": 8, "text": "<follow/engage prompt>", "visual": "brand color accent, logo end card"}
-  ],
-  "audio": {"type": "background_music", "mood": "cinematic lo-fi", "volume": 0.3},
-  "caption_tone": "direct",
-  "transitions": "cut",
-  "asset_paths": []
+# Dimensions per aspect ratio
+ASPECT_DIMS = {
+    "9:16": (1080, 1920),
+    "1:1":  (1080, 1080),
+    "16:9": (1920, 1080),
 }
-Rules:
-- scenes array must include id="hook" as first and id="cta" as last
-- scene durations must sum to exactly the total duration
-- text fields must come from the post content, not be invented
-- aspect_ratio must be exactly the value provided"""
 
-USER_PROMPT_TEMPLATE = """Convert this social media post into a HyperFrames brief.
-Aspect ratio: {aspect_ratio}
+SYSTEM_PROMPT = """You convert social media posts into HyperFrames HTML compositions.
+Output ONLY the raw HTML — no markdown fences, no explanation, nothing else.
+
+Rules:
+- viewport meta must match the provided width x height exactly
+- data-composition-id="main" on root div
+- data-width and data-height on root div must match viewport
+- data-duration="30" (30 seconds total)
+- exactly 4 clips: id="hook" (0-5s), id="s1" (5-13s), id="s2" (13-22s), id="cta" (22-30s)
+- each clip: data-start, data-duration, data-track-index="1"
+- all clips hidden initially via CSS opacity:0 — GSAP animates them in
+- after every tl.to fade-out, add tl.set hard kill e.g. tl.set("#hook", { opacity: 0 }, 5.00)
+- brand palette: background #0A0A0A, text #FFFFFF, accent #C8B560
+- fonts: "Arial Black" for headlines (font-weight:900), Arial for body
+- hook: punchy 1-line from post opening — largest font (88px)
+- s1/s2: core points from post body — medium font (52px), color #CCCCCC
+- cta: follow/engage prompt — accent color (#C8B560), 64px
+- text must come from the post content, not be invented
+- GSAP CDN: https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js
+- window.__timelines["main"] = tl pattern required"""
+
+USER_PROMPT_TEMPLATE = """Convert this social media post into a HyperFrames HTML composition.
+Width: {width}px  Height: {height}px  Aspect ratio: {aspect_ratio}
 
 POST:
 {post_text}"""
@@ -223,23 +239,59 @@ class HyperframeBriefGenerator:
     def __init__(self):
         self._client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
-    def generate(self, post_text: str, aspect_ratio: str = "9:16") -> dict:
+    def generate(self, post_text: str, aspect_ratio: str = "9:16") -> str:
+        """Returns HTML string for the composition."""
+        width, height = ASPECT_DIMS.get(aspect_ratio, (1080, 1920))
         response = self._client.messages.create(
             model="claude-sonnet-4-6",
-            max_tokens=1024,
+            max_tokens=2048,
             system=[{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
             messages=[{
                 "role": "user",
                 "content": USER_PROMPT_TEMPLATE.format(
+                    width=width, height=height,
                     aspect_ratio=aspect_ratio,
                     post_text=post_text[:2000]
                 )
             }]
         )
-        raw = response.content[0].text.strip()
-        brief = json.loads(raw)
-        brief["aspect_ratio"] = aspect_ratio
-        return brief
+        html = response.content[0].text.strip()
+        # Strip any accidental markdown fences
+        if html.startswith("```"):
+            html = html.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+        return html
+
+    def render_to_mp4(self, post_text: str, aspect_ratio: str, output_path: str) -> str:
+        """Scaffold project, write HTML, lint, render. Returns output_path."""
+        project_dir = tempfile.mkdtemp(prefix="hf_boost_")
+        try:
+            # Scaffold
+            subprocess.run(
+                ["npx", "hyperframes", "init", project_dir, "--non-interactive"],
+                check=True, capture_output=True, text=True, timeout=60
+            )
+            # Write composition
+            html = self.generate(post_text, aspect_ratio)
+            index_path = os.path.join(project_dir, "index.html")
+            with open(index_path, "w", encoding="utf-8") as f:
+                f.write(html)
+            # Lint (warn only, don't block on density warning)
+            lint = subprocess.run(
+                ["npx", "hyperframes", "lint"],
+                cwd=project_dir, capture_output=True, text=True, timeout=30
+            )
+            if "error" in lint.stdout.lower() and "0 error" not in lint.stdout:
+                raise RuntimeError(f"HyperFrames lint errors:\n{lint.stdout[:500]}")
+            # Render
+            result = subprocess.run(
+                ["npx", "hyperframes", "render", "--quality", "standard", "--output", output_path],
+                cwd=project_dir, capture_output=True, text=True, timeout=300
+            )
+            if result.returncode != 0:
+                raise RuntimeError(f"HyperFrames render failed: {result.stderr[:300]}")
+            return output_path
+        finally:
+            shutil.rmtree(project_dir, ignore_errors=True)
 ```
 
 - [ ] **Step 4: Run tests to confirm pass**
@@ -643,22 +695,7 @@ Add to bottom of `orchestrator/hyperframe_boost_agent.py` (replace the `run` stu
 
 ```python
 from orchestrator.hyperframe_brief_generator import HyperframeBriefGenerator
-from orchestrator.studio_render_publisher import _upload_to_drive, _ffmpeg
-
-
-def _ffmpeg_render(brief: dict, output_path: str) -> str:
-    """Render HyperFrames brief to MP4 via npx hyperframes CLI."""
-    import subprocess, tempfile, json as _json
-    brief_file = tempfile.NamedTemporaryFile(suffix=".json", delete=False, mode="w")
-    _json.dump(brief, brief_file)
-    brief_file.close()
-    result = subprocess.run(
-        ["npx", "hyperframes", "render", "--brief", brief_file.name, "--output", output_path],
-        capture_output=True, text=True, timeout=300
-    )
-    if result.returncode != 0:
-        raise RuntimeError(f"HyperFrames render failed: {result.stderr[:300]}")
-    return output_path
+from orchestrator.studio_render_publisher import _upload_to_drive
 
 
 def _create_studio_record(notion_client, candidate: dict, drive_url: str,
@@ -711,9 +748,8 @@ Then replace the `run` method in `HyperframeBoostAgent`:
 
         for aspect_ratio, platforms in [("9:16", ["x", "youtube_shorts"]), ("1:1", ["linkedin"])]:
             try:
-                brief = gen.generate(candidate["full_text"], aspect_ratio=aspect_ratio)
                 out_path = tempfile.mktemp(suffix=f"_{aspect_ratio.replace(':','x')}.mp4")
-                _ffmpeg_render(brief, out_path)
+                gen.render_to_mp4(candidate["full_text"], aspect_ratio=aspect_ratio, output_path=out_path)
                 upload = _upload_to_drive(out_path, f"hf_boost_{candidate['notion_id']}_{aspect_ratio.replace(':','x')}.mp4")
                 record_id = _create_studio_record(
                     self._notion, candidate, upload["drive_url"], aspect_ratio, platforms
