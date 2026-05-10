@@ -150,7 +150,52 @@ def _run_skill_eval(skill_dir: Path) -> tuple[bool, str]:
     return passed, summary
 
 
+def _reap_stale_leases() -> int:
+    """Expire running tasks whose lease_expires_at has passed.
+
+    Prevents phantom locks from dead agent sessions blocking future claims.
+    Returns count of reaped rows.
+    """
+    try:
+        import sys as _sys
+        _sys.path.insert(0, str(REPO_ROOT))
+        from dotenv import load_dotenv
+        load_dotenv(str(ENV_FILE))
+        import psycopg2
+        import os as _os
+        dsn = (
+            _os.environ.get("TEST_COORD_DSN")
+            or _os.environ.get("POSTGRES_DSN")
+        )
+        host = _os.environ.get("POSTGRES_HOST")
+        user = _os.environ.get("POSTGRES_USER")
+        pw = _os.environ.get("POSTGRES_PASSWORD")
+        db = _os.environ.get("POSTGRES_DB")
+        conn = psycopg2.connect(dsn) if dsn else psycopg2.connect(
+            host=host, user=user, password=pw, dbname=db
+        )
+        with conn, conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE tasks SET status = 'done'
+                WHERE status = 'running'
+                  AND lease_expires_at < now()
+                """
+            )
+            count = cur.rowcount
+            conn.commit()
+        conn.close()
+        if count:
+            print(f"[gate_poll] lease_reaper: expired {count} stale running task(s)")
+        return count
+    except Exception as exc:
+        print(f"[gate_poll] lease_reaper failed (non-fatal): {exc}", file=sys.stderr)
+        return 0
+
+
 def poll_once(bot_token: str, chat_id: str, dry_run: bool = False) -> list[str]:
+    _reap_stale_leases()
+
     if not _fetch():
         print("[gate_poll] git fetch failed", file=sys.stderr)
         return []
