@@ -4,6 +4,8 @@ Schema: `YYYY-MM-DD | source | verdict | placement | leverage type`
 
 Verdicts: `PROCEED` | `DON'T PROCEED` | `ARCHIVE-AND-NOTE`
 
+2026-05-10 | <https://x.com/Zephyr_hg/status/2053133843905830992> (Zephyr sub-agents explainer) | ARCHIVE-AND-NOTE | archive | none — public popularization of parallel sub-agent pattern; superpowers:dispatching-parallel-agents skill + AGENT_SOP.md Concurrency Rule already cover spawn mechanics, isolation, and integration; post adds no new pattern or mechanic
+
 2026-05-10 | Jaya Gupta — "The Next Biggest Moat in AI" (X article, text-jaya-gupta-ai-moat) | PROCEED | enhance skills/engagement-ops (chosen-vs-seen diagnostic) + new docs/patterns/altitude-alignment.md (SW audit lens) + new skills/ctq-social/references/content-seeds-org-moat.md (3 post skeletons) | continuous-improvement + producing-motion (content board)
 
 2026-05-10 | [Greg Isenberg — design.md thread](https://x.com/gregisenberg/status/2052110589682749869) | PROCEED | enhance docs/styleguides + 5 skills | continuous-improvement + founder-time-reduction
