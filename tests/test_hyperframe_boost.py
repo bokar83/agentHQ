@@ -160,3 +160,39 @@ def test_query_candidates_returns_top3():
 
     assert len(candidates) == 3
     assert candidates[0]["total_score"] >= candidates[1]["total_score"]
+
+
+def test_render_and_queue_attempts_both_aspect_ratios():
+    """_render_and_queue must call render_to_mp4 for both 9:16 and 1:1."""
+    import unittest.mock as mock
+    from orchestrator.hyperframe_boost_agent import HyperframeBoostAgent
+
+    agent = HyperframeBoostAgent.__new__(HyperframeBoostAgent)
+    agent._notion = mock.MagicMock()
+
+    candidate = {
+        "notion_id": "test-notion-id",
+        "total_score": 85,
+        "text_preview": "Test post preview",
+        "full_text": "Full test post text for render",
+        "scheduled_date": "2026-05-12",
+        "platform": ["linkedin", "x"],
+    }
+
+    with mock.patch('orchestrator.hyperframe_boost_agent.HyperframeBriefGenerator') as MockGen, \
+         mock.patch('orchestrator.hyperframe_boost_agent._drive_upload') as mock_upload, \
+         mock.patch('orchestrator.hyperframe_boost_agent._create_studio_record') as mock_record, \
+         mock.patch('orchestrator.hyperframe_boost_agent._mark_twin') as mock_twin, \
+         mock.patch('orchestrator.hyperframe_boost_agent.send_message'):
+
+        MockGen.return_value.render_to_mp4.return_value = "/tmp/fake.mp4"
+        mock_upload.return_value = {"webViewLink": "https://drive.google.com/fake", "id": "fake-id"}
+        mock_record.return_value = "new-studio-record-id"
+
+        agent._render_and_queue(candidate)
+
+    assert MockGen.return_value.render_to_mp4.call_count == 2
+    calls = MockGen.return_value.render_to_mp4.call_args_list
+    aspect_ratios = [c.kwargs.get("aspect_ratio") or c.args[1] for c in calls]
+    assert "9:16" in aspect_ratios
+    assert "1:1" in aspect_ratios
