@@ -142,13 +142,21 @@ class HyperframeBoostAgent:
                         cb_chat = str(cb.get("message", {}).get("chat", {}).get("id", ""))
                         if cb_chat != str(TELEGRAM_CHAT_ID):
                             continue
-                        # Acknowledge the callback
+                        # Acknowledge the callback (toast)
                         try:
                             requests.post(
                                 f"{api_base}/answerCallbackQuery",
                                 json={"callback_query_id": cb["id"], "text": "Got it ✓"},
                                 timeout=5,
                             )
+                        except Exception:
+                            pass
+                        # Send visible confirmation message
+                        selection = cb["data"]
+                        label = "ALL posts" if selection == "all" else f"post {selection}" if selection != "skip" else "skipped"
+                        try:
+                            from orchestrator.notifier import send_message as _sm
+                            _sm(TELEGRAM_CHAT_ID, f"✓ Got it — rendering {label}. This takes ~2 min per post.")
                         except Exception:
                             pass
                         return _parse_reply(cb["data"], count)
