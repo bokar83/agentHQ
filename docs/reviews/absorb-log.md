@@ -4,9 +4,12 @@ Schema: `YYYY-MM-DD | source | verdict | placement | leverage type`
 
 Verdicts: `PROCEED` | `DON'T PROCEED` | `ARCHIVE-AND-NOTE`
 
+2026-05-10 | Jaya Gupta — "The Next Biggest Moat in AI" (X article, text-jaya-gupta-ai-moat) | PROCEED | enhance skills/engagement-ops (chosen-vs-seen diagnostic) + new docs/patterns/altitude-alignment.md (SW audit lens) + new skills/ctq-social/references/content-seeds-org-moat.md (3 post skeletons) | continuous-improvement + producing-motion (content board)
+
 2026-05-10 | [Greg Isenberg — design.md thread](https://x.com/gregisenberg/status/2052110589682749869) | PROCEED | enhance docs/styleguides + 5 skills | continuous-improvement + founder-time-reduction
 
 2026-05-09 | https://github.com/Yeachan-Heo/clawhip | PROCEED | new script scripts/hook_notifier.py (Stop hook -> Telegram) + remove speculative pre-condition from atlas item 6 | continuous-improvement + producing-motion (Atlas autonomy)
+2026-05-10 | https://resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf | PROCEED | enhance skills/boubacar-skill-creator (Steps 4+5: official spec fields + testing framework) + log anthropics/skills repo as separate absorb | continuous-improvement
 
 2026-05-09 | https://x.com/noisyb0y1/status/2044692412061425748 (ECC X-thread) | PROCEED | enhance skills/agentshq-absorb (Self-Audit Mode) + enhance docs/roadmap/compass.md (M6) | continuous-improvement
 
