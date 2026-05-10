@@ -826,9 +826,9 @@ def get_crm_board() -> dict:
         conn, is_fallback = get_crm_connection_with_fallback()
         cols = ", ".join(_CRM_COLUMNS)
         with conn.cursor() as cur:
-            cur.execute(
-                f"SELECT {cols} FROM leads ORDER BY updated_at DESC NULLS LAST LIMIT 500"
-            )
+            cur.execute("SELECT COUNT(*) FROM leads")
+            total = cur.fetchone()[0]
+            cur.execute(f"SELECT {cols} FROM leads ORDER BY updated_at DESC NULLS LAST")
             rows = cur.fetchall()
         conn.close()
     except Exception as exc:
@@ -838,20 +838,21 @@ def get_crm_board() -> dict:
     board: dict[str, list] = {s: [] for s in _CRM_STATUSES}
     for row in rows:
         r = dict(row)
-        # Coerce non-serialisable types
         for k in ("created_at", "updated_at", "last_contacted_at"):
             if r.get(k) is not None:
                 r[k] = r[k].isoformat()
         status = (r.get("status") or "new").lower()
-        r["status"] = status  # normalize in-place
+        r["status"] = status
         if status not in board:
             board.setdefault(status, [])
         board[status].append(r)
 
+    # Return all observed statuses (known + any unexpected ones from DB)
+    all_columns = list(_CRM_STATUSES) + [s for s in board if s not in _CRM_STATUSES]
     return {
-        "columns": _CRM_STATUSES,
+        "columns": all_columns,
         "board": board,
-        "total": len(rows),
+        "total": total,
         "is_fallback": is_fallback,
     }
 
