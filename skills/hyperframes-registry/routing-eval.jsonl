@@ -1,3 +1,3 @@
-{"intent": "install registry block into my composition", "expected": "hyperframes-registry"}
-{"intent": "wire registry component into index html", "expected": "hyperframes-registry"}
-{"intent": "install a block from the registry", "expected": "hyperframes-registry"}
+{"intent": "install a block into my composition", "expected": "hyperframes-registry"}
+{"intent": "wire a block from the registry", "expected": "hyperframes-registry"}
+{"intent": "add a component to my composition from registry", "expected": "hyperframes-registry"}

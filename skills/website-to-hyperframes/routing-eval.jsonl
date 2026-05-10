@@ -1,3 +1,3 @@
-{"intent": "I want a video from this website url", "expected": "website-to-hyperframes"}
-{"intent": "capture this site and turn it into a video promo", "expected": "website-to-hyperframes"}
-{"intent": "build a social ad from this webpage", "expected": "website-to-hyperframes"}
+{"intent": "build a video from this website url", "expected": "website-to-hyperframes"}
+{"intent": "turn this page into a promo video", "expected": "website-to-hyperframes"}
+{"intent": "site to video for this client site", "expected": "website-to-hyperframes"}

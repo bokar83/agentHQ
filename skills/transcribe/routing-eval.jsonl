@@ -1,3 +1,3 @@
 {"intent": "speech to text this audio file", "expected": "transcribe"}
-{"intent": "transcribe this audio recording", "expected": "transcribe"}
-{"intent": "convert this MP3 to text", "expected": "transcribe"}
+{"intent": "transcribe this audio recording for me", "expected": "transcribe"}
+{"intent": "transcribe this video file to text", "expected": "transcribe"}
