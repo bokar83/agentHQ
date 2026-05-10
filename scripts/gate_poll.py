@@ -154,37 +154,25 @@ def _reap_stale_leases() -> int:
     """Expire running tasks whose lease_expires_at has passed.
 
     Prevents phantom locks from dead agent sessions blocking future claims.
+    Runs via docker exec into orc-postgres -- no psycopg2 needed on host.
     Returns count of reaped rows.
     """
+    sql = (
+        "UPDATE tasks SET status='done' "
+        "WHERE status='running' AND lease_expires_at < now();"
+    )
     try:
-        import sys as _sys
-        _sys.path.insert(0, str(REPO_ROOT))
-        from dotenv import load_dotenv
-        load_dotenv(str(ENV_FILE))
-        import psycopg2
-        import os as _os
-        dsn = (
-            _os.environ.get("TEST_COORD_DSN")
-            or _os.environ.get("POSTGRES_DSN")
+        proc = subprocess.run(
+            ["docker", "exec", "orc-postgres",
+             "psql", "-U", "postgres", "-d", "postgres", "-t", "-c", sql],
+            capture_output=True, text=True, check=False, timeout=10
         )
-        host = _os.environ.get("POSTGRES_HOST")
-        user = _os.environ.get("POSTGRES_USER")
-        pw = _os.environ.get("POSTGRES_PASSWORD")
-        db = _os.environ.get("POSTGRES_DB")
-        conn = psycopg2.connect(dsn) if dsn else psycopg2.connect(
-            host=host, user=user, password=pw, dbname=db
-        )
-        with conn, conn.cursor() as cur:
-            cur.execute(
-                """
-                UPDATE tasks SET status = 'done'
-                WHERE status = 'running'
-                  AND lease_expires_at < now()
-                """
-            )
-            count = cur.rowcount
-            conn.commit()
-        conn.close()
+        if proc.returncode != 0:
+            print(f"[gate_poll] lease_reaper psql error: {proc.stderr.strip()}", file=sys.stderr)
+            return 0
+        # psql -t returns "UPDATE N"
+        out = proc.stdout.strip()
+        count = int(out.split()[-1]) if out.startswith("UPDATE") else 0
         if count:
             print(f"[gate_poll] lease_reaper: expired {count} stale running task(s)")
         return count

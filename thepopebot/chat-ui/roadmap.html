@@ -556,6 +556,59 @@ async function loadMetrics() {
   } catch(e) { /* silent — static fallbacks still show */ }
 }
 
+const STATUS_BADGE_MAP = {
+  shipped:  {cls: 'b-shipped',  label: 'SHIPPED'},
+  active:   {cls: 'b-progress', label: 'IN PROGRESS'},
+  blocked:  {cls: 'b-gated',    label: 'GATED'},
+  queued:   {cls: 'b-queued',   label: 'QUEUED'},
+  deferred: {cls: 'b-deferred', label: 'DEFERRED'},
+  descoped: {cls: 'b-descoped', label: 'DESCOPED'},
+};
+const STATUS_DS_MAP = {
+  shipped: 'shipped', active: 'active', blocked: 'blocked',
+  queued: 'blocked', deferred: 'deferred', descoped: 'deferred',
+};
+
+function renderMilestoneRows(codename, milestones) {
+  const panel = document.getElementById('rp-' + codename);
+  if (!panel || !milestones || milestones.length === 0) return; // keep static fallback
+  const tbody = panel.querySelector('tbody');
+  if (!tbody) return;
+  tbody.replaceChildren(); // clear static rows
+  for (const m of milestones) {
+    const bdef = STATUS_BADGE_MAP[m.status] || STATUS_BADGE_MAP.queued;
+    const ds   = STATUS_DS_MAP[m.status]   || 'blocked';
+
+    const tr = document.createElement('tr');
+    tr.dataset.s = ds;
+
+    // Cell definitions: [className, text | {badge}]
+    const cellDefs = [
+      {cls: 'ci', text: m.mid    || ''},
+      {cls: 'cn', text: m.title  || ''},
+      {cls: '',   badge: bdef},
+      {cls: 'cb', text: m.blocked_by  || '—'},
+      {cls: 'cd', text: m.shipped_date || m.eta || '—'},
+      {cls: 'co', text: m.notes || ''},
+    ];
+
+    for (const def of cellDefs) {
+      const td = document.createElement('td');
+      if (def.cls) td.className = def.cls;
+      if (def.badge) {
+        const span = document.createElement('span');
+        span.className = 'badge ' + def.badge.cls;
+        span.textContent = def.badge.label;
+        td.appendChild(span);
+      } else {
+        td.textContent = def.text;
+      }
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+}
+
 function applyMetrics() {
   const m = liveMetrics;
 
@@ -594,6 +647,15 @@ function applyMetrics() {
   set('gn-leads-email', emailLeads.toLocaleString());
   const leadPct = totalLeads > 0 ? Math.min(100, Math.round(emailLeads / totalLeads * 100)) : 0;
   setWidth('gb-leads', leadPct);
+
+  // Render live milestone rows from DB (static rows are fallback if API returns nothing)
+  const ms = m.milestones || {};
+  for (const codename of ['atlas', 'echo', 'compass', 'studio', 'harvest']) {
+    if (ms[codename] && ms[codename].length > 0) {
+      renderMilestoneRows(codename, ms[codename]);
+    }
+  }
+  applyFilter();
 }
 
 function set(id, val) {
