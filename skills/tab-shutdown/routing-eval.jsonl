@@ -1,0 +1,3 @@
+{"intent": "help me with tab shutdown", "expected": "tab-shutdown"}
+{"intent": "I need to close this tab", "expected": "tab-shutdown"}
+{"intent": "can you end session for this project", "expected": "tab-shutdown"}

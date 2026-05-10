@@ -468,7 +468,7 @@ def test_second_today_record_uses_slot_1():
 
 
 def test_x_third_slot_at_2pm():
-    """X has 3 slots: 07/11/14. Third X record waits until 14:00 MT."""
+    """X has slots at 05:15, 08:30, 11:45, 15:00. Third X record waits until 11:45 MT."""
     import auto_publisher as ap
     notion = MagicMock()
     notion.query_database.return_value = [
@@ -476,11 +476,13 @@ def test_x_third_slot_at_2pm():
         _page("p-x-2", "Posted", ["X"], "2026-04-25", title="x2"),
         _page("p-x-3", "Queued", ["X"], "2026-04-25", title="x3"),
     ]
-    due_12 = ap._fetch_due_queued(notion, "2026-04-25", now_local=_at(12, 0))
-    assert due_12 == []  # slot 2 (14:00) not reached
-    due_14 = ap._fetch_due_queued(notion, "2026-04-25", now_local=_at(14, 5))
-    assert len(due_14) == 1
-    assert due_14[0]["title"] == "x3"
+    # At 11:00 AM: slot 2 (11:45) is not reached yet
+    due_11 = ap._fetch_due_queued(notion, "2026-04-25", now_local=_at(11, 0))
+    assert due_11 == []
+    # At 12:05 PM: slot 2 (11:45) is reached
+    due_12 = ap._fetch_due_queued(notion, "2026-04-25", now_local=_at(12, 5))
+    assert len(due_12) == 1
+    assert due_12[0]["title"] == "x3"
 
 
 def test_past_due_ignores_time_of_day_gate():
@@ -586,13 +588,54 @@ def test_past_due_capped_per_tick(monkeypatch):
     mock_publisher_cls = MagicMock(return_value=mock_publisher)
     mock_notifier = MagicMock(); mock_em = MagicMock(); mock_em.start_task.return_value = MagicMock(id="o1")
 
+    mock_sched = {
+        "past_due": {
+            "max_per_tick": 4,
+            "max_posts_per_tick": 4
+        },
+        "weekday_policy": {
+            "skip_days": [6]
+        }
+    }
+
+    with patch("skills.forge_cli.notion_client.NotionClient", mock_client_cls), \
+         patch("blotato_publisher.BlotatoPublisher", mock_publisher_cls), \
+         patch("auto_publisher._load_schedule", return_value=mock_sched), \
+         patch.dict("sys.modules", {"notifier": mock_notifier, "episodic_memory": mock_em}):
+        ap.auto_publisher_tick()
+
+    # Should be capped at mock schedule's max_posts_per_tick (4)
+    assert mock_publisher.publish.call_count == 4
+
+
+def test_tick_single_fire_stagger_limit():
+    """If multiple records are due (e.g. 2 today-records or 1 today + 1 past-due),
+    by default max_posts_per_tick is 1, so only 1 fires in this tick.
+    """
+    import auto_publisher as ap
+    notion = MagicMock()
+    # 2 due records
+    pages = [
+        _page("p-0", "Queued", ["X"], "2026-04-25", title="today-1", draft="body-1"),
+        _page("p-1", "Queued", ["LinkedIn"], "2026-04-25", title="today-2", draft="body-2")
+    ]
+    notion.query_database.return_value = pages
+    mock_client_cls = MagicMock(return_value=notion)
+    mock_publisher = MagicMock()
+    mock_publisher.publish.return_value = "sub-1"
+    mr = MagicMock(); mr.status = "published"; mr.ok = True; mr.public_url = "https://x"; mr.error_message = None
+    mock_publisher.poll_until_terminal.return_value = mr
+    mock_publisher_cls = MagicMock(return_value=mock_publisher)
+    mock_notifier = MagicMock(); mock_em = MagicMock(); mock_em.start_task.return_value = MagicMock(id="o1")
+
+    # Use default schedule loaded from disk which has max_posts_per_tick = 1
     with patch("skills.forge_cli.notion_client.NotionClient", mock_client_cls), \
          patch("blotato_publisher.BlotatoPublisher", mock_publisher_cls), \
          patch.dict("sys.modules", {"notifier": mock_notifier, "episodic_memory": mock_em}):
         ap.auto_publisher_tick()
 
-    # Should be capped at default max_per_tick (4)
-    assert mock_publisher.publish.call_count == 4
+    # Only 1 record should fire in this tick
+    assert mock_publisher.publish.call_count == 1
 
 
 def test_tick_stale_publishing_promoted_to_publish_failed():

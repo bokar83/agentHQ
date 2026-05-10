@@ -1,6 +1,6 @@
 ---
 name: hunter-skill
-description: Automates discovery, logging, and reporting of high-intent Utah leads for Catalyst Works Consulting.
+description: Automates discovery, logging, and reporting of high-intent Utah leads for Catalyst Works Consulting. Triggers on "hunter", "run hunter", "prospect Utah", "daily prospecting", "find contacts", "hunter leads".
 ---
 
 # Hunter Skill — Catalyst Daily Prospecting

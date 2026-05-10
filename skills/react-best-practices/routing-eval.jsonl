@@ -1,0 +1,3 @@
+{"intent": "help me with react best practices", "expected": "vercel-react-best-practices"}
+{"intent": "I need to nextjs performance", "expected": "vercel-react-best-practices"}
+{"intent": "can you optimize react for this", "expected": "vercel-react-best-practices"}

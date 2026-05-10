@@ -1,0 +1,3 @@
+{"intent": "help me with improve this prompt", "expected": "boubacar-prompts"}
+{"intent": "I need to rewrite this prompt", "expected": "boubacar-prompts"}
+{"intent": "can you make this prompt better for this project", "expected": "boubacar-prompts"}

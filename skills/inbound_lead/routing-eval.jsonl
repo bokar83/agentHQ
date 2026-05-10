@@ -1,0 +1,3 @@
+{"intent": "help me with inbound lead", "expected": "inbound-lead"}
+{"intent": "I need to new lead came in", "expected": "inbound-lead"}
+{"intent": "can you research this prospect for this", "expected": "inbound-lead"}

@@ -1,6 +1,6 @@
 ---
 name: notion-stylist
-description: Applies premium Catalyst Works visual styling to Notion pages and databases.
+description: Applies premium Catalyst Works visual styling to Notion pages and databases. Triggers on "notion stylist", "style this notion page", "notion branding", "format notion", "notion design".
 ---
 
 # Notion Stylist Skill — agentsHQ Premium Branding

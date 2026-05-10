@@ -1,6 +1,6 @@
 ---
 name: clone-builder
-description: |
+description: |. Triggers on "clone-builder", "build this clone", "start building", "clone targets", "build the target".
   Takes a Clone Targets Notion record by name and executes the full build pipeline:
   fetch Launch Brief → profile the target site → generate copy in target language →
   scaffold the build → deploy via vercel-launch → update Notion status to Building.

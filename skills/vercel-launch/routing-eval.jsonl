@@ -1,0 +1,3 @@
+{"intent": "help me with deploy to vercel", "expected": "vercel-launch"}
+{"intent": "I need to vercel preview", "expected": "vercel-launch"}
+{"intent": "can you get a preview link for this", "expected": "vercel-launch"}

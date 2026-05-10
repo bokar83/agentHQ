@@ -1,6 +1,6 @@
 ---
 name: remoat
-description: Automates the connection between the Antigravity IDE and Telegram bot through the Remoat bridge.
+description: Automates the connection between the Antigravity IDE and Telegram bot through the Remoat bridge. Triggers on "remoat", "antigravity bridge", "connect IDE to Telegram", "remoat ignite", "wire Antigravity".
 ---
 
 # Remoat Ignite — Automated Launch

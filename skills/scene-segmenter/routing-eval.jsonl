@@ -1,0 +1,3 @@
+{"intent": "help me with segment script", "expected": "scene-segmenter"}
+{"intent": "I need to scene split", "expected": "scene-segmenter"}
+{"intent": "can you beat segmentation for this project", "expected": "scene-segmenter"}

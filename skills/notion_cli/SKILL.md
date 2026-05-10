@@ -1,6 +1,6 @@
 ---
 name: notion-cli
-description: Project-specific CLI for direct interaction with Notion databases in agentsHQ.
+description: Project-specific CLI for direct interaction with Notion databases in agentsHQ. Triggers on "notion cli", "query notion", "notion database", "update notion record", "notion lookup".
 ---
 
 # Notion CLI Skill

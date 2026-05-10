@@ -1,6 +1,6 @@
 ---
 name: content_multiplier
-description: Takes ONE approved content source (article URL, YouTube video, post, PDF, raw text) and generates 9 atomic content pieces aligned to Boubacar's voice and the 8 diagnostic lenses. Operates in verbatim mode (cite source, use quotes) or remix mode (strip unverifiable elements, keep concept, write Boubacar's original take with no source citation). Pieces route to LinkedIn, X, and matching Studio channel video scripts. Triggers automatically on Trend Scout approval, on /multiply slash command, on "multiply this: <url>" natural language, or on Notion Content Board records with Status=Multiply. Writes results to Content Board with multiplier_run_id grouping for batch review.
+description: Takes ONE approved content source (article URL, YouTube video, post, PDF, raw text) and generates 9 atomic content pieces aligned to Boubacar's voice and the 8 diagnostic lenses. Operates in verbatim mode (cite source, use quotes) or remix mode (strip unverifiable elements, keep concept, write Boubacar's original take with no source citation). Pieces route to LinkedIn, X, and matching Studio channel video scripts. Triggers automatically on Trend Scout approval, on /multiply slash command, on "multiply this: <url>" natural language, or on Notion Content Board records with Status=Multiply. Writes results to Content Board with multiplier_run_id grouping for batch review. Triggers on "content multiplier", "multiply this content", "repurpose this", "turn this into multiple posts", "content from one source".
 ---
 
 # Content Multiplier

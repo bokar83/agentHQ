@@ -1,0 +1,3 @@
+{"intent": "help me with gsap", "expected": "gsap"}
+{"intent": "I need to gsap animation", "expected": "gsap"}
+{"intent": "can you gsap timeline for this", "expected": "gsap"}

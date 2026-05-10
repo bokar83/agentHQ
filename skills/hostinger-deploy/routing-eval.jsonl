@@ -1,0 +1,3 @@
+{"intent": "help me with hostinger", "expected": "hostinger-deploy"}
+{"intent": "I need to deploy to hostinger", "expected": "hostinger-deploy"}
+{"intent": "can you hostinger deploy for this", "expected": "hostinger-deploy"}

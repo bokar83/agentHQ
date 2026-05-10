@@ -1,0 +1,3 @@
+{"intent": "help me with create image", "expected": "kie_media"}
+{"intent": "I need to create video", "expected": "kie_media"}
+{"intent": "can you generate image for this project", "expected": "kie_media"}

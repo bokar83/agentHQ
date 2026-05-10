@@ -1,0 +1,3 @@
+{"intent": "help me with ui ux", "expected": "ui-ux-pro-max"}
+{"intent": "I need to design this app", "expected": "ui-ux-pro-max"}
+{"intent": "can you plan the ui for this", "expected": "ui-ux-pro-max"}

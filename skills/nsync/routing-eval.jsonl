@@ -1,0 +1,3 @@
+{"intent": "help me with /nsync", "expected": "nsync"}
+{"intent": "I need to sync repos", "expected": "nsync"}
+{"intent": "can you check sync for this project", "expected": "nsync"}

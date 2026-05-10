@@ -1,6 +1,6 @@
 ---
 name: agentshq-absorb
-description: Use when evaluating any GitHub repo, live URL, MCP server, n8n workflow, PDF, raw doc, or local skill for inclusion in agentsHQ. Auto-fires on bare GitHub URLs (read-only analysis, never installs). Outputs PROCEED / DON'T PROCEED / ARCHIVE-AND-NOTE verdict with placement (enhance/extend/new skill/new tool/new agent/satellite) and leverage type (producing-motion/founder-time-reduction/continuous-improvement). Triggers on "absorb", "should we absorb", "evaluate this for agentsHQ", "is this worth adding", "review this repo for agentsHQ", "/agentshq-absorb", or a bare github.com URL with no other context.
+description: Use when evaluating any GitHub repo, live URL, MCP server, n8n workflow, PDF, raw doc, or local skill for inclusion in agentsHQ. Auto-fires on bare GitHub URLs (read-only analysis, never installs). Outputs PROCEED / DON'T PROCEED / ARCHIVE-AND-NOTE verdict with placement (enhance/extend/new skill/new tool/new agent/satellite) and leverage type (producing-motion/founder-time-reduction/continuous-improvement). Triggers on "absorb", "should we absorb", "evaluate this for agentshq", "is this worth adding", "review this repo for agentshq", "/agentshq-absorb", or a bare github.com URL with no other context.
 ---
 
 # /agentshq-absorb

@@ -1,0 +1,3 @@
+{"intent": "help me with brand voice", "expected": "ckm:brand"}
+{"intent": "I need to brand identity", "expected": "ckm:brand"}
+{"intent": "can you messaging framework for this", "expected": "ckm:brand"}
