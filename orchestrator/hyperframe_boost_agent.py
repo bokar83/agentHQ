@@ -63,7 +63,7 @@ class HyperframeBoostAgent:
                     {"property": "hyperframe_twin_id", "relation": {"is_empty": True}},
                 ]
             },
-            sorts=[{"property": "total_score", "direction": "descending"}],
+            sorts=[{"property": "Total Score", "direction": "descending"}],
             page_size=20,
         )
         return response.get("results", [])
@@ -81,7 +81,7 @@ class HyperframeBoostAgent:
                 continue
             parsed.append({
                 "notion_id": page["id"],
-                "total_score": (props.get("total_score") or {}).get("number", 0) or 0,
+                "total_score": (props.get("Total Score") or {}).get("number", 0) or 0,
                 "text_preview": full_text[:150],
                 "full_text": full_text,
                 "scheduled_date": ((props.get("Scheduled Date") or {}).get("date") or {}).get("start", ""),
@@ -134,7 +134,7 @@ class HyperframeBoostAgent:
         gen = HyperframeBriefGenerator()
         twin_id = None
 
-        for aspect_ratio, platforms in [("9:16", ["x", "youtube_shorts"]), ("1:1", ["linkedin"])]:
+        for aspect_ratio, platforms in [("9:16", ["x", "youtube-shorts"]), ("1:1", ["LinkedIn"])]:
             try:
                 out_path = tempfile.mktemp(suffix=f"_{aspect_ratio.replace(':','x')}.mp4")
                 gen.render_to_mp4(candidate["full_text"], aspect_ratio=aspect_ratio, output_path=out_path)
@@ -210,13 +210,13 @@ def _create_studio_record(notion_client, candidate: dict, drive_url: str,
         parent={"database_id": STUDIO_DB_ID},
         properties={
             "Name": {"title": [{"text": {"content": f"HF Boost — {candidate['text_preview'][:60]}"}}]},
-            "Status": {"select": {"name": "Scheduled"}},
+            "Status": {"select": {"name": "scheduled"}},
             "Scheduled Date": {"date": {"start": video_date}},
             "Platform": {"multi_select": [{"name": p} for p in platforms]},
             "Asset URL": {"url": drive_url},
             "linked_text_post_id": {"rich_text": [{"text": {"content": candidate["notion_id"]}}]},
-            "channel": {"select": {"name": "personal"}},
-            "format": {"select": {"name": "hyperframe-boost"}},
+            "hf_channel": {"select": {"name": "personal"}},
+            "hf_format": {"select": {"name": "hyperframe-boost"}},
             "aspect_ratio": {"select": {"name": aspect_ratio}},
         }
     )
