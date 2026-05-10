@@ -1,7 +1,19 @@
 # skills/coordination/spawner.py
 from __future__ import annotations
+import uuid as _uuid
+import os as _os
 
 MAX_SPAWN_DEPTH = 5
+
+
+def build_agent_env(branch: str, parent_id: str = "") -> dict:
+    """Build environment dict for a spawned agent subprocess."""
+    env = {**_os.environ}
+    env["CLAUDE_AGENT_ID"] = _uuid.uuid4().hex
+    env["CLAUDE_AGENT_BRANCH"] = branch
+    if parent_id:
+        env["CLAUDE_PARENT_AGENT_ID"] = parent_id
+    return env
 
 
 class SpawnDepthExceeded(RuntimeError):
