@@ -15,6 +15,10 @@ build/
 .venv/
 venv/
 env/
+Python/
+
+# ── Generated outputs ─────────────────────────────────────────
+outputs/council/
 
 # ── Environment & Secrets ────────────────────────────────────
 # NEVER commit any file containing real secrets.
