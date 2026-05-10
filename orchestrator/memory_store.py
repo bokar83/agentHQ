@@ -49,7 +49,7 @@ def write(model) -> Optional[int]:
             (%(source)s, %(category)s, %(title)s, %(content)s, %(tags)s,
              %(entity_ref)s, %(external_id)s, %(agent_id)s, %(pipeline)s,
              %(relevance_boost)s, %(expires_at)s)
-        ON CONFLICT (source, external_id)
+        ON CONFLICT (source, external_id) WHERE external_id IS NOT NULL
             DO UPDATE SET
                 content = EXCLUDED.content,
                 updated_at = NOW()
