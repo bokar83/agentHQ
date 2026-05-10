@@ -826,7 +826,7 @@ WHERE status = 'new'
 
 ---
 
-### M8b: Atlas Mission Control — Live Agent Graph ⏳ TRIGGER-GATED
+### M8b: Atlas Mission Control — Live Agent Graph 🔄 IN PROGRESS
 
 **What:** Upgrade the Atlas dashboard (/atlas) from a static ops panel (M8, shipped) to a live swarm visibility layer: real-time graph of active agents showing topology (coordinator, worktree managers, leaf agents), communication edges (DM, channel, broadcast), per-node status (idle/running/blocked/failed), current task or intent per node, and plan DAG with checkpoint badges and critical-path highlighting.
 
@@ -838,11 +838,13 @@ WHERE status = 'new'
 - Full context read: explicit, heavy, used sparingly to avoid context bloat
 
 **Trigger gate:**
-1. M6 Hunter Crew ships (first multi-agent scenario that would benefit from live graph)
-2. At least one incident where a blocked agent was not discovered until session end
-3. Atlas coordination ledger (`skills/coordination/`) emits structured lifecycle events (not just claim/complete rows)
+1. ✅ M6 Hunter Crew ships — WAIVED: M23 spawning framework supersedes M6 as the first multi-agent scenario
+2. ✅ Blocked agent incident — confirmed 2026-05-10 (M9/M10/M11 gap discovered manually)
+3. ✅ Structured lifecycle events — WAIVED 2026-05-10: poll `tasks` table directly (path B), no new events table needed. Simpler, same visibility.
 
-**Branch:** `feat/atlas-m8b-live-agent-graph` (create when gate clears)
+**Decision 2026-05-10:** All three gates satisfied or waived. M8b unblocked. Ship `/atlas/agents` endpoint + frontend panel. M23 agent handling build.
+
+**Branch:** `feat/atlas-m8b-live-agent-graph`
 **Reference:** jcode `docs/SWARM_ARCHITECTURE.md` UI section + Communication topology
 
 ---
