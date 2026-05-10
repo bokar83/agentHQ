@@ -65,16 +65,17 @@ class HyperframeBriefGenerator:
                 )
             }]
         )
+        if not response.content:
+            raise RuntimeError("Anthropic API returned empty content list")
         block = response.content[0]
-        # Narrow to TextBlock; guard against unexpected block types at runtime.
         if isinstance(block, anthropic.types.TextBlock):
             html = block.text.strip()
         elif hasattr(block, "text"):
             html = block.text.strip()  # type: ignore[union-attr]
         else:
-            raise RuntimeError(f"Unexpected response block type: {type(block)}")
-        if html.startswith("```"):
-            html = html.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+            raise RuntimeError(f"Unexpected content block type: {type(block)}")
+        import re
+        html = re.sub(r"^```[a-zA-Z]*\n?", "", html).rstrip("`").strip()
         return html
 
     def render_to_mp4(self, post_text: str, aspect_ratio: str, output_path: str) -> str:
