@@ -586,7 +586,7 @@ def handle_callback_query(update: dict) -> bool:
             run_id = cb_data.split(":", 1)[1]
             from notifier import answer_callback_query, send_message
             notion = _open_notion()
-            db_id = os.environ.get("NOTION_CONTENT_DB_ID")
+            db_id = os.environ.get("FORGE_CONTENT_DB", "339bcf1a-3029-81d1-8377-dc2f2de13a20")
             pages = notion.query_database(db_id, filter_obj={"and": [{"property": "Multiplier Run ID", "rich_text": {"equals": run_id}}, {"property": "Status", "select": {"equals": "Idea"}}]})
             count = 0
             for page in pages or []:
@@ -602,7 +602,7 @@ def handle_callback_query(update: dict) -> bool:
             run_id = cb_data.split(":", 1)[1]
             from notifier import answer_callback_query, send_message
             notion = _open_notion()
-            db_id = os.environ.get("NOTION_CONTENT_DB_ID")
+            db_id = os.environ.get("FORGE_CONTENT_DB", "339bcf1a-3029-81d1-8377-dc2f2de13a20")
             pages = notion.query_database(db_id, filter_obj={"and": [{"property": "Multiplier Run ID", "rich_text": {"equals": run_id}}, {"property": "Status", "select": {"equals": "Idea"}}]})
             count = 0
             for page in pages or []:
@@ -618,7 +618,7 @@ def handle_callback_query(update: dict) -> bool:
             run_id = cb_data.split(":", 1)[1]
             from notifier import answer_callback_query, send_message_with_buttons
             notion = _open_notion()
-            db_id = os.environ.get("NOTION_CONTENT_DB_ID")
+            db_id = os.environ.get("FORGE_CONTENT_DB", "339bcf1a-3029-81d1-8377-dc2f2de13a20")
             pages = notion.query_database(db_id, filter_obj={"and": [{"property": "Multiplier Run ID", "rich_text": {"equals": run_id}}, {"property": "Status", "select": {"equals": "Idea"}}]})
             count = len(pages or [])
             for page in pages or []:
