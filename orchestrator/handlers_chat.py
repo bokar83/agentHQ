@@ -868,6 +868,26 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
         "what jobs are running", "running jobs", "what can you do",
         "what tasks", "show me queued", "queued items",
     )
+    # Milestone ship intent -- deterministic, no LLM needed
+    _SHIP_PATTERNS = ["mark shipped", "mark as shipped", "ship milestone", "shipped milestone", "/shipped"]
+    _is_milestone_ship = any(p in _user_text.lower() for p in _SHIP_PATTERNS)
+    if _is_milestone_ship:
+        import re as _re
+        _codenames = ["atlas", "echo", "compass", "studio", "harvest"]
+        _c = next((c for c in _codenames if c in _user_text.lower()), None)
+        _m = _re.search(r'\b(M[\w./]+|R[\w.-]+|Substrate)\b', _user_text, _re.IGNORECASE)
+        if _c and _m:
+            import sys as _sys, pathlib as _pl
+            _sys.path.insert(0, str(_pl.Path(__file__).parent))
+            from atlas_dashboard import flip_milestone as _fm
+            _r = _fm(_c, _m.group(1), "shipped")
+            if _r["ok"]:
+                return {"reply": f"Shipped: `{_c}/{_m.group(1)}` ({_r['old_status']} -> shipped). Roadmap page updates within 60s.", "actions": []}
+            else:
+                return {"reply": f"Could not mark shipped: {_r['error']}", "actions": []}
+        else:
+            return {"reply": "Format: 'mark atlas M5 shipped' or 'ship milestone compass M2.5b'", "actions": []}
+
     _is_read_intent = any(p in _user_text for p in _READ_PATTERNS)
 
     if _is_read_intent:

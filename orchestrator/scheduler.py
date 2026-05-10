@@ -1244,9 +1244,7 @@ def _run_drive_watch(scan_all: bool = False):
             for line in scan_summary:
                 summary_lines.append(f"\n{line}")
             _send_telegram_alert("\n".join(summary_lines))
-        else:
-            if scan_all:
-                _send_telegram_alert("Scan complete -- no new files found in Drive inbox.")
+        # Empty scan: no notification — not actionable.
 
     finally:
         try:

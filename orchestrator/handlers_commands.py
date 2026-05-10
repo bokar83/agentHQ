@@ -1292,6 +1292,86 @@ def _cmd_callsheet(text: str, chat_id: str) -> bool:
     return True
 
 
+def _cmd_shipped(text: str, chat_id: str) -> bool:
+    """/shipped <codename> <mid> -- mark a milestone shipped in the milestones DB."""
+    if not text.lower().startswith("/shipped"):
+        return False
+    from notifier import send_message as _send
+    parts = text.strip().split()
+    if len(parts) < 3:
+        _send(chat_id, "Usage: `/shipped <codename> <mid>`\nExample: `/shipped atlas M5`\nCodenames: atlas, echo, compass, studio, harvest")
+        return True
+    codename = parts[1].lower()
+    mid = parts[2]
+    if codename not in {"atlas", "echo", "compass", "studio", "harvest"}:
+        _send(chat_id, f"Unknown codename `{codename}`. Valid: atlas, echo, compass, studio, harvest")
+        return True
+    try:
+        import sys as _sys, pathlib as _pl
+        _sys.path.insert(0, str(_pl.Path(__file__).parent))
+        from atlas_dashboard import flip_milestone
+        r = flip_milestone(codename, mid, "shipped")
+        if r["ok"]:
+            _send(chat_id, f"Shipped: `{codename}/{mid}` ({r['old_status']} -> shipped). Roadmap updates within 60s.")
+        else:
+            _send(chat_id, f"Could not mark shipped: {r['error']}")
+    except Exception as e:
+        _send(chat_id, f"/shipped error: {e}")
+    return True
+
+
+def _cmd_milestones(text: str, chat_id: str) -> bool:
+    """/milestones <codename> [status] -- list milestones from DB."""
+    if not text.lower().startswith("/milestones"):
+        return False
+    from notifier import send_message as _send
+    parts = text.strip().split()
+    if len(parts) < 2:
+        _send(chat_id, "Usage: `/milestones <codename> [status]`\nExample: `/milestones atlas active`")
+        return True
+    codename = parts[1].lower()
+    status_filter = parts[2].lower() if len(parts) >= 3 else None
+    try:
+        import sys as _sys, pathlib as _pl
+        _sys.path.insert(0, str(_pl.Path(__file__).parent))
+        from memory import _pg_conn
+        conn = _pg_conn()
+        cur = conn.cursor()
+        if status_filter:
+            cur.execute(
+                "SELECT mid, title, status FROM milestones WHERE codename=%s AND status=%s ORDER BY id",
+                (codename, status_filter),
+            )
+        else:
+            cur.execute(
+                "SELECT mid, title, status FROM milestones WHERE codename=%s ORDER BY id",
+                (codename,),
+            )
+        rows = cur.fetchall()
+        conn.close()
+        STATUS_ICON = {
+            "shipped": "OK", "active": ">>", "blocked": "[]",
+            "queued": "..", "deferred": "--", "descoped": "XX",
+        }
+        if not rows:
+            msg = f"No milestones for `{codename}`"
+            if status_filter:
+                msg += f" with status `{status_filter}`"
+            _send(chat_id, msg)
+            return True
+        lines = [f"*{codename.upper()}*" + (f" ({status_filter})" if status_filter else "") + ":"]
+        for row in rows:
+            mid_v  = row["mid"]    if isinstance(row, dict) else row[0]
+            title_v = row["title"] if isinstance(row, dict) else row[1]
+            st_v   = row["status"] if isinstance(row, dict) else row[2]
+            icon = STATUS_ICON.get(st_v, "?")
+            lines.append(f"[{icon}] `{mid_v}` {title_v[:50]}")
+        _send(chat_id, "\n".join(lines))
+    except Exception as e:
+        _send(chat_id, f"/milestones error: {e}")
+    return True
+
+
 # Ordered by specificity. /heartbeat_status must come before a hypothetical
 # /heartbeat. /autonomy_status, /pause_autonomy, /resume_autonomy each have
 # unique prefixes so order within the Phase 0 group does not matter. /status
@@ -1312,6 +1392,8 @@ _COMMANDS = [
     _cmd_reject,
     _cmd_outcomes,
     _cmd_callsheet,
+    _cmd_shipped,
+    _cmd_milestones,
     _cmd_remember,
     _cmd_query,
     _cmd_digest,

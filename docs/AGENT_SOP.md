@@ -196,3 +196,4 @@ Non-Claude agents (Codex, etc): translate each skill trigger to the equivalent d
 ## Skill SOPs Live With the Skills
 
 Each skill keeps its own rules in `skills/<name>/SKILL.md`. Read the skill file when you touch that skill. This SOP does not repeat skill-specific detail.
+test

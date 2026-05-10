@@ -89,7 +89,7 @@ def main():
 
     bot_token = os.environ.get("ORCHESTRATOR_TELEGRAM_BOT_TOKEN", "")
     chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
-    if bot_token and chat_id:
+    if bot_token and chat_id and record["turns"] > 0:
         cost = record["cost_usd"]
         turns = record["turns"]
         dur = record["duration_s"]
@@ -99,6 +99,19 @@ def main():
             f"ID: {session_id[:8]}\n"
             f"Cost: ${cost:.4f} | Turns: {turns} | {dur}s"
         )
+        sentinel = Path("/tmp/session_logger_last_alert.txt")
+        cooldown_s = 300  # 5 min: don't repeat if same project fires back-to-back
+        now_ts = datetime.now(UTC).timestamp()
+        if sentinel.exists():
+            try:
+                parts = sentinel.read_text().split("|")
+                last_ts = float(parts[0])
+                last_proj = parts[1] if len(parts) > 1 else ""
+                if now_ts - last_ts < cooldown_s and last_proj == project_label:
+                    return  # same project within cooldown — skip duplicate
+            except Exception:
+                pass
+        sentinel.write_text(f"{now_ts}|{project_label}")
         _send_telegram(bot_token, chat_id, msg)
 
 
