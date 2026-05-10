@@ -275,6 +275,23 @@ def recent_completed(kind: str, since_seconds: int = 3600, limit: int = 50) -> l
         return [dict(r) for r in cur.fetchall()]
 
 
+def recent_completed_prefix(prefix: str, since_seconds: int = 3600, limit: int = 50) -> list[dict]:
+    """Recent finished work items whose kind starts with prefix."""
+    with _connect() as c, c.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute(
+            """
+            SELECT id, kind, status, payload, result, claimed_by, claimed_at
+            FROM tasks
+            WHERE kind LIKE %s AND status IN ('done', 'failed')
+              AND claimed_at > now() - make_interval(secs => %s)
+            ORDER BY claimed_at DESC
+            LIMIT %s
+            """,
+            (prefix.rstrip("%") + "%", since_seconds, limit),
+        )
+        return [dict(r) for r in cur.fetchall()]
+
+
 @contextlib.contextmanager
 def lock(resource: str, holder: str, ttl_seconds: int) -> Iterator[dict]:
     """Context manager. Raises RuntimeError if resource already held."""
