@@ -133,7 +133,7 @@ filter_repo_invocations=$(git diff --cached --name-only --diff-filter=ACM 2>/dev
       'git filter-repo|subprocess.*filter.repo|exec.*filter.repo|run.*filter.repo|\bfilter-repo\b[^`]' \
       2>/dev/null \
   | grep -v '^\s*#' \
-  | grep -v 'Never run.*filter-repo\|do not.*filter-repo\|filter-repo.*banned\|filter-repo.*guard\|filter-repo.*block\|Only run filter-repo\|filter-repo.*only.*during\|filter-repo.*while\|avoid.*filter-repo\|filter-repo.*rewrite' \
+  | grep -v 'Never run.*filter-repo\|do not.*filter-repo\|filter-repo.*banned\|filter-repo.*guard\|filter-repo.*block\|Only run filter-repo\|filter-repo.*only.*during\|filter-repo.*while\|avoid.*filter-repo\|filter-repo.*rewrite\|via.*filter-repo\|via `git filter-repo\|purged.*filter-repo\|history.*filter-repo' \
   || true)
 if [ -n "$filter_repo_invocations" ]; then
   if [ "${SKIP_FILTER_REPO_CHECK:-0}" = "1" ]; then

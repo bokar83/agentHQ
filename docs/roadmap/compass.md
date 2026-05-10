@@ -433,3 +433,11 @@ gbrain (garrytan/gbrain) absorbed (PROCEED — pattern-only, no install). Three 
 Full Postgres RAG backend (gbrain's headline feature) HOLD — corpus at zero, no named retrieval failure, infra cost unjustified.
 
 Compass status: M2.5 added and immediately SHIPPED. All prior milestones unchanged.
+
+### 2026-05-10: Pre-commit hook hardening + filter-repo guard upgrade
+
+**What shipped:**
+- Pre-commit hook check 8 upgraded: filter-repo guard now distinguishes actual invocations from doc prose references. Whitelist of known prose patterns. Excludes `pre-commit-hook.sh` from self-check. Invocations still block; documentation does not.
+- `scripts/pre-commit-hook.sh` (tracked source) synced with `.git/hooks/pre-commit` (installed) -- was missing checks 7 (routing gap) and 8 (filter-repo guard) since M7.
+
+No Compass milestone change -- governance hygiene, not a new milestone.

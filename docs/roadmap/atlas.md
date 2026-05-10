@@ -15,12 +15,12 @@
 
 ## Session-Start Cheat Block (read this first)
 
-Last session ended **2026-05-10 (M24 shipped — Hermes Self-Healing live on VPS `ffe3e52`)**. State at close:
+Last session ended **2026-05-10 (Gate conflict backlog cleared, phantom lock root cause fixed, pre-commit hardened)**. State at close:
 
-- **M24 SHIPPED:** `orchestrator/hermes_worker.py` live. Minion handler registered at startup (confirmed in docker logs). Cherry-picked to VPS main `ffe3e52`, pushed to GitHub.
-- **M23 SHIPPED:** Minion spawning, `/atlas/agents` endpoint, 10 tests passing.
-- **M19 SHIPPED:** Native CRM board, 2,592 leads, VPS `150c229`.
-- **Gate:** Firing every 5 min 24/7 (`*/5 * * * *`). Conflict backlog on 4 stale branches blocking merge queue — needs cleanup.
+- **M24 SHIPPED:** `orchestrator/hermes_worker.py` live. VPS `ffe3e52`.
+- **Gate:** Clean queue. Lease reaper live in `scripts/gate_poll.py` (docker exec psql, fires every 5 min). 0 phantom running tasks.
+- **4 stale branches DELETED:** all confirmed subsumed by main, Gate queue unblocked.
+- **AGENT_SOP + coordination:** claim() try/finally rule codified. Pre-commit check 8 upgraded (invocation vs prose). `scripts/pre-commit-hook.sh` synced with installed hook.
 - **Atlas frontend:** `d:/Ai_Sandbox/agentsHQ/thepopebot/chat-ui/atlas.js` + `atlas.html`.
 
 **Default next moves (in priority order):**
@@ -3041,3 +3041,33 @@ Ending: fully signal-threaded sequence, qualification gate, gmb_opener persisted
 1. M24 Hermes Self-Healing — brainstorming in parallel session
 2. Rename `thepopebot/chat-ui/` to `atlas-ui/` (cosmetic debt, post-M24)
 3. sw_email_log verification after morning_runner fires
+
+### 2026-05-10: Gate conflict backlog cleared + phantom lock root cause fixed
+
+**What shipped:**
+- 4 stale branches deleted (fix/studio-production-import, fix/studio-qa-fail-chat-id, feature/gws-email-rules-update, fix/studio-drive-upload) -- all confirmed fully subsumed by main, zero code loss
+- Root cause diagnosed: 2 phantom `running` leases from 2026-05-04 (claude-main session died without calling `complete()`) blocked file coordination for 6 days
+- Lease reaper wired into `gate_poll.py` via `docker exec orc-postgres psql` -- fires every 5 min, no host psycopg2 needed
+- `skills/coordination/__init__.py claim()` docstring updated with mandatory try/finally pattern
+- AGENT_SOP hard rule added: every claim() must wrap work in try/finally: complete()
+- Pre-commit hook check 8 (filter-repo guard) improved: now distinguishes actual invocations from doc prose. `scripts/pre-commit-hook.sh` synced with installed hook (was missing checks 7+8)
+- Sankofa skill upgraded: COUNCIL ESCALATION CHECK block added (pre-run 4-signal scoring, post-run tension flag)
+- Council ran on Gate conflict problem -- correctly killed pre-push hook proposal, identified phantom locks as root cause
+- VPS confirmed: all changes live, reaper firing cleanly, 0 running phantom tasks
+
+**Lessons:**
+- Always run Council (not Sankofa) when: irreversibility + insider fog + stakes asymmetry all fire. Pre-push hook was wrong solution; Council caught it in one pass.
+- Coordination table had no active monitor. lease_expires_at was written but never enforced by anything running independently.
+- Gate watches GitHub not Postgres -- two subsystems parallel, not integrated.
+- `scripts/pre-commit-hook.sh` (tracked) was behind `.git/hooks/pre-commit` (installed) by 2 checks -- always keep both in sync on hook changes.
+
+**State at close:**
+- Gate: clean queue, reaper live
+- VPS main: `77eb7c0` (pre-commit hook fix) + VPS pulled `dfd757f`
+- All 4 stale branches: gone
+- Phantom locks: cleared
+
+**Next priorities (unchanged from prior session):**
+1. M18 HALO unlock: instrument Atlas heartbeat with tracing.py + 50 traces by 2026-05-18
+2. Echo M1: slash command surface (/propose, /ack, /reject) + Telegram one-tap -- READY, no blockers
+3. Atlas M9d-A: Weekly Synthesis crew -- target 2026-05-18
