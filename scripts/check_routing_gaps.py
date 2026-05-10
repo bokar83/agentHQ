@@ -159,7 +159,7 @@ def load_fixtures(skills: dict[str, SkillEntry]) -> list[Fixture]:
                 if intent:
                     fixtures.append(Fixture(skill_slug=slug, intent=intent, expected_slug=expected))
             except json.JSONDecodeError as e:
-                print(f"WARN: {fixture_file.relative_to(REPO_ROOT)}:{line_no}: bad JSON: {e}")
+                print(f"WARN: {fixture_file.relative_to(REPO_ROOT)}:{line_no}: bad JSON: {e}", file=sys.stderr)
     return fixtures
 
 
