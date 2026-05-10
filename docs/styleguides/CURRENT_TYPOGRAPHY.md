@@ -1,3 +1,102 @@
+---
+version: "1.1"
+name: CW Typography Stack
+description: Single source of truth for all Catalyst Works typography. Load this file first for any CW-branded output. Overrides all font references in other CW styleguide files.
+typography:
+  display:
+    fontFamily: "Spectral"
+    fontSize: "56px"
+    fontWeight: 700
+    lineHeight: 1.1
+    letterSpacing: "-0.02em"
+    note: "Display/hero headlines. Weights 500-800 available."
+  h1:
+    fontFamily: "Spectral"
+    fontSize: "44px"
+    fontWeight: 700
+    lineHeight: 1.2
+    letterSpacing: "-0.02em"
+  h2:
+    fontFamily: "Spectral"
+    fontSize: "32px"
+    fontWeight: 600
+    lineHeight: 1.25
+    letterSpacing: "-0.015em"
+  h3:
+    fontFamily: "Public Sans"
+    fontSize: "22px"
+    fontWeight: 700
+    lineHeight: 1.3
+    letterSpacing: "-0.01em"
+  h4:
+    fontFamily: "Public Sans"
+    fontSize: "18px"
+    fontWeight: 600
+    lineHeight: 1.4
+    letterSpacing: "0"
+  body:
+    fontFamily: "Public Sans"
+    fontSize: "16px"
+    fontWeight: 400
+    lineHeight: 1.6
+    letterSpacing: "0"
+  body-lg:
+    fontFamily: "Spectral"
+    fontSize: "18px"
+    fontWeight: 400
+    fontStyle: "normal"
+    lineHeight: 1.65
+    letterSpacing: "0"
+    note: "Long-form body, about page narrative"
+  pull-quote:
+    fontFamily: "Spectral"
+    fontSize: "18px"
+    fontWeight: 400
+    fontStyle: "italic"
+    lineHeight: 1.65
+    letterSpacing: "0"
+    note: "Use sparingly — once or twice per page max"
+  label:
+    fontFamily: "Public Sans"
+    fontSize: "12px"
+    fontWeight: 500
+    lineHeight: 1.4
+    letterSpacing: "0.1em"
+    textTransform: "uppercase"
+  caption:
+    fontFamily: "Public Sans"
+    fontSize: "11px"
+    fontWeight: 400
+    lineHeight: 1.4
+    letterSpacing: "0"
+  data:
+    fontFamily: "JetBrains Mono"
+    fontSize: "14px"
+    fontWeight: 400
+    lineHeight: 1.5
+    letterSpacing: "0"
+    note: "Data, code, numeric callouts — unchanged from v1.0"
+fonts:
+  retired:
+    - "Inter"
+    - "Plus Jakarta Sans"
+    - "Source Serif 4"
+    - "DM Sans"
+    - "DM Serif Display"
+    - "Space Grotesk"
+    - "Syne"
+    - "Outfit"
+    - "Fraunces"
+    - "Newsreader"
+    - "Lora"
+    - "Crimson"
+    - "Cormorant"
+    - "Playfair Display"
+    - "Instrument Sans"
+    - "Instrument Serif"
+  import_html: "<link href=\"https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,500;0,600;0,700;0,800;1,400;1,700&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono&display=swap\" rel=\"stylesheet\">"
+---
+
 # Current Typography Stack - Catalyst Works Consulting
 
 **This is the single source of truth for CW typography.** Every other styleguide file (master, websites, PDF, slides, social) and every skill that produces CW-branded artifacts MUST load this file first and use the stack defined here. When typography changes, this file changes - no other file should hard-code the font names.

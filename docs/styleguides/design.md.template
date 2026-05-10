@@ -1,0 +1,112 @@
+---
+version: alpha
+name: <brand-name>
+description: <one-line brand personality>
+colors:
+  primary: "#000000"
+  secondary: "#000000"
+  accent: "#000000"
+  background: "#000000"
+  surface: "#000000"
+  text-primary: "#000000"
+  text-secondary: "#000000"
+  border: "#000000"
+typography:
+  display:
+    fontFamily: ""
+    fontSize: "48px"
+    fontWeight: 700
+    lineHeight: 1.1
+    letterSpacing: "-0.02em"
+  heading:
+    fontFamily: ""
+    fontSize: "32px"
+    fontWeight: 600
+    lineHeight: 1.25
+    letterSpacing: "-0.01em"
+  body:
+    fontFamily: ""
+    fontSize: "16px"
+    fontWeight: 400
+    lineHeight: 1.6
+    letterSpacing: "0"
+  caption:
+    fontFamily: ""
+    fontSize: "13px"
+    fontWeight: 400
+    lineHeight: 1.4
+    letterSpacing: "0.01em"
+rounded:
+  sm: "4px"
+  md: "8px"
+  lg: "16px"
+  full: "9999px"
+spacing:
+  xs: "4px"
+  sm: "8px"
+  md: "16px"
+  lg: "24px"
+  xl: "40px"
+  2xl: "64px"
+components:
+  button-primary:
+    backgroundColor: "{colors.primary}"
+    textColor: "{colors.background}"
+    rounded: "{rounded.md}"
+    padding: "12px 24px"
+  card:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.text-primary}"
+    rounded: "{rounded.lg}"
+    padding: "{spacing.lg}"
+---
+
+## Overview
+
+<Brand personality 2-3 sentences. Emotional intent. Three words that define the visual voice.>
+
+## Colors
+
+**Primary:** `{colors.primary}` — <signal, when to use>
+**Accent:** `{colors.accent}` — <CTAs, highlights only>
+**Background:** `{colors.background}` — <primary canvas>
+**Surface:** `{colors.surface}` — <cards, panels>
+
+## Typography
+
+**Display:** <font> — <when to use>
+**Heading:** <font> — <when to use>
+**Body:** <font> — <when to use>
+
+## Layout
+
+<Grid model, max-width, gutter, rhythm>
+
+## Elevation & Depth
+
+<How hierarchy is expressed: shadows, borders, blur>
+
+## Shapes
+
+<Corner radius language and when each applies>
+
+## Components
+
+<Key component style guidance beyond tokens>
+
+## Agent Prompt Guide
+
+When generating visual output for this brand:
+- <Instruction 1>
+- <Instruction 2>
+- <Instruction 3>
+
+## Do's and Don'ts
+
+**Do:**
+- <Rule 1>
+- <Rule 2>
+
+**Don't:**
+- <Anti-pattern 1>
+- <Anti-pattern 2>

@@ -1,3 +1,64 @@
+---
+version: "1.1"
+name: Catalyst Works Consulting
+description: Brand essence, voice rules, cross-platform consistency, anti-patterns. Load with CURRENT_TYPOGRAPHY.md for full CW stack.
+colors:
+  primary: "#00B7C2"
+  primary-dark: "#008F99"
+  primary-light: "#E6F9FA"
+  base: "#071A2E"
+  base-lighter: "#0D2A45"
+  accent: "#FF7A00"
+  accent-hover: "#E06900"
+  clay: "#B47C57"
+  mist: "#F3F6F9"
+  white: "#FFFFFF"
+  carbon: "#1E222A"
+  carbon-muted: "#5A6272"
+  carbon-subtle: "#9AA3B2"
+  divider: "#DDE2EA"
+  deep-indigo: "#1F2A60"
+  saffron: "#F2A900"
+  cobalt: "#1E5AA6"
+  night-indigo: "#14213D"
+spacing:
+  "1": "8px"
+  "2": "16px"
+  "3": "24px"
+  "4": "32px"
+  "5": "40px"
+  "6": "48px"
+  "8": "64px"
+  "10": "80px"
+  "12": "96px"
+  "16": "128px"
+rounded:
+  sm: "4px"
+  md: "8px"
+  lg: "12px"
+components:
+  button-primary:
+    backgroundColor: "#FF7A00"
+    textColor: "#FFFFFF"
+    rounded: "4px"
+    padding: "14px 28px"
+  button-secondary:
+    backgroundColor: "transparent"
+    textColor: "#00B7C2"
+    rounded: "4px"
+    padding: "13px 27px"
+  card-light:
+    backgroundColor: "#FFFFFF"
+    textColor: "#1E222A"
+    rounded: "8px"
+    padding: "32px"
+  card-dark:
+    backgroundColor: "rgba(0,183,194,0.06)"
+    textColor: "#FFFFFF"
+    rounded: "8px"
+    padding: "28px 24px"
+---
+
 # Master Style Guide - Catalyst Works Consulting
 
 **Version:** 1.1

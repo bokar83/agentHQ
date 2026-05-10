@@ -10,6 +10,8 @@ metadata:
 
 # UI Styling Skill
 
+**BRAND ROUTING — READ FIRST:** Before producing any branded visual output, read `docs/styleguides/INDEX.md`. Find the brand slug. Load the files listed for that brand. Files have YAML front-matter between `---` delimiters — extract those token values as authoritative; they override prose equivalents in the same file. For CW/Boubacar: load full styleguide stack (master + CURRENT_TYPOGRAPHY + medium-specific). For Studio channels (utb / 1stgen / aic): load the channel DESIGN.md from `docs/styleguides/studio/`.
+
 **Canonical shadcn/ui home for agentsHQ.** All shadcn/ui knowledge (components, theming, accessibility, blocks-as-starters, registry conventions) lives here. `frontend-design`, `ui-ux-pro-max`, `banner-design`, `design`, `design-system`, `vercel-launch`, `hostinger-deploy`, and `clone-builder` defer to this skill for shadcn specifics. Authoritative shadcn source: `cache/llms-<date>.txt`, refreshed via `scripts/refresh-shadcn-cache.sh`. Block index: `references/shadcn-blocks.md`.
 
 Comprehensive skill for creating beautiful, accessible user interfaces combining shadcn/ui components, Tailwind CSS utility styling, and canvas-based visual design systems.

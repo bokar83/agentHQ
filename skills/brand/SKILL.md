@@ -9,6 +9,8 @@ metadata:
 
 # Brand
 
+**BRAND ROUTING — READ FIRST:** Before producing any branded visual output, read `docs/styleguides/INDEX.md`. Find the brand slug. Load the files listed for that brand. Files have YAML front-matter between `---` delimiters — extract those token values as authoritative; they override prose equivalents in the same file. For CW/Boubacar: load full styleguide stack (master + CURRENT_TYPOGRAPHY + medium-specific). For Studio channels (utb / 1stgen / aic): load the channel DESIGN.md from `docs/styleguides/studio/`.
+
 Brand identity, voice, messaging, asset management, and consistency frameworks.
 
 ## When to Use
