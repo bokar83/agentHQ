@@ -55,7 +55,7 @@ class HyperframeBriefGenerator:
         """Returns HTML string for the composition."""
         width, height = ASPECT_DIMS.get(aspect_ratio, (1080, 1920))
         response = self._get_client().messages.create(
-            model="anthropic/claude-sonnet-4-6",
+            model="anthropic/claude-sonnet-4.6",
             max_tokens=2048,
             system=[{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
             messages=[{

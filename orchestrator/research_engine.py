@@ -20,7 +20,7 @@ import anthropic
 
 logger = logging.getLogger("agentsHQ.research_engine")
 
-MODEL = "anthropic/claude-sonnet-4-5-20250929"
+MODEL = "anthropic/claude-sonnet-4.6"
 MAX_TURNS = 20
 
 

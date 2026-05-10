@@ -115,7 +115,7 @@ def group_by_signature(lines: list[str]) -> list[dict]:
     return groups
 
 
-_HAIKU_MODEL = "anthropic/claude-haiku-4-5-20251001"
+_HAIKU_MODEL = "anthropic/claude-haiku-4.5"
 _PROPOSE_PROMPT = """\
 You are an ops engineer triaging a production error. Given this error signature and sample lines, return ONLY valid JSON with exactly these keys:
 - "summary": one sentence describing the error (max 80 chars)

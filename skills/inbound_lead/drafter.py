@@ -20,7 +20,7 @@ from skills.inbound_lead.schema import DraftedEmail, ResearchBrief
 
 logger = logging.getLogger("agentsHQ.inbound_lead.drafter")
 
-MODEL = "anthropic/claude-sonnet-4-5-20250929"
+MODEL = "anthropic/claude-sonnet-4.6"
 
 BLOCKED_FRAMEWORKS = [
     "theory of constraints", "toc",
