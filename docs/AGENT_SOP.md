@@ -15,7 +15,28 @@ Applies to every coding-agent session (Claude Code, Codex, any future agent). Ag
    - `docs/roadmap/echo.md` (THE ASYNC LAYER): Partnership substrate - agent proposes commits, human acks asynchronously. Neither blocks on the other.
    - Read the latest session-log entry in each. Surface any milestone that has gone stale (trigger date passed, blocker removed, or action overdue) and flag it before starting work.
 3. Check `docs/superpowers/plans/` for a handoff. Legacy: roadmaps supersede handoff docs for any roadmapped project.
-4. **Read `docs/CADENCE_CALENDAR.md`** if work touches scheduling, heartbeats, or anything that pulls Boubacar into a window. The calendar is the single source of truth for what runs when and where humans are required. Update it when a schedule changes; never schedule new human-in-loop work without first checking the daily attention budget there.
+4. **Load second brain context at session start.** Run this snippet to inject hard rules + recent lessons before starting work:
+
+  ```python
+  # cd d:/Ai_Sandbox/agentsHQ && python -c "..."
+  import sys; sys.path.insert(0, '.')
+  from orchestrator.memory_store import load_hard_rules, query_text
+  from datetime import date
+
+  rules = load_hard_rules()
+  print(f"=== {len(rules)} HARD RULES ===")
+  for r in rules:
+      print(f"• {r['content'][:120]}")
+
+  recent = query_text("", limit=10, category="agent_lesson")
+  print(f"\n=== RECENT LESSONS (last 7 days) ===")
+  for r in recent[:5]:
+      print(f"• {r['content'][:150]}")
+  ```
+
+  If Postgres is unreachable (laptop offline, VPS down), skip silently — flat-file MEMORY.md is the fallback.
+
+1. **Read `docs/CADENCE_CALENDAR.md`** if work touches scheduling, heartbeats, or anything that pulls Boubacar into a window. The calendar is the single source of truth for what runs when and where humans are required. Update it when a schedule changes; never schedule new human-in-loop work without first checking the daily attention budget there.
 
 ## Session End
 

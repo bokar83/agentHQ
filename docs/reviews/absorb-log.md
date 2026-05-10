@@ -10,6 +10,8 @@ Verdicts: `PROCEED` | `DON'T PROCEED` | `ARCHIVE-AND-NOTE`
 
 2026-05-09 | https://github.com/Yeachan-Heo/clawhip | PROCEED | new script scripts/hook_notifier.py (Stop hook -> Telegram) + remove speculative pre-condition from atlas item 6 | continuous-improvement + producing-motion (Atlas autonomy)
 2026-05-10 | https://resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf | PROCEED | enhance skills/boubacar-skill-creator (Steps 4+5: official spec fields + testing framework) + log anthropics/skills repo as separate absorb | continuous-improvement
+2026-05-10 | https://github.com/anthropics/skills | PROCEED | (B) enhance skills/boubacar-skill-creator Step 8 (description-optimizer via run_loop.py); (C) GATED webapp-testing — awaiting friction confirmation; (D) doc-coauthoring queued 2026-05-17 | continuous-improvement + producing-motion (GATED)
+2026-05-10 | https://github.com/anthropics/skills (skills/doc-coauthoring) | ARCHIVE-AND-NOTE (full skill) + PROCEED (surgical extracts) | enhance skills/engagement-ops (Deliverable QA reader-testing pass) + enhance skills/client-intake (Extended Context Gathering) | producing-motion + founder-time-reduction
 
 2026-05-09 | https://x.com/noisyb0y1/status/2044692412061425748 (ECC X-thread) | PROCEED | enhance skills/agentshq-absorb (Self-Audit Mode) + enhance docs/roadmap/compass.md (M6) | continuous-improvement
 

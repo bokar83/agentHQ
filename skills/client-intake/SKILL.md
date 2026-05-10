@@ -175,6 +175,22 @@ That is the actual cost of skipping intake.
 - Do not store this in Airtable, Google Sheets, or any tool outside Notion +
   the markdown file. The file is the source of truth; Notion is the index.
 
+## Extended Context Gathering (complex engagements)
+
+For SHIELD or multi-week engagements where the brief will be long and stakes are high, use this pattern after initial discovery:
+
+**Info dump first.** Ask the client (or yourself, for internal briefs) to dump everything relevant without organizing it: background, team dynamics, past incidents, why alternatives were rejected, timeline pressures, stakeholder concerns, technical constraints. Tell them order doesn't matter — just get it out.
+
+**Then clarifying questions.** Generate 5-10 numbered questions based on gaps in what was shared. Format:
+```
+1. [specific gap question]
+2. [specific gap question]
+...
+```
+Tell them shorthand answers are fine: "1: yes, 2: see Slack thread, 3: no because X." Offer to let them keep info-dumping instead of answering one by one.
+
+**Exit condition:** you can ask about edge cases and trade-offs without needing basics explained. That's when you have enough context to write the brief.
+
 ---
 
 ## Files
