@@ -1,7 +1,4 @@
 """Tests for weekly_synthesis_crew.py"""
-import pytest
-from unittest.mock import patch, MagicMock
-from pathlib import Path
 
 
 def test_read_memory_files_returns_list(tmp_path):
@@ -39,11 +36,27 @@ def test_build_synthesis_prompt_contains_required_sections():
         assert section in prompt
 
 
-def test_format_notion_page_properties():
-    """format_notion_page returns properties dict with Name and Date."""
-    from orchestrator.weekly_synthesis_crew import format_notion_page
-    props, children = format_notion_page(content="## Test\nSome text.", date_iso="2026-05-11")
-    assert "Name" in props
-    assert "Date" in props
-    assert isinstance(children, list)
-    assert len(children) > 0
+def test_save_to_postgres_calls_execute(monkeypatch):
+    """save_to_postgres opens a connection and executes an INSERT."""
+    import orchestrator.weekly_synthesis_crew as wsc
+
+    executed = []
+
+    class FakeCursor:
+        def execute(self, sql, params=None):
+            executed.append((sql, params))
+        def __enter__(self): return self
+        def __exit__(self, *a): pass
+
+    class FakeConn:
+        def cursor(self): return FakeCursor()
+        def commit(self): pass
+        def close(self): pass
+
+    monkeypatch.setattr("psycopg2.connect", lambda **kw: FakeConn())
+    wsc.save_to_postgres("## Test\nContent.", "2026-05-11")
+    assert len(executed) == 1
+    sql, params = executed[0]
+    assert "weekly_synthesis" in sql
+    assert params[0] == "2026-05-11"
+    assert "## Test" in params[1]

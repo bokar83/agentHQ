@@ -32,7 +32,6 @@ MEMORY_DIR = Path(os.environ.get(
     str(Path.home() / ".claude" / "projects" / "d--Ai-Sandbox-agentsHQ" / "memory")
 ))
 ROADMAP_DIR = ROOT_DIR / "docs" / "roadmap"
-NOTION_DB_ID = os.environ.get("FORGE_RETROSPECTIVES_DB", "")
 SYNTHESIS_MODEL = "anthropic/claude-sonnet-4-6"
 MEMORY_LIMIT = 30
 ROADMAP_DAYS = 7
@@ -109,39 +108,32 @@ One specific thing to work on next, with a one-sentence reason grounded in the e
 Write in Boubacar's voice: direct, earned, no filler. Smart Brevity rules apply."""
 
 
-# ── Notion formatting ──────────────────────────────────────────────────────────
+# ── Postgres writer ────────────────────────────────────────────────────────────
 
-def format_notion_page(
-    content: str,
-    date_iso: str,
-) -> tuple[dict, list]:
-    """Return (properties, children) for NotionClient.create_page."""
-    properties = {
-        "Name": {
-            "title": [{"text": {"content": f"Weekly Synthesis — {date_iso}"}}]
-        },
-        "Date": {
-            "date": {"start": date_iso}
-        },
-    }
-    children: list[dict] = []
-    for line in content.split("\n"):
-        line = line.strip()
-        if not line:
-            continue
-        if line.startswith("## "):
-            children.append({
-                "object": "block",
-                "type": "heading_2",
-                "heading_2": {"rich_text": [{"type": "text", "text": {"content": line[3:]}}]},
-            })
-        else:
-            children.append({
-                "object": "block",
-                "type": "paragraph",
-                "paragraph": {"rich_text": [{"type": "text", "text": {"content": line}}]},
-            })
-    return properties, children
+def save_to_postgres(content: str, date_iso: str) -> None:
+    """INSERT into weekly_synthesis table. UNIQUE on date — safe to re-run."""
+    import psycopg2
+    conn = psycopg2.connect(
+        host=os.environ.get("POSTGRES_HOST", "agentshq-postgres-1"),
+        database=os.environ.get("POSTGRES_DB", "postgres"),
+        user=os.environ.get("POSTGRES_USER", "postgres"),
+        password=os.environ.get("POSTGRES_PASSWORD", ""),
+        port=int(os.environ.get("POSTGRES_PORT", 5432)),
+    )
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO weekly_synthesis (date, content)
+            VALUES (%s, %s)
+            ON CONFLICT (date) DO UPDATE SET content = EXCLUDED.content, created_at = NOW()
+            """,
+            (date_iso, content),
+        )
+        conn.commit()
+        logger.info(f"weekly_synthesis: saved to Postgres (date={date_iso})")
+    finally:
+        conn.close()
 
 
 # ── main ───────────────────────────────────────────────────────────────────────
@@ -174,28 +166,13 @@ def run(dry_run: bool = False) -> None:
         sys.stdout.buffer.flush()
         return
 
-    notion_secret = os.environ.get("NOTION_SECRET") or os.environ.get("NOTION_API_KEY")
-    if not notion_secret:
-        raise RuntimeError("NOTION_SECRET env var not set")
-
-    if not NOTION_DB_ID:
-        out_path = ROOT_DIR / "outputs" / f"weekly-synthesis-{today}.md"
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(synthesis, encoding="utf-8")
-        logger.info(f"weekly_synthesis: no FORGE_RETROSPECTIVES_DB set; wrote to {out_path}")
-        return
-
-    from skills.forge_cli.notion_client import NotionClient
-    notion = NotionClient(secret=notion_secret)
-    properties, children = format_notion_page(synthesis, today)
-    page = notion.create_page(NOTION_DB_ID, properties, children)
-    logger.info(f"weekly_synthesis: Notion page created: {page.get('id')}")
+    save_to_postgres(synthesis, today)
 
     try:
         from notifier import send_message
         chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
         if chat_id:
-            send_message(chat_id, f"Weekly synthesis ready ({today}). Check Notion: Retrospectives.")
+            send_message(chat_id, f"Weekly synthesis ready ({today}). Query: SELECT content FROM weekly_synthesis WHERE date = '{today}'")
     except Exception as e:
         logger.debug(f"Telegram notify skipped: {e}")
 

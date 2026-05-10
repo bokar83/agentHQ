@@ -33,7 +33,6 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import os
 import shutil
 import subprocess
 import time
@@ -118,7 +117,10 @@ def score_design_audit(artifact_path: Path) -> DesignScore:
         messages=[{"role": "user", "content": f"Score this HTML:\n\n{html_sample}"}],
     )
 
-    raw = response.content[0].text.strip()
+    raw = next(b.text for b in response.content if hasattr(b, "text")).strip()
+    if raw.startswith("```"):
+        raw = "\n".join(raw.split("\n")[1:])
+        raw = raw.rstrip("`").rstrip()
     try:
         data = json.loads(raw)
     except json.JSONDecodeError as e:
@@ -161,7 +163,7 @@ def mutate_artifact(artifact_path: Path, score: DesignScore, working_copy: Path)
         "responsiveness": score.responsiveness,
         "anti_patterns": score.anti_patterns,
     }
-    weakest = min(dims, key=dims.get)
+    weakest = min(dims, key=lambda k: dims[k])
     weakest_score = dims[weakest]
 
     prompt = (
@@ -178,7 +180,7 @@ def mutate_artifact(artifact_path: Path, score: DesignScore, working_copy: Path)
         messages=[{"role": "user", "content": prompt}],
     )
 
-    full_response = response.content[0].text.strip()
+    full_response = next(b.text for b in response.content if hasattr(b, "text")).strip()
     lines = full_response.split("\n", 1)
     change_desc = lines[0].replace("CHANGE:", "").strip() if lines[0].startswith("CHANGE:") else "unspecified change"
     mutated_html = lines[1].strip() if len(lines) > 1 else full_response
