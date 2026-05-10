@@ -1,3 +1,3 @@
-{"intent": "help me with client intake", "expected": "client-intake"}
-{"intent": "I need to new client kickoff", "expected": "client-intake"}
-{"intent": "can you brand discovery for this project", "expected": "client-intake"}
+{"intent": "run client intake for a new client", "expected": "client-intake"}
+{"intent": "brand discovery interview for this prospect", "expected": "client-intake"}
+{"intent": "new client kickoff intake session", "expected": "client-intake"}

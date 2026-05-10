@@ -1,3 +1,3 @@
-{"intent": "help me with hyperframes init", "expected": "hyperframes-cli"}
-{"intent": "I need to hyperframes render", "expected": "hyperframes-cli"}
-{"intent": "can you hyperframes preview for this", "expected": "hyperframes-cli"}
+{"intent": "run the init command for my composition", "expected": "hyperframes-cli"}
+{"intent": "render and export the video", "expected": "hyperframes-cli"}
+{"intent": "lint the composition file", "expected": "hyperframes-cli"}
