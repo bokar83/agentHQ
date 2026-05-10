@@ -842,9 +842,9 @@ def get_crm_board() -> dict:
         for k in ("created_at", "updated_at", "last_contacted_at"):
             if r.get(k) is not None:
                 r[k] = r[k].isoformat()
-        for k, v in r.items():
-            if isinstance(v, Decimal):
-                r[k] = float(v)
+        for k in list(r.keys()):
+            if isinstance(r[k], Decimal):
+                r[k] = float(r[k])
         status = (r.get("status") or "new").lower()
         r["status"] = status
         if status not in board:
