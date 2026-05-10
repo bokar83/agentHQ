@@ -123,6 +123,47 @@ When pulling a pattern, name it explicitly in the artifact under "Patterns pulle
 | **superpowers:brainstorming** | Use before drafting an engagement brief if the engagement shape is ambiguous. The brainstorming output seeds the brief. |
 | **sankofa** | Use to pressure-test a SHIELD proposal before sending. Use to pressure-test a tough closeout decision. |
 
+## Touchpoint Propagation (runs after session-notes are written)
+
+After every session-notes entry, extract named entities and push them to the CRM and Notion — automatically. Don't wait for Boubacar to update records manually.
+
+**What to extract from session notes:**
+
+- Named people mentioned (prospect, referral, decision-maker, new contact)
+- Named companies
+- Decisions made
+- Commitments made (who owes what by when)
+- Open questions flagged
+
+**Where to propagate:**
+
+| Entity type | Target |
+| ----------- | ------ |
+| Person (new contact) | Create or update record in `local_crm` via `skills/local_crm` |
+| Company (prospect/client) | Update Notion client page: add "Last touchpoint" date + 1-line summary |
+| Decision | Append to `deliverable-tracker.md` under a "Decisions" section |
+| Commitment | Add row to `deliverable-tracker.md` with owner + due date |
+| Open question | Append to `session-notes.md` under "Parking lot" |
+
+**How to run:**
+
+1. After writing the session-notes entry, re-read it once looking only for entities.
+2. For each entity found: call the appropriate skill or tool (local_crm for new contacts, notion_skill for Notion page updates).
+3. Log propagated entities at the bottom of the session-notes entry:
+
+```text
+## Propagated
+- [Person] Jane Doe → local_crm updated (role: CFO, company: Acme Trucking)
+- [Decision] No SHIELD until Q3 → deliverable-tracker.md updated
+- [Commitment] BB owes Signal Memo by 2026-05-16 → deliverable-tracker.md row added
+```
+
+**When to skip:** If session notes contain no named entities (rare), log "Propagated: none" and move on.
+
+**Why this matters:** Every touchpoint compounds. A contact mentioned once and never logged is a compounding opportunity lost. This step takes 60 seconds and ensures the CRM stays current without manual effort.
+
+---
+
 ## What this skill is NOT
 
 - Not a CRM. Lead pipeline lives in Notion + Supabase.

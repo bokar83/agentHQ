@@ -2549,6 +2549,42 @@ Sankofa + Karpathy both rejected the 8-pattern proposal. Cut to 3:
 
 **Key architectural insight (PHILOSOPHY.md):** "notification routing pushed outside agent context window so agents stay focused on implementation." agentsHQ Gate violates this. Named and queued.
 
+### 2026-05-09: Garry Tan "Meta-Meta-Prompting" article absorb — 6 actionable gaps extracted
+
+Source: Garry Tan X thread / article on meta-prompting, GBrain, Skillify, cross-modal eval, entity propagation, 100K-page brain.
+
+Verdict: ARCHIVE-AND-NOTE on the article itself (fat-skills/thin-harness architecture = already us; Skillify = boubacar-skill-creator). 6 concrete gaps extracted and shipped.
+
+**What transferred (6 items — all shipped or queued this session):**
+
+**10. [SKILL QUALITY] Adversarial second-model eval in ctq-social:**
+Every CTQ pass currently uses single-model scoring (one Sonnet call applies the rubric). Garry's cross-modal eval insight: model blind spots are systematic — same model misses the same things every run. Fix: after Sonnet produces + scores output, route the same output + rubric through DeepSeek R1 (via OpenRouter) as adversarial reviewer. If scores diverge ≥2 points on any criterion, flag for human review. Added to `skills/ctq-social/SKILL.md` as "Cross-Model Adversarial Check" step. Cost: ~$0.002/post. No new infra — one extra LLM call at end of Pass 2.
+
+**11. [SKILL ROUTING] check_resolvable in boubacar-skill-creator:**
+New skills can be created with trigger phrases that conflict with existing skills or fall into routing dead zones. Nothing currently validates this. Garry's `check_resolvable` pattern (run after every new skill creation, verify triggers uniquely route). Added as Step 4.5 in `skills/boubacar-skill-creator/SKILL.md`: scans SKILLS_INDEX.md for trigger overlap before the skill is registered. Pre-condition: none. Success criterion: next skill created goes through this check and either passes or surfaces a real conflict.
+
+**12. [SKILL ROUTING] Fix 13 skills with zero trigger phrases:**
+13 of 51 skills in `docs/agentsHQ_inventory.json` have no trigger phrases, making them unroutable by the LLM resolver. Fixed by auditing each skill's description and adding trigger phrases to `SKILLS_INDEX.md`. All 13 patched this session.
+
+**13. [CRM COMPOUND] Touchpoint propagation to engagement-ops:**
+After any client session, nothing automatically updates the client's Notion/local_crm record with entities mentioned (people, decisions, follow-ups). Garry's entity propagation pattern. Added "Propagation Step" to `skills/engagement-ops/SKILL.md`: after session-notes are written, extract named entities and propagate to local_crm + Notion client page. Pre-condition: none. Success criterion: first engagement run after this change shows client Notion page updated from session notes without manual Boubacar input.
+
+**14. [ATLAS L5] Verification queue (gate cleared 2026-05-08):**
+Designed 2026-05-04, gated on M5 Chairman crew build. M5 shipped 2026-05-08. Gate cleared. Build `data/verification_queue.md` on VPS: any Chairman crew claim that would mutate a scoring weight gets staged here before promotion to fact. Prevents hallucination laundering in L5. Pre-condition: M5 Chairman crew live (✅ shipped). Success criterion: next Chairman weekly tick writes candidate mutations to verification_queue.md before enqueuing to approval_queue. See atlas.md line 779 for original design note.
+
+**15. [SKILL ARCHITECTURE] Skill dependency graph:**
+No map of which skills call other skills exists. If `website-intelligence` is improved, we can't know what downstream skills benefit. Built `docs/skill-dependencies.json` this session: maps each skill to its downstream consumers. Useful for impact analysis + identifying high-leverage improvement targets.
+
+**Files touched this session:**
+
+- `docs/roadmap/atlas.md` — items 10-15 added, this session block
+- `skills/ctq-social/SKILL.md` — cross-model adversarial check added
+- `skills/boubacar-skill-creator/SKILL.md` — check_resolvable step added
+- `skills/engagement-ops/SKILL.md` — touchpoint propagation step added
+- `docs/SKILLS_INDEX.md` — trigger phrases added to 13 skills
+- `docs/skill-dependencies.json` — new file, skill dependency graph
+- `docs/reviews/absorb-log.md` — Garry Tan article logged
+
 **Dropped patterns (with reasons):**
 - Recovery recipes: Rust enum variants model CLI errors, not VPS/container/git failures
 - Lane events: full 83K implementation, not a pattern; build for CrewAI when Atlas telemetry is actually scoped

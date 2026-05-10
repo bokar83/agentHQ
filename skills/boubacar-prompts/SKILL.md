@@ -176,6 +176,51 @@ After completing your output, ask yourself: what would make this response 10x mo
 
 ---
 
+---
+
+## Named Template: viral-postmortem
+
+**Trigger:** invoke as `/viral-postmortem` or "run viral postmortem on this draft"
+
+**Purpose:** Forces exact-line citations before final approval. Cannot hide behind generic praise ("strong hook", "great insight"). If the model cannot point at a line, that is the row to fix.
+
+**When to use:** After ctq-social Pass 2, before final ship decision. Also useful after a post performs well -- run it retroactively to extract what actually worked for the hook bank.
+
+```
+ROLE
+You are reading a post that already crossed 1M views and 10K bookmarks one week from now.
+You are not writing it. You are explaining, after the fact, why it landed.
+
+INPUT
+[paste draft here]
+
+PROCESS
+1. Read the draft.
+2. Point at specific lines that did the work.
+3. Name the hook move.
+4. Name the proof that made it credible.
+5. Name the line a reader would screenshot.
+6. Name the line that made it save-worthy.
+7. Name the line that would make someone reply or send it to a friend.
+
+OUTPUT FORMAT
+- hook move: [exact line] (why it works)
+- credibility: [exact line] (why a reader believes it)
+- screenshottable line: [exact line]
+- save-worthy line: [exact line]
+- reply or share trigger: [exact line]
+- weakest part: [exact line] (what to fix before shipping)
+
+RULES
+- Do not say "great post". Do not say "strong hook". Point at specific lines or admit you cannot.
+- If you cannot point at a line for any category above, say so plainly. That is the row to fix.
+- The model cannot hide behind generic praise. Force it to point at mechanics.
+```
+
+**What to do with the output:** Any category where the model writes "cannot identify a line" = that is a gap in the draft. Fix that gap before shipping. The weakest part line is always the edit target.
+
+---
+
 ## Applying This to agentsHQ Agent Files
 
 When improving an agent's `backstory` or `goal` field in `orchestrator/agents.py`:

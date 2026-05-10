@@ -19,6 +19,23 @@ description: Ensures AI-generated content sounds human, earned, direct, and spec
 - **Buzzword Soup**: "Leverage", "Synergy", "Tapestry", "Delve", "Complexities".
 - **Uniformity**: Sentence length should vary drastically. (Short. Long. Short.)
 
+## Avoid-Slop: Shann OS Tier 1 (8 patterns)
+
+Source: @shannholmberg Content OS framework (2026-05-09 absorb). Full 54-pattern tier list deferred pending bookmarkable.io blueprint release (~2026-06-01). These 8 patterns augment the AI Red-Flag Watchlist above.
+
+Scan every draft for these before voice polish. Any hit = flag and rewrite before proceeding.
+
+| Pattern | Example of fail | Fix |
+| ------- | --------------- | --- |
+| Promotional language | "groundbreaking", "game-changing" | Name what it actually does. Specific verb. |
+| Significance inflation | "pivotal moment", "testament to" | Cut the inflation. State the fact. |
+| Vague attribution | "experts believe", "studies show" | Name the expert or the study. No name = cut the claim. |
+| False agency | "the system compounds", "the data tells us" | Who did what. Active voice. Human subject. |
+| Rhetorical setup | "the question is whether you X" | Kill it. Make the statement. |
+| Staccato fragmentation | "No X. No Y. No Z." | One strong sentence beats three drumbeats. |
+| Em dash overuse | "this is the move -- and it's clear" | Zero is the target. Rewrite the sentence. |
+| Filler adverbs | "actually", "literally", "quietly" | Cut. Every time. |
+
 ## Continuous Learning Tool
 The agent using this skill is tasked with searching the web for:
 - "AI text detection patterns 2026"

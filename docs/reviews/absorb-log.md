@@ -4,6 +4,8 @@ Schema: `YYYY-MM-DD | source | verdict | placement | leverage type`
 
 Verdicts: `PROCEED` | `DON'T PROCEED` | `ARCHIVE-AND-NOTE`
 
+2026-05-09 | <https://x.com/i/status/2052780393326092407> (@shannholmberg Content OS) | PROCEED | enhance skills/boub_voice_mastery + skills/ctq-social + skills/boubacar-prompts | continuous-improvement + producing-motion
+
 2026-05-09 | <https://github.com/freeCodeCamp/freeCodeCamp> | ARCHIVE-AND-NOTE | archive | none
 
 2026-05-09 | <https://github.com/openclaw/openclaw> | ARCHIVE-AND-NOTE | archive | none
@@ -63,3 +65,5 @@ Leverage types: `producing-motion` | `founder-time-reduction` | `continuous-impr
 2026-05-08 | https://github.com/firecrawl/firecrawl | ARCHIVE-AND-NOTE | archive | none — core Firecrawl platform (scrape/crawl/search/agent API); already fully covered: skills/website-intelligence uses Firecrawl MCP as its scraping engine (SKILL.md lines 75-125); self-hosting adds infra complexity with zero leverage gain over the cloud API already wired
 2026-05-08 | <https://github.com/google-gemini/gemini-cli> | ARCHIVE-AND-NOTE | archive | none — Google's agentic coding CLI (Gemini 2.5 Pro, 1M ctx, MCP, free tier 1k req/day); model access already via OpenRouter (google/gemini-2.5-pro); no capability gap vs Claude Code + Codex + OpenRouter; architecture reference value: Trusted Folders + sandbox model, GEMINI.md multi-agent convention, multi-agent comms patterns — logged to atlas.md
 2026-05-08 | <https://github.com/open-webui/open-webui> | ARCHIVE-AND-NOTE | archive | none — self-hosted LLM chat UI (SvelteKit + FastAPI, 136k stars, active); agentsHQ has Claude Code + Telegram bot + CrewAI orchestrator covering all current interface/async/pipeline needs; no producing motion gap. REOPEN CONDITION 1: OpenRouter monthly spend exceeds $150/mo on batch/enrichment inference paths → evaluate Ollama + Open WebUI on VPS as cost reducer (spend tracker: reference_spend_tracking_stack.md). REOPEN CONDITION 2: CW closes engagement requiring branded AI chat interface → fork as satellite repo, white-label, bill as CW deliverable. Delete entry if neither fires by 2027-01-01.
+2026-05-09 | garry-tan-meta-meta-prompting-article | ARCHIVE-AND-NOTE | archive | none — fat-skills/thin-harness + skillify already in stack; cross-modal-eval blocked by no GPT routing; revisit at Atlas M3 multi-provider milestone
+2026-05-09 | https://github.com/garrytan/gbrain | PROCEED | pattern-extraction: enhance skills/boubacar-skill-creator + docs/roadmap/compass.md + docs/roadmap/atlas.md | continuous-improvement + founder-time-reduction

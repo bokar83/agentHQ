@@ -86,6 +86,28 @@ Write a first draft following the standard SKILL.md format:
 **CHECK-IN TRIGGER:** After draft is written:
 > "First draft done. Does this sound like you, or does it feel generic?"
 
+## Step 4.5 - check_resolvable (resolver validation before registration)
+
+Before the skill is registered in `SKILLS_INDEX.md`, verify its trigger phrases don't conflict with or duplicate existing skills.
+
+**Run this check:**
+
+1. Read `docs/SKILLS_INDEX.md` — extract every trigger phrase already registered.
+2. For each trigger phrase in the new skill draft: check if it overlaps (exact match or near-synonym) with any existing skill's triggers.
+3. Check for **dead zones**: trigger phrases so vague ("use when needed", "help with X") that the LLM won't reliably route to this skill over another.
+
+**Output — one of three verdicts:**
+
+| Verdict | Condition | Action |
+| ------- | --------- | ------ |
+| **CLEAN** | No overlaps, no dead zones | Proceed to Step 5 |
+| **CONFLICT** | ≥1 trigger phrase matches an existing skill | Rewrite the conflicting phrase to be more specific. Name the conflicting skill. |
+| **DEAD ZONE** | ≥1 trigger phrase is too vague to route reliably | Replace with a more precise phrase. |
+
+**After any CONFLICT or DEAD ZONE fix:** re-run check before proceeding.
+
+**Why this matters:** Skills with ambiguous triggers silently fail — the LLM routes to the wrong skill or no skill. A 2-minute check here prevents weeks of wondering why a skill never fires.
+
 ## Step 5 - Test with skill-creator
 
 Delegate testing mechanics to the official skill-creator. Invoke it:

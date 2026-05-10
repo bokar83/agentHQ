@@ -162,6 +162,25 @@ Rewrite directive: [one clear instruction]
 
 ---
 
+## Cross-Model Adversarial Check (runs after Pass 2 Chairman Synthesis)
+
+Single-model scoring has systematic blind spots — Sonnet misses the same things every run. After the Chairman delivers the Pass 2 viral score, route the final rewrite + the five CTQ targets (Voice Authenticity, Hook Power, CTA Quality, Anti-Professorial, Viral Worthiness) through a second model as adversarial reviewer.
+
+**How to run:**
+
+1. Send the final rewrite + this prompt to DeepSeek R1 via OpenRouter (`deepseek/deepseek-r1` model):
+   > "Score this LinkedIn/X post on these five criteria, 1-3 each. Be adversarial — look for what the previous reviewer missed. Criteria: Hook Power (scroll-stop test), Voice Fidelity (sounds like a specific human not a bot), Diagnosis Clarity (one bold claim committed), AI Slop Absence (no hedge/filler/slop), CTA Landing (mirror/wit/wisdom not a question). Output: criterion name, score 1-3, one-line reason."
+
+2. Compare scores to Sonnet's Chairman verdict.
+
+3. **If any criterion diverges by ≥2 points:** flag it explicitly before declaring done. One of the two models is wrong — surface the disagreement to Boubacar and let him decide.
+
+4. **If all criteria within 1 point:** proceed. The two models agree; the post is clean.
+
+**When to skip:** Story Review posts (different rubric). Only fires on standard CTQ.
+
+---
+
 ## When to End the CTQ Session
 
 Stop when ALL of these are true:
@@ -177,6 +196,28 @@ Stop when ALL of these are true:
 If Boubacar says "post it" before 9/10 -- that is his call. Respect it and update Notion.
 
 ---
+
+## Bookmarkability Rubric (Shann OS -- mandatory before Chairman final verdict)
+
+Score 0, 1, or 2 per row. Bar: 8/12. Below 8 = fix the weakest row, re-score. Do not trash the draft -- fix the row.
+
+| Row | What it checks | Score |
+| --- | -------------- | ----- |
+| Saves the reader a future task | Does reading this remove something the reader would otherwise have to figure out? | /2 |
+| Includes proof | Numbers, screenshot, named example -- not a claim without evidence | /2 |
+| Gives a reusable takeaway | Template, checklist, frame, or mental model they can apply without Boubacar in the room | /2 |
+| Has a specific audience and job-to-be-done | One person. One situation. Not "leaders" or "professionals." | /2 |
+| Can be applied without Boubacar | Does it work if the reader never meets him? | /2 |
+| Has a strong visual or screenshottable line | An image, a table, or one line they will screenshot | /2 |
+
+**Total: /12. Verdict:**
+
+- 10-12: ship
+- 8-9: ship (flag the weakest row for next draft)
+- 6-7: fix and re-score (name the single row that lifts the score most)
+- 0-5: kill or return to brief
+
+Run this rubric at Pass 2, after Hook and CTA audits. Log the score in the CTQ output under Chairman Synthesis.
 
 ## After Approval
 
