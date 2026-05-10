@@ -41,11 +41,37 @@ _EXCLUDED_MEMORY = {"MEMORY.md", "MEMORY.original.md", "MEMORY_ARCHIVE.md"}
 
 # ── readers ───────────────────────────────────────────────────────────────────
 
+def read_memory_from_db(days: int = 7, limit: int = 50) -> list[tuple[str, str]]:
+    """Read recent memory rows from Postgres for weekly synthesis."""
+    import psycopg2
+    import psycopg2.extras
+    conn = psycopg2.connect(
+        host=os.environ.get("POSTGRES_HOST", "agentshq-postgres-1"),
+        database=os.environ.get("POSTGRES_DB", "postgres"),
+        user=os.environ.get("POSTGRES_USER", "postgres"),
+        password=os.environ.get("POSTGRES_PASSWORD", ""),
+        port=int(os.environ.get("POSTGRES_PORT", 5432)),
+    )
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT category, title, content, pipeline, source, created_at
+            FROM memory
+            WHERE created_at > NOW() - INTERVAL '%s days'
+            ORDER BY relevance_boost DESC, created_at DESC
+            LIMIT %s
+        """, (days, limit))
+        rows: list[dict] = [dict(r) for r in cur.fetchall()]
+        return [(f"{r['category']}:{r.get('title') or r['source']}", r['content']) for r in rows]
+    finally:
+        conn.close()
+
+
 def read_memory_files(
     memory_dir: Path = MEMORY_DIR,
     limit: int = MEMORY_LIMIT,
 ) -> list[tuple[str, str]]:
-    """Return list of (filename, content) for recent non-index memory files."""
+    """Return list of (filename, content) for recent non-index memory files (flat-file fallback)."""
     files = sorted(
         [f for f in memory_dir.glob("*.md") if f.name not in _EXCLUDED_MEMORY],
         key=lambda f: f.stat().st_mtime,
@@ -142,9 +168,16 @@ def run(dry_run: bool = False) -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     today = date.today().isoformat()
 
-    logger.info("weekly_synthesis: reading memory files")
-    snippets = read_memory_files()
-    logger.info(f"weekly_synthesis: {len(snippets)} memory files read")
+    logger.info("weekly_synthesis: reading memory from Postgres")
+    try:
+        snippets = read_memory_from_db(days=7, limit=50)
+    except Exception as e:
+        logger.warning(f"weekly_synthesis: DB read failed ({e}), falling back to flat files")
+        snippets = []
+    if not snippets:
+        logger.info("weekly_synthesis: DB returned 0 rows, falling back to flat files")
+        snippets = read_memory_files()
+    logger.info(f"weekly_synthesis: {len(snippets)} memory items read")
 
     logger.info("weekly_synthesis: reading roadmap logs")
     roadmap_text = read_roadmap_logs()

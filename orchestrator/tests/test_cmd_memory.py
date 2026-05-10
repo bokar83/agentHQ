@@ -98,3 +98,23 @@ def test_query_llm_failure_returns_raw_rows(monkeypatch):
     result = _cmd_query("/query FGM rules", "chat123")
     assert result is True
     assert len(sent) >= 1
+
+
+def test_query_synthesis_flag(monkeypatch):
+    """--synthesis flag returns weekly synthesis."""
+    sent = []
+    monkeypatch.setattr("orchestrator.handlers_commands._send_memory", lambda cid, msg: sent.append(msg))
+
+    import psycopg2
+    class FakeCursor:
+        def execute(self, sql, params=None): pass
+        def fetchone(self): return ("2026-05-10", "## PROJECT STATUS\nAtlas is on track.")
+    class FakeConn:
+        def cursor(self): return FakeCursor()
+        def close(self): pass
+    monkeypatch.setattr("psycopg2.connect", lambda **kw: FakeConn())
+
+    from orchestrator.handlers_commands import _cmd_query
+    result = _cmd_query("/query --synthesis", "chat123")
+    assert result is True
+    assert any("synthesis" in m.lower() or "PROJECT STATUS" in m for m in sent)

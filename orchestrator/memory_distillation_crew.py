@@ -37,8 +37,33 @@ _EXCLUDED = {"MEMORY.md", "MEMORY.original.md", "MEMORY_ARCHIVE.md", "MEMORY-DIG
 
 # ── reader ────────────────────────────────────────────────────────────────────
 
+def read_memory_from_db(limit: int = 200) -> list[tuple[str, str]]:
+    """Read all memory rows from Postgres for distillation."""
+    import psycopg2
+    import psycopg2.extras
+    conn = psycopg2.connect(
+        host=os.environ.get("POSTGRES_HOST", "agentshq-postgres-1"),
+        database=os.environ.get("POSTGRES_DB", "postgres"),
+        user=os.environ.get("POSTGRES_USER", "postgres"),
+        password=os.environ.get("POSTGRES_PASSWORD", ""),
+        port=int(os.environ.get("POSTGRES_PORT", 5432)),
+    )
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT category, title, content, pipeline, source
+            FROM memory
+            ORDER BY relevance_boost DESC, created_at DESC
+            LIMIT %s
+        """, (limit,))
+        rows: list[dict] = [dict(r) for r in cur.fetchall()]
+        return [(f"{r['category']}:{r.get('title') or r['source']}", r['content']) for r in rows]
+    finally:
+        conn.close()
+
+
 def read_all_memory_files(memory_dir: Path = MEMORY_DIR) -> list[tuple[str, str]]:
-    """Return (filename, content) for all non-index, non-digest memory files."""
+    """Return (filename, content) for all non-index, non-digest memory files (flat-file fallback)."""
     files = sorted(
         [f for f in memory_dir.glob("*.md") if f.name not in _EXCLUDED],
         key=lambda f: f.name,
@@ -122,9 +147,16 @@ def run(dry_run: bool = False) -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     today = date.today().isoformat()
 
-    logger.info("memory_distillation: reading memory files")
-    snippets = read_all_memory_files()
-    logger.info(f"memory_distillation: {len(snippets)} files read")
+    logger.info("memory_distillation: reading memory from Postgres")
+    try:
+        snippets = read_memory_from_db(limit=200)
+    except Exception as e:
+        logger.warning(f"memory_distillation: DB read failed ({e}), falling back to flat files")
+        snippets = []
+    if not snippets:
+        logger.info("memory_distillation: DB returned 0 rows, falling back to flat files")
+        snippets = read_all_memory_files()
+    logger.info(f"memory_distillation: {len(snippets)} memory items read")
 
     from llm_helpers import call_llm
     prompt = build_distillation_prompt(snippets, today)

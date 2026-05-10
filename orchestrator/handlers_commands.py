@@ -987,6 +987,9 @@ def _cmd_digest(text: str, chat_id: str) -> bool:
     if owner_id and str(chat_id) != str(owner_id):
         _send(chat_id, 'Not authorized.')
         return True
+    snippet = _get_latest_synthesis_snippet()
+    if snippet:
+        _send_memory(chat_id, snippet)
     _send(chat_id, 'Digest firing. Full morning report incoming (~30s).')
 
     def _do_digest():
@@ -1049,6 +1052,28 @@ def _cmd_sw(text: str, chat_id: str) -> bool:
 def _send_memory(chat_id: str, msg: str) -> None:
     from notifier import send_message
     send_message(chat_id, msg)
+
+
+def _get_latest_synthesis_snippet() -> str:
+    """Return first 300 chars of latest weekly synthesis, or empty string."""
+    try:
+        import psycopg2, os
+        conn = psycopg2.connect(
+            host=os.environ.get("POSTGRES_HOST", "agentshq-postgres-1"),
+            database=os.environ.get("POSTGRES_DB", "postgres"),
+            user=os.environ.get("POSTGRES_USER", "postgres"),
+            password=os.environ.get("POSTGRES_PASSWORD", ""),
+            port=5432,
+        )
+        cur = conn.cursor()
+        cur.execute("SELECT date, content FROM weekly_synthesis ORDER BY date DESC LIMIT 1")
+        row = cur.fetchone()
+        conn.close()
+        if not row:
+            return ""
+        return f"Last synthesis ({row[0]}): {row[1][:280]}..."
+    except Exception:
+        return ""
 
 
 def _memory_write(model):
@@ -1132,6 +1157,29 @@ def _cmd_query(text: str, chat_id: str) -> bool:
         return True
 
     query_str = parts[1].strip()
+
+    # Synthesis mode: return latest weekly synthesis
+    if query_str.startswith("--synthesis"):
+        try:
+            import psycopg2, os
+            conn = psycopg2.connect(
+                host=os.environ.get("POSTGRES_HOST", "agentshq-postgres-1"),
+                database=os.environ.get("POSTGRES_DB", "postgres"),
+                user=os.environ.get("POSTGRES_USER", "postgres"),
+                password=os.environ.get("POSTGRES_PASSWORD", ""),
+                port=5432,
+            )
+            cur = conn.cursor()
+            cur.execute("SELECT date, content FROM weekly_synthesis ORDER BY date DESC LIMIT 1")
+            row = cur.fetchone()
+            conn.close()
+            if row:
+                _send_memory(chat_id, f"Weekly synthesis ({row[0]}):\n\n{row[1][:3000]}")
+            else:
+                _send_memory(chat_id, "No weekly synthesis yet. Runs Sunday 20:00 MT.")
+        except Exception as e:
+            _send_memory(chat_id, f"Could not fetch synthesis: {e}")
+        return True
 
     if query_str.startswith("--filter"):
         filter_str = query_str[len("--filter"):].strip()
