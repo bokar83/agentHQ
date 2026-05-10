@@ -93,7 +93,7 @@ class HyperframeBriefGenerator:
                 ["npx", "hyperframes", "lint"],
                 cwd=project_dir, capture_output=True, text=True, timeout=30
             )
-            if "error" in lint.stdout.lower() and "0 error" not in lint.stdout:
+            if "error" in lint.stdout.lower() and "0 error" not in lint.stdout.lower():
                 raise RuntimeError(f"HyperFrames lint errors:\n{lint.stdout[:500]}")
             result = subprocess.run(
                 ["npx", "hyperframes", "render", "--quality", "standard", "--output", output_path],
