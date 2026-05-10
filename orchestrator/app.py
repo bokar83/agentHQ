@@ -341,7 +341,6 @@ async def startup_event():
     # M23: Minion worker -- background loop for agent-to-agent spawning.
     try:
         import minion_worker as _mw
-        _mw.register("minion:test", lambda p: {"ok": True, "echo": p.get("msg", "")})
         asyncio.create_task(_mw.run())
         logger.info("minion_worker started.")
     except Exception as e:

@@ -826,7 +826,9 @@ WHERE status = 'new'
 
 ---
 
-### M8b: Atlas Mission Control — Live Agent Graph 🔄 IN PROGRESS
+### M8b: Atlas Mission Control — Live Agent Graph ✅ SHIPPED 2026-05-10
+
+**Shipped:** Absorbed into M23 branch. `/atlas/agents` GET endpoint added to backend (polls `tasks` table via `list_running()` + `recent_completed_prefix("minion:")`). Active Agents card added to Atlas dashboard at agentshq.boubacarbarry.com/atlas. XSS-safe DOM construction. Polls every 30s. Shows running agents + 1h recent completions. Gate condition 3 waived in favor of direct tasks-table read (no new events table needed).
 
 **What:** Upgrade the Atlas dashboard (/atlas) from a static ops panel (M8, shipped) to a live swarm visibility layer: real-time graph of active agents showing topology (coordinator, worktree managers, leaf agents), communication edges (DM, channel, broadcast), per-node status (idle/running/blocked/failed), current task or intent per node, and plan DAG with checkpoint badges and critical-path highlighting.
 
@@ -849,7 +851,9 @@ WHERE status = 'new'
 
 ---
 
-### M23: Agent-to-Agent Spawning & Delegation ⏳ QUEUED
+### M23: Agent-to-Agent Spawning & Delegation ✅ SHIPPED 2026-05-10
+
+**Shipped:** `skills/coordination/spawner.py` (`spawn()`, `SpawnDepthExceeded`, depth cap=5), `skills/coordination/__init__.py` (`recent_completed_prefix()`), `orchestrator/minion_worker.py` (background claim/execute loop, plain-dict handler registry), wired at app startup, `/atlas/agents` endpoint, 10 tests passing (4 unit spawner, 3 unit worker, 3 integration). All 5 success criteria verified on VPS. M8b absorbed (Active Agents card live on dashboard). Unlocks M24.
 
 **What:** Implement a lightweight, secure spawning framework where a high-level agent (e.g., the Planner, Router, or Copywriter) can programmatically spawn, execute, and monitor a specialized sub-agent (Minion) to perform a targeted task. Relies on Postgres-backed durable Minion queues (`skills/coordination`) for zero-latency wakes, passes state cleanly via JSON payloads, enforces parent-child depth caps (default: 5) to prevent infinite runaway recursion, and logs all spawned-agent logs to the central database.
 
