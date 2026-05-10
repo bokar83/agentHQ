@@ -105,6 +105,75 @@ Done = all five true at the same time.
 
 ---
 
+### M2.5: Routing evaluator gap detection (gbrain pattern) ✅ SHIPPED 2026-05-09
+
+**Pattern source:** garrytan/gbrain `src/core/routing-eval.ts` + `src/core/check-resolvable.ts`. Absorbed 2026-05-09 (PROCEED — pattern-only, no install).
+
+**What the pattern does:** Validates that user intents route to correct skills. Two layers:
+
+- **Layer A (structural, no LLM):** Normalize intent + normalize trigger phrases. Check substring match. Flag if intent matches zero skills (gap) or multiple skills (ambiguity).
+- **Fixture lint:** Reject test cases where the intent IS a trigger phrase verbatim (tautology — must paraphrase).
+
+**Six audit checks from gbrain's check-resolvable:**
+
+| Check | What it catches |
+|-------|----------------|
+| Unreachable skills | Skill in `skills/` with no entry in SKILLS_INDEX.md |
+| MECE overlap | Two skills whose trigger phrases would both match the same intent |
+| MECE gap | Common user intent pattern no skill covers |
+| DRY violation | Logic inlined in a skill that should live in a shared convention file |
+| Routing fixture miss | Test fixture didn't match expected skill (Layer A) |
+| Stub unreplaced | Skill created from template still contains placeholder text |
+
+**Integration plan for agentsHQ:**
+
+- Add routing fixture JSONL files alongside each skill (`skills/<name>/routing-eval.jsonl`) — 2-3 real intent phrases per skill, paraphrased from trigger phrases.
+- Add `scripts/check_routing_gaps.py` that reads all routing fixtures + SKILLS_INDEX.md and runs Layer A check. Output: `CLEAN` or list of gaps/overlaps/misses.
+- Wire to pre-commit (warn-only first quarter; strict after fixtures reach >80% skill coverage).
+
+**Pre-condition:** none. **Target:** next compass maintenance window. **Success criterion:** `python scripts/check_routing_gaps.py` returns CLEAN on all skills with fixtures; at least 50% of skills have fixture files.
+
+---
+
+### M6: Monthly self-audit of agentsHQ own config ⏳ QUEUED (first run 2026-05-16)
+
+**Pattern source:** ECC AgentShield concept (absorbed 2026-05-09 from X-thread). Core insight: the Security Scan Gate in agentshq-absorb scans external artifacts but never turns inward. Our own CLAUDE.md, hooks, settings.json, and MCP configs have never been audited.
+
+**What:** Run the Self-Audit Mode checklist (now documented in `skills/agentshq-absorb/SKILL.md`) against agentsHQ's own Claude Code configuration monthly. Four static checks, no external tools:
+
+1. Hardcoded secrets in CLAUDE.md + handoff docs (v2-6 regex)
+2. Shell-out patterns in hook scripts (v1-1 patterns)
+3. Overly-broad permissions in settings.json (`*` globs, unconstrained Bash)
+4. Non-TLS or raw-key MCP transport entries
+
+**Success criterion:** `Check 1-4: CLEAN` on first run (2026-05-16). Any FINDINGS = fix before close. Zero v2-6 matches in CLAUDE.md and all handoff docs.
+
+**Cadence:** monthly. Re-arm after each run. Also trigger on any new hook, MCP server, or settings.json entry added.
+
+**Pre-condition:** none. Run Self-Audit Mode from agentshq-absorb skill.
+
+**First run results (2026-05-09):**
+
+```
+SELF-AUDIT RESULTS : agentsHQ config
+=====================================
+Check 1 (secrets in docs):    CLEAN
+Check 2 (hook shell-outs):    CLEAN
+Check 3 (broad permissions):  FINDINGS — Read(*), Edit(*), Write(*) in settings.json
+                               allow list are unconstrained globs. Intentional
+                               (project-wide access for direct sessions) but
+                               flagged for Boubacar review. Not an injection risk;
+                               a blast-radius risk if a malicious skill runs.
+Check 4 (MCP transport):      CLEAN
+
+Overall: FINDINGS PRESENT (Check 3 only — REVIEWED + ACCEPTED 2026-05-09)
+Action required: Check 3 reviewed 2026-05-09: Read*/Edit*/Write* broad allows are
+                 intentional for direct session workspace access. Accepted. Re-verify
+                 monthly that no new unconstrained Bash(*) allow appears.
+```
+
+---
+
 ### M3: Quarterly purge cadence ⏳ ARMED 2026-05-02 (first run 2026-08-02)
 
 **What:** Every 90 days, run a governance review pass. Surface rules untouched 90+ days that have no commits/hooks/memory referencing them. Decide retire vs keep, with manifest entries for any retirement.

@@ -7,6 +7,71 @@ description: Use when evaluating any GitHub repo, live URL, MCP server, n8n work
 
 Codify Boubacar's manual workflow for evaluating any artifact (GitHub repo, live URL, MCP server, n8n workflow, PDF, raw doc, or local skill) against agentsHQ. Output: structured one-pager verdict + placement + leverage type + follow-up handoff. Default placement bias: enhance an existing skill, not build a new one.
 
+## Self-Audit Mode
+
+Run this when the user says "audit my config", "scan our own setup", "check agentsHQ for secrets", or at any Compass-scheduled monthly interval. Turns the Security Scan Gate inward against agentsHQ's own Claude Code configuration — not an external artifact being absorbed.
+
+**Four checks. Run all four. Each is a grep, no external tools.**
+
+### Check 1 — Hardcoded secrets in CLAUDE.md and handoff docs (v2-6)
+
+Pattern: `(password|secret|token|api_key|private_key)\s*=\s*['"][^'"]{8,}['"]`
+
+Grep targets:
+- `CLAUDE.md`
+- `docs/handoff/**/*.md`
+- `docs/memory/**/*.md`
+- `C:\Users\HUAWEI\.claude\projects\d--Ai-Sandbox-agentsHQ\memory\**/*.md`
+
+Verdict: any match = BLOCKED (secrets committed). Fix: move value to `.env` or remove from doc.
+
+### Check 2 — Shell-out patterns in hooks (v1-1)
+
+Pattern: any of `curl`, `wget`, `fetch`, `sh -c`, `bash -c` inside hook scripts.
+
+Grep targets:
+- `~/.claude/hooks/**/*.js`
+- `~/.claude/hooks/**/*.sh`
+- `~/.claude/settings.json` (hook command fields)
+
+Verdict: match = SUSPICIOUS. Hooks executing remote downloads = supply chain vector. Review intent; replace with local scripts.
+
+### Check 3 — Overly-broad permissions in settings.json
+
+Read `~/.claude/settings.json` and `d:\Ai_Sandbox\agentsHQ\.claude\settings.json`.
+
+Flag if any `allow` permission entry uses `*` glob without path restriction, or grants `Bash` to a command with no argument constraints.
+
+Verdict: match = WARN. Tighten to specific patterns.
+
+### Check 4 — Known-bad MCP transport patterns
+
+Read all `~/.claude/mcp*.json` or MCP entries in settings.json.
+
+Flag if:
+- Any MCP server uses `http://` (non-TLS) transport to a non-localhost endpoint
+- Any MCP server entry has `env` fields containing raw API keys (not `$ENV_VAR` references)
+
+Verdict: non-TLS external = SUSPICIOUS. Raw key in env = BLOCKED.
+
+**Output format:**
+
+```text
+SELF-AUDIT RESULTS : agentsHQ config
+=====================================
+Check 1 (secrets in docs):    CLEAN | <file:line — matched value>
+Check 2 (hook shell-outs):    CLEAN | <file:line — matched pattern>
+Check 3 (broad permissions):  CLEAN | <entry — exact permission string>
+Check 4 (MCP transport):      CLEAN | <server — issue>
+
+Overall: CLEAN | FINDINGS PRESENT
+Action required: <list fixes, or "none">
+```
+
+**Cadence:** monthly, governed by Compass M6. Also run any time a new hook, MCP server, or settings.json entry is added.
+
+---
+
 ## Hard rule: bare URL = absorb, never install
 
 A bare GitHub URL with no other context **always** triggers absorb. Never install. The shallow clone in Phase 1 lives in `sandbox/.tmp/absorb-<slug>/` and is read-only. Install only fires on explicit "install this repo / install <name> / add this to agentsHQ / wire this up" + URL, and is handled by other skills.
