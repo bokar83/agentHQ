@@ -15,7 +15,7 @@
 
 ## Session-Start Cheat Block (read this first)
 
-Last session ended **2026-05-09 (SW pipeline complete — signal-threaded 5-touch sequence, GMB gate, /callsheet, decay cron, audit script)**. State at close:
+Last session ended **2026-05-09 (absorb session — gate_poll.py + Stop→Telegram + 86% routing coverage shipped)**. State at close:
 
 - **Gate fully autonomous:** 5-min cron 24/7, silent success, inline ✅/❌ buttons, 4 high-risk files. Host cron sole runner.
 - **Baked-file drift permanently fixed:** entrypoint syncs `orchestrator/*.py` over baked `/app/*.py` on every container start.
@@ -2698,3 +2698,31 @@ Ending: fully signal-threaded sequence, qualification gate, gmb_opener persisted
 - `orchestrator/scheduler.py` — _run_gmb_score_decay() monthly cron
 - `scripts/pipeline_audit.py` — new file
 - `skills/hormozi-lead-gen/references/cold-call-scripts.md` + `review-request-product.md`
+
+### 2026-05-09: Absorb session — ECC + clawhip + autonomy layer improvements
+
+**Absorbs processed:**
+- ECC X-thread (noisyb0y1) — Self-Audit Mode added to agentshq-absorb skill + Compass M6 monthly self-audit
+- clawhip (Yeachan-Heo) — Stop→Telegram hook pattern extracted, shipped as session_logger.py enhancement
+
+**Atlas autonomy shipped:**
+- `scripts/gate_poll.py` — dumb Python cron, polls READY branches, zero LLM on empty queue. VPS cron: `*/5 * * * *`. Atlas item 6 CLOSED.
+- `scripts/session_logger.py` (moved from tools/) — Stop hook fires Telegram on session end (project/cost/turns/duration). Loads .env directly, stdlib urllib only.
+
+**Compass shipped:**
+- Self-Audit Mode in agentshq-absorb/SKILL.md — 4 checks (secrets, hook shell-outs, broad perms, MCP transport). First run: CLEAN.
+- Compass M6 milestone filed (monthly self-audit cadence).
+- check_routing_gaps.py pre-commit step 7 wired (warn-only, ERRORs block).
+- Strategy 2 extractor added — all quoted strings in description, not just post-"Triggers on". Coverage 16% → 86% (59/69 skills).
+- Fixture files: 48 new routing-eval.jsonl files written. Warnings: 25 → 1 (accepted overlap).
+- Sub-skill trigger discrimination: hyperframes-cli, hyperframes-registry, website-to-hyperframes SKILL.md updated with non-prefixed discriminating trigger phrases.
+
+**Files shipped:**
+- `scripts/gate_poll.py` (new)
+- `scripts/session_logger.py` (moved from tools/, enhanced)
+- `scripts/check_routing_gaps.py` (Strategy 2 extractor)
+- `skills/agentshq-absorb/SKILL.md` (Self-Audit Mode section)
+- `docs/roadmap/compass.md` (M6 milestone)
+- 48 `skills/*/routing-eval.jsonl` files
+- 8 `skills/*/SKILL.md` trigger phrase updates
+- `docs/reviews/absorb-log.md` + `absorb-followups.md`
