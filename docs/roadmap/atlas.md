@@ -3061,6 +3061,25 @@ Ending: fully signal-threaded sequence, qualification gate, gmb_opener persisted
 - Gate watches GitHub not Postgres -- two subsystems parallel, not integrated.
 - `scripts/pre-commit-hook.sh` (tracked) was behind `.git/hooks/pre-commit` (installed) by 2 checks -- always keep both in sync on hook changes.
 
+### 2026-05-10: M26 SHIPPED — Live Roadmap DB
+
+**What shipped:**
+
+- `milestones` table in orc-postgres — 70 rows seeded across 5 roadmaps (atlas 23, compass 11, echo 7, harvest 17, studio 12)
+- `flip_milestone(codename, mid, status)` in atlas_dashboard.py — single write path for all callers, 4 unit tests
+- `get_roadmap_metrics()` extended to return live milestone arrays + 30s module-level cache
+- `check_routing_gaps.py --json` fixed (was silently failing, fallback was hardcoded 11; now returns real 69/69)
+- Telegram `/shipped atlas M5` and `/milestones atlas [status]` commands wired
+- Atlas webchat "mark atlas M26 shipped" intent routes to flip_milestone()
+- `roadmap.html` JS renders table rows from live API via DOM methods (no innerHTML); static rows are fallback when API returns nothing
+- VPS verified: atlas rows 23, routing fixtures 69, flip_milestone round-trip clean, 7 tests pass
+
+**What this means:**
+
+Any agent (Telegram, webchat, or autonomous) can now call `flip_milestone()` and the roadmap page reflects the change within 60s. No git conflict risk — concurrent writes go to Postgres row locks, not markdown files.
+
+**Next:** M25 (Event-Driven Message Bus) gates on M23+M24 stable 30 days → unblocks 2026-06-10.
+
 **State at close:**
 - Gate: clean queue, reaper live
 - VPS main: `77eb7c0` (pre-commit hook fix) + VPS pulled `dfd757f`
