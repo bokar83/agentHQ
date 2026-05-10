@@ -171,7 +171,13 @@ def _get_due_leads(conn, pipeline: str, touch: int, limit: int = 10) -> list[dic
         except ImportError:
             from serper_skill.hunter_tool import score_gmb_lead
         before = len(rows)
-        rows = [r for r in rows if score_gmb_lead(r) >= 2]
+        qualified = []
+        for r in rows:
+            score, notes = score_gmb_lead(r)
+            if score >= 2:
+                r["gmb_signal_notes"] = notes  # passed to sw_t1 for opener selection
+                qualified.append(r)
+        rows = qualified
         filtered = before - len(rows)
         if filtered:
             logger.info(f"[SW] T1 GMB gate: dropped {filtered} unqualified lead(s) (score < 2)")
@@ -505,6 +511,10 @@ def _render(body_or_builder, lead: dict) -> str:
             enriched["city"] = lead.get("city") or "your city"
         if "business_name" not in enriched:
             enriched["business_name"] = lead.get("business_display_name") or lead.get("name") or "your business"
+        if "review_count" not in enriched:
+            enriched["review_count"] = int(lead.get("review_count", 0) or 0)
+        if "gmb_signal_notes" not in enriched:
+            enriched["gmb_signal_notes"] = lead.get("gmb_signal_notes", {})
         return body_or_builder(enriched)
     niche = (lead.get("industry") or "business").lower()
     city = lead.get("city") or "your city"

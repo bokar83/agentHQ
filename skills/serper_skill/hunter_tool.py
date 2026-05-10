@@ -31,12 +31,14 @@ GMB_LOW_REVIEW_THRESHOLD = 30      # under 30 = invisible vs top-ranked competit
 GMB_LOW_RATING_THRESHOLD = 4.0     # below 4.0 = poor review management signal
 GMB_REQUIRED_FIELDS = {"phone", "website_url", "google_address"}  # missing = gap
 
-def score_gmb_lead(lead: dict) -> int:
+def score_gmb_lead(lead: dict) -> tuple[int, dict]:
     """Score a GMB lead 0-4 based on qualification signals.
 
-    Returns int 0-4. Leads scoring >= 2 are qualified prospects (two or more
-    visible gaps a SW engagement can close). Leads scoring 0-1 are likely
-    already well-managed and not worth SW outreach.
+    Returns (score, notes) where:
+      score  int 0-4. Leads scoring >= 2 are qualified prospects.
+      notes  dict with fired signal names and their actual values, used by
+             sw_t1.py to pick a specific opener (e.g. "low_reviews" branch
+             gets the exact review_count to say "only 8 reviews").
 
     Signals (one point each):
       1. review_count below GMB_LOW_REVIEW_THRESHOLD
@@ -45,19 +47,30 @@ def score_gmb_lead(lead: dict) -> int:
       4. one or more GMB_REQUIRED_FIELDS missing / empty in the lead record
     """
     score = 0
+    notes: dict = {}
+
     review_count = int(lead.get("review_count", 0) or 0)
     if review_count < GMB_LOW_REVIEW_THRESHOLD:
         score += 1
-    if not lead.get("has_website") and not lead.get("website_url"):
+        notes["low_reviews"] = review_count
+
+    no_website = not lead.get("has_website") and not lead.get("website_url")
+    if no_website:
         score += 1
+        notes["no_website"] = True
+
     rating = lead.get("google_rating")
     if rating is None or float(rating) < GMB_LOW_RATING_THRESHOLD:
         score += 1
+        notes["low_rating"] = float(rating) if rating is not None else None
+
     for field in GMB_REQUIRED_FIELDS:
         if not lead.get(field):
             score += 1
-            break  # one point max for missing fields
-    return score
+            notes["missing_fields"] = True
+            break
+
+    return score, notes
 
 # ── Default ICP constants — change here to change everywhere ──
 DEFAULT_LOCATIONS = [
