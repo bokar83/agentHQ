@@ -69,13 +69,15 @@ Use this exact framing when they're engaged past 60 seconds:
 
 ## Offer Menu (pick ONE per call based on their gap)
 
-| Gap | Offer |
-|-----|-------|
-| No website | One-page site: phone, services, hours, quote form. One afternoon build. |
-| Under 30 reviews | Review automation: text every customer a review link post-job. Doubles count in 60 days. |
-| Phone goes unanswered | AI receptionist / missed-call text-back. 62% of SMB calls go unanswered and callers don't call back. |
+| Gap | Offer | Price anchor |
+|-----|-------|-------------|
+| No website | One-page site: phone, services, hours, quote form. One afternoon build. | $500-1500 |
+| Under 30 reviews | Review automation: SMS link after every job, doubles count in 60 days. Full spec: `review-request-product.md` | $297-497 + $97/mo |
+| Phone goes unanswered | AI receptionist / missed-call text-back. 62% of SMB calls go unanswered and callers don't call back. | $200-400/mo |
 
 One gap. One fix. Never pitch all three.
+
+**Stack play:** if they have both no website AND low reviews, lead with the website (higher ticket), then upsell review automation as the "while we're at it" add-on. One conversation, two line items.
 
 ---
 

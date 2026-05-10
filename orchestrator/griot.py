@@ -677,6 +677,32 @@ def _ops_digest_text() -> tuple[str, str]:
     except Exception as e:
         logger.warning(f"_ops_digest_text: pipeline_metrics failed: {e}")
 
+    # -- GMB signal breakdown (which gaps are driving SW T1 sends) --
+    try:
+        from db import get_crm_connection as _get_crm
+        _conn2 = _get_crm()
+        _cur2 = _conn2.cursor()
+        _cur2.execute("""
+            SELECT
+                COUNT(*) FILTER (WHERE sequence_touch >= 1 AND email_drafted_at::date = CURRENT_DATE) AS t1_today,
+                COUNT(*) FILTER (WHERE sequence_touch >= 1 AND email_drafted_at::date = CURRENT_DATE AND NOT has_website) AS no_website_today,
+                COUNT(*) FILTER (WHERE sequence_touch >= 1 AND email_drafted_at::date = CURRENT_DATE AND review_count < 30 AND has_website) AS low_reviews_today,
+                COUNT(*) FILTER (WHERE sequence_touch >= 1 AND email_drafted_at::date = CURRENT_DATE AND has_website AND review_count >= 30) AS chatgpt_hook_today
+            FROM leads
+            WHERE source LIKE 'signal_works%'
+        """)
+        _gmb = dict(_cur2.fetchone())
+        _conn2.close()
+        t1 = _gmb.get("t1_today", 0)
+        if t1:
+            nw = _gmb.get("no_website_today", 0)
+            lr = _gmb.get("low_reviews_today", 0)
+            ch = _gmb.get("chatgpt_hook_today", 0)
+            lines_tg.append(f"\nSW T1 today: {t1} sent — {nw} no-website / {lr} low-reviews / {ch} chatgpt-hook")
+            lines_html.append(f'<tr><td><b>SW T1 today</b></td><td>{t1} sent ({nw} no-website, {lr} low-reviews, {ch} chatgpt)</td></tr>')
+    except Exception as _e:
+        logger.warning(f"_ops_digest_text: gmb_signal_breakdown failed: {_e}")
+
     # -- Spend (MTD from atlas_dashboard) --
     try:
         from atlas_dashboard import _spend_aggregates
