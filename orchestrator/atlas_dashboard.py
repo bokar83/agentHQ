@@ -826,8 +826,8 @@ def get_crm_board() -> dict:
         conn, is_fallback = get_crm_connection_with_fallback()
         cols = ", ".join(_CRM_COLUMNS)
         with conn.cursor() as cur:
-            cur.execute("SELECT COUNT(*) FROM leads")
-            total = cur.fetchone()[0]
+            cur.execute("SELECT COUNT(*) AS n FROM leads")
+            total = cur.fetchone()["n"]
             cur.execute(f"SELECT {cols} FROM leads ORDER BY updated_at DESC NULLS LAST")
             rows = cur.fetchall()
         conn.close()
