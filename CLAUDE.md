@@ -57,19 +57,6 @@ Skipping any step breaks multi-agent coordination. Gate checks the task table be
 
 **No Telegram. No /propose. No manual signal to gate.** Push feature branch with [READY] commit. Gate watches GitHub every 60s and handles everything. Agent moves on immediately after push.
 
-## Echo M1: /propose Convention (2026-05-10)
-
-After a coherent unit of work hits green tests, call `/propose`. Do NOT wait for the user to ask. This is the async-partnership contract.
-
-**When to call `/propose`:**
-- Tests just turned green on a feature or fix
-- A logical work unit is complete (even if the session continues)
-- Before switching to a different task or file domain
-
-**What `/propose` does:** snapshots working tree → queues a commit-proposal row → fires a Telegram card to Boubacar → returns immediately. Agent keeps working. Boubacar acks on his cadence.
-
-**Never block on an ack.** Queue it and move on.
-
 ## Agent Role Authority (2026-05-08)
 
 Every session has exactly ONE role. Read this table at session start. Do not do the other role's work.
