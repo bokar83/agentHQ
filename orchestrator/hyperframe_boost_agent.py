@@ -50,13 +50,13 @@ def _extract_platforms(prop) -> list[str]:
 
 class HyperframeBoostAgent:
     def __init__(self):
-        from notion_client import Client as NotionClient
-        self._notion = NotionClient(auth=os.environ["NOTION_SECRET"])
+        from skills.forge_cli.notion_client import NotionClient
+        self._notion = NotionClient(secret=os.environ["NOTION_SECRET"])
 
     def _notion_query(self) -> list[dict]:
-        response = self._notion.databases.query(
-            database_id=GRIOT_DB_ID,
-            filter={
+        return self._notion.query_database(
+            GRIOT_DB_ID,
+            filter_obj={
                 "and": [
                     {"property": "Status", "select": {"is_not_empty": True}},
                     {"property": "Status", "select": {"does_not_equal": "Posted"}},
@@ -64,9 +64,7 @@ class HyperframeBoostAgent:
                 ]
             },
             sorts=[{"property": "Total Score", "direction": "descending"}],
-            page_size=20,
         )
-        return response.get("results", [])
 
     def _query_candidates(self) -> list[dict]:
         raw = self._notion_query()
@@ -206,10 +204,10 @@ def _create_studio_record(notion_client, candidate: dict, drive_url: str,
     else:
         video_date = (date.today() + timedelta(days=1)).isoformat()
 
-    response = notion_client.pages.create(
-        parent={"database_id": STUDIO_DB_ID},
-        properties={
-            "Name": {"title": [{"text": {"content": f"HF Boost — {candidate['text_preview'][:60]}"}}]},
+    response = notion_client.create_page(
+        STUDIO_DB_ID,
+        {
+            "Title": {"title": [{"text": {"content": f"HF Boost — {candidate['text_preview'][:60]}"}}]},
             "Status": {"select": {"name": "scheduled"}},
             "Scheduled Date": {"date": {"start": video_date}},
             "Platform": {"multi_select": [{"name": p} for p in platforms]},
@@ -225,7 +223,7 @@ def _create_studio_record(notion_client, candidate: dict, drive_url: str,
 
 def _mark_twin(notion_client, griot_page_id: str, twin_page_id: str) -> None:
     """Write hyperframe_twin_id back to source Griot record as dedup guard."""
-    notion_client.pages.update(
-        page_id=griot_page_id,
-        properties={"hyperframe_twin_id": {"relation": [{"id": twin_page_id}]}}
+    notion_client.update_page(
+        griot_page_id,
+        {"hyperframe_twin_id": {"relation": [{"id": twin_page_id}]}}
     )
