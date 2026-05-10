@@ -228,6 +228,7 @@ services:
       - ./secrets:/app/secrets:ro
       - ./orchestrator/skills/doc_routing:/app/orchestrator_skills/doc_routing:ro
       - ./data:/app/data
+      - ./configs:/app/configs
       - ./workspace/studio-cards/channel_cards:/app/workspace/assets/intros:ro
       - ./workspace/studio-cards/channel_cards:/app/workspace/assets/outros:ro
       - ./workspace/renders:/app/workspace/renders
