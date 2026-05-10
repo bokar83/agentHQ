@@ -40,8 +40,11 @@ Applies to every coding-agent session (Claude Code, Codex, any future agent). Ag
 
 ## Session End
 
-1. If a roadmap was touched this session, append a session-log entry to that roadmap. Date, what changed, what's next.
-2. Update milestone statuses in the roadmap (queued / in-progress / shipped / blocked / descoped).
+1. If a roadmap was touched this session, **before** appending the session log:
+   - Find the `### MXX:` header for every milestone that shipped. Change `⏳ QUEUED` or `🔄 IN PROGRESS` to `✅ SHIPPED YYYY-MM-DD`. This edit goes in the header line itself, not just the session log body.
+   - Update the sub-milestone status table rows inside the milestone body to match.
+   - Create or update the Notion task entry (`NOTION_TASK_DB_ID = 249bcf1a302980739c26c61cad212477`) — set Status: Done for shipped milestones, In Progress for partial.
+2. Append a session-log entry to that roadmap. Date, what changed, what's next.
 3. Push (local + VPS, per hard rule below).
 
 ## Who Boubacar Is
