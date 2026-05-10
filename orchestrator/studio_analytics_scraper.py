@@ -62,7 +62,8 @@ def _scrape_views(url: str, platform: str) -> int | None:
     if platform == "tiktok":
         match = re.search(r'"playCount":(\d+)', response.text)
     elif platform == "youtube":
-        match = re.search(r'"viewCount":"(\d+)"', response.text)
+        # "originalViewCount" is locale-independent numeric string in ytInitialData
+        match = re.search(r'"originalViewCount":"(\d+)"', response.text)
     else:
         return None
     return int(match.group(1)) if match else None
