@@ -668,6 +668,68 @@ async function refreshIdeas() {
   try { renderIdeas(await apiFetch('/atlas/ideas')); } catch (_) {}
 }
 
+function renderAgents(d) {
+  const el = document.getElementById('card-agents-body');
+  if (!el) return;
+  const running = d.running || [];
+  const recent = d.recent || [];
+  while (el.firstChild) el.removeChild(el.firstChild);
+  if (running.length === 0 && recent.length === 0) {
+    const p = document.createElement('p');
+    p.className = 'dim';
+    p.textContent = 'No active agents.';
+    el.appendChild(p);
+    return;
+  }
+  function makeTable(rows, cols) {
+    const tbl = document.createElement('table');
+    tbl.className = 'mini-table';
+    const thead = tbl.createTHead();
+    const hrow = thead.insertRow();
+    cols.forEach(function(c) {
+      const th = document.createElement('th');
+      th.textContent = c.label;
+      hrow.appendChild(th);
+    });
+    const tbody = tbl.createTBody();
+    rows.forEach(function(r) {
+      const tr = tbody.insertRow();
+      cols.forEach(function(c) {
+        const td = tr.insertCell();
+        td.textContent = c.get(r) || '--';
+      });
+    });
+    return tbl;
+  }
+  if (running.length > 0) {
+    const lbl = document.createElement('p');
+    lbl.className = 'card-label';
+    lbl.textContent = 'Running';
+    el.appendChild(lbl);
+    el.appendChild(makeTable(running, [
+      { label: 'Kind', get: function(r) { return r.resource || r.kind; } },
+      { label: 'Holder', get: function(r) { return r.claimed_by; } },
+      { label: 'Expires', get: function(r) { return r.lease_expires_at ? new Date(r.lease_expires_at).toLocaleTimeString() : null; } }
+    ]));
+  }
+  if (recent.length > 0) {
+    const lbl2 = document.createElement('p');
+    lbl2.className = 'card-label';
+    lbl2.style.marginTop = '0.75rem';
+    lbl2.textContent = 'Recent (1h)';
+    el.appendChild(lbl2);
+    el.appendChild(makeTable(recent, [
+      { label: 'Kind', get: function(r) { return r.kind; } },
+      { label: 'Status', get: function(r) { return r.status; } },
+      { label: 'Claimed By', get: function(r) { return r.claimed_by; } }
+    ]));
+  }
+}
+
+async function refreshAgents() {
+  try { renderAgents(await apiFetch('/atlas/agents')); } catch (_) {}
+}
+
 // Action stubs (wired fully in Task 17)
 async function actionToggleGriot(enabled, btn) {
   btn.disabled = true;
@@ -796,6 +858,7 @@ function refreshAll() {
   refreshHeartbeats();
   refreshErrors();
   refreshIdeas();
+  refreshAgents();
 }
 
 function startPolling() {
