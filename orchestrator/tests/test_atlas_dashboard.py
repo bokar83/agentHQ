@@ -236,3 +236,19 @@ def test_get_ideas_returns_ranked():
     assert result["count"] == 2
     assert result["items"][0]["score"] == 6
     assert result["items"][0]["title"] == "High Impact Low Effort"
+
+
+def test_get_agents_returns_shape():
+    """get_agents() must return dict with 'running' and 'recent' lists."""
+    from unittest.mock import patch
+    mock_running = [{"id": "r1", "resource": "minion:test", "claimed_by": "minion_worker"}]
+    mock_recent = [{"id": "d1", "kind": "minion:test", "status": "done"}]
+
+    with patch("skills.coordination.list_running", return_value=mock_running), \
+         patch("skills.coordination.recent_completed_prefix", return_value=mock_recent):
+        result = atlas_dashboard.get_agents()
+
+    assert "running" in result
+    assert "recent" in result
+    assert result["running"][0]["id"] == "r1"
+    assert result["recent"][0]["kind"] == "minion:test"

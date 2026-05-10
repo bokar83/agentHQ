@@ -1055,6 +1055,11 @@ async def atlas_ledger(days: int = 30, _auth=Depends(verify_chat_token)):
     return JSONResponse(_atd.get_cost_ledger(days=days))
 
 
+@app.get("/atlas/agents")
+async def atlas_agents(_auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_agents())
+
+
 @app.post("/atlas/ledger")
 async def atlas_ledger_add(body: _LedgerEntryBody, _auth=Depends(verify_chat_token)):
     return JSONResponse(_atd.add_cost_ledger_entry(

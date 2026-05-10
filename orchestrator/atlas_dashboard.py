@@ -795,6 +795,17 @@ def get_ideas() -> dict:
     return {"items": items, "count": len(items)}
 
 
+def get_agents() -> dict:
+    """Live Agent Graph: running tasks + recently completed Minion tasks."""
+    try:
+        from skills.coordination import list_running, recent_completed_prefix
+        running = list_running()
+        recent = recent_completed_prefix("minion:", since_seconds=3600, limit=50)
+        return {"running": running, "recent": recent}
+    except Exception:
+        return {"running": [], "recent": []}
+
+
 def get_cost_report(days: int = 90) -> dict:
     """
     Full spend report for /atlas/cost page.
