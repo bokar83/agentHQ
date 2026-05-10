@@ -45,7 +45,9 @@ class HyperframeBriefGenerator:
     def _get_client(self):
         if self._client is None:
             self._client = anthropic.Anthropic(
-                api_key=os.environ.get("ANTHROPIC_API_KEY")
+                api_key=os.environ.get("OPENROUTER_API_KEY"),
+                base_url="https://openrouter.ai/api/v1",
+                default_headers={"HTTP-Referer": "https://agentshq.io"},
             )
         return self._client
 
@@ -53,7 +55,7 @@ class HyperframeBriefGenerator:
         """Returns HTML string for the composition."""
         width, height = ASPECT_DIMS.get(aspect_ratio, (1080, 1920))
         response = self._get_client().messages.create(
-            model="claude-sonnet-4-6",
+            model="anthropic/claude-sonnet-4-6",
             max_tokens=2048,
             system=[{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
             messages=[{
