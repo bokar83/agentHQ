@@ -1,91 +1,58 @@
 # Echo - Async Partnership Substrate
 
-**Codename:** `echo`. The agent and the human echo each other's work asynchronously: agent proposes, human acks, neither blocks on the other.
+**Codename:** `echo`. Async human-review layer for ALL autonomous agent actions — commits, deploys, content, outreach drafts. Agent queues proposals, human batch-acks via Telegram. Neither blocks on the other.
 
 ---
 
 ## Done Definition
 
-The pause-to-commit ceremony is gone. Boubacar can let Claude (or any autonomous agent in agentsHQ) work for an extended stretch without ever having to stop the agent to commit, push, or acknowledge a checkpoint. Concretely:
+**Reframed 2026-05-10 after Sankofa Council.** The commit-proposal use case is descoped — Gate already handles commits autonomously. Echo's real value is a unified async review queue for autonomous AGENT ACTIONS (content proposals, outreach drafts, deploy approvals, spend gates).
 
-1. Agent proposes commits asynchronously (via slash command). Boubacar acks them on his cadence.
-2. Acks happen in 1 keystroke (Telegram tap, slash command, or web one-click).
-3. Agent does not block on acks. It moves to the next task. Backlog of un-acked proposals does not stall the agent.
-4. Multiple proposal kinds (commit, deploy, publish, draft) flow through the same queue.
-5. After 1 week of real use, the count of "pause and commit" interruptions in chat history is at least 50% lower than baseline.
+Echo is "done" when:
+
+1. CrewAI agents (Griot, Hunter, Studio, Concierge) route proposals through the Echo queue instead of firing direct Telegram alerts.
+2. Boubacar batch-acks proposals from one Telegram surface on his cadence.
+3. Agents do not block on acks — they queue and continue.
+4. At least 3 distinct proposal kinds flow through the same queue.
+5. The queue handles ≥10 proposals/week from autonomous agents without manual intervention.
 
 ---
 
 ## Status Snapshot
 
-**Substrate (the foundation, NOT the product):** SHIPPED on `feature/coordination-layer`.
+*Last updated: 2026-05-10*
 
-- `skills/coordination/__init__.py` - Postgres `tasks` table with `claim/complete/lock/enqueue/claim_next/fail/recent_completed/renew`.
-- `skills/coordination/cli.py` - bash shim (`with-lock` subcommand).
-- 14 tests green, 4 callers wired (morning_runner, outreach_runner, deploy.sh, vercel-launch).
-- Schema live on prod orc-postgres.
+**Substrate:** SHIPPED. `tasks` table live on orc-postgres. `claim/complete/enqueue/proposal.propose/ack/reject` all operational.
 
-**Echo product:** NOT STARTED. M1 begins when Phase 1 ships.
+**M1 infrastructure:** SHIPPED. `skills/coordination/proposal.py` + Telegram handlers + `.claude/commands/` shims all wired. Smoke tested 2026-05-10.
+
+**Commit-proposal use case:** DESCOPED 2026-05-10. Gate handles commits autonomously. Not a problem Boubacar has.
+
+**Next:** M3 — wire CrewAI agents to queue proposals through Echo instead of direct Telegram alerts. `approval_queue.py` is the existing pattern to unify.
 
 ---
 
 ## Milestones
 
-### M1 - Slash command surface (THE SVP)
+### M1 - Slash command surface ✅ SHIPPED 2026-05-10
 
-**Status:** READY. Build any session.
+**Status:** SHIPPED. Commit-proposal use case DESCOPED — Gate owns commits. Infrastructure stays for M3.
 
-**Goal:** Prove the async-partnership flow with the smallest possible surface. Three slash commands plus one new proposal `kind` in the existing queue.
+**What shipped:** `/propose`, `/ack`, `/reject`, `/list-proposals` Telegram handlers + CC slash commands + `skills/coordination/proposal.py`. Smoke tested end-to-end. 19 gate tests green.
 
-**Scope:**
-
-- `/propose` slash command:
-  1. Run `git status --porcelain` and `git diff --stat HEAD`.
-  2. Run a configurable test command (default `pytest -q`).
-  3. Generate a commit message from the diff via the active model.
-  4. `enqueue(kind='commit-proposal', payload={files, suggested_message, tests_status, branch, repo_path, diff_summary})`.
-  5. Send a Telegram message via the existing helper to Boubacar's chat ID with proposal ID + summary + reply instructions.
-  6. Print "Proposal queued. Continuing." to chat. Agent moves on.
-- `/ack <N>` slash command: read proposal N, run `git add <files> && git commit -m '<msg>'`, mark row done.
-- `/reject <N>` slash command: mark row rejected, no commit, no further action.
-- CLAUDE.md addition: convention for when Claude should call `/propose` (after a coherent unit hits green tests).
-
-**No new schema work.** `tasks` table already has `kind` and `payload jsonb`.
-
-**Build sequence:** see Session log entry at the bottom for the actual checklist.
-
-**Exit criterion:**
-- Boubacar uses `/propose` for one full work day.
-- Telegram acks work end-to-end.
-- Agent never blocks waiting for an ack.
-
-**Blockers:** None. Substrate exists.
-
-**ETA:** 90-120 minutes.
+**Descoped:** commit-proposal workflow. Boubacar confirmed Gate already handles this. The queue infra is the asset; the commit use case was the wrong first instance.
 
 ---
 
-### M2 - Second proposal kind
+### M2 - Second proposal kind DESCOPED
 
-**Status:** GATED on M1 + 1 week of real use.
-
-**Goal:** Generalize the queue to a second proposal type. Validates the "ack queue as platform" hypothesis from Sankofa Expansionist.
-
-**Candidates (pick whichever has highest ack-friction in real workflow):**
-
-- `kind='publish-proposal'` - newsletter/social drafts surface as proposals.
-- `kind='deploy-proposal'` - deploy.sh drops a proposal, ack-to-deploy from Telegram.
-- `kind='draft-proposal'` - outreach drafts queue as proposals you batch-ack.
-
-**Trigger to start:** M1 has been in real use for at least 7 days AND interruption-rate measurement shows 50%+ reduction (validates the substrate is doing what we hoped).
-
-**Trigger to NOT start:** if M1 has not produced friction reduction, debrief and consider the Outsider's hypothesis (the friction was ack-cost, not detection) before generalizing.
+**Status:** DESCOPED 2026-05-10. The "7 days of real use + 50% friction reduction" gate assumed commit-proposals were the product. They are not. Skipping directly to M3.
 
 ---
 
 ### M3 - Multi-agent ingestion
 
-**Status:** GATED on M2.
+**Status:** NEXT. No gate. Build when a session has 2+ hours.
 
 **Goal:** Extend the queue to ingest from CrewAI runs and n8n workflows. Same schema, same ack UI. The queue becomes the single ack surface for ALL autonomous work in agentsHQ.
 
@@ -134,9 +101,9 @@ The pause-to-commit ceremony is gone. Boubacar can let Claude (or any autonomous
 - C4: Gate auto-merges a docs-only proposal without prompting.
 - C5: `/nsync` runs clean after gate flushes queue.
 
-**Trigger to start:** M2 (`deploy-proposal`) in real use AND confirmed collision incident in session history.
+**Trigger to start:** Gate already ships Layers 1+3. Layer 2 (conflict detection in proposal queue) builds when multi-agent collision occurs in practice.
 
-**Council verdicts (2026-05-04):** Sankofa + Karpathy both say build discipline first, not a new monolithic agent. Gate Agent is Layer 3, not Layer 1. Build in sequence.
+**Council verdicts (2026-05-04):** Sankofa + Karpathy both say build discipline first. Gate Agent is Layer 3, not Layer 1. Layers 1+3 already SHIPPED via gate_agent.py + file-lock protocol in CLAUDE.md.
 
 ---
 
@@ -184,7 +151,21 @@ The pause-to-commit ceremony is gone. Boubacar can let Claude (or any autonomous
 
 ## Session Log
 
-### 2026-05-04: Gate agent SHIPPED -- host cron, 19 tests green, live on VPS
+### 2026-05-10: Sankofa reframe — commit-proposal descoped, Echo repivoted to agent-action queue
+
+Sankofa Council run against all five roadmaps. Echo verdict: commit-proposal use case was solving a problem that doesn't exist. Gate already handles commits from coding agents autonomously. Direct sessions have Boubacar present.
+
+**Changes this session:**
+- Done Definition rewritten: Echo is a unified async review queue for autonomous AGENT ACTIONS, not commits.
+- M1 marked SHIPPED (infrastructure is real and useful for M3).
+- M2 (second proposal kind) DESCOPED — gate assumed wrong use case.
+- M3 ungated — it is now the next milestone with no prerequisite.
+- M2.5 Layer 1+3 noted as already shipped via gate_agent.py + CLAUDE.md file-lock protocol.
+- Status Snapshot updated to reflect 2026-05-10 reality.
+
+**Next:** M3 — wire Griot/Hunter/Studio/Concierge to queue proposals through Echo queue instead of direct Telegram. `approval_queue.py` is the pattern; M3 unifies it.
+
+### 2026-05-10: M1 slash commands SHIPPED — exit criteria pending
 
 **What shipped:**
 

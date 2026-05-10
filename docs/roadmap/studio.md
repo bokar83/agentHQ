@@ -38,15 +38,16 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 
 ## Status Snapshot
 
-*Last updated: 2026-04-25 (Saturday evening)*
+*Last updated: 2026-05-10 (Sankofa audit)*
 
 | Gate | Status | Notes |
 |---|---|---|
-| G1 Channels live | 🟡 2 of 3 EXIST | Under the Baobab + AI Catalyst exist (Boubacar's). First Generation Money needs creation in M2. Engine LIVE on VPS (kill switch off). |
-| G2 Production autonomy | 🟡 ENGINE LIVE | M1 SHIPPED 2026-04-25: Trend Scout + QA Crew (8 checks) + Pipeline DB live. Studio session also shipped harvest reviewer + niche research + inventory snapshot. Production pipeline orchestration (script -> render) is M3. |
-| G3 Publishing autonomy | ✅ INFRA READY | Atlas M7b SHIPPED 2026-04-25 (Blotato API verified, $20.30/mo Skool-discounted). Studio M4 reuses BlotatoPublisher class (platform-agnostic by design). |
-| G4 Revenue floor | ❌ $0 | No channels live posting yet. Floor is portfolio-level: $1k/mo net across all active channels, sustained 90 days. |
-| G5 Ops cost | N/A | Build phase budget: up to 2 hr/day. Steady-state target: 3 hr/week. Time-tracking ships in M1 Pipeline DB. |
+| G1 Channels live | ✅ 3 EXIST | UTB + AIC + 1stGen all have Blotato accounts wired. First TikTok posted 2026-05-10 @underthebaobab_. |
+| G2 Production autonomy | ✅ ENGINE LIVE | M3 SHIPPED 2026-05-05. Shorts-first. Script → voice → visuals → ffmpeg render → Drive → Notion. 11 QA checks. |
+| G3 Publishing autonomy | 🟡 WARM-UP | Publisher wired. First post live. 30-day warm-up window underway per platform. |
+| G4 Revenue floor | ❌ $0 | No monetization eligibility yet. Requires warm-up window + threshold (YT: 1k subs / 4k hrs). |
+| G5 Ops cost | 🟡 BUILD PHASE | Still in build phase. Steady-state measurement starts when G3 fully automated. |
+| G6 Channel count | ✅ 3 ACTIVE | UTB + AIC + 1stGen all publishing. |
 
 **Leverageable infrastructure (already shipped on agentsHQ):**
 - Atlas autonomy layer: griot crew, scheduler, publish brief, error monitor, three-way nsync (active and stable)
@@ -282,7 +283,7 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 
 ---
 
-### M3.7: Content Multiplier with Remix QA 🔄 IN PROGRESS (started 2026-05-07)
+### M3.7: Content Multiplier with Remix QA ✅ SHIPPED iter 4 (2026-05-07)
 
 **What:** Take ONE approved source (article, YouTube video, post, PDF, raw text) and generate 9 atomic content pieces aligned to Boubacar's voice and the 8 diagnostic lenses. Pieces route to LinkedIn, X, and matching Studio channel video scripts. QA can route a source three ways: passed (use verbatim), remix (strip unverifiable bits, keep concept, write Boubacar's original take), or failed (truly off-brand).
 
@@ -1104,3 +1105,19 @@ Phase 3 — YAML machine-readable tokens:
 **YT analytics:** scraper already working (`originalViewCount` regex correct). 8/12 records updated. TikTok 0s = bot detection serving 0, not a code bug.
 
 **Next studio session:** SW demo build validation (verify agent loads INDEX.md unprompted) — target 2026-05-17.
+
+---
+
+### 2026-05-10: Sankofa audit — status snapshot updated, milestones aligned
+
+Sankofa Council run across all five roadmaps. Studio verdict: Status Snapshot was 15 days stale. All G gates updated to reflect current reality. Key changes:
+
+- G1: 3 channels exist and have Blotato accounts wired (was "2 of 3 EXIST").
+- G2: M3 confirmed SHIPPED 2026-05-05.
+- G3: Warm-up window active, first post published 2026-05-10.
+- M3 marked SHIPPED (was already correct in body, snapshot was wrong).
+- M3.4 marked SHIPPED (mixed video motion, committed a556542).
+- M3.7 marked SHIPPED iter 4 (memory confirms 2026-05-07, roadmap still showed IN PROGRESS).
+- M4 remains IN PROGRESS — warm-up window is the gate, not code.
+
+No descopes. No milestone reorders. G4 ($0 revenue) is the honest state.

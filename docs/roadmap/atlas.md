@@ -137,23 +137,25 @@ Reference: AlphaSignal benchmarks across 10,000 SEC filings, five LLMs. Key find
 
 ## Status Snapshot
 
-*Last updated: 2026-04-25 (Saturday evening, post M7a)*
+*Last updated: 2026-05-10*
 
 | Loop | Status | Notes |
 |---|---|---|
-| L1 Propose | ✅ LIVE | griot-morning fires Mon-Fri 07:00 MT. Verified weekend gate working today. |
-| L2 Schedule | ✅ LIVE | 5-min wake. Queue #3 scheduled for Monday 2026-04-27. |
-| L3 Publish | ✅ LIVE | M7b SHIPPED 2026-04-25. Auto-publisher tick fires every 5 min via Blotato API ($20.30/mo Skool-discounted). Time-of-day slots (LI 07/11/12 MT, X 07/11/14 MT). Mon-Sat cadence, skip Sun. Past-due stagger (max 4/tick). publish_brief still sends Telegram digest as audit; auto_publisher does the actual posting. |
-| L4 Reconcile | ✅ LIVE | Reply 'posted' or 'skip' to publish-brief Telegram message; Notion Status flips, task_outcomes written. Shipped 2026-04-25 (M1). |
-| L5 Learn | ✅ LIVE | M5 Chairman Crew shipped 2026-05-08. chairman-weekly fires Monday 06:00 MT. enabled=false dry_run=true on VPS. First real tick: next Monday (6 outcomes in DB, need 7). |
+| L1 Propose | ✅ LIVE | griot-morning fires Mon-Fri 07:00 MT. |
+| L2 Schedule | ✅ LIVE | 5-min wake. Auto-schedules approved candidates. |
+| L3 Publish | ✅ LIVE | auto_publisher fires every 5 min via Blotato. First TikTok posted 2026-05-10 @underthebaobab_. |
+| L4 Reconcile | ✅ LIVE | Telegram buttons write Notion Status + task_outcomes. |
+| L5 Learn | ✅ LIVE | Chairman crew shipped 2026-05-08. enabled=false dry_run=true. First real Monday tick 2026-05-11. |
 
-**Infrastructure live:**
-- 6 heartbeat wakes registered, all firing on schedule
-- `orc-crewai` Up 19h healthy
-- Three-way sync (local + origin + VPS) on `1fc4980`
-- error_monitor.sh cron silent for 19h (no error spikes)
-- approval_queue: 3 rows total (1 approved+scheduled, 1 rejected, 1 historical approved)
-- autonomy_state.json: griot.enabled=true, dry_run=true
+**Infrastructure live as of 2026-05-10:**
+
+- All 5 loops closed. Done Definition met structurally.
+- Gate: 5-min host cron, fully autonomous. Merges + deploys with no human touch.
+- M23 SHIPPED: minion spawning (`spawner.py` + `minion_worker.py`). Active Agents endpoint live.
+- M8b SHIPPED: Active Agents card live at agentshq.boubacarbarry.com/atlas.
+- sw_email_log LIVE: migration 007. 165 SW T1s confirmed.
+- Chairman dry_run=true — enable after first real tick 2026-05-11.
+- Next: M24 Hermes Self-Healing (worktree sandbox isolation).
 
 ---
 
@@ -946,6 +948,14 @@ Roadmap items for MCP/plugin stack. Not immediate — document when/why so we do
 ## Session Log
 
 Append-only. Newest entry at the bottom. Each entry: date, what changed, what's next.
+
+### 2026-05-10: Sankofa audit — status snapshot updated, M24 confirmed next
+
+Sankofa Council run across all five roadmaps. Atlas verdict: all 5 loops are live and Done Definition is structurally met. Status Snapshot was 15 days stale (last updated 2026-04-25). Updated to current reality: M23+M8b shipped, Gate fully autonomous, Chairman dry_run=true pending first real tick 2026-05-11, sw_email_log live.
+
+Architectural observation: Atlas has grown to 72K tokens — hits the Read tool's hard limit. Architecture docs (hierarchical pattern map, gbrain reference, LangGraph gate) belong in AGENT_SOP, not the roadmap. Flagged for Compass to enforce at next maintenance window.
+
+Next: M24 Hermes Self-Healing (worktree sandbox isolation). M18 HALO tracing (50 traces by 2026-05-18). Chairman first real tick 2026-05-11 — flip enabled=true after dry run validates.
 
 ### 2026-04-23: Phase 0 shipped
 Safety rails (spend cap, kill switch, per-crew flags, dry-run, ledger split). PR #9 merged. autonomy_state.json now persisted on VPS via `./data:/app/data` mount. Tags: `savepoint-pre-autonomy-20260423`, `savepoint-phase-0-autonomy-shipped-20260423`.

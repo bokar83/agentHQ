@@ -19,42 +19,39 @@ The autonomy roadmap (`atlas.md`) is about building the system that supports Bou
 
 ---
 
-## Done Definition (placeholder; lock in revenue-session)
+## Done Definition (locked 2026-05-10)
 
-Target: $5K MRR by June 2026. Possible framings to choose from:
-- N paid engagements per quarter
-- $X MRR / quarterly revenue floor
-- Pipeline coverage ratio (qualified leads / revenue target)
-- First-engagement-shipped milestone (then revisit done definition)
+Revised target after Sankofa audit: June 2026 is not achievable from $0 with one warm prospect.
+
+Harvest is "done" when: first 3 paid contracts closed (any mix of SW + CW) AND pipeline producing ≥5 qualified leads/week without manual intervention. Revenue target $5K MRR remains the north star; first-contract-closed is the real forcing function that unlocks all downstream milestones (R3, R4, newsletter monetization).
 
 ---
 
-## Status Snapshot (updated 2026-04-28)
+## Status Snapshot (updated 2026-05-10)
 
 **Signal Works (closest to cash):**
 
-- Daily email pipeline LIVE: 20 drafts/day (10 SW + 10 CW) in CW drafts folder
-- 3 demo sites live on Vercel: roofing, dental, HVAC
-- 3 pitch reels built
-- First contract target: 2026-05-02
-- Week 1 (manual review), Week 2 (auto-send flip)
+**Revenue as of 2026-05-10:** $0. First touch sent to Rod (Elevate Roofing) 2026-05-07. Hold window ends 2026-05-14.
+
+**Pipeline:**
+
+- SW daily harvest: 50 leads/day running (35 SW + 15 CW). Hunter + Apollo wired.
+- Email sequences: T1-T5 SW, T1-T5 CW. sw_email_log tracking every touch (migration 007).
+- 2,545 leads in DB. 423 with verified email.
+- Auto-send still OFF. Flip `AUTO_SEND_SW=true` after lead quality confirmed.
 
 **Catalyst Works:**
 
-- Zero paid engagements as of 2026-04-28
-- Phase 0 playbook: LinkedIn + BNI + South Valley Chamber
-- 4-7 discovery calls in 30 days target
-- Signal Session = $497, 90 min
-- Discovery Call OS v2.0 documented
+- Zero paid engagements. Newsletter live (Issue 3 sent, Listmonk). Truth-loop thesis on site.
+- CW T1 new hook: "What your team is not telling you."
+- R7 eval date: 2026-06-01 (transcript-style-dna lift test).
 
 **Active offer stack:**
 
-- Signal Works Tier 1: $500 setup + $497/month (AI presence infrastructure)
-- CW Signal Session: $497, 90 min (diagnostic)
-- SaaS Audit: $500 flat (TBD: not yet built, see R2 below)
-- "We are your AI department" unified SKU: $997/month (TBD: design phase)
-
-**Revenue as of 2026-04-28:** $0
+- Signal Works Tier 1: $500 setup + $497/month
+- CW Signal Session: $497, 90 min
+- SaaS Audit: $500 flat — R2 SHIPPED 2026-05-04
+- CW automation delivery: $3K-$5K per build (R-automation, queued)
 
 ---
 
@@ -736,6 +733,14 @@ Milestones R1-R6 defined. Status snapshot populated. Three immediately actionabl
 Full analysis artifact: `docs/strategy/yc-rfs-s26-analysis.md`
 
 Next: R1 closes when first Signal Works contract signs. Then R2 (SaaS audit) and R3 (CW Signal Session) run in parallel.
+
+### 2026-05-10: Sankofa audit — Done Definition locked, status updated
+
+Sankofa Council run across all five roadmaps. Harvest verdict: Done Definition was a placeholder for 12 days. Locked it: first 3 paid contracts + pipeline producing 5 qualified leads/week autonomously. $5K MRR remains north star; first contract is the real gate.
+
+Status Snapshot updated from 2026-04-28 to current reality. R2 marked SHIPPED. R1c marked SHIPPED. R-notion-sever Steps 1+2 marked done. Honest state: $0 revenue, Rod first touch pending (hold ends 2026-05-14, one bump allowed then drop).
+
+No milestone order changes. R1 still the critical path.
 
 ### 2026-04-25: Stub created
 

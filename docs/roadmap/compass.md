@@ -27,19 +27,26 @@ Done = all five true at the same time.
 
 ## Status Snapshot
 
-*Last updated: 2026-05-02 (evening)*
+*Last updated: 2026-05-10 (Sankofa audit)*
 
-- M0 SHIPPED 2026-05-02: `docs/GOVERNANCE.md` (64 lines) routing table + AGENT_SOP top-of-file annotation + this roadmap + folder-purpose pre-commit hook (the M0 enforcement piece).
-- M1 SHIPPED 2026-05-02: AGENTS.md compliance audit + backfill. 100% folder coverage (was 32%).
-- M2 SHIPPED 2026-05-02 (evening): 5 enforcement hooks live (memory-frontmatter, session-log, redundancy, doc-size, retirement-candidates manual stage). 31 tests passing. Surfaced + fixed one pre-existing violation (`docs/memory/brand_catalyst_works.md` was missing frontmatter).
-- M3 ARMED for 2026-08-02: quarterly purge agent.
-- M4 SHIPPED 2026-05-02 (evening): `docs/governance.manifest.json` (LLM-readable routing table) + `scripts/validate_governance_manifest.py` drift check + 7 tests. Wired to fire on edits to GOVERNANCE.md or the manifest.
-- M5 SHIPPED 2026-05-02 (evening, late): `.gitmodules` canonicalized to `signal-works-demo-hvac`; original attire-inspo-app code relocated from `output/` root to `output/apps/attire-inspo-app/`; reference docs updated. Original 3-4 hour spec collapsed to 10 min once Boubacar reframed: GitHub repos already separate, no merge needed, just local hygiene. Placement rule: apps live in `output/apps/`, websites in `output/websites/`.
+- M0 SHIPPED 2026-05-02
+- M1 SHIPPED 2026-05-02: 100% AGENTS.md folder coverage
+- M2 SHIPPED 2026-05-02: 5 enforcement hooks, 31 tests
+- M2.5 SHIPPED 2026-05-09: routing evaluator + skill conformance gate. 11/70 skills (16%) have fixtures.
+- M3 ARMED 2026-08-02: quarterly purge cron set
+- M4 SHIPPED 2026-05-02: `governance.manifest.json` + validator
+- M5 SHIPPED 2026-05-02: submodule reconciliation
+- M6 SHIPPED 2026-05-04: security scan gate v1+v2+v3, fixtures written
 
-**Coverage today:**
+**Compass is near-complete.** Only open work: routing fixture coverage 11/70 → 59/70 (80%), then flip routing gap hook from warn-only to strict. One session.
 
-- 8/25 active top-level folders had AGENTS.md before today (32%).
-- M1 today brings coverage to 100% by writing the missing 17 + auditing the existing 8.
+Done Definition check:
+
+- 30s reachability via GOVERNANCE.md: ✅
+- Every enforceable rule IS enforced by mechanism: ✅
+- Surfaces consolidated: ✅
+- New collaborator can answer "where does rule go?": ✅
+- Retirement protocol enforced automatically: ✅ (M3 cron armed)
 - Folder-purpose enforcement hook live as of M0 (commits adding new top-level folders without AGENTS.md/README.md will fail).
 
 ---
@@ -311,6 +318,14 @@ Action required: Check 3 reviewed 2026-05-09: Read*/Edit*/Write* broad allows ar
 ---
 
 ## Session Log
+
+### 2026-05-10: Sankofa audit — near-complete verdict, M2.5b next
+
+Sankofa Council run across all five roadmaps. Compass verdict: Done Definition is met on all 5 criteria. Only open work is routing fixture coverage 11/70 → 59/70 (80%), then flip routing gap check to strict mode.
+
+Status Snapshot updated to reflect 2026-05-10 reality. All shipped milestones confirmed. M6 (security scan) verified shipped. No milestone regressions found.
+
+Next: add routing fixtures to 48 more skills (1-2 hours), then flip `check_routing_gaps.py` to strict. After that, Compass status moves to shipped.
 
 ### 2026-05-04: n8n-mcp absorb session: M6 security scan gate exercised in the wild
 
