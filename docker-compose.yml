@@ -231,6 +231,7 @@ services:
       - ./workspace/studio-cards/channel_cards:/app/workspace/assets/intros:ro
       - ./workspace/studio-cards/channel_cards:/app/workspace/assets/outros:ro
       - ./workspace/renders:/app/workspace/renders
+      - ./loops:/app/loops
     depends_on:
       postgres:
         condition: service_healthy
