@@ -1,0 +1,3 @@
+{"intent": "help me with karpathy", "expected": "karpathy"}
+{"intent": "I need to karpathy audit", "expected": "karpathy"}
+{"intent": "can you four principles for this", "expected": "karpathy"}

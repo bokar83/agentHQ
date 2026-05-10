@@ -1,6 +1,6 @@
 ---
 name: hostinger-deploy
-description: Full workflow for creating, updating, and deploying static websites on Hostinger via GitHub. Covers repo setup, local folder structure in agentsHQ, GitHub push, and Hostinger Git integration.
+description: Full workflow for creating, updating, and deploying static websites on Hostinger via GitHub. Covers repo setup, local folder structure in agentsHQ, GitHub push, and Hostinger Git integration. Triggers on "hostinger", "deploy to hostinger", "hostinger deploy", "publish to hostinger", "live deploy".
 user-invocable: true
 ---
 

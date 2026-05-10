@@ -1,0 +1,3 @@
+{"intent": "help me with client intake", "expected": "client-intake"}
+{"intent": "I need to new client kickoff", "expected": "client-intake"}
+{"intent": "can you brand discovery for this project", "expected": "client-intake"}

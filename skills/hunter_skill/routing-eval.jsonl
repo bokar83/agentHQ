@@ -1,0 +1,3 @@
+{"intent": "help me with hunter", "expected": "hunter-skill"}
+{"intent": "I need to run hunter", "expected": "hunter-skill"}
+{"intent": "can you prospect Utah for this", "expected": "hunter-skill"}

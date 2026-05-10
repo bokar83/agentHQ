@@ -1,0 +1,3 @@
+{"intent": "help me with mermaid", "expected": "mermaid_diagrammer"}
+{"intent": "I need to generate diagram", "expected": "mermaid_diagrammer"}
+{"intent": "can you mermaid diagram for this", "expected": "mermaid_diagrammer"}

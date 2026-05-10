@@ -1,0 +1,3 @@
+{"intent": "help me with transcribe", "expected": "transcribe"}
+{"intent": "I need to get transcript", "expected": "transcribe"}
+{"intent": "can you speech to text for this", "expected": "transcribe"}

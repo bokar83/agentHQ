@@ -1,6 +1,6 @@
 ---
 name: opencli-rs
-description: |
+description: |. Triggers on "opencli", "browse linkedin", "fetch from reddit", "search hackernews", "scrape this site with cli".
   Use opencli-rs CLI to interact with social/content websites (HackerNews, DevTo, Lobsters, StackOverflow, Steam, Linux-do, Arxiv, Wikipedia, Apple-Podcasts, Xiaoyuzhou, BBC, Hugging Face, SinaFinance, Google, V2EX, Bloomberg, Twitter/X, Bilibili, Reddit, Zhihu, Xiaohongshu, Xueqiu, Weibo, Douban, WeRead, YouTube, Medium, Substack, SinaBlog, BOSS直聘, Jike, Facebook, Instagram, TikTok, Yollomi, Yahoo-Finance, Barchart, LinkedIn, Reuters, SMZDM, Ctrip, Coupang, Grok, Jimeng, Chaoxing, Weixin, Doubao, Cursor, Codex, ChatWise, ChatGPT, Doubao-App, Notion, Discord, Antigravity etc.) via the user's Chrome login session. ALWAYS prefer opencli-rs over playwright/browser automation for these supported sites. Triggers: user asks to browse, search, or fetch hot/trending content from internet, post, or read messages on any web site; 
 metadata:
   author: nash_su

@@ -1,6 +1,6 @@
 ---
 name: vercel-launch
-description: Vercel preview deploy for Boubacar's apps — for mobile testing and sharing preview links with clients ONLY. NOT for production. All live/production deployments go to Hostinger (use hostinger-deploy skill). Use when user says "deploy my app to Vercel", "get me a preview link", "share this with a client", or "test on mobile". App name becomes <name>-app. ALWAYS preview only — never production.
+description: Vercel preview deploy for Boubacar's apps — for mobile testing and sharing preview links with clients ONLY. NOT for production. All live/production deployments go to Hostinger (use hostinger-deploy skill). Use when user says "deploy my app to Vercel", "get me a preview link", "share this with a client", or "test on mobile". App name becomes <name>-app. ALWAYS preview only — never production. Triggers on "deploy to vercel", "vercel preview", "get a preview link", "share with client via vercel", "test on mobile".
 ---
 
 # Vercel Launch

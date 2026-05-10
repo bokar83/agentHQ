@@ -1,6 +1,6 @@
 ---
 name: openspace-skill
-description: Autonomous performance optimization and skill repair engine for self-evolving Catalyst Works agents.
+description: Autonomous performance optimization and skill repair engine for self-evolving Catalyst Works agents. Triggers on "openspace", "evolve skill", "repair skill", "optimize agent performance", "fix broken skill", "self-improve".
 ---
 
 # OpenSpace: Self-Evolving Skill System

@@ -1,6 +1,6 @@
 ---
 name: clone-scout
-description: |
+description: |. Triggers on "clone scout", "find sites to clone", "find high traffic sites", "scout clone targets", "find profitable sites".
   Scouts high-traffic websites and web apps that can be cloned and monetized via AdSense.
   Starts from verified traffic data (SimilarWeb, Semrush, Ahrefs estimates), not self-reported
   revenue. Finds utility tools, converters, calculators, AI tools, and single-purpose web apps

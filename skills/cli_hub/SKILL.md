@@ -1,6 +1,6 @@
 ---
 name: "cli_hub"
-description: "Search the community CLI-Hub for pre-built agent-native CLIs (GIMP, Blender, OBS, etc.) and install them."
+description: "Search the community CLI-Hub for pre-built agent-native CLIs (GIMP, Blender, OBS, etc.) and install them. Triggers on \"cli hub\", \"find a CLI\", \"agent CLI\", \"install CLI tool\", \"pre-built CLI\", \"CLI for\"."
 ---
 
 # CLI-Hub Explorer Skill

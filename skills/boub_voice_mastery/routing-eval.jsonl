@@ -1,0 +1,3 @@
+{"intent": "help me with voice check", "expected": "boub-voice-mastery"}
+{"intent": "I need to does this sound like me", "expected": "boub-voice-mastery"}
+{"intent": "can you apply my voice for this", "expected": "boub-voice-mastery"}

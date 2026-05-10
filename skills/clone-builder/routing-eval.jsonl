@@ -1,0 +1,3 @@
+{"intent": "help me with clone-builder", "expected": "clone-builder"}
+{"intent": "I need to build this clone", "expected": "clone-builder"}
+{"intent": "can you start building for this", "expected": "clone-builder"}

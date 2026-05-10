@@ -1,6 +1,6 @@
 ---
 name: karpathy
-description: Apply the four Karpathy coding principles (from AGENT_SOP.md) as a structured audit of code that was just written, proposed, or reviewed. Use on-demand via /karpathy or as a gate before shipping. Outputs a scored pass/fail per principle with specific line-level callouts.
+description: Apply the four Karpathy coding principles (from AGENT_SOP.md) as a structured audit of code that was just written, proposed, or reviewed. Use on-demand via /karpathy or as a gate before shipping. Outputs a scored pass/fail per principle with specific line-level callouts. Triggers on "karpathy", "karpathy audit", "four principles", "audit this code", "/karpathy".
 ---
 
 # Karpathy Principles Audit

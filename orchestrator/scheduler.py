@@ -280,15 +280,90 @@ def _run_social_analytics():
         logger.error(f"CRON: Social Analytics refresh failed: {e}")
 
 
+def _run_gmb_score_decay():
+    """Monthly re-score of SW leads. Opts out leads that no longer qualify
+    (review_count >= 100 OR has_website flipped True and review_count >= 30).
+    Fires on the 1st of each month at 06:00 MT. Sends Telegram summary.
+
+    Success criterion: leads that improved beyond both thresholds are opted out
+    and logged. Leads mid-sequence (sequence_touch > 0) are flagged but NOT
+    opted out — do not interrupt an active thread.
+    """
+    try:
+        if "/app" not in sys.path:
+            sys.path.insert(0, "/app")
+        from db import get_crm_connection
+        from notifier import send_message
+
+        GMB_DECAY_REVIEW_FLOOR = 100   # above this = no longer a low-review prospect
+        GMB_DECAY_WEBSITE_FLOOR = 30   # has_website=True + reviews above this = graduated
+
+        conn = get_crm_connection()
+        cur = conn.cursor()
+
+        # Find leads not yet contacted (sequence_touch = 0 or NULL) that no longer qualify
+        cur.execute("""
+            SELECT id, name, city, niche, review_count, has_website
+            FROM leads
+            WHERE source LIKE 'signal_works%%'
+              AND (opt_out IS NULL OR opt_out = FALSE)
+              AND (sequence_touch IS NULL OR sequence_touch = 0)
+              AND (
+                review_count >= %s
+                OR (has_website = TRUE AND review_count >= %s)
+              )
+        """, (GMB_DECAY_REVIEW_FLOOR, GMB_DECAY_WEBSITE_FLOOR))
+        to_decay = [dict(r) for r in cur.fetchall()]
+
+        if to_decay:
+            ids = [r["id"] for r in to_decay]
+            cur.execute("""
+                UPDATE leads SET opt_out = TRUE, updated_at = NOW()
+                WHERE id = ANY(%s)
+            """, (ids,))
+            conn.commit()
+
+        # Find mid-sequence leads that improved (flag only, no opt-out)
+        cur.execute("""
+            SELECT id, name, city, niche, review_count, has_website, sequence_touch
+            FROM leads
+            WHERE source LIKE 'signal_works%%'
+              AND (opt_out IS NULL OR opt_out = FALSE)
+              AND sequence_touch > 0
+              AND (
+                review_count >= %s
+                OR (has_website = TRUE AND review_count >= %s)
+              )
+        """, (GMB_DECAY_REVIEW_FLOOR, GMB_DECAY_WEBSITE_FLOOR))
+        mid_sequence = [dict(r) for r in cur.fetchall()]
+        conn.close()
+
+        chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+        msg = f"GMB SCORE DECAY — monthly re-score\n"
+        msg += f"Opted out (pre-T1): {len(to_decay)} leads improved past thresholds\n"
+        if mid_sequence:
+            msg += f"Mid-sequence flagged (NOT opted out): {len(mid_sequence)} leads\n"
+            for r in mid_sequence[:5]:
+                msg += f"  {r['name']} ({r['city']}) — touch {r['sequence_touch']}, {r['review_count']} reviews\n"
+        else:
+            msg += "Mid-sequence: none improved past thresholds\n"
+        if chat_id:
+            send_message(chat_id, msg)
+        logger.info(f"GMB score decay: {len(to_decay)} opted out, {len(mid_sequence)} mid-sequence flagged")
+    except Exception as e:
+        logger.error(f"_run_gmb_score_decay failed: {e}", exc_info=True)
+
+
 def _scheduler_loop():
     """
     Check the time every minute and trigger if it matches the target.
     """
     logger.info(f"Scheduler loop started. Target: {TARGET_HOUR:02d}:{TARGET_MINUTE:02d} {TIMEZONE}")
-    
+
     tz = pytz.timezone(TIMEZONE)
     last_run_date = None
     last_digest_date = None
+    last_decay_month = None
 
     while True:
         now = datetime.now(tz)
@@ -308,6 +383,12 @@ def _scheduler_loop():
             if last_digest_date != now.date():
                 _run_notebooklm_digest()
                 last_digest_date = now.date()
+
+        # GMB score decay: 1st of month at 06:00 MT
+        if now.day == 1 and now.hour == 6 and now.minute == 0:
+            if last_decay_month != now.month:
+                _run_gmb_score_decay()
+                last_decay_month = now.month
 
         # Sleep for 30 seconds to avoid missing the minute or double-triggering
         time.sleep(30)

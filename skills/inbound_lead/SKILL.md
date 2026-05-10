@@ -1,6 +1,6 @@
 ---
 name: inbound-lead
-description: Inbound lead routine for researching, drafting, logging, and notifying on new prospect opportunities.
+description: Inbound lead routine for researching, drafting, logging, and notifying on new prospect opportunities. Triggers on "inbound lead", "new lead came in", "research this prospect", "log this inbound", "new inquiry".
 ---
 
 # Inbound Lead

@@ -1,0 +1,3 @@
+{"intent": "help me with remote access audit", "expected": "remote-access-auditor"}
+{"intent": "I need to scan for remote tools", "expected": "remote-access-auditor"}
+{"intent": "can you security scan my PC for this", "expected": "remote-access-auditor"}
