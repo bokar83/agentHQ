@@ -12,7 +12,7 @@ def _fix_html(html: str) -> str:
         r'\1 data-start="0"',
         html
     )
-    # Inject window.__timelines if missing
+    # Inject window.__timelines if missing — works even if HTML is truncated
     if "window.__timelines" not in html:
         inject = (
             '\n<script>\n'
@@ -21,7 +21,13 @@ def _fix_html(html: str) -> str:
             '  window.__timelines["main"] = tl;\n'
             '</script>'
         )
-        html = html.replace("</body>", inject + "\n</body>")
+        if "</body>" in html:
+            html = html.replace("</body>", inject + "\n</body>")
+        else:
+            # Truncated output — close tags and append
+            html = html.rstrip() + inject + "\n</body>\n</html>"
+    elif "</body>" not in html:
+        html = html.rstrip() + "\n</body>\n</html>"
     return html
 
 
@@ -78,7 +84,7 @@ class HyperframeBriefGenerator:
         width, height = ASPECT_DIMS.get(aspect_ratio, (1080, 1920))
         response = self._get_client().chat.completions.create(
             model="anthropic/claude-sonnet-4.6",
-            max_tokens=2048,
+            max_tokens=4096,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {
