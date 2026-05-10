@@ -98,6 +98,17 @@ If unsure which role: check whether Boubacar explicitly assigned Gate duty this 
 
 Non-Claude agents (Codex, other): same rule applies. Call coordination tools and immediately continue working. Never stop and wait for an orchestrator to "do work" after a registration call.
 
+## Extension Ownership Boundary
+
+Fix owner-specific behavior in the owner module only. Core gets generic seams, not bundled extension logic. Concrete rules:
+
+- `gate_agent.py` owns Gate behavior. Skills own their own `SKILL.md` + tests. No cross-module patches.
+- If a bug is in skill X, fix skill X — do not add a workaround in `engine.py` or `coordination.py`.
+- If a capability is needed by two skills, the correct fix is a shared helper in `skills/coordination/` or `orchestrator/`, not copy-paste into both skill dirs.
+- Before touching any file outside the module you are fixing, ask: is this a seam (generic interface) or a bundled extension (owner-specific logic)? Seams belong in core. Logic belongs in the owner.
+
+*Pattern source: openclaw/openclaw AGENTS.md — "Extension-specific behavior stays extension-owned. Core provides generic seams only." Absorbed 2026-05-09.*
+
 ## Coding Principles (Karpathy)
 
 1. **Think before coding**: state assumptions; ask when ambiguous.

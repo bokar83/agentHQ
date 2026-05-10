@@ -4,6 +4,10 @@ Schema: `YYYY-MM-DD | source | verdict | placement | leverage type`
 
 Verdicts: `PROCEED` | `DON'T PROCEED` | `ARCHIVE-AND-NOTE`
 
+2026-05-09 | <https://github.com/freeCodeCamp/freeCodeCamp> | ARCHIVE-AND-NOTE | archive | none
+
+2026-05-09 | <https://github.com/openclaw/openclaw> | ARCHIVE-AND-NOTE | archive | none
+
 2026-05-09 | <https://github.com/trimstray/the-book-of-secret-knowledge> | PROCEED | new tool (Drive 05_Learning/ + NotebookLM CW_Learning Lab) | continuous-improvement (Atlas/infra sessions — queryable sysops/devops/pentest/container reference)
 2026-05-09 | https://github.com/langflow-ai/langflow | ARCHIVE-AND-NOTE | archive | none — visual agent/workflow builder platform (147k stars, MIT, active, 1185 days old); replaces not extends agentsHQ stack (CrewAI+Claude Code); Phase 0 all-no: no producing motion gap, no founder-time leak, no skill enhancement; REOPEN CONDITION: CW wins engagement requiring deliverable no-code agent builder for client → evaluate as satellite repo/white-label product; notable: "Deploy as MCP server" converts flows to MCP tools — relevant if packaging agent logic for non-developer clients
 2026-05-08 | <https://github.com/TauricResearch/TradingAgents> | ARCHIVE-AND-NOTE | docs/patterns/langgraph-checkpoint-pattern.md (pattern extracted) | continuous-improvement (Atlas — checkpoint-sqlite wiring for coding agent crash-resume)

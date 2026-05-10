@@ -33,6 +33,8 @@ Last session ended **2026-05-08 (claw-code absorb — ARCHIVE-AND-NOTE, 3 delive
 5. **[GATED] LangGraph checkpoint-sqlite for coding agent:** Pattern doc at `docs/patterns/langgraph-checkpoint-pattern.md`. Pre-condition: orchestrator must have at least one LangGraph StateGraph (none today — all crews are CrewAI). Trigger when first LangGraph graph is built: wire `SqliteSaver` per pattern doc + verify crash-resume on VPS. Do not add `langgraph-checkpoint-sqlite` to requirements.txt before pre-condition met.
 6. **[ATLAS ARCH] Refactor Gate from Claude session polling to dumb Python cron:** Gate currently runs inside a Claude Code session with LLM context open every 5 min regardless of queue state. This burns context budget on empty-queue ticks. Target architecture: pure Python cron loop (`scripts/gate_poll.py`) polls GitHub for READY branches + checks task table — zero LLM cost. LLM context opens ONLY when a READY branch needs arbitration. Estimated savings: ~85% of current Gate LLM spend on idle nights/weekends. Pre-condition: none. Success criterion: Gate cron runs 24h on VPS with zero LLM calls on empty-queue ticks, verified via spend tracking. See `docs/patterns/` reference: claw-code PHILOSOPHY.md — "notification routing pushed outside agent context window." Trigger: next Gate maintenance window.
 
+7. **[ARCH REF] google-gemini/gemini-cli:** Do NOT install — model access via OpenRouter. Architecture value only: Trusted Folders + bubblewrap sandbox model (maps to Gate/coordination isolation), GEMINI.md multi-agent convention (equivalent of our CLAUDE.md agent contracts), multi-agent comms patterns (103K stars, 386 days old, Apache-2.0). Reference when designing M21 overnight-ambient isolation or M8b live agent graph. Repo: <https://github.com/google-gemini/gemini-cli>.
+
 **Do not start a new milestone without reading the latest Session Log entry below.**
 
 ---
@@ -2557,3 +2559,17 @@ Sankofa + Karpathy both rejected the 8-pattern proposal. Cut to 3:
 - `docs/reviews/absorb-followups.md` — clawhip ticket appended
 - `docs/roadmap/atlas.md` — item 6 added, session block updated, this log entry
 - `orchestrator/tests/mock_llm_service.py` — new file
+
+### 2026-05-09: openclaw absorb — ARCHIVE-AND-NOTE + 3 arch patterns extracted
+
+Source: <https://github.com/openclaw/openclaw> (370K stars, MIT, TypeScript/Node self-hosted AI assistant platform, 165 days old, STATIC-CLEAN).
+
+Verdict: ARCHIVE-AND-NOTE. Phase 0 all-no: full platform replacement, not a component. Our Telegram + CrewAI + Gate stack already covers everything OpenClaw offers.
+
+**3 patterns extracted for Atlas backlog:**
+
+7. **[ATLAS ARCH] Prepared Runtime Facts — cache routing at boot, not per-request:** Gate and orchestrator re-resolve channel IDs, model refs, and agent routing on every message/tick. OpenClaw pre-computes these at startup and passes through context. Target: `orchestrator/startup_check.py` or a new `orchestrator/runtime_cache.py` caches TELEGRAM_CHAT_ID, model ref, skill manifest hashes once at boot. Zero re-discovery per request. Estimated gain: eliminates 2-4 redundant env lookups per message on every heartbeat tick. Pre-condition: none. Success criterion: log shows "runtime facts loaded" once at startup; no per-tick re-reads of static env vars. Trigger: next Gate maintenance window or any heartbeat refactor.
+
+8. **[ATLAS ARCH] Docker Healthcheck Hardening — `/healthz` + `cap_drop` + `security_opt`:** Our `docker-compose.yml` has no healthcheck on `orc-crewai`. Gate watchdog patches around this manually. OpenClaw uses: `healthcheck: test: curl -f http://localhost:PORT/healthz`, `interval: 30s`, `start_period: 20s`, `cap_drop: [ALL]`, `security_opt: [no-new-privileges:true]`. Target: add these to `orc-crewai` service in `docker-compose.yml`. Eliminates the "container Up but silent" failure class we've patched 3+ times. Pre-condition: verify `/healthz` endpoint exists in `app.py` (M12 may have added one — check first). Success criterion: `docker inspect orc-crewai | grep Health` shows `healthy` after 20s. Trigger: next `docker-compose.yml` touch.
+
+9. **[ATLAS ARCH] Manifest-First Loader — pre-compute skill manifests, retire `importlib` crawls:** Orchestrator crawls `skills/` via `importlib` on every agent run to discover capabilities. OpenClaw's pattern: build a manifest dict at startup (skill name → entry point + capabilities), pass pre-resolved object through context. Target: `orchestrator/engine.py` or `scheduler.py` builds skill manifest once at startup, stores in module-level dict. Skills register via a `@register_skill` decorator or explicit `MANIFEST` dict in their `__init__.py`. Per-run `importlib` scan retired. Pre-condition: audit current importlib usage (`grep -r "importlib" orchestrator/`). Success criterion: startup log shows "N skills registered" once; no importlib calls during heartbeat ticks. Trigger: next orchestrator engine refactor.
