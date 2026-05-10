@@ -1,24 +1,27 @@
 {
   "_doc": "Atlas M7b auto_publisher time-of-day rules. Editable without code changes. Times are local America/Denver. Slot index 0=first post of the day, 1=second, etc.",
-  "_updated": "2026-04-25",
+  "_updated": "2026-05-10",
 
   "platform_slots": {
     "LinkedIn": [
-      {"slot": 0, "hour": 7, "minute": 0, "label": "morning"},
-      {"slot": 1, "hour": 11, "minute": 0, "label": "late-morning"},
-      {"slot": 2, "hour": 12, "minute": 0, "label": "noon"}
+      {"slot": 0, "hour": 6, "minute": 30, "label": "morning-coffee"},
+      {"slot": 1, "hour": 10, "minute": 0, "label": "lunch-peak"},
+      {"slot": 2, "hour": 13, "minute": 0, "label": "afternoon-slump"},
+      {"slot": 3, "hour": 16, "minute": 0, "label": "end-workday"}
     ],
     "X": [
-      {"slot": 0, "hour": 7, "minute": 0, "label": "morning"},
-      {"slot": 1, "hour": 11, "minute": 0, "label": "late-morning"},
-      {"slot": 2, "hour": 14, "minute": 0, "label": "afternoon"}
+      {"slot": 0, "hour": 5, "minute": 15, "label": "waking-scroll"},
+      {"slot": 1, "hour": 8, "minute": 30, "label": "mid-morning"},
+      {"slot": 2, "hour": 11, "minute": 45, "label": "post-lunch"},
+      {"slot": 3, "hour": 15, "minute": 0, "label": "commute-peak"}
     ]
   },
 
   "past_due": {
     "_doc": "When multiple past-due records fire on the same wake, stagger them so they do not burst. Skip stagger inside a thread (future-work; no thread concept yet).",
     "stagger_seconds": 900,
-    "max_per_tick": 4
+    "max_per_tick": 4,
+    "max_posts_per_tick": 1
   },
 
   "weekday_policy": {

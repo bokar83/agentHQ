@@ -1,0 +1,3 @@
+{"intent": "help me with clone scout", "expected": "clone-scout"}
+{"intent": "I need to find sites to clone", "expected": "clone-scout"}
+{"intent": "can you find high traffic sites for this", "expected": "clone-scout"}

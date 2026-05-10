@@ -581,6 +581,17 @@ def auto_publisher_tick() -> None:
     else:
         due = today_records
 
+    # Strict single-fire rate limit: cap the number of published posts per tick (default: 1)
+    # This guarantees that under no circumstances do multiple platform posts fire in the
+    # same 5-minute heartbeat loop, spreading out any concurrent or backlog posts.
+    max_posts = int(schedule.get("past_due", {}).get("max_posts_per_tick", 1))
+    if len(due) > max_posts:
+        logger.info(
+            f"auto_publisher: capping due list from {len(due)} to {max_posts} "
+            f"to guarantee strictly staggered, one-at-a-time execution."
+        )
+        due = due[:max_posts]
+
     if not due:
         logger.debug("auto_publisher: no due records (after time-gate + weekday-skip + stagger)")
         return

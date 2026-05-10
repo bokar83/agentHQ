@@ -1,0 +1,3 @@
+{"intent": "help me with notion cli", "expected": "notion-cli"}
+{"intent": "I need to query notion", "expected": "notion-cli"}
+{"intent": "can you notion database for this", "expected": "notion-cli"}

@@ -1,6 +1,6 @@
 ---
 name: roadmap
-description: Manage living roadmaps for multi-session projects in docs/roadmap/. Use when user says "roadmap", "roadmaps", "list roadmaps", "show me the roadmap", "what's next on <codename>", "where are we on <codename>", "create a roadmap", "new roadmap", "log session", or starts/ends a session that touched a roadmapped project. Roadmaps live at d:/Ai_Sandbox/agentsHQ/docs/roadmap/. Each roadmap has a one-or-two-word codename (e.g. atlas, harvest). Read at session start, update at session end. Replaces orphan handoff docs for any project that spans multiple sessions.
+description: Manage living roadmaps for multi-session projects in docs/roadmap/. Use when user says "roadmap", "roadmaps", "list roadmaps", "show me the roadmap", "what's next on <codename>", "where are we on <codename>", "create a roadmap", "new roadmap", "log session", or starts/ends a session that touched a roadmapped project. Roadmaps live at d:/Ai_Sandbox/agentsHQ/docs/roadmap/. Each roadmap has a one-or-two-word codename (e.g. atlas, harvest). Read at session start, update at session end. Replaces orphan handoff docs for any project that spans multiple sessions. Triggers on "roadmap", "show me the roadmap", "what is next on", "log session", "create a roadmap", "list roadmaps".
 ---
 
 # Roadmap Skill

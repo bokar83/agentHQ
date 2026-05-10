@@ -1,0 +1,3 @@
+{"intent": "help me with cli hub\\", "expected": "cli_hub"}
+{"intent": "I need to find a CLI\\", "expected": "cli_hub"}
+{"intent": "can you agent CLI\\ for this", "expected": "cli_hub"}

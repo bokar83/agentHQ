@@ -1,0 +1,3 @@
+{"intent": "help me with harvest skool", "expected": "skool-harvester"}
+{"intent": "I need to scrape skool", "expected": "skool-harvester"}
+{"intent": "can you pull skool lesson for this project", "expected": "skool-harvester"}

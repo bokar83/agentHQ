@@ -1,0 +1,3 @@
+{"intent": "help me with signal works pitch reel", "expected": "signal-works-pitch-reel"}
+{"intent": "I need to pitch reel", "expected": "signal-works-pitch-reel"}
+{"intent": "can you generate pitch video for this", "expected": "signal-works-pitch-reel"}

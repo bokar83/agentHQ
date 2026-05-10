@@ -1,0 +1,3 @@
+{"intent": "help me with serper", "expected": "serper-skill"}
+{"intent": "I need to search leads", "expected": "serper-skill"}
+{"intent": "can you serper search for this", "expected": "serper-skill"}

@@ -1,6 +1,6 @@
 ---
 name: mermaid_diagrammer
-description: Generates PNG, SVG, or PDF diagrams from Mermaid syntax using local Mermaid-CLI.
+description: Generates PNG, SVG, or PDF diagrams from Mermaid syntax using local Mermaid-CLI. Triggers on "mermaid", "generate diagram", "mermaid diagram", "draw this as a diagram", "create flowchart".
 when_to_use: When an agent needs to draw a flowchart, org chart, architecture diagram, or thought process map and output it to a file.
 ---
 

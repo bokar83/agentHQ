@@ -1,0 +1,3 @@
+{"intent": "help me with design logo", "expected": "ckm:design"}
+{"intent": "I need to create CIP", "expected": "ckm:design"}
+{"intent": "can you generate mockups for this", "expected": "ckm:design"}

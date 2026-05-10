@@ -1,0 +1,3 @@
+{"intent": "help me with content multiplier", "expected": "content_multiplier"}
+{"intent": "I need to multiply this content", "expected": "content_multiplier"}
+{"intent": "can you repurpose this for this", "expected": "content_multiplier"}

@@ -1,0 +1,3 @@
+{"intent": "help me with local crm", "expected": "local-crm"}
+{"intent": "I need to update pipeline", "expected": "local-crm"}
+{"intent": "can you add lead to CRM for this", "expected": "local-crm"}

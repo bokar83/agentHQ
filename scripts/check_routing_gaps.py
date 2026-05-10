@@ -102,18 +102,32 @@ def load_skills_index() -> dict[str, SkillEntry]:
         slug, dir_rel, description = m.group(1), m.group(2), m.group(3)
         dir_path = REPO_ROOT / dir_rel.rstrip("/")
 
-        # Extract explicit trigger phrases from description (quoted strings after "Triggers on" etc.)
+        # Extract trigger phrases from description.
+        # Strategy 1: quoted strings after "Triggers on" / "Trigger when" / "Use when"
+        # Strategy 2: ALL quoted strings anywhere in the description (catches skills
+        #             that list examples inline like 'say "build a site"')
+        # Strategy 3: action keywords from description body (fallback for no quotes)
         triggers: list[str] = []
         trigger_pattern = re.compile(r'"([^"]{3,80})"')
-        # Only extract from the trigger declaration part of the description
+
+        # Strategy 1: preferred — quoted phrases near trigger declaration
         trigger_section = re.search(
-            r'[Tt]riggers?\s+(?:on|when)[^.]*\.?(.{0,500})', description
+            r'[Tt]riggers?\s+(?:on|when|with)[^.]*\.?(.{0,500})', description
         )
         if trigger_section:
             for phrase_match in trigger_pattern.finditer(trigger_section.group(0)):
                 phrase = phrase_match.group(1).strip()
                 if phrase and not phrase.startswith("http"):
                     triggers.append(phrase)
+
+        # Strategy 2: all quoted strings in description (if strategy 1 gave nothing)
+        if not triggers:
+            for phrase_match in trigger_pattern.finditer(description):
+                phrase = phrase_match.group(1).strip()
+                if phrase and not phrase.startswith("http") and len(phrase.split()) <= 8:
+                    triggers.append(phrase)
+                if len(triggers) >= 6:
+                    break
 
         entries[slug] = SkillEntry(
             slug=slug,

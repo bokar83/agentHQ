@@ -1,0 +1,3 @@
+{"intent": "help me with automation engagement", "expected": "cw-automation-engagement"}
+{"intent": "I need to case study client", "expected": "cw-automation-engagement"}
+{"intent": "can you build automation for for this project", "expected": "cw-automation-engagement"}

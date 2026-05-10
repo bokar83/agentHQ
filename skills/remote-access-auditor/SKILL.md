@@ -1,6 +1,6 @@
 ---
 name: remote-access-auditor
-description: >
+description: >. Triggers on "remote access audit", "scan for remote tools", "security scan my PC", "check if someone is accessing my computer".
   Performs a full unauthorized remote access audit on a Windows machine using Desktop Commander.
   Use this skill whenever the user asks to: scan for remote access tools, check if anyone is
   accessing their computer, run a security scan, audit running services, check for suspicious

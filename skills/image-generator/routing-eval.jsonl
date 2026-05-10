@@ -1,0 +1,3 @@
+{"intent": "help me with image generator", "expected": "image-generator"}
+{"intent": "I need to scroll-stop prompt", "expected": "image-generator"}
+{"intent": "can you deconstruction prompt for this project", "expected": "image-generator"}
