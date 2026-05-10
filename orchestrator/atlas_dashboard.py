@@ -11,6 +11,12 @@ import logging
 
 logger = logging.getLogger("agentsHQ.atlas_dashboard")
 
+try:
+    from memory import _pg_conn
+except Exception:  # noqa: BLE001 — memory may not be importable in test envs
+    def _pg_conn():  # type: ignore[misc]
+        raise RuntimeError("memory._pg_conn not available in this environment")
+
 
 def get_state() -> dict:
     """Atlas State card: autonomy kill switch + per-crew flags."""
@@ -986,6 +992,80 @@ def get_cost_report(days: int = 90) -> dict:
         "summary": summary,
         "days": days,
     }
+
+
+# ── Milestone status flipping ────────────────────────────────────────────────
+
+_VALID_MILESTONE_STATUSES = {"shipped", "active", "blocked", "queued", "deferred", "descoped"}
+
+
+def flip_milestone(codename: str, mid: str, status: str, notes: str | None = None) -> dict:
+    """Update a milestone's status in the milestones table.
+
+    Returns {ok, codename, mid, old_status, new_status} on success,
+    or {ok=False, error} on failure.
+    Called by Telegram /shipped, webchat intent, and autonomous agents.
+    """
+    if status not in _VALID_MILESTONE_STATUSES:
+        return {
+            "ok": False,
+            "error": f"Invalid status '{status}'. Valid: {sorted(_VALID_MILESTONE_STATUSES)}",
+        }
+    try:
+        conn = _pg_conn()
+        cur = conn.cursor()
+
+        # Fetch current row to get old_status
+        cur.execute(
+            "SELECT id, status FROM milestones WHERE codename=%s AND mid=%s",
+            (codename, mid),
+        )
+        row = cur.fetchone()
+        if row is None:
+            conn.close()
+            return {
+                "ok": False,
+                "error": f"Milestone {codename}/{mid} not found. Use /milestones {codename} to see valid IDs.",
+            }
+        old_status = row["status"] if isinstance(row, dict) else row[1]
+
+        # Build UPDATE dynamically to handle optional notes + shipped_at
+        set_parts = ["status=%s", "updated_at=NOW()"]
+        params: list = [status]
+
+        if notes is not None:
+            set_parts.append("notes=%s")
+            params.append(notes)
+
+        if status == "shipped":
+            set_parts.append("shipped_at=NOW()")
+
+        params += [codename, mid]
+        cur.execute(
+            f"UPDATE milestones SET {', '.join(set_parts)} WHERE codename=%s AND mid=%s",
+            params,
+        )
+        conn.commit()
+
+        # Fetch new status for confirmation
+        cur.execute(
+            "SELECT status FROM milestones WHERE codename=%s AND mid=%s",
+            (codename, mid),
+        )
+        new_row = cur.fetchone()
+        new_status = new_row["status"] if isinstance(new_row, dict) else new_row[0]
+        conn.close()
+
+        return {
+            "ok": True,
+            "codename": codename,
+            "mid": mid,
+            "old_status": old_status,
+            "new_status": new_status,
+        }
+    except Exception as e:
+        logger.warning(f"flip_milestone error: {e}")
+        return {"ok": False, "error": str(e)}
 
 
 # ── Roadmap live metrics ─────────────────────────────────────────────────────
