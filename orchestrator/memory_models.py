@@ -56,6 +56,11 @@ class _MemoryBase(BaseModel, ABC):
             "expires_at": getattr(self, "expires_at", None),
         }
 
+    @property
+    def content(self) -> str:
+        """Convenience property — returns the same string written to the DB content column."""
+        return self._build_content()
+
     @abstractmethod
     def _build_content(self) -> str: ...
 
