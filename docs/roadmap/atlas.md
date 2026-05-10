@@ -275,20 +275,22 @@ Reference: AlphaSignal benchmarks across 10,000 SEC filings, five LLMs. Key find
 
 ---
 
-### M6: Hunter Crew (Phase 6) ⏳ TRIGGER-GATED, MAY DESCOPE
+### M6: Hunter Crew (Phase 6) ✅ SHIPPED ~2026-05-05
 
-**What:** Autonomous lead-finding + outreach crew (Hunter.io + LinkedIn).
+**What:** Autonomous lead-finding + outreach crew (Hunter.io + Apollo + Serper Maps).
 
-**Why:** Originally planned as second pilot crew. May be replaced by manual pipeline playbook.
+**Why:** Originally planned as second pilot crew. Shipped as integrated harvest pipeline rather than standalone CrewAI crew.
 
-**Trigger gate:** 2026-05-06 (Hunter.io upgrade decision date per `project_hunter_upgrade.md`).
-**Blockers:**
-- Hunter.io subscription decision
-- Pipeline playbook results may make this irrelevant (LinkedIn + face-to-face is current Phase 0)
+**Shipped state:**
 
-**Decision needed on 2026-05-06:** go/no-go.
-**Branch:** `feat/hunter-autonomous`
-**ETA:** 4-6 hr when triggered.
+- Hunter.io Starter ($49/mo) paid + wired. Apollo two-step org search fixed (25-50% hit rate). Serper Maps GMB primary for SW trades.
+- `skills/hunter_skill/daily_leads.py` + `signal_works/harvest_until_target.py` running daily 06:00 MT on VPS.
+- 50 leads/day target (SW=35 + CW=15). `force_fresh` bypass for CW short-circuit. 3-tier Hunter domain_search (7/8 hit rate on SMB domains).
+- `/sw` Telegram command triggers harvest on demand.
+- `sw_email_log` table (migration 007) tracks every T1-T5 touch per lead.
+- Hard rules captured: `skills/hunter_skill/SKILL.md`.
+
+**Note:** Roadmap never updated after shipping. Gap identified 2026-05-10 — known retroactive-update problem being addressed separately.
 
 ---
 
@@ -750,6 +752,51 @@ WHERE status = 'new'
 
 **Branch:** `feat/atlas-m22-llm-indexed-blog` (create when gate clears)
 **Reference:** `skills/ctq-social/references/linkedin-craft.md` Part 5 (transformation templates) · `skills/seo-strategy/` (SEO mode wire-in) · `skills/content_multiplier/` (repurpose routing)
+
+---
+
+### M9: Atlas Chat — Full Command Center ✅ SHIPPED 2026-04-27
+
+**Sub-milestones:**
+
+| Sub | Scope | Status |
+|-----|-------|--------|
+| M9a | Correctness fixes + Telegram push alerts with action buttons | ✅ SHIPPED 2026-04-26 |
+| M9b | Web chat: native Atlas panel, async job polling, artifact table, write-action confirmation, approval queue badge | ✅ SHIPPED 2026-04-26 |
+| M9c | Cross-session memory compressor: 30-min inactivity trigger, Haiku summarizes, silent system prompt injection | ✅ SHIPPED 2026-04-27 |
+
+**Full spec + session log:** see M9 section in session logs (line ~1193).
+
+---
+
+### M10: Autonomous Crew Contract ✅ SHIPPED 2026-04-26
+
+**What:** Standardized contract for how crews expose capabilities to the orchestrator. Enables dynamic crew selection and capability-based routing without hardcoded crew names.
+
+**Sub-milestones:**
+
+| Sub | Scope | Status |
+|-----|-------|--------|
+| M10 | Crew contract + autonomous routing | ✅ SHIPPED 2026-04-26 (83f9e2b) |
+
+**Full spec + session log:** see M10 section in session logs (line ~1400).
+
+---
+
+### M11: OpenRouter-Native Intelligent Model Routing 🔄 PARTIALLY SHIPPED
+
+**What:** agentsHQ uses OpenRouter as single routing layer across all providers. `select_by_capability()` replaces hardcoded model strings across all crews.
+
+**Sub-milestones:**
+
+| Sub | Scope | Status |
+|-----|-------|--------|
+| M11a | Bug fixes + named model constants | ✅ SHIPPED 2026-04-26 |
+| M11b | ROLE_CAPABILITY migration: replace ROLE_MODEL with select_by_capability() | ✅ SHIPPED 2026-04-26 |
+| M11c | Research engine rewrite: two-phase Perplexity Sonar Pro + Firecrawl | ⏸ TRIPLE HOLD — revisit 2026-05-15 |
+| M11d | Harvest reviewer migration + weekly model review agent | 🔄 IN PROGRESS |
+
+**Full spec + session log:** see M11 section in session logs (line ~1254).
 
 ---
 
@@ -2877,3 +2924,30 @@ Ending: fully signal-threaded sequence, qualification gate, gmb_opener persisted
 2. Fix GMB search query pulling wrong leads
 3. Flip AUTO_SEND_SW=true after lead quality confirmed
 4. M18 HALO: instrument heartbeat with tracing.py (target 50 traces by 2026-05-18)
+
+---
+
+### 2026-05-10: Milestone registry gap fix + skill quality gate + Echo metric gate
+
+**Session type:** Direct (Boubacar present).
+
+**Shipped:**
+- `docs/roadmap/atlas.md` — M9, M10, M11 promoted from session logs to canonical `### MXX` headers in milestone registry section. Gap discovered: milestones existed only in session logs, never in canonical registry.
+- `scripts/skill_eval.py` — new routing eval runner. Reads `routing-eval.jsonl` per skill, checks trigger phrase matching, exits 0 if pass rate >= threshold (default 80%), exits 1 if below. CLI: `python scripts/skill_eval.py skills/<name>`.
+- `skills/openspace_skill/routing-eval.jsonl` — expanded from 3 to 15 rows (10 true positives + 5 true negatives). Passes at 93% (14/15).
+- `scripts/gate_poll.py` — wired `skill_eval.py` as pre-LLM-review gate. READY branches that touch skills with `routing-eval.jsonl` now auto-rejected via Telegram if pass rate < 80%. No LLM session opened on rejection.
+- `scripts/check_session_log_updated.py` — strengthened: now warns (non-blocking) when session log mentions SHIPPED milestones whose `### MXX` headers are still stale.
+- `skills/openspace_skill/references/self-improving-agents-primer.md` — reference doc from self-improving agents absorb (DGM, Hyperagents, Autoresearch). Hold until Echo metric gate live.
+- `docs/roadmap/atlas.md` — item 16 added: Echo metric gate (GATED, scope deadline 2026-05-17).
+- `docs/reviews/absorb-log.md` — self-improving agents primer logged as ARCHIVE-AND-NOTE.
+- Notion tasks created: ATLAS-M9 (Done), ATLAS-M10 (Done), ATLAS-M11 (In Progress), ATLAS-REGISTRY-FIX (Done).
+
+**Root cause of logging gap:**
+- M9/M10/M11 shipped before the auto-update rule (AGENT_SOP.md line 72, added 2026-05-02). No enforcement existed.
+- Pre-commit hook only checked session log presence, not milestone header status flips. Now warns on stale headers.
+
+**Next priorities:**
+1. Scope Echo metric gate (Atlas item 16) by 2026-05-17 — define metric name + 3-criterion rubric + gate_agent integration point.
+2. Monday harvest diagnosis — fix GMB niche filter pulling wrong businesses.
+3. Flip AUTO_SEND_SW=true after lead quality confirmed.
+4. M18 HALO: 50 traces by 2026-05-18.

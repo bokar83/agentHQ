@@ -1,3 +1,15 @@
 {"intent": "help me with openspace", "expected": "openspace-skill"}
 {"intent": "I need to evolve skill", "expected": "openspace-skill"}
 {"intent": "can you repair skill for this", "expected": "openspace-skill"}
+{"intent": "optimize agent performance on this crew", "expected": "openspace-skill"}
+{"intent": "fix broken skill that keeps failing", "expected": "openspace-skill"}
+{"intent": "self-improve the routing logic", "expected": "openspace-skill"}
+{"intent": "run openspace on content multiplier", "expected": "openspace-skill"}
+{"intent": "evolve skill definition for absorb", "expected": "openspace-skill"}
+{"intent": "repair skill after bad output", "expected": "openspace-skill"}
+{"intent": "analyze execution traces for latency", "expected": "openspace-skill"}
+{"intent": "build a new landing page for signal works", "expected": "frontend-design"}
+{"intent": "send cold outreach to roofers in utah", "expected": "hormozi-lead-gen"}
+{"intent": "create a notion page for the client", "expected": "notion_skill"}
+{"intent": "absorb this github repo into agentshq", "expected": "agentshq-absorb"}
+{"intent": "review my pull request", "expected": "code-review"}

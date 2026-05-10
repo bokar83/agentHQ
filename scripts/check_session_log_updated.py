@@ -55,6 +55,12 @@ TRIVIAL_LINE_RE = re.compile(
     r"^\+\s*(?:\*?Last updated[:\*]|<!--|$)",
     re.IGNORECASE,
 )
+# Detect milestone status changes in added lines (SHIPPED/IN PROGRESS/QUEUED/BLOCKED).
+MILESTONE_STATUS_RE = re.compile(
+    r"^\+###\s+M\d+\w*[:\s].*"
+    r"(?:SHIPPED|IN PROGRESS|QUEUED|BLOCKED|TRIGGER-GATED|NOT STARTED)",
+    re.IGNORECASE,
+)
 
 
 def _force_utf8_stdout() -> None:
@@ -127,6 +133,55 @@ def _has_new_dated_entry(diff: str) -> bool:
     return False
 
 
+def _check_stale_milestone_status(path: Path, diff: str) -> list[str]:
+    """Warn if a milestone header in the file still shows old status after changes.
+
+    Specifically: if the diff adds lines containing 'SHIPPED' in a session-log
+    entry but the file still has that milestone header marked as QUEUED or
+    IN PROGRESS, flag it.
+
+    Returns list of warning strings (empty = clean).
+    """
+    warnings: list[str] = []
+    # Find milestone names mentioned as SHIPPED in added session-log lines
+    shipped_in_log: set[str] = set()
+    for line in diff.splitlines():
+        if not line.startswith("+") or line.startswith("+++"):
+            continue
+        # Look for "M9", "M10" etc. mentioned alongside SHIPPED in log additions
+        m = re.search(r"\b(M\d+\w*)\b.*\bSHIPPED\b", line, re.IGNORECASE)
+        if m:
+            shipped_in_log.add(m.group(1).upper())
+
+    if not shipped_in_log:
+        return []
+
+    # Read current file content and check milestone headers
+    try:
+        content = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return []
+
+    for milestone in shipped_in_log:
+        # Find the milestone header line
+        header_re = re.compile(
+            rf"^###\s+{re.escape(milestone)}[:\s].*$", re.MULTILINE | re.IGNORECASE
+        )
+        for match in header_re.finditer(content):
+            header_line = match.group(0)
+            # If header doesn't contain SHIPPED, flag it
+            if "SHIPPED" not in header_line.upper():
+                try:
+                    rel = path.resolve().relative_to(REPO_ROOT).as_posix()
+                except ValueError:
+                    rel = str(path)
+                warnings.append(
+                    f"  {rel}: {milestone} logged as SHIPPED in session log "
+                    f"but header still shows: '{header_line.strip()}'"
+                )
+    return warnings
+
+
 def main(argv: list[str]) -> int:
     _force_utf8_stdout()
 
@@ -160,6 +215,25 @@ def main(argv: list[str]) -> int:
         print("Bypass for cosmetic fixes: SKIP_SESSION_LOG=1 git commit ...")
         print("Reference: docs/AGENT_SOP.md Session End; docs/roadmap/compass.md M2.")
         return 1
+
+    # Secondary check: warn (non-blocking) if milestone headers are stale
+    stale_warnings: list[str] = []
+    for arg in argv[1:]:
+        path = Path(arg)
+        if not _is_roadmap_file(path):
+            continue
+        diff = _staged_diff(path)
+        if not diff:
+            continue
+        stale_warnings.extend(_check_stale_milestone_status(path, diff))
+
+    if stale_warnings:
+        print("WARN: session log mentions SHIPPED milestones whose headers may be stale:")
+        for w in stale_warnings:
+            print(w)
+        print()
+        print("Fix: update the ### MXX header status to '✅ SHIPPED YYYY-MM-DD'.")
+        print("This is a warning only — commit is not blocked.")
 
     return 0
 

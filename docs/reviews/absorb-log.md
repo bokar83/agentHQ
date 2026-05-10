@@ -18,6 +18,7 @@ Verdicts: `PROCEED` | `DON'T PROCEED` | `ARCHIVE-AND-NOTE`
 2026-05-09 | <https://x.com/i/status/2052780393326092407> (@shannholmberg Content OS) | PROCEED | enhance skills/boub_voice_mastery + skills/ctq-social + skills/boubacar-prompts | continuous-improvement + producing-motion
 
 2026-05-09 | <https://github.com/freeCodeCamp/freeCodeCamp> | ARCHIVE-AND-NOTE | archive | none
+2026-05-10 | Self-Improving Agents Primer (raw doc — DGM/Hyperagents/Autoresearch survey, text-selfimprv) | ARCHIVE-AND-NOTE | skills/openspace_skill/references/self-improving-agents-primer.md (hold until Echo metric gate live) | continuous-improvement (GATED)
 2026-05-09 | <https://x.com/exploraX_/status/2052774623473803483> (m0h GMaps lead-gen playbook) | PROCEED | enhance skills/serper_skill (score_gmb_lead gate) + new ref skills/hormozi-lead-gen/references/cold-call-scripts.md | producing-motion + founder-time-reduction
 
 2026-05-09 | <https://github.com/openclaw/openclaw> | ARCHIVE-AND-NOTE | archive | none

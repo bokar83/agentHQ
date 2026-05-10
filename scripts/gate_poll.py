@@ -32,6 +32,9 @@ import time
 import urllib.request
 from pathlib import Path
 
+SKILL_EVAL_SCRIPT = Path(__file__).resolve().parent / "skill_eval.py"
+SKILL_EVAL_THRESHOLD = 0.8
+
 REPO_ROOT = Path(os.environ.get("REPO_ROOT", Path(__file__).resolve().parents[1]))
 ENV_FILE = REPO_ROOT / ".env"
 MAIN_BRANCH = "main"
@@ -109,6 +112,44 @@ def _notify(bot_token: str, chat_id: str, text: str) -> None:
         print(f"[gate_poll] notify failed: {exc}", file=sys.stderr)
 
 
+def _changed_skills(branch: str) -> list[Path]:
+    """Return skill dirs modified in branch vs main that have a routing eval file."""
+    rc, out = _git(["diff", "--name-only", f"origin/{MAIN_BRANCH}...origin/{branch}"])
+    if rc != 0:
+        return []
+    skills_root = REPO_ROOT / "skills"
+    seen: set[str] = set()
+    result: list[Path] = []
+    eval_filename = "routing-eval.jsonl"
+    for path_str in out.splitlines():
+        parts = Path(path_str).parts
+        if len(parts) >= 2 and parts[0] == "skills":
+            skill_name = parts[1]
+            if skill_name in seen:
+                continue
+            seen.add(skill_name)
+            skill_dir = skills_root / skill_name
+            if (skill_dir / eval_filename).exists():
+                result.append(skill_dir)
+    return result
+
+
+def _run_skill_eval(skill_dir: Path) -> tuple[bool, str]:
+    """Run skill_eval.py on a skill dir. Returns (passed, summary_line)."""
+    proc = subprocess.run(
+        [sys.executable, str(SKILL_EVAL_SCRIPT), str(skill_dir),
+         "--threshold", str(SKILL_EVAL_THRESHOLD)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    output = proc.stdout.strip() or proc.stderr.strip()
+    summary = output.splitlines()[0] if output else "no output"
+    # exit 2 = no eval file — treat as warn, not block
+    passed = proc.returncode in (0, 2)
+    return passed, summary
+
+
 def poll_once(bot_token: str, chat_id: str, dry_run: bool = False) -> list[str]:
     if not _fetch():
         print("[gate_poll] git fetch failed", file=sys.stderr)
@@ -120,6 +161,26 @@ def poll_once(bot_token: str, chat_id: str, dry_run: bool = False) -> list[str]:
         return []
 
     for branch in ready:
+        # Run skill quality check on any modified skills before LLM gate review
+        skill_dirs = _changed_skills(branch)
+        failures: list[str] = []
+        for skill_dir in skill_dirs:
+            passed, summary = _run_skill_eval(skill_dir)
+            print(f"[gate_poll] skill_check {skill_dir.name}: {summary}")
+            if not passed:
+                failures.append(f"{skill_dir.name}: {summary}")
+
+        if failures:
+            fail_detail = "\n".join(failures)
+            msg = (f"GATE: skill quality check FAILED — auto-reject\n"
+                   f"Branch: {branch}\n"
+                   f"Failures:\n{fail_detail}\n"
+                   f"Fix routing regressions before re-pushing.")
+            print(f"[gate_poll] {msg}")
+            if not dry_run and bot_token and chat_id:
+                _notify(bot_token, chat_id, msg)
+            continue
+
         msg = f"GATE: READY branch detected\nBranch: {branch}\nGate review starting in container."
         print(f"[gate_poll] {msg}")
         if not dry_run and bot_token and chat_id:
