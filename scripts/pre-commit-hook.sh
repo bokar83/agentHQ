@@ -111,5 +111,47 @@ fi
 
 check_branch
 
+# 7. Routing gap check (warn-only until fixture coverage > 50%)
+if [ -f scripts/check_routing_gaps.py ]; then
+    routing_output=$(python3 scripts/check_routing_gaps.py 2>/dev/null || true)
+    routing_errors=$(echo "$routing_output" | grep '^\[ERROR\]' || true)
+    if [ -n "$routing_errors" ]; then
+        echo "ROUTING GAPS (errors):" >&2
+        echo "$routing_errors" >&2
+        fail "Skill routing errors detected." \
+             "Fix [ERROR] findings in check_routing_gaps.py output above. Warnings are OK."
+    fi
+fi
+
+# 8. filter-repo guard — blocks actual invocations, not doc references
+# Matches: "git filter-repo", subprocess calls, shell execs with filter-repo as command.
+# Does NOT match: prose mentions like "Never run git filter-repo while..." in AGENT_SOP.md.
+filter_repo_invocations=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null \
+  | grep -E '\.(py|sh|md)$' \
+  | grep -v 'pre-commit-hook\.sh' \
+  | xargs grep -En \
+      'git filter-repo|subprocess.*filter.repo|exec.*filter.repo|run.*filter.repo|\bfilter-repo\b[^`]' \
+      2>/dev/null \
+  | grep -v '^\s*#' \
+  | grep -v 'Never run.*filter-repo\|do not.*filter-repo\|filter-repo.*banned\|filter-repo.*guard\|filter-repo.*block\|Only run filter-repo\|filter-repo.*only.*during\|filter-repo.*while\|avoid.*filter-repo\|filter-repo.*rewrite' \
+  || true)
+if [ -n "$filter_repo_invocations" ]; then
+  if [ "${SKIP_FILTER_REPO_CHECK:-0}" = "1" ]; then
+    echo "[warn] filter-repo invocation staged -- SKIP_FILTER_REPO_CHECK=1 set, bypassing"
+  else
+    echo "[BLOCK] filter-repo invocation detected in staged files:"
+    echo "$filter_repo_invocations"
+    echo "Running filter-repo rewrites ALL branch SHAs. Use GitHub secret bypass instead. To override: SKIP_FILTER_REPO_CHECK=1"
+    exit 1
+  fi
+fi
+
+# 9. Vendor token scanner
+if python scripts/check_vendor_tokens.py; then
+  :
+else
+  exit 1
+fi
+
 echo "Pre-commit checks passed."
 exit 0
