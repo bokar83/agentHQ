@@ -14,11 +14,15 @@ SUBJECT = "Closing your file"
 # Low confidence drops the greeting entirely. See feedback_no_greeting_when_unknown.md.
 _GREETING_HIGH = "Hi {first_name},\n\n"
 
+CALENDLY = "https://calendly.com/boubacarbarry/signal-works-discovery-call"
+
 _BODY_HOOK = """I will not follow up after this.
 
 If AI visibility is not a priority right now, completely understood. The timing has to be right.
 
-If it ever becomes relevant, the offer stands: free demo, your business, your city, your category.
+If it ever becomes relevant, the offer stands: free 15-minute walkthrough, your business, your city, your category.
+
+{calendly}
 
 Boubacar
 geolisted.co
@@ -35,4 +39,5 @@ def build_body(lead: dict) -> str:
     greeting = _GREETING_HIGH if confidence == "high" else ""
     return (greeting + _BODY_HOOK).format(
         first_name=lead.get("first_name", "there"),
+        calendly=CALENDLY,
     )

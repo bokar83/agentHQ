@@ -1048,6 +1048,69 @@ def _cmd_sw(text: str, chat_id: str) -> bool:
 # Dispatcher (order matters: longest prefix first to avoid collisions)
 # ══════════════════════════════════════════════════════════════
 
+def _cmd_callsheet(text: str, chat_id: str) -> bool:
+    if text.lower().strip() != '/callsheet':
+        return False
+    owner_id = os.environ.get('OWNER_TELEGRAM_CHAT_ID', '')
+    from notifier import send_message as _send
+    if owner_id and str(chat_id) != str(owner_id):
+        _send(chat_id, 'Not authorized.')
+        return True
+
+    _OPENERS = {
+        'no_website': "I went looking for {name} on Google and couldn't find a website.",
+        'low_reviews': "I was looking at {name} on Google and noticed you only have {review_count} reviews.",
+        'chatgpt': 'Open ChatGPT and type: "who is the best {niche} in {city}?" — if {name} doesn\'t show up, someone ready to hire just called a competitor.',
+        'generic': 'AI tools like ChatGPT are now how people find local businesses. {name} may not be showing up.',
+    }
+
+    try:
+        import sys as _sys; _sys.path.insert(0, '/app')
+        try:
+            from db import get_crm_connection as _crm
+        except ImportError:
+            from orchestrator.db import get_crm_connection as _crm
+        conn = _crm()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT name, phone, city, niche, gmb_opener, review_count
+            FROM leads
+            WHERE source LIKE 'signal_works%'
+              AND sequence_touch = 1
+              AND phone IS NOT NULL AND phone != ''
+              AND email_drafted_at::date = CURRENT_DATE
+            ORDER BY email_drafted_at ASC
+            LIMIT 20
+        """)
+        rows = [dict(r) for r in cur.fetchall()]
+        conn.close()
+
+        if not rows:
+            _send(chat_id, 'No SW leads emailed today with phone numbers. Check again after morning runner fires.')
+            return True
+
+        lines = [f"SW CALL SHEET — {len(rows)} leads emailed today\n"]
+        for i, r in enumerate(rows, 1):
+            opener_tpl = _OPENERS.get(r.get('gmb_opener') or 'generic', _OPENERS['generic'])
+            opener = opener_tpl.format(
+                name=r.get('name', 'this business'),
+                review_count=int(r.get('review_count', 0) or 0),
+                niche=r.get('niche', 'business') or 'business',
+                city=r.get('city', 'your area') or 'your area',
+            )
+            lines.append(
+                f"{i}. {r.get('name', '?')} — {r.get('phone', '?')}\n"
+                f"   {r.get('city', '')} | {r.get('niche', '')}\n"
+                f"   Opener: {opener}"
+            )
+        _send(chat_id, '\n\n'.join(lines))
+    except Exception as e:
+        logger.error(f'/callsheet error: {e}')
+        from notifier import send_message as _send2
+        _send2(chat_id, f'callsheet failed: {e}')
+    return True
+
+
 # Ordered by specificity. /heartbeat_status must come before a hypothetical
 # /heartbeat. /autonomy_status, /pause_autonomy, /resume_autonomy each have
 # unique prefixes so order within the Phase 0 group does not matter. /status
@@ -1067,6 +1130,7 @@ _COMMANDS = [
     _cmd_approve,
     _cmd_reject,
     _cmd_outcomes,
+    _cmd_callsheet,
     _cmd_digest,
     _cmd_publish,
     _cmd_sw,
