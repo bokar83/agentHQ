@@ -79,3 +79,56 @@ def test_generate_uses_correct_dimensions_9x16():
         gen.generate(SAMPLE_POST, aspect_ratio="9:16")
     assert "1080" in captured_prompt[0]
     assert "1920" in captured_prompt[0]
+
+
+def test_candidates_exclude_posts_with_twin():
+    """Posts that already have hyperframe_twin_id set must be excluded."""
+    from orchestrator.hyperframe_boost_agent import _filter_candidates
+
+    candidates = [
+        {"notion_id": "aaa", "total_score": 90, "hyperframe_twin_id": None, "platform": ["linkedin", "x"]},
+        {"notion_id": "bbb", "total_score": 85, "hyperframe_twin_id": "some-twin-id", "platform": ["linkedin"]},
+        {"notion_id": "ccc", "total_score": 80, "hyperframe_twin_id": None, "platform": ["x"]},
+    ]
+    result = _filter_candidates(candidates)
+    ids = [c["notion_id"] for c in result]
+    assert "bbb" not in ids
+    assert "aaa" in ids
+    assert "ccc" in ids
+
+def test_candidates_sorted_by_score_desc():
+    from orchestrator.hyperframe_boost_agent import _filter_candidates
+
+    candidates = [
+        {"notion_id": "low", "total_score": 60, "hyperframe_twin_id": None, "platform": ["x"]},
+        {"notion_id": "high", "total_score": 90, "hyperframe_twin_id": None, "platform": ["linkedin"]},
+        {"notion_id": "mid", "total_score": 75, "hyperframe_twin_id": None, "platform": ["x"]},
+    ]
+    result = _filter_candidates(candidates)
+    assert result[0]["notion_id"] == "high"
+    assert result[1]["notion_id"] == "mid"
+
+def test_candidates_capped_at_three():
+    from orchestrator.hyperframe_boost_agent import _filter_candidates
+
+    candidates = [
+        {"notion_id": str(i), "total_score": 100 - i, "hyperframe_twin_id": None, "platform": ["x"]}
+        for i in range(6)
+    ]
+    result = _filter_candidates(candidates)
+    assert len(result) == 3
+
+def test_parse_telegram_reply_multiselect():
+    from orchestrator.hyperframe_boost_agent import _parse_reply
+
+    assert _parse_reply("1,3", 3) == [0, 2]
+    assert _parse_reply("all", 3) == [0, 1, 2]
+    assert _parse_reply("skip", 3) == []
+    assert _parse_reply("2", 3) == [1]
+    assert _parse_reply("1, 2, 3", 3) == [0, 1, 2]
+
+def test_parse_telegram_reply_out_of_range():
+    from orchestrator.hyperframe_boost_agent import _parse_reply
+
+    result = _parse_reply("5", 3)
+    assert result == []
