@@ -70,7 +70,7 @@ Replaced the literal token with an environment variable reference:
 **Residual risk:** Token exists in git history prior to this commit. Recommend rotating the Vercel token immediately via the Vercel dashboard and confirming the old token is revoked. If this repo is public or has been pushed to GitHub, treat the token as fully compromised.
 
 **Follow-up required (human action):**
-1. Go to vercel.com → Settings → Tokens → revoke `vcp_REDACTED_rotate_via_vercel_dashboard`
+1. Go to vercel.com → Settings → Tokens → revoke the token beginning with `vcp_7s8b...` (full value visible in local `.vscode/settings.json` before this audit; do not re-commit it)
 2. Generate a new token
 3. Set `VERCEL_ACCESS_TOKEN=<new-token>` in the local machine environment (not in any tracked file)
 4. Consider adding `.vscode/settings.json` to `.gitignore` to prevent future IDE credential leaks

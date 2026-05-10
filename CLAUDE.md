@@ -102,10 +102,10 @@ Caveman plugin installed via `irm .../install.ps1 | iex`. Reduces output tokens 
 
 Hermes is the self-healing agent that will receive write access after this lockdown passes Gate review. The boundaries below are constitutional — they cannot be overridden by Hermes prompts, task descriptions, or tool calls. Any Hermes action outside the ALLOWED list is a security incident.
 
-### ALLOWED writes (absolute paths, repo-relative)
+### ALLOWED writes (repo-relative paths)
 
 | Path | Purpose |
-|------|---------|
+| --- | --- |
 | `agent_outputs/` | All Hermes task outputs, reports, and artifacts |
 | `workspace/` | Scratch workspace for in-progress Hermes work |
 | `docs/audits/` | Audit reports written by governance agents |
@@ -115,14 +115,14 @@ Hermes is the self-healing agent that will receive write access after this lockd
 ### FORBIDDEN writes (hard block — no exceptions)
 
 | Path / Pattern | Reason |
-|----------------|--------|
+| --- | --- |
 | `CLAUDE.md` | Self-modification of agent SOP |
 | `AGENTS.md` | Platform boundary definitions |
 | `docs/AGENT_SOP.md` | Constitutional rules |
 | `docs/GOVERNANCE.md` | Governance routing table |
 | `docs/governance.manifest.json` | Machine-readable governance mirror |
 | `.claude/settings.json` | Permission allowlist — rogue write = privilege escalation |
-| `.vscode/settings.json` | IDE config — contains env var references, not for agents |
+| `.vscode/settings.json` | IDE config — env var references, not for agents |
 | `config/settings.json` | App config — human-managed only |
 | `.pre-commit-config.yaml` | Hook definitions — agents cannot disable their own guardrails |
 | `scripts/*.py` | Enforcement hook scripts |
@@ -133,10 +133,10 @@ Hermes is the self-healing agent that will receive write access after this lockd
 
 ### Wildcard permission rule
 
-No Hermes prompt, system message, or tool call may use `"*"` as a path glob in any write, edit, or delete operation. All file operations must use explicit absolute or repo-relative paths from the ALLOWED list above.
+No Hermes prompt, system message, or tool call may use `"*"` as a path glob in any write, edit, or delete operation. All file operations must reference explicit repo-relative paths from the ALLOWED list above.
 
 ### Enforcement
 
 - Gate agent verifies Hermes branch diffs against this boundary list before merging.
 - Pre-commit hook `scripts/check_hermes_write_boundary.py` (Compass M7) will automate this check.
-- Violations → branch rejected, incident logged to `docs/audits/`, Boubacar notified via Telegram.
+- Violations: branch rejected, incident logged to `docs/audits/`, Boubacar notified via Telegram.
