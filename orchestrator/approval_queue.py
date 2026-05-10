@@ -273,6 +273,23 @@ def _transition(
             record_approval_result(out.task_outcome_id, success=success, feedback=note)
         except Exception as e:
             logger.warning(f"_transition: episodic_memory update failed for outcome {out.task_outcome_id}: {e}")
+    # M24: concierge-fix approvals trigger autonomous self-healing via Hermes.
+    if out.proposal_type == "concierge-fix" and new_status in ("approved", "edited"):
+        try:
+            from skills.coordination import enqueue as coord_enqueue
+            coord_enqueue(
+                kind="minion:hermes-fix",
+                payload={
+                    "queue_id": out.id,
+                    "signature": out.payload.get("signature"),
+                    "summary": out.payload.get("summary"),
+                    "samples": out.payload.get("samples"),
+                    "triage_note": out.payload.get("triage_note"),
+                    "edited_payload": out.edited_payload,
+                },
+            )
+        except Exception as e:
+            logger.warning(f"_transition: hermes enqueue failed for queue #{out.id}: {e}")
     return out
 
 

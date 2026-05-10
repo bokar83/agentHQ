@@ -341,8 +341,11 @@ async def startup_event():
     # M23: Minion worker -- background loop for agent-to-agent spawning.
     try:
         import minion_worker as _mw
+        # M24: Register Hermes self-healing handler before starting the loop.
+        from hermes_worker import hermes_fix_handler
+        _mw.register("minion:hermes-fix", hermes_fix_handler)
         asyncio.create_task(_mw.run())
-        logger.info("minion_worker started.")
+        logger.info("minion_worker started (hermes-fix handler registered).")
     except Exception as e:
         logger.warning(f"minion_worker startup failed (non-fatal): {e}")
 
