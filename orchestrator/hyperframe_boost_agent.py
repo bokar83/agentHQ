@@ -206,9 +206,10 @@ def send_message(chat_id: str, text: str) -> None:
 def _drive_upload(local_path: str, filename: str) -> dict:
     """Upload MP4 to Drive. Returns dict with webViewLink and id."""
     try:
+        from pathlib import Path
         from kie_media import _upload_to_drive
         folder_id = os.environ.get("HF_BOOST_DRIVE_FOLDER_ID", "")
-        return _upload_to_drive(local_path, folder_id, filename, "video/mp4")
+        return _upload_to_drive(Path(local_path), folder_id, filename, "video/mp4")
     except ImportError:
         logger.warning("kie_media not available — Drive upload skipped (dev mode)")
         return {"webViewLink": f"file://{local_path}", "id": "local"}
