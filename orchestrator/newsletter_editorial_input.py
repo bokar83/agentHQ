@@ -52,11 +52,15 @@ def upsert_reply(week_start_date: date, reply_text: str, chat_id: str) -> None:
 
 def get_reply_for_week(week_start_date: date) -> Optional[str]:
     """Return the stored reply for the given Monday, or None."""
-    conn = _conn()
-    with conn.cursor() as cur:
-        cur.execute(
-            "SELECT reply_text FROM newsletter_editorial_input WHERE week_start_date = %s",
-            (week_start_date,),
-        )
-        row = cur.fetchone()
-    return row[0] if row else None
+    try:
+        conn = _conn()
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT reply_text FROM newsletter_editorial_input WHERE week_start_date = %s",
+                (week_start_date,),
+            )
+            row = cur.fetchone()
+        return row[0] if row else None
+    except Exception as e:
+        logger.warning("newsletter_editorial_input.get_reply_for_week failed (non-fatal): %s", e)
+        return None
