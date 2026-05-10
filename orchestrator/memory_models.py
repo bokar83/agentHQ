@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import re
 from typing import Literal, Optional
+from abc import ABC, abstractmethod
 from pydantic import BaseModel, Field, model_validator
 
 
@@ -27,7 +28,7 @@ def _slugify(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
 
 
-class _MemoryBase(BaseModel):
+class _MemoryBase(BaseModel, ABC):
     """Shared fields injected by every model's to_db_row()."""
     source: str = "claude-code"
     agent_id: Optional[str] = None
@@ -55,8 +56,8 @@ class _MemoryBase(BaseModel):
             "expires_at": getattr(self, "expires_at", None),
         }
 
-    def _build_content(self) -> str:
-        raise NotImplementedError
+    @abstractmethod
+    def _build_content(self) -> str: ...
 
 
 class AgentLesson(_MemoryBase):
@@ -123,10 +124,12 @@ class LeadRecord(_MemoryBase):
     last_touch: str
     response: str = ""
     audit_url: str = ""
+    title: Optional[str] = None
 
     @model_validator(mode="after")
     def set_entity_ref(self) -> "LeadRecord":
         self.entity_ref = f"sw:{_slugify(self.company)}"
+        self.title = self.company
         return self
 
     def _build_content(self) -> str:
@@ -156,10 +159,12 @@ class ClientRecord(_MemoryBase):
     last_touch: str
     mrr: str = ""
     notes: str = ""
+    title: Optional[str] = None
 
     @model_validator(mode="after")
     def set_entity_ref(self) -> "ClientRecord":
         self.entity_ref = f"cw:{_slugify(self.company)}"
+        self.title = self.company
         return self
 
     def _build_content(self) -> str:
@@ -236,7 +241,7 @@ class SessionLog(_MemoryBase):
     category: str = "session_log"
     relevance_boost: float = 1.2
 
-    codename: str
+    codename: Literal["atlas", "harvest", "studio", "compass", "echo", "general"]
     summary: str
     date: str
 
