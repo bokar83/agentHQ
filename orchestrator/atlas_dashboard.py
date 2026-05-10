@@ -806,6 +806,85 @@ def get_agents() -> dict:
         return {"running": [], "recent": []}
 
 
+# ── M19: Native CRM Board ────────────────────────────────────────────────────
+
+_CRM_STATUSES = ["new", "messaged", "replied", "qualified", "proposal", "closed_won", "closed_lost"]
+
+_CRM_COLUMNS = [
+    "id", "name", "company", "email", "phone", "location", "city",
+    "niche", "lead_type", "source", "status", "ai_score",
+    "google_rating", "review_count", "website_url", "has_website",
+    "google_maps_url", "ai_quick_wins", "last_contacted_at",
+    "created_at", "updated_at",
+]
+
+
+def get_crm_board() -> dict:
+    """M19 CRM Board: leads grouped by status from Supabase."""
+    try:
+        from db import get_crm_connection_with_fallback
+        conn, is_fallback = get_crm_connection_with_fallback()
+        cols = ", ".join(_CRM_COLUMNS)
+        with conn.cursor() as cur:
+            cur.execute(
+                f"SELECT {cols} FROM leads ORDER BY updated_at DESC NULLS LAST LIMIT 500"
+            )
+            rows = cur.fetchall()
+        conn.close()
+    except Exception as exc:
+        logger.warning(f"get_crm_board failed: {exc}")
+        return {"columns": _CRM_STATUSES, "board": {s: [] for s in _CRM_STATUSES}, "total": 0, "error": str(exc)}
+
+    board: dict[str, list] = {s: [] for s in _CRM_STATUSES}
+    for row in rows:
+        r = dict(row)
+        # Coerce non-serialisable types
+        for k in ("created_at", "updated_at", "last_contacted_at"):
+            if r.get(k) is not None:
+                r[k] = r[k].isoformat()
+        status = r.get("status") or "new"
+        if status not in board:
+            board.setdefault(status, [])
+        board[status].append(r)
+
+    return {
+        "columns": _CRM_STATUSES,
+        "board": board,
+        "total": len(rows),
+        "is_fallback": is_fallback,
+    }
+
+
+def set_lead_status(lead_id: int, status: str) -> dict:
+    """M19: Transition a lead's status. Returns updated lead row."""
+    if status not in _CRM_STATUSES:
+        return {"ok": False, "error": f"Invalid status '{status}'. Valid: {_CRM_STATUSES}"}
+    try:
+        from db import get_crm_connection_with_fallback
+        conn, _ = get_crm_connection_with_fallback()
+        cols = ", ".join(_CRM_COLUMNS)
+        with conn.cursor() as cur:
+            cur.execute(
+                f"UPDATE leads SET status=%s, updated_at=NOW() WHERE id=%s RETURNING {cols}",
+                (status, lead_id),
+            )
+            row = cur.fetchone()
+            conn.commit()
+        conn.close()
+    except Exception as exc:
+        logger.warning(f"set_lead_status failed: {exc}")
+        return {"ok": False, "error": str(exc)}
+
+    if not row:
+        return {"ok": False, "error": "Lead not found"}
+
+    r = dict(row)
+    for k in ("created_at", "updated_at", "last_contacted_at"):
+        if r.get(k) is not None:
+            r[k] = r[k].isoformat()
+    return {"ok": True, "lead": r}
+
+
 def get_cost_report(days: int = 90) -> dict:
     """
     Full spend report for /atlas/cost page.

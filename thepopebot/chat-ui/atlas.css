@@ -888,4 +888,109 @@ html, body {
 }
 
 .btn-chat-action:hover:not(:disabled) { background: var(--brass); color: var(--bg); }
+
+/* ── M19 CRM Board ─────────────────────────────────────────── */
+.card-crm { overflow: hidden; }
+
+#crm-board {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 4px 2px 10px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--hairline-md) transparent;
+}
+
+.crm-col {
+  flex: 0 0 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.crm-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  border-radius: var(--radius);
+  background: var(--surface2);
+  border-left: 2px solid var(--lapis);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-dim);
+  font-weight: 500;
+}
+.crm-col-header[data-status="new"]         { border-color: var(--ink-dim); }
+.crm-col-header[data-status="messaged"]    { border-color: var(--brass); }
+.crm-col-header[data-status="replied"]     { border-color: var(--verdigris); }
+.crm-col-header[data-status="qualified"]   { border-color: #8b5cf6; }
+.crm-col-header[data-status="proposal"]    { border-color: var(--terracotta); }
+.crm-col-header[data-status="closed_won"]  { border-color: var(--green); }
+.crm-col-header[data-status="closed_lost"] { border-color: var(--rose); }
+
+.crm-count {
+  font-size: 10px;
+  color: var(--ink-muted);
+  background: var(--hairline);
+  border-radius: 10px;
+  padding: 1px 6px;
+}
+
+.crm-card {
+  background: var(--surface2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  cursor: default;
+  transition: border-color 0.15s, background 0.15s;
+}
+.crm-card:hover { border-color: var(--hairline-md); background: #1c2130; }
+
+.crm-card-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+.crm-card-meta {
+  font-size: 10px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 6px;
+}
+.crm-card-score {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--brass);
+}
+.crm-status-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 6px;
+}
+.crm-status-btn {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  padding: 2px 5px;
+  border-radius: 3px;
+  border: 1px solid var(--hairline-md);
+  background: transparent;
+  color: var(--ink-dim);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.crm-status-btn:hover:not(:disabled) { background: var(--lapis); color: var(--ink); border-color: var(--lapis); }
+.crm-status-btn:disabled { opacity: 0.35; cursor: default; }
+.crm-empty { font-size: 11px; color: var(--ink-muted); padding: 4px 0; text-align: center; }
 .btn-chat-action:disabled { opacity: 0.4; cursor: not-allowed; }

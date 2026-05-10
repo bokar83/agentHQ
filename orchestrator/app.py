@@ -1105,6 +1105,27 @@ async def atlas_queue_reject(queue_id: int, body: _AtlasRejectBody, _auth=Depend
     return JSONResponse(_atd.get_queue())
 
 
+# ══════════════════════════════════════════════════════════════
+# M19: Native CRM Board endpoints
+# ══════════════════════════════════════════════════════════════
+
+class _CrmStatusBody(_BaseModel):
+    status: str
+
+
+@app.get("/atlas/crm/board")
+async def atlas_crm_board(_auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_crm_board())
+
+
+@app.post("/atlas/crm/leads/{lead_id}/status")
+async def atlas_crm_lead_status(lead_id: int, body: _CrmStatusBody, _auth=Depends(verify_chat_token)):
+    result = _atd.set_lead_status(lead_id, body.status)
+    if not result.get("ok"):
+        raise HTTPException(status_code=400, detail=result.get("error", "Update failed"))
+    return JSONResponse(result)
+
+
 @app.post("/atlas/brief/posted")
 async def atlas_brief_posted(_auth=Depends(verify_chat_token)):
     raise HTTPException(
