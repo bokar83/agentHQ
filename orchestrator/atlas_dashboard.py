@@ -355,6 +355,10 @@ def _get_historical_comparisons() -> dict:
 
 MONTHLY_BUDGET_USD = 60.0
 
+_roadmap_metrics_cache: dict = {}
+_roadmap_metrics_cache_ts: float = 0.0
+_ROADMAP_METRICS_TTL: float = 30.0  # seconds
+
 
 def _fetch_elevenlabs_spend() -> dict:
     """Pull ElevenLabs TTS spend from cost_ledger for today/week/month."""
@@ -1076,6 +1080,12 @@ def get_roadmap_metrics() -> dict:
     Returns metrics that feed progress bars and gate-lift trackers.
     Never raises — each metric falls back to None on failure.
     """
+    global _roadmap_metrics_cache, _roadmap_metrics_cache_ts
+    import time as _time
+    _now = _time.monotonic()
+    if _roadmap_metrics_cache and (_now - _roadmap_metrics_cache_ts) < _ROADMAP_METRICS_TTL:
+        return _roadmap_metrics_cache
+
     import datetime
     metrics: dict = {"ts": datetime.datetime.utcnow().isoformat() + "Z"}
 
@@ -1147,11 +1157,44 @@ def get_roadmap_metrics() -> dict:
         import json as _json
         data = _json.loads(result.stdout or "{}")
         metrics["routing_skills_total"] = data.get("total_skills", 70)
-        metrics["routing_skills_with_fixtures"] = data.get("skills_with_fixtures", 11)
-        metrics["routing_fixture_target"] = 56  # 80% of 70
+        metrics["routing_skills_with_fixtures"] = data.get("skills_with_fixtures", 69)
+        metrics["routing_fixture_target"] = 69
     except Exception:
         metrics["routing_skills_total"] = 70
-        metrics["routing_skills_with_fixtures"] = 11
-        metrics["routing_fixture_target"] = 56
+        metrics["routing_skills_with_fixtures"] = 69
+        metrics["routing_fixture_target"] = 69
+
+    # ── Milestones from DB ──────────────────────────────────────────────────────
+    _milestones: dict = {rm: [] for rm in ["atlas", "echo", "compass", "studio", "harvest"]}
+    try:
+        from memory import _pg_conn
+        _ms_conn = _pg_conn()
+        _ms_cur = _ms_conn.cursor()
+        _ms_cur.execute("""
+            SELECT codename, mid, title, status, blocked_by, eta, notes,
+                   to_char(shipped_at, 'YYYY-MM-DD') AS shipped_date
+            FROM milestones
+            ORDER BY codename, id
+        """)
+        _ms_rows = _ms_cur.fetchall()
+        _ms_conn.close()
+        for _ms_row in _ms_rows:
+            if isinstance(_ms_row, dict):
+                _rm = _ms_row["codename"]
+                _m = {k: _ms_row[k] for k in ("mid", "title", "status", "blocked_by", "eta", "notes", "shipped_date")}
+            else:
+                _rm = _ms_row[0]
+                _m = {"mid": _ms_row[1], "title": _ms_row[2], "status": _ms_row[3],
+                      "blocked_by": _ms_row[4], "eta": _ms_row[5], "notes": _ms_row[6],
+                      "shipped_date": _ms_row[7]}
+            if _rm in _milestones:
+                _milestones[_rm].append(_m)
+    except Exception as _ms_e:
+        logger.warning(f"get_roadmap_metrics milestones: {_ms_e}")
+    metrics["milestones"] = _milestones
+
+    # ── Cache and return ────────────────────────────────────────────────────────
+    _roadmap_metrics_cache = metrics
+    _roadmap_metrics_cache_ts = _now
 
     return metrics
