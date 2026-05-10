@@ -1,3 +1,3 @@
-{"intent": "help me with opencli", "expected": "opencli-rs"}
-{"intent": "I need to browse linkedin", "expected": "opencli-rs"}
-{"intent": "can you fetch from reddit for this", "expected": "opencli-rs"}
+{"intent": "help me with opencli", "expected": "opencli_skill"}
+{"intent": "I need to browse linkedin", "expected": "opencli_skill"}
+{"intent": "can you fetch from reddit for this", "expected": "opencli_skill"}

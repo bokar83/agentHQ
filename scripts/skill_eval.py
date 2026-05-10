@@ -30,17 +30,37 @@ DEFAULT_THRESHOLD = 0.8
 
 
 def _load_skill_triggers(skill_dir: Path) -> list[str]:
-    """Extract trigger phrases from SKILL.md description frontmatter."""
+    """Extract trigger phrases from SKILL.md description frontmatter.
+
+    Handles both inline descriptions and YAML block scalars (> and |).
+    """
     skill_md = skill_dir / "SKILL.md"
     if not skill_md.exists():
         return []
     text = skill_md.read_text(encoding="utf-8")
-    # Match description: line in YAML frontmatter
-    m = re.search(r"^description:\s*(.+)$", text, re.MULTILINE)
+
+    # Find description: value — may be inline or a block scalar (> or |)
+    m = re.search(r"^description:\s*(.*)$", text, re.MULTILINE)
     if not m:
         return []
-    desc = m.group(1)
-    # Split on common delimiters: periods, "Triggers on", quoted comma-lists
+
+    first_line = m.group(1).strip()
+    if first_line in (">", "|", "|-", ">-"):
+        # Block scalar: collect indented lines that follow until next key or end of frontmatter
+        block_start = m.end()
+        block_lines = []
+        for line in text[block_start:].splitlines():
+            if re.match(r"^\S", line) or line.strip() == "---":
+                break
+            block_lines.append(line.strip())
+        desc = " ".join(block_lines)
+    else:
+        desc = first_line
+
+    # Unescape and strip outer YAML quotes so inner trigger phrases are extractable
+    if desc.startswith('"') and desc.endswith('"'):
+        desc = desc[1:-1].replace('\\"', '"')
+
     # Extract quoted trigger phrases if present
     quoted = re.findall(r'"([^"]+)"', desc)
     if quoted:
@@ -77,6 +97,8 @@ def _load_eval_rows(skill_dir: Path) -> list[dict]:
 
 
 def _normalize(name: str) -> str:
+    # Strip namespace prefix (e.g. "ckm:brand" → "brand", "vercel-react-best-practices" stays)
+    name = name.split(":")[-1]
     return name.lower().replace("-", "_").replace(" ", "_")
 
 
