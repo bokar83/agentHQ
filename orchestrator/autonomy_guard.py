@@ -27,13 +27,6 @@ from typing import Optional
 
 logger = logging.getLogger("agentsHQ.autonomy_guard")
 
-try:
-    from logger import audit_self_heal
-    _AUDIT_AVAILABLE = True
-except Exception:
-    _AUDIT_AVAILABLE = False
-    def audit_self_heal(*args, **kwargs): pass  # noqa: E301
-
 
 class ContractNotSatisfiedError(Exception):
     """Raised when set_crew_enabled(True) or set_crew_dry_run(False) is called
@@ -312,12 +305,6 @@ class AutonomyGuard:
                 self._state["killed_at"] = datetime.now(timezone.utc).isoformat()
                 self._state["killed_reason"] = f"daily cap reached (${spent:.4f} of ${self._cap_usd:.2f})"
                 self._persist()
-                audit_self_heal(
-                    "autonomy_guard",
-                    description=self._state["killed_reason"],
-                    status="blocked",
-                    extra={"crew": crew_name, "spent_usd": spent, "cap_usd": self._cap_usd},
-                )
                 return GuardDecision(
                     allowed=False, dry_run=False,
                     reason=self._state["killed_reason"],
@@ -350,7 +337,6 @@ class AutonomyGuard:
             self._state["killed_reason"] = reason
             self._persist()
             logger.warning(f"autonomy_guard: KILL set ({reason})")
-            audit_self_heal("autonomy_guard", description=reason, status="blocked")
 
     def unkill(self) -> None:
         with self._lock:

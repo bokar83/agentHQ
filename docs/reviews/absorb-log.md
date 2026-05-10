@@ -4,11 +4,6 @@ Schema: `YYYY-MM-DD | source | verdict | placement | leverage type`
 
 Verdicts: `PROCEED` | `DON'T PROCEED` | `ARCHIVE-AND-NOTE`
 
-> FILTER: sub-agent explainer posts (X/Twitter) → auto-skip unless post demonstrates a specific .claude/agents/ mechanism not already documented in AGENT_SOP.md. Three ARCHIVE-AND-NOTE verdicts on this topic as of 2026-05-10
-
-2026-05-10 | <https://x.com/heynavtoor/status/2053422550567502046> (@heynavtoor — 7 Claude sub-agents thread) | ARCHIVE-AND-NOTE | archive | none — 7 generic business-role agent files (Researcher/Editor/PM/Analyst/Recruiter/OpsLead/CFO) designed for solo founders; roles don't map to agentsHQ producing motions; real signal is the .claude/agents/ format mechanism itself, not these files; see Atlas item 18 for follow-up
-2026-05-10 | <https://x.com/Zephyr_hg/status/2053133843905830992> (Zephyr sub-agents explainer) | ARCHIVE-AND-NOTE | archive | none — public popularization of parallel sub-agent pattern; superpowers:dispatching-parallel-agents skill + AGENT_SOP.md Concurrency Rule already cover spawn mechanics, isolation, and integration; post adds no new pattern or mechanic
-
 2026-05-10 | Jaya Gupta — "The Next Biggest Moat in AI" (X article, text-jaya-gupta-ai-moat) | PROCEED | enhance skills/engagement-ops (chosen-vs-seen diagnostic) + new docs/patterns/altitude-alignment.md (SW audit lens) + new skills/ctq-social/references/content-seeds-org-moat.md (3 post skeletons) | continuous-improvement + producing-motion (content board)
 
 2026-05-10 | [Greg Isenberg — design.md thread](https://x.com/gregisenberg/status/2052110589682749869) | PROCEED | enhance docs/styleguides + 5 skills | continuous-improvement + founder-time-reduction

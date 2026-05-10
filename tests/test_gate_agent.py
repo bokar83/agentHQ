@@ -37,13 +37,6 @@ import gate_agent
 def no_telegram(monkeypatch):
     """Never actually send Telegram messages in tests."""
     monkeypatch.setattr(gate_agent, "_notify", MagicMock())
-    monkeypatch.setattr(gate_agent, "_notify_gate_review", MagicMock())
-
-
-@pytest.fixture(autouse=True)
-def gate_enabled(monkeypatch):
-    """Enable gate for all tests — autonomy_state.json not present in test env."""
-    monkeypatch.setattr(gate_agent, "_gate_enabled", MagicMock(return_value=True))
 
 
 @pytest.fixture(autouse=True)
@@ -54,10 +47,6 @@ def no_git_io(monkeypatch):
     monkeypatch.setattr(gate_agent, "_deploy_vps", MagicMock(return_value=(True, "")))
     monkeypatch.setattr(gate_agent, "_delete_remote_branch", MagicMock())
     monkeypatch.setattr(gate_agent, "_merge_branch", MagicMock(return_value=(True, "")))
-    monkeypatch.setattr(gate_agent, "_files_differ", MagicMock(return_value=True))
-    # gate_tick() checks REPO_DIR/.git exists -- point it at the test's own repo root
-    repo_root = Path(__file__).parent.parent
-    monkeypatch.setattr(gate_agent, "REPO_DIR", repo_root)
 
 
 # ---------------------------------------------------------------------------
@@ -126,22 +115,22 @@ def test_clean_branch_auto_merges(monkeypatch):
 # ---------------------------------------------------------------------------
 
 def test_high_risk_branch_held(monkeypatch):
-    """Branch touching gate_agent.py (high-risk) is held, not auto-merged."""
+    """Branch touching scheduler.py is held, not auto-merged."""
     monkeypatch.setattr(gate_agent, "_branches_ahead_of_main",
-                        MagicMock(return_value=["feature/gate-fix"]))
+                        MagicMock(return_value=["feature/scheduler-fix"]))
     monkeypatch.setattr(gate_agent, "_branch_is_claimed", MagicMock(return_value=False))
     monkeypatch.setattr(gate_agent, "_branch_is_ready", MagicMock(return_value=True))
     monkeypatch.setattr(gate_agent, "_files_changed_vs_main",
-                        MagicMock(return_value=["orchestrator/gate_agent.py"]))
+                        MagicMock(return_value=["orchestrator/scheduler.py"]))
     monkeypatch.setattr(gate_agent, "_run_tests", MagicMock())
-    monkeypatch.setattr(gate_agent, "_check_approval", MagicMock(return_value="pending"))
 
     gate_agent.gate_tick()
 
     gate_agent._merge_branch.assert_not_called()
     gate_agent._push_main.assert_not_called()
-    # Gate review notify fired (not _notify with urgent, but _notify_gate_review)
-    gate_agent._notify_gate_review.assert_called_once()
+    # Urgent notify fired
+    notify_calls = gate_agent._notify.call_args_list
+    assert any(kw.get("urgent") for _, kw in notify_calls)
 
 
 # ---------------------------------------------------------------------------
@@ -205,8 +194,8 @@ def test_conflict_blocks_only_involved_branches(monkeypatch):
 # Risk classification helpers
 # ---------------------------------------------------------------------------
 
-def test_is_high_risk_detects_orc_rebuild():
-    assert gate_agent._is_high_risk(["scripts/orc_rebuild.sh"]) is True
+def test_is_high_risk_detects_scheduler():
+    assert gate_agent._is_high_risk(["orchestrator/scheduler.py"]) is True
 
 
 def test_is_high_risk_detects_gate_agent():

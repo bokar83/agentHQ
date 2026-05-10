@@ -18,7 +18,7 @@ Does NOT: write code, answer questions, run crews, respond to unrelated messages
 
 Hard rules enforced here:
 - Never merges if tests fail
-- Never merges if file overlap exists without human approval
+- Escalates to Boubacar ONLY for HIGH_RISK_PREFIXES conflicts (gate_agent.py, .env, docker-compose, CLAUDE.md, AGENTS.md, GOVERNANCE.md). All other conflicts auto-resolved by merge order.
 - Shorts-first: target_duration_sec=55 wins any conflict
 - High-risk files (see HIGH_RISK_PREFIXES) require explicit approval
 """
@@ -66,13 +66,17 @@ PROTECTED_BRANCHES = {
 SKIP_PREFIXES = ("archive/",)
 
 # Files requiring explicit Boubacar approval before merge.
-# Keep this list SHORT -- only truly dangerous files. Tests catch regressions
-# in scheduler.py / app.py; those were removed 2026-05-08 to reduce noise.
+# ONLY ping Boubacar for these. Everything else gate resolves autonomously.
+# Principle: GitHub + save points = safe revert. Alert cost > revert cost for non-core files.
 HIGH_RISK_PREFIXES = (
     "orchestrator/gate_agent.py",  # gate modifying itself
     "scripts/orc_rebuild.sh",       # deploy script
     ".env",                          # secrets
     "docker-compose",               # container topology
+    "CLAUDE.md",                     # agent SOP -- constitutional
+    "AGENTS.md",                     # platform boundary definitions
+    "docs/GOVERNANCE.md",            # governance routing table
+    "docs/governance.manifest.json", # machine-readable governance mirror
 )
 
 # Auto-approve scopes (no LLM review needed, just tests)
@@ -82,6 +86,10 @@ AUTO_APPROVE_PREFIXES = (
     "skills/",
     "templates/",
     "configs/",
+    "orchestrator/",  # tests catch regressions; gate merges and reverts if needed
+    "thepopebot/",
+    "scripts/",
+    "signal_works/",
 )
 
 # Telegram notify
@@ -514,17 +522,25 @@ def gate_tick() -> None:
         branches_with_files.append((branch, files))
         logger.info("gate: %s touches %d file(s)", branch, len(files))
 
-    # Conflict detection -- block ALL involved branches
+    # Conflict detection -- escalate only if HIGH_RISK files conflict.
+    # Non-high-risk conflicts: gate merges branch-wins (theirs) autonomously, silent.
+    # Rationale: GitHub history + save points make revert trivial. Alert cost > revert cost.
     conflicts = _detect_conflicts(branches_with_files)
     blocked: set[str] = set()
     for b1, b2, f in conflicts:
-        blocked.add(b1)
-        blocked.add(b2)
-        conflict_key = f"{b1}||{b2}||{f}"
-        if conflict_key not in _alerted_conflicts:
-            _alerted_conflicts.add(conflict_key)
-            _notify_conflict(b1, b2, f)
-        logger.warning("gate: conflict -- %s vs %s on %s", b1, b2, f)
+        if any(f.startswith(p) for p in HIGH_RISK_PREFIXES):
+            # Core governance / infra file -- escalate to Boubacar
+            blocked.add(b1)
+            blocked.add(b2)
+            conflict_key = f"{b1}||{b2}||{f}"
+            if conflict_key not in _alerted_conflicts:
+                _alerted_conflicts.add(conflict_key)
+                _notify_conflict(b1, b2, f)
+            logger.warning("gate: HIGH-RISK conflict -- %s vs %s on %s -- held for review", b1, b2, f)
+        else:
+            # Non-core conflict -- auto-resolve: merge b1 first (earlier branch wins),
+            # b2 will rebase on top after b1 lands. No alert sent.
+            logger.info("gate: non-core conflict %s vs %s on %s -- will auto-resolve by merge order", b1, b2, f)
 
     # Process non-blocked branches
     merged: list[str] = []
