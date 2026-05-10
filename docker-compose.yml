@@ -217,6 +217,12 @@ services:
       - CHAT_TEMPERATURE=${CHAT_TEMPERATURE}
       - CHAT_SANDBOX=${CHAT_SANDBOX}
       - VIDEO_CREW_ENABLED=${VIDEO_CREW_ENABLED:-}
+      - AUDIT_PG_HOST=${AUDIT_PG_HOST:-postgres}
+      - AUDIT_PG_PORT=${AUDIT_PG_PORT:-5432}
+      - AUDIT_PG_DB=${AUDIT_PG_DB:-postgres}
+      - AUDIT_PG_USER=${AUDIT_PG_USER:-audit_logger}
+      - AUDIT_PG_PASSWORD=${AUDIT_PG_PASSWORD}
+      - AUDIT_PG_SSLMODE=${AUDIT_PG_SSLMODE:-disable}
     volumes:
       - ./agent_outputs:/app/outputs
       - ./signal_works:/app/signal_works

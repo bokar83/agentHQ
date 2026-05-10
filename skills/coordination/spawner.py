@@ -26,4 +26,16 @@ def spawn(kind: str, payload: dict, parent_id: str | None = None, depth: int = 0
         )
     full_payload = {"_parent_id": parent_id, "_depth": depth, **payload}
     from skills.coordination import enqueue
-    return enqueue(kind, full_payload)
+    task_id = enqueue(kind, full_payload)
+    try:
+        from orchestrator.logger import audit_spawn
+        audit_spawn(
+            parent_agent_id=parent_id or "root",
+            child_agent_id=kind,
+            branch=payload.get("branch", ""),
+            depth=depth,
+            extra={"task_id": task_id},
+        )
+    except Exception:
+        pass
+    return task_id
