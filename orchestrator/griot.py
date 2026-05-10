@@ -354,6 +354,60 @@ def _pick_top_candidate(candidates: list, recent_posts: list) -> Optional[dict]:
 # Main callback
 # ═════════════════════════════════════════════════════════════════════════════
 
+def _build_memory_block() -> str:
+    """
+    Build a morning memory briefing: top 3 hard rules + top 3 recent lessons.
+    Returns empty string if memory table unreachable (non-fatal).
+    """
+    try:
+        import psycopg2
+        import psycopg2.extras
+        import os
+        conn = psycopg2.connect(
+            host=os.environ.get("POSTGRES_HOST", "agentshq-postgres-1"),
+            database=os.environ.get("POSTGRES_DB", "postgres"),
+            user=os.environ.get("POSTGRES_USER", "postgres"),
+            password=os.environ.get("POSTGRES_PASSWORD", ""),
+            port=int(os.environ.get("POSTGRES_PORT", 5432)),
+            cursor_factory=psycopg2.extras.RealDictCursor,
+        )
+        try:
+            cur = conn.cursor()
+            # Top 3 hard rules (highest relevance_boost)
+            cur.execute(
+                "SELECT content FROM memory WHERE category = 'hard_rule' "
+                "ORDER BY relevance_boost DESC, created_at DESC LIMIT 3"
+            )
+            rules = [dict(r)["content"].split("\n")[0].replace("Rule: ", "") for r in cur.fetchall()]
+
+            # Top 3 recent lessons (last 7 days)
+            cur.execute(
+                "SELECT content FROM memory WHERE category = 'agent_lesson' "
+                "AND created_at > NOW() - INTERVAL '7 days' "
+                "ORDER BY created_at DESC LIMIT 3"
+            )
+            lessons = [dict(r)["content"].split("\n")[0].replace("What happened: ", "") for r in cur.fetchall()]
+        finally:
+            conn.close()
+
+        if not rules and not lessons:
+            return ""
+
+        lines = ["Morning memory brief:"]
+        if rules:
+            lines.append("\nHard rules:")
+            for r in rules:
+                lines.append(f"• {r[:120]}")
+        if lessons:
+            lines.append("\nRecent lessons:")
+            for l in lessons:
+                lines.append(f"• {l[:120]}")
+        return "\n".join(lines)
+    except Exception as e:
+        logger.debug(f"_build_memory_block failed (non-fatal): {e}")
+        return ""
+
+
 def _pipeline_summary(rows: list, today_iso: str) -> str:
     """Build a pipeline summary string for the morning message.
 
@@ -479,6 +533,17 @@ def griot_morning_tick() -> None:
             f"griot_morning_tick: pool candidates={len(candidates_all)} "
             f"after_dedup={len(candidates)} recent_posts={len(recent_posts)}"
         )
+
+        # Memory block: hard rules + recent lessons (non-fatal).
+        try:
+            from notifier import send_message
+            chat_id = os.environ.get("OWNER_TELEGRAM_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID")
+            if chat_id:
+                memory_lines = _build_memory_block()
+                if memory_lines:
+                    send_message(chat_id, memory_lines)
+        except Exception as e:
+            logger.warning(f"griot_morning_tick: memory block failed (non-fatal): {e}")
 
         # Build pipeline summary (always send, even if backlog empty).
         try:
