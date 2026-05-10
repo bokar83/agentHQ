@@ -15,13 +15,15 @@
 
 ## Session-Start Cheat Block (read this first)
 
-Last session ended **2026-05-08 (claw-code absorb — ARCHIVE-AND-NOTE, 3 deliverables shipped)**. State at close:
+Last session ended **2026-05-09 (openclaw absorb — ARCHIVE-AND-NOTE, 3 arch patterns extracted)**. State at close:
 
 - **Gate fully autonomous:** 5-min cron 24/7, silent success, inline ✅/❌ buttons, dedup alerts, 4 high-risk files only (`gate_agent.py`, `orc_rebuild.sh`, `.env`, `docker-compose`). Container gate registration removed — host cron is sole runner.
 - **Baked-file drift permanently fixed:** `scripts/docker-entrypoint.sh` ships with Dockerfile. Every container start auto-syncs `orchestrator/*.py` over baked `/app/*.py`. `docker cp` ritual retired. Rebuild completed successfully 2026-05-08 21:47 UTC.
 - **Completion Report Policy now a hard rule in AGENT_SOP.md:** All Atlas agents must close each prompted turn with outcome + changes + validation + blockers. "Done" alone is invalid.
 - **New milestones named (trigger-gated):** M21 (overnight ambient), M9d (deep memory garden), M8b (live agent graph). Each has explicit trigger conditions — do not start until gates clear.
-- **claw-code absorbed (ARCHIVE-AND-NOTE):** Rust Claude Code reimplementation, viral star-farm repo (190K stars in 38 days). SUSPICIOUS v3-7. Phase 0 all-no — we already run Claude Code natively. 3 deliverables extracted: mock_llm_service.py, Gate context-burn roadmap task (item 6 above), clawhip absorb ticket (2026-05-15).
+- **openclaw absorbed (ARCHIVE-AND-NOTE):** Self-hosted AI assistant platform (370K stars, TypeScript/Node). Phase 0 all-no — full platform replacement, not a component. 3 arch patterns extracted as Atlas items 7/8/9.
+- **Atlas items 7/8/9 added:** Prepared Runtime Facts (#7), Docker Healthcheck Hardening (#8), Manifest-First Skill Loader (#9). All trigger on next relevant maintenance window — no pre-conditions.
+- **AGENT_SOP.md Extension Ownership Boundary rule added:** Owner module fixes own bugs. Core gets generic seams only. Concrete examples listed.
 - **Gate context-burn fix queued (atlas.md item 6):** Gate currently burns LLM context every 5 min regardless of queue state. Target: dumb Python cron, LLM only on READY branch. Clawhip absorb must run first.
 
 **Default next moves (in priority order):**
