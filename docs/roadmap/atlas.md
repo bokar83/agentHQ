@@ -15,25 +15,21 @@
 
 ## Session-Start Cheat Block (read this first)
 
-Last session ended **2026-05-10 (immutable audit trail + M23 agent spawning review)**. State at close:
+Last session ended **2026-05-10 (M23 + M8b shipped — Minion spawning framework + Live Agent Graph live on VPS + dashboard)**. State at close:
 
-- **Gate fully autonomous:** 5-min cron 24/7, silent success, inline ✅/❌ buttons, 4 high-risk files. Host cron sole runner.
-- **Baked-file drift permanently fixed:** entrypoint syncs `orchestrator/*.py` over baked `/app/*.py` on every container start.
-- **SW pipeline fully signal-threaded (2026-05-09):** T1-T3 openers driven by `gmb_opener` (no_website/low_reviews/chatgpt/generic). `gmb_opener` persisted to DB at T1, reconstructed for T2-T5. Branch frozen at enrollment — never resets if lead data changes. "One per city" fabricated scarcity REMOVED from all templates. Fabricated social proof numbers REMOVED from T3.
-- **Calendly in T3 + T4:** `calendly.com/boubacarbarry/signal-works-discovery-call` appended to every T3/T4 body. Direct booking path for email readers.
-- **Morning digest GMB signal breakdown:** `orchestrator/griot.py _ops_digest_text()` — shows no-website/low-reviews/chatgpt split for today's T1 sends.
-- **`/callsheet` Telegram command LIVE:** pulls today's SW T1 leads with phone numbers. Pre-writes 10-second opener per lead from `gmb_opener`. Send to @CCagentsHQ_bot after morning runner fires.
-- **Score decay cron:** `orchestrator/scheduler.py _run_gmb_score_decay()` — fires 1st of month 06:00 MT. Opts out pre-T1 leads that graduated past thresholds. Mid-sequence flagged only.
-- **`scripts/pipeline_audit.py` LIVE:** `--check all` on 2026-05-28 to verify gate. Run: `docker exec orc-crewai python3 /app/scripts/pipeline_audit.py --check all`
-- **Review-request product spec:** `skills/hormozi-lead-gen/references/review-request-product.md` — n8n+Twilio build spec, $297-497 price, sell to low_reviews leads. Build after first SW client.
-- **sw_email_log LIVE (2026-05-10):** migration 007 run on orc-postgres. `sequence_engine.py _mark_sent()` + `_log_to_orc_postgres()` wire every T1-T5 touch (drafted/sent/failed/dry-run). 165 SW T1s confirmed in Supabase for last 7 days.
-- **profitablepenny/scribd — NOT a harvest bug:** `enrichment_tool.py` runs Hunter on CW Apollo leads. SW GMB harvest is clean (dental/hvac/roofing/plumbing niches only).
+- **M23 SHIPPED:** `skills/coordination/spawner.py` (`spawn()`, depth cap=5), `orchestrator/minion_worker.py` (background claim/execute loop), `/atlas/agents` endpoint, 10 tests passing. Branch `feat/atlas-m23-agent-spawning` pushed `[READY]` — gate merging.
+- **M8b SHIPPED (absorbed into M23):** Active Agents card live at agentshq.boubacarbarry.com/atlas. Polls `/atlas/agents` every 30s. XSS-safe DOM construction. Frontend pushed to main `39d225f`.
+- **M24 unblocked:** Hermes Self-Healing gates 1+2 met. M24 builds worktree sandbox isolation. M24 brainstorming started in parallel session.
+- **Atlas frontend location:** `d:/Ai_Sandbox/agentsHQ-echo/thepopebot/chat-ui/atlas.js` + `atlas.html`. Served by `thepopebot-chat-ui` nginx container. Rename to `atlas-ui/` deferred post-M24.
+- **M6 roadmap retroactively fixed:** Hunter pipeline was live since ~2026-05-05 but milestone never marked shipped. Fixed this session. Root cause: no retroactive roadmap update mechanism. Separate agent addressing this.
+- **Gate fully autonomous:** 5-min cron 24/7. Host cron sole runner.
+- **sw_email_log LIVE (2026-05-10):** migration 007 run on orc-postgres. 165 SW T1s confirmed.
 
 **Default next moves (in priority order):**
 
-1. **Verify sw_email_log populating** — after morning_runner fires: `docker exec orc-postgres psql -U postgres -d postgres -c "SELECT pipeline, touch, status, COUNT(*) FROM sw_email_log WHERE created_at >= NOW() - INTERVAL '1 day' GROUP BY pipeline, touch, status"`
-2. Flip `AUTO_SEND_SW=true` after lead quality confirmed (VPS `.env` + `docker compose up -d orchestrator`)
-3. Send `/callsheet` after first successful T1 batch — call leads within the hour
+1. **M24 Hermes Self-Healing** — brainstorming/spec in parallel session. Check that session for progress.
+2. **Verify sw_email_log populating** — after morning_runner fires: `docker exec orc-postgres psql -U postgres -d postgres -c "SELECT pipeline, touch, status, COUNT(*) FROM sw_email_log WHERE created_at >= NOW() - INTERVAL '1 day' GROUP BY pipeline, touch, status"`
+3. Flip `AUTO_SEND_SW=true` after lead quality confirmed (VPS `.env` + `docker compose up -d orchestrator`)
 4. M18 HALO unlock: instrument Atlas heartbeat with tracing.py + 50 traces by 2026-05-18
 6. ✅ DONE 2026-05-10: Fix `newsletter_editorial_input` table missing — migration 006 run on VPS orc-postgres; `get_reply_for_week()` wrapped non-fatal.
 5. ✅ DONE 2026-05-09: `check_routing_gaps.py` pre-commit wired (step 7, warn-only). Coverage 86% (59/69). 11 warnings = real gaps/overlaps, not fixture bugs. Run weekly to track sub-skill routing improvements.
@@ -78,6 +74,8 @@ Last session ended **2026-05-10 (immutable audit trail + M23 agent spawning revi
     **Pre-condition (HARD GATE):** At least one skill has a machine-runnable eval (routing-eval.jsonl in openspace_skill is a candidate). Do not wire gate_agent before eval exists. **Scope deadline: 2026-05-17.** If not scoped by then, reference doc stays idle and absorb verdict downgrades to DON'T PROCEED at next Compass audit.
 
 17. **[GATED — SW LEAD-GEN] Auto-audit: GMB scorer output → website-teardown one-pager per qualified lead.** After `score_gmb_lead()` gates a SW T1 lead (score >= 2), auto-run `website-teardown` on the lead's URL and attach the audit one-pager as a personalized warm opener in the T1 email. This converts cold outreach to audit-led warm outreach. Pre-condition: `score_gmb_lead()` gate shipped (done 2026-05-09) + SW T1 open rate baseline established (need 2 weeks of gate-filtered sends). Trigger: 2026-05-28 pipeline audit date. Do not start before baseline exists.
+
+18. **[ARCH DOC] Document `.claude/agents/` sub-agent format in AGENT_SOP.md.** agentsHQ has no documented guidance on the three agent formats (skill / `.claude/agents/` sub-agent / orchestrator CrewAI agent) or when to use each. Add one section to `docs/AGENT_SOP.md` explaining the three formats with when-to-use guidance. Identify 2-3 agentsHQ-native sub-agent candidates (sw-auditor: runs SW audit pass without contaminating main context; voice-editor: edits drafts to Boubacar voice in isolation; gate-reviewer: reviews [READY] branches without main thread contamination). Success criterion: `grep ".claude/agents" docs/AGENT_SOP.md` returns ≥1 match AND ≥2 agentsHQ-native candidate names appear in that section. Target: 2026-05-17. Source: absorb 2026-05-10 heynavtoor thread.
 
 **Do not start a new milestone without reading the latest Session Log entry below.**
 
@@ -2981,3 +2979,67 @@ Ending: fully signal-threaded sequence, qualification gate, gmb_opener persisted
 1. Gate merges `feat/immutable-audit-log` → main.
 2. Wire `audit()` calls into `spawner.py` (agent_spawn), `gate_agent.py` (gate_proposal/approve/reject), `autonomy_guard.py` (agent_self_heal) — a follow-on coding agent task.
 3. Set `AUDIT_PG_PASSWORD` in VPS `.env` and `docker compose up -d orchestrator` to activate live logging.
+
+---
+
+### 2026-05-10 (session 2): Audit trail fully wired + live on VPS
+
+**Session type:** Direct (Boubacar present).
+
+**What shipped:**
+- **Push block resolved:** `git filter-branch` rewrote 5 commits on `feat/atlas-m23-agent-spawning` to redact `vcp_7s8bJxFcf...` Vercel token from `docs/audits/2026-05-10-compass-m6-audit.md:73`. Force-pushed with `--force-with-lease`.
+- **Gate monitoring confirmed:** `feat/atlas-m23-agent-spawning` merged by Gate at `18:30 UTC` (`777c8a9`). `feat/immutable-audit-log` had merged earlier at `17:40 UTC` (`88682fc`).
+- **Audit callers wired** (3 files):
+  - `skills/coordination/spawner.py` — `audit_spawn()` after `enqueue()` success
+  - `orchestrator/gate_agent.py` — `audit_gate()` on proposal (high-risk hold), approve (auto-merge), reject (Telegram rejection)
+  - `orchestrator/autonomy_guard.py` — `audit_self_heal()` on `kill()` and cap-breach auto-kill path
+- **`docker-compose.yml`** — 6 `AUDIT_PG_*` env vars added to orchestrator service block
+- **`AUDIT_PG_PASSWORD` live on VPS:** `ALTER ROLE audit_logger` applied, vars in `/root/agentsHQ/.env`, all 6 in running container
+- **End-to-end verified:** Row id=4 written live from inside `orc-crewai` container → confirmed in `immutable_audit.agent_audit_trail`
+
+**Rule shipped (Boubacar):** Do work now, don't defer to handoff. Only defer if blocked by other agents, timing, or external dependencies.
+
+**VPS state at close:**
+- `main` = `777c8a9` (merge of feat/atlas-m23-agent-spawning)
+- `orc-crewai` running with all audit env vars
+- `immutable_audit.agent_audit_trail` has 4 rows (id 1-4)
+- Audit logger: NOT degraded, worker thread starts on first `audit()` call
+
+**Default next moves:**
+1. Verify sw_email_log populating after morning_runner fires
+2. Flip `AUTO_SEND_SW=true` after lead quality confirmed
+3. M18 HALO: instrument Atlas heartbeat with tracing.py (50 traces by 2026-05-18)
+4. Scope Echo metric gate (Atlas item 16) by 2026-05-17
+
+### 2026-05-10: M23 + M8b Shipped — Minion Spawning + Live Agent Graph
+
+**Session type:** Direct (Boubacar present) — autonomy infrastructure.
+
+**Shipped:**
+- `skills/coordination/spawner.py` — `spawn()`, `SpawnDepthExceeded`, `MAX_SPAWN_DEPTH=5`
+- `skills/coordination/__init__.py` — `recent_completed_prefix()` (LIKE query prefix match)
+- `orchestrator/minion_worker.py` — background async loop, plain-dict handler registry, `register()` + `run()` + `_execute()`
+- `orchestrator/app.py` — minion_worker wired at startup, `/atlas/agents` GET endpoint
+- `orchestrator/atlas_dashboard.py` — `get_agents()` fetcher
+- `agentsHQ-echo/thepopebot/chat-ui/atlas.html` + `atlas.js` — Active Agents card (XSS-safe DOM construction, `renderAgents`, `refreshAgents`, wired into `refreshAll`)
+- 10 tests: 4 unit spawner, 3 unit worker, 3 integration against live VPS Postgres
+- M6 roadmap fixed retroactively (Hunter pipeline was live ~2026-05-05, milestone never marked)
+- M8b gate 3 waived (tasks-table poll replaces event stream requirement)
+- All 5 success criteria verified on VPS: spawn creates row, worker marks done in <5s, /atlas/agents returns data, dashboard card renders, depth cap blocks write
+
+**Branch:** `feat/atlas-m23-agent-spawning` — pushed `[READY]`, gate merging.
+
+**VPS state at close:**
+- `main` = `777c8a9` (gate already auto-merged M23 on VPS)
+- `orc-crewai` running with `minion_worker started.` confirmed at 18:31 UTC
+- 10 tests passing, VPS verified live
+
+**Lessons:**
+- Subagents committed to wrong branch (main instead of feat branch) — cherry-picked to fix. Root cause: subagents inherit working directory state, not branch intent. Future: explicitly state branch name in every subagent prompt.
+- Frontend push hit merge conflict chaos because agentsHQ and agentsHQ-echo share the same GitHub remote. Resolved by direct edit on main + push.
+- Karpathy P3 caught a branch management issue before it became a production bug.
+
+**Next priorities:**
+1. M24 Hermes Self-Healing — brainstorming in parallel session
+2. Rename `thepopebot/chat-ui/` to `atlas-ui/` (cosmetic debt, post-M24)
+3. sw_email_log verification after morning_runner fires
