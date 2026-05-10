@@ -23,4 +23,8 @@ Production code module. Not a Boubacar-invoked skill. Contains:
 
 **Drive URLs in outreach emails must be public.** Use `orchestrator.drive_publish.audit_email_template_pdfs()` to verify. See `feedback_drive_pdfs_must_be_public.md`.
 
-**Diagnose zero-volume before flipping AUTO_SEND.** Volume=0 can mean: (a) flag is off, OR (b) harvest is pulling wrong businesses with no deliverable emails. Check both. Confirmed 2026-05-10: `leads` table had 0 rows because harvest pulled `scribd.com` + `profitablepenny.com` — not contractors. Hunter found no deliverable emails → zero T1s regardless of flag state. Fix harvest niche filter FIRST, verify 5-10 correct leads, THEN flip flag.
+**SW leads live in Supabase, not orc-postgres.** `sequence_engine.py` calls `get_crm_connection_with_fallback()` → Supabase. The `leads` table in orc-postgres is unrelated. Never query orc-postgres to assess SW sequence volume.
+
+**No per-send logging in Postgres (as of 2026-05-10).** `email_jobs` table only tracks system emails, not SW outreach. To assess T1-T5 volume: query Supabase `leads` table `sequence_touch` + `email_drafted_at` columns, or check Gmail Drafts/Sent. A `sw_email_log` table should be added to orc-postgres for real-time visibility.
+
+**`AUTO_SEND_SW=false` = drafts, not silence.** T1s draft to Gmail Drafts for manual review + send. Not a bug — intentional gate. Flip to `true` in VPS `.env` + `docker compose up -d orchestrator` when ready for autonomous sends.
