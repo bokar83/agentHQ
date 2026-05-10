@@ -41,6 +41,13 @@ SUBPROCESS_FLAGS = 0x08000000 if sys.platform == "win32" else 0
 
 logger = logging.getLogger("agentsHQ.gate_agent")
 
+try:
+    from logger import audit_gate
+    _AUDIT_AVAILABLE = True
+except Exception:
+    _AUDIT_AVAILABLE = False
+    def audit_gate(*args, **kwargs): pass  # noqa: E301
+
 DATA_DIR = Path(os.environ.get("GATE_DATA_DIR", "/app/data"))
 REPO_DIR = Path(os.environ.get("REPO_ROOT", "/app"))
 VPS_HOST = os.environ.get("VPS_HOST", "root@72.60.209.109")
@@ -504,6 +511,7 @@ def gate_tick() -> None:
             if decision == "reject":
                 _alerted_high_risk.discard(branch)
                 _notify(f"Gate rejection processed: {branch} held without merge.")
+                audit_gate("gate_agent", "reject", branch, reason="explicit Telegram rejection")
                 continue
             if decision != "approve":
                 held_high_risk.append(branch)
@@ -511,6 +519,7 @@ def gate_tick() -> None:
                     hr_files = [f for f in files if any(f.startswith(p) for p in HIGH_RISK_PREFIXES)]
                     _notify_gate_review(branch, hr_files)
                     _alerted_high_risk.add(branch)
+                    audit_gate("gate_agent", "proposal", branch, reason="high-risk files require approval", extra={"hr_files": hr_files})
                 continue
             # Approved — fall through to test + merge below
             _alerted_high_risk.discard(branch)
@@ -534,6 +543,7 @@ def gate_tick() -> None:
             continue
 
         merged.append(branch)
+        audit_gate("gate_agent", "approve", branch, reason="tests passed, auto-merged")
 
     # Push main once if anything merged
     if merged:
