@@ -49,11 +49,13 @@
 
     /* Topbar */
     #topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--hairline-md); margin: -24px -20px 32px; background: var(--surface); }
-    .topbar-left { display: flex; align-items: center; gap: 10px; }
+    .topbar-left { display: flex; align-items: center; gap: 10px; flex: 1; }
     .topbar-left h1 { font-family: var(--font-display); font-size: 18px; font-weight: 300; }
     .topbar-right { display: flex; align-items: center; gap: 10px; }
-    .back-link { color: var(--ink-dim); font-size: 12px; text-decoration: none; font-family: var(--font-mono); padding: 4px 10px; border: 1px solid var(--hairline-md); border-radius: var(--radius); }
-    .back-link:hover { color: var(--ink); border-color: var(--brass); }
+    .tnav { display: flex; gap: 6px; }
+    .nl { color: var(--ink-muted); font-size: 12px; text-decoration: none; font-family: var(--font-mono); padding: 6px 13px; border: 1px solid transparent; border-radius: var(--radius); transition: all .12s; white-space: nowrap; }
+    .nl:hover { color: var(--ink); border-color: var(--hairline-md); }
+    .nl.here { color: var(--terracotta); border-color: rgba(255,107,53,.35); }
     #last-updated { font-family: var(--font-mono); font-size: 11px; color: var(--ink-muted); }
 
     /* Summary tiles */
@@ -116,7 +118,11 @@
     </div>
     <div class="topbar-right">
       <span id="last-updated"></span>
-      <a class="back-link" href="/atlas">Dashboard</a>
+      <nav class="tnav">
+        <a href="/atlas" class="nl">Dashboard</a>
+        <a href="/atlas/roadmap" class="nl">Roadmap</a>
+        <a href="/atlas/cost" class="nl here">Spend</a>
+      </nav>
     </div>
   </div>
 

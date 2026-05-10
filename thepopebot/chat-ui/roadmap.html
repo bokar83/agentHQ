@@ -12,11 +12,11 @@
 /* ── Tokens ───────────────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#08090C; --surface:#10131A; --surface2:#181D28; --surface3:#1e2330;
+  --bg:#0E1117; --surface:#161B24; --surface2:#1C2232; --surface3:#222840;
   --terracotta:#FF6B35; --brass:#C19A6B; --lapis:#4A7A8C;
   --verdigris:#6F9B6E; --bronze:#B87333; --rose:#C25A6E; --echo:#a78bfa;
-  --ink:#F4EEE0; --ink-dim:#B9B09A; --ink-muted:#76705F;
-  --hairline:rgba(193,154,107,0.07); --hairline-md:rgba(193,154,107,0.18);
+  --ink:#F4EEE0; --ink-dim:#CEC6B4; --ink-muted:#9E9888;
+  --hairline:rgba(193,154,107,0.10); --hairline-md:rgba(193,154,107,0.22);
   --radius:8px;
   --font-body:'Atkinson Hyperlegible',system-ui,sans-serif;
   --font-display:'Fraunces',Georgia,serif;
@@ -75,7 +75,7 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--fo
 .rp.vis{display:block}
 
 /* Context block */
-.ctx{border-radius:var(--radius);padding:22px 24px;margin-bottom:28px;border-left:4px solid;background:var(--surface)}
+.ctx{border-radius:var(--radius);padding:22px 24px;margin-bottom:28px;border-left:4px solid;background:var(--surface2)}
 .ctx[data-r=atlas]  {border-color:var(--lapis)}
 .ctx[data-r=echo]   {border-color:var(--echo)}
 .ctx[data-r=compass]{border-color:var(--verdigris)}
@@ -122,11 +122,11 @@ tbody tr{border-bottom:1px solid var(--hairline);transition:background .1s}
 tbody tr:last-child{border-bottom:none}
 tbody tr:hover{background:rgba(255,255,255,.02)}
 td{padding:14px 16px;vertical-align:top}
-.ci{font-family:var(--font-mono);font-size:13px;color:var(--ink-muted);white-space:nowrap;width:72px}
+.ci{font-family:var(--font-mono);font-size:13px;color:var(--ink-dim);white-space:nowrap;width:72px}
 .cn{font-size:16px;font-weight:500;color:var(--ink);min-width:200px}
-.cb{font-size:14px;color:var(--ink-muted)}
-.cd{font-family:var(--font-mono);font-size:13px;color:var(--ink-muted);white-space:nowrap}
-.co{font-size:14px;color:var(--ink-muted);line-height:1.55}
+.cb{font-size:14px;color:var(--ink-dim)}
+.cd{font-family:var(--font-mono);font-size:13px;color:var(--ink-dim);white-space:nowrap}
+.co{font-size:14px;color:var(--ink-dim);line-height:1.55}
 /* inline gate progress in notes */
 .inline-gate{display:inline-block;margin-top:6px;background:var(--surface2);border:1px solid var(--hairline);border-radius:4px;padding:4px 10px;font-family:var(--font-mono);font-size:12px;color:var(--ink-dim)}
 .inline-gate strong{color:var(--ink)}
@@ -153,7 +153,7 @@ tr.hide{display:none}
   #page{padding:24px 16px 64px}
   .page-title{font-size:28px}
   .ctx-top{flex-direction:column}
-  thead th:nth-child(4),thead th:nth-child(5),td:nth-child(4),td:nth-child(5){display:none}
+  thead th:nth-child(4),thead th:nth-child(5),thead th:nth-child(6),td:nth-child(4),td:nth-child(5),td:nth-child(6){display:none}
   .tl h1{font-size:16px}
 }
 @media(max-width:480px){
