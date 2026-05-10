@@ -132,5 +132,6 @@ def test_to_db_row_has_required_keys():
     )
     row = m.to_db_row()
     for key in ("source", "category", "content", "relevance_boost",
-                "pipeline", "entity_ref", "tags", "agent_id", "external_id"):
+                "pipeline", "entity_ref", "tags", "agent_id", "external_id",
+                "expires_at"):
         assert key in row, f"Missing key: {key}"
