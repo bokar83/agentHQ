@@ -98,8 +98,8 @@ class HyperframeBoostAgent:
         if len(msg) > 3800:
             msg = msg[:3800] + "..."
         # Inline keyboard: numbered buttons + ALL + SKIP
-        num_buttons = [{"text": str(i), "callback_data": str(i)} for i in range(1, len(candidates) + 1)]
-        action_buttons = [{"text": "ALL", "callback_data": "all"}, {"text": "SKIP", "callback_data": "skip"}]
+        num_buttons = [(str(i), str(i)) for i in range(1, len(candidates) + 1)]
+        action_buttons = [("ALL", "all"), ("SKIP", "skip")]
         buttons = [num_buttons, action_buttons]
         send_message_with_buttons(TELEGRAM_CHAT_ID, msg, buttons)
 
