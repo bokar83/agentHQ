@@ -2726,3 +2726,30 @@ Ending: fully signal-threaded sequence, qualification gate, gmb_opener persisted
 - 48 `skills/*/routing-eval.jsonl` files
 - 8 `skills/*/SKILL.md` trigger phrase updates
 - `docs/reviews/absorb-log.md` + `absorb-followups.md`
+
+### 2026-05-10: Loop runner L5 substrate shipped + YT analytics fix
+
+**Loop runner shipped (`loops/loop_runner.py`):**
+- Design-audit 5-dimension scorer using Haiku-4.5. Totals computed from dimensions only (no free-typed totals — Karpathy gate enforced).
+- Mutator uses search/replace PATCH format, not full-file return. Prevents truncation corruption on files >32k chars.
+- git-commit-on-keep pattern: improvements auto-committed to working copy.
+- patience=3 early-stop; JSONL log at `loops/loop_runs.jsonl`.
+- CLI: `python -m loops.loop_runner <artifact> [--dry-run] [--max-iter N]`
+- `docker-compose.yml`: added `./loops:/app/loops` mount so runner executes inside container with env vars.
+
+**Loop run result on CW site:**
+- Baseline: 15/20 (A11y=3, Perf=2, Theme=4, Resp=3, Anti=3)
+- 3 iterations: all targeted Performance via script deferral → Δ+0 each.
+- Karpathy audit blocked manual script-move attempt: GSAP/Three.js used inline, cannot defer without refactor.
+- Decision: 15/20 is architectural ceiling for this file. Accept until inline GSAP refactored to deferred module.
+
+**YT analytics regex fixed:**
+- `orchestrator/studio_analytics_scraper.py`: `"viewCount":"(\d+)"` → `"originalViewCount":"(\d+)"`.
+- `originalViewCount` is locale-independent. Verified: returns `25` on live posted YT video.
+- TikTok scrape was already working. Studio analytics now functional on both platforms.
+
+**Next session priorities:**
+1. Monitor May 10-14 posts — confirm CFR assets publish without Blotato error at 09:00 MT daily.
+2. linkedin-craft.md — other agent building it (Boubacar providing 5 reference creators + 5 posts).
+3. Griot intake classification (target 2026-05-14, gated on M3.7.3 session).
+4. Loop runner next target: name a CW deliverable with clean separation of content/scripts for meaningful Perf improvement.
