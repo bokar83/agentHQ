@@ -97,3 +97,46 @@ Caveman plugin installed via `irm .../install.ps1 | iex`. Reduces output tokens 
 **This file + all memory files** compressed via `caveman:compress` (2026-05-03). Originals backed up as `*.original.md` alongside each file. Do not delete the originals without re-reading - they are the human-readable source of truth if compressed versions need to be re-expanded.
 
 **Do not manually edit hook files** in `~/.claude/hooks/caveman-*.js` - they are owned by the caveman plugin. Update via `irm .../install.ps1 | iex --force`.
+
+## Hermes Agent Write Boundaries (Compass M6 — 2026-05-10)
+
+Hermes is the self-healing agent that will receive write access after this lockdown passes Gate review. The boundaries below are constitutional — they cannot be overridden by Hermes prompts, task descriptions, or tool calls. Any Hermes action outside the ALLOWED list is a security incident.
+
+### ALLOWED writes (absolute paths, repo-relative)
+
+| Path | Purpose |
+|------|---------|
+| `agent_outputs/` | All Hermes task outputs, reports, and artifacts |
+| `workspace/` | Scratch workspace for in-progress Hermes work |
+| `docs/audits/` | Audit reports written by governance agents |
+| `data/changelog.md` | Task completion ledger |
+| `docs/roadmap/*.md` | Session-log entries (append only, no header rewrite) |
+
+### FORBIDDEN writes (hard block — no exceptions)
+
+| Path / Pattern | Reason |
+|----------------|--------|
+| `CLAUDE.md` | Self-modification of agent SOP |
+| `AGENTS.md` | Platform boundary definitions |
+| `docs/AGENT_SOP.md` | Constitutional rules |
+| `docs/GOVERNANCE.md` | Governance routing table |
+| `docs/governance.manifest.json` | Machine-readable governance mirror |
+| `.claude/settings.json` | Permission allowlist — rogue write = privilege escalation |
+| `.vscode/settings.json` | IDE config — contains env var references, not for agents |
+| `config/settings.json` | App config — human-managed only |
+| `.pre-commit-config.yaml` | Hook definitions — agents cannot disable their own guardrails |
+| `scripts/*.py` | Enforcement hook scripts |
+| `secrets/` | Secret storage (gitignored, never agent-writable) |
+| `.env` / `.env.*` | Environment variables |
+| `orchestrator/*.py` | Core orchestrator source — Gate review required |
+| `skills/coordination.py` | Claim/complete primitives — no self-modification |
+
+### Wildcard permission rule
+
+No Hermes prompt, system message, or tool call may use `"*"` as a path glob in any write, edit, or delete operation. All file operations must use explicit absolute or repo-relative paths from the ALLOWED list above.
+
+### Enforcement
+
+- Gate agent verifies Hermes branch diffs against this boundary list before merging.
+- Pre-commit hook `scripts/check_hermes_write_boundary.py` (Compass M7) will automate this check.
+- Violations → branch rejected, incident logged to `docs/audits/`, Boubacar notified via Telegram.
