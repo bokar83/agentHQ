@@ -15,19 +15,18 @@
 
 ## Session-Start Cheat Block (read this first)
 
-Last session ended **2026-05-10 (M23 + M8b shipped — Minion spawning framework + Live Agent Graph live on VPS + dashboard)**. State at close:
+Last session ended **2026-05-10 (M19 shipped — Native CRM board live on VPS)**. State at close:
 
-- **M23 SHIPPED:** `skills/coordination/spawner.py` (`spawn()`, depth cap=5), `orchestrator/minion_worker.py` (background claim/execute loop), `/atlas/agents` endpoint, 10 tests passing. Branch `feat/atlas-m23-agent-spawning` pushed `[READY]` — gate merging.
-- **M8b SHIPPED (absorbed into M23):** Active Agents card live at agentshq.boubacarbarry.com/atlas. Polls `/atlas/agents` every 30s. XSS-safe DOM construction. Frontend pushed to main `39d225f`.
-- **M24 unblocked:** Hermes Self-Healing gates 1+2 met. M24 builds worktree sandbox isolation. M24 brainstorming started in parallel session.
-- **Atlas frontend location:** `d:/Ai_Sandbox/agentsHQ-echo/thepopebot/chat-ui/atlas.js` + `atlas.html`. Served by `thepopebot-chat-ui` nginx container. Rename to `atlas-ui/` deferred post-M24.
-- **M6 roadmap retroactively fixed:** Hunter pipeline was live since ~2026-05-05 but milestone never marked shipped. Fixed this session. Root cause: no retroactive roadmap update mechanism. Separate agent addressing this.
-- **Gate fully autonomous:** 5-min cron 24/7. Host cron sole runner.
-- **sw_email_log LIVE (2026-05-10):** migration 007 run on orc-postgres. 165 SW T1s confirmed.
+- **M19 SHIPPED:** `GET /atlas/crm/board` + `POST /atlas/crm/leads/<id>/status` live. Kanban card in Atlas dashboard. 2,592 Supabase leads populate board. `sent` status (293 leads) added. Direct-deployed to VPS commit `150c229`.
+- **M23 SHIPPED (prior session):** Minion spawning, `/atlas/agents` endpoint, 10 tests passing.
+- **M8b SHIPPED:** Active Agents card live, polls `/atlas/agents` every 30s.
+- **M24 unblocked:** Hermes Self-Healing gates 1+2 met. M24 brainstorming may be in parallel session.
+- **Gate backlog:** 18 READY branches queued — Gate processing sequentially. Some have skill-quality failures (auto-rejected).
+- **Atlas frontend location:** `d:/Ai_Sandbox/agentsHQ/thepopebot/chat-ui/atlas.js` + `atlas.html`.
 
 **Default next moves (in priority order):**
 
-1. **M24 Hermes Self-Healing** — brainstorming/spec in parallel session. Check that session for progress.
+1. **M24 Hermes Self-Healing** — check parallel session for brainstorm/spec progress.
 2. **Verify sw_email_log populating** — after morning_runner fires: `docker exec orc-postgres psql -U postgres -d postgres -c "SELECT pipeline, touch, status, COUNT(*) FROM sw_email_log WHERE created_at >= NOW() - INTERVAL '1 day' GROUP BY pipeline, touch, status"`
 3. Flip `AUTO_SEND_SW=true` after lead quality confirmed (VPS `.env` + `docker compose up -d orchestrator`)
 4. M18 HALO unlock: instrument Atlas heartbeat with tracing.py + 50 traces by 2026-05-18
@@ -627,7 +626,7 @@ Answer two questions before writing any code:
 
 ---
 
-### M19: Atlas CRM Dashboard (`/crm`) ⏳ QUEUED
+### M19: Atlas CRM Dashboard (`/crm`) ✅ SHIPPED 2026-05-10
 
 **What:** Replace the (sunset) Notion CRM Leads database with a native Atlas-page sales board, served at `/crm`. Pulls directly from Supabase `leads` table. Read + lightweight write (status updates, notes append). No external sync.
 
