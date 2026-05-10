@@ -15,7 +15,7 @@
 
 ## Session-Start Cheat Block (read this first)
 
-Last session ended **2026-05-09 (Garry Tan meta-meta-prompting absorb — 6 gaps extracted + shipped)**. State at close:
+Last session ended **2026-05-09 (gbrain absorb — 3 patterns extracted: conformance audit, routing evaluator SHIPPED, minion pattern gated)**. State at close:
 
 - **Gate fully autonomous:** 5-min cron 24/7, silent success, inline ✅/❌ buttons, dedup alerts, 4 high-risk files only (`gate_agent.py`, `orc_rebuild.sh`, `.env`, `docker-compose`). Container gate registration removed — host cron is sole runner.
 - **Baked-file drift permanently fixed:** `scripts/docker-entrypoint.sh` ships with Dockerfile. Every container start auto-syncs `orchestrator/*.py` over baked `/app/*.py`. `docker cp` ritual retired. Rebuild completed successfully 2026-05-08 21:47 UTC.
@@ -2564,9 +2564,9 @@ Sankofa + Karpathy both rejected the 8-pattern proposal. Cut to 3:
 
 1. **`orchestrator/tests/mock_llm_service.py`** — pytest fixture that intercepts `select_by_capability` / `get_llm` with scripted scenario responses. Zero OpenRouter calls. 3 smoke tests included. Drop `mock_llm` fixture into any test file.
 
-2. **Atlas item 6 (Gate context-burn fix)** — Gate currently runs inside Claude session with LLM context open every 5 min regardless of queue state. Target: dumb Python cron (`scripts/gate_poll.py`), LLM context opens only on READY branch detection. Estimated ~85% Gate LLM spend reduction on idle periods. Pre-condition: absorb clawhip first.
+2. **Atlas item 6 (Gate context-burn fix)** — Gate currently runs inside Claude session with LLM context open every 5 min regardless of queue state. Target: dumb Python cron (`scripts/gate_poll.py`), LLM context opens only on READY branch detection. Estimated ~85% Gate LLM spend reduction on idle periods. Pre-condition: none (clawhip absorb complete 2026-05-09 — pre-condition was speculative, Gate refactor already fully specced).
 
-3. **`absorb-followups.md` clawhip ticket** — `/agentshq-absorb https://github.com/Yeachan-Heo/clawhip` queued 2026-05-15. clawhip is the event router that keeps notifications outside agent context (isomorphic to our Telegram + Gate). Implementation of the exact architecture Gate refactor needs. Must run before Gate refactor starts.
+3. **`scripts/hook_notifier.py` (clawhip absorb deliverable)** — Stop hook script that fires Telegram notification when Claude Code session ends, without LLM context open. Wire into `~/.claude/settings.json` Stop hook. V1 scope: Stop event only. Message: session_id + cwd. Success criterion: end a session, Telegram receives notification. Target: 2026-05-16.
 
 **Key architectural insight (PHILOSOPHY.md):** "notification routing pushed outside agent context window so agents stay focused on implementation." agentsHQ Gate violates this. Named and queued.
 

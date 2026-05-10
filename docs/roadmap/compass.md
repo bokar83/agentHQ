@@ -380,3 +380,15 @@ Sankofa Council 30-day audit run. Governance finding: skill directories with stu
 Skill count: 74 -> 68. SKILLS_INDEX regenerated. Archive manifest at `zzzArchive/2026-05-06-skill-consolidation/MANIFEST.md`.
 
 No Compass milestone changes. This is a governance integrity note.
+
+### 2026-05-09: M2.5 SHIPPED — gbrain routing evaluator pattern
+
+gbrain (garrytan/gbrain) absorbed (PROCEED — pattern-only, no install). Three patterns extracted:
+
+- **Pattern A SHIPPED:** boubacar-skill-creator Step 4.6 — 11-item conformance audit gate (objective pass/fail score before skill ships). Replaces subjective "looks good" with structured checklist. Hard fails on SKILL.md missing, vague triggers, no index entry, duplicate coverage.
+- **Pattern B SHIPPED (M2.5):** `scripts/check_routing_gaps.py` — Layer A structural routing check. Reads SKILLS_INDEX.md + per-skill `routing-eval.jsonl` fixtures. 6 checks: unreachable skills, MECE overlap/gap, fixture miss, stub sentinel, tautology. Pilot: 11/70 skills have fixtures (16%). 0 errors on first run. Bug found + fixed: content_multiplier was unreachable (missing from SKILLS_INDEX). memory skill had no trigger phrases.
+- **Pattern C GATED:** gbrain minion durable-job-queue documented in atlas.md item 10. Hard gate: Postgres must already be running for another reason before touching this.
+
+Full Postgres RAG backend (gbrain's headline feature) HOLD — corpus at zero, no named retrieval failure, infra cost unjustified.
+
+Compass status: M2.5 added and immediately SHIPPED. All prior milestones unchanged.

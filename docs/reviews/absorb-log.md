@@ -4,6 +4,8 @@ Schema: `YYYY-MM-DD | source | verdict | placement | leverage type`
 
 Verdicts: `PROCEED` | `DON'T PROCEED` | `ARCHIVE-AND-NOTE`
 
+2026-05-09 | https://github.com/Yeachan-Heo/clawhip | PROCEED | new script scripts/hook_notifier.py (Stop hook -> Telegram) + remove speculative pre-condition from atlas item 6 | continuous-improvement + producing-motion (Atlas autonomy)
+
 2026-05-09 | https://x.com/noisyb0y1/status/2044692412061425748 (ECC X-thread) | PROCEED | enhance skills/agentshq-absorb (Self-Audit Mode) + enhance docs/roadmap/compass.md (M6) | continuous-improvement
 
 2026-05-09 | <https://x.com/i/status/2052780393326092407> (@shannholmberg Content OS) | PROCEED | enhance skills/boub_voice_mastery + skills/ctq-social + skills/boubacar-prompts | continuous-improvement + producing-motion
