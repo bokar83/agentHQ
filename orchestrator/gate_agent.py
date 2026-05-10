@@ -83,6 +83,8 @@ _CHAT_ID = os.environ.get("OWNER_TELEGRAM_CHAT_ID", "")
 
 # Tracks branches already alerted this process lifetime to suppress repeat notifications
 _alerted_high_risk: set[str] = set()
+# Tracks conflict pairs already alerted -- key: "b1||b2||file" -- suppresses repeat spam
+_alerted_conflicts: set[str] = set()
 
 
 # ---------------------------------------------------------------------------
@@ -141,6 +143,36 @@ def _notify_gate_review(branch: str, hr_files: list[str]) -> None:
             f"Reply '/gate-approve {branch}' to approve, '/gate-reject {branch}' to discard.",
             urgent=True,
         )
+
+
+def _notify_conflict(b1: str, b2: str, conflict_file: str) -> None:
+    """Send a ONE-TIME conflict alert with Approve/Reject buttons.
+
+    Approve = merge b1, drop b2. Reject = drop both, re-queue manually.
+    The _alerted_conflicts set in the tick loop ensures this fires only once
+    per unique (b1, b2, file) triple for the lifetime of the gate process.
+    """
+    if not _BOT_TOKEN or not _CHAT_ID:
+        return
+    text = (
+        f"GATE CONFLICT\n"
+        f"Branches: {b1}  vs  {b2}\n"
+        f"File: {conflict_file}\n\n"
+        f"Approve merges {b1} and drops {b2}.\n"
+        f"Reject drops both — re-queue manually."
+    )
+    approve_cb = f"gate_approve:{b1}"
+    reject_cb = f"gate_reject:{b1}"
+    try:
+        from notifier import send_message_with_buttons
+        if len(approve_cb.encode()) <= 64 and len(reject_cb.encode()) <= 64:
+            buttons = [[("✅ Merge b1", approve_cb), ("❌ Drop both", reject_cb)]]
+            send_message_with_buttons(_CHAT_ID, text, buttons)
+            return
+    except Exception as exc:
+        logger.warning("gate: _notify_conflict buttons failed: %s", exc)
+    # Fallback: plain text (no repeat -- caller already deduped)
+    _notify(f"CONFLICT (one-time): {b1} vs {b2} on {conflict_file}. Both held.", urgent=True)
 
 
 # ---------------------------------------------------------------------------
@@ -481,10 +513,10 @@ def gate_tick() -> None:
     for b1, b2, f in conflicts:
         blocked.add(b1)
         blocked.add(b2)
-        _notify(
-            f"CONFLICT: {b1} and {b2} both touch {f}. Both held. Review and resolve.",
-            urgent=True,
-        )
+        conflict_key = f"{b1}||{b2}||{f}"
+        if conflict_key not in _alerted_conflicts:
+            _alerted_conflicts.add(conflict_key)
+            _notify_conflict(b1, b2, f)
         logger.warning("gate: conflict -- %s vs %s on %s", b1, b2, f)
 
     # Process non-blocked branches
