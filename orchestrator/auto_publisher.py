@@ -214,6 +214,8 @@ def _account_id_for_platform(platform: str) -> Optional[str]:
         return os.environ.get("BLOTATO_TIKTOK_ACCOUNT_ID")
     if platform == "Threads":
         return os.environ.get("BLOTATO_THREADS_ACCOUNT_ID")
+    if platform == "youtube_shorts" or platform_lc == "youtube_shorts":
+        return os.environ.get("BLOTATO_YT_SHORTS_ACCOUNT_ID", "")
     if platform == "YouTube" or platform_lc.startswith("youtube"):
         if "catalyst" in platform_lc:
             return os.environ.get("BLOTATO_YT_CATALYST_ACCOUNT_ID")
