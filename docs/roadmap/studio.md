@@ -1087,3 +1087,20 @@ Phase 3 — YAML machine-readable tokens:
 **Next studio session:**
 - Phase 3b: add DESIGN.md path resolution to `orchestrator/studio_production_crew.py` — reads `docs/styleguides/studio/<channel_slug>.DESIGN.md` before each render job and injects brand tokens into ffmpeg/image prompts
 - YT analytics regex fix (scraper not matching viewCount from last session)
+
+---
+
+### 2026-05-10 (continued) — Phase 3b shipped + configs volume-mounted
+
+**Brand config JSONs synced to locked DESIGN.md palettes:**
+- `configs/brand_config.under_the_baobab.json`: primary `#C4622D`, gold `#D4A017`, indigo-night `#1B1F4A`; Fraunces + Source Serif 4
+- `configs/brand_config.first_generation_money.json`: teal `#0A7C6E`, amber `#C97B2A`, highlight `#FFD166`; DM Sans + DM Mono + Public Sans
+- `configs/brand_config.ai_catalyst.json`: violet `#6C63FF`, electric cyan `#00E5FF`, base `#0E0E1A`; Syne + JetBrains Mono + Public Sans
+
+**Infra fix:** `configs/` volume-mounted in `docker-compose.yml` — future brand config changes deploy via `git pull + docker compose up -d`, no `docker cp` needed.
+
+**Verified live:** `load_brand_config()` returns locked hex values in container.
+
+**YT analytics:** scraper already working (`originalViewCount` regex correct). 8/12 records updated. TikTok 0s = bot detection serving 0, not a code bug.
+
+**Next studio session:** SW demo build validation (verify agent loads INDEX.md unprompted) — target 2026-05-17.
