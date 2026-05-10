@@ -15,7 +15,7 @@
 
 ## Session-Start Cheat Block (read this first)
 
-Last session ended **2026-05-10 (sw_email_log shipped + harvest mystery solved)**. State at close:
+Last session ended **2026-05-10 (immutable audit trail + M23 agent spawning review)**. State at close:
 
 - **Gate fully autonomous:** 5-min cron 24/7, silent success, inline ✅/❌ buttons, 4 high-risk files. Host cron sole runner.
 - **Baked-file drift permanently fixed:** entrypoint syncs `orchestrator/*.py` over baked `/app/*.py` on every container start.
@@ -2953,3 +2953,27 @@ Ending: fully signal-threaded sequence, qualification gate, gmb_opener persisted
 2. Monday harvest diagnosis — fix GMB niche filter pulling wrong businesses.
 3. Flip AUTO_SEND_SW=true after lead quality confirmed.
 4. M18 HALO: 50 traces by 2026-05-18.
+
+---
+
+### 2026-05-10: Immutable audit trail (Sankofa Council mandate)
+
+**Session type:** Direct (Boubacar present).
+
+**Shipped:**
+- `scripts/setup_immutable_audit.sql` — new schema `immutable_audit`, table `agent_audit_trail` (id/ts/agent_id/action/target/payload JSONB/status). Role `audit_logger` with INSERT-only privileges. `SECURITY DEFINER` function `append_audit_event()` validates action verb + payload. `BEFORE UPDATE/DELETE` trigger `deny_mutation()` blocks even superuser from mutating rows. Applied to VPS `orc-postgres` container; all 7 DB-level checks passed.
+- `orchestrator/logger.py` — fire-and-forget `audit()` API. Background daemon thread with exponential-backoff reconnect (cap 60s). Graceful degraded mode when `AUDIT_PG_PASSWORD` absent. Convenience wrappers: `audit_spawn`, `audit_self_heal`, `audit_gate`, `audit_file_edit`, `audit_task`.
+- `tests/test_immutable_logger.py` — pytest suite asserting INSERT allowed, UPDATE/DELETE raise `InsufficientPrivilege` (both direct and via trigger), SELECT denied for `audit_logger`, fire-and-forget flush works end-to-end.
+- Branch `feat/immutable-audit-log` pushed with `[READY]` commit `37d3c56`. Gate will pick up on next 5-min poll.
+
+**Key security properties verified on VPS:**
+- `audit_logger` role: INSERT only (confirmed via `information_schema.role_table_grants`)
+- Direct UPDATE/DELETE by `audit_logger`: `permission denied for table`
+- UPDATE/DELETE by `postgres` superuser: blocked by trigger (`InsufficientPrivilege`)
+- `audit_logger` SELECT: `permission denied for table`
+- INSERT via `SECURITY DEFINER` function: works (row id=1, row id=2 confirmed)
+
+**Next priorities (unchanged from prior session):**
+1. Gate merges `feat/immutable-audit-log` → main.
+2. Wire `audit()` calls into `spawner.py` (agent_spawn), `gate_agent.py` (gate_proposal/approve/reject), `autonomy_guard.py` (agent_self_heal) — a follow-on coding agent task.
+3. Set `AUDIT_PG_PASSWORD` in VPS `.env` and `docker compose up -d orchestrator` to activate live logging.
