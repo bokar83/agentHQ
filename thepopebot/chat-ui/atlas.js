@@ -788,9 +788,9 @@ function startQuoteRotation() {
 
 // ── M19 CRM Board ────────────────────────────────────────────────────────────
 
-var _CRM_COLS = ["new", "messaged", "replied", "qualified", "proposal", "closed_won", "closed_lost"];
+var _CRM_COLS = ["new", "sent", "messaged", "replied", "qualified", "proposal", "closed_won", "closed_lost"];
 var _CRM_LABELS = {
-  new: "New", messaged: "Messaged", replied: "Replied",
+  new: "New", sent: "Sent", messaged: "Messaged", replied: "Replied",
   qualified: "Qualified", proposal: "Proposal",
   closed_won: "Won", closed_lost: "Lost"
 };

@@ -808,7 +808,7 @@ def get_agents() -> dict:
 
 # ── M19: Native CRM Board ────────────────────────────────────────────────────
 
-_CRM_STATUSES = ["new", "messaged", "replied", "qualified", "proposal", "closed_won", "closed_lost"]
+_CRM_STATUSES = ["new", "sent", "messaged", "replied", "qualified", "proposal", "closed_won", "closed_lost"]
 
 _CRM_COLUMNS = [
     "id", "name", "company", "email", "phone", "location", "city",
@@ -842,7 +842,8 @@ def get_crm_board() -> dict:
         for k in ("created_at", "updated_at", "last_contacted_at"):
             if r.get(k) is not None:
                 r[k] = r[k].isoformat()
-        status = r.get("status") or "new"
+        status = (r.get("status") or "new").lower()
+        r["status"] = status  # normalize in-place
         if status not in board:
             board.setdefault(status, [])
         board[status].append(r)
