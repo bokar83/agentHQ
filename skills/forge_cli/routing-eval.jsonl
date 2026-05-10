@@ -1,0 +1,3 @@
+{"intent": "query a Notion database via forge client", "expected": "forge-cli"}
+{"intent": "build a KPI page in Notion using forge", "expected": "forge-cli"}
+{"intent": "use notion_client to create a Notion page", "expected": "forge-cli"}

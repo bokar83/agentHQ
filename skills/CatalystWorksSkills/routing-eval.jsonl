@@ -1,0 +1,3 @@
+{"intent": "run a Catalyst Works agent workflow", "expected": "catalyst-works-skills"}
+{"intent": "use CW local agent capabilities", "expected": "catalyst-works-skills"}
+{"intent": "access Catalyst Works shared practice skills", "expected": "catalyst-works-skills"}

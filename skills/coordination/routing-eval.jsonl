@@ -1,0 +1,3 @@
+{"intent": "claim this file before editing it", "expected": "coordination"}
+{"intent": "mark the branch task as complete", "expected": "coordination"}
+{"intent": "check if another agent has locked this file", "expected": "coordination"}

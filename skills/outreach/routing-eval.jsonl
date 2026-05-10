@@ -1,0 +1,3 @@
+{"intent": "run the outreach sequence engine", "expected": "outreach"}
+{"intent": "send a touch sequence via outreach tool", "expected": "outreach"}
+{"intent": "trigger email sequence for SW pipeline", "expected": "outreach"}

@@ -1,0 +1,3 @@
+{"intent": "query a Notion database via notion_tool", "expected": "notion-skill"}
+{"intent": "create a Notion page using the internal tool", "expected": "notion-skill"}
+{"intent": "search Notion databases with notion_tool", "expected": "notion-skill"}
