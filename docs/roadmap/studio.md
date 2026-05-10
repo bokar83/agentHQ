@@ -997,9 +997,43 @@ Boubacar's lived experiences and raw observations are the primary content source
 | AI Catalyst | YouTube | 35696 |
 
 **Next Studio session:**
-1. Wire Studio script crew to pull `Content Type=Story + Status=Idea` as candidate briefs (alongside trend-scouted topics)
-2. Story → multi-channel adaptation: one entry generates 3 scripts (1stGen/UTB/AIC lenses)
-3. M4 warm-up: confirm first batch of renders posted and tracking engagement
+1. Monitor May 10-14 scheduled posts — confirm TikTok/YT accept CFR videos (no Blotato "Failed to read media metadata")
+2. Fix YT analytics scrape regex — `"viewCount":"(\d+)"` not matching current YT HTML; check actual response structure
+3. Story → multi-channel adaptation: one entry generates 3 scripts (1stGen/UTB/AIC lenses)
+4. Wire Studio script crew to pull `Content Type=Story + Status=Idea` as candidate briefs
+5. M5 full: evaluate OAuth path for proper analytics once 30 days of posts exist
+
+---
+
+## Session log 2026-05-10 — CFR fix + multiplier callbacks + M5-lite analytics
+
+**VFR bug fixed — root cause:**
+- `zoompan` ffmpeg filter outputs VFR timestamps despite `fps=` param in filter string
+- All renders had `r_frame_rate: 30/1` (declared) but `avg_frame_rate: ~7fps` (actual)
+- TikTok + Blotato validate actual frame data and reject VFR — Blotato error: "Failed to read media metadata"
+- Fix: `studio_render_publisher.py:277` — appended `,fps={fps}` filter to Ken Burns vf chain
+- Verified: `r: 30/1 avg: 30/1` on test output post-fix
+
+**5 failed Drive assets re-encoded to CFR:**
+- Downloaded each from Drive, re-encoded with `ffmpeg -vf fps=30`, re-uploaded, Notion asset URL updated
+- Rescheduled May 10-14 (one per day). First TikTok published: `@underthebaobab_/video/7638074870898691342`
+- Dead AI Catalyst stub (no asset, no platform, May 5) archived via Notion API
+
+**M3.7.3 shipped:**
+- `handlers_approvals.py`: 5 Telegram callbacks wired (multiplier_approve_all, reject_all, per_piece, piece_approve, piece_reject)
+- `content_multiplier_crew.py`: `_MULTIPLIER_LOCK = threading.Lock()` guard in `multiplier_tick()` prevents double-run
+- `scheduler.py`: `multiplier-tick` (every 5m, crew=studio) + `studio-analytics` (daily 18:00) registered
+- Bug found + fixed same session: callbacks used `NOTION_CONTENT_DB_ID` (unset) → corrected to `FORGE_CONTENT_DB`
+- Notion: added `Multiply` status option to Content Board DB; `Views` number property to Studio Pipeline DB
+
+**M5-lite shipped:**
+- `orchestrator/studio_analytics_scraper.py`: scrapes TikTok (`"playCount":(\d+)`) + YT (`"viewCount":"(\d+)"`) from Posted URLs
+- TikTok scrape working (3 records updated on first run). YT regex not matching — needs investigation next session
+- X URLs skipped (blocks scraping). Instagram skipped (no public API)
+
+**Deferred (Karpathy/Sankofa gate):**
+- `/multiply` router intent — heartbeat polling covers it, router adds no marginal value
+- Loop runner (`loops/loop_runner.py`) — no named first CW deliverable target, premature abstraction
 
 ---
 
