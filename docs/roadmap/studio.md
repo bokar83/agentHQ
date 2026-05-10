@@ -1050,3 +1050,40 @@ Boubacar's lived experiences and raw observations are the primary content source
 - Result: 11 qa-passed candidates processed on next tick. First two renders confirmed in logs: 1stGen Money + Under the Baobab both rendered, Notion updated, emails sent.
 
 **Confirmed working end-to-end:** brand_config loads → intro/outro MP4s found via bind-mount → ffmpeg render → Drive upload → Notion → scheduled status → email to both addresses.
+
+---
+
+### 2026-05-10 — Google DESIGN.md format absorbed — Studio channel specs locked
+
+**Session scope:** Absorb Google DESIGN.md open-source format (google-labs-code/design.md, Apache 2.0, released 2026-04-21). Full 3-phase integration.
+
+**What shipped:**
+
+Phase 1 — Brand routing infrastructure:
+- `docs/styleguides/INDEX.md`: universal brand-to-file routing table (slugs: cw, sw, utb, 1stgen, aic)
+- BRAND ROUTING instruction added to 6 skills: `brand`, `design`, `design-system`, `ui-styling`, `frontend-design` (agentsHQ), `ui-ux-pro-max` (global `~/.claude/skills/`)
+
+Phase 2 — Studio channel DESIGN.md specs (palettes approved by Boubacar after HTML preview):
+- `docs/styleguides/studio/under-the-baobab.DESIGN.md`: Terracotta Fire `#C4622D` + Firelight Gold `#D4A017` + Indigo Night `#1B1F4A`. Fraunces display, Source Serif 4 body. Adinkra/kente geometry. Region tags mandatory.
+- `docs/styleguides/studio/first-generation-money.DESIGN.md`: Deep Teal `#0A7C6E` + Amber `#C97B2A` + Highlight Yellow `#FFD166`. DM Sans + DM Mono numbers. "Show your work" visual signature.
+- `docs/styleguides/studio/ai-catalyst.DESIGN.md`: Violet `#6C63FF` + Electric Cyan `#00E5FF` + Base `#0E0E1A`. Syne display, JetBrains Mono data. Dark mode only for video.
+
+Phase 3 — YAML machine-readable tokens:
+- `docs/styleguides/CURRENT_TYPOGRAPHY.md`: full YAML front-matter block (typography stack, retired fonts, HTML import)
+- `docs/styleguides/styleguide_master.md`: YAML front-matter block (CW colors, spacing, rounded, components)
+- All 6 skill routing instructions updated: "extract YAML block between --- delimiters as authoritative"
+- `docs/styleguides/design.md.template`: canonical template for new brand DESIGN.md files
+
+**dream.py first run completed:**
+- Fixed 3 bugs: Windows SSL bypass (httpx), fence strip (```json), token ceiling (16k→32k)
+- 13 memory changes applied: 3 file merges, 9 project files archived, gate cron contradiction fixed
+
+**Commits:** `6ec027c` (DESIGN.md Phases 1-3), `9921e96` (dream.py fixes)
+
+**Deferred:**
+- Phase 3b: wire studio production crew to pass channel DESIGN.md path to render jobs — target 2026-05-24
+- SW demo build validation (verify agent loads INDEX.md unprompted) — target 2026-05-17
+
+**Next studio session:**
+- Phase 3b: add DESIGN.md path resolution to `orchestrator/studio_production_crew.py` — reads `docs/styleguides/studio/<channel_slug>.DESIGN.md` before each render job and injects brand tokens into ffmpeg/image prompts
+- YT analytics regex fix (scraper not matching viewCount from last session)
