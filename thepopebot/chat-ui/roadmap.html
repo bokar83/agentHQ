@@ -655,6 +655,8 @@ function applyMetrics() {
       renderMilestoneRows(codename, ms[codename]);
     }
   }
+  // Update selector bars with live counts now that milestones are loaded
+  updateSelectorBars();
   applyFilter();
 }
 
@@ -668,20 +670,27 @@ function setWidth(id, pct) {
 }
 
 // ── Milestone progress calculations ──────────────────────────────────────────
-const SHIPPED_COUNTS = { atlas: 16, echo: 4, compass: 9, studio: 7, harvest: 8 };
-const TOTAL_COUNTS   = { atlas: 22, echo: 7, compass: 10, studio: 13, harvest: 17 };
+// Fallback counts used before live data arrives (updated 2026-05-10)
+const FALLBACK_SHIPPED = { atlas: 17, echo: 4, compass: 10, studio: 7, harvest: 8 };
+const FALLBACK_TOTAL   = { atlas: 23, echo: 7, compass: 11, studio: 13, harvest: 17 };
 
 function updateSelectorBars() {
+  const ms = liveMetrics.milestones || {};
   for (const rm of ['atlas','echo','compass','studio','harvest']) {
-    const pct = Math.round(SHIPPED_COUNTS[rm] / TOTAL_COUNTS[rm] * 100);
+    let shipped = FALLBACK_SHIPPED[rm], total = FALLBACK_TOTAL[rm];
+    if (ms[rm] && ms[rm].length > 0) {
+      total   = ms[rm].length;
+      shipped = ms[rm].filter(m => m.status === 'shipped').length;
+    }
+    const pct = Math.round(shipped / total * 100);
     const fill = document.getElementById('sp-' + rm);
     if (fill) fill.style.width = pct + '%';
+    if (rm === 'atlas') {
+      set('atlas-pct-val', pct + '%');
+      set('atlas-pct-text', shipped + ' of ' + total + ' shipped');
+      setWidth('atlas-pbar', pct);
+    }
   }
-  // Atlas overall pct
-  const atlasPct = Math.round(SHIPPED_COUNTS.atlas / TOTAL_COUNTS.atlas * 100);
-  set('atlas-pct-val', atlasPct + '%');
-  set('atlas-pct-text', SHIPPED_COUNTS.atlas + ' of ' + TOTAL_COUNTS.atlas + ' shipped');
-  setWidth('atlas-pbar', atlasPct);
 }
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
