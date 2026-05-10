@@ -1,0 +1,81 @@
+import pytest
+from unittest.mock import patch, MagicMock
+
+SAMPLE_POST = """Nobody hands 1stGen founders a roadmap.
+I spent 3 years waiting for permission that was never coming.
+The playbook exists — you have to build it yourself.
+If you're building without a safety net, follow for the real talk."""
+
+SAMPLE_HTML_9x16 = """<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>* { margin:0; padding:0; } html,body { width:1080px; height:1920px; background:#0A0A0A; }</style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="30" data-width="1080" data-height="1920">
+      <div id="hook" data-start="0" data-duration="5" data-track-index="1">Hook text</div>
+      <div id="s1" data-start="5" data-duration="8" data-track-index="1">Body text</div>
+      <div id="s2" data-start="13" data-duration="9" data-track-index="1">Body text 2</div>
+      <div id="cta" data-start="22" data-duration="8" data-track-index="1">Follow us</div>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.from("#hook", { opacity: 0, duration: 0.6 }, 0);
+      tl.set("#hook", { opacity: 0 }, 5.00);
+      tl.from("#cta", { opacity: 0, duration: 0.6 }, 22);
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>"""
+
+SAMPLE_HTML_1x1 = SAMPLE_HTML_9x16.replace("height=1920", "height=1080").replace(
+    "height:1920px", "height:1080px").replace('data-height="1920"', 'data-height="1080"')
+
+
+def test_generate_returns_html_string():
+    from orchestrator.hyperframe_brief_generator import HyperframeBriefGenerator
+    gen = HyperframeBriefGenerator()
+    mock_response = MagicMock()
+    mock_response.content = [MagicMock(text=SAMPLE_HTML_9x16)]
+    with patch('anthropic.Anthropic') as mock_anthropic:
+        mock_client = MagicMock()
+        mock_anthropic.return_value = mock_client
+        mock_client.messages.create.return_value = mock_response
+        html = gen.generate(SAMPLE_POST, aspect_ratio="9:16")
+    assert isinstance(html, str)
+    assert "<!doctype html" in html.lower()
+
+def test_generate_strips_markdown_fences():
+    from orchestrator.hyperframe_brief_generator import HyperframeBriefGenerator
+    gen = HyperframeBriefGenerator()
+    mock_response = MagicMock()
+    mock_response.content = [MagicMock(text=f"```html\n{SAMPLE_HTML_9x16}\n```")]
+    with patch('anthropic.Anthropic') as mock_anthropic:
+        mock_client = MagicMock()
+        mock_anthropic.return_value = mock_client
+        mock_client.messages.create.return_value = mock_response
+        html = gen.generate(SAMPLE_POST, aspect_ratio="9:16")
+    assert not html.startswith("```")
+    assert "<!doctype html" in html.lower()
+
+def test_generate_uses_correct_dimensions_9x16():
+    from orchestrator.hyperframe_brief_generator import HyperframeBriefGenerator
+    gen = HyperframeBriefGenerator()
+    mock_response = MagicMock()
+    mock_response.content = [MagicMock(text=SAMPLE_HTML_9x16)]
+    with patch('anthropic.Anthropic') as mock_anthropic:
+        mock_client = MagicMock()
+        mock_anthropic.return_value = mock_client
+        mock_client.messages.create.return_value = mock_response
+        captured_prompt = []
+        def capture(*args, **kwargs):
+            captured_prompt.append(kwargs.get("messages", [{}])[0].get("content", ""))
+            return mock_response
+        mock_client.messages.create.side_effect = capture
+        gen.generate(SAMPLE_POST, aspect_ratio="9:16")
+    assert "1080" in captured_prompt[0]
+    assert "1920" in captured_prompt[0]
