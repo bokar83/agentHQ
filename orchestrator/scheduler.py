@@ -676,6 +676,31 @@ def start_scheduler():
     except Exception as e:
         logger.error(f"STUDIO_PRODUCTION: wake registration failed ({e}); continuing without production tick", exc_info=True)
 
+    # Studio M3.7.3: content multiplier tick. Runs every 5 minutes.
+    try:
+        import heartbeat as _heartbeat
+        from orchestrator.content_multiplier_crew import multiplier_tick
+        _heartbeat.register_wake(
+            'multiplier-tick',
+            crew_name='studio',
+            callback=multiplier_tick,
+            every='5m',
+        )
+    except Exception as e:
+        logger.error(f'MULTIPLIER_TICK: wake registration failed ({e}); continuing', exc_info=True)
+
+    # Studio M5-lite: scrape view counts from posted URLs daily.
+    try:
+        import heartbeat as _heartbeat
+        from orchestrator.studio_analytics_scraper import studio_analytics_tick
+        _heartbeat.register_wake(
+            'studio-analytics',
+            crew_name='studio',
+            callback=studio_analytics_tick,
+            at='18:00',
+        )
+    except Exception as e:
+        logger.error(f'STUDIO_ANALYTICS: wake registration failed ({e}); continuing', exc_info=True)
     # Atlas: Notion State Poller. Runs every 5 minutes. Queries Tasks DB for
     # rows changed in last 6 minutes, diffs against cache, writes changelog.
     # Single source of truth for "what changed in the Tasks DB" event log.

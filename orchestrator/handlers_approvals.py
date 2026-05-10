@@ -580,6 +580,99 @@ def handle_callback_query(update: dict) -> bool:
             except Exception:
                 pass
 
+
+    elif cb_data.startswith("multiplier_approve_all:"):
+        try:
+            run_id = cb_data.split(":", 1)[1]
+            from notifier import answer_callback_query, send_message
+            notion = _open_notion()
+            db_id = os.environ.get("NOTION_CONTENT_DB_ID")
+            pages = notion.query_database(db_id, filter_obj={"and": [{"property": "Multiplier Run ID", "rich_text": {"equals": run_id}}, {"property": "Status", "select": {"equals": "Idea"}}]})
+            count = 0
+            for page in pages or []:
+                notion.update_page(page["id"], properties={"Status": {"select": {"name": "Ready"}}})
+                count += 1
+            answer_callback_query(cb_id, f"Approved {count} pieces.")
+            send_message(cb_chat_id, f"Multiplier: approved {count} pieces for run {run_id[:8]}.")
+        except Exception as e:
+            logger.warning(f"callback_query multiplier_approve_all handling error: {e}")
+
+    elif cb_data.startswith("multiplier_reject_all:"):
+        try:
+            run_id = cb_data.split(":", 1)[1]
+            from notifier import answer_callback_query, send_message
+            notion = _open_notion()
+            db_id = os.environ.get("NOTION_CONTENT_DB_ID")
+            pages = notion.query_database(db_id, filter_obj={"and": [{"property": "Multiplier Run ID", "rich_text": {"equals": run_id}}, {"property": "Status", "select": {"equals": "Idea"}}]})
+            count = 0
+            for page in pages or []:
+                notion.update_page(page["id"], properties={"Status": {"select": {"name": "Archived"}}})
+                count += 1
+            answer_callback_query(cb_id, f"Rejected {count} pieces.")
+            send_message(cb_chat_id, f"Multiplier: rejected {count} pieces for run {run_id[:8]}.")
+        except Exception as e:
+            logger.warning(f"callback_query multiplier_reject_all handling error: {e}")
+
+    elif cb_data.startswith("multiplier_per_piece:"):
+        try:
+            run_id = cb_data.split(":", 1)[1]
+            from notifier import answer_callback_query, send_message_with_buttons
+            notion = _open_notion()
+            db_id = os.environ.get("NOTION_CONTENT_DB_ID")
+            pages = notion.query_database(db_id, filter_obj={"and": [{"property": "Multiplier Run ID", "rich_text": {"equals": run_id}}, {"property": "Status", "select": {"equals": "Idea"}}]})
+            count = len(pages or [])
+            for page in pages or []:
+                page_id = page.get("id", "")
+                props = page.get("properties", {}) or {}
+                title = "".join(
+                    seg.get("plain_text") or ((seg.get("text") or {}).get("content")) or ""
+                    for seg in (props.get("Title", {}) or {}).get("title", [])
+                ).strip() or page_id[:8]
+                draft = "".join(
+                    seg.get("plain_text") or ((seg.get("text") or {}).get("content")) or ""
+                    for seg in (props.get("Draft", {}) or {}).get("rich_text", [])
+                ).strip()
+                if not draft:
+                    for prop in props.values():
+                        rich = (prop or {}).get("rich_text")
+                        if rich:
+                            draft = "".join(
+                                seg.get("plain_text") or ((seg.get("text") or {}).get("content")) or ""
+                                for seg in rich
+                            ).strip()
+                            if draft:
+                                break
+                msg = f"{title}\n\n{draft[:200]}"
+                buttons = [[
+                    ("Approve", f"multiplier_piece_approve:{page_id}"),
+                    ("Reject", f"multiplier_piece_reject:{page_id}"),
+                ]]
+                send_message_with_buttons(cb_chat_id, msg, buttons)
+            answer_callback_query(cb_id, f"Sending {count} pieces for review.")
+        except Exception as e:
+            logger.warning(f"callback_query multiplier_per_piece handling error: {e}")
+
+    elif cb_data.startswith("multiplier_piece_approve:"):
+        try:
+            page_id = cb_data.split(":", 1)[1]
+            from notifier import answer_callback_query, send_message
+            notion = _open_notion()
+            notion.update_page(page_id, properties={"Status": {"select": {"name": "Ready"}}})
+            answer_callback_query(cb_id, "Piece approved.")
+            send_message(cb_chat_id, f"Multiplier: approved piece {page_id[:8]}.")
+        except Exception as e:
+            logger.warning(f"callback_query multiplier_piece_approve handling error: {e}")
+
+    elif cb_data.startswith("multiplier_piece_reject:"):
+        try:
+            page_id = cb_data.split(":", 1)[1]
+            from notifier import answer_callback_query, send_message
+            notion = _open_notion()
+            notion.update_page(page_id, properties={"Status": {"select": {"name": "Archived"}}})
+            answer_callback_query(cb_id, "Piece rejected.")
+            send_message(cb_chat_id, f"Multiplier: rejected piece {page_id[:8]}.")
+        except Exception as e:
+            logger.warning(f"callback_query multiplier_piece_reject handling error: {e}")
     return True
 
 

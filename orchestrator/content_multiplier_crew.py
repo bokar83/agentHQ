@@ -48,6 +48,7 @@ def _resolve_skill_dir() -> Path:
     return candidates[1]
 
 logger = logging.getLogger("agentsHQ.content_multiplier_crew")
+_MULTIPLIER_LOCK = threading.Lock()
 
 CONTENT_DB_ID = "339bcf1a-3029-81d1-8377-dc2f2de13a20"
 LENS_MODEL = "anthropic/claude-haiku-4.5"
@@ -1004,36 +1005,41 @@ def _remix_notes_from_page(page: dict[str, Any]) -> dict[str, Any] | None:
 
 
 def multiplier_tick() -> None:
-    notion = _notion_client()
-    db_id = _content_db_id()
-    rows = notion.query_database(
-        db_id,
-        filter_obj={"property": "Status", "select": {"equals": "Multiply"}},
-        sorts=[{"timestamp": "created_time", "direction": "ascending"}],
-    )
-    if not rows:
-        logger.info("content multiplier tick: no Multiply records.")
+    if not _MULTIPLIER_LOCK.acquire(blocking=False):
+        logger.info("content multiplier tick: already running, skipping.")
         return
-
-    page = rows[0]
-    page_id = page["id"]
-    source = _source_from_page(page)
-    qa_verdict = _plain_text_prop(page, "QA Verdict") or None
-    remix_notes = _remix_notes_from_page(page)
     try:
-        multiply_source(
-            source,
-            source_type="auto",
-            source_trend_notion_id=page_id,
-            mode="auto",
-            qa_verdict=qa_verdict,
-            remix_notes=remix_notes,
+        notion = _notion_client()
+        db_id = _content_db_id()
+        rows = notion.query_database(
+            db_id,
+            filter_obj={"property": "Status", "select": {"equals": "Multiply"}},
+            sorts=[{"timestamp": "created_time", "direction": "ascending"}],
         )
-        notion.update_page(page_id, properties={"Status": {"select": {"name": "Idea"}}})
-    except Exception:
-        logger.exception("content multiplier tick failed for page %s", page_id)
-        raise
+        if not rows:
+            logger.info("content multiplier tick: no Multiply records.")
+            return
 
+        page = rows[0]
+        page_id = page["id"]
+        source = _source_from_page(page)
+        qa_verdict = _plain_text_prop(page, "QA Verdict") or None
+        remix_notes = _remix_notes_from_page(page)
+        try:
+            multiply_source(
+                source,
+                source_type="auto",
+                source_trend_notion_id=page_id,
+                mode="auto",
+                qa_verdict=qa_verdict,
+                remix_notes=remix_notes,
+            )
+            notion.update_page(page_id, properties={"Status": {"select": {"name": "Idea"}}})
+        except Exception:
+            logger.exception("content multiplier tick failed for page %s", page_id)
+            raise
+    finally:
+        _MULTIPLIER_LOCK.release()
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Run the agentsHQ content multiplier.")
