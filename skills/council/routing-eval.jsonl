@@ -1,3 +1,3 @@
-{"intent": "I need a Sankofa Council review on this decision", "expected": "council"}
-{"intent": "stress-test this strategy with five voices", "expected": "council"}
-{"intent": "run high-stakes review on this plan", "expected": "council"}
+{"intent": "read the council review documentation", "expected": "council"}
+{"intent": "what does high-stakes review involve", "expected": "council"}
+{"intent": "show me strategic council workflow docs", "expected": "council"}

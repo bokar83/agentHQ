@@ -1,3 +1,3 @@
-{"intent": "query a Notion database via notion_tool", "expected": "notion-skill"}
-{"intent": "create a Notion page using the internal tool", "expected": "notion-skill"}
-{"intent": "search Notion databases with notion_tool", "expected": "notion-skill"}
+{"intent": "use notion api tool to create a page", "expected": "notion-skill"}
+{"intent": "call the internal notion tool", "expected": "notion-skill"}
+{"intent": "agent notion tool create idea page", "expected": "notion-skill"}

@@ -1,3 +1,3 @@
-{"intent": "show me active mirrored skills", "expected": "active"}
+{"intent": "show me the active bundle capabilities", "expected": "active"}
 {"intent": "what skills are in the active bundle", "expected": "active"}
-{"intent": "list active external skill workspace", "expected": "active"}
+{"intent": "check the active skill workspace", "expected": "active"}

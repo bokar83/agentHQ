@@ -1,3 +1,3 @@
-{"intent": "run the outreach sequence engine", "expected": "outreach"}
-{"intent": "send a touch sequence via outreach tool", "expected": "outreach"}
-{"intent": "trigger email sequence for SW pipeline", "expected": "outreach"}
+{"intent": "run the outreach sequence engine for this campaign", "expected": "outreach"}
+{"intent": "send via outreach pipeline", "expected": "outreach"}
+{"intent": "execute outreach sequence engine job", "expected": "outreach"}

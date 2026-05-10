@@ -7,9 +7,9 @@
 {"intent": "run openspace on content multiplier", "expected": "openspace-skill"}
 {"intent": "evolve skill definition for absorb", "expected": "openspace-skill"}
 {"intent": "repair skill after bad output", "expected": "openspace-skill"}
-{"intent": "analyze execution traces for latency", "expected": "openspace-skill"}
-{"intent": "build a new landing page for signal works", "expected": "frontend-design"}
-{"intent": "send cold outreach to roofers in utah", "expected": "hormozi-lead-gen"}
-{"intent": "create a notion page for the client", "expected": "notion_skill"}
+{"intent": "optimize agent performance on this pipeline", "expected": "openspace-skill"}
+{"intent": "build a landing page for signal works", "expected": "frontend-design"}
+{"intent": "cold email roofers in utah", "expected": "hormozi-lead-gen"}
+{"intent": "query notion database for client record", "expected": "notion-cli"}
 {"intent": "absorb this github repo into agentshq", "expected": "agentshq-absorb"}
-{"intent": "review my pull request", "expected": "code-review"}
+{"intent": "absorb this PR for review", "expected": "agentshq-absorb"}

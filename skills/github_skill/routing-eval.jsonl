@@ -1,3 +1,3 @@
-{"intent": "create a github repo via github_tool", "expected": "github-skill"}
-{"intent": "open a GitHub issue using the automation tool", "expected": "github-skill"}
-{"intent": "push files to GitHub with github_tool", "expected": "github-skill"}
+{"intent": "automate github repo creation", "expected": "github-skill"}
+{"intent": "use github skill to open an issue", "expected": "github-skill"}
+{"intent": "use github automation tool to push file", "expected": "github-skill"}

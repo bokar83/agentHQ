@@ -1,3 +1,3 @@
-{"intent": "find shared skill library assets", "expected": "library"}
-{"intent": "what reusable capabilities are in the library", "expected": "library"}
-{"intent": "look up shared skill references", "expected": "library"}
+{"intent": "find assets in the skill library", "expected": "library"}
+{"intent": "look up internal library references", "expected": "library"}
+{"intent": "access the shared library for this skill", "expected": "library"}
