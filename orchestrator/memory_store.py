@@ -86,7 +86,7 @@ def query_text(
     Full-text tsvector search. Returns list of row dicts ordered by
     ts_rank * relevance_boost DESC. Returns [] on any failure (non-fatal).
     """
-    conditions = ["content_tsv @@ plainto_tsquery('english', %(text)s)"]
+    conditions = ["content_tsv @@ websearch_to_tsquery('english', %(text)s)"]
     params: dict = {"text": text, "limit": limit}
     if pipeline:
         conditions.append("pipeline = %(pipeline)s")
@@ -100,7 +100,7 @@ def query_text(
                source, created_at
         FROM memory
         WHERE {where}
-        ORDER BY ts_rank(content_tsv, plainto_tsquery('english', %(text)s))
+        ORDER BY ts_rank(content_tsv, websearch_to_tsquery('english', %(text)s))
                  * relevance_boost DESC
         LIMIT %(limit)s
     """
