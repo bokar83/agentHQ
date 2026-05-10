@@ -274,7 +274,7 @@ def _render_ken_burns_clip(img: str, out: Path, dur: float, fps: int, w: int, h:
         crop = ""
     _ffmpeg([
         "-loop", "1", "-i", img,
-        "-vf", f"{crop}{kb}",
+        "-vf", f"{crop}{kb},fps={fps}",
         "-t", str(dur),
         "-c:v", "libx264", "-preset", "fast", "-crf", "20",
         "-pix_fmt", "yuv420p", "-an",
