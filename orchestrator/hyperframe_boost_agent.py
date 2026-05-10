@@ -93,9 +93,28 @@ class HyperframeBoostAgent:
         lines = ["HyperFrame candidates ready:\n"]
         for i, c in enumerate(candidates, 1):
             score_100 = round(c['total_score'] * 2)
-            lines.append(f"{i}. [{score_100}/100] {c['text_preview'][:100]}...")
+            lines.append(f"{i}. [{score_100}/100] {c['text_preview'][:60]}...")
         lines.append("\nReply: 1, 2, 3, 1,3, all, or skip")
-        send_message(TELEGRAM_CHAT_ID, "\n".join(lines))
+        msg = "\n".join(lines)
+        # Telegram hard limit is 4096 chars — truncate safely
+        if len(msg) > 4000:
+            msg = msg[:4000] + "\n...(truncated)\nReply: 1, 2, 3, 1,3, all, or skip"
+        send_message(TELEGRAM_CHAT_ID, msg)
+
+    def _get_latest_update_id(self) -> int:
+        """Fetch current highest update_id so polling ignores pre-existing messages."""
+        if not _BOT_TOKEN:
+            return 0
+        try:
+            resp = requests.get(
+                f"https://api.telegram.org/bot{_BOT_TOKEN}/getUpdates",
+                params={"limit": 1, "offset": -1},
+                timeout=10,
+            )
+            results = resp.json().get("result", [])
+            return results[-1]["update_id"] + 1 if results else 0
+        except Exception:
+            return 0
 
     def _poll_telegram_reply(self, count: int, timeout_hours: int = 24) -> list[int]:
         """Poll Telegram getUpdates for reply. Returns approved indices or [] on timeout/skip."""
@@ -104,7 +123,7 @@ class HyperframeBoostAgent:
             return []
         api_base = f"https://api.telegram.org/bot{_BOT_TOKEN}"
         deadline = time.time() + timeout_hours * 3600
-        offset = 0
+        offset = self._get_latest_update_id()
         while time.time() < deadline:
             try:
                 resp = requests.get(

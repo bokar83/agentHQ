@@ -213,7 +213,8 @@ def _get_due_leads(conn, pipeline: str, touch: int, limit: int = 10) -> list[dic
 
 
 def _mark_sent(conn, lead_id: int, touch: int, pipeline: str, subject: str,
-               gmb_opener: str = "") -> None:
+               gmb_opener: str = "", lead_email: str = "",
+               gmail_id: str = "", status: str = "drafted") -> None:
     now = datetime.now(timezone.utc)
     cur = conn.cursor()
     if gmb_opener and touch == 1:
@@ -243,6 +244,37 @@ def _mark_sent(conn, lead_id: int, touch: int, pipeline: str, subject: str,
     """, (lead_id, f"sequence_{pipeline}_t{touch}", subject))
     conn.commit()
     cur.close()
+    _log_to_orc_postgres(
+        lead_id=lead_id, lead_email=lead_email, touch=touch,
+        pipeline=pipeline, subject=subject, gmail_id=gmail_id, status=status,
+    )
+
+
+def _log_to_orc_postgres(lead_id: int, lead_email: str, touch: int,
+                         pipeline: str, subject: str,
+                         gmail_id: str, status: str) -> None:
+    """Write one row to sw_email_log in orc-postgres. Non-fatal on any error."""
+    try:
+        import psycopg2
+        orc_conn = psycopg2.connect(
+            host=os.environ.get("POSTGRES_HOST", "orc-postgres"),
+            database=os.environ.get("POSTGRES_DB", "postgres"),
+            user=os.environ.get("POSTGRES_USER", "postgres"),
+            password=os.environ.get("POSTGRES_PASSWORD", ""),
+            port=int(os.environ.get("POSTGRES_PORT", 5432)),
+        )
+        cur = orc_conn.cursor()
+        cur.execute("""
+            INSERT INTO sw_email_log
+                (lead_id, lead_email, touch, pipeline, status, subject, gmail_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (lead_id, lead_email, touch, pipeline, status,
+              subject[:500] if subject else "", gmail_id or ""))
+        orc_conn.commit()
+        cur.close()
+        orc_conn.close()
+    except Exception as e:
+        logger.warning(f"sw_email_log: write failed (non-fatal): {e}")
 
 
 # ── Gmail ─────────────────────────────────────────────────────────────────────
@@ -605,17 +637,28 @@ def run_sequence(pipeline: str, dry_run: bool = False, daily_limit: int = 10) ->
 
             if dry_run:
                 logger.info(f"  [DRY-RUN] Would {'send' if auto_send else 'draft'}: {name} <{email}> | {subject}")
+                _log_to_orc_postgres(
+                    lead_id=lead["id"], lead_email=email, touch=touch,
+                    pipeline=pipeline, subject=subject, gmail_id="", status="dry-run",
+                )
                 results.append({"name": name, "email": email, "touch": touch, "status": "dry-run"})
                 continue
 
             result_id = _create_draft(email, subject, body, pipeline, auto_send=auto_send)
+            touch_status = "sent" if auto_send else "drafted"
             if result_id:
                 _mark_sent(conn, lead["id"], touch, pipeline, subject,
-                           gmb_opener=lead.get("gmb_opener", ""))
+                           gmb_opener=lead.get("gmb_opener", ""),
+                           lead_email=email, gmail_id=result_id or "",
+                           status=touch_status)
                 total_sent += 1
                 results.append({"name": name, "email": email, "touch": touch,
-                                 "status": "sent" if auto_send else "drafted"})
+                                 "status": touch_status})
             else:
+                _log_to_orc_postgres(
+                    lead_id=lead["id"], lead_email=email, touch=touch,
+                    pipeline=pipeline, subject=subject, gmail_id="", status="failed",
+                )
                 total_failed += 1
                 results.append({"name": name, "email": email, "touch": touch, "status": "failed"})
 
