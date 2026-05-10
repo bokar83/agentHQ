@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 from typing import Optional
 
 logger = logging.getLogger("agentsHQ.memory_store")
@@ -76,6 +77,19 @@ def write(model) -> Optional[int]:
                 pass
 
 
+_QUESTION_PREFIXES = re.compile(
+    r"^\s*(tell me (about|what you know about)|what (do i|do we) know about|"
+    r"show me|find|give me|look up|search for|what is|who is|"
+    r"what are my|what are|remind me|remember)\s+",
+    re.IGNORECASE,
+)
+
+
+def _clean_query(text: str) -> str:
+    """Strip conversational prefixes before passing to tsvector."""
+    return _QUESTION_PREFIXES.sub("", text).strip()
+
+
 def query_text(
     text: str,
     limit: int = 20,
@@ -85,9 +99,11 @@ def query_text(
     """
     Full-text tsvector search. Returns list of row dicts ordered by
     ts_rank * relevance_boost DESC. Returns [] on any failure (non-fatal).
+    Strips conversational question prefixes before searching.
     """
+    clean = _clean_query(text)
     conditions = ["content_tsv @@ websearch_to_tsquery('english', %(text)s)"]
-    params: dict = {"text": text, "limit": limit}
+    params: dict = {"text": clean, "limit": limit}
     if pipeline:
         conditions.append("pipeline = %(pipeline)s")
         params["pipeline"] = pipeline
