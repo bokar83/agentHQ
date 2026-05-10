@@ -33,7 +33,7 @@ The pause-to-commit ceremony is gone. Boubacar can let Claude (or any autonomous
 
 ### M1 - Slash command surface (THE SVP)
 
-**Status:** READY. Build any session.
+**Status:** IN PROGRESS. Slash commands shipped. Exit criteria pending real-use day.
 
 **Goal:** Prove the async-partnership flow with the smallest possible surface. Three slash commands plus one new proposal `kind` in the existing queue.
 
@@ -183,6 +183,26 @@ The pause-to-commit ceremony is gone. Boubacar can let Claude (or any autonomous
 ---
 
 ## Session Log
+
+### 2026-05-10: M1 slash commands SHIPPED — exit criteria pending
+
+**What shipped (`feat/echo-m1-commands`, commit ddc91a6):**
+
+- `orchestrator/handlers_commands.py`: four new Telegram handlers — `_cmd_echo_propose`, `_cmd_echo_ack`, `_cmd_echo_reject` (unified: int→approval_queue, hex→Echo proposal), `_cmd_echo_list_proposals`.
+- All three route through `skills/coordination/proposal.py` (existing M1 library — propose/ack/reject/list_pending).
+- `.claude/commands/` shims (propose.md, ack.md, reject.md, list-proposals.md) were already present from prior session.
+- `CLAUDE.md`: `/propose` convention added — "after coherent unit hits green tests, call /propose."
+- `tests/test_gate_agent.py`: fixed 7 pre-existing failures — added `gate_enabled`, `_files_differ`, `REPO_DIR`, `_notify_gate_review` fixtures; aligned `_is_high_risk` test to current HIGH_RISK_PREFIXES (scheduler.py removed 2026-05-08). All 19 tests green.
+
+**M1 exit criteria status:**
+- `/propose` slash commands wired ✅
+- Telegram card fires on propose ✅ (wired in proposal.py `_telegram_send`)
+- `/ack` commits, `/reject` drops ✅
+- Agent doesn't block on ack ✅ (handler returns immediately)
+- Boubacar uses `/propose` for one real work day ⏳ not yet
+- Smoke test end-to-end ⏳ not yet
+
+**What's next:** Run smoke test (real `/propose` → Telegram → `/ack` → git commit). After 1 real-use day, flip M1 to SHIPPED.
 
 ### 2026-05-04: Gate agent SHIPPED -- host cron, 19 tests green, live on VPS
 
