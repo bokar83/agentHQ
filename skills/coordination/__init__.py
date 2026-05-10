@@ -115,6 +115,19 @@ def claim(resource: str, holder: str, ttl_seconds: int) -> Optional[dict]:
 
     Race-free via the partial unique index on (resource) WHERE status='running'.
     Stale rows (lease_expires_at < now) are taken over by the new holder.
+
+    IMPORTANT: always wrap in try/finally to call complete() on crash or exit.
+    A session that dies without complete() leaves a phantom running row until
+    lease_expires_at -- which gate_poll.py reaps every 5 min. But clean up
+    explicitly rather than relying on the reaper:
+
+        task = claim(resource, holder, ttl_seconds)
+        if task is None:
+            return  # already held
+        try:
+            do_work()
+        finally:
+            complete(task["id"])
     """
     task_id = uuid.uuid4().hex
     with _connect() as c, c.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
