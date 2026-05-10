@@ -372,7 +372,7 @@ function renderSpend(d) {
   body.replaceChildren();
   const today = d.today || {};
   const spent = today.spent_usd || 0;
-  const cap = today.cap_usd || 1;
+  const cap = d.daily_budget || today.cap_usd || 1;
   const pct = Math.min(100, (spent / cap) * 100);
   const barCls = pct > 90 ? 'spend-bar-fill red' : pct > 70 ? 'spend-bar-fill amber' : 'spend-bar-fill';
 
