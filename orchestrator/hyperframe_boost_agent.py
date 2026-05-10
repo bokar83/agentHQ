@@ -142,8 +142,7 @@ class HyperframeBoostAgent:
                 record_id = _create_studio_record(
                     self._notion, candidate, upload["webViewLink"], aspect_ratio, platforms
                 )
-                if twin_id is None:
-                    twin_id = record_id
+                twin_id = record_id
             except Exception as e:
                 send_message(TELEGRAM_CHAT_ID, f"HF Boost render failed ({aspect_ratio}) for '{candidate['text_preview'][:60]}': {str(e)[:150]}")
                 logger.error("Render failed %s %s: %s", candidate["notion_id"], aspect_ratio, e)
