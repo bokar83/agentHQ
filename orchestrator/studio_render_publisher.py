@@ -192,22 +192,22 @@ def _ffmpeg_render(
 
     intro_dur = _probe_duration(intro_asset) if has_intro else 0.0
 
+    motion_sidecar = _load_motion_sidecar(project_dir)
+
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp = Path(tmpdir)
 
         clip_paths = []
         for scene in scenes:
+            idx = scene["index"]
             img = scene.get("image_path", "")
             dur = float(scene.get("duration_sec", 8.0))
             motion = scene.get("motion", "zoom_in")
-            clip_out = tmp / f"clip_{scene['index']:03d}.mp4"
+            clip_out = tmp / f"clip_{idx:03d}.mp4"
 
-            if img and Path(img).exists():
-                _render_ken_burns_clip(img, clip_out, dur, fps, width, height, motion)
-            else:
-                _render_color_clip(clip_out, dur, fps, width, height, bg_color)
-
-            clip_paths.append(clip_out)
+            video_clip = _resolve_motion_clip(idx, dur, fps, width, height, motion,
+                                              img, bg_color, motion_sidecar, clip_out)
+            clip_paths.append(video_clip)
 
         all_clips = []
         if has_intro:
@@ -229,6 +229,73 @@ def _ffmpeg_render(
             ["ffmpeg", "-y", "-i", str(mixed_path), "-c", "copy", str(output_path)],
             check=True, capture_output=True, timeout=300,
         )
+
+
+def _load_motion_sidecar(project_dir: Path) -> dict[int, Any]:
+    """Load motion_assets.json sidecar written by visual_generator. Returns {} on miss."""
+    import json as _json
+    sidecar_path = project_dir / "motion_assets.json"
+    if not sidecar_path.exists():
+        return {}
+    try:
+        raw = _json.loads(sidecar_path.read_text())
+        # Keys are stringified scene indices from json.dumps
+        return {int(k): v for k, v in raw.items()}
+    except Exception as exc:
+        logger.warning("render_publisher: failed to load motion sidecar: %s", exc)
+        return {}
+
+
+def _resolve_motion_clip(
+    idx: int,
+    dur: float,
+    fps: int,
+    width: int,
+    height: int,
+    motion: str,
+    img: str,
+    bg_color: str,
+    motion_sidecar: dict[int, Any],
+    clip_out: Path,
+) -> Path:
+    """Render one scene clip. Uses pre-generated video for motion scenes; Ken Burns otherwise.
+
+    Falls back to Ken Burns (or color) if the video clip file is missing or transcoding fails.
+    """
+    asset = motion_sidecar.get(idx, {})
+    video_path = asset.get("video_local_path", "") if asset.get("motion_type") == "video" else ""
+
+    if video_path and Path(video_path).exists():
+        # Transcode pre-generated clip to target resolution/fps so it matches the concat stream.
+        try:
+            if height > width:
+                scale = f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height}"
+            elif width == height:
+                scale = f"scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height}"
+            else:
+                scale = f"scale={width}:{height}"
+            _ffmpeg([
+                "-i", video_path,
+                "-vf", f"{scale},fps={fps}",
+                "-t", str(dur),
+                "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+                "-pix_fmt", "yuv420p", "-an",
+                str(clip_out),
+            ], timeout=300)
+            logger.info("render_publisher: scene %d — used motion video clip", idx)
+            return clip_out
+        except Exception as exc:
+            logger.warning(
+                "render_publisher: scene %d motion clip transcode failed, falling back to Ken Burns: %s",
+                idx, exc,
+            )
+
+    # Ken Burns fallback (also default for non-motion scenes)
+    if img and Path(img).exists():
+        _render_ken_burns_clip(img, clip_out, dur, fps, width, height, motion)
+    else:
+        _render_color_clip(clip_out, dur, fps, width, height, bg_color)
+    return clip_out
 
 
 def _ffmpeg(cmd: list, timeout: int = 300) -> None:
