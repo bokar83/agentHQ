@@ -668,68 +668,6 @@ async function refreshIdeas() {
   try { renderIdeas(await apiFetch('/atlas/ideas')); } catch (_) {}
 }
 
-function renderAgents(d) {
-  const el = document.getElementById('card-agents-body');
-  if (!el) return;
-  const running = d.running || [];
-  const recent = d.recent || [];
-  while (el.firstChild) el.removeChild(el.firstChild);
-  if (running.length === 0 && recent.length === 0) {
-    const p = document.createElement('p');
-    p.className = 'dim';
-    p.textContent = 'No active agents.';
-    el.appendChild(p);
-    return;
-  }
-  function makeTable(rows, cols) {
-    const tbl = document.createElement('table');
-    tbl.className = 'mini-table';
-    const thead = tbl.createTHead();
-    const hrow = thead.insertRow();
-    cols.forEach(function(c) {
-      const th = document.createElement('th');
-      th.textContent = c.label;
-      hrow.appendChild(th);
-    });
-    const tbody = tbl.createTBody();
-    rows.forEach(function(r) {
-      const tr = tbody.insertRow();
-      cols.forEach(function(c) {
-        const td = tr.insertCell();
-        td.textContent = c.get(r) || '--';
-      });
-    });
-    return tbl;
-  }
-  if (running.length > 0) {
-    const lbl = document.createElement('p');
-    lbl.className = 'card-label';
-    lbl.textContent = 'Running';
-    el.appendChild(lbl);
-    el.appendChild(makeTable(running, [
-      { label: 'Kind', get: function(r) { return r.resource || r.kind; } },
-      { label: 'Holder', get: function(r) { return r.claimed_by; } },
-      { label: 'Expires', get: function(r) { return r.lease_expires_at ? new Date(r.lease_expires_at).toLocaleTimeString() : null; } }
-    ]));
-  }
-  if (recent.length > 0) {
-    const lbl2 = document.createElement('p');
-    lbl2.className = 'card-label';
-    lbl2.style.marginTop = '0.75rem';
-    lbl2.textContent = 'Recent (1h)';
-    el.appendChild(lbl2);
-    el.appendChild(makeTable(recent, [
-      { label: 'Kind', get: function(r) { return r.kind; } },
-      { label: 'Status', get: function(r) { return r.status; } },
-      { label: 'Claimed By', get: function(r) { return r.claimed_by; } }
-    ]));
-  }
-}
-
-async function refreshAgents() {
-  try { renderAgents(await apiFetch('/atlas/agents')); } catch (_) {}
-}
-
 // Action stubs (wired fully in Task 17)
 async function actionToggleGriot(enabled, btn) {
   btn.disabled = true;
@@ -848,6 +786,114 @@ function startQuoteRotation() {
   }, 60000);
 }
 
+// ── M19 CRM Board ────────────────────────────────────────────────────────────
+
+var _CRM_COLS = ["new", "sent", "messaged", "replied", "qualified", "proposal", "closed_won", "closed_lost"];
+var _CRM_LABELS = {
+  new: "New", sent: "Sent", messaged: "Messaged", replied: "Replied",
+  qualified: "Qualified", proposal: "Proposal",
+  closed_won: "Won", closed_lost: "Lost"
+};
+
+function renderCrmBoard(d) {
+  var wrap = document.getElementById('crm-board');
+  var badge = document.getElementById('crm-total-badge');
+  wrap.replaceChildren();
+
+  if (d.error && !d.total) {
+    var errMsg = document.createElement('p');
+    errMsg.className = 'empty-state';
+    errMsg.textContent = 'CRM unavailable: ' + d.error;
+    wrap.appendChild(errMsg);
+    return;
+  }
+
+  if (badge) {
+    badge.textContent = (d.total || 0) + ' leads';
+    badge.className = 'badge badge-dim';
+  }
+
+  var board = d.board || {};
+  var cols = d.columns || _CRM_COLS;
+
+  cols.forEach(function(status) {
+    var leads = board[status] || [];
+    var colEl = el('div', { class: 'crm-col' });
+
+    var hdr = el('div', { class: 'crm-col-header', 'data-status': status },
+      document.createTextNode(_CRM_LABELS[status] || status),
+      el('span', { class: 'crm-count' }, String(leads.length))
+    );
+    colEl.appendChild(hdr);
+
+    if (!leads.length) {
+      colEl.appendChild(el('div', { class: 'crm-empty' }, '—'));
+    }
+
+    leads.forEach(function(lead) {
+      colEl.appendChild(buildCrmCard(lead, status, cols));
+    });
+
+    wrap.appendChild(colEl);
+  });
+}
+
+function buildCrmCard(lead, currentStatus, allCols) {
+  var card = el('div', { class: 'crm-card' });
+
+  var nameEl = el('div', { class: 'crm-card-name' });
+  nameEl.textContent = lead.name || '(unnamed)';
+  card.appendChild(nameEl);
+
+  var meta = [lead.niche || lead.lead_type, lead.city || lead.location].filter(Boolean).join(' · ');
+  if (meta) {
+    var metaEl = el('div', { class: 'crm-card-meta' });
+    metaEl.textContent = meta;
+    card.appendChild(metaEl);
+  }
+
+  if (lead.ai_score) {
+    var scoreEl = el('div', { class: 'crm-card-score' });
+    scoreEl.textContent = 'Score ' + lead.ai_score + '/100';
+    card.appendChild(scoreEl);
+  }
+
+  // Status transition buttons (prev / next only to keep it clean)
+  var idx = allCols.indexOf(currentStatus);
+  var neighbors = [];
+  if (idx > 0) neighbors.push(allCols[idx - 1]);
+  if (idx < allCols.length - 1) neighbors.push(allCols[idx + 1]);
+
+  if (neighbors.length) {
+    var btnsWrap = el('div', { class: 'crm-status-btns' });
+    neighbors.forEach(function(targetStatus) {
+      var arrow = targetStatus === allCols[idx - 1] ? '← ' : '→ ';
+      var btn = el('button', { class: 'crm-status-btn' },
+        arrow + (_CRM_LABELS[targetStatus] || targetStatus)
+      );
+      btn.addEventListener('click', function() {
+        btn.disabled = true;
+        apiFetch('/atlas/crm/leads/' + lead.id + '/status', {
+          method: 'POST',
+          body: JSON.stringify({ status: targetStatus }),
+        }).then(function() {
+          refreshCrm();
+        }).catch(function() {
+          btn.disabled = false;
+        });
+      });
+      btnsWrap.appendChild(btn);
+    });
+    card.appendChild(btnsWrap);
+  }
+
+  return card;
+}
+
+async function refreshCrm() {
+  try { renderCrmBoard(await apiFetch('/atlas/crm/board')); } catch (_) {}
+}
+
 // Polling
 function refreshAll() {
   refreshHero();
@@ -858,7 +904,7 @@ function refreshAll() {
   refreshHeartbeats();
   refreshErrors();
   refreshIdeas();
-  refreshAgents();
+  refreshCrm();
 }
 
 function startPolling() {

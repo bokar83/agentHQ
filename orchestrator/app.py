@@ -1055,6 +1055,11 @@ async def atlas_ledger(days: int = 30, _auth=Depends(verify_chat_token)):
     return JSONResponse(_atd.get_cost_ledger(days=days))
 
 
+@app.get("/atlas/agents")
+async def atlas_agents(_auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_agents())
+
+
 @app.post("/atlas/ledger")
 async def atlas_ledger_add(body: _LedgerEntryBody, _auth=Depends(verify_chat_token)):
     return JSONResponse(_atd.add_cost_ledger_entry(
@@ -1098,6 +1103,27 @@ async def atlas_queue_reject(queue_id: int, body: _AtlasRejectBody, _auth=Depend
     if row is None:
         raise HTTPException(status_code=404, detail="Queue item not found or already decided")
     return JSONResponse(_atd.get_queue())
+
+
+# ══════════════════════════════════════════════════════════════
+# M19: Native CRM Board endpoints
+# ══════════════════════════════════════════════════════════════
+
+class _CrmStatusBody(_BaseModel):
+    status: str
+
+
+@app.get("/atlas/crm/board")
+async def atlas_crm_board(_auth=Depends(verify_chat_token)):
+    return JSONResponse(_atd.get_crm_board())
+
+
+@app.post("/atlas/crm/leads/{lead_id}/status")
+async def atlas_crm_lead_status(lead_id: int, body: _CrmStatusBody, _auth=Depends(verify_chat_token)):
+    result = _atd.set_lead_status(lead_id, body.status)
+    if not result.get("ok"):
+        raise HTTPException(status_code=400, detail=result.get("error", "Update failed"))
+    return JSONResponse(result)
 
 
 @app.post("/atlas/brief/posted")
