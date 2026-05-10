@@ -34,7 +34,7 @@ Last session ended **2026-05-10 (content session — linkedin-craft.md + M22 LLM
 3. `docker logs orc-crewai --tail 50` — confirm `[SW] T1 GMB gate: dropped N` line present
 4. Diagnose SW sequence volume — is AUTO_SEND_SW=true? How many T1s per week? If low, that's the real bottleneck
 3. M18 HALO unlock: instrument Atlas heartbeat with tracing.py + 50 traces by 2026-05-18
-4. Fix `newsletter_editorial_input` table missing (studio_trend_scout error — separate session)
+4. ✅ DONE 2026-05-09: Fix `newsletter_editorial_input` table missing — migration 006 run on VPS orc-postgres; `get_reply_for_week()` wrapped non-fatal.
 5. ✅ DONE 2026-05-09: `check_routing_gaps.py` pre-commit wired (step 7, warn-only). Coverage 86% (59/69). 11 warnings = real gaps/overlaps, not fixture bugs. Run weekly to track sub-skill routing improvements.
 6. **[GATED] LangGraph checkpoint-sqlite for coding agent:** Pattern doc at `docs/patterns/langgraph-checkpoint-pattern.md`. Pre-condition: orchestrator must have at least one LangGraph StateGraph. Do not add dependency before pre-condition met.
 7. ✅ DONE 2026-05-09: `scripts/gate_poll.py` shipped + VPS cron wired (`*/5 * * * *`). Zero LLM on empty-queue ticks. Verify: next READY branch fires Telegram without Claude session open.
