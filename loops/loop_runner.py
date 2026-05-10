@@ -106,8 +106,8 @@ def score_design_audit(artifact_path: Path) -> DesignScore:
     import anthropic
 
     html = artifact_path.read_text(encoding="utf-8", errors="replace")
-    # Truncate to 40k chars — enough for structure, not full page content
-    html_sample = html[:40000]
+    # Send full file to scorer — scorer reads-only, no mutation risk
+    html_sample = html
 
     client = anthropic.Anthropic()
     response = client.messages.create(
@@ -138,24 +138,30 @@ def score_design_audit(artifact_path: Path) -> DesignScore:
 # ─────────────────────────────────────────────────────────────────────────────
 
 MUTATOR_SYSTEM = """You are a precise frontend engineer. Given an HTML file and its design audit scores,
-propose and apply ONE targeted improvement to the weakest-scoring dimension.
+propose ONE targeted improvement to the weakest-scoring dimension.
 
 Rules:
 - Change exactly ONE thing (one CSS property, one HTML attribute, one element)
 - Target the lowest-scoring dimension
 - Do not regress other dimensions
-- Return the complete modified HTML with the change applied
-- Start your response with a single line: CHANGE: <one-sentence description>
-- Then output the full modified HTML"""
+- Output a search/replace patch in this exact format:
+
+CHANGE: <one-sentence description of what and why>
+FIND:
+<exact string to find in the file — must be unique, include surrounding context>
+REPLACE:
+<exact replacement string>
+
+The FIND string must appear verbatim in the file. Include 1-2 lines of context
+around the change so it is unique. Do not output anything else."""
 
 
 def mutate_artifact(artifact_path: Path, score: DesignScore, working_copy: Path) -> str:
-    """Propose and apply one mutation. Returns description of change."""
+    """Propose and apply one mutation via search/replace patch. Returns change description."""
     import anthropic
 
     html = artifact_path.read_text(encoding="utf-8", errors="replace")
 
-    # Identify weakest dimension
     dims = {
         "accessibility": score.accessibility,
         "performance": score.performance,
@@ -166,31 +172,46 @@ def mutate_artifact(artifact_path: Path, score: DesignScore, working_copy: Path)
     weakest = min(dims, key=lambda k: dims[k])
     weakest_score = dims[weakest]
 
+    # Send first 60k chars for context — mutator only returns a patch, not the full file
     prompt = (
         f"Current scores: {score.as_dict()}\n"
         f"Weakest dimension: {weakest} (score={weakest_score}/4)\n\n"
-        f"HTML to improve:\n\n{html[:40000]}"
+        f"HTML file ({len(html)} chars total, showing first 60000):\n\n{html[:60000]}"
     )
 
     client = anthropic.Anthropic()
     response = client.messages.create(
         model="claude-haiku-4-5-20251001",
-        max_tokens=8192,
+        max_tokens=1024,
         system=MUTATOR_SYSTEM,
         messages=[{"role": "user", "content": prompt}],
     )
 
-    full_response = next(b.text for b in response.content if hasattr(b, "text")).strip()
-    lines = full_response.split("\n", 1)
-    change_desc = lines[0].replace("CHANGE:", "").strip() if lines[0].startswith("CHANGE:") else "unspecified change"
-    mutated_html = lines[1].strip() if len(lines) > 1 else full_response
+    raw = next(b.text for b in response.content if hasattr(b, "text")).strip()
 
-    # Strip markdown code fences if present
-    if mutated_html.startswith("```"):
-        mutated_html = "\n".join(mutated_html.split("\n")[1:])
-        if mutated_html.endswith("```"):
-            mutated_html = mutated_html[:-3].rstrip()
+    # Parse CHANGE / FIND / REPLACE blocks
+    change_desc = "unspecified change"
+    find_str = replace_str = None
 
+    for line in raw.split("\n"):
+        if line.startswith("CHANGE:"):
+            change_desc = line[len("CHANGE:"):].strip()
+            break
+
+    if "FIND:" in raw and "REPLACE:" in raw:
+        find_block = raw.split("FIND:", 1)[1].split("REPLACE:", 1)
+        find_str = find_block[0].strip()
+        replace_str = find_block[1].strip()
+
+    if not find_str or find_str not in html:
+        raise ValueError(
+            f"Mutator FIND string not in artifact "
+            f"(find={repr(find_str[:80]) if find_str else None})"
+        )
+    if replace_str is None:
+        raise ValueError("Mutator REPLACE block missing from response")
+
+    mutated_html = html.replace(find_str, replace_str, 1)
     working_copy.write_text(mutated_html, encoding="utf-8")
     return change_desc
 
