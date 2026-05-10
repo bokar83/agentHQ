@@ -27,7 +27,7 @@ Done = all five true at the same time.
 
 ## Status Snapshot
 
-*Last updated: 2026-05-02 (evening)*
+*Last updated: 2026-05-10*
 
 - M0 SHIPPED 2026-05-02: `docs/GOVERNANCE.md` (64 lines) routing table + AGENT_SOP top-of-file annotation + this roadmap + folder-purpose pre-commit hook (the M0 enforcement piece).
 - M1 SHIPPED 2026-05-02: AGENTS.md compliance audit + backfill. 100% folder coverage (was 32%).
@@ -35,6 +35,7 @@ Done = all five true at the same time.
 - M3 ARMED for 2026-08-02: quarterly purge agent.
 - M4 SHIPPED 2026-05-02 (evening): `docs/governance.manifest.json` (LLM-readable routing table) + `scripts/validate_governance_manifest.py` drift check + 7 tests. Wired to fire on edits to GOVERNANCE.md or the manifest.
 - M5 SHIPPED 2026-05-02 (evening, late): `.gitmodules` canonicalized to `signal-works-demo-hvac`; original attire-inspo-app code relocated from `output/` root to `output/apps/attire-inspo-app/`; reference docs updated. Original 3-4 hour spec collapsed to 10 min once Boubacar reframed: GitHub repos already separate, no merge needed, just local hygiene. Placement rule: apps live in `output/apps/`, websites in `output/websites/`.
+- M6 SHIPPED 2026-05-10: Pre-Hermes security lockdown. Vercel token redacted from .vscode/settings.json, purged from all git history via filter-repo. Hermes write boundaries codified in CLAUDE.md (allowed/forbidden paths, wildcard prohibition). Gate conflict alert dedup + Telegram approve/reject buttons shipped. 7/7 governance tests pass. Branch: audit/compass-m6-lockdown.
 
 **Coverage today:**
 
@@ -289,6 +290,23 @@ Action required: Check 3 reviewed 2026-05-09: Read*/Edit*/Write* broad allows ar
 **Shipped:** v1 (2 patterns) + v2 (4 patterns + 80-pkg reference list) + v3 (astroturfed repo detection via GitHub API) + acceptance test fixtures for all 7 patterns. 4 Notion tasks Done.
 
 **Success criterion:** ≥1 pattern detects a real suspicious repo in 30 days of use; false positive rate on known-clean repos stays at zero.
+
+---
+
+### M7: Pre-Hermes Security Lockdown ✅ SHIPPED 2026-05-10
+
+**What:** Hardened workspace before Hermes self-healing agent receives write access.
+
+**Shipped:**
+- Vercel access token removed from `.vscode/settings.json` (was local-only, never git-tracked)
+- Token purged from full git history across all branches via `git filter-repo`
+- `CLAUDE.md`: Hermes write boundaries section — explicit ALLOWED/FORBIDDEN path lists, wildcard prohibition, enforcement protocol
+- `docs/audits/2026-05-10-compass-m6-audit.md`: 5-finding audit report (F-001 critical, F-002 medium, F-003 low, F-004/F-005 info)
+- Gate conflict dedup: `_alerted_conflicts` set prevents re-alerting same pair every 5 min
+- Gate conflict Telegram messages now include Approve / Reject inline buttons
+- `pytest tests/test_validate_governance_manifest.py`: 7/7 pass
+
+**Branch:** `audit/compass-m6-lockdown` (merged to main)
 
 ---
 
