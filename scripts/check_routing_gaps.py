@@ -321,7 +321,22 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Check agentsHQ skill routing gaps")
     parser.add_argument("--strict", action="store_true", help="treat OVERLAP/GAP/MISS as errors")
     parser.add_argument("--coverage", action="store_true", help="show fixture coverage stats")
+    parser.add_argument("--json", action="store_true", help="output machine-readable JSON coverage to stdout and exit 0")
     args = parser.parse_args()
+
+    if args.json:
+        skills = load_skills_index()
+        fixtures = load_fixtures(skills)
+        skills_with_fixtures = {fx.skill_slug for fx in fixtures}
+        total = len(skills)
+        covered = len(skills_with_fixtures)
+        pct = round(covered / total * 100, 1) if total else 0.0
+        print(json.dumps({
+            "skills_with_fixtures": covered,
+            "total_skills": total,
+            "coverage_pct": pct,
+        }))
+        return 0
 
     skills = load_skills_index()
     fixtures = load_fixtures(skills)
