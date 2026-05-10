@@ -22,3 +22,5 @@ Production code module. Not a Boubacar-invoked skill. Contains:
 **Studio cohort is wired** (`sequence_engine.py` line 77). If studio leads are queued and `studio_t1` fails to import (e.g. SyntaxError), the entire Studio cohort silently skips. Always verify `python -c "import templates.email.studio_t1"` before morning run.
 
 **Drive URLs in outreach emails must be public.** Use `orchestrator.drive_publish.audit_email_template_pdfs()` to verify. See `feedback_drive_pdfs_must_be_public.md`.
+
+**Diagnose zero-volume before flipping AUTO_SEND.** Volume=0 can mean: (a) flag is off, OR (b) harvest is pulling wrong businesses with no deliverable emails. Check both. Confirmed 2026-05-10: `leads` table had 0 rows because harvest pulled `scribd.com` + `profitablepenny.com` — not contractors. Hunter found no deliverable emails → zero T1s regardless of flag state. Fix harvest niche filter FIRST, verify 5-10 correct leads, THEN flip flag.

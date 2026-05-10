@@ -15,7 +15,7 @@
 
 ## Session-Start Cheat Block (read this first)
 
-Last session ended **2026-05-10 (content session — linkedin-craft.md + M22 LLM blog pipeline milestone)**. State at close:
+Last session ended **2026-05-10 (newsletter_editorial_input fix + SW pipeline diagnosis)**. State at close:
 
 - **Gate fully autonomous:** 5-min cron 24/7, silent success, inline ✅/❌ buttons, 4 high-risk files. Host cron sole runner.
 - **Baked-file drift permanently fixed:** entrypoint syncs `orchestrator/*.py` over baked `/app/*.py` on every container start.
@@ -29,12 +29,12 @@ Last session ended **2026-05-10 (content session — linkedin-craft.md + M22 LLM
 
 **Default next moves (in priority order):**
 
-1. Send `/callsheet` to @CCagentsHQ_bot tomorrow after 07:30 MT digest — get list, call within the hour
-2. Check morning digest for GMB signal breakdown line (no-website/low-reviews/chatgpt split)
-3. `docker logs orc-crewai --tail 50` — confirm `[SW] T1 GMB gate: dropped N` line present
-4. Diagnose SW sequence volume — is AUTO_SEND_SW=true? How many T1s per week? If low, that's the real bottleneck
-3. M18 HALO unlock: instrument Atlas heartbeat with tracing.py + 50 traces by 2026-05-18
-4. ✅ DONE 2026-05-09: Fix `newsletter_editorial_input` table missing — migration 006 run on VPS orc-postgres; `get_reply_for_week()` wrapped non-fatal.
+1. **Monday harvest diagnosis** — if cron fired: review output. If not: `docker logs orc-crewai --since 12h 2>&1 | grep -iE 'harvest|gmb|niche|hunter|T1|dropped|deliverable'`
+2. Fix harvest GMB search query — pulling `profitablepenny.com`, `scribd.com` instead of roofing/HVAC/plumbing
+3. Flip `AUTO_SEND_SW=true` after lead quality confirmed (VPS `.env` + `docker compose up -d orchestrator`)
+4. Send `/callsheet` after first successful T1 batch — call leads within the hour
+5. M18 HALO unlock: instrument Atlas heartbeat with tracing.py + 50 traces by 2026-05-18
+6. ✅ DONE 2026-05-10: Fix `newsletter_editorial_input` table missing — migration 006 run on VPS orc-postgres; `get_reply_for_week()` wrapped non-fatal.
 5. ✅ DONE 2026-05-09: `check_routing_gaps.py` pre-commit wired (step 7, warn-only). Coverage 86% (59/69). 11 warnings = real gaps/overlaps, not fixture bugs. Run weekly to track sub-skill routing improvements.
 6. **[GATED] LangGraph checkpoint-sqlite for coding agent:** Pattern doc at `docs/patterns/langgraph-checkpoint-pattern.md`. Pre-condition: orchestrator must have at least one LangGraph StateGraph. Do not add dependency before pre-condition met.
 7. ✅ DONE 2026-05-09: `scripts/gate_poll.py` shipped + VPS cron wired (`*/5 * * * *`). Zero LLM on empty-queue ticks. Verify: next READY branch fires Telegram without Claude session open.
@@ -2847,3 +2847,26 @@ Ending: fully signal-threaded sequence, qualification gate, gmb_opener persisted
 2. M10 Topic Scout: gate check 2026-05-12 (two Monday runs with 5+ picks needed for M22 pre-condition).
 3. Griot intake classification (target 2026-05-14, gated on M3.7.3).
 4. Monitor May 10-14 posts — CFR assets publish without Blotato error at 09:00 MT.
+
+### 2026-05-10: newsletter_editorial_input fix + SW pipeline diagnosis
+
+**Session type:** Direct (Boubacar present, Sunday).
+
+**Shipped:**
+- `orchestrator/newsletter_editorial_input.py` — `get_reply_for_week()` wrapped in try/except; returns None on any DB error instead of raising. Prevents studio_trend_scout anchor selection from dying if table is missing or DB is down.
+- `migrations/006_newsletter_editorial_input.sql` — run on VPS `orc-postgres`. Table `newsletter_editorial_input` now exists (was missing, caused 17:58 UTC error).
+- `docs/roadmap/atlas.md` — atlas item 4 marked DONE.
+
+**SW pipeline diagnosis:**
+- `AUTO_SEND_SW=false` — pipeline is OFF. Zero T1 emails sent, ever.
+- `leads` table = 0 rows. Daily harvest runs (06:00 MT) but pulls wrong businesses: `profitablepenny.com`, `scribd.com` — not roofing/HVAC/plumbing contractors.
+- Monday cron scheduled (session-only): 08:00 MT, diagnose harvest query, fix niche filter, flip flag after leads look correct.
+- Root cause not confirmed yet — needs harvest log review on a weekday run.
+
+**Commits:** `a86c179` (newsletter fix + migration), `b93c834` (atlas roadmap update)
+
+**Next priorities:**
+1. Monday 08:00 MT: harvest log diagnosis (cron will fire automatically)
+2. Fix GMB search query pulling wrong leads
+3. Flip AUTO_SEND_SW=true after lead quality confirmed
+4. M18 HALO: instrument heartbeat with tracing.py (target 50 traces by 2026-05-18)
