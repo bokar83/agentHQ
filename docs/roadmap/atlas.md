@@ -15,22 +15,24 @@
 
 ## Session-Start Cheat Block (read this first)
 
-Last session ended **2026-05-09 (gbrain absorb — 3 patterns extracted: conformance audit, routing evaluator SHIPPED, minion pattern gated)**. State at close:
+Last session ended **2026-05-09 (SW pipeline complete — signal-threaded 5-touch sequence, GMB gate, /callsheet, decay cron, audit script)**. State at close:
 
-- **Gate fully autonomous:** 5-min cron 24/7, silent success, inline ✅/❌ buttons, dedup alerts, 4 high-risk files only (`gate_agent.py`, `orc_rebuild.sh`, `.env`, `docker-compose`). Container gate registration removed — host cron is sole runner.
-- **Baked-file drift permanently fixed:** `scripts/docker-entrypoint.sh` ships with Dockerfile. Every container start auto-syncs `orchestrator/*.py` over baked `/app/*.py`. `docker cp` ritual retired. Rebuild completed successfully 2026-05-08 21:47 UTC.
-- **Verification queue LIVE (2026-05-09):** `data/verification_queue.md` created on VPS. `_stage_to_verification_queue()` wired into `orchestrator/chairman_crew.py::enqueue_proposals()` — every L5 weight-mutation staged to audit trail before hitting approval_queue. Prevents hallucination laundering.
-- **Routing gap checker shipped (2026-05-09):** `scripts/check_routing_gaps.py` — Layer A structural check (gbrain M2.5 pattern). Reads SKILLS_INDEX.md + per-skill `routing-eval.jsonl` fixtures. 11 fixture files seeded. Run: `python scripts/check_routing_gaps.py --coverage`. 0 errors on current stack.
-- **Skill quality improvements (2026-05-09):** ctq-social → cross-model adversarial check (DeepSeek R1 via OpenRouter after Pass 2). boubacar-skill-creator → check_resolvable (Step 4.5) + gbrain conformance checklist (Step 4.6). engagement-ops → touchpoint propagation after session notes.
-- **SKILLS_INDEX fixed:** content_multiplier added (was unreachable). 11 skills got trigger phrases (apollo, boub-voice-mastery, cli_hub, hunter, local-crm, notion-cli, notion-stylist, openspace, remoat, sankofa, transcribe).
-- **Skill dependency graph:** `docs/skill-dependencies.json` — maps all skill call chains. sankofa + website-intelligence = highest-leverage targets (4 downstream consumers each).
-- **SW T1 GMB qualification gate SHIPPED (2026-05-09):** `score_gmb_lead()` in `skills/serper_skill/hunter_tool.py`. Pipeline audit due 2026-05-28.
-- **Gate context-burn fix queued (atlas.md item 6):** Gate currently burns LLM context every 5 min regardless of queue state. Target: dumb Python cron, LLM only on READY branch.
+- **Gate fully autonomous:** 5-min cron 24/7, silent success, inline ✅/❌ buttons, 4 high-risk files. Host cron sole runner.
+- **Baked-file drift permanently fixed:** entrypoint syncs `orchestrator/*.py` over baked `/app/*.py` on every container start.
+- **SW pipeline fully signal-threaded (2026-05-09):** T1-T3 openers driven by `gmb_opener` (no_website/low_reviews/chatgpt/generic). `gmb_opener` persisted to DB at T1, reconstructed for T2-T5. Branch frozen at enrollment — never resets if lead data changes. "One per city" fabricated scarcity REMOVED from all templates. Fabricated social proof numbers REMOVED from T3.
+- **Calendly in T3 + T4:** `calendly.com/boubacarbarry/signal-works-discovery-call` appended to every T3/T4 body. Direct booking path for email readers.
+- **Morning digest GMB signal breakdown:** `orchestrator/griot.py _ops_digest_text()` — shows no-website/low-reviews/chatgpt split for today's T1 sends.
+- **`/callsheet` Telegram command LIVE:** pulls today's SW T1 leads with phone numbers. Pre-writes 10-second opener per lead from `gmb_opener`. Send to @CCagentsHQ_bot after morning runner fires.
+- **Score decay cron:** `orchestrator/scheduler.py _run_gmb_score_decay()` — fires 1st of month 06:00 MT. Opts out pre-T1 leads that graduated past thresholds. Mid-sequence flagged only.
+- **`scripts/pipeline_audit.py` LIVE:** `--check all` on 2026-05-28 to verify gate. Run: `docker exec orc-crewai python3 /app/scripts/pipeline_audit.py --check all`
+- **Review-request product spec:** `skills/hormozi-lead-gen/references/review-request-product.md` — n8n+Twilio build spec, $297-497 price, sell to low_reviews leads. Build after first SW client.
 
 **Default next moves (in priority order):**
 
-1. Verify container entrypoint synced: `docker exec orc-crewai diff /app/chairman_crew.py /app/orchestrator/chairman_crew.py` (should be empty — verification_queue wiring deployed)
-2. Test `/digest` and `/publish` commands via DM to @agentsHQ4Bou_bot
+1. Send `/callsheet` to @CCagentsHQ_bot tomorrow after 07:30 MT digest — get list, call within the hour
+2. Check morning digest for GMB signal breakdown line (no-website/low-reviews/chatgpt split)
+3. `docker logs orc-crewai --tail 50` — confirm `[SW] T1 GMB gate: dropped N` line present
+4. Diagnose SW sequence volume — is AUTO_SEND_SW=true? How many T1s per week? If low, that's the real bottleneck
 3. M18 HALO unlock: instrument Atlas heartbeat with tracing.py + 50 traces by 2026-05-18
 4. Fix `newsletter_editorial_input` table missing (studio_trend_scout error — separate session)
 5. Run `python scripts/check_routing_gaps.py --coverage` weekly; target 50% fixture coverage before wiring to pre-commit
@@ -2672,3 +2674,27 @@ Verdict: PROCEED. Leverage: producing-motion + founder-time-reduction (SW pipeli
 - `docs/roadmap/atlas.md` — Atlas item #11 added, cheat block updated, this log entry
 - `docs/reviews/absorb-log.md` — verdict logged
 - `docs/reviews/absorb-followups.md` — follow-up logged + marked DONE
+
+### 2026-05-09: SW pipeline signal-threading — full sequence rebuilt
+
+Starting: generic 5-touch sequence, unqualified leads, fabricated scarcity, no thread continuity.
+Ending: fully signal-threaded sequence, qualification gate, gmb_opener persisted, Calendly, /callsheet, decay cron, audit script. All live on VPS.
+
+**Key decisions:**
+- "One per city" scarcity = fabricated. Removed permanently from all templates.
+- T3 social proof numbers = fabricated. Replaced with honest "similar businesses in Utah."
+- gmb_opener stored to DB — thread frozen at T1, never resets on data change.
+- /callsheet = on-demand Telegram command, not auto-digest (stale by afternoon).
+- Decay cron opts out pre-T1 improved leads; never interrupts mid-sequence.
+
+**Sankofa finding:** Machine is built, left in garage. Revenue = calls. /callsheet + Calendly in T3/T4 are the two things that generate booked meetings.
+
+**Files touched this session:**
+- `skills/serper_skill/hunter_tool.py` — score_gmb_lead() returns (int, dict)
+- `skills/outreach/sequence_engine.py` — gate, opener persistence, T2-T5 reconstruction
+- `templates/email/sw_t1.py` through `sw_t4.py` — full signal thread
+- `orchestrator/griot.py` — GMB signal breakdown in digest
+- `orchestrator/handlers_commands.py` — /callsheet command
+- `orchestrator/scheduler.py` — _run_gmb_score_decay() monthly cron
+- `scripts/pipeline_audit.py` — new file
+- `skills/hormozi-lead-gen/references/cold-call-scripts.md` + `review-request-product.md`
