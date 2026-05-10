@@ -280,21 +280,73 @@ def _run_social_analytics():
         logger.error(f"CRON: Social Analytics refresh failed: {e}")
 
 
+def _run_gmb_score_decay():
+    """Monthly re-score of SW leads. Fires 1st of month 06:00 MT.
+
+    Opts out pre-T1 leads that graduated past thresholds:
+      review_count >= 100  OR  (has_website=True AND review_count >= 30)
+    Mid-sequence leads (touch > 0) are flagged in Telegram but NOT opted out.
+    Sends Telegram summary either way.
+    """
+    GMB_DECAY_REVIEW_FLOOR = 100
+    GMB_DECAY_WEBSITE_FLOOR = 30
+    try:
+        if "/app" not in sys.path:
+            sys.path.insert(0, "/app")
+        from db import get_crm_connection
+        from notifier import send_message
+        conn = get_crm_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT id, name, city, review_count, has_website
+            FROM leads
+            WHERE source LIKE 'signal_works%%'
+              AND (opt_out IS NULL OR opt_out = FALSE)
+              AND (sequence_touch IS NULL OR sequence_touch = 0)
+              AND (review_count >= %s OR (has_website = TRUE AND review_count >= %s))
+        """, (GMB_DECAY_REVIEW_FLOOR, GMB_DECAY_WEBSITE_FLOOR))
+        to_decay = [dict(r) for r in cur.fetchall()]
+        if to_decay:
+            ids = [r["id"] for r in to_decay]
+            cur.execute("UPDATE leads SET opt_out=TRUE, updated_at=NOW() WHERE id=ANY(%s)", (ids,))
+            conn.commit()
+        cur.execute("""
+            SELECT id, name, city, sequence_touch, review_count
+            FROM leads
+            WHERE source LIKE 'signal_works%%'
+              AND (opt_out IS NULL OR opt_out = FALSE)
+              AND sequence_touch > 0
+              AND (review_count >= %s OR (has_website = TRUE AND review_count >= %s))
+        """, (GMB_DECAY_REVIEW_FLOOR, GMB_DECAY_WEBSITE_FLOOR))
+        mid = [dict(r) for r in cur.fetchall()]
+        conn.close()
+        chat_id = os.environ.get("TELEGRAM_CHAT_ID", "")
+        msg = f"GMB SCORE DECAY\nOpted out (pre-T1): {len(to_decay)}\nMid-sequence flagged (not opted out): {len(mid)}"
+        if mid:
+            for r in mid[:5]:
+                msg += f"\n  {r['name']} ({r['city']}) touch={r['sequence_touch']} reviews={r['review_count']}"
+        if chat_id:
+            send_message(chat_id, msg)
+        logger.info(f"GMB decay: {len(to_decay)} opted out, {len(mid)} mid-sequence flagged")
+    except Exception as e:
+        logger.error(f"_run_gmb_score_decay failed: {e}", exc_info=True)
+
+
 def _scheduler_loop():
     """
     Check the time every minute and trigger if it matches the target.
     """
     logger.info(f"Scheduler loop started. Target: {TARGET_HOUR:02d}:{TARGET_MINUTE:02d} {TIMEZONE}")
-    
+
     tz = pytz.timezone(TIMEZONE)
     last_run_date = None
     last_digest_date = None
+    last_decay_month = None
 
     while True:
         now = datetime.now(tz)
         _run_pending_email_jobs()
 
-        # Check if it's the target time and we haven't run today
         if now.hour == TARGET_HOUR and now.minute == TARGET_MINUTE:
             if last_run_date != now.date():
                 _run_quote_rotation()
@@ -303,13 +355,17 @@ def _scheduler_loop():
                 _run_social_analytics()
                 last_run_date = now.date()
 
-        # NotebookLM digest at 08:30 AM MT
         if now.hour == 8 and now.minute == 30:
             if last_digest_date != now.date():
                 _run_notebooklm_digest()
                 last_digest_date = now.date()
 
-        # Sleep for 30 seconds to avoid missing the minute or double-triggering
+        # GMB score decay: 1st of month at 06:00 MT
+        if now.day == 1 and now.hour == 6 and now.minute == 0:
+            if last_decay_month != now.month:
+                _run_gmb_score_decay()
+                last_decay_month = now.month
+
         time.sleep(30)
 
 def _run_supabase_sync():
