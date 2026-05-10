@@ -15,7 +15,7 @@
 
 ## Session-Start Cheat Block (read this first)
 
-Last session ended **2026-05-09 (absorb session — gate_poll.py + Stop→Telegram + 86% routing coverage shipped)**. State at close:
+Last session ended **2026-05-10 (content session — linkedin-craft.md + M22 LLM blog pipeline milestone)**. State at close:
 
 - **Gate fully autonomous:** 5-min cron 24/7, silent success, inline ✅/❌ buttons, 4 high-risk files. Host cron sole runner.
 - **Baked-file drift permanently fixed:** entrypoint syncs `orchestrator/*.py` over baked `/app/*.py` on every container start.
@@ -2773,3 +2773,27 @@ Ending: fully signal-threaded sequence, qualification gate, gmb_opener persisted
 2. linkedin-craft.md — other agent building it (Boubacar providing 5 reference creators + 5 posts).
 3. Griot intake classification (target 2026-05-14, gated on M3.7.3 session).
 4. Loop runner next target: name a CW deliverable with clean separation of content/scripts for meaningful Perf improvement.
+
+### 2026-05-10: LinkedIn Craft Reference + Atlas M22 Filed
+
+**Session type:** Direct (Boubacar present) — content/voice infrastructure.
+
+**Shipped:**
+- `skills/ctq-social/references/linkedin-craft.md` — 8-part craft file. Built from reverse-engineering 5 of Boubacar's best LinkedIn posts + 8 creator profile studies + 4 recommended additions (David Sengeh, Elizabeth Adefioye, Liz Fosslien, Imole Ashogbon). Covers: voice fingerprint, 5 hook patterns (3 in rotation + 2 new to add), format rules, 4 CTA types, LI→X/newsletter transform templates, named series ideas, creator cheat sheet, update protocol.
+- `orchestrator/content_multiplier_crew.py`: linkedin-craft.md added to `_load_voice_profile_with_references()` ref_files list — verbatim-loaded into Sonnet context on every LinkedIn/X piece generation. No other code changes.
+- `skills/ctq-social/SKILL.md`: one-line pointer added at top of CTQ targets section.
+- `skills/boub_voice_mastery/SKILL.md`: one-line pointer added.
+- `docs/styleguides/styleguide_linkedin.md`: cross-reference banner added pointing to craft file.
+- **Atlas M22 milestone added** (this file): LLM-Indexed Blog Pipeline — autonomous 2-3 long-form posts/week targeting Claude/ChatGPT answer surfaces. Gate: M10 two Monday runs confirmed + craft file in active use. Target 2026-06-01.
+
+**Absorb completed:** Michel Lieben OpenClaw 5-Phase LinkedIn Playbook (PROCEED). Sankofa council correctly redirected from Phase 3 feedback loops to Phase 2 craft file gap. Karpathy SHIP.
+
+**Key decision:** linkedin-craft.md lives in `skills/ctq-social/references/` (NOT `docs/styleguides/`). Styleguides = formatting spec. Craft file = voice intelligence. Both needed, different jobs. Cross-referenced.
+
+**Commit:** `74edb93`
+
+**Next priorities:**
+1. Verify craft file in use: draft a LinkedIn post using it, confirm "70% there on first pass" bar met.
+2. M10 Topic Scout: gate check 2026-05-12 (two Monday runs with 5+ picks needed for M22 pre-condition).
+3. Griot intake classification (target 2026-05-14, gated on M3.7.3).
+4. Monitor May 10-14 posts — CFR assets publish without Blotato error at 09:00 MT.
