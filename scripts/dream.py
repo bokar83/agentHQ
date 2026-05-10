@@ -40,7 +40,7 @@ PROPOSAL_FILE = OUTPUT_DIR / "PROPOSAL.md"
 APPROVAL_FILE = OUTPUT_DIR / "APPROVAL.txt"
 
 MODEL = "claude-opus-4-7"
-MAX_TOKENS = 16000
+MAX_TOKENS = 32000
 
 # ── Telegram ──────────────────────────────────────────────────────────────────
 
@@ -222,7 +222,14 @@ Today: {datetime.now().strftime('%Y-%m-%d')}
 # ── Step 1-2: Scan + Propose ──────────────────────────────────────────────────
 
 def run_propose(n_commits: int) -> None:
-    client = anthropic.Anthropic()
+    import httpx, ssl, sys
+    http_client = None
+    if sys.platform == "win32":
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        http_client = httpx.Client(verify=False)
+    client = anthropic.Anthropic(http_client=http_client)
 
     print("Reading memory files...")
     memory_files = read_memory_files()
@@ -243,20 +250,24 @@ def run_propose(n_commits: int) -> None:
     text = next((b.text for b in response.content if b.type == "text"), "")
     print(f"  {response.usage.output_tokens} output tokens")
 
-    # Strip markdown fences if present
+    # Strip markdown fences if present (handles ```json, ```, etc.)
     text = text.strip()
     if text.startswith("```"):
         text = "\n".join(text.split("\n")[1:])
+        text = text.strip()
         if text.endswith("```"):
-            text = text.rsplit("```", 1)[0]
+            text = text.rsplit("```", 1)[0].strip()
 
     try:
         result = json.loads(text)
     except json.JSONDecodeError as e:
-        print(f"ERROR: response not valid JSON: {e}", file=sys.stderr)
         OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-        (OUTPUT_DIR / "_raw_response.txt").write_text(text, encoding="utf-8")
-        print("Raw saved to dream-output/_raw_response.txt")
+        raw_path = OUTPUT_DIR / "_raw_response.txt"
+        raw_path.write_text(text, encoding="utf-8")
+        tokens_used = response.usage.output_tokens
+        hint = " (response likely truncated — raise MAX_TOKENS)" if tokens_used >= MAX_TOKENS - 100 else ""
+        print(f"ERROR: response not valid JSON at {e}{hint}", file=sys.stderr)
+        print(f"Raw saved to {raw_path}")
         raise
 
     # Write outputs
