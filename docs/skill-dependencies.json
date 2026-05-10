@@ -1,0 +1,145 @@
+{
+  "_meta": {
+    "generated": "2026-05-09",
+    "purpose": "Maps which skills call other skills. Use for impact analysis when modifying a shared skill, and to identify high-leverage improvement targets.",
+    "format": "skill-slug -> array of skills it calls/depends on"
+  },
+  "3d-website-building": {
+    "calls": ["website-intelligence", "image-generator", "3d-animation-creator", "seo-strategy"],
+    "called_by": []
+  },
+  "3d-animation-creator": {
+    "calls": [],
+    "called_by": ["3d-website-building"]
+  },
+  "agentshq-absorb": {
+    "calls": ["sankofa", "karpathy"],
+    "called_by": []
+  },
+  "boubacar-skill-creator": {
+    "calls": ["skill-creator", "sankofa"],
+    "called_by": []
+  },
+  "clone-builder": {
+    "calls": ["website-intelligence", "boub-voice-mastery", "seo-strategy", "vercel-launch"],
+    "called_by": []
+  },
+  "clone-scout": {
+    "calls": ["website-intelligence"],
+    "called_by": []
+  },
+  "ctq-social": {
+    "calls": ["sankofa", "boub-voice-mastery"],
+    "called_by": []
+  },
+  "engagement-ops": {
+    "calls": ["local-crm", "notion-cli", "roadmap", "sankofa", "superpowers:writing-plans", "superpowers:brainstorming"],
+    "called_by": []
+  },
+  "frontend-design": {
+    "calls": ["superpowers:brainstorming", "web-design-guidelines"],
+    "called_by": ["website-intelligence", "clone-builder", "3d-website-building"]
+  },
+  "hormozi-lead-gen": {
+    "calls": ["apollo-skill", "hunter-skill"],
+    "called_by": []
+  },
+  "hostinger-deploy": {
+    "calls": [],
+    "called_by": ["vercel-launch"]
+  },
+  "hyperframes": {
+    "calls": ["hyperframes-cli", "hyperframes-registry", "kie_media", "transcribe"],
+    "called_by": ["website-to-hyperframes", "signal-works-pitch-reel", "scene-segmenter"]
+  },
+  "hyperframes-cli": {
+    "calls": [],
+    "called_by": ["hyperframes"]
+  },
+  "hyperframes-registry": {
+    "calls": [],
+    "called_by": ["hyperframes"]
+  },
+  "image-generator": {
+    "calls": ["kie_media"],
+    "called_by": ["3d-website-building"]
+  },
+  "karpathy": {
+    "calls": [],
+    "called_by": ["agentshq-absorb", "boubacar-skill-creator", "superpowers:verification-before-completion"]
+  },
+  "kie_media": {
+    "calls": [],
+    "called_by": ["image-generator", "hyperframes", "website-teardown"]
+  },
+  "notion-cli": {
+    "calls": [],
+    "called_by": ["engagement-ops", "local-crm"]
+  },
+  "roadmap": {
+    "calls": [],
+    "called_by": ["engagement-ops", "tab-shutdown"]
+  },
+  "sankofa": {
+    "calls": [],
+    "called_by": ["agentshq-absorb", "boubacar-skill-creator", "ctq-social", "engagement-ops"]
+  },
+  "scene-segmenter": {
+    "calls": ["hyperframes", "kie_media"],
+    "called_by": []
+  },
+  "seo-strategy": {
+    "calls": ["website-intelligence"],
+    "called_by": ["3d-website-building", "clone-builder", "website-teardown"]
+  },
+  "signal-works-pitch-reel": {
+    "calls": ["hyperframes", "kie_media"],
+    "called_by": []
+  },
+  "tab-shutdown": {
+    "calls": ["roadmap"],
+    "called_by": []
+  },
+  "transcribe": {
+    "calls": [],
+    "called_by": ["hyperframes", "youtube-10k-lens"]
+  },
+  "transcript-style-dna": {
+    "calls": [],
+    "called_by": ["hormozi-lead-gen"]
+  },
+  "vercel-launch": {
+    "calls": [],
+    "called_by": ["clone-builder"]
+  },
+  "web-design-guidelines": {
+    "calls": [],
+    "called_by": ["frontend-design", "website-teardown"]
+  },
+  "website-intelligence": {
+    "calls": ["seo-strategy"],
+    "called_by": ["3d-website-building", "clone-builder", "clone-scout", "website-teardown"]
+  },
+  "website-teardown": {
+    "calls": ["website-intelligence", "web-design-guidelines", "seo-strategy", "kie_media"],
+    "called_by": []
+  },
+  "website-to-hyperframes": {
+    "calls": ["hyperframes"],
+    "called_by": []
+  },
+  "youtube-10k-lens": {
+    "calls": ["transcribe"],
+    "called_by": []
+  },
+  "_high_leverage": {
+    "note": "Skills with most downstream dependents — improving these compounds across the most workflows",
+    "ranked": [
+      {"skill": "sankofa", "downstream_count": 4, "consumers": ["agentshq-absorb", "boubacar-skill-creator", "ctq-social", "engagement-ops"]},
+      {"skill": "website-intelligence", "downstream_count": 4, "consumers": ["3d-website-building", "clone-builder", "clone-scout", "website-teardown"]},
+      {"skill": "hyperframes", "downstream_count": 3, "consumers": ["website-to-hyperframes", "signal-works-pitch-reel", "scene-segmenter"]},
+      {"skill": "kie_media", "downstream_count": 3, "consumers": ["image-generator", "hyperframes", "website-teardown"]},
+      {"skill": "seo-strategy", "downstream_count": 3, "consumers": ["3d-website-building", "clone-builder", "website-teardown"]}
+    ]
+  }
+}

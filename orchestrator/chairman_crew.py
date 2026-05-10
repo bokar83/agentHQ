@@ -282,13 +282,54 @@ def _field_already_queued(field: str) -> bool:
 # Enqueue proposals
 # =============================================================================
 
+_VQ_PATH = "/root/agentsHQ/data/verification_queue.md"
+
+
+def _stage_to_verification_queue(mutations: list[dict]) -> None:
+    """Stage candidate mutations to verification_queue.md before approval_queue.
+
+    Prevents hallucination laundering: every Chairman claim that would change a
+    scoring weight is logged here first so there is an audit trail even if the
+    approval_queue entry is later rejected or expires.
+    """
+    import os
+    from datetime import datetime as _dt
+
+    if not mutations:
+        return
+    try:
+        tz = pytz.timezone(TIMEZONE)
+        ts = _dt.now(tz).strftime("%Y-%m-%d %H:%M")
+        lines = [f"\n### [{ts}] chairman: weight-mutations (batch of {len(mutations)})\n"]
+        for m in mutations:
+            current = m.get("current", "?")
+            proposed = m.get("proposed", "?")
+            delta_pct = abs(proposed - current) / max(abs(current), 1e-9) * 100
+            confidence = "LOW" if delta_pct < 5 else "MEDIUM" if delta_pct < 15 else "HIGH"
+            lines.append(
+                f"- Field: `{m['field']}` | {current} -> {proposed} "
+                f"({delta_pct:.1f}%) | Confidence: {confidence}\n"
+                f"  Rationale: {m.get('rationale', 'none')}\n"
+                f"  Status: PENDING\n"
+            )
+        vq_file = os.environ.get("VERIFICATION_QUEUE_PATH", _VQ_PATH)
+        with open(vq_file, "a", encoding="utf-8") as f:
+            f.writelines(lines)
+        logger.info(f"chairman: staged {len(mutations)} mutation(s) to verification_queue")
+    except Exception as e:
+        logger.warning(f"chairman: verification_queue write failed (non-fatal): {e}")
+
+
 def enqueue_proposals(mutations: list[dict]) -> list[int]:
     """Enqueue approved mutation proposals to approval_queue.
 
+    Stages to verification_queue.md first, then enqueues to approval_queue.
     Skips any field that already has a pending chairman-mutation proposal.
     Returns list of enqueued queue row IDs.
     """
     from approval_queue import enqueue
+
+    _stage_to_verification_queue(mutations)
 
     enqueued_ids = []
     for m in mutations:

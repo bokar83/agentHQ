@@ -1,0 +1,3 @@
+{"intent": "review this LinkedIn post before I publish it", "expected": "ctq-social"}
+{"intent": "run quality check on this draft tweet thread", "expected": "ctq-social"}
+{"intent": "does this post sound like me", "expected": "ctq-social"}

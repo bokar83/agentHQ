@@ -4,9 +4,12 @@ Schema: `YYYY-MM-DD | source | verdict | placement | leverage type`
 
 Verdicts: `PROCEED` | `DON'T PROCEED` | `ARCHIVE-AND-NOTE`
 
+2026-05-09 | https://x.com/noisyb0y1/status/2044692412061425748 (ECC X-thread) | PROCEED | enhance skills/agentshq-absorb (Self-Audit Mode) + enhance docs/roadmap/compass.md (M6) | continuous-improvement
+
 2026-05-09 | <https://x.com/i/status/2052780393326092407> (@shannholmberg Content OS) | PROCEED | enhance skills/boub_voice_mastery + skills/ctq-social + skills/boubacar-prompts | continuous-improvement + producing-motion
 
 2026-05-09 | <https://github.com/freeCodeCamp/freeCodeCamp> | ARCHIVE-AND-NOTE | archive | none
+2026-05-09 | <https://x.com/exploraX_/status/2052774623473803483> (m0h GMaps lead-gen playbook) | PROCEED | enhance skills/serper_skill (score_gmb_lead gate) + new ref skills/hormozi-lead-gen/references/cold-call-scripts.md | producing-motion + founder-time-reduction
 
 2026-05-09 | <https://github.com/openclaw/openclaw> | ARCHIVE-AND-NOTE | archive | none
 

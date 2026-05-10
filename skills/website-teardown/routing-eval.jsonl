@@ -1,0 +1,3 @@
+{"intent": "audit this prospect's website and tell me if it's worth pursuing", "expected": "website-teardown"}
+{"intent": "run a teardown on acmeplumbing.com", "expected": "website-teardown"}
+{"intent": "should we pursue this lead based on their site", "expected": "website-teardown"}

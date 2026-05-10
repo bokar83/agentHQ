@@ -1,0 +1,4 @@
+{"intent": "what do you remember from last session about the gate agent", "expected": "memory"}
+{"intent": "save this to memory for future conversations", "expected": "memory"}
+{"intent": "recall what we decided about the deploy process", "expected": "memory"}
+{"intent": "memory lookup on the studio pipeline decision", "expected": "memory"}

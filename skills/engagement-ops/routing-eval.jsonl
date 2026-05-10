@@ -1,0 +1,3 @@
+{"intent": "I have a Signal Session booked with a new client", "expected": "engagement-ops"}
+{"intent": "prep me for tomorrow's client call", "expected": "engagement-ops"}
+{"intent": "log notes from today's SHIELD kickoff", "expected": "engagement-ops"}

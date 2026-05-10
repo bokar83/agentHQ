@@ -15,16 +15,16 @@
 
 ## Session-Start Cheat Block (read this first)
 
-Last session ended **2026-05-09 (openclaw absorb — ARCHIVE-AND-NOTE, 3 arch patterns extracted)**. State at close:
+Last session ended **2026-05-09 (m0h GMaps playbook absorb — PROCEED, SW T1 gate + cold-call scripts shipped)**. State at close:
 
 - **Gate fully autonomous:** 5-min cron 24/7, silent success, inline ✅/❌ buttons, dedup alerts, 4 high-risk files only (`gate_agent.py`, `orc_rebuild.sh`, `.env`, `docker-compose`). Container gate registration removed — host cron is sole runner.
 - **Baked-file drift permanently fixed:** `scripts/docker-entrypoint.sh` ships with Dockerfile. Every container start auto-syncs `orchestrator/*.py` over baked `/app/*.py`. `docker cp` ritual retired. Rebuild completed successfully 2026-05-08 21:47 UTC.
 - **Completion Report Policy now a hard rule in AGENT_SOP.md:** All Atlas agents must close each prompted turn with outcome + changes + validation + blockers. "Done" alone is invalid.
 - **New milestones named (trigger-gated):** M21 (overnight ambient), M9d (deep memory garden), M8b (live agent graph). Each has explicit trigger conditions — do not start until gates clear.
-- **openclaw absorbed (ARCHIVE-AND-NOTE):** Self-hosted AI assistant platform (370K stars, TypeScript/Node). Phase 0 all-no — full platform replacement, not a component. 3 arch patterns extracted as Atlas items 7/8/9.
-- **Atlas items 7/8/9 added:** Prepared Runtime Facts (#7), Docker Healthcheck Hardening (#8), Manifest-First Skill Loader (#9). All trigger on next relevant maintenance window — no pre-conditions.
-- **AGENT_SOP.md Extension Ownership Boundary rule added:** Owner module fixes own bugs. Core gets generic seams only. Concrete examples listed.
-- **Gate context-burn fix queued (atlas.md item 6):** Gate currently burns LLM context every 5 min regardless of queue state. Target: dumb Python cron, LLM only on READY branch. Clawhip absorb must run first.
+- **SW T1 GMB qualification gate SHIPPED (2026-05-09):** `score_gmb_lead()` added to `skills/serper_skill/hunter_tool.py`. Gate wired in `sequence_engine.py` `_get_due_leads` SW T1 path — leads scoring < 2 (out of 4 gap signals) are dropped before sequence enrollment. Columns already in DB (`has_website`, `review_count`, `google_rating`). Named threshold constants (GMB_LOW_REVIEW_THRESHOLD=30, GMB_LOW_RATING_THRESHOLD=4.0). Pipeline audit due 2026-05-28.
+- **Cold-call scripts shipped (2026-05-09):** `skills/hormozi-lead-gen/references/cold-call-scripts.md` — 3 objection counters, "walkthrough not meeting" reframe, "tomorrow at 10" close, offer menu.
+- **Atlas item #11 added (GATED):** Auto-audit — GMB scorer output → website-teardown one-pager per qualified lead as warm T1 opener. Trigger: 2026-05-28 pipeline audit date.
+- **Gate context-burn fix queued (atlas.md item 6):** Gate currently burns LLM context every 5 min regardless of queue state. Target: dumb Python cron, LLM only on READY branch.
 
 **Default next moves (in priority order):**
 
@@ -36,6 +36,25 @@ Last session ended **2026-05-09 (openclaw absorb — ARCHIVE-AND-NOTE, 3 arch pa
 6. **[ATLAS ARCH] Refactor Gate from Claude session polling to dumb Python cron:** Gate currently runs inside a Claude Code session with LLM context open every 5 min regardless of queue state. This burns context budget on empty-queue ticks. Target architecture: pure Python cron loop (`scripts/gate_poll.py`) polls GitHub for READY branches + checks task table — zero LLM cost. LLM context opens ONLY when a READY branch needs arbitration. Estimated savings: ~85% of current Gate LLM spend on idle nights/weekends. Pre-condition: none. Success criterion: Gate cron runs 24h on VPS with zero LLM calls on empty-queue ticks, verified via spend tracking. See `docs/patterns/` reference: claw-code PHILOSOPHY.md — "notification routing pushed outside agent context window." Trigger: next Gate maintenance window.
 
 7. **[ARCH REF] google-gemini/gemini-cli:** Do NOT install — model access via OpenRouter. Architecture value only: Trusted Folders + bubblewrap sandbox model (maps to Gate/coordination isolation), GEMINI.md multi-agent convention (equivalent of our CLAUDE.md agent contracts), multi-agent comms patterns (103K stars, 386 days old, Apache-2.0). Reference when designing M21 overnight-ambient isolation or M8b live agent graph. Repo: <https://github.com/google-gemini/gemini-cli>.
+
+10. **[ARCH REF — GATED] garrytan/gbrain minion durable job queue:** Do NOT install — Postgres + Bun dependency not yet on stack. Architecture reference only. Absorbed 2026-05-09 (PROCEED — pattern-only).
+
+    **What it solves:** agentsHQ currently spawns full CrewAI agents for background tasks. Each spawn costs ~10s + ~$0.03 in tokens. gbrain's Minion queue handles the same jobs in 753ms at $0 per wake, using Postgres as the durable ledger.
+
+    **Key patterns to borrow when Postgres lands:**
+    - `MinionQueue.add(name, data, opts)` — submit with idempotency_key to prevent duplicate jobs on cron re-fire
+    - Parent-child depth cap (default 5) — prevents runaway recursive spawns
+    - Stall detection: worker exits if waiting jobs exist but nothing in-flight for 5+ min (maps to Gate's empty-queue tick problem)
+    - Quiet hours gating — defer jobs during overnight window at claim time, not dispatch time
+    - Stagger key — decorrelates concurrent cron-fired jobs, prevents thundering herd at exact same second
+
+    **Pre-condition (HARD GATE):** Postgres must already be running on VPS for another reason AND a real background-task corpus exists (>10 recurring cron jobs worth queuing). Do NOT add pgvector or Postgres solely for this. Do NOT add to `requirements.txt` before pre-condition met.
+
+    **Success criterion when gated condition clears:** one Atlas cron loop migrated from full CrewAI spawn to minion-style queue; timing comparison logged (target: <1s vs current >10s spawn overhead); no increase in monthly OR spend.
+
+    **Source:** `src/core/minions/` in garrytan/gbrain. MinionQueue + MinionWorker schema documented in absorb session 2026-05-09.
+
+11. **[GATED — SW LEAD-GEN] Auto-audit: GMB scorer output → website-teardown one-pager per qualified lead.** After `score_gmb_lead()` gates a SW T1 lead (score >= 2), auto-run `website-teardown` on the lead's URL and attach the audit one-pager as a personalized warm opener in the T1 email. This converts cold outreach to audit-led warm outreach. Pre-condition: `score_gmb_lead()` gate shipped (done 2026-05-09) + SW T1 open rate baseline established (need 2 weeks of gate-filtered sends). Trigger: 2026-05-28 pipeline audit date. Do not start before baseline exists.
 
 **Do not start a new milestone without reading the latest Session Log entry below.**
 

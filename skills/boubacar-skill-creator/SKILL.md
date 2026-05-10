@@ -108,6 +108,36 @@ Before the skill is registered in `SKILLS_INDEX.md`, verify its trigger phrases 
 
 **Why this matters:** Skills with ambiguous triggers silently fail — the LLM routes to the wrong skill or no skill. A 2-minute check here prevents weeks of wondering why a skill never fires.
 
+## Step 4.6 - gbrain conformance audit (11-item quality gate)
+
+Run this after check_resolvable passes, before Step 5. Adapted from gbrain's `skillify check` — converts subjective "looks good" into an objective pass/fail score.
+
+**Checklist (mark each ✅ PASS or ❌ FAIL):**
+
+| # | Item | What to check |
+|---|------|---------------|
+| 1 | SKILL.md exists | File present with valid YAML frontmatter (`name`, `description`, `triggers[]`) |
+| 2 | Trigger phrases real | Each trigger is a phrase a human would actually say — no vague "use when helpful" |
+| 3 | Procedure numbered | Steps are numbered, each is one atomic action, no compound "and" steps |
+| 4 | Output contract stated | Exact format of what gets produced (file path, structure, length limits) |
+| 5 | Failure modes named | At least two anti-patterns the skill must not produce |
+| 6 | SKILLS_INDEX.md entry | Skill registered with real trigger phrases, not a stub |
+| 7 | No duplicate coverage | check_resolvable returned CLEAN (Step 4.5 passed) |
+| 8 | Domain classified | voice-inject or stay-technical declared (Step 3 done) |
+| 9 | No sentinel stubs | No placeholder text like "replace this" or "TODO" in final SKILL.md |
+| 10 | Instincts applied | All instincts with confidence ≥ 0.75 reflected in the draft |
+| 11 | Gates named (if spawns subagents) | Every checkpoint labeled as pre-flight / revision / escalation / abort |
+
+**Scoring:**
+
+- 11/11 → SHIP
+- 9-10/11 → SHIP with logged WARNs (note the fails, fix next session)
+- ≤8/11 → HOLD — fix fails before proceeding to Step 5
+
+**Hard fails (auto-HOLD regardless of score):** items 1, 2, 6, 7 — a skill with no SKILL.md, vague triggers, no index entry, or duplicate coverage is broken by definition.
+
+**Log result:** one line in the session — `gbrain-conformance: 11/11 SHIP` or list the fails.
+
 ## Step 5 - Test with skill-creator
 
 Delegate testing mechanics to the official skill-creator. Invoke it:

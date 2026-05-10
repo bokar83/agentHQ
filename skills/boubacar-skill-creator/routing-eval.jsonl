@@ -1,0 +1,3 @@
+{"intent": "I want to turn this workflow into a reusable skill", "expected": "boubacar-skill-creator"}
+{"intent": "help me capture this repeating process as a skill", "expected": "boubacar-skill-creator"}
+{"intent": "build a new skill for my cold outreach flow", "expected": "boubacar-skill-creator"}
