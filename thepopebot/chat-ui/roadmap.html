@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Roadmap Status · Atlas</title>
+  <link rel="icon" type="image/svg+xml" href="/atlas/compass.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/atlas/atlas.css?v=20260503d" />
+<style>
+/* ── Page shell ───────────────────────────────────────────── */
+body { font-size: 15px; }
+
+#roadmap-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 64px;
+}
+
+/* ── Topbar (mirrors atlas.html) ──────────────────────────── */
+#topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg);
+  border-bottom: 1px solid var(--hairline);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px;
+  height: 54px;
+}
+.topbar-left { display: flex; align-items: center; gap: 10px; flex: 1; }
+.topbar-left h1 { font-family: var(--font-display); font-size: 17px; font-weight: 400; color: var(--ink); }
+.topbar-left .accent-word { color: var(--terracotta); }
+.topbar-compass { opacity: 0.85; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.topbar-link {
+  color: var(--ink-dim); font-size: 13px; text-decoration: none;
+  font-family: var(--font-mono); padding: 4px 10px;
+  border: 1px solid var(--hairline-md); border-radius: var(--radius);
+  white-space: nowrap;
+}
+.topbar-link:hover { color: var(--ink); border-color: rgba(193,154,107,0.35); }
+.topbar-link.active { color: var(--terracotta); border-color: rgba(255,107,53,0.35); }
+
+/* ── Page header ──────────────────────────────────────────── */
+.page-header {
+  padding: 32px 0 8px;
+  border-bottom: 1px solid var(--hairline);
+  margin-bottom: 28px;
+}
+.page-header h2 {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.page-subtitle { color: var(--ink-muted); font-size: 13px; font-family: var(--font-mono); }
+
+/* ── Summary cards ────────────────────────────────────────── */
+.summary-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 36px;
+}
+.sum-card {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.sum-card:hover { border-color: var(--hairline-md); }
+.sum-card.active-filter { border-color: var(--terracotta); }
+.sum-label { font-family: var(--font-mono); font-size: 10px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 6px; }
+.sum-big { font-family: var(--font-display); font-size: 24px; font-weight: 600; margin-bottom: 3px; }
+.sum-sub { font-size: 12px; color: var(--ink-muted); line-height: 1.3; }
+.sum-atlas   { color: var(--lapis); }
+.sum-echo    { color: #a78bfa; }
+.sum-compass { color: var(--verdigris); }
+.sum-studio  { color: var(--brass); }
+.sum-harvest { color: var(--rose); }
+
+/* ── Roadmap sections ─────────────────────────────────────── */
+.rm-section { margin-bottom: 20px; }
+
+.rm-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+  border-radius: var(--radius);
+  transition: background 0.12s;
+  margin-bottom: 0;
+}
+.rm-header:hover { background: rgba(255,255,255,0.03); }
+.rm-toggle {
+  font-size: 14px;
+  color: var(--ink-muted);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.rm-section.collapsed .rm-toggle { transform: rotate(-90deg); }
+.rm-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.rm-oneliner { font-size: 13px; color: var(--ink-muted); }
+
+.rm-body { overflow: hidden; }
+.rm-section.collapsed .rm-body { display: none; }
+.rm-body-inner { padding-bottom: 28px; }
+
+.rm-done-def {
+  background: var(--surface);
+  border-left: 3px solid var(--hairline-md);
+  padding: 10px 16px;
+  margin-bottom: 14px;
+  color: var(--ink-dim);
+  font-size: 13px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  line-height: 1.6;
+}
+.rm-done-def strong { color: var(--terracotta); }
+
+.atlas-border  { border-left-color: var(--lapis); }
+.echo-border   { border-left-color: #a78bfa; }
+.compass-border{ border-left-color: var(--verdigris); }
+.studio-border { border-left-color: var(--brass); }
+.harvest-border{ border-left-color: var(--rose); }
+
+/* ── Table ────────────────────────────────────────────────── */
+.rm-table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  background: var(--surface2);
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--hairline);
+  white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--hairline); }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover td { background: rgba(255,255,255,0.02); }
+td {
+  padding: 11px 14px;
+  vertical-align: top;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.col-id { font-family: var(--font-mono); font-size: 12px; color: var(--ink-muted); white-space: nowrap; width: 64px; }
+.col-name { color: var(--ink); font-weight: 500; max-width: 260px; }
+.col-blocker { color: var(--ink-muted); font-size: 12px; }
+.col-date { font-family: var(--font-mono); font-size: 12px; color: var(--ink-muted); white-space: nowrap; }
+.col-notes { color: var(--ink-muted); font-size: 12px; line-height: 1.5; max-width: 300px; }
+
+/* ── Badges ───────────────────────────────────────────────── */
+.badge-pill {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+.b-shipped  { background: rgba(111,155,110,0.15); color: #6fbf6e; border: 1px solid rgba(111,155,110,0.25); }
+.b-live     { background: rgba(74,122,140,0.15);  color: #6bb4c8; border: 1px solid rgba(74,122,140,0.25); }
+.b-progress { background: rgba(193,154,107,0.15); color: var(--brass); border: 1px solid rgba(193,154,107,0.25); }
+.b-next     { background: rgba(167,139,250,0.15); color: #a78bfa; border: 1px solid rgba(167,139,250,0.25); }
+.b-queued   { background: rgba(255,255,255,0.04); color: var(--ink-muted); border: 1px solid var(--hairline-md); }
+.b-gated    { background: rgba(194,90,110,0.10);  color: #d47a8a; border: 1px solid rgba(194,90,110,0.20); }
+.b-deferred { background: rgba(255,255,255,0.02); color: var(--ink-muted); border: 1px solid var(--hairline); opacity: 0.6; }
+.b-descoped { background: rgba(255,255,255,0.02); color: var(--ink-muted); border: 1px solid var(--hairline); text-decoration: line-through; opacity: 0.4; }
+.b-armed    { background: rgba(111,155,110,0.08); color: #5ca85a; border: 1px solid rgba(111,155,110,0.15); }
+.b-warning  { background: rgba(194,90,110,0.12);  color: var(--rose); border: 1px solid rgba(194,90,110,0.25); }
+
+/* ── Filter bar ───────────────────────────────────────────── */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.filter-btn {
+  background: var(--surface);
+  border: 1px solid var(--hairline-md);
+  border-radius: var(--radius);
+  color: var(--ink-dim);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.filter-btn:hover { color: var(--ink); border-color: rgba(193,154,107,0.35); }
+.filter-btn.active { color: var(--terracotta); border-color: rgba(255,107,53,0.4); background: rgba(255,107,53,0.06); }
+.filter-label { font-size: 12px; color: var(--ink-muted); margin-right: 4px; }
+
+/* ── Mobile ───────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  body { font-size: 15px; }
+  #roadmap-page { padding: 0 16px 64px; }
+  #topbar { padding: 0 16px; }
+  .topbar-link { display: none; }
+  .topbar-link.active { display: inline-block; }
+
+  .summary-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .sum-card:nth-child(5) { grid-column: span 2; }
+
+  .rm-header { flex-direction: row; flex-wrap: wrap; gap: 4px 10px; }
+  .rm-name { font-size: 17px; }
+  .rm-oneliner { width: 100%; font-size: 12px; order: 3; }
+
+  /* On mobile, collapse less-important columns */
+  .col-date, .col-blocker { display: none; }
+  thead th:nth-child(4), thead th:nth-child(5) { display: none; }
+  td:nth-child(4), td:nth-child(5) { display: none; }
+
+  td { font-size: 13px; padding: 10px 12px; }
+  thead th { padding: 9px 12px; font-size: 10px; }
+}
+
+@media (max-width: 480px) {
+  .sum-big { font-size: 20px; }
+  .page-header h2 { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<header id="topbar">
+  <div class="topbar-left">
+    <img src="/atlas/compass.svg" alt="Atlas" class="topbar-compass" width="28" height="28" />
+    <h1>Atlas <span class="accent-word">Mission Control</span></h1>
+  </div>
+  <div class="topbar-right">
+    <a href="/atlas" class="topbar-link">Dashboard</a>
+    <a href="/atlas/cost" class="topbar-link">Spend</a>
+    <a href="/atlas/roadmap" class="topbar-link active">Roadmap</a>
+  </div>
+</header>
+
+<div id="roadmap-page">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <h2>Roadmap <span style="color:var(--terracotta)">Status</span></h2>
+    <div class="page-subtitle">Sankofa Council pass · 2026-05-10 · All five roadmaps reviewed</div>
+  </div>
+
+  <!-- Summary cards (clickable filter) -->
+  <div class="summary-row">
+    <div class="sum-card" onclick="filterRoadmap('atlas')" data-rm="atlas">
+      <div class="sum-label">Atlas</div>
+      <div class="sum-big sum-atlas">L5/5</div>
+      <div class="sum-sub">All loops live · M24 next</div>
+    </div>
+    <div class="sum-card" onclick="filterRoadmap('echo')" data-rm="echo">
+      <div class="sum-label">Echo</div>
+      <div class="sum-big sum-echo">M3 next</div>
+      <div class="sum-sub">Commits descoped · Reframed</div>
+    </div>
+    <div class="sum-card" onclick="filterRoadmap('compass')" data-rm="compass">
+      <div class="sum-label">Compass</div>
+      <div class="sum-big sum-compass">~Done</div>
+      <div class="sum-sub">M2.5b only · 11/70 fixtures</div>
+    </div>
+    <div class="sum-card" onclick="filterRoadmap('studio')" data-rm="studio">
+      <div class="sum-label">Studio</div>
+      <div class="sum-big sum-studio">M4</div>
+      <div class="sum-sub">Warm-up · $0 rev · G3 active</div>
+    </div>
+    <div class="sum-card" onclick="filterRoadmap('harvest')" data-rm="harvest">
+      <div class="sum-label">Harvest</div>
+      <div class="sum-big sum-harvest">$0</div>
+      <div class="sum-sub">Rod hold ends 05-14 · R1 open</div>
+    </div>
+  </div>
+
+  <!-- Status filter bar -->
+  <div class="filter-bar">
+    <span class="filter-label">Show:</span>
+    <button class="filter-btn active" onclick="filterStatus('all', this)">All</button>
+    <button class="filter-btn" onclick="filterStatus('active', this)">Active only</button>
+    <button class="filter-btn" onclick="filterStatus('shipped', this)">Shipped</button>
+    <button class="filter-btn" onclick="filterStatus('blocked', this)">Blocked / Gated</button>
+    <button class="filter-btn" onclick="filterStatus('deferred', this)">Deferred / Descoped</button>
+  </div>
+
+
+  <!-- ══ ATLAS ══════════════════════════════════════════════ -->
+  <div class="rm-section" data-roadmap="atlas">
+    <div class="rm-header" style="border-left: 3px solid var(--lapis);" onclick="toggleSection(this)">
+      <span class="rm-name">Atlas</span>
+      <span class="rm-oneliner">agentsHQ true agentic work — autonomy layer</span>
+      <span class="rm-toggle">▼</span>
+    </div>
+    <div class="rm-body"><div class="rm-body-inner">
+    <div class="rm-done-def atlas-border">
+      All 5 loops closed: <strong>L1 Propose → L2 Schedule → L3 Publish → L4 Reconcile → L5 Learn</strong>. Zero manual Notion work. Self-heals on failures. Learns from approvals.
+    </div>
+    <div class="rm-table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Milestone</th><th>Status</th><th>Blocked by</th><th>Shipped / ETA</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr data-status="shipped"><td class="col-id">M1</td><td class="col-name">L4 Close-Loop, Publish Reply</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-04-25</td><td class="col-notes">Telegram 3-button row → Notion Status + task_outcomes</td></tr>
+          <tr data-status="shipped"><td class="col-id">M2</td><td class="col-name">Skip Self-Heal, Re-Pick</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-04-25</td><td class="col-notes">griot_scheduler backfills skipped slots same-day</td></tr>
+          <tr data-status="blocked"><td class="col-id">M3</td><td class="col-name">Reconciliation Polling</td><td><span class="badge-pill b-queued">QUEUED</span></td><td class="col-blocker">M1 + 7 days tap-failure data</td><td class="col-date">2-3h</td><td class="col-notes">Query LI/X → auto-flip Notion status on missed taps</td></tr>
+          <tr data-status="shipped"><td class="col-id">M3.7</td><td class="col-name">Voice Learning Layer</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-06</td><td class="col-notes">Voice fingerprint + Earned Insight Gate wired</td></tr>
+          <tr data-status="shipped"><td class="col-id">M4</td><td class="col-name">Concierge Crew</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-08</td><td class="col-notes">Log triage → approval_queue. 10 tests green.</td></tr>
+          <tr data-status="active"><td class="col-id">M5</td><td class="col-name">Chairman Crew (L5 Learn)</td><td><span class="badge-pill b-live">DRY-RUN</span></td><td class="col-blocker">7 outcomes in DB (have 6)</td><td class="col-date">First real tick 2026-05-11</td><td class="col-notes">enabled=false dry_run=true. Enable after 2 clean Monday ticks.</td></tr>
+          <tr data-status="shipped"><td class="col-id">M6</td><td class="col-name">Hunter Crew (lead harvest)</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">~2026-05-05</td><td class="col-notes">50 leads/day. sw_email_log T1-T5 tracking live.</td></tr>
+          <tr data-status="shipped"><td class="col-id">M7a/b</td><td class="col-name">Auto-Publish via Blotato</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-04-25</td><td class="col-notes">L3 closed. Mon-Sat, time-of-day slots, past-due stagger.</td></tr>
+          <tr data-status="active"><td class="col-id">M8</td><td class="col-name">CEO Desk Dashboard</td><td><span class="badge-pill b-progress">IN PROGRESS</span></td><td class="col-blocker">—</td><td class="col-date">—</td><td class="col-notes">agentshq.boubacarbarry.com/atlas live. Decision Inbox partial.</td></tr>
+          <tr data-status="shipped"><td class="col-id">M8b</td><td class="col-name">Live Agent Graph card</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-10</td><td class="col-notes">Polls /atlas/agents every 30s. XSS-safe DOM.</td></tr>
+          <tr data-status="shipped"><td class="col-id">M9</td><td class="col-name">Atlas Chat Command Center</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-04-27</td><td class="col-notes">Full agentic chat loop in dashboard.</td></tr>
+          <tr data-status="shipped"><td class="col-id">M10-12</td><td class="col-name">Crew Contracts + Model Routing + Startup Contract</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-04-26-28</td><td class="col-notes">Autonomy contracts, OpenRouter routing, hard-fail env check.</td></tr>
+          <tr data-status="shipped"><td class="col-id">M13-15</td><td class="col-name">Spend · Notion Links · Task Add</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-04-30 – 05-03</td><td class="col-notes">Provider billing API, clickable Notion links, /task add.</td></tr>
+          <tr data-status="blocked"><td class="col-id">M16</td><td class="col-name">Cross-provider token tracking</td><td><span class="badge-pill b-queued">QUEUED</span></td><td class="col-blocker">3 months OR data (2026-08-01)</td><td class="col-date">—</td><td class="col-notes">Claude Code + Codex + Console. No public API yet.</td></tr>
+          <tr data-status="blocked"><td class="col-id">M17</td><td class="col-name">Kie.ai Spend Tracking</td><td><span class="badge-pill b-gated">GATED</span></td><td class="col-blocker">Kie usage API exists</td><td class="col-date">2-3h after gate</td><td class="col-notes">Credits-remaining only today.</td></tr>
+          <tr data-status="blocked"><td class="col-id">M18</td><td class="col-name">HALO Loop — Trace-Driven Optimization</td><td><span class="badge-pill b-gated">TRIGGER-GATED</span></td><td class="col-blocker">OTel instrumentation first</td><td class="col-date">Target 2026-05-18</td><td class="col-notes">50 traces → optimization loop. Instrument heartbeat first.</td></tr>
+          <tr data-status="shipped"><td class="col-id">M19</td><td class="col-name">Atlas CRM Dashboard (/crm)</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-10</td><td class="col-notes">Native Supabase sales board replaces Notion CRM.</td></tr>
+          <tr data-status="blocked"><td class="col-id">M20</td><td class="col-name">Native Social Publisher (replace Blotato)</td><td><span class="badge-pill b-gated">RESEARCH-GATED</span></td><td class="col-blocker">$5K+ MRR or Blotato fails</td><td class="col-date">2d + 2wk Meta review</td><td class="col-notes">Direct OAuth YT/IG/TikTok/LI/X. $97/mo saving.</td></tr>
+          <tr data-status="blocked"><td class="col-id">M21</td><td class="col-name">Overnight Ambient Mode</td><td><span class="badge-pill b-queued">FUTURE</span></td><td class="col-blocker">M18 HALO data</td><td class="col-date">—</td><td class="col-notes">Agents run + self-heal overnight with laptop off.</td></tr>
+          <tr data-status="blocked"><td class="col-id">M22</td><td class="col-name">LLM-Indexed Blog Pipeline</td><td><span class="badge-pill b-gated">TRIGGER-GATED</span></td><td class="col-blocker">geolisted.co ranking signal</td><td class="col-date">—</td><td class="col-notes">Auto inbound loop via SEO content.</td></tr>
+          <tr data-status="shipped"><td class="col-id">M23</td><td class="col-name">Agent-to-Agent Spawning</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-10</td><td class="col-notes">spawner.py + minion_worker.py + /atlas/agents. 10 tests.</td></tr>
+          <tr data-status="shipped"><td class="col-id">M24</td><td class="col-name">Hermes Self-Healing Execution</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-10</td><td class="col-notes">Worktree sandbox isolation for autonomous edits.</td></tr>
+          <tr data-status="blocked"><td class="col-id">M25</td><td class="col-name">Event-Driven Agent Message Bus</td><td><span class="badge-pill b-queued">NOT STARTED</span></td><td class="col-blocker">M23 + M24 stable</td><td class="col-date">—</td><td class="col-notes">Ambient execution loop. Post-M24.</td></tr>
+          <tr data-status="blocked"><td class="col-id">M9d</td><td class="col-name">Deep Memory Garden (A/B/C)</td><td><span class="badge-pill b-gated">TRIGGER-GATED</span></td><td class="col-blocker">Sequential: A→B→C</td><td class="col-date">A: 2026-05-18</td><td class="col-notes">Self-writing Notion vault. Weekly synthesis → distillation → connections.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+    </div></div><!-- /rm-body atlas -->
+  </div><!-- /rm-section atlas -->
+
+  <!-- ══ ECHO ═══════════════════════════════════════════════ -->
+  <div class="rm-section" data-roadmap="echo">
+    <div class="rm-header" style="border-left: 3px solid #a78bfa;" onclick="toggleSection(this)">
+      <span class="rm-name">Echo</span>
+      <span class="rm-oneliner">Async human-review queue for all autonomous agent actions</span>
+      <span class="rm-toggle">▼</span>
+    </div>
+    <div class="rm-body"><div class="rm-body-inner">
+    <div class="rm-done-def echo-border">
+      CrewAI agents queue proposals through Echo instead of direct Telegram alerts. Boubacar batch-acks from one surface. 3+ distinct proposal kinds. ≥10 proposals/week. <strong>NOT commits — Gate already owns those.</strong>
+    </div>
+    <div class="rm-table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Milestone</th><th>Status</th><th>Blocked by</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr data-status="shipped"><td class="col-id">Substrate</td><td class="col-name">tasks table + coordination primitives</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-notes">claim/enqueue/proposal.propose/ack/reject live on orc-postgres</td></tr>
+          <tr data-status="shipped"><td class="col-id">M1</td><td class="col-name">/propose /ack /reject slash commands</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-notes">Infra shipped. Commit-proposal use case DESCOPED — Gate owns commits.</td></tr>
+          <tr data-status="deferred"><td class="col-id">M2</td><td class="col-name">Second proposal kind</td><td><span class="badge-pill b-descoped">DESCOPED</span></td><td class="col-blocker">—</td><td class="col-notes">Gate assumed wrong use case. Skipping directly to M3.</td></tr>
+          <tr data-status="active"><td class="col-id">M3</td><td class="col-name">Multi-agent ingestion</td><td><span class="badge-pill b-next">NEXT</span></td><td class="col-blocker">None — 2+ hours</td><td class="col-notes">Wire Griot/Hunter/Studio/Concierge → Echo queue. Unify approval_queue.py.</td></tr>
+          <tr data-status="shipped"><td class="col-id">M2.5</td><td class="col-name">Push Gate file-locking + conflict detection</td><td><span class="badge-pill b-shipped">LAYERS 1+3 SHIPPED</span></td><td class="col-blocker">Layer 2: on collision incident</td><td class="col-notes">gate_agent.py = Layer 3. CLAUDE.md file-lock = Layer 1.</td></tr>
+          <tr data-status="deferred"><td class="col-id">M4</td><td class="col-name">Auto-detection</td><td><span class="badge-pill b-deferred">DEFERRED</span></td><td class="col-blocker">—</td><td class="col-notes">Convention-driven /propose is right. Harness changes not available.</td></tr>
+          <tr data-status="deferred"><td class="col-id">M5</td><td class="col-name">Reversible redirection</td><td><span class="badge-pill b-deferred">DEFERRED</span></td><td class="col-blocker">3 rollback incidents needed</td><td class="col-notes">git stash/reset sufficient today.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+    </div></div><!-- /rm-body echo -->
+  </div><!-- /rm-section echo -->
+
+  <!-- ══ COMPASS ════════════════════════════════════════════ -->
+  <div class="rm-section" data-roadmap="compass">
+    <div class="rm-header" style="border-left: 3px solid var(--verdigris);" onclick="toggleSection(this)">
+      <span class="rm-name">Compass</span>
+      <span class="rm-oneliner">Governance model — where rules live, enforced, retire</span>
+      <span class="rm-toggle">▼</span>
+    </div>
+    <div class="rm-body"><div class="rm-body-inner">
+    <div class="rm-done-def compass-border">
+      Rules reachable &lt;30s. Every enforceable rule IS enforced by mechanism. New collaborator navigates from GOVERNANCE.md alone. Retirement automatic. <strong>Sankofa verdict: near-complete. One milestone remaining.</strong>
+    </div>
+    <div class="rm-table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Milestone</th><th>Status</th><th>Blocked by</th><th>Shipped</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr data-status="shipped"><td class="col-id">M0</td><td class="col-name">Governance scaffolding</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-02</td><td class="col-notes">GOVERNANCE.md 64-line routing table + folder-purpose hook.</td></tr>
+          <tr data-status="shipped"><td class="col-id">M1</td><td class="col-name">AGENTS.md compliance audit</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-02</td><td class="col-notes">100% folder coverage (was 32%). 17 AGENTS.md written.</td></tr>
+          <tr data-status="shipped"><td class="col-id">M2</td><td class="col-name">5 enforcement hooks</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-02</td><td class="col-notes">memory-frontmatter, session-log, redundancy, doc-size, retirement. 31 tests.</td></tr>
+          <tr data-status="shipped"><td class="col-id">M2.5</td><td class="col-name">Routing evaluator (gbrain)</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-09</td><td class="col-notes">check_routing_gaps.py. 11/70 skills (16%) have fixtures today.</td></tr>
+          <tr data-status="active"><td class="col-id">M2.5b</td><td class="col-name">Routing fixtures → 80% + strict mode</td><td><span class="badge-pill b-next">NEXT</span></td><td class="col-blocker">None — 1 session</td><td class="col-date">—</td><td class="col-notes">Add fixtures to 48 more skills → flip hook strict. Then Compass = DONE.</td></tr>
+          <tr data-status="shipped"><td class="col-id">M3</td><td class="col-name">Quarterly purge cadence</td><td><span class="badge-pill b-armed">ARMED</span></td><td class="col-blocker">—</td><td class="col-date">First run 2026-08-02</td><td class="col-notes">Cron set. Fires automatically. No action needed.</td></tr>
+          <tr data-status="shipped"><td class="col-id">M4</td><td class="col-name">LLM-readable governance manifest</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-02</td><td class="col-notes">governance.manifest.json + validator + 7 tests.</td></tr>
+          <tr data-status="shipped"><td class="col-id">M5</td><td class="col-name">output/ submodule reconciliation</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-02</td><td class="col-notes">gitmodules canonicalized. attire-inspo relocated.</td></tr>
+          <tr data-status="shipped"><td class="col-id">M6</td><td class="col-name">Security scan gate v1+v2+v3</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-04</td><td class="col-notes">7 patterns + fixtures. v3 = astroturfed repo detection.</td></tr>
+          <tr data-status="active"><td class="col-id">M6-audit</td><td class="col-name">Monthly config self-audit</td><td><span class="badge-pill b-queued">QUEUED</span></td><td class="col-blocker">—</td><td class="col-date">First run 2026-05-16</td><td class="col-notes">Check 3 (broad permissions) = FINDINGS ACCEPTED 2026-05-09.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+    </div></div><!-- /rm-body compass -->
+  </div><!-- /rm-section compass -->
+
+  <!-- ══ STUDIO ═════════════════════════════════════════════ -->
+  <div class="rm-section" data-roadmap="studio">
+    <div class="rm-header" style="border-left: 3px solid var(--brass);" onclick="toggleSection(this)">
+      <span class="rm-name">Studio</span>
+      <span class="rm-oneliner">Faceless content agency — branded channels on agentsHQ infra</span>
+      <span class="rm-toggle">▼</span>
+    </div>
+    <div class="rm-body"><div class="rm-body-inner">
+    <div class="rm-done-def studio-border">
+      G1 Engine ✅ · G2 Production ✅ · G3 Publishing 🟡 warm-up · G4 Revenue ❌ $0 · G5 Ops cost 🟡 build phase · G6 Channels ✅ 3 active. <strong>Blocker: 30-day warm-up window → monetization eligibility.</strong>
+    </div>
+    <div class="rm-table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Milestone</th><th>Status</th><th>Blocked by</th><th>Shipped</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr data-status="shipped"><td class="col-id">M1</td><td class="col-name">Engine + 3-channel batch</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-04-25</td><td class="col-notes">Trend Scout + Pipeline DB + QA Crew. UTB/AIC/1stGen briefs.</td></tr>
+          <tr data-status="shipped"><td class="col-id">M2</td><td class="col-name">Brand Identity (all 3 channels)</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-03</td><td class="col-notes">Brand bibles + DESIGN.md palettes locked. Phase 3b wired.</td></tr>
+          <tr data-status="shipped"><td class="col-id">M3</td><td class="col-name">Content Production Pipeline</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-05</td><td class="col-notes">Script→voice→visuals→ffmpeg→Drive. Shorts-first. 11 QA checks.</td></tr>
+          <tr data-status="shipped"><td class="col-id">M3.4</td><td class="col-name">Scene Motion Upgrade (Mixed Video)</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-10</td><td class="col-notes">Hook+Climax → Kai Seedance. Body scenes → Ken Burns.</td></tr>
+          <tr data-status="blocked"><td class="col-id">M3.5</td><td class="col-name">Channel Cloner Pipeline</td><td><span class="badge-pill b-queued">QUEUED</span></td><td class="col-blocker">M3 working video confirmed</td><td class="col-date">12-15h</td><td class="col-notes">Reference channels → style profile → scripts in that voice.</td></tr>
+          <tr data-status="active"><td class="col-id">M3.6</td><td class="col-name">Content Intelligence Layer (dossiers)</td><td><span class="badge-pill b-live">STUB LIVE</span></td><td class="col-blocker">M5 analytics ROI</td><td class="col-date">—</td><td class="col-notes">Dossiers injecting. No automated refresh yet.</td></tr>
+          <tr data-status="shipped"><td class="col-id">M3.7</td><td class="col-name">Content Multiplier + Remix QA</td><td><span class="badge-pill b-shipped">SHIPPED iter 4</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-07</td><td class="col-notes">9 pieces/source, 3-verdict QA, Telegram callbacks wired.</td></tr>
+          <tr data-status="active"><td class="col-id">M4</td><td class="col-name">Multi-Channel Publish Pipeline</td><td><span class="badge-pill b-progress">IN PROGRESS</span></td><td class="col-blocker">30-day platform warm-up</td><td class="col-date">First post 2026-05-10</td><td class="col-notes">All account IDs wired. First TikTok @underthebaobab_ live.</td></tr>
+          <tr data-status="blocked"><td class="col-id">M5</td><td class="col-name">Performance Tracking + Analytics</td><td><span class="badge-pill b-queued">QUEUED</span></td><td class="col-blocker">10+ published assets/channel</td><td class="col-date">—</td><td class="col-notes">M5-lite (TikTok scraper) already running. Full OAuth path post-30 days.</td></tr>
+          <tr data-status="blocked"><td class="col-id">M6</td><td class="col-name">Monetization Wiring</td><td><span class="badge-pill b-gated">TRIGGER-GATED</span></td><td class="col-blocker">Platform eligibility thresholds</td><td class="col-date">—</td><td class="col-notes">YT: 1k subs + 4k watch hrs. TikTok + Meta have own gates.</td></tr>
+          <tr data-status="blocked"><td class="col-id">M7</td><td class="col-name">Channel 3 (Wealth Atlas / trend pick)</td><td><span class="badge-pill b-gated">TRIGGER-GATED</span></td><td class="col-blocker">M6 on one channel + 30d stable</td><td class="col-date">—</td><td class="col-notes">Engine exists. Brand + niche tuning only. ~50% of M2-M6 effort.</td></tr>
+          <tr data-status="blocked"><td class="col-id">M8</td><td class="col-name">Channel 4 + Operations Layer</td><td><span class="badge-pill b-gated">TRIGGER-GATED</span></td><td class="col-blocker">M7 stable 60 days</td><td class="col-date">—</td><td class="col-notes">Studio Logs + weekly auto-brief + channel-kill/spawn protocols.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+    </div></div><!-- /rm-body studio -->
+  </div><!-- /rm-section studio -->
+
+  <!-- ══ HARVEST ════════════════════════════════════════════ -->
+  <div class="rm-section" data-roadmap="harvest">
+    <div class="rm-header" style="border-left: 3px solid var(--rose);" onclick="toggleSection(this)">
+      <span class="rm-name">Harvest</span>
+      <span class="rm-oneliner">Catalyst Works revenue pipeline — $0 → first 3 paid contracts</span>
+      <span class="rm-toggle">▼</span>
+    </div>
+    <div class="rm-body"><div class="rm-body-inner">
+    <div class="rm-done-def harvest-border">
+      First 3 paid contracts closed (any SW + CW mix) AND pipeline producing ≥5 qualified leads/week autonomously. <strong>Current: $0. Rod first touch sent 2026-05-07. Hold ends 2026-05-14.</strong>
+    </div>
+    <div class="rm-table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Milestone</th><th>Status</th><th>Blocked by</th><th>Shipped</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr data-status="active"><td class="col-id">R1</td><td class="col-name">First Signal Works contract</td><td><span class="badge-pill b-warning">IN PROGRESS</span></td><td class="col-blocker">Rod reply (hold ends 05-14)</td><td class="col-date">—</td><td class="col-notes">First touch sent 2026-05-07. One bump allowed 05-14, then drop.</td></tr>
+          <tr data-status="active"><td class="col-id">R1a</td><td class="col-name">Score-report conversion methodology</td><td><span class="badge-pill b-progress">IN FLIGHT</span></td><td class="col-blocker">—</td><td class="col-date">—</td><td class="col-notes">8-step playbook + hook-and-deliverable architecture locked.</td></tr>
+          <tr data-status="shipped"><td class="col-id">R1c</td><td class="col-name">website-teardown skill</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-04</td><td class="col-notes">6-phase thin orchestrator. Internal + client reports.</td></tr>
+          <tr data-status="shipped"><td class="col-id">R1d</td><td class="col-name">catalystworks.consulting self-teardown</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-01</td><td class="col-notes">Verdict: ITERATE. 9 patches queued on dev branch.</td></tr>
+          <tr data-status="active"><td class="col-id">R1e</td><td class="col-name">catalystworks.consulting v3-WOW</td><td><span class="badge-pill b-progress">TIER 1 LIVE</span></td><td class="col-blocker">Tier 2 due 2026-05-15</td><td class="col-date">—</td><td class="col-notes">Three.js hero + Constraints AI demo + Calendly CTA live.</td></tr>
+          <tr data-status="shipped"><td class="col-id">R1f</td><td class="col-name">frontend-design art direction lift</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-04</td><td class="col-notes">6-field Kie prompt template + design-audit.md 80+ checks.</td></tr>
+          <tr data-status="shipped"><td class="col-id">R1g</td><td class="col-name">Enrichment pipeline + harvest-until-50</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-07</td><td class="col-notes">Hunter wired. Apollo two-step fixed. 50 leads/day. 2,545 in DB.</td></tr>
+          <tr data-status="shipped"><td class="col-id">R2</td><td class="col-name">SaaS Audit offer ($500 flat)</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-04</td><td class="col-notes">PDF + Drive link + SW T5 sequence Day 17.</td></tr>
+          <tr data-status="blocked"><td class="col-id">R3</td><td class="col-name">First CW Signal Session ($497)</td><td><span class="badge-pill b-gated">GATED</span></td><td class="col-blocker">R1 closes OR LinkedIn converts</td><td class="col-date">—</td><td class="col-notes">Discovery Call OS v2.0 ready. Needs social proof.</td></tr>
+          <tr data-status="blocked"><td class="col-id">R4</td><td class="col-name">"We are your AI department" SKU</td><td><span class="badge-pill b-queued">CONCEPT</span></td><td class="col-blocker">R1 + R3 both close</td><td class="col-date">—</td><td class="col-notes">$997/mo. One offer page. Zero new infra.</td></tr>
+          <tr data-status="blocked"><td class="col-id">R5</td><td class="col-name">Client portal (Atlas white-label)</td><td><span class="badge-pill b-queued">PARKED</span></td><td class="col-blocker">First client requests it</td><td class="col-date">—</td><td class="col-notes">Try weekly email report first. Build portal only if asked.</td></tr>
+          <tr data-status="blocked"><td class="col-id">R6</td><td class="col-name">Repeatable lead source identified</td><td><span class="badge-pill b-queued">NOT MEASURABLE</span></td><td class="col-blocker">100+ contacts + 30 days data</td><td class="col-date">—</td><td class="col-notes">Which source → lowest cost-per-conversation.</td></tr>
+          <tr data-status="active"><td class="col-id">R7</td><td class="col-name">transcript-style-dna lift test verdict</td><td><span class="badge-pill b-progress">ACTIVE</span></td><td class="col-blocker">—</td><td class="col-date">Eval 2026-06-01</td><td class="col-notes">⏰ KEEP if ≥+20% reply lift. DELETE if not. No extensions.</td></tr>
+          <tr data-status="blocked"><td class="col-id">R-auto</td><td class="col-name">CW AI automation delivery</td><td><span class="badge-pill b-queued">QUEUED</span></td><td class="col-blocker">R1 closes OR inbound inquiry</td><td class="col-date">Skill target 2026-05-18</td><td class="col-notes">$3K-$5K/build. n8n-mcp installed.</td></tr>
+          <tr data-status="active"><td class="col-id">R-news</td><td class="col-name">The Weekly Signal newsletter</td><td><span class="badge-pill b-live">LIVE</span></td><td class="col-blocker">—</td><td class="col-date">Issue 3: 2026-05-07</td><td class="col-notes">Listmonk self-hosted. Growth → Substack mirror at 500 subs.</td></tr>
+          <tr data-status="shipped"><td class="col-id">R-sever</td><td class="col-name">Notion CRM sever</td><td><span class="badge-pill b-shipped">SHIPPED</span></td><td class="col-blocker">—</td><td class="col-date">2026-05-07</td><td class="col-notes">Sync code deleted. Supabase = sole SOR. Parity audit clean.</td></tr>
+          <tr data-status="blocked"><td class="col-id">R-brand</td><td class="col-name">Brand guide audit + rebuild</td><td><span class="badge-pill b-queued">QUEUED</span></td><td class="col-blocker">—</td><td class="col-date">Target 2026-06-17</td><td class="col-notes">CW/SW/Studio/humanatwork.ai consistency audit. Week 7.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div></div><!-- /rm-body harvest -->
+  </div><!-- /rm-section harvest -->
+
+</div><!-- #roadmap-page -->
+
+<script>
+// ── Toggle section open/closed ──────────────────────────────
+function toggleSection(header) {
+  const section = header.closest('.rm-section');
+  section.classList.toggle('collapsed');
+}
+
+// ── Filter by roadmap (click summary card) ─────────────────
+let activeRoadmap = null;
+function filterRoadmap(name) {
+  const sections = document.querySelectorAll('.rm-section');
+  const cards = document.querySelectorAll('.sum-card');
+
+  if (activeRoadmap === name) {
+    // Toggle off — show all
+    activeRoadmap = null;
+    sections.forEach(s => s.style.display = '');
+    cards.forEach(c => c.classList.remove('active-filter'));
+  } else {
+    activeRoadmap = name;
+    sections.forEach(s => {
+      s.style.display = s.dataset.roadmap === name ? '' : 'none';
+    });
+    cards.forEach(c => {
+      c.classList.toggle('active-filter', c.dataset.rm === name);
+    });
+  }
+}
+
+// ── Filter by status ────────────────────────────────────────
+function filterStatus(type, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const rows = document.querySelectorAll('tbody tr');
+  rows.forEach(row => {
+    const s = row.dataset.status || '';
+    if (type === 'all') {
+      row.style.display = '';
+    } else if (type === 'active') {
+      row.style.display = (s === 'active') ? '' : 'none';
+    } else if (type === 'shipped') {
+      row.style.display = (s === 'shipped') ? '' : 'none';
+    } else if (type === 'blocked') {
+      row.style.display = (s === 'blocked') ? '' : 'none';
+    } else if (type === 'deferred') {
+      row.style.display = (s === 'deferred') ? '' : 'none';
+    }
+  });
+}
+</script>
+</body>
+</html>
