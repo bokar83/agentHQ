@@ -4,6 +4,27 @@ import subprocess
 import tempfile
 import shutil
 
+def _fix_html(html: str) -> str:
+    """Post-process LLM HTML to fix common HyperFrames lint errors."""
+    # Ensure data-start="0" on root composition element
+    html = re.sub(
+        r'(data-composition-id="main"(?![^>]*data-start))',
+        r'\1 data-start="0"',
+        html
+    )
+    # Inject window.__timelines if missing
+    if "window.__timelines" not in html:
+        inject = (
+            '\n<script>\n'
+            '  window.__timelines = window.__timelines || {};\n'
+            '  const tl = gsap.timeline({ paused: true });\n'
+            '  window.__timelines["main"] = tl;\n'
+            '</script>'
+        )
+        html = html.replace("</body>", inject + "\n</body>")
+    return html
+
+
 ASPECT_DIMS = {
     "9:16": (1080, 1920),
     "1:1":  (1080, 1080),
@@ -73,6 +94,7 @@ class HyperframeBriefGenerator:
         html = response.choices[0].message.content or ""
         html = html.strip()
         html = re.sub(r"^```[a-zA-Z]*\n?", "", html).rstrip("`").strip()
+        html = _fix_html(html)
         return html
 
     def render_to_mp4(self, post_text: str, aspect_ratio: str, output_path: str) -> str:

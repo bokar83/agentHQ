@@ -89,17 +89,19 @@ class HyperframeBoostAgent:
         return _filter_candidates(parsed)
 
     def _send_telegram_menu(self, candidates: list[dict]) -> None:
-        from orchestrator.notifier import send_message
-        lines = ["HyperFrame candidates ready:\n"]
+        from orchestrator.notifier import send_message_with_buttons
+        lines = ["🎬 HyperFrame Boost — pick posts to convert:\n"]
         for i, c in enumerate(candidates, 1):
             score_100 = round(c['total_score'] * 2)
             lines.append(f"{i}. [{score_100}/100] {c['text_preview'][:60]}...")
-        lines.append("\nReply: 1, 2, 3, 1,3, all, or skip")
         msg = "\n".join(lines)
-        # Telegram hard limit is 4096 chars — truncate safely
-        if len(msg) > 4000:
-            msg = msg[:4000] + "\n...(truncated)\nReply: 1, 2, 3, 1,3, all, or skip"
-        send_message(TELEGRAM_CHAT_ID, msg)
+        if len(msg) > 3800:
+            msg = msg[:3800] + "..."
+        # Inline keyboard: numbered buttons + ALL + SKIP
+        num_buttons = [{"text": str(i), "callback_data": str(i)} for i in range(1, len(candidates) + 1)]
+        action_buttons = [{"text": "ALL", "callback_data": "all"}, {"text": "SKIP", "callback_data": "skip"}]
+        buttons = [num_buttons, action_buttons]
+        send_message_with_buttons(TELEGRAM_CHAT_ID, msg, buttons)
 
     def _get_latest_update_id(self) -> int:
         """Fetch current highest update_id so polling ignores pre-existing messages."""
@@ -117,7 +119,7 @@ class HyperframeBoostAgent:
             return 0
 
     def _poll_telegram_reply(self, count: int, timeout_hours: int = 24) -> list[int]:
-        """Poll Telegram getUpdates for reply. Returns approved indices or [] on timeout/skip."""
+        """Poll for button callback_query OR text reply. Returns approved indices or [] on timeout/skip."""
         if not _BOT_TOKEN:
             logger.warning("No bot token — cannot poll Telegram. Auto-skipping.")
             return []
@@ -128,12 +130,28 @@ class HyperframeBoostAgent:
             try:
                 resp = requests.get(
                     f"{api_base}/getUpdates",
-                    params={"offset": offset, "timeout": 30, "allowed_updates": ["message"]},
+                    params={"offset": offset, "timeout": 30, "allowed_updates": ["message", "callback_query"]},
                     timeout=35,
                 )
                 data = resp.json()
                 for update in data.get("result", []):
                     offset = update["update_id"] + 1
+                    # Handle button tap (callback_query)
+                    if "callback_query" in update:
+                        cb = update["callback_query"]
+                        cb_chat = str(cb.get("message", {}).get("chat", {}).get("id", ""))
+                        if cb_chat != str(TELEGRAM_CHAT_ID):
+                            continue
+                        # Acknowledge the callback
+                        try:
+                            requests.post(
+                                f"{api_base}/answerCallbackQuery",
+                                json={"callback_query_id": cb["id"], "text": "Got it ✓"},
+                                timeout=5,
+                            )
+                        except Exception:
+                            pass
+                        return _parse_reply(cb["data"], count)
                     msg = update.get("message", {})
                     chat_id = str(msg.get("chat", {}).get("id", ""))
                     if chat_id != str(TELEGRAM_CHAT_ID):
