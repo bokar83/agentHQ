@@ -132,3 +132,31 @@ def test_parse_telegram_reply_out_of_range():
 
     result = _parse_reply("5", 3)
     assert result == []
+
+
+def test_query_candidates_returns_top3():
+    from orchestrator.hyperframe_boost_agent import HyperframeBoostAgent
+    import unittest.mock as mock
+
+    fake_pages = [
+        {
+            "id": f"page-{i}",
+            "properties": {
+                "total_score": {"number": 90 - i},
+                "Draft": {"rich_text": [{"plain_text": f"Post text {i} " * 30}]},
+                "Status": {"select": {"name": "Draft"}},
+                "Platform": {"multi_select": [{"name": "linkedin"}, {"name": "x"}]},
+                "Scheduled Date": {"date": {"start": "2026-05-12"}},
+                "hyperframe_twin_id": {"relation": []},
+            }
+        }
+        for i in range(5)
+    ]
+
+    agent = HyperframeBoostAgent.__new__(HyperframeBoostAgent)
+
+    with mock.patch.object(agent, '_notion_query', return_value=fake_pages):
+        candidates = agent._query_candidates()
+
+    assert len(candidates) == 3
+    assert candidates[0]["total_score"] >= candidates[1]["total_score"]
