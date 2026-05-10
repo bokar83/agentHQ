@@ -115,7 +115,7 @@ def group_by_signature(lines: list[str]) -> list[dict]:
     return groups
 
 
-_HAIKU_MODEL = "claude-haiku-4-5-20251001"
+_HAIKU_MODEL = "anthropic/claude-haiku-4-5-20251001"
 _PROPOSE_PROMPT = """\
 You are an ops engineer triaging a production error. Given this error signature and sample lines, return ONLY valid JSON with exactly these keys:
 - "summary": one sentence describing the error (max 80 chars)
@@ -143,15 +143,19 @@ def propose_fix(group: dict) -> dict:
         samples="\n".join(group["samples"])[:500],
     )
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    api_key = os.environ.get("OPENROUTER_API_KEY", "")
     if not api_key:
-        logger.error("concierge_crew: ANTHROPIC_API_KEY not set, skipping propose_fix")
+        logger.error("concierge_crew: OPENROUTER_API_KEY not set, skipping propose_fix")
         return {
             "summary": group["signature"][:80],
             "severity": "med",
             "triage_note": "Investigate logs manually.",
         }
-    client = anthropic.Anthropic(api_key=api_key)
+    client = anthropic.Anthropic(
+        api_key=api_key,
+        base_url="https://openrouter.ai/api/v1",
+        default_headers={"HTTP-Referer": "https://agentshq.io"},
+    )
     try:
         response = client.messages.create(
             model=_HAIKU_MODEL,

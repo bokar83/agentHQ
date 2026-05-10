@@ -20,7 +20,7 @@ import anthropic
 
 logger = logging.getLogger("agentsHQ.research_engine")
 
-MODEL = "claude-sonnet-4-5-20250929"
+MODEL = "anthropic/claude-sonnet-4-5-20250929"
 MAX_TURNS = 20
 
 
@@ -139,12 +139,16 @@ def run_research(
             "error": Optional[str],
         }
     """
-    anthropic_api_key = anthropic_api_key or os.environ.get("ANTHROPIC_API_KEY")
+    anthropic_api_key = anthropic_api_key or os.environ.get("OPENROUTER_API_KEY")
     firecrawl_api_key = firecrawl_api_key or os.environ.get("FIRECRAWL_API_KEY")
     if not anthropic_api_key:
-        return {"success": False, "answer": "", "tool_calls": 0, "turns": 0, "error": "ANTHROPIC_API_KEY missing"}
+        return {"success": False, "answer": "", "tool_calls": 0, "turns": 0, "error": "OPENROUTER_API_KEY missing"}
 
-    client = anthropic.Anthropic(api_key=anthropic_api_key)
+    client = anthropic.Anthropic(
+        api_key=anthropic_api_key,
+        base_url="https://openrouter.ai/api/v1",
+        default_headers={"HTTP-Referer": "https://agentshq.io"},
+    )
 
     sys_text = system_prompt or (
         "You are agentsHQ's research engine. Answer the user's request by searching "

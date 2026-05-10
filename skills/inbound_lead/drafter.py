@@ -20,7 +20,7 @@ from skills.inbound_lead.schema import DraftedEmail, ResearchBrief
 
 logger = logging.getLogger("agentsHQ.inbound_lead.drafter")
 
-MODEL = "claude-sonnet-4-5-20250929"
+MODEL = "anthropic/claude-sonnet-4-5-20250929"
 
 BLOCKED_FRAMEWORKS = [
     "theory of constraints", "toc",
@@ -164,11 +164,15 @@ def _generate_draft(
     """Call Anthropic directly. Isolated so tests can mock it."""
     import anthropic
 
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
-        raise RuntimeError("ANTHROPIC_API_KEY not set; cannot draft email.")
+        raise RuntimeError("OPENROUTER_API_KEY not set; cannot draft email.")
 
-    client = anthropic.Anthropic(api_key=api_key)
+    client = anthropic.Anthropic(
+        api_key=api_key,
+        base_url="https://openrouter.ai/api/v1",
+        default_headers={"HTTP-Referer": "https://agentshq.io"},
+    )
     prompt = _build_drafter_prompt(name, brief, meeting_time, correction_hint)
 
     response = client.messages.create(
