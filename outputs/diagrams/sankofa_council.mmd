@@ -1,0 +1,30 @@
+
+flowchart TD
+    Task[Consulting Deliverable] --> Start[Sankofa Council Activated]
+    
+    Start --> V1[The Contrarian\ndeepseek-r1]
+    Start --> V2[First Principles Thinker\nclaude-sonnet-4.6]
+    Start --> V3[The Expansionist\ngrok-4]
+    Start --> V4[The Outsider\ngemini-2.5-flash]
+    Start --> V5[The Executor\nmistral-large-2512]
+    
+    V1 --> PeerReview[Anonymous Peer Review]
+    V2 --> PeerReview
+    V3 --> PeerReview
+    V4 --> PeerReview
+    V5 --> PeerReview
+    
+    PeerReview --> Scoring{Convergence\nScoring}
+    
+    Scoring -- "< 90% and < 3 Rounds" --> Feedback[Distribute Feedback]
+    Feedback --> V1
+    Feedback --> V2
+    Feedback --> V3
+    Feedback --> V4
+    Feedback --> V5
+    
+    Scoring -- ">= 90% or 3 Rounds" --> Synthesize[Chairman Synthesis\nclaude-opus-4.6]
+    
+    Synthesize --> Log[Save Run Log\noutputs/council/]
+    Synthesize --> HTML[Generate Client Report\noutputs/council/]
+    Synthesize --> SQL[(Save to PostgreSQL\ncouncil_runs)]
