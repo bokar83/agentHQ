@@ -1226,6 +1226,174 @@ def _cmd_query(text: str, chat_id: str) -> bool:
 
 
 # ══════════════════════════════════════════════════════════════
+# Echo M1: commit proposal commands (/propose, /ack, /reject)
+# ══════════════════════════════════════════════════════════════
+
+def _cmd_echo_propose(text: str, chat_id: str) -> bool:
+    """
+    /propose [description]  — snapshot working tree as an async commit proposal.
+
+    Queues a row in tasks (kind=commit-proposal), fires a Telegram card to
+    Boubacar, and returns immediately. Agent does NOT block for approval.
+    """
+    if not text.lower().startswith("/propose"):
+        return False
+    from notifier import send_message as _send
+    parts = text.strip().split(maxsplit=1)
+    extra = parts[1].strip() if len(parts) > 1 else None
+    try:
+        import sys as _sys
+        import pathlib as _pl
+        _sys.path.insert(0, str(_pl.Path(__file__).parent.parent))
+        from skills.coordination import proposal as _prop
+        result = _prop.propose(test_cmd=None, extra_message=extra)
+        lines = [
+            f"Proposal `{result['short_id']}` queued.",
+            f"Branch: {result['branch']}  |  tests: {result['tests_status']}  |  files: {len(result['files'])}",
+            f"Suggested: {result['suggested_message'].splitlines()[0]}",
+            f"Use `/ack {result['short_id']}` to approve or `/reject {result['short_id']}` to discard.",
+        ]
+        _send(chat_id, "\n".join(lines))
+    except Exception as e:
+        logger.error(f"/propose error: {e}", exc_info=True)
+        _send(chat_id, f"Propose failed: {e}")
+    return True
+
+
+def _cmd_echo_ack(text: str, chat_id: str) -> bool:
+    """
+    /ack <proposal_id>  — approve a queued Echo commit proposal.
+
+    Stages the proposal's files and creates the commit with the suggested
+    message. The proposal_id can be the full UUID or the 8-char prefix shown
+    in the Telegram card.
+    """
+    if not text.lower().startswith("/ack"):
+        return False
+    from notifier import send_message as _send
+    parts = text.strip().split(maxsplit=1)
+    if len(parts) < 2 or not parts[1].strip():
+        _send(chat_id, "Usage: /ack <proposal_id>\nRun /list-proposals to see queued ids.")
+        return True
+    proposal_id = parts[1].strip()
+    try:
+        import sys as _sys
+        import pathlib as _pl
+        _sys.path.insert(0, str(_pl.Path(__file__).parent.parent))
+        from skills.coordination import proposal as _prop
+        result = _prop.ack(proposal_id)
+        if result.get("ok"):
+            sha = (result.get("commit_sha") or "?")[:8]
+            msg_head = result.get("message", "").splitlines()[0]
+            files_n = len(result.get("files", []))
+            _send(chat_id, f"Acked `{proposal_id[:8]}` -> commit `{sha}`\n{msg_head}\n({files_n} files)")
+        else:
+            _send(chat_id, f"Ack failed: {result.get('error')}")
+    except Exception as e:
+        logger.error(f"/ack error: {e}", exc_info=True)
+        _send(chat_id, f"Ack failed: {e}")
+    return True
+
+
+def _cmd_echo_reject(text: str, chat_id: str) -> bool:
+    """
+    /reject <id> [reason|tag] [note]  — unified reject handler.
+
+    Routes by ID type:
+    - hex string (UUID prefix) -> Echo commit proposal reject
+    - integer                  -> approval_queue reject (Phase 1)
+
+    This single handler replaces the separate _cmd_reject so both paths share
+    the same /reject prefix without dispatcher order ambiguity.
+    """
+    if not text.lower().startswith("/reject"):
+        return False
+    from notifier import send_message as _send
+    parts = text.strip().split(maxsplit=3)
+    if len(parts) < 2 or not parts[1].strip():
+        _send(chat_id, "Usage: /reject <proposal_id|queue_id> [reason]\nProposal id: hex prefix from /list-proposals\nQueue id: integer from /queue")
+        return True
+
+    raw_id = parts[1].strip()
+
+    # Integer -> approval_queue reject
+    if raw_id.isdigit():
+        from approval_queue import reject as _aq_reject, KNOWN_FEEDBACK_TAGS
+        try:
+            qid = int(raw_id)
+        except ValueError:
+            _send(chat_id, f"Invalid queue id: {raw_id}")
+            return True
+        tag = None
+        note = None
+        if len(parts) > 2:
+            if parts[2].lower() in KNOWN_FEEDBACK_TAGS:
+                tag = parts[2].lower()
+                note = parts[3] if len(parts) > 3 else None
+            else:
+                note = " ".join(parts[2:])
+        row = _aq_reject(qid, note=note, feedback_tag=tag)
+        if row is None:
+            _send(chat_id, f"Queue #{qid}: not found or already decided.")
+        else:
+            _send(chat_id, f"Queue #{qid}: rejected. Tag: {tag or 'none'}")
+        return True
+
+    # Hex prefix -> Echo commit proposal reject
+    reason = " ".join(parts[2:]).strip() if len(parts) > 2 else None
+    try:
+        import sys as _sys
+        import pathlib as _pl
+        _sys.path.insert(0, str(_pl.Path(__file__).parent.parent))
+        from skills.coordination import proposal as _prop
+        result = _prop.reject(raw_id, reason=reason)
+        if result.get("ok"):
+            note_str = f" ({reason})" if reason else ""
+            _send(chat_id, f"Rejected `{result['id'][:8]}`{note_str}")
+        else:
+            _send(chat_id, f"Reject failed: {result.get('error')}")
+    except Exception as e:
+        logger.error(f"/reject (echo) error: {e}", exc_info=True)
+        _send(chat_id, f"Reject failed: {e}")
+    return True
+
+
+def _cmd_echo_list_proposals(text: str, chat_id: str) -> bool:
+    """
+    /list-proposals  — show all queued Echo commit proposals.
+    """
+    if text.lower().strip() not in ("/list-proposals", "/list_proposals"):
+        return False
+    from notifier import send_message as _send
+    try:
+        import sys as _sys
+        import pathlib as _pl
+        from datetime import datetime, timezone
+        _sys.path.insert(0, str(_pl.Path(__file__).parent.parent))
+        from skills.coordination import proposal as _prop
+        rows = _prop.list_pending(limit=10)
+        if not rows:
+            _send(chat_id, "No queued proposals.")
+            return True
+        now = datetime.now(timezone.utc)
+        lines = [f"Queued proposals ({len(rows)}):"]
+        for r in rows:
+            pid = r["id"][:8]
+            p = r["payload"]
+            age_min = int((now - r["created_at"]).total_seconds() / 60)
+            head = p.get("suggested_message", "").splitlines()[0][:60]
+            lines.append(
+                f"  {pid}  {p.get('branch', '?'):<28}  tests={p.get('tests_status', '?')}  "
+                f"files={len(p.get('files', []))}  {age_min}m  {head}"
+            )
+        _send(chat_id, "\n".join(lines))
+    except Exception as e:
+        logger.error(f"/list-proposals error: {e}", exc_info=True)
+        _send(chat_id, f"Could not load proposals: {e}")
+    return True
+
+
+# ══════════════════════════════════════════════════════════════
 # Dispatcher (order matters: longest prefix first to avoid collisions)
 # ══════════════════════════════════════════════════════════════
 
@@ -1297,8 +1465,8 @@ def _cmd_callsheet(text: str, chat_id: str) -> bool:
 # unique prefixes so order within the Phase 0 group does not matter. /status
 # has a guard against /status_foo inside its own handler.
 _COMMANDS = [
-    _cmd_gate_approve,  # must come before _cmd_approve (longer prefix)
-    _cmd_gate_reject,   # must come before _cmd_reject (longer prefix)
+    _cmd_gate_approve,       # must come before _cmd_approve (longer prefix)
+    _cmd_gate_reject,        # must come before _cmd_echo_reject and _cmd_reject (longer prefix)
     _cmd_dream,
     _cmd_task_add,
     _cmd_heartbeat_status,
@@ -1309,7 +1477,6 @@ _COMMANDS = [
     _cmd_resume_autonomy,
     _cmd_queue,
     _cmd_approve,
-    _cmd_reject,
     _cmd_outcomes,
     _cmd_callsheet,
     _cmd_remember,
@@ -1324,6 +1491,11 @@ _COMMANDS = [
     _cmd_projects,
     _cmd_cost,
     _cmd_switch,
+    # Echo M1: commit-proposal commands (must come after /gate-reject)
+    _cmd_echo_list_proposals,  # /list-proposals — no prefix collision risk
+    _cmd_echo_propose,         # /propose
+    _cmd_echo_ack,             # /ack
+    _cmd_echo_reject,          # /reject — unified: hex=Echo proposal, int=approval_queue
 ]
 
 
