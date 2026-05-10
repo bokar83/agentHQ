@@ -359,22 +359,47 @@ Recommendation: PROCEED | PROCEED-WITH-CAUTION | HALT
 Override (SUSPICIOUS only): [ ] Boubacar annotated: "<reason>" on <date>
 ```
 
-### Coverage check (runs after dossier, before Phase 3)
+### Coverage check + Connection map (runs after dossier, before Phase 3)
 
 **Hard rule: grep our stack before any council work.**
 
-Extract 2-3 core capability keywords from the dossier. Then grep all four:
+Extract 2-5 core capability keywords from the dossier. Grep all five sources:
 
 1. `docs/AGENT_SOP.md`
 2. `CLAUDE.md`
 3. `docs/SKILLS_INDEX.md`
 4. `skills/<closest-match>/SKILL.md`
+5. `C:\Users\HUAWEI\.claude\projects\d--Ai-Sandbox-agentsHQ\memory\MEMORY.md` (prior decisions, project state)
 
-If matches found that cover the artifact's core capability: **stop**. Surface the matching file + line number. Verdict is ARCHIVE-AND-NOTE immediately. Do not continue to Phase 3 or Phase 4.
+**Three possible outcomes — map EVERY capability, not just the primary one:**
 
-If no coverage found: continue to Phase 3.
+**Full overlap** — artifact's core capability is entirely covered verbatim. Verdict is ARCHIVE-AND-NOTE immediately. Do not continue to Phase 3 or Phase 4. Surface the matching file + line number.
+
+**Partial overlap (most common)** — some capabilities already exist, others don't. This is the connection-finding case. Do NOT stop. Instead, build a Connection Map:
+
+```text
+CONNECTION MAP : <artifact name>
+=================================
+Already have:
+  - <capability A> → covered by skills/<X> (file:line)
+  - <capability B> → covered by orchestrator/<Y> (file:line)
+
+We DON'T have (absorption candidates):
+  - <capability C> → no coverage found. Enhancement target: skills/<Z>
+  - <capability D> → no coverage found. Could strengthen: <producing motion>
+
+Cross-skill opportunity:
+  - <artifact> + skills/<X> + skills/<Y> → combined they unlock <outcome not possible alone>
+  (only include if a genuine compound capability exists — don't invent connections)
+```
+
+The absorption candidates column drives Phase 3. Only the uncovered capabilities need placement. The connection map is included in the Phase 5 verdict output.
+
+**No overlap** — nothing in our stack touches these capabilities. Continue to Phase 3 with full artifact scope.
 
 **Why this rule exists:** 2026-05-03: absorbed `forrestchang/andrej-karpathy-skills`, ran full Sankofa council, council argued persuasively to PROCEED. But AGENT_SOP.md line 65-70 already had all 4 Karpathy principles verbatim. Council was run on a duplicate. Full council review wasted on noise that a 10-second grep would have caught.
+
+**Why connection-finding matters:** Artifacts often contain 3-5 distinct ideas. One may duplicate what we have. Two others may enhance different skills. One may combine with existing tools to unlock something entirely new. The old "full overlap → stop" rule discarded those compound opportunities. The Connection Map ensures we capture B, C, and W even when A was already home.
 
 ## Phase 3: Placement proposal
 
@@ -448,29 +473,56 @@ The Karpathy skill returns four principle verdicts (PASS/FAIL/WARN). A single FA
 
 ### Output format (single chat message)
 
-```text
-ABSORB VERDICT : <artifact name>
-================================
-<PROCEED | DON'T PROCEED | ARCHIVE-AND-NOTE>
+Render as clean markdown — no raw text blocks, no JSON leak, no code fences around the verdict. Use headers, bold labels, and bullet lists so it reads naturally in the Claude Code terminal and in Telegram.
 
-Leverage: <producing-motion | founder-time-reduction | continuous-improvement | none>
-Motion / target: <SW website builds | CW PDFs | lead-gen | content board | Atlas | Studio | skills/X enhancement | etc.>
+---
 
-Why (3 lines max):
-- <reason 1>
-- <reason 2>
-- <reason 3>
+## Absorb Verdict — `<artifact name>`
 
-Placement: <enhance skills/X | extend skills/X | new skill skills/Y | new tool | new agent | satellite repo | archive>
-Runner-up: <other option>. Rejected because <one line>.
+**Decision:** PROCEED | DON'T PROCEED | ARCHIVE-AND-NOTE
 
-Next action: <one specific concrete next step>
-Target date: <YYYY-MM-DD on PROCEED; "n/a" on ARCHIVE-AND-NOTE or DON'T PROCEED>
-```
+**Leverage:** producing-motion | founder-time-reduction | continuous-improvement | none  
+**Target:** `<named producing motion or skill being strengthened>`
 
-**Target date rule:** On PROCEED, a real YYYY-MM-DD target date is required (matches the follow-up entry). On ARCHIVE-AND-NOTE or DON'T PROCEED, the field still appears with value `n/a` to keep the verdict block schema-stable for the verification harness.
+**Why this verdict (3 lines max):**
+- `<reason 1>`
+- `<reason 2>`
+- `<reason 3>`
 
-Below that, four collapsed `<details>` sections: **What it is** (Phase 2 dossier), **Sankofa Council** (five voices + chairman + the v1 disclaimer), **Karpathy audit** (four principle verdicts), **Placement reasoning** (why chosen home wins, why runner-up loses).
+**What we're absorbing (from Connection Map):**
+- Already have: `<capability A>` → covered by `skills/<X>`, skipping
+- Absorbing: `<capability C>` → enhancing `skills/<Z>`
+- Absorbing: `<capability D>` → strengthening `<motion>`
+- Cross-skill unlock: `<artifact>` + `skills/<X>` → `<compound outcome>` *(only if real)*
+
+**Placement:** `enhance skills/<X>` | `extend skills/<X>` | `new skill skills/<Y>` | `new tool` | `new agent` | `satellite repo` | `archive`  
+**Runner-up rejected:** `<other option>` — `<one-line reason>`
+
+**Next action:** `<one specific concrete step>`  
+**Target date:** `<YYYY-MM-DD>` | `n/a`
+
+---
+
+Then four collapsed `<details>` sections. Each section uses a `<summary>` label. Content inside uses plain prose and bullets — no raw code blocks unless showing actual code.
+
+**Section 1 — What it is**
+> Phase 2 dossier: what it does, how it works, dependencies, risks.
+
+**Section 2 — Connection Map**
+> Full connection map output: already-have list, absorption candidates, cross-skill opportunity.
+
+**Section 3 — Sankofa Council**
+> Five voices (Contrarian, First Principles, Expansionist, Outsider, Executor) each in one short paragraph. Chairman synthesis in bold. Disclaimer: *(Sankofa: in-IDE single-LLM v1. v2: route via orchestrator for adversarial review.)*
+
+**Section 4 — Karpathy Audit**
+> Four principle verdicts (PASS / FAIL / WARN) each with one sentence of reasoning. A single FAIL appears in bold red text label. WARNs noted but don't block.
+
+**Section 5 — Placement reasoning**
+> Why chosen placement wins. Why runner-up loses. One paragraph each.
+
+**Target date rule:** On PROCEED, a real `YYYY-MM-DD` target date is required (matches the follow-up entry). On ARCHIVE-AND-NOTE or DON'T PROCEED, use literal `n/a` to keep the schema stable for the verification harness.
+
+**Formatting rule:** Never output the verdict as a fenced code block. Markdown headers and bullets render in Claude Code terminal and Telegram. Raw text blocks do not — they look like JSON dumps and are hard to scan.
 
 ### Registry appends
 
