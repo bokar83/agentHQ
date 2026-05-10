@@ -1,5 +1,7 @@
 # LinkedIn Style Guide — Boubacar Barry / Catalyst Works
 
+> **Companion file:** `skills/ctq-social/references/linkedin-craft.md` — hook patterns, pivot line rules, CTA types, named series ideas, and creator cheat sheet built from Boubacar's best posts. This file covers formatting and structure. That file covers craft and voice intelligence. Use both.
+
 **Version:** 1.0
 **Last updated:** 2026-03-29
 **For:** Boubacar Barry, Founder — Catalyst Works Consulting

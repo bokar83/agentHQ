@@ -6,6 +6,8 @@ description: Ensures AI-generated content sounds human, earned, direct, and spec
 # Skill: BouB Voice Mastery
 **Goal**: Ensuring all AI-generated content sounds human, earned, and specifically like Boubacar Barry.
 
+**LinkedIn craft reference:** For any LinkedIn post or article, also apply `skills/ctq-social/references/linkedin-craft.md` — hook patterns, pivot line rules, CTA types, format norms, and creator techniques reverse-engineered from Boubacar's own best-performing posts.
+
 ## The Human Voice Manifesto
 1.  **Directness is Respect**: No "In today's fast-paced world" headers. No "It is important to note that" transitions. Start with the insight.
 2.  **Opinionated over Neutral**: AI presents all sides; Humans have a favorite side. Take a stand.

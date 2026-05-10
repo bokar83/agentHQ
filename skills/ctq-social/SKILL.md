@@ -13,6 +13,8 @@ CTQ (Content Quality Control) is a minimum two-pass Sankofa Council review proce
 
 ---
 
+**LinkedIn craft reference:** When checking or drafting any LinkedIn post, also apply `skills/ctq-social/references/linkedin-craft.md` — hook patterns, pivot line rules, format norms, CTA types, and creator techniques.
+
 ## CTQ Targets (what the Council judges against)
 
 Each target is a lens the Council applies. Boubacar states the active target at session start. Default is the full set below when no target is specified.

@@ -721,6 +721,26 @@ WHERE status = 'new'
 
 ---
 
+### M22: LLM-Indexed Blog Pipeline (Autonomous Inbound Loop) ⏳ TRIGGER-GATED
+
+**What:** A scheduled agent that produces 2-3 long-form blog posts per week targeting questions buyers ask Claude/ChatGPT — not Google. Topics: AI automation for SMBs, local business AI, first-gen wealth building. Posts are published to geolisted.co and/or catalystworks.consulting. The agent writes, formats, and queues for Boubacar's 1-tap approval. No founder involvement after the initial topic brief.
+
+**Why:** Max Mitcham (Trigify) reported 40 inbound conversations in one week sourced from Claude/ChatGPT surfacing his content — not Google, not LinkedIn. The mechanism: agents wrote SEO-optimized long-form content that answers the exact queries buyers type into LLMs. Those LLMs surface the content because it answers the question clearly and authoritatively. This is the first fully autonomous revenue-generating content loop that requires zero founder involvement after setup.
+
+**Secondary leverage:** The same long-form blog content seeds Studio video scripts. One blog post = one LinkedIn piece + one X thread + one Studio short. Blog is not just inbound — it is the content seed for the entire distribution engine.
+
+**Trigger gate:**
+1. M10 Topic Trend Scout has 2+ Monday runs with 5+ picks confirmed (gate: 2026-05-12)
+2. The `linkedin-craft.md` reference file is in active use (at least 3 posts drafted against it)
+3. A publishing destination (geolisted.co or catalystworks.consulting blog) is confirmed live
+
+**Target gate date:** 2026-06-01
+
+**Branch:** `feat/atlas-m22-llm-indexed-blog` (create when gate clears)
+**Reference:** `skills/ctq-social/references/linkedin-craft.md` Part 5 (transformation templates) · `skills/seo-strategy/` (SEO mode wire-in) · `skills/content_multiplier/` (repurpose routing)
+
+---
+
 ### M9d: Deep Memory Garden ⏳ TRIGGER-GATED
 
 **What:** Upgrade Atlas cross-session memory from shallow compression (M9c: Haiku summarizes, injects into system prompt) to full graph-based consolidation: deduplication of semantically similar memories, contradiction detection and resolution, fact verification against current codebase state, confidence decay with category-specific half-lives, retroactive extraction from crashed/missed sessions, and cluster reorganization.

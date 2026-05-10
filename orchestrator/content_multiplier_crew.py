@@ -123,6 +123,7 @@ def _load_voice_profile_with_references() -> str:
     ref_files = [
         "skills/boub_voice_mastery/references/brand-spine-audit.md",
         "skills/boub_voice_mastery/references/voice-fingerprint.md",
+        "skills/ctq-social/references/linkedin-craft.md",
     ]
     for rel in ref_files:
         for root in (ROOT_DIR, Path("/app"), ORCH_DIR):
