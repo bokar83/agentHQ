@@ -338,6 +338,14 @@ async def startup_event():
     except Exception as e:
         logger.warning(f"concierge-sweep wake registration failed (non-fatal): {e}")
 
+    # M23: Minion worker -- background loop for agent-to-agent spawning.
+    try:
+        import minion_worker as _mw
+        asyncio.create_task(_mw.run())
+        logger.info("minion_worker started.")
+    except Exception as e:
+        logger.warning(f"minion_worker startup failed (non-fatal): {e}")
+
     # Telegram polling in the background (hardened loop in handlers.py).
     asyncio.create_task(telegram_polling_loop())
     logger.info("Telegram Polling Loop scheduled.")
