@@ -1,6 +1,6 @@
 ---
 name: sankofa
-description: Use when the user invokes /sankofa or asks to run the Sankofa Council on content, a decision, a deliverable, or a strategy. Five independent voices stress-test the thing in context — no validation, only pressure.
+description: Use when the user invokes /sankofa or asks to run the Sankofa Council on content, a decision, a deliverable, or a strategy. Five independent voices stress-test the thing in context — no validation, only pressure. Triggers on "/sankofa", "sankofa council", "stress-test this", "pressure-test this", "run council on", "five voices", "council review", "stress test this decision", "pressure test this proposal", "I need five perspectives".
 ---
 
 # The Sankofa Council

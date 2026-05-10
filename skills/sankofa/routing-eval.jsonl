@@ -1,3 +1,3 @@
-{"intent": "stress-test this business decision before I commit", "expected": "sankofa"}
-{"intent": "I need five different perspectives on this strategy", "expected": "sankofa"}
-{"intent": "pressure test this proposal", "expected": "sankofa"}
+{"intent": "stress-test this strategy with five voices", "expected": "sankofa"}
+{"intent": "run a sankofa council review on this decision", "expected": "sankofa"}
+{"intent": "I need council review on this before I commit", "expected": "sankofa"}

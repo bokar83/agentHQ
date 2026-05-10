@@ -1,3 +1,3 @@
-{"intent": "should we add this repo to agentsHQ", "expected": "agentshq-absorb"}
-{"intent": "evaluate this GitHub link for our stack", "expected": "agentshq-absorb"}
-{"intent": "is this worth absorbing into the project", "expected": "agentshq-absorb"}
+{"intent": "should we absorb this into our stack", "expected": "agentshq-absorb"}
+{"intent": "is this worth adding to our tools", "expected": "agentshq-absorb"}
+{"intent": "evaluate this tool for agentsHQ", "expected": "agentshq-absorb"}

@@ -1,6 +1,6 @@
 ---
 name: ctq-social
-description: Use when reviewing, rewriting, or quality-checking any social media post or article draft for Boubacar Barry before publishing. Triggers on any LinkedIn post, X post, or article that needs to go through the Sankofa Council review process.
+description: Use when reviewing, rewriting, or quality-checking any social media post or article draft for Boubacar Barry before publishing. Triggers on "review this post", "quality check this draft", "ctq-social", "does this sound like me", "check this LinkedIn post", "review this tweet", "run ctq", or any post needing Sankofa Council review before publishing.
 ---
 
 # CTQ Social -- Content Quality Control for Boubacar Barry

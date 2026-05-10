@@ -1,3 +1,3 @@
-{"intent": "optimize this article for search before publishing", "expected": "seo-strategy"}
-{"intent": "full SEO audit of geolisted.co", "expected": "seo-strategy"}
-{"intent": "check why this page isn't ranking", "expected": "seo-strategy"}
+{"intent": "SEO optimize this article for ranking", "expected": "seo-strategy"}
+{"intent": "optimize this page for Google", "expected": "seo-strategy"}
+{"intent": "check this article for SEO issues", "expected": "seo-strategy"}

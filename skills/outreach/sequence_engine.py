@@ -104,6 +104,7 @@ def _ensure_sequence_columns(conn) -> None:
         ("sequence_touch", "INTEGER DEFAULT 0"),
         ("sequence_pipeline", "TEXT"),
         ("opt_out", "BOOLEAN DEFAULT FALSE"),
+        ("gmb_opener", "TEXT"),  # which T1 branch fired: no_website|low_reviews|chatgpt|generic
     ]:
         cur.execute(f"""
             ALTER TABLE leads ADD COLUMN IF NOT EXISTS {col} {definition}
@@ -133,7 +134,9 @@ def _get_due_leads(conn, pipeline: str, touch: int, limit: int = 10) -> list[dic
     if touch == 1:
         cur.execute(f"""
             SELECT id, name, email, title, company, industry, city,
-                   sequence_touch, sequence_pipeline
+                   sequence_touch, sequence_pipeline,
+                   review_count, has_website, google_rating, niche,
+                   gmb_opener
             FROM leads
             WHERE email IS NOT NULL AND email != ''
               AND (opt_out IS NULL OR opt_out = FALSE)
@@ -146,7 +149,9 @@ def _get_due_leads(conn, pipeline: str, touch: int, limit: int = 10) -> list[dic
     else:
         cur.execute(f"""
             SELECT id, name, email, title, company, industry, city,
-                   sequence_touch, sequence_pipeline
+                   sequence_touch, sequence_pipeline,
+                   review_count, has_website, google_rating, niche,
+                   gmb_opener
             FROM leads
             WHERE email IS NOT NULL AND email != ''
               AND (opt_out IS NULL OR opt_out = FALSE)
@@ -175,28 +180,63 @@ def _get_due_leads(conn, pipeline: str, touch: int, limit: int = 10) -> list[dic
         for r in rows:
             score, notes = score_gmb_lead(r)
             if score >= 2:
-                r["gmb_signal_notes"] = notes  # passed to sw_t1 for opener selection
+                r["gmb_signal_notes"] = notes
+                # Determine which opener branch will fire — stored to DB so T2-T5 use
+                # the same thread even if the lead's data changes between touches.
+                if notes.get("no_website"):
+                    r["gmb_opener"] = "no_website"
+                elif notes.get("low_reviews") is not None:
+                    r["gmb_opener"] = "low_reviews"
+                elif r.get("niche"):
+                    r["gmb_opener"] = "chatgpt"
+                else:
+                    r["gmb_opener"] = "generic"
                 qualified.append(r)
         rows = qualified
         filtered = before - len(rows)
         if filtered:
             logger.info(f"[SW] T1 GMB gate: dropped {filtered} unqualified lead(s) (score < 2)")
 
+    elif pipeline == "sw" and touch > 1:
+        # Reconstruct gmb_signal_notes from stored gmb_opener for T2-T5.
+        # This ensures the same thread fires regardless of data changes since T1.
+        for r in rows:
+            opener = r.get("gmb_opener") or ""
+            if opener == "no_website":
+                r["gmb_signal_notes"] = {"no_website": True}
+            elif opener == "low_reviews":
+                r["gmb_signal_notes"] = {"low_reviews": int(r.get("review_count", 0) or 0)}
+            else:
+                r["gmb_signal_notes"] = {}
+
     return rows
 
 
-def _mark_sent(conn, lead_id: int, touch: int, pipeline: str, subject: str) -> None:
+def _mark_sent(conn, lead_id: int, touch: int, pipeline: str, subject: str,
+               gmb_opener: str = "") -> None:
     now = datetime.now(timezone.utc)
     cur = conn.cursor()
-    cur.execute("""
-        UPDATE leads
-        SET sequence_touch = %s,
-            sequence_pipeline = %s,
-            last_contacted_at = %s,
-            email_drafted_at = COALESCE(email_drafted_at, %s),
-            updated_at = %s
-        WHERE id = %s
-    """, (touch, pipeline, now, now, now, lead_id))
+    if gmb_opener and touch == 1:
+        cur.execute("""
+            UPDATE leads
+            SET sequence_touch = %s,
+                sequence_pipeline = %s,
+                last_contacted_at = %s,
+                email_drafted_at = COALESCE(email_drafted_at, %s),
+                updated_at = %s,
+                gmb_opener = %s
+            WHERE id = %s
+        """, (touch, pipeline, now, now, now, gmb_opener, lead_id))
+    else:
+        cur.execute("""
+            UPDATE leads
+            SET sequence_touch = %s,
+                sequence_pipeline = %s,
+                last_contacted_at = %s,
+                email_drafted_at = COALESCE(email_drafted_at, %s),
+                updated_at = %s
+            WHERE id = %s
+        """, (touch, pipeline, now, now, now, lead_id))
     cur.execute("""
         INSERT INTO lead_interactions (lead_id, interaction_type, content)
         VALUES (%s, %s, %s)
@@ -570,7 +610,8 @@ def run_sequence(pipeline: str, dry_run: bool = False, daily_limit: int = 10) ->
 
             result_id = _create_draft(email, subject, body, pipeline, auto_send=auto_send)
             if result_id:
-                _mark_sent(conn, lead["id"], touch, pipeline, subject)
+                _mark_sent(conn, lead["id"], touch, pipeline, subject,
+                           gmb_opener=lead.get("gmb_opener", ""))
                 total_sent += 1
                 results.append({"name": name, "email": email, "touch": touch,
                                  "status": "sent" if auto_send else "drafted"})

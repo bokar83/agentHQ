@@ -4,7 +4,7 @@ Schema: `YYYY-MM-DD | placement | leverage type | next action | target date`
 
 PROCEED verdicts append here automatically. PROCEED without a follow-up entry is incomplete.
 
-2026-05-09 | new script scripts/hook_notifier.py | continuous-improvement + producing-motion (Atlas) | Write Stop hook script: reads Claude Code Stop payload from stdin, fires notifier.send_message(chat_id, "Session ended: {session_id} in {cwd}"). Wire into ~/.claude/settings.json Stop hook. V1 scope: Stop event only. Verify: end a session, confirm Telegram receives notification before closing ticket. | 2026-05-16
+2026-05-09 | enhance tools/session_logger.py (Stop hook Telegram) | continuous-improvement + producing-motion (Atlas) | SHIPPED 2026-05-09: Added Telegram notification to existing session_logger.py Stop hook. Reads ORCHESTRATOR_TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID from .env, fires on session end with project/cost/turns/duration. Uses stdlib urllib only — no deps. Silent on failure (never blocks session close). Smoke test passes. VERIFY: close this session, confirm Telegram receives "Session ended" message. | 2026-05-16
 
 2026-05-09 | enhance skills/agentshq-absorb (Self-Audit Mode) + enhance docs/roadmap/compass.md (M6) | continuous-improvement | SHIPPED 2026-05-09: Self-Audit Mode section added to agentshq-absorb/SKILL.md (4 checks: secrets/hook shell-outs/broad perms/MCP transport). Compass M6 milestone filed with monthly cadence. First run completed same session: Checks 1/2/4 CLEAN; Check 3 FINDING (Read*/Edit*/Write* broad allows — intentional, flagged for review). VERIFY by 2026-05-16: review Check 3 finding in settings.json, decide accept-with-comment or scope to specific paths. | 2026-05-16
 
@@ -15,7 +15,7 @@ PROCEED verdicts append here automatically. PROCEED without a follow-up entry is
 
 2026-05-08 | enhance docs/roadmap/atlas.md | continuous-improvement | Add "Architectural Patterns" section: 4 crew mappings (gate=hierarchical, studio=sequential, chairman=reflexive, griot=parallel) + benchmark (hierarchical 0.929 F1 at 60.7% reflexive cost) before L4 Reconcile implementation | 2026-05-15 | DONE 2026-05-08: section written at docs/roadmap/atlas.md, decision guide + crew map live
 
-2026-05-08 | absorb-followup: Yeachan-Heo/clawhip | continuous-improvement (Atlas) | Run /agentshq-absorb https://github.com/Yeachan-Heo/clawhip — event router that keeps notifications outside agent context windows (isomorphic to agentsHQ Telegram notifier + Gate). claw-code PHILOSOPHY.md names it as the layer that solved the context-burn problem. This is the implementation of the architecture Atlas Gate refactor (atlas.md item 6) should mirror. Absorb before Gate refactor starts. | 2026-05-15
+2026-05-08 | absorb-followup: Yeachan-Heo/clawhip | continuous-improvement (Atlas) | DONE 2026-05-09: absorb complete. Deliverables: (1) tools/session_logger.py enhanced with Stop->Telegram notification; (2) atlas item 6 pre-condition removed (was speculative); (3) clawhip pattern confirmed: Stop hook fires Telegram without LLM context open. | 2026-05-15
 
 2026-05-06 | new script scripts/dream.py | founder-time-reduction | Run first dream on current memory store; verify dedup + stale project archiving works; wire to Stop hook or scheduled agent | 2026-05-13
 2026-05-06 | enhance skills/sankofa | continuous-improvement | verify DEAD-PROJECT MODE surfaces unique failure mode on first high-stakes /sankofa run | 2026-06-06

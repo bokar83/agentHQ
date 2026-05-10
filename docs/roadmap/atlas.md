@@ -56,7 +56,19 @@ Last session ended **2026-05-09 (gbrain absorb — 3 patterns extracted: conform
 
     **Source:** `src/core/minions/` in garrytan/gbrain. MinionQueue + MinionWorker schema documented in absorb session 2026-05-09.
 
-10. **[GATED — SW LEAD-GEN] Auto-audit: GMB scorer output → website-teardown one-pager per qualified lead.** After `score_gmb_lead()` gates a SW T1 lead (score >= 2), auto-run `website-teardown` on the lead's URL and attach the audit one-pager as a personalized warm opener in the T1 email. This converts cold outreach to audit-led warm outreach. Pre-condition: `score_gmb_lead()` gate shipped (done 2026-05-09) + SW T1 open rate baseline established (need 2 weeks of gate-filtered sends). Trigger: 2026-05-28 pipeline audit date. Do not start before baseline exists.
+10. **[ATLAS M9d-A] Weekly Synthesis crew:** `orchestrator/weekly_synthesis_crew.py`. Reads last 30 memory files + roadmap logs → LLM synthesis → Notion Retrospectives DB page. VPS cron Sunday 20:00. Target: 2026-05-18. Success: Boubacar names 1 non-obvious insight from first run. Plan: `docs/superpowers/plans/2026-05-09-self-writing-notion-vault.md`.
+
+11. **[ATLAS M9d-B] Memory Distillation Engine:** `orchestrator/memory_distillation_crew.py`. Reads all `memory/*.md` → LLM distillation → `MEMORY-DIGEST.md`. VPS cron 1st of month 06:00. Pre-condition: M9d-A ships + validates. Target: 2026-05-25. Success: MEMORY-DIGEST.md contains 1 fact not already in MEMORY.md index.
+
+12. **[ATLAS M9d-C] Content Connection Finder:** `orchestrator/content_connection_crew.py`. Reads last 30 days content board → LLM connection analysis → Notion Connections DB. VPS cron Monday 07:00. Pre-condition: M9d-B ships + Connections DB created in Notion. Target: 2026-06-01. Success: Boubacar acts on 1 suggestion within 7 days of first run.
+
+13. **[M9d ARCHIVE — GATED] Queue Processor:** Notion DB as async task inbox (drop file → agent picks up → output lands in Generated). Blocked on: M9d trigger conditions + Notion full-text search. Do not build until M9d unlocked.
+
+14. **[M9d ARCHIVE — GATED] Project Auto-Updater:** Trigger on Notion page modification, auto-update project overview. Blocked on: M9d trigger conditions.
+
+15. **[M9d ARCHIVE — GATED] Daily Context Generator:** Reads memory + active projects + inbox daily → morning context note. Blocked on: Notion full-text search (Notion MCP does not support it natively today).
+
+16. **[GATED — SW LEAD-GEN] Auto-audit: GMB scorer output → website-teardown one-pager per qualified lead.** After `score_gmb_lead()` gates a SW T1 lead (score >= 2), auto-run `website-teardown` on the lead's URL and attach the audit one-pager as a personalized warm opener in the T1 email. This converts cold outreach to audit-led warm outreach. Pre-condition: `score_gmb_lead()` gate shipped (done 2026-05-09) + SW T1 open rate baseline established (need 2 weeks of gate-filtered sends). Trigger: 2026-05-28 pipeline audit date. Do not start before baseline exists.
 
 **Do not start a new milestone without reading the latest Session Log entry below.**
 
@@ -2564,9 +2576,9 @@ Sankofa + Karpathy both rejected the 8-pattern proposal. Cut to 3:
 
 1. **`orchestrator/tests/mock_llm_service.py`** — pytest fixture that intercepts `select_by_capability` / `get_llm` with scripted scenario responses. Zero OpenRouter calls. 3 smoke tests included. Drop `mock_llm` fixture into any test file.
 
-2. **Atlas item 6 (Gate context-burn fix)** — Gate currently runs inside Claude session with LLM context open every 5 min regardless of queue state. Target: dumb Python cron (`scripts/gate_poll.py`), LLM context opens only on READY branch detection. Estimated ~85% Gate LLM spend reduction on idle periods. Pre-condition: none (clawhip absorb complete 2026-05-09 — pre-condition was speculative, Gate refactor already fully specced).
+2. **Atlas item 6 (Gate context-burn fix) — `scripts/gate_poll.py` SHIPPED 2026-05-09** — Dumb Python cron built. `--once` mode for VPS host cron (every 5 min). Polls GitHub for READY branches, fires Telegram on detection, zero LLM on empty queue. Deploy command: `*/5 * * * * cd /root/agentsHQ && git pull && python scripts/gate_poll.py --once >> /tmp/gate_poll.log 2>&1`. Verify: merge a READY branch and confirm Telegram fires.
 
-3. **`scripts/hook_notifier.py` (clawhip absorb deliverable)** — Stop hook script that fires Telegram notification when Claude Code session ends, without LLM context open. Wire into `~/.claude/settings.json` Stop hook. V1 scope: Stop event only. Message: session_id + cwd. Success criterion: end a session, Telegram receives notification. Target: 2026-05-16.
+3. **`tools/session_logger.py` Stop→Telegram SHIPPED 2026-05-09** — Telegram notification added to existing Stop hook. Fires on session end with project/cost/turns/duration. Uses stdlib urllib, loads .env directly. Verify: close a session, confirm Telegram receives "Session ended" message.
 
 **Key architectural insight (PHILOSOPHY.md):** "notification routing pushed outside agent context window so agents stay focused on implementation." agentsHQ Gate violates this. Named and queued.
 

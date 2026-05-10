@@ -1,3 +1,3 @@
-{"intent": "research our top competitors before building the site", "expected": "website-intelligence"}
-{"intent": "scrape and analyze this company site", "expected": "website-intelligence"}
-{"intent": "competitive analysis for a plumbing business website", "expected": "website-intelligence"}
+{"intent": "competitive analysis before we build the site", "expected": "website-intelligence"}
+{"intent": "scrape and rebuild this company site", "expected": "website-intelligence"}
+{"intent": "website intelligence for this niche", "expected": "website-intelligence"}

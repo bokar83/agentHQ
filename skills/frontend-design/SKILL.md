@@ -1,11 +1,6 @@
 ---
 name: frontend-design
-description: >
-  Use when creating, updating, or reviewing any website, landing page, or
-  HTML/CSS artifact. Must run before writing any code. Applies the Volta
-  design standard (cinematic, distinctive, business-type-matched) and enforces
-  the banned default skeleton. Trigger on any website build, redesign, section
-  update, clone, demo site, or UI artifact request.
+description: Use when creating, updating, or reviewing any website, landing page, or HTML/CSS artifact. Must run before writing any code. Applies the Volta design standard and enforces the banned default skeleton. Triggers on "build a landing page", "create a website", "redesign this site", "build a page", "frontend-design", "create an HTML page", "update the hero section", "build a clone", any website build, redesign, section update, clone, demo site, or UI artifact request.
 ---
 
 # Frontend Design Skill

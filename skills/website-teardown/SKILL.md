@@ -1,6 +1,6 @@
 ---
 name: website-teardown
-description: 6-phase pipeline that audits a prospect website and produces an internal viability report (PURSUE/DROP verdict, price band) plus a client-facing teardown report with before/after mockup. Trigger with /website-teardown URL.
+description: 6-phase pipeline that audits a prospect website and produces an internal viability report (PURSUE/DROP verdict, price band) plus a client-facing teardown report with before/after mockup. Triggers on "website-teardown", "teardown this site", "audit this prospect site", "run a teardown", "should we pursue this lead", "is this site worth pursuing", or /website-teardown URL.
 ---
 
 # website-teardown

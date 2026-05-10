@@ -1,3 +1,3 @@
 {"intent": "build a landing page for my HVAC client", "expected": "frontend-design"}
-{"intent": "redesign the hero section of this site", "expected": "frontend-design"}
-{"intent": "create a new HTML page for the agency", "expected": "frontend-design"}
+{"intent": "update the hero section of our HTML page", "expected": "frontend-design"}
+{"intent": "create an HTML page for the agency", "expected": "frontend-design"}

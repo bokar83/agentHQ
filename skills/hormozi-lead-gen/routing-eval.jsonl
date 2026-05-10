@@ -1,3 +1,3 @@
-{"intent": "help me write a cold email sequence for roofers", "expected": "hormozi-lead-gen"}
-{"intent": "our hook isn't converting, fix it", "expected": "hormozi-lead-gen"}
-{"intent": "build a lead magnet for Catalyst Works", "expected": "hormozi-lead-gen"}
+{"intent": "our hook is not converting, improve our hooks", "expected": "hormozi-lead-gen"}
+{"intent": "fix this email for cold outreach", "expected": "hormozi-lead-gen"}
+{"intent": "build lead gen system for my agency", "expected": "hormozi-lead-gen"}

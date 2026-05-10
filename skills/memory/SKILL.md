@@ -1,6 +1,6 @@
 ---
 name: memory
-description: Memory helpers and references for retrieving and preserving agent operating context. Two layers: (1) flat-file auto-memory in ~/.claude/projects/.../memory/ for curated signal; (2) MemPalace semantic search over verbatim conversation history.
+description: Memory helpers and references for retrieving and preserving agent operating context. Two layers: (1) flat-file auto-memory in ~/.claude/projects/.../memory/ for curated signal; (2) MemPalace semantic search over verbatim conversation history. Triggers on "memory lookup", "save this to memory", "what do you remember", "recall what we decided", "check your memory", "remember this", "/memory".
 ---
 
 # Memory
