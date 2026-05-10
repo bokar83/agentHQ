@@ -1,8 +1,8 @@
 import os
+import re
 import subprocess
 import tempfile
 import shutil
-import anthropic
 
 ASPECT_DIMS = {
     "9:16": (1080, 1920),
@@ -44,7 +44,8 @@ class HyperframeBriefGenerator:
 
     def _get_client(self):
         if self._client is None:
-            self._client = anthropic.Anthropic(
+            from openai import OpenAI
+            self._client = OpenAI(
                 api_key=os.environ.get("OPENROUTER_API_KEY"),
                 base_url="https://openrouter.ai/api/v1",
                 default_headers={"HTTP-Referer": "https://agentshq.io"},
@@ -54,29 +55,23 @@ class HyperframeBriefGenerator:
     def generate(self, post_text: str, aspect_ratio: str = "9:16") -> str:
         """Returns HTML string for the composition."""
         width, height = ASPECT_DIMS.get(aspect_ratio, (1080, 1920))
-        response = self._get_client().messages.create(
+        response = self._get_client().chat.completions.create(
             model="anthropic/claude-sonnet-4.6",
             max_tokens=2048,
-            system=[{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
-            messages=[{
-                "role": "user",
-                "content": USER_PROMPT_TEMPLATE.format(
-                    width=width, height=height,
-                    aspect_ratio=aspect_ratio,
-                    post_text=post_text[:2000]
-                )
-            }]
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": USER_PROMPT_TEMPLATE.format(
+                        width=width, height=height,
+                        aspect_ratio=aspect_ratio,
+                        post_text=post_text[:2000]
+                    )
+                }
+            ]
         )
-        if not response.content:
-            raise RuntimeError("Anthropic API returned empty content list")
-        block = response.content[0]
-        if isinstance(block, anthropic.types.TextBlock):
-            html = block.text.strip()
-        elif hasattr(block, "text"):
-            html = block.text.strip()  # type: ignore[union-attr]
-        else:
-            raise RuntimeError(f"Unexpected content block type: {type(block)}")
-        import re
+        html = response.choices[0].message.content or ""
+        html = html.strip()
         html = re.sub(r"^```[a-zA-Z]*\n?", "", html).rstrip("`").strip()
         return html
 
