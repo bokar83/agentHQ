@@ -160,6 +160,22 @@ def _get_due_leads(conn, pipeline: str, touch: int, limit: int = 10) -> list[dic
 
     rows = [dict(r) for r in cur.fetchall()]
     cur.close()
+
+    # GMB qualification gate: SW T1 only.
+    # Blocks unqualified leads (already well-reviewed, have website) from burning
+    # sequence credits. Gate uses score_gmb_lead(); leads scoring < 2 are skipped.
+    # T2-T5 are not gated — once enrolled, the sequence runs to completion.
+    if pipeline == "sw" and touch == 1:
+        try:
+            from skills.serper_skill.hunter_tool import score_gmb_lead
+        except ImportError:
+            from serper_skill.hunter_tool import score_gmb_lead
+        before = len(rows)
+        rows = [r for r in rows if score_gmb_lead(r) >= 2]
+        filtered = before - len(rows)
+        if filtered:
+            logger.info(f"[SW] T1 GMB gate: dropped {filtered} unqualified lead(s) (score < 2)")
+
     return rows
 
 

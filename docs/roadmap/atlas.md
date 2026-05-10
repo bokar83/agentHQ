@@ -15,29 +15,31 @@
 
 ## Session-Start Cheat Block (read this first)
 
-Last session ended **2026-05-09 (m0h GMaps playbook absorb — PROCEED, SW T1 gate + cold-call scripts shipped)**. State at close:
+Last session ended **2026-05-09 (Garry Tan meta-meta-prompting absorb — 6 gaps extracted + shipped)**. State at close:
 
 - **Gate fully autonomous:** 5-min cron 24/7, silent success, inline ✅/❌ buttons, dedup alerts, 4 high-risk files only (`gate_agent.py`, `orc_rebuild.sh`, `.env`, `docker-compose`). Container gate registration removed — host cron is sole runner.
 - **Baked-file drift permanently fixed:** `scripts/docker-entrypoint.sh` ships with Dockerfile. Every container start auto-syncs `orchestrator/*.py` over baked `/app/*.py`. `docker cp` ritual retired. Rebuild completed successfully 2026-05-08 21:47 UTC.
-- **Completion Report Policy now a hard rule in AGENT_SOP.md:** All Atlas agents must close each prompted turn with outcome + changes + validation + blockers. "Done" alone is invalid.
-- **New milestones named (trigger-gated):** M21 (overnight ambient), M9d (deep memory garden), M8b (live agent graph). Each has explicit trigger conditions — do not start until gates clear.
-- **SW T1 GMB qualification gate SHIPPED (2026-05-09):** `score_gmb_lead()` added to `skills/serper_skill/hunter_tool.py`. Gate wired in `sequence_engine.py` `_get_due_leads` SW T1 path — leads scoring < 2 (out of 4 gap signals) are dropped before sequence enrollment. Columns already in DB (`has_website`, `review_count`, `google_rating`). Named threshold constants (GMB_LOW_REVIEW_THRESHOLD=30, GMB_LOW_RATING_THRESHOLD=4.0). Pipeline audit due 2026-05-28.
-- **Cold-call scripts shipped (2026-05-09):** `skills/hormozi-lead-gen/references/cold-call-scripts.md` — 3 objection counters, "walkthrough not meeting" reframe, "tomorrow at 10" close, offer menu.
-- **Atlas item #11 added (GATED):** Auto-audit — GMB scorer output → website-teardown one-pager per qualified lead as warm T1 opener. Trigger: 2026-05-28 pipeline audit date.
+- **Verification queue LIVE (2026-05-09):** `data/verification_queue.md` created on VPS. `_stage_to_verification_queue()` wired into `orchestrator/chairman_crew.py::enqueue_proposals()` — every L5 weight-mutation staged to audit trail before hitting approval_queue. Prevents hallucination laundering.
+- **Routing gap checker shipped (2026-05-09):** `scripts/check_routing_gaps.py` — Layer A structural check (gbrain M2.5 pattern). Reads SKILLS_INDEX.md + per-skill `routing-eval.jsonl` fixtures. 11 fixture files seeded. Run: `python scripts/check_routing_gaps.py --coverage`. 0 errors on current stack.
+- **Skill quality improvements (2026-05-09):** ctq-social → cross-model adversarial check (DeepSeek R1 via OpenRouter after Pass 2). boubacar-skill-creator → check_resolvable (Step 4.5) + gbrain conformance checklist (Step 4.6). engagement-ops → touchpoint propagation after session notes.
+- **SKILLS_INDEX fixed:** content_multiplier added (was unreachable). 11 skills got trigger phrases (apollo, boub-voice-mastery, cli_hub, hunter, local-crm, notion-cli, notion-stylist, openspace, remoat, sankofa, transcribe).
+- **Skill dependency graph:** `docs/skill-dependencies.json` — maps all skill call chains. sankofa + website-intelligence = highest-leverage targets (4 downstream consumers each).
+- **SW T1 GMB qualification gate SHIPPED (2026-05-09):** `score_gmb_lead()` in `skills/serper_skill/hunter_tool.py`. Pipeline audit due 2026-05-28.
 - **Gate context-burn fix queued (atlas.md item 6):** Gate currently burns LLM context every 5 min regardless of queue state. Target: dumb Python cron, LLM only on READY branch.
 
 **Default next moves (in priority order):**
 
-1. Verify container entrypoint synced correctly: `docker exec orc-crewai diff /app/gate_agent.py /app/orchestrator/gate_agent.py` (should be empty)
+1. Verify container entrypoint synced: `docker exec orc-crewai diff /app/chairman_crew.py /app/orchestrator/chairman_crew.py` (should be empty — verification_queue wiring deployed)
 2. Test `/digest` and `/publish` commands via DM to @agentsHQ4Bou_bot
 3. M18 HALO unlock: instrument Atlas heartbeat with tracing.py + 50 traces by 2026-05-18
-4. Fix `newsletter_editorial_input` table missing (studio_trend_scout error at 17:58 — separate session)
-5. **[GATED] LangGraph checkpoint-sqlite for coding agent:** Pattern doc at `docs/patterns/langgraph-checkpoint-pattern.md`. Pre-condition: orchestrator must have at least one LangGraph StateGraph (none today — all crews are CrewAI). Trigger when first LangGraph graph is built: wire `SqliteSaver` per pattern doc + verify crash-resume on VPS. Do not add `langgraph-checkpoint-sqlite` to requirements.txt before pre-condition met.
-6. **[ATLAS ARCH] Refactor Gate from Claude session polling to dumb Python cron:** Gate currently runs inside a Claude Code session with LLM context open every 5 min regardless of queue state. This burns context budget on empty-queue ticks. Target architecture: pure Python cron loop (`scripts/gate_poll.py`) polls GitHub for READY branches + checks task table — zero LLM cost. LLM context opens ONLY when a READY branch needs arbitration. Estimated savings: ~85% of current Gate LLM spend on idle nights/weekends. Pre-condition: none. Success criterion: Gate cron runs 24h on VPS with zero LLM calls on empty-queue ticks, verified via spend tracking. See `docs/patterns/` reference: claw-code PHILOSOPHY.md — "notification routing pushed outside agent context window." Trigger: next Gate maintenance window.
+4. Fix `newsletter_editorial_input` table missing (studio_trend_scout error — separate session)
+5. Run `python scripts/check_routing_gaps.py --coverage` weekly; target 50% fixture coverage before wiring to pre-commit
+6. **[GATED] LangGraph checkpoint-sqlite for coding agent:** Pattern doc at `docs/patterns/langgraph-checkpoint-pattern.md`. Pre-condition: orchestrator must have at least one LangGraph StateGraph. Do not add dependency before pre-condition met.
+7. **[ATLAS ARCH] Refactor Gate from Claude session polling to dumb Python cron:** Gate currently runs inside a Claude Code session with LLM context open every 5 min regardless of queue state. This burns context budget on empty-queue ticks. Target architecture: pure Python cron loop (`scripts/gate_poll.py`) polls GitHub for READY branches + checks task table — zero LLM cost. LLM context opens ONLY when a READY branch needs arbitration. Estimated savings: ~85% of current Gate LLM spend on idle nights/weekends. Pre-condition: none. Success criterion: Gate cron runs 24h on VPS with zero LLM calls on empty-queue ticks, verified via spend tracking. See `docs/patterns/` reference: claw-code PHILOSOPHY.md — "notification routing pushed outside agent context window." Trigger: next Gate maintenance window.
 
-7. **[ARCH REF] google-gemini/gemini-cli:** Do NOT install — model access via OpenRouter. Architecture value only: Trusted Folders + bubblewrap sandbox model (maps to Gate/coordination isolation), GEMINI.md multi-agent convention (equivalent of our CLAUDE.md agent contracts), multi-agent comms patterns (103K stars, 386 days old, Apache-2.0). Reference when designing M21 overnight-ambient isolation or M8b live agent graph. Repo: <https://github.com/google-gemini/gemini-cli>.
+8. **[ARCH REF] google-gemini/gemini-cli:** Do NOT install — model access via OpenRouter. Architecture value only: Trusted Folders + bubblewrap sandbox model (maps to Gate/coordination isolation), GEMINI.md multi-agent convention (equivalent of our CLAUDE.md agent contracts), multi-agent comms patterns (103K stars, 386 days old, Apache-2.0). Reference when designing M21 overnight-ambient isolation or M8b live agent graph. Repo: <https://github.com/google-gemini/gemini-cli>.
 
-10. **[ARCH REF — GATED] garrytan/gbrain minion durable job queue:** Do NOT install — Postgres + Bun dependency not yet on stack. Architecture reference only. Absorbed 2026-05-09 (PROCEED — pattern-only).
+9. **[ARCH REF — GATED] garrytan/gbrain minion durable job queue:** Do NOT install — Postgres + Bun dependency not yet on stack. Architecture reference only. Absorbed 2026-05-09 (PROCEED — pattern-only).
 
     **What it solves:** agentsHQ currently spawns full CrewAI agents for background tasks. Each spawn costs ~10s + ~$0.03 in tokens. gbrain's Minion queue handles the same jobs in 753ms at $0 per wake, using Postgres as the durable ledger.
 
@@ -54,7 +56,7 @@ Last session ended **2026-05-09 (m0h GMaps playbook absorb — PROCEED, SW T1 ga
 
     **Source:** `src/core/minions/` in garrytan/gbrain. MinionQueue + MinionWorker schema documented in absorb session 2026-05-09.
 
-11. **[GATED — SW LEAD-GEN] Auto-audit: GMB scorer output → website-teardown one-pager per qualified lead.** After `score_gmb_lead()` gates a SW T1 lead (score >= 2), auto-run `website-teardown` on the lead's URL and attach the audit one-pager as a personalized warm opener in the T1 email. This converts cold outreach to audit-led warm outreach. Pre-condition: `score_gmb_lead()` gate shipped (done 2026-05-09) + SW T1 open rate baseline established (need 2 weeks of gate-filtered sends). Trigger: 2026-05-28 pipeline audit date. Do not start before baseline exists.
+10. **[GATED — SW LEAD-GEN] Auto-audit: GMB scorer output → website-teardown one-pager per qualified lead.** After `score_gmb_lead()` gates a SW T1 lead (score >= 2), auto-run `website-teardown` on the lead's URL and attach the audit one-pager as a personalized warm opener in the T1 email. This converts cold outreach to audit-led warm outreach. Pre-condition: `score_gmb_lead()` gate shipped (done 2026-05-09) + SW T1 open rate baseline established (need 2 weeks of gate-filtered sends). Trigger: 2026-05-28 pipeline audit date. Do not start before baseline exists.
 
 **Do not start a new milestone without reading the latest Session Log entry below.**
 
@@ -2630,3 +2632,31 @@ Verdict: ARCHIVE-AND-NOTE. Phase 0 all-no: full platform replacement, not a comp
 8. **[ATLAS ARCH] Docker Healthcheck Hardening — `/healthz` + `cap_drop` + `security_opt`:** Our `docker-compose.yml` has no healthcheck on `orc-crewai`. Gate watchdog patches around this manually. OpenClaw uses: `healthcheck: test: curl -f http://localhost:PORT/healthz`, `interval: 30s`, `start_period: 20s`, `cap_drop: [ALL]`, `security_opt: [no-new-privileges:true]`. Target: add these to `orc-crewai` service in `docker-compose.yml`. Eliminates the "container Up but silent" failure class we've patched 3+ times. Pre-condition: verify `/healthz` endpoint exists in `app.py` (M12 may have added one — check first). Success criterion: `docker inspect orc-crewai | grep Health` shows `healthy` after 20s. Trigger: next `docker-compose.yml` touch.
 
 9. **[ATLAS ARCH] Manifest-First Loader — pre-compute skill manifests, retire `importlib` crawls:** Orchestrator crawls `skills/` via `importlib` on every agent run to discover capabilities. OpenClaw's pattern: build a manifest dict at startup (skill name → entry point + capabilities), pass pre-resolved object through context. Target: `orchestrator/engine.py` or `scheduler.py` builds skill manifest once at startup, stores in module-level dict. Skills register via a `@register_skill` decorator or explicit `MANIFEST` dict in their `__init__.py`. Per-run `importlib` scan retired. Pre-condition: audit current importlib usage (`grep -r "importlib" orchestrator/`). Success criterion: startup log shows "N skills registered" once; no importlib calls during heartbeat ticks. Trigger: next orchestrator engine refactor.
+
+### 2026-05-09: m0h GMaps lead-gen absorb — SW T1 qualification gate + cold-call scripts shipped
+
+Source: https://x.com/exploraX_/status/2052774623473803483 (m0h/@exploraX_ pasted raw doc).
+Verdict: PROCEED. Leverage: producing-motion + founder-time-reduction (SW pipeline).
+
+**What shipped:**
+
+- `skills/serper_skill/hunter_tool.py` — `score_gmb_lead(lead: dict) -> int` added with 4 named threshold constants:
+  - `GMB_LOW_REVIEW_THRESHOLD = 30`
+  - `GMB_LOW_RATING_THRESHOLD = 4.0`
+  - `GMB_REQUIRED_FIELDS = {"phone", "website_url", "google_address"}`
+  - Scores 0-4 against: review count, has_website, google_rating, missing fields
+- `skills/outreach/sequence_engine.py` — T1 SW gate in `_get_due_leads()`: leads scoring < 2 dropped before enrollment. CW + Studio paths untouched. Imports `score_gmb_lead` with dual import path (VPS + local).
+- `skills/hormozi-lead-gen/references/cold-call-scripts.md` — new file: 3 objection handlers ("not interested", "send email", "how much?"), "walkthrough not meeting" reframe, "tomorrow at 10" close, offer menu (website/review-automation/missed-call text-back).
+- `docs/roadmap/atlas.md` — Atlas item #11 added (GATED: auto-audit scorer output → website-teardown warm T1 opener, trigger 2026-05-28).
+
+**Gap closed:** `has_website`, `review_count`, `google_rating` already stored in `leads` table (`orchestrator/db.py` lines 322-338). No schema migration needed. Gate is Python-side filter post-SQL-fetch — surgical, auditable, no blast radius to CW/Studio.
+
+**Pipeline audit due 2026-05-28:** Verify zero leads with >100 reviews or `has_website=True` in active SW `sequence_touch=1` rows.
+
+**Files touched this session:**
+- `skills/serper_skill/hunter_tool.py` — `score_gmb_lead()` + threshold constants added (lines 28-62)
+- `skills/outreach/sequence_engine.py` — T1 SW gate added (after `_get_due_leads` return, lines ~161-174)
+- `skills/hormozi-lead-gen/references/cold-call-scripts.md` — new file
+- `docs/roadmap/atlas.md` — Atlas item #11 added, cheat block updated, this log entry
+- `docs/reviews/absorb-log.md` — verdict logged
+- `docs/reviews/absorb-followups.md` — follow-up logged + marked DONE

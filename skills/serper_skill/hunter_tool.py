@@ -26,6 +26,39 @@ from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
+# ── GMB qualification gate — thresholds from m0h absorb 2026-05-09 ──────────
+GMB_LOW_REVIEW_THRESHOLD = 30      # under 30 = invisible vs top-ranked competitors
+GMB_LOW_RATING_THRESHOLD = 4.0     # below 4.0 = poor review management signal
+GMB_REQUIRED_FIELDS = {"phone", "website_url", "google_address"}  # missing = gap
+
+def score_gmb_lead(lead: dict) -> int:
+    """Score a GMB lead 0-4 based on qualification signals.
+
+    Returns int 0-4. Leads scoring >= 2 are qualified prospects (two or more
+    visible gaps a SW engagement can close). Leads scoring 0-1 are likely
+    already well-managed and not worth SW outreach.
+
+    Signals (one point each):
+      1. review_count below GMB_LOW_REVIEW_THRESHOLD
+      2. has_website is False (no website linked on GMB listing)
+      3. google_rating below GMB_LOW_RATING_THRESHOLD (or absent)
+      4. one or more GMB_REQUIRED_FIELDS missing / empty in the lead record
+    """
+    score = 0
+    review_count = int(lead.get("review_count", 0) or 0)
+    if review_count < GMB_LOW_REVIEW_THRESHOLD:
+        score += 1
+    if not lead.get("has_website") and not lead.get("website_url"):
+        score += 1
+    rating = lead.get("google_rating")
+    if rating is None or float(rating) < GMB_LOW_RATING_THRESHOLD:
+        score += 1
+    for field in GMB_REQUIRED_FIELDS:
+        if not lead.get(field):
+            score += 1
+            break  # one point max for missing fields
+    return score
+
 # ── Default ICP constants — change here to change everywhere ──
 DEFAULT_LOCATIONS = [
     # Utah — by county + key cities (Boubacar based in SLC, ~1-2hr drive to all)
