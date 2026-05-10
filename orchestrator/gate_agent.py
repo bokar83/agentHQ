@@ -421,6 +421,26 @@ def _is_auto_approvable(files: list[str]) -> bool:
     )
 
 
+import re as _re
+_TOKEN_PATTERN = _re.compile(
+    r'\b(vcp_[A-Za-z0-9_]{20,}|sk-[A-Za-z0-9]{32,}|'
+    r'ghp_[A-Za-z0-9]{36,}|ghs_[A-Za-z0-9]{36,}|AKIA[0-9A-Z]{16})\b'
+)
+_TOKEN_SAFE = _re.compile(r'REDACTED|EXAMPLE|PLACEHOLDER', _re.I)
+
+def _branch_diff_has_token(branch: str) -> bool:
+    """Return True if branch diff vs main contains an unredacted vendor token."""
+    rc, diff, _ = _git(["diff", f"origin/{MAIN_BRANCH}...origin/{branch}"])
+    if rc != 0:
+        return False
+    for m in _TOKEN_PATTERN.finditer(diff):
+        context = diff[max(0, m.start()-30):m.end()+30]
+        if not _TOKEN_SAFE.search(context):
+            logger.warning("gate: vendor token detected in %s diff", branch)
+            return True
+    return False
+
+
 # ---------------------------------------------------------------------------
 # Main tick
 # ---------------------------------------------------------------------------
@@ -549,6 +569,16 @@ def gate_tick() -> None:
 
     for branch, files in branches_with_files:
         if branch in blocked:
+            continue
+
+        # Gate-side token scan -- catches tokens that slipped past local pre-commit
+        if _branch_diff_has_token(branch):
+            _notify(
+                f"TOKEN DETECTED: {branch} diff contains a vendor-prefixed API token. "
+                f"Branch held. Redact token and re-push with REDACTED safe-word.",
+                urgent=True,
+            )
+            blocked.add(branch)
             continue
 
         # High-risk files need explicit approval. Check for marker file first

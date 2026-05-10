@@ -36,6 +36,8 @@ Done = all five true at the same time.
 - M4 SHIPPED 2026-05-02 (evening): `docs/governance.manifest.json` (LLM-readable routing table) + `scripts/validate_governance_manifest.py` drift check + 7 tests. Wired to fire on edits to GOVERNANCE.md or the manifest.
 - M5 SHIPPED 2026-05-02 (evening, late): `.gitmodules` canonicalized to `signal-works-demo-hvac`; original attire-inspo-app code relocated from `output/` root to `output/apps/attire-inspo-app/`; reference docs updated. Original 3-4 hour spec collapsed to 10 min once Boubacar reframed: GitHub repos already separate, no merge needed, just local hygiene. Placement rule: apps live in `output/apps/`, websites in `output/websites/`.
 - M6 SHIPPED 2026-05-10: Pre-Hermes security lockdown. Vercel token redacted from .vscode/settings.json, purged from all git history via filter-repo. Hermes write boundaries codified in CLAUDE.md (allowed/forbidden paths, wildcard prohibition). Gate conflict alert dedup + Telegram approve/reject buttons shipped. 7/7 governance tests pass. Branch: audit/compass-m6-lockdown.
+- M7 IN PROGRESS 2026-05-10: Branch discipline + secret scan hardening. Fixes root causes of today's rebase crisis: CLAUDE_AGENT_ID injection at spawn, filter-repo hard rule + pre-commit guard, vendor token scanner (catches tokens in markdown tables), gate-side token scan before merge. Plan: `docs/superpowers/plans/2026-05-10-branch-discipline-secret-scan-v2.md`.
+- M8 QUEUED (next week): Scale to 20-40 agents. File-dependency pre-assignment, connection pooling, orc-hermes container isolation, per-task state recovery. Blocked on M7 ship.
 
 **Coverage today:**
 
