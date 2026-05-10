@@ -171,6 +171,29 @@ After every session-notes entry, extract named entities and push them to the CRM
 - Not a substitute for the discovery call. The first conversation about whether to engage is its own skill.
 - Not for internal builds. Use the roadmap skill for those.
 
+## Discovery Diagnostics
+
+<!-- DIAGNOSTIC PROMPT: Run this lens on every new client discovery call before drafting the engagement brief. -->
+
+**Chosen vs. Seen (from Jaya Gupta, "The Next Biggest Moat in AI"):**
+
+Ambitious people often feel *chosen* (special, believed in, belonging) before they feel *seen* (scope, authority, economics, decision rights, written mechanisms). The gap between the two is where founder-level intensity gets captured at employee-level compensation and empowerment.
+
+Use this as a client-side diagnostic during discovery calls for CW automation engagements:
+
+| Signal | What it reveals |
+| --- | --- |
+| Team feels motivated but stuck | Chosen without scope — authority mismatch |
+| High performer leaving despite praise | Chosen without economics — compensation mismatch |
+| "We trust them" but no written process | Chosen without mechanism — accountability gap |
+| "Over time this will grow" promises | Time-denominated deferred structure — asymmetric exchange |
+
+**Billable insight:** If a client's team is operating with founder-level intensity but employee-level authority and economics, that is a retention risk and a change-management constraint for any automation rollout. Name it explicitly in the engagement brief under "Risks."
+
+**Structural promise audit:** When the client says "X matters to us," ask: does the org structure reinforce X or contradict it? If they say "speed matters" but decisions are centralized — the promise is fake and the automation engagement will hit political friction.
+
+---
+
 ## Failure modes to watch for
 
 - **Process LARP at small scale.** A Constraint Matrix on a $497 Signal Session takes 3 minutes. A full Risk Management Plan on a $497 Signal Session is theatre. Pull the light version, skip the heavy one.
