@@ -90,9 +90,9 @@ class HyperframeBoostAgent:
 
     def _send_telegram_menu(self, candidates: list[dict]) -> None:
         from orchestrator.notifier import send_message
-        lines = ["HyperFrame candidates ready:\n"]
+        lines = ["HyperFrame candidates ready (score /50):\n"]
         for i, c in enumerate(candidates, 1):
-            lines.append(f"{i}. [score: {c['total_score']:.0f}] {c['text_preview'][:100]}...")
+            lines.append(f"{i}. [{c['total_score']:.0f}/50] {c['text_preview'][:100]}...")
         lines.append("\nReply: 1, 2, 3, 1,3, all, or skip")
         send_message(TELEGRAM_CHAT_ID, "\n".join(lines))
 
