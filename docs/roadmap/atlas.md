@@ -15,7 +15,7 @@
 
 ## Session-Start Cheat Block (read this first)
 
-Last session ended **2026-05-10 (newsletter_editorial_input fix + SW pipeline diagnosis)**. State at close:
+Last session ended **2026-05-10 (sw_email_log shipped + harvest mystery solved)**. State at close:
 
 - **Gate fully autonomous:** 5-min cron 24/7, silent success, inline ✅/❌ buttons, 4 high-risk files. Host cron sole runner.
 - **Baked-file drift permanently fixed:** entrypoint syncs `orchestrator/*.py` over baked `/app/*.py` on every container start.
@@ -26,14 +26,15 @@ Last session ended **2026-05-10 (newsletter_editorial_input fix + SW pipeline di
 - **Score decay cron:** `orchestrator/scheduler.py _run_gmb_score_decay()` — fires 1st of month 06:00 MT. Opts out pre-T1 leads that graduated past thresholds. Mid-sequence flagged only.
 - **`scripts/pipeline_audit.py` LIVE:** `--check all` on 2026-05-28 to verify gate. Run: `docker exec orc-crewai python3 /app/scripts/pipeline_audit.py --check all`
 - **Review-request product spec:** `skills/hormozi-lead-gen/references/review-request-product.md` — n8n+Twilio build spec, $297-497 price, sell to low_reviews leads. Build after first SW client.
+- **sw_email_log LIVE (2026-05-10):** migration 007 run on orc-postgres. `sequence_engine.py _mark_sent()` + `_log_to_orc_postgres()` wire every T1-T5 touch (drafted/sent/failed/dry-run). 165 SW T1s confirmed in Supabase for last 7 days.
+- **profitablepenny/scribd — NOT a harvest bug:** `enrichment_tool.py` runs Hunter on CW Apollo leads. SW GMB harvest is clean (dental/hvac/roofing/plumbing niches only).
 
 **Default next moves (in priority order):**
 
-1. **Monday harvest diagnosis** — if cron fired: review output. If not: `docker logs orc-crewai --since 12h 2>&1 | grep -iE 'harvest|gmb|niche|hunter|T1|dropped|deliverable'`
-2. Fix harvest GMB search query — pulling `profitablepenny.com`, `scribd.com` instead of roofing/HVAC/plumbing
-3. Flip `AUTO_SEND_SW=true` after lead quality confirmed (VPS `.env` + `docker compose up -d orchestrator`)
-4. Send `/callsheet` after first successful T1 batch — call leads within the hour
-5. M18 HALO unlock: instrument Atlas heartbeat with tracing.py + 50 traces by 2026-05-18
+1. **Verify sw_email_log populating** — after morning_runner fires: `docker exec orc-postgres psql -U postgres -d postgres -c "SELECT pipeline, touch, status, COUNT(*) FROM sw_email_log WHERE created_at >= NOW() - INTERVAL '1 day' GROUP BY pipeline, touch, status"`
+2. Flip `AUTO_SEND_SW=true` after lead quality confirmed (VPS `.env` + `docker compose up -d orchestrator`)
+3. Send `/callsheet` after first successful T1 batch — call leads within the hour
+4. M18 HALO unlock: instrument Atlas heartbeat with tracing.py + 50 traces by 2026-05-18
 6. ✅ DONE 2026-05-10: Fix `newsletter_editorial_input` table missing — migration 006 run on VPS orc-postgres; `get_reply_for_week()` wrapped non-fatal.
 5. ✅ DONE 2026-05-09: `check_routing_gaps.py` pre-commit wired (step 7, warn-only). Coverage 86% (59/69). 11 warnings = real gaps/overlaps, not fixture bugs. Run weekly to track sub-skill routing improvements.
 6. **[GATED] LangGraph checkpoint-sqlite for coding agent:** Pattern doc at `docs/patterns/langgraph-checkpoint-pattern.md`. Pre-condition: orchestrator must have at least one LangGraph StateGraph. Do not add dependency before pre-condition met.
@@ -70,7 +71,13 @@ Last session ended **2026-05-10 (newsletter_editorial_input fix + SW pipeline di
 
 15. **[M9d ARCHIVE — GATED] Daily Context Generator:** Reads memory + active projects + inbox daily → morning context note. Blocked on: Notion full-text search (Notion MCP does not support it natively today).
 
-16. **[GATED — SW LEAD-GEN] Auto-audit: GMB scorer output → website-teardown one-pager per qualified lead.** After `score_gmb_lead()` gates a SW T1 lead (score >= 2), auto-run `website-teardown` on the lead's URL and attach the audit one-pager as a personalized warm opener in the T1 email. This converts cold outreach to audit-led warm outreach. Pre-condition: `score_gmb_lead()` gate shipped (done 2026-05-09) + SW T1 open rate baseline established (need 2 weeks of gate-filtered sends). Trigger: 2026-05-28 pipeline audit date. Do not start before baseline exists.
+16. **[GATED — ECHO METRIC GATE] Skill quality rubric + gate_agent auto-approve for skill repairs:** Enable Echo to approve/reject skill repair proposals without Boubacar ack. Currently, every skill change requires human Gate review. A measurable rubric would let gate_agent auto-approve low-risk repairs and auto-reject regressions. Reference: `skills/openspace_skill/references/self-improving-agents-primer.md` (Autoresearch git-commit/reset pattern maps directly to Echo propose/ack loop).
+
+    **Scoped = this entry contains all three:** (1) metric name (e.g., routing-eval pass rate), (2) rubric definition with 3+ criteria (e.g., no new FAIL in routing-eval, no security scan flag, diff < 50 lines), (3) gate_agent integration point named (e.g., `gate_agent.py _auto_approve_skill_repair()`).
+
+    **Pre-condition (HARD GATE):** At least one skill has a machine-runnable eval (routing-eval.jsonl in openspace_skill is a candidate). Do not wire gate_agent before eval exists. **Scope deadline: 2026-05-17.** If not scoped by then, reference doc stays idle and absorb verdict downgrades to DON'T PROCEED at next Compass audit.
+
+17. **[GATED — SW LEAD-GEN] Auto-audit: GMB scorer output → website-teardown one-pager per qualified lead.** After `score_gmb_lead()` gates a SW T1 lead (score >= 2), auto-run `website-teardown` on the lead's URL and attach the audit one-pager as a personalized warm opener in the T1 email. This converts cold outreach to audit-led warm outreach. Pre-condition: `score_gmb_lead()` gate shipped (done 2026-05-09) + SW T1 open rate baseline established (need 2 weeks of gate-filtered sends). Trigger: 2026-05-28 pipeline audit date. Do not start before baseline exists.
 
 **Do not start a new milestone without reading the latest Session Log entry below.**
 
