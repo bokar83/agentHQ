@@ -226,7 +226,7 @@ def _drive_upload(local_path: str, filename: str) -> dict:
     try:
         from pathlib import Path
         from kie_media import _upload_to_drive
-        folder_id = os.environ.get("HF_BOOST_DRIVE_FOLDER_ID", "")
+        folder_id = os.environ.get("HF_BOOST_DRIVE_FOLDER_ID") or os.environ.get("GOOGLE_DRIVE_FOLDER_ID", "")
         return _upload_to_drive(Path(local_path), folder_id, filename, "video/mp4")
     except ImportError:
         logger.warning("kie_media not available — Drive upload skipped (dev mode)")
