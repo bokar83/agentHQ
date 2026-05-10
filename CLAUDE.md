@@ -55,7 +55,7 @@ complete(branch_task['id'])
 
 Skipping any step breaks multi-agent coordination. Gate checks the task table before processing any branch. Unclaimed = in-flight = gate skips it.
 
-**No Telegram. No /propose. No manual signal to gate.** Push feature branch with [READY] commit. Gate watches GitHub every 60s and handles everything. Agent moves on immediately after push.
+**No Telegram. No /propose. No manual signal to gate.** Push feature branch with [READY] commit. Gate watches GitHub every 5 min (`*/5 * * * *` VPS cron, 24/7) and handles everything. Agent moves on immediately after push.
 
 ## Agent Role Authority (2026-05-08)
 

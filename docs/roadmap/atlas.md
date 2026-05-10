@@ -15,18 +15,17 @@
 
 ## Session-Start Cheat Block (read this first)
 
-Last session ended **2026-05-10 (M19 shipped — Native CRM board live on VPS)**. State at close:
+Last session ended **2026-05-10 (M24 shipped — Hermes Self-Healing committed [READY], pending Gate merge)**. State at close:
 
-- **M19 SHIPPED:** `GET /atlas/crm/board` + `POST /atlas/crm/leads/<id>/status` live. Kanban card in Atlas dashboard. 2,592 Supabase leads populate board. `sent` status (293 leads) added. Direct-deployed to VPS commit `150c229`.
-- **M23 SHIPPED (prior session):** Minion spawning, `/atlas/agents` endpoint, 10 tests passing.
-- **M8b SHIPPED:** Active Agents card live, polls `/atlas/agents` every 30s.
-- **M24 unblocked:** Hermes Self-Healing gates 1+2 met. M24 brainstorming may be in parallel session.
-- **Gate backlog:** 18 READY branches queued — Gate processing sequentially. Some have skill-quality failures (auto-rejected).
-- **Atlas frontend location:** `d:/Ai_Sandbox/agentsHQ/thepopebot/chat-ui/atlas.js` + `atlas.html`.
+- **M24 SHIPPED:** `orchestrator/hermes_worker.py` live. Immunological path check, LLM repair loop (3 attempts, OpenRouter Haiku), Telegram notify. Approval trigger in `approval_queue.py`. Registered in `app.py`. 4/4 tests pass. Branch `feat/atlas-m24-hermes-self-healing` committed — push + Gate merge pending.
+- **M23 SHIPPED:** Minion spawning, `/atlas/agents` endpoint, 10 tests passing.
+- **M19 SHIPPED:** Native CRM board, 2,592 leads, VPS `150c229`.
+- **Gate:** Firing every 5 min 24/7 (`*/5 * * * *`). Conflict backlog on ~3 stale branches. Telegram notifier 429 rate-limited (~190s). NOT 15min — CLAUDE.md is stale on this.
+- **Atlas frontend:** `d:/Ai_Sandbox/agentsHQ/thepopebot/chat-ui/atlas.js` + `atlas.html`.
 
 **Default next moves (in priority order):**
 
-1. **M24 Hermes Self-Healing** — check parallel session for brainstorm/spec progress.
+1. **Push M24 branch** — `git push origin feat/atlas-m24-hermes-self-healing`. Gate picks up within 5 min.
 2. **Verify sw_email_log populating** — after morning_runner fires: `docker exec orc-postgres psql -U postgres -d postgres -c "SELECT pipeline, touch, status, COUNT(*) FROM sw_email_log WHERE created_at >= NOW() - INTERVAL '1 day' GROUP BY pipeline, touch, status"`
 3. Flip `AUTO_SEND_SW=true` after lead quality confirmed (VPS `.env` + `docker compose up -d orchestrator`)
 4. M18 HALO unlock: instrument Atlas heartbeat with tracing.py + 50 traces by 2026-05-18
@@ -867,18 +866,20 @@ WHERE status = 'new'
 
 ---
 
-### M24: Hermes Self-Healing Execution ⏳ QUEUED
+### M24: Hermes Self-Healing Execution ✅ SHIPPED 2026-05-10
 
 **What:** Upgrade the development/maintenance agents (e.g., `concierge_crew.py`) to possess autonomous write-and-fix capabilities. Under this architecture, when an agent detects an error or is assigned a feature, it can autonomously: (1) check out a feature branch, (2) analyze the code, (3) write/modify files, (4) execute the local pytest test suites to verify correctness, and (5) construct a `[READY]` commit message with a `[GATE-NOTE]` block and push it to GitHub for the Gate agent to review, merge, and deploy.
 
 **Why:** Transitioning from "AI as a tool" to "AI as an autonomous builder" requires removing the human-in-the-loop for typical coding and bug-fixing tasks. By allowing agents to write, test, and push code directly to the Gate, the system becomes truly self-healing and capable of expanding its own capabilities autonomously within safe sandbox constraints.
 
-**Trigger gate:**
-1. Postgres on VPS live + dynamic task queue ready (standard baseline for claims/coordination/minions).
-2. Agent-to-Agent Spawning & Delegation (M23) is fully operational.
-3. Feature branch sandbox environment is fully isolated and verified.
+**Shipped:**
+- `orchestrator/hermes_worker.py`: immunological path check (traversal guard + exact forbidden-file list + prefix allowlist), LLM repair loop up to 3 attempts via OpenRouter Haiku, explicit-path git staging (no `git add .`), Telegram notification on success/failure/abort
+- `orchestrator/approval_queue.py`: `_transition` enqueues `minion:hermes-fix` when concierge-fix proposal approved/edited
+- `orchestrator/app.py`: registers `hermes_fix_handler` at minion_worker startup
+- `tests/test_hermes_self_healing.py`: 4/4 pass (immunological path safety, approval trigger, sandbox branch, commit packaging)
+- Sankofa + Karpathy audits run pre-implementation; 3 blocking findings fixed before first line of code
 
-**Branch:** `feat/atlas-m24-hermes-self-healing`
+**Branch:** `feat/atlas-m24-hermes-self-healing` — [READY] committed, pending push + Gate merge
 
 ---
 
@@ -948,6 +949,16 @@ Roadmap items for MCP/plugin stack. Not immediate — document when/why so we do
 ## Session Log
 
 Append-only. Newest entry at the bottom. Each entry: date, what changed, what's next.
+
+### 2026-05-10: M24 Hermes Self-Healing shipped
+
+Sankofa + Karpathy audits run before implementation. Three blocking findings fixed pre-code: (1) missing `".."` traversal guard in `is_path_safe`, (2) `git add .` replaced with explicit safe-path staging to prevent credential leak, (3) test suite updated to assert safe staging. Implementation: `orchestrator/hermes_worker.py` (immunological check, LLM repair loop 3 attempts, OpenRouter Haiku, Telegram notify), `approval_queue.py` `_transition` trigger, `app.py` startup registration. 4/4 tests pass. Committed `[READY]` on `feat/atlas-m24-hermes-self-healing` — pending push + Gate merge.
+
+Gate status: firing every 5 min (confirmed `/etc/cron.d/gate-agent`). Currently processing conflict backlog from ~3 stale branches. Telegram notifier hitting 429 rate-limit (~190s retry). VPS main at `d4b7dd5`.
+
+CLAUDE.md still says "Gate = 15min daytime / 90min overnight" — stale, needs update. Actual: `*/5 * * * *` 24/7.
+
+Next: push M24 branch + Gate merge. M25 Event Bus unblocked after merge. M18 HALO tracing (50 traces by 2026-05-18). Fix CLAUDE.md gate schedule reference.
 
 ### 2026-05-10: Sankofa audit — status snapshot updated, M24 confirmed next
 
