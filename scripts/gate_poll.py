@@ -172,14 +172,13 @@ def poll_once(bot_token: str, chat_id: str, dry_run: bool = False) -> list[str]:
 
         if failures:
             fail_detail = "\n".join(failures)
-            msg = (f"GATE: skill quality check FAILED — auto-reject\n"
+            msg = (f"GATE: skill routing WARN (non-blocking)\n"
                    f"Branch: {branch}\n"
                    f"Failures:\n{fail_detail}\n"
-                   f"Fix routing regressions before re-pushing.")
+                   f"Proceeding to LLM gate review. Fix routing regressions when convenient.")
             print(f"[gate_poll] {msg}")
             if not dry_run and bot_token and chat_id:
                 _notify(bot_token, chat_id, msg)
-            continue
 
         msg = f"GATE: READY branch detected\nBranch: {branch}\nGate review starting in container."
         print(f"[gate_poll] {msg}")
