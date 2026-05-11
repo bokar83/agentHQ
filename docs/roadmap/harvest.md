@@ -323,11 +323,12 @@ skills/signal-works-conversion/
 
 | # | Task | Why |
 |---|---|---|
-| T3.1 | First "Diagnostic Patterns Q2 2026" post mining Supabase `diagnostic_submissions` for the 5-7 most-common constraints visitors are typing in. Becomes a McKinsey-quality insights piece you publish from your own funnel. | Sankofa Expansionist: aggregate the diagnoses |
-| T3.2 | Internal anchor-text variation on secondary cards ("AI consulting" / "constraint coaching" instead of bare titles) | SEO ranking (audit #9) |
-| T3.3 | Mobile H1 size drop to 34px on `<480px` viewports + tighter line-height | Polish (audit #14) |
-| T3.4 | Email follow-up sequence wired (3 emails over 14 days after capture: PDF → 30-day framework → "ready for Signal Session?") | Converts the email list into bookings |
-| T3.5 | Add Stripe direct-payment to Signal Session offer card (skip Calendly discovery, sell straight to $497) once first 3 paid sessions happen via T2.7 path | Tightens funnel |
+| T3.1 🟡 | First "Diagnostic Patterns Q2 2026" post mining Supabase `diagnostic_submissions` for the 5-7 most-common constraints visitors are typing in. | Sankofa Expansionist: aggregate the diagnoses. **2026-05-11 BLOCKED:** Supabase MCP scoped to a different org; cannot query `diagnostic_submissions` from agent side. Grant access or provide export. |
+| T3.2 ✅ | Internal anchor-text variation on secondary cards | SEO ranking (audit #9). **Shipped 2026-05-11 (14b3868):** new `.related-links` row below the secondary grid with 7 internal links — throughput lens, reversible decisions, signal-in-the-room, partner-led firms, speed-to-lead trades, healthcare ops, Weekly Signal. Amber `<strong>` accents inside neutral grey text. |
+| T3.3 ✅ | Mobile H1 size drop to 34px on `<480px` viewports + tighter line-height | Polish (audit #14). **Shipped 2026-05-11 (14b3868):** `.hero h1` clamp tightened to `clamp(34px, 9vw, 44px)`, `line-height: 1.02`, `letter-spacing: -0.03em` at `<480px`. |
+| T3.4 🟡 | Email follow-up sequence wired (3 emails over 14 days after capture) | **2026-05-11 BLOCKED:** same Supabase-access blocker as T3.1; n8n capture endpoint exists but agent cannot query the events table. Either grant access or build the sequence inside n8n workflow UI. |
+| T3.5 🟡 | Stripe direct-payment on Signal Session offer card | **2026-05-11 NEEDS DECISION:** Calendly+Stripe (current paid event) already direct-pays. T3.5 = add a parallel Stripe-only checkout that skips Calendly entirely, OR replace the Calendly path. Boubacar to choose. |
+| Theme parity ✅ | `governance.html` re-themed to v3-WOW palette so legacy AI-Governance page matches homepage. `ai-data-audit.html` intentionally left alone — own cohesive slate/red/warm identity, not a v3-WOW mismatch. | **Shipped 2026-05-11 (14b3868):** governance.html `:root` swapped to ink/paper/amber/cyan with legacy navy/carbon/orange/clay kept as aliases pointing at the new tokens (zero-churn migration across 500+ `var()` references). Fonts: Spectral + Public Sans + JetBrains Mono. |
 
 **Live URLs:**
 
@@ -712,6 +713,31 @@ Active revenue-seeking lane launched. Not waiting on Rod, not waiting on SW T1-T
 - 0 replies + 0 bookings → trust-anchor blocker is real, pause cold pipeline until first SW client lands
 
 ---
+
+### 2026-05-11 — H1e Tier 3 partial ship + governance theme parity
+
+Commits on `bokar83/catalystworks-site` main: `5c86a39` (UX hover affordances + /signal 403 fix + issues 1+2 stub), `766538a` (canonical issue 1+2 content from Notion Content Board), `14b3868` (T3 partial: SEO anchor variation + mobile H1 + governance theme parity). All live at <https://catalystworks.consulting/>.
+
+#### What shipped
+
+- **Lens cards + outcome strip cards**: visible hover state (3px lift, amber border, amber halo shadow), title flips to amber on hover, "Read the lens →" / "See the protocol for this industry →" CTA chips slide in. Closes the "invisible click affordance" gap. Outcome strip cards converted from `<article>` to `<a href="for/...html">` so the industry pages now have entry points from the homepage.
+- **Custom cursor**: dot bumped 6px → 9px with 14px glow, 0.7 alpha. Subtle, not loud.
+- **`/signal` 403 fix**: `.htaccess` now has `DirectorySlash Off` + explicit `RewriteRule ^signal$ signal.html [NC,L]` BEFORE the general clean-URL rule. LiteSpeed no longer redirects `/signal` to `/signal/` then 403s.
+- **Newsletter archive complete**: `signal/issue-1.html` + `signal/issue-2.html` rebuilt with the canonical bodies pulled from the Notion Content Board (data-source `collection://339bcf1a-3029-81ed-8eaa-000b984ec759`). Beehiiv links preserved as authoritative source.
+- **Top nav**: "The Weekly Signal" link added; sitemap.xml gains `/signal` + 3 issue URLs.
+- **T3.2 SEO anchor variation**: `.related-links` row below the secondary section surfaces 7 varied internal anchors covering throughput / decision / information / industry pages / Weekly Signal.
+- **T3.3 mobile H1**: clamp tightened to `clamp(34px, 9vw, 44px)` + `line-height 1.02` + `letter-spacing -0.03em` at `<480px`. Headline no longer overflows narrowest phones.
+- **Theme parity**: `governance.html` re-themed to v3-WOW via alias-driven token swap (low-risk, zero touch on 500+ existing `var()` references). `ai-data-audit.html` left alone — its slate/red/warm identity is intentional.
+
+#### Still open after this session
+
+- T3.1 + T3.4: blocked on Supabase access to `diagnostic_submissions` / capture events. The catalystworks Supabase project is not in the agent's MCP scope. Either grant access or provide an export.
+- T3.5: needs Boubacar funnel decision — keep Calendly+Stripe (current direct-pay path) or add parallel Stripe-only checkout that skips Calendly entirely.
+- `ai-data-audit.html` theme decision: leave intentional standalone identity, or fold into v3-WOW palette later. No 404 risk either way.
+
+#### Process memory recorded
+
+- New rule: **Notion Content Board is the canonical source-of-truth for every published Catalyst Works newsletter / LinkedIn / X post.** When restoring previously-shipped content, query the Notion MCP first (`mcp__claude_ai_Notion__notion-search` → `notion-fetch` on the page; body lives in either page content or the `Draft` property). Detail in `~/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/feedback_content_board_is_source_of_truth.md`. Caught the issue 1+2 reconstruction because Boubacar corrected: "look in the github repo archives... they should be in the content board as sent too." The github repo did NOT have them; the Content Board did.
 
 ### 2026-05-11 — H1e Tier 2 FULLY LIVE (all 9 tasks shipped + Karpathy-reviewed merge)
 
