@@ -1027,6 +1027,34 @@ def _cmd_publish(text: str, chat_id: str) -> bool:
     threading.Thread(target=_do_publish, daemon=True).start()
     return True
 
+
+def _cmd_multiply(text: str, chat_id: str) -> bool:
+    if not text.lower().startswith("/multiply"):
+        return False
+    if len(text) > len("/multiply") and not text[len("/multiply")].isspace():
+        return False
+    from notifier import send_message as _send
+    parts = text.strip().split(maxsplit=1)
+    if len(parts) < 2 or not parts[1].strip():
+        _send(chat_id, "Usage: /multiply <notion_page_id_or_url>")
+        return True
+    source = parts[1].strip()
+    _send(chat_id, f"Multiplier fired for {source[:80]}.")
+
+    def _do_multiply():
+        try:
+            try:
+                from content_multiplier_crew import multiply_source
+            except ImportError:
+                from orchestrator.content_multiplier_crew import multiply_source
+            multiply_source(source)
+        except Exception as e:
+            logger.error(f'/multiply error: {e}', exc_info=True)
+            _send(chat_id, f"Multiplier failed: {e}")
+
+    threading.Thread(target=_do_multiply, daemon=True).start()
+    return True
+
 # ══════════════════════════════════════════════════════════════
 # SW pipeline trigger
 # ══════════════════════════════════════════════════════════════
@@ -1400,6 +1428,7 @@ _COMMANDS = [
     _cmd_query,
     _cmd_digest,
     _cmd_publish,
+    _cmd_multiply,
     _cmd_sw,
     _cmd_scan_drive,
     _cmd_lessons,

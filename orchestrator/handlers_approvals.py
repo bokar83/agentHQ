@@ -466,16 +466,22 @@ def handle_callback_query(update: dict) -> bool:
             logger.warning(f"callback_query enhance_variation handling error: {e}")
 
     elif cb_data.startswith("scout_approve:"):
-        # scout_approve:<notion_page_id> flips Content Board Status from Draft to Ready.
+        # scout_approve:<notion_page_id> flips Content Board Status to Multiply and starts multiplier now.
         try:
             notion_page_id = cb_data.split(":", 1)[1]
             from notifier import answer_callback_query, send_message
             notion = _open_notion()
             notion.update_page(notion_page_id, properties={
-                "Status": {"select": {"name": "Ready"}}
+                "Status": {"select": {"name": "Multiply"}}
             })
-            answer_callback_query(cb_id, "Approved. Status set to Ready.")
-            send_message(cb_chat_id, f"Content Scout: approved. Notion page {notion_page_id[:8]}... is now Ready.")
+            try:
+                from content_multiplier_crew import multiply_source
+            except ImportError:
+                from orchestrator.content_multiplier_crew import multiply_source
+            import threading
+            threading.Thread(target=multiply_source, args=(notion_page_id,), daemon=True).start()
+            answer_callback_query(cb_id, "Approved. Status set to Multiply.")
+            send_message(cb_chat_id, f"Content Scout: approved. Notion page {notion_page_id[:8]}... queued for multiplication.")
         except Exception as e:
             logger.warning(f"callback_query scout_approve handling error: {e}")
             try:

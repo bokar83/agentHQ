@@ -506,6 +506,42 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 
 ---
 
+### H-teardown-vault: Password-gated cold-teardown subdomain on geolisted.co (idea / enhancement)
+
+**Status:** 💡 IDEA — not in current sprint. Captured 2026-05-11.
+
+**Concept:** Host cold-teardown reports as full-fidelity HTML pages under a password-gated subdomain like `teardowns.geolisted.co` (or `audit.geolisted.co`). One unique URL + access code per prospect. Lets us send a short cold email with a "view your teardown" link instead of a plain-text 3-leak email, without exposing the analysis publicly.
+
+**Why this could lift reply rate:**
+- Cold email body stays short (council mandates honored — witnessed loss + 1 sentence + link).
+- The HTML teardown does the heavy lifting once they click. Card-grid TL;DR + score pill + paste-ready email card pattern from `feedback_html_full_repertoire.md`.
+- Password gate prevents prospects from forwarding to competitors or it indexing on Google. Stays bespoke-feeling, not a public template.
+- The gate itself = curiosity hook (similar to ConvertKit's "What's inside?" mechanic).
+
+**Why we're not doing this NOW:**
+- Council Mandate 8 (no sample-report link in cold email — spam classifier + templated read) still applies in the cold lane. This idea would test whether password-gated personalized link beats plain-text.
+- We have zero data on plain-text cold reply rate yet (measurement window opens 2026-05-12). Until plain-text is benchmarked, can't A/B against linked version.
+- geolisted.co is the SW trade-pages site; adding a teardown subdomain needs the brand guide audit (H-brand-guides) decision first.
+
+**Open questions to answer before building:**
+- Subdomain placement: `teardowns.geolisted.co` (lives in SW brand) vs `audit.catalystworks.consulting` (lives in CW brand)?
+- Password mechanism: per-prospect code in email vs single shared "trade-owner" code vs OAuth (overkill)?
+- Page expiry: do links live forever, expire 30 days, expire on first view?
+- HTML template: reuse `cold-render.py` output exactly, or strip internal analysis notes for prospect-facing version?
+
+**When to revisit:**
+- After 2026-05-19 batch 1+2 reply-rate measurement.
+- If plain-text reply rate is < 1% across 8 sends, this is the next experiment.
+- If reply rate is ≥ 1% already, deprioritize (don't fix what isn't broken).
+
+**Cross-refs:**
+- Brand guide audit: H-brand-guides (must decide subdomain placement)
+- HTML repertoire standard: `~/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/feedback_html_full_repertoire.md`
+- Cold-mode skill: `skills/website-teardown/SKILL.md`
+- Council mandate 8 (no sample link): `feedback_cold_teardown_council_mandates.md`
+
+---
+
 ### H1g: Enrichment pipeline rebuild + harvest-until-50 + thesis launch (2026-05-07)
 
 **Status:** SHIPPED 2026-05-07.
