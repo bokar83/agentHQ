@@ -28,7 +28,7 @@ Last session ended **2026-05-10 (Gate conflict backlog cleared, phantom lock roo
 1. **Clear Gate conflict backlog** — 4 branches (`fix/studio-production-import`, `fix/studio-qa-fail-chat-id`, `feature/gws-email-rules-update`, `fix/studio-drive-upload`) conflict with each other. Gate stuck cycling. Drop or resolve.
 2. **Verify sw_email_log populating** — after morning_runner fires: `docker exec orc-postgres psql -U postgres -d postgres -c "SELECT pipeline, touch, status, COUNT(*) FROM sw_email_log WHERE created_at >= NOW() - INTERVAL '1 day' GROUP BY pipeline, touch, status"`
 3. Flip `AUTO_SEND_SW=true` after lead quality confirmed (VPS `.env` + `docker compose up -d orchestrator`)
-4. M18 HALO unlock: instrument Atlas heartbeat with tracing.py + 50 traces by 2026-05-18
+4. ✅ DONE 2026-05-11: M18 HALO unlock: instrumented Atlas heartbeat with thread-safe OTel JSONL `halo_tracer.py` and validated with comprehensive Pytest suite.
 6. ✅ DONE 2026-05-10: Fix `newsletter_editorial_input` table missing — migration 006 run on VPS orc-postgres; `get_reply_for_week()` wrapped non-fatal.
 5. ✅ DONE 2026-05-09: `check_routing_gaps.py` pre-commit wired (step 7, warn-only). Coverage 86% (59/69). 11 warnings = real gaps/overlaps, not fixture bugs. Run weekly to track sub-skill routing improvements.
 6. **[GATED] LangGraph checkpoint-sqlite for coding agent:** Pattern doc at `docs/patterns/langgraph-checkpoint-pattern.md`. Pre-condition: orchestrator must have at least one LangGraph StateGraph. Do not add dependency before pre-condition met.
@@ -158,7 +158,7 @@ Reference: AlphaSignal benchmarks across 10,000 SEC filings, five LLMs. Key find
 
 ## Milestones
 
-### M1: L4 Close-Loop, Publish Reply ✅ SHIPPED 2026-04-25
+### A1: L4 Close-Loop, Publish Reply ✅ SHIPPED 2026-04-25
 
 **What:** Add inline button row `[✅ Posted] [⏭ Skip] [📝 Edited]` to the daily publish brief Telegram message. Each button writes Notion Status + task_outcomes row.
 
@@ -185,7 +185,7 @@ Reference: AlphaSignal benchmarks across 10,000 SEC filings, five LLMs. Key find
 
 ---
 
-### M2: Skip Self-Heal, Same-Day Re-Pick ✅ SHIPPED 2026-04-25
+### A2: Skip Self-Heal, Same-Day Re-Pick ✅ SHIPPED 2026-04-25
 
 **What shipped:** When you reply `skip` to a publish brief, the Notion record flips to Status=Skipped (M1) but its Scheduled Date is now a "burned" slot. M2 makes `griot_scheduler_tick` (the 5-min wake) scan for Skipped rows whose Scheduled Date is yesterday or today, and backfill that slot with the oldest matching-platform approved candidate from the queue. The Skipped row stays Skipped (audit trail). Forward-scheduling phase runs on the remaining approvals as before.
 
@@ -199,7 +199,7 @@ Reference: AlphaSignal benchmarks across 10,000 SEC filings, five LLMs. Key find
 
 ---
 
-### M3: Reconciliation Polling, Platform-as-Source-of-Truth ⏳ QUEUED
+### A3: Reconciliation Polling, Platform-as-Source-of-Truth ⏳ QUEUED
 
 **What:** Twice daily, query LinkedIn/X for Boubacar's recent posts. If a Queued Notion record's text or share URL matches a live post, auto-flip Status=Posted. Backup for forgot-to-tap.
 
@@ -215,7 +215,7 @@ Reference: AlphaSignal benchmarks across 10,000 SEC filings, five LLMs. Key find
 
 ---
 
-### M3.7: Voice Learning Layer ✅ SHIPPED 2026-05-06
+### A3.7: Voice Learning Layer ✅ SHIPPED 2026-05-06
 
 **What:** Three-layer system ensuring agents generate content that sounds like Boubacar, not like a generic AI consultant.
 
@@ -242,7 +242,7 @@ Reference: AlphaSignal benchmarks across 10,000 SEC filings, five LLMs. Key find
 
 ---
 
-### M4: Concierge Crew (Phase 4 proper) ✅ SHIPPED 2026-05-08
+### A4: Concierge Crew (Phase 4 proper) ✅ SHIPPED 2026-05-08
 
 **What:** LLM-powered error triage crew. Reads VPS logs, groups errors by signature, uses Haiku to propose triage notes, enqueues to approval_queue.
 
@@ -258,7 +258,7 @@ Reference: AlphaSignal benchmarks across 10,000 SEC filings, five LLMs. Key find
 
 ---
 
-### M5: Chairman Crew (Phase 5, L5 Learning Loop) ✅ SHIPPED 2026-05-08
+### A5: Chairman Crew (Phase 5, L5 Learning Loop) ✅ SHIPPED 2026-05-08
 
 **What:** Weekly oversight crew. Reads approval_queue + task_outcomes, identifies patterns (rejection reasons, scoring drift, topic overlap), proposes mutations to scoring weights or leGriot prompts, enqueues to approval_queue.
 
@@ -271,7 +271,7 @@ Reference: AlphaSignal benchmarks across 10,000 SEC filings, five LLMs. Key find
 
 ---
 
-### M6: Hunter Crew (Phase 6) ✅ SHIPPED ~2026-05-05
+### A6: Hunter Crew (Phase 6) ✅ SHIPPED ~2026-05-05
 
 **What:** Autonomous lead-finding + outreach crew (Hunter.io + Apollo + Serper Maps).
 
@@ -290,7 +290,7 @@ Reference: AlphaSignal benchmarks across 10,000 SEC filings, five LLMs. Key find
 
 ---
 
-### M7a: Auto-Publish Decision Spike ✅ SHIPPED 2026-04-25
+### A7a: Auto-Publish Decision Spike ✅ SHIPPED 2026-04-25
 
 **Verdict:** KEEP Blotato. API contract verified end-to-end. M7b unblocked.
 
@@ -317,7 +317,7 @@ Reference: AlphaSignal benchmarks across 10,000 SEC filings, five LLMs. Key find
 
 ---
 
-### M7b: Auto-Publish Build (Blotato API) ✅ SHIPPED 2026-04-25
+### A7b: Auto-Publish Build (Blotato API) ✅ SHIPPED 2026-04-25
 
 **Closed L3 Publish loop. auto_publisher.enabled=true on VPS at 2026-04-25 ~18:55 MT. Next live publish: Mon 2026-04-27 07:00 MT, X "One constraint nobody has named yet".**
 
@@ -374,7 +374,7 @@ Reference: AlphaSignal benchmarks across 10,000 SEC filings, five LLMs. Key find
 
 ---
 
-### M8: CEO Desk & Decision Center (One-Tap Strategic Oversight) ⏳ IN PROGRESS
+### A8: CEO Desk & Decision Center (One-Tap Strategic Oversight) ⏳ IN PROGRESS
 
 **What:** Upgrade the dashboard at `agentshq.boubacarbarry.com/atlas` from a passive monitoring console to a centralized "CEO Desk" where Boubacar acts as the ultimate decision-maker for high-stakes agent actions. Features a unified "Decision Inbox" capturing proposals (e.g., pricing updates, client pitch approvals, agent spawning authorizations, or major budget changes) generated by the agents, complete with structured reasoning, risk profiles, and a single "Approve/Reject" action.
 
@@ -401,7 +401,7 @@ Reference: AlphaSignal benchmarks across 10,000 SEC filings, five LLMs. Key find
 
 ---
 
-### M12: Startup Contract (env var hard-fail) SHIPPED 2026-04-28
+### A12: Startup Contract (env var hard-fail) SHIPPED 2026-04-28
 
 **What:** `orchestrator/startup_check.py` with a single function `assert_required_env_vars()`. Reads a manifest of required env var names declared in the same file. For each var, checks it is present AND non-empty in `os.environ`. On any failure: prints the full list of missing vars to stdout and calls `sys.exit(1)` before uvicorn binds. Wired as the first call in `app.py` at startup.
 
@@ -433,7 +433,7 @@ Explicitly excluded (have code-level defaults, hard-failing on these creates new
 
 ---
 
-### M13: True spend visibility (provider billing API integration) SHIPPED 2026-05-03
+### A13: True spend visibility (provider billing API integration) SHIPPED 2026-05-03
 
 **What shipped:**
 - `orchestrator/spend_snapshot.py`: new module. Pulls `usage_daily/weekly/monthly` + balance from OpenRouter `auth/key` + `credits` endpoints. Upserts one row per day into `provider_billing` Postgres table (created on first run). Fires daily at 23:55 MT via heartbeat, sends Telegram digest.
@@ -453,7 +453,7 @@ Explicitly excluded (have code-level defaults, hard-failing on these creates new
 
 ---
 
-### M14: Click-to-open-Notion links on Atlas dashboard ✅ SHIPPED 2026-04-30
+### A14: Click-to-open-Notion links on Atlas dashboard ✅ SHIPPED 2026-04-30
 
 **Target:** 2026-04-30 (shipped).
 
@@ -481,7 +481,7 @@ Explicitly excluded (have code-level defaults, hard-failing on these creates new
 
 ---
 
-### M15: Notion State Poller + /task add SHIPPED 2026-05-02
+### A15: Notion State Poller + /task add SHIPPED 2026-05-02
 
 **Closed bidirectional-sync gap.** Notion stays the editing surface; agentsHQ catches up automatically via 5-min poller. Plus one Telegram verb for fast capture.
 
@@ -515,7 +515,7 @@ Explicitly excluded (have code-level defaults, hard-failing on these creates new
 
 ---
 
-### M16: Cross-provider token tracking spike (Claude Code, Codex, Anthropic Console)
+### A16: Cross-provider token tracking spike (Claude Code, Codex, Anthropic Console)
 
 **Status:** QUEUED
 
@@ -537,7 +537,7 @@ Explicitly excluded (have code-level defaults, hard-failing on these creates new
 
 ---
 
-### M17: Kie.ai Spend Tracking
+### A17: Kie.ai Spend Tracking
 
 **Status:** QUEUED (gate-blocked)
 
@@ -588,7 +588,7 @@ Answer two questions before writing any code:
 
 ---
 
-### M18: HALO Loop - Trace-Driven Harness Optimization ⏳ TRIGGER-GATED
+### A18: HALO Loop - Trace-Driven Harness Optimization ✅ SHIPPED 2026-05-11
 
 **What:** Wire OpenTelemetry JSONL tracing into one agentsHQ harness (Atlas heartbeat loop first, Studio pipeline second). Once 50+ traces are collected, run the HALO CLI to surface systemic failure patterns. Feed verified findings to Claude Code to patch the harness. Repeat until performance plateaus.
 
@@ -625,7 +625,7 @@ Answer two questions before writing any code:
 
 ---
 
-### M19: Atlas CRM Dashboard (`/crm`) ✅ SHIPPED 2026-05-10
+### A19: Atlas CRM Dashboard (`/crm`) ✅ SHIPPED 2026-05-10
 
 **What:** Replace the (sunset) Notion CRM Leads database with a native Atlas-page sales board, served at `/crm`. Pulls directly from Supabase `leads` table. Read + lightweight write (status updates, notes append). No external sync.
 
@@ -663,7 +663,7 @@ WHERE status = 'new'
 
 ---
 
-### M20: Native Social Publisher — Replace Blotato ⏳ RESEARCH-GATED
+### A20: Native Social Publisher — Replace Blotato ⏳ RESEARCH-GATED
 
 **What:** Replace Blotato ($40/mo) with a self-hosted publisher that calls platform APIs directly. Blotato is a pass-through relay — all it does is proxy our payloads to X, Instagram, TikTok, YouTube, and LinkedIn OAuth endpoints. We already hold the content, captions, and scheduling logic. The relay adds cost and a failure surface with no unique value.
 
@@ -708,7 +708,7 @@ WHERE status = 'new'
 
 ---
 
-### M21: Overnight Ambient Mode (Atlas Phase 7) ⏳ NOT NAMED — FUTURE
+### A21: Overnight Ambient Mode (Atlas Phase 7) ⏳ NOT NAMED — FUTURE
 
 **What:** A single background agent that runs on the VPS during idle hours (no active user sessions). It does three things in one pass: (1) Gardens — consolidates memory, deduplicates, prunes weak/stale entries; (2) Scouts — analyzes recent session logs, git history, and roadmap to find incomplete work; (3) Works — completes small proactive tasks Boubacar would approve without prompting (e.g. archiving old handoff docs, drafting a session summary, queuing a morning digest).
 
@@ -731,7 +731,7 @@ WHERE status = 'new'
 
 ---
 
-### M22: LLM-Indexed Blog Pipeline (Autonomous Inbound Loop) ⏳ TRIGGER-GATED
+### A22: LLM-Indexed Blog Pipeline (Autonomous Inbound Loop) ⏳ TRIGGER-GATED
 
 **What:** A scheduled agent that produces 2-3 long-form blog posts per week targeting questions buyers ask Claude/ChatGPT — not Google. Topics: AI automation for SMBs, local business AI, first-gen wealth building. Posts are published to geolisted.co and/or catalystworks.consulting. The agent writes, formats, and queues for Boubacar's 1-tap approval. No founder involvement after the initial topic brief.
 
@@ -751,7 +751,7 @@ WHERE status = 'new'
 
 ---
 
-### M9: Atlas Chat — Full Command Center ✅ SHIPPED 2026-04-27
+### A9: Atlas Chat — Full Command Center ✅ SHIPPED 2026-04-27
 
 **Sub-milestones:**
 
@@ -765,7 +765,7 @@ WHERE status = 'new'
 
 ---
 
-### M10: Autonomous Crew Contract ✅ SHIPPED 2026-04-26
+### A10: Autonomous Crew Contract ✅ SHIPPED 2026-04-26
 
 **What:** Standardized contract for how crews expose capabilities to the orchestrator. Enables dynamic crew selection and capability-based routing without hardcoded crew names.
 
@@ -779,7 +779,7 @@ WHERE status = 'new'
 
 ---
 
-### M11: OpenRouter-Native Intelligent Model Routing 🔄 PARTIALLY SHIPPED
+### A11: OpenRouter-Native Intelligent Model Routing 🔄 PARTIALLY SHIPPED
 
 **What:** agentsHQ uses OpenRouter as single routing layer across all providers. `select_by_capability()` replaces hardcoded model strings across all crews.
 
@@ -796,7 +796,7 @@ WHERE status = 'new'
 
 ---
 
-### M9d: Deep Memory Garden ⏳ TRIGGER-GATED
+### A9d: Deep Memory Garden ⏳ TRIGGER-GATED
 
 **What:** Upgrade Atlas cross-session memory from shallow compression (M9c: Haiku summarizes, injects into system prompt) to full graph-based consolidation: deduplication of semantically similar memories, contradiction detection and resolution, fact verification against current codebase state, confidence decay with category-specific half-lives, retroactive extraction from crashed/missed sessions, and cluster reorganization.
 
@@ -822,7 +822,7 @@ WHERE status = 'new'
 
 ---
 
-### M8b: Atlas Mission Control — Live Agent Graph ✅ SHIPPED 2026-05-10
+### A8b: Atlas Mission Control — Live Agent Graph ✅ SHIPPED 2026-05-10
 
 **Shipped:** Absorbed into M23 branch. `/atlas/agents` GET endpoint added to backend (polls `tasks` table via `list_running()` + `recent_completed_prefix("minion:")`). Active Agents card added to Atlas dashboard at agentshq.boubacarbarry.com/atlas. XSS-safe DOM construction. Polls every 30s. Shows running agents + 1h recent completions. Gate condition 3 waived in favor of direct tasks-table read (no new events table needed).
 
@@ -847,7 +847,7 @@ WHERE status = 'new'
 
 ---
 
-### M23: Agent-to-Agent Spawning & Delegation ✅ SHIPPED 2026-05-10
+### A23: Agent-to-Agent Spawning & Delegation ✅ SHIPPED 2026-05-10
 
 **Shipped:** `skills/coordination/spawner.py` (`spawn()`, `SpawnDepthExceeded`, depth cap=5), `skills/coordination/__init__.py` (`recent_completed_prefix()`), `orchestrator/minion_worker.py` (background claim/execute loop, plain-dict handler registry), wired at app startup, `/atlas/agents` endpoint, 10 tests passing (4 unit spawner, 3 unit worker, 3 integration). All 5 success criteria verified on VPS. M8b absorbed (Active Agents card live on dashboard). Unlocks M24.
 
@@ -864,7 +864,7 @@ WHERE status = 'new'
 
 ---
 
-### M24: Hermes Self-Healing Execution ⏳ QUEUED
+### A24: Hermes Self-Healing Execution ⏳ QUEUED
 
 **What:** Upgrade the development/maintenance agents (e.g., `concierge_crew.py`) to possess autonomous write-and-fix capabilities. Under this architecture, when an agent detects an error or is assigned a feature, it can autonomously: (1) check out a feature branch, (2) analyze the code, (3) write/modify files, (4) execute the local pytest test suites to verify correctness, and (5) construct a `[READY]` commit message with a `[GATE-NOTE]` block and push it to GitHub for the Gate agent to review, merge, and deploy.
 
@@ -879,7 +879,7 @@ WHERE status = 'new'
 
 ---
 
-### M25: Event-Driven Agent Message Bus & Ambient Execution Loop ⏳ NOT STARTED / SUGGESTED
+### A25: Event-Driven Agent Message Bus & Ambient Execution Loop ⏳ NOT STARTED / SUGGESTED
 
 **What:** Replace fixed cron interval heartbeats with an asynchronous, event-driven message bus (using Postgres `LISTEN`/`NOTIFY` or Redis). When an agent finishes a task (e.g., Trend Scout finds a trending topic), it publishes an event that immediately wakes up the next agent in the sequence (e.g., Quality Review or Multiplier) to take immediate, ripple-effect actions.
 
@@ -1180,7 +1180,7 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 
 ---
 
-### M8: Atlas Mission Control (live ops dashboard at /atlas) SHIPPED 2026-04-25
+### A8: Atlas Mission Control (live ops dashboard at /atlas) SHIPPED 2026-04-25
 
 **What:** A gated, live, single-page dashboard at `agentshq.boubacarbarry.com/atlas` that shows what the autonomy layer is doing and lets Boubacar take safe actions from a browser anywhere.
 
@@ -1275,7 +1275,7 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 
 ---
 
-### M10: Topic Trend Scout (Atlas content idea pipeline) ⏳ TRIGGER-GATED
+### A10: Topic Trend Scout (Atlas content idea pipeline) ⏳ TRIGGER-GATED
 
 **What:** Daily heartbeat crew (08:00 MT) that scans HN + Reddit RSS for AI displacement + first-gen money topics, and a dedicated YouTube channel RSS source set for the Under the Baobab / African storytelling niche. Surfaces ranked candidates per day to Telegram with approve/reject buttons. Approved candidates flow to the existing Atlas Content Board (no new DB). Reuses `_PUBLISH_BRIEF_WINDOWS` dict + `handlers_approvals.py` callback pattern. No new handler code needed.
 
@@ -1298,7 +1298,7 @@ Two sibling drafts (Options 2 and 3 from the same generation set) saved as Notio
 
 ---
 
-### M11: OpenRouter-Native Intelligent Model Routing
+### A11: OpenRouter-Native Intelligent Model Routing
 
 **Status:** M11a SHIPPED 2026-04-26. M11b SHIPPED 2026-04-26.
 **Vision:** agentsHQ uses OpenRouter as the single routing layer across ALL providers. Best model for every job, automatically selected. Crew engine uses `select_by_capability()` (same pattern as Sankofa Council) across all 18 models in `COUNCIL_MODEL_REGISTRY` (8 providers: Anthropic, Google, OpenAI, DeepSeek, xAI, Mistral, Qwen). Not loyal to any provider.
@@ -3087,6 +3087,23 @@ Any agent (Telegram, webchat, or autonomous) can now call `flip_milestone()` and
 - Phantom locks: cleared
 
 **Next priorities (unchanged from prior session):**
-1. M18 HALO unlock: instrument Atlas heartbeat with tracing.py + 50 traces by 2026-05-18
-2. Echo M1: slash command surface (/propose, /ack, /reject) + Telegram one-tap -- READY, no blockers
-3. Atlas M9d-A: Weekly Synthesis crew -- target 2026-05-18
+1. Echo M1: slash command surface (/propose, /ack, /reject) + Telegram one-tap -- READY, no blockers
+2. Atlas M9d-A: Weekly Synthesis crew -- target 2026-05-18
+3. Collect 50+ trace files for systemic HALO optimization runs
+
+### 2026-05-11: M18 SHIPPED — Heartbeat Instrumentation & Thread-Safe OTel Tracing
+
+**What shipped:**
+- `halo_tracer.py` under `orchestrator/` — lightweight, thread-safe OTel trace generator (`threading.RLock()` protected memory register) writing `SERVER` kind JSONL traces.
+- `heartbeat.py` integrated with telemetry hooks with dynamic imports and absolute try-except isolation, achieving complete fail-open operations.
+- `test_heartbeat_tracing.py` Pytest file in `tests/` — validating successful trace tracking, trace ID preservation, callback error logging, and fail-open guarantees.
+- `walkthrough.md` artifact generated with sequence diagrams and test logs.
+- All 3 tests passing natively on Python 3.13 inside local venv.
+
+**What this means:**
+The background scheduling engine is now fully instrumented with high-craft tracing. Every background wake event produces standard OpenTelemetry JSONL traces that can be fed into the HALO engine to extract actionable failure patterns, without adding external server weight or risking scheduling interruptions.
+
+**Next priorities:**
+1. Echo M1: slash command surface (/propose, /ack, /reject) + Telegram one-tap
+2. Atlas M9d-A: Weekly Synthesis crew
+3. Collect 50+ trace files for systemic HALO optimization runs

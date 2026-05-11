@@ -49,7 +49,7 @@ Done = all five true at the same time.
 
 ## Milestones
 
-### M0: Governance scaffolding ✅ SHIPPED 2026-05-02
+### C0: Governance scaffolding ✅ SHIPPED 2026-05-02
 
 **What:** Path B chosen post-Sankofa+Karpathy audits. AGENT_SOP stays as the rules library (load-bearing). `docs/GOVERNANCE.md` is the 64-line routing table. Conflict-resolution rule, retirement protocol, success criteria, explicit gap statement all locked.
 
@@ -65,7 +65,7 @@ Done = all five true at the same time.
 
 ---
 
-### M1: AGENTS.md compliance audit + backfill ✅ SHIPPED 2026-05-02
+### C1: AGENTS.md compliance audit + backfill ✅ SHIPPED 2026-05-02
 
 **What:** Every top-level folder must have an AGENTS.md (or README.md where the rule allows it). 11 missing AGENTS.md written (config, data, deliverables, migrations, projects, research, sql, templates, tests, thepopebot, zzzArchive). 8 existing audited; n8n/AGENTS.md fixed for stale workflows/ subfolder reference. GOVERNANCE.md cross-refs added to all 8 existing. 100% folder-governance coverage; was 32%. Notion task created and marked Done.
 
@@ -85,7 +85,7 @@ Done = all five true at the same time.
 
 ---
 
-### M2: Enforcement layer ✅ SHIPPED 2026-05-02 (evening)
+### C2: Enforcement layer ✅ SHIPPED 2026-05-02 (evening)
 
 **What:** Converted governance rules from documents to mechanism. Six pre-commit hooks now live (folder-purpose from M0 plus the five M2 hooks). Total Python: ~750 lines across 5 new scripts; 31 tests passing.
 
@@ -108,7 +108,7 @@ Done = all five true at the same time.
 
 ---
 
-### M2.5b: Routing fixture coverage — 100% ✅ SHIPPED 2026-05-10
+### C2.5b: Routing fixture coverage — 100% ✅ SHIPPED 2026-05-10
 
 **What:** Brought routing fixture coverage from 59/69 (86%) to 69/69 (100%). Flipped pre-commit hook from warn-only to strict mode.
 
@@ -125,7 +125,7 @@ Done = all five true at the same time.
 
 ---
 
-### M2.5: Routing evaluator gap detection (gbrain pattern) ✅ SHIPPED 2026-05-09
+### C2.5: Routing evaluator gap detection (gbrain pattern) ✅ SHIPPED 2026-05-09
 
 **Pattern source:** garrytan/gbrain `src/core/routing-eval.ts` + `src/core/check-resolvable.ts`. Absorbed 2026-05-09 (PROCEED — pattern-only, no install).
 
@@ -155,7 +155,7 @@ Done = all five true at the same time.
 
 ---
 
-### M6: Monthly self-audit of agentsHQ own config ⏳ QUEUED (first run 2026-05-16)
+### C6: Monthly self-audit of agentsHQ own config ⏳ QUEUED (first run 2026-05-16)
 
 **Pattern source:** ECC AgentShield concept (absorbed 2026-05-09 from X-thread). Core insight: the Security Scan Gate in agentshq-absorb scans external artifacts but never turns inward. Our own CLAUDE.md, hooks, settings.json, and MCP configs have never been audited.
 
@@ -194,7 +194,7 @@ Action required: Check 3 reviewed 2026-05-09: Read*/Edit*/Write* broad allows ar
 
 ---
 
-### M3: Quarterly purge cadence ⏳ ARMED 2026-05-02 (first run 2026-08-02)
+### C3: Quarterly purge cadence ⏳ ARMED 2026-05-02 (first run 2026-08-02)
 
 **What:** Every 90 days, run a governance review pass. Surface rules untouched 90+ days that have no commits/hooks/memory referencing them. Decide retire vs keep, with manifest entries for any retirement.
 
@@ -217,7 +217,7 @@ Action required: Check 3 reviewed 2026-05-09: Read*/Edit*/Write* broad allows ar
 
 ---
 
-### M5: output/ submodule reconciliation + attire-inspo relocation ✅ SHIPPED 2026-05-02 (evening, late)
+### C5: output/ submodule reconciliation + attire-inspo relocation ✅ SHIPPED 2026-05-02 (evening, late)
 
 **What shipped (collapsed scope):** Boubacar reframed the original spec on 2026-05-02 evening: both `bokar83/attire-inspo-app` and `bokar83/signal-works-demo-hvac` already exist as separate GitHub repos and stay separate. The only real work is local hygiene. Three tasks, ~10 min total.
 
@@ -236,7 +236,7 @@ Action required: Check 3 reviewed 2026-05-09: Read*/Edit*/Write* broad allows ar
 
 ---
 
-### M5 (original spec, descoped): output/ submodule restructure
+### C5 (original spec, descoped): output/ submodule restructure
 
 **Why:** Phase 3 of the 2026-05-02 structural cleanup surfaced two real issues that need a dedicated session:
 
@@ -272,7 +272,7 @@ Action required: Check 3 reviewed 2026-05-09: Read*/Edit*/Write* broad allows ar
 
 ---
 
-### M4: LLM-readable governance manifest ✅ SHIPPED 2026-05-02 (evening)
+### C4: LLM-readable governance manifest ✅ SHIPPED 2026-05-02 (evening)
 
 **What:** Machine-readable mirror of the GOVERNANCE.md routing table at `docs/governance.manifest.json`. Lets every LLM agent (Codex, MCP servers, future bots) load the routing table without parsing markdown. GOVERNANCE.md remains the human-readable source of truth; the manifest is the machine-readable mirror.
 
@@ -292,7 +292,7 @@ Action required: Check 3 reviewed 2026-05-09: Read*/Edit*/Write* broad allows ar
 
 ---
 
-### M6: Security Scan Gate v2 patterns ✅ SHIPPED 2026-05-04
+### C6: Security Scan Gate v2 patterns ✅ SHIPPED 2026-05-04
 
 **What:** Extend the v1 security scan (2 patterns shipped 2026-05-04) with the remaining 5 high-value patterns:
 
@@ -312,7 +312,7 @@ Action required: Check 3 reviewed 2026-05-09: Read*/Edit*/Write* broad allows ar
 
 ---
 
-### M7: Pre-Hermes Security Lockdown ✅ SHIPPED 2026-05-10
+### C7: Pre-Hermes Security Lockdown ✅ SHIPPED 2026-05-10
 
 **What:** Hardened workspace before Hermes self-healing agent receives write access.
 

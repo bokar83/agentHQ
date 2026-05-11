@@ -73,7 +73,7 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 
 ## Milestones
 
-### M1: Engine First, Three-Channel Batch Second ✅ SHIPPED 2026-04-25
+### S1: Engine First, Three-Channel Batch Second ✅ SHIPPED 2026-04-25
 
 **Same-day ship after Atlas M7b.** Engine LIVE on VPS, kill switch off pending Boubacar's first dry-run brief verification. THREE channels in M1 batch (not 2 as originally scoped): Under the Baobab + AI Catalyst + First Generation Money.
 
@@ -119,7 +119,7 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 
 ---
 
-### M2: Brand Identity for Two Channels ✅ SHIPPED 2026-05-03
+### S2: Brand Identity for Two Channels ✅ SHIPPED 2026-05-03
 
 **What:** Lock brand identity for BOTH M1 channels in parallel. Each channel gets: name (final), logo, color palette, typography, motion vocabulary, voice identity (TTS voice or stock narration), end-card template, thumbnail template, channel-page assets (avatar, banner, about copy, links).
 
@@ -137,7 +137,7 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 
 ---
 
-### M3: Content Production Pipeline ✅ SHIPPED 2026-05-05
+### S3: Content Production Pipeline ✅ SHIPPED 2026-05-05
 
 **What:** Wire the studio production crew that takes a Pipeline DB candidate (qa-passed) and produces a publish-ready asset. Pipeline shape:
 
@@ -166,7 +166,7 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 
 ---
 
-### M3.4: Scene Motion Upgrade , Ken Burns → Mixed Video ✅ SHIPPED 2026-05-10
+### S3.4: Scene Motion Upgrade , Ken Burns → Mixed Video ✅ SHIPPED 2026-05-10
 
 **What:** Replace all-Ken-Burns scene rendering with a mixed-motion pipeline. Instead of every scene being a still image with zoompan, 2-3 scenes per Short get real video motion via Kai image-to-video (Seedance). Remaining scenes keep Ken Burns.
 
@@ -196,7 +196,7 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 
 ---
 
-### M3.5: Channel Cloner Pipeline ⏳ QUEUED (post-M3)
+### S3.5: Channel Cloner Pipeline ⏳ QUEUED (post-M3)
 
 **What:** Reverse-engineer a successful YouTube channel's full surface (voice, scripts, visuals, thumbnails) and produce new content modeled after it. Same M3 production engine, different input shape: instead of trend-scout candidate → original script, the cloner takes 3-5 reference channels → style profile → script in that style → visuals matching the channel's aesthetic → thumbnails matching their grammar.
 
@@ -252,7 +252,7 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 
 ---
 
-### M3.6: Content Intelligence Layer ⏳ STUB LIVE (post-M3 confirm)
+### S3.6: Content Intelligence Layer ⏳ STUB LIVE (post-M3 confirm)
 
 **What:** Per-channel intelligence dossiers injected into the Studio script crew at production time. Scripts read niche signal, competitor gaps, and proven hooks before writing. Scripts do not write blind.
 
@@ -282,7 +282,7 @@ Anything outside these gates is descoped or future enhancement. If a gate stops 
 
 ---
 
-### M3.7: Content Multiplier with Remix QA 🔄 IN PROGRESS (started 2026-05-07)
+### S3.7: Content Multiplier with Remix QA 🔄 IN PROGRESS (started 2026-05-07)
 
 **What:** Take ONE approved source (article, YouTube video, post, PDF, raw text) and generate 9 atomic content pieces aligned to Boubacar's voice and the 8 diagnostic lenses. Pieces route to LinkedIn, X, and matching Studio channel video scripts. QA can route a source three ways: passed (use verbatim), remix (strip unverifiable bits, keep concept, write Boubacar's original take), or failed (truly off-brand).
 
@@ -359,7 +359,7 @@ QA classifies each failure as FATAL or FIXABLE. All FIXABLE = qa-remix. Any FATA
 
 ---
 
-### M4: Multi-Channel Publish Pipeline 🔄 IN PROGRESS
+### S4: Multi-Channel Publish Pipeline 🔄 IN PROGRESS
 
 **What:** Auto-publish from Studio Pipeline DB to the platform on Scheduled Date. Default path: Blotato Creator at $97/mo (verified live 2026-04-25), supports YouTube + IG + TikTok + Threads + LinkedIn + X + FB + Pinterest, 5,000 AI credits/mo, 40 social accounts.
 
@@ -386,7 +386,7 @@ QA classifies each failure as FATAL or FIXABLE. All FIXABLE = qa-remix. Any FATA
 
 ---
 
-### M5: Performance Tracking and Analytics Ingestion ⏳ QUEUED
+### S5: Performance Tracking and Analytics Ingestion ⏳ QUEUED
 
 **What:** Pull per-channel and per-asset metrics into a Studio dashboard (or Notion view). Daily ingestion of: views, watch time, subs gained, click-through, RPM, top-performing assets, drop-off curves where the platform exposes them.
 
@@ -399,7 +399,7 @@ QA classifies each failure as FATAL or FIXABLE. All FIXABLE = qa-remix. Any FATA
 
 ---
 
-### M6: Monetization Wiring ⏳ TRIGGER-GATED
+### S6: Monetization Wiring ⏳ TRIGGER-GATED
 
 **Channel Launch Protocol:** See [`skills/kie_media/references/channel-launch-doctrine.md`](../../skills/kie_media/references/channel-launch-doctrine.md). Covers: 5-decision launch framework, 4-part content formula, Shorts path doctrine, iteration protocol. Load at every new channel launch.
 
@@ -414,7 +414,7 @@ QA classifies each failure as FATAL or FIXABLE. All FIXABLE = qa-remix. Any FATA
 
 ---
 
-### M7: Channel 3 (Wealth Atlas or Trend-Scout Pick) ⏳ TRIGGER-GATED
+### S7: Channel 3 (Wealth Atlas or Trend-Scout Pick) ⏳ TRIGGER-GATED
 
 **What:** Add a third channel to the portfolio. Default candidate: Wealth Atlas (faceless first-gen personal finance, $15-22 RPM, deferred from M1). Alternative: whichever niche the trend scout has produced strongest signal on after 14+ days of daily briefs. Reuses M3 production pipeline with channel-specific brand and niche.
 
@@ -431,7 +431,7 @@ QA classifies each failure as FATAL or FIXABLE. All FIXABLE = qa-remix. Any FATA
 
 ---
 
-### M8: Channel 4 + Operations Layer + Portfolio Engine Maturation ⏳ TRIGGER-GATED
+### S8: Channel 4 + Operations Layer + Portfolio Engine Maturation ⏳ TRIGGER-GATED
 
 **What:** Add Channel 4 (likely Studio Logs / Agentic Diary, the meta-content channel that is the proof point for AI Catalyst and CW) AND lock the operations layer that lets the system run open-endedly. Includes:
 

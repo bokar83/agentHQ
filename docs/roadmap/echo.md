@@ -31,7 +31,7 @@ The pause-to-commit ceremony is gone. Boubacar can let Claude (or any autonomous
 
 ## Milestones
 
-### M1 - Slash command surface (THE SVP)
+### E1 - Slash command surface (THE SVP)
 
 **Status:** READY. Build any session.
 
@@ -65,7 +65,7 @@ The pause-to-commit ceremony is gone. Boubacar can let Claude (or any autonomous
 
 ---
 
-### M2 - Second proposal kind
+### E2 - Second proposal kind
 
 **Status:** GATED on M1 + 1 week of real use.
 
@@ -83,7 +83,7 @@ The pause-to-commit ceremony is gone. Boubacar can let Claude (or any autonomous
 
 ---
 
-### M3 - Multi-agent ingestion
+### E3 - Multi-agent ingestion
 
 **Status:** GATED on M2.
 
@@ -98,7 +98,7 @@ The pause-to-commit ceremony is gone. Boubacar can let Claude (or any autonomous
 
 ---
 
-### M2.5 - Push Gate: file-locking discipline + conflict detection
+### E2.5 - Push Gate: file-locking discipline + conflict detection
 
 **Status:** PLANNED. Gated on M2 (`deploy-proposal` kind in real use).
 
@@ -140,7 +140,7 @@ The pause-to-commit ceremony is gone. Boubacar can let Claude (or any autonomous
 
 ---
 
-### M4 - Auto-detection (DEFERRED INDEFINITELY)
+### E4 - Auto-detection (DEFERRED INDEFINITELY)
 
 **Status:** DEFERRED.
 
@@ -150,7 +150,7 @@ The pause-to-commit ceremony is gone. Boubacar can let Claude (or any autonomous
 
 ---
 
-### M5 - Reversible redirection across dependent tasks (DEFERRED)
+### E5 - Reversible redirection across dependent tasks (DEFERRED)
 
 **Status:** DEFERRED.
 

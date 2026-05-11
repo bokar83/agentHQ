@@ -60,7 +60,7 @@ Target: $5K MRR by June 2026. Possible framings to choose from:
 
 ## Milestones
 
-### R1: First Signal Works contract (trigger: email reply converts)
+### H1: First Signal Works contract (trigger: email reply converts)
 
 **Status:** In progress. **First-touch SENT 2026-05-07 to Rod (Elevate Roofing & Construction, Medford OR)** with two URLs (demo site + mobile-first audit brief). Awaiting reply.
 
@@ -87,7 +87,7 @@ Target: $5K MRR by June 2026. Possible framings to choose from:
 
 **Success criterion:** Signed contract + first payment received.
 
-#### R1a: Score-report conversion methodology (NEW . added 2026-05-01 mid-session)
+#### H1a: Score-report conversion methodology (NEW . added 2026-05-01 mid-session)
 
 **Why this exists:** First conversion attempt (Rod / Elevate) surfaced a gap in the SW pitch . the v1 "Before/After scorecard" report was internally proof-strong but cold-read weak. Sankofa Council 2026-05-01 verdict: judgment-call scores torch trust, "GEO" jargon gates comprehension, no money line, no real CTA, project-plan masquerading as a call-to-action. The fix is a repeatable 8-step playbook every SW prospect now goes through.
 
@@ -118,7 +118,7 @@ Target: $5K MRR by June 2026. Possible framings to choose from:
 
 **Success criterion for R1a (separate from R1):** the 8-step playbook is captured in `skills/signal-works-conversion/SKILL.md` (sibling to `signal-works-pitch-reel`), runs end-to-end on Rod, and either (a) Rod converts using it OR (b) we surface why he didn't and the playbook is updated for SW prospect #2.
 
-#### R1a-v3: Hook-and-deliverable architecture (locked 2026-05-01 mid-session, post-v2 Sankofa)
+#### H1a-v3: Hook-and-deliverable architecture (locked 2026-05-01 mid-session, post-v2 Sankofa)
 
 **Why this is here:** v2 stress-test verdict on 2026-05-01: "v2 is shaped like a deliverable. It needs to be shaped like a fishing lure." Council disagreement resolved by operator: skill scales to thousands of contractors, conversion math favors the lure-and-deliverable split.
 
@@ -197,7 +197,7 @@ skills/signal-works-conversion/
 
 ---
 
-### R1c: website-teardown skill (one-trigger master diagnostic)
+### H1c: website-teardown skill (one-trigger master diagnostic)
 
 **Status:** SHIPPED 2026-05-04. SKILL.md + both HTML report templates built and pushed on `feature/website-teardown`. Ready to test on next prospect.
 **Trigger:** Any teardown request now uses `/website-teardown` instead of manually invoking 4-5 separate skills.
@@ -222,7 +222,7 @@ skills/signal-works-conversion/
 
 ---
 
-### R1d: catalystworks.consulting v1 self-teardown (eat our own food)
+### H1d: catalystworks.consulting v1 self-teardown (eat our own food)
 
 **Status:** Teardown completed 2026-05-01 against the live CW site. Verdict: ITERATE. Patches applying on `dev` branch as of 2026-05-01.
 **Trigger:** First end-to-end run of the website-teardown skill (R1c). Self-applied to validate the pipeline before pointing it at prospects.
@@ -261,7 +261,7 @@ skills/signal-works-conversion/
 
 ---
 
-### R1f: frontend-design skill - art direction + design audit lift (taste-skill absorb)
+### H1f: frontend-design skill - art direction + design audit lift (taste-skill absorb)
 
 **Status:** PROCEED. Integration target 2026-05-07.
 **Source:** `leonxlnx/taste-skill` (MIT). Security scan: STATIC-CLEAN.
@@ -289,7 +289,7 @@ skills/signal-works-conversion/
 
 ---
 
-### R1e: catalystworks.consulting v3-WOW (cinematic + Constraints AI live demo)
+### H1e: catalystworks.consulting v3-WOW (cinematic + Constraints AI live demo)
 
 **Status:** Tier 1 shipped 2026-05-01 to `dev-v3-WOW` branch. Sankofa Council + design+SEO audit run. Tier 2 + Tier 3 planned below, not yet built.
 
@@ -337,7 +337,7 @@ skills/signal-works-conversion/
 
 ---
 
-### R-automation: CW AI automation delivery service line
+### H-automation: CW AI automation delivery service line
 
 **Status:** Queued. n8n-mcp MCP installed 2026-05-04. Skill build target 2026-05-18.
 **Trigger:** After R1 closes (need first social proof) OR first inbound automation inquiry.
@@ -358,7 +358,7 @@ skills/signal-works-conversion/
 
 ---
 
-### R2: SaaS Audit offer live ($500 flat)
+### H2: SaaS Audit offer live ($500 flat)
 
 **Status:** SHIPPED 2026-05-04.
 
@@ -375,7 +375,7 @@ skills/signal-works-conversion/
 
 ---
 
-### R3: First CW Signal Session sold ($497)
+### H3: First CW Signal Session sold ($497)
 
 **Status:** Waiting on R1 social proof or direct LinkedIn outreach conversion.
 **Trigger:** After R1 closes OR first LinkedIn discovery call books.
@@ -388,7 +388,7 @@ skills/signal-works-conversion/
 
 ---
 
-### R4: "We are your AI department" unified SKU designed
+### H4: "We are your AI department" unified SKU designed
 
 **Status:** Concept only. Design phase.
 **Trigger:** After R1 + R3 both close (need proof that both brands convert independently before bundling).
@@ -399,7 +399,7 @@ skills/signal-works-conversion/
 
 ---
 
-### R5: Client portal pilot (Atlas dashboard white-labeled)
+### H5: Client portal pilot (Atlas dashboard white-labeled)
 
 **Status:** Parked until R1 closes.
 **Trigger:** First Signal Works client asks for more visibility into their data.
@@ -410,7 +410,7 @@ skills/signal-works-conversion/
 
 ---
 
-### R6: Repeatable lead source identified
+### H6: Repeatable lead source identified
 
 **Status:** Not yet measurable. Needs 30 days of outreach data.
 **Trigger:** After 100+ contacts reached and reply/close rates logged.
@@ -428,7 +428,7 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 
 ---
 
-### R7: transcript-style-dna lift-test verdict (KEEP or DELETE)
+### H7: transcript-style-dna lift-test verdict (KEEP or DELETE)
 
 **Status:** ⏰ Active, eval date 2026-06-01.
 **Trigger date:** 2026-06-01. Surface in any session that starts on or after that date. **If the trigger date has passed, this is the FIRST item to action this session.**
@@ -465,7 +465,7 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 
 ---
 
-### R-newsletter: The Weekly Signal distribution flywheel
+### H-newsletter: The Weekly Signal distribution flywheel
 
 **Status:** LIVE. Issue 3 sent 2026-05-07.
 **Platform:** Listmonk v6.1.0 (self-hosted, `mail.srv1040886.hstgr.cloud`) — Beehiiv replaced (Enterprise-only send gating).
@@ -491,7 +491,7 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 
 ---
 
-### R-brand-guides: CW / SW / Studio brand guide audit and rebuild
+### H-brand-guides: CW / SW / Studio brand guide audit and rebuild
 
 **Status:** Queued. Target: Week 7 (complete by 2026-06-17).
 **Trigger:** Dedicated brand session. Skills to reference: `frontend-design`, `ui-ux-pro-max`, `design-audit`.
@@ -502,7 +502,7 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 
 ---
 
-### R1g: Enrichment pipeline rebuild + harvest-until-50 + thesis launch (2026-05-07)
+### H1g: Enrichment pipeline rebuild + harvest-until-50 + thesis launch (2026-05-07)
 
 **Status:** SHIPPED 2026-05-07.
 
@@ -548,7 +548,7 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 
 ---
 
-### R-notion-sever: Severing Notion-Supabase CRM Link and Archiving Notion DB (Sync Code Deleted)
+### H-notion-sever: Severing Notion-Supabase CRM Link and Archiving Notion DB (Sync Code Deleted)
 
 **Status:** Sync code DELETED 2026-05-07. Supabase = sole CRM system of record.
 **Trigger:** Notion API performance slowdowns, full-table scan delays, and sync timeouts.
