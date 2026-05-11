@@ -29,7 +29,7 @@ def get_queue() -> dict:
     Pending items show approve/reject buttons. Decided items show outcome + who/when.
     """
     import approval_queue
-    rows = approval_queue.list_recent(hours=48, limit=40)
+    rows = approval_queue.list_recent(hours=168, limit=40)  # 7 days
     items = []
     for r in rows:
         preview = ""
