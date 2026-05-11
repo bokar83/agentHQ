@@ -304,9 +304,10 @@ function renderQueue(d) {
   // Update topbar queue badge
   const badge = document.getElementById('sync-badge');
   const qBadge = document.getElementById('chat-queue-badge');
+  const pendingCount = (d.pending != null) ? d.pending : items.filter(i => i.status === 'pending').length;
   if (qBadge) {
-    if (items.length > 0) {
-      qBadge.textContent = items.length + ' pending';
+    if (pendingCount > 0) {
+      qBadge.textContent = pendingCount + ' pending';
       qBadge.className = 'badge badge-warn';
       qBadge.style.display = '';
     } else {
@@ -315,11 +316,19 @@ function renderQueue(d) {
   }
 
   if (!items.length) {
-    body.appendChild(el('p', { class: 'empty-state' }, 'No pending items'));
+    body.appendChild(el('p', { class: 'empty-state' }, 'No activity in last 48h'));
     return;
   }
+
+  const STATUS_CHIP = {
+    pending:   { label: 'PENDING',   cls: 'qs-pending'   },
+    approved:  { label: 'APPROVED',  cls: 'qs-approved'  },
+    rejected:  { label: 'REJECTED',  cls: 'qs-rejected'  },
+    enhancing: { label: 'ENHANCING', cls: 'qs-enhancing' },
+    edited:    { label: 'EDITED',    cls: 'qs-approved'  },
+  };
+
   items.forEach(function(item) {
-    // Header row: crew + type badge + age
     const typeDef = QUEUE_TYPE_LABEL[item.proposal_type] || { label: item.proposal_type || 'item', cls: 'qt-default' };
     const typeBadge = el('span', { class: 'queue-type-badge ' + typeDef.cls }, typeDef.label);
     const crew = el('span', { class: 'queue-crew-inline' }, (item.crew_name || '').toUpperCase());
@@ -330,14 +339,22 @@ function renderQueue(d) {
     previewSpan.textContent = item.preview || '';
     const previewWrap = el('div', { class: 'queue-preview' }, maybeLink(previewSpan, item.notion_url));
 
-    const approveBtn = el('button', { class: 'btn btn-approve' }, 'Approve');
-    const rejectBtn = el('button', { class: 'btn btn-reject' }, 'Reject');
-    approveBtn.addEventListener('click', function() { actionQueueApprove(item.id, approveBtn, rejectBtn); });
-    rejectBtn.addEventListener('click', function() { actionQueueReject(item.id, approveBtn, rejectBtn); });
+    let actionEl;
+    if (item.status === 'pending') {
+      const approveBtn = el('button', { class: 'btn btn-approve' }, 'Approve');
+      const rejectBtn  = el('button', { class: 'btn btn-reject'  }, 'Reject');
+      approveBtn.addEventListener('click', function() { actionQueueApprove(item.id, approveBtn, rejectBtn); });
+      rejectBtn.addEventListener('click',  function() { actionQueueReject(item.id, approveBtn, rejectBtn); });
+      actionEl = el('div', { class: 'queue-actions' }, approveBtn, rejectBtn);
+    } else {
+      const sc = STATUS_CHIP[item.status] || { label: item.status, cls: 'qs-pending' };
+      const chip = el('span', { class: 'queue-status-chip ' + sc.cls }, sc.label);
+      const decided = item.ts_decided ? el('span', { class: 'queue-age' }, _timeAgo(item.ts_decided)) : null;
+      actionEl = el('div', { class: 'queue-decided' }, chip, ...(decided ? [decided] : []));
+    }
 
-    body.appendChild(el('div', { class: 'queue-item' },
-      header, previewWrap,
-      el('div', { class: 'queue-actions' }, approveBtn, rejectBtn)
+    body.appendChild(el('div', { class: 'queue-item' + (item.status === 'pending' ? ' queue-item-pending' : '') },
+      header, previewWrap, actionEl
     ));
   });
 }

@@ -479,6 +479,24 @@ html, body {
 
 .queue-actions { display: flex; gap: 6px; }
 
+.queue-decided { display: flex; align-items: center; gap: 8px; }
+
+.queue-item-pending { background: rgba(193,154,107,.04); border-radius: 4px; padding: 10px 8px; margin: 0 -8px; }
+
+.queue-status-chip {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+.qs-pending   { background: rgba(193,154,107,.15); color: var(--brass);   border: 1px solid rgba(193,154,107,.3); }
+.qs-approved  { background: rgba(111,155,110,.12); color: #7ecf7c;        border: 1px solid rgba(111,155,110,.2); }
+.qs-rejected  { background: rgba(194,90,110,.10);  color: var(--rose);    border: 1px solid rgba(194,90,110,.2); }
+.qs-enhancing { background: rgba(74,122,140,.12);  color: #6bc4db;        border: 1px solid rgba(74,122,140,.2); }
+
 /* Content items */
 .content-item {
   padding: 6px 0;

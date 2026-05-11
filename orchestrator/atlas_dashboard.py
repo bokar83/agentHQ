@@ -25,16 +25,17 @@ def get_state() -> dict:
 
 
 def get_queue() -> dict:
-    """Approval Queue card: pending items, newest first."""
+    """Approval Queue card: all items from last 48h (any status), newest first.
+    Pending items show approve/reject buttons. Decided items show outcome + who/when.
+    """
     import approval_queue
-    rows = approval_queue.list_pending(limit=20)
+    rows = approval_queue.list_recent(hours=48, limit=40)
     items = []
     for r in rows:
         preview = ""
         notion_url = ""
         if isinstance(r.payload, dict):
             preview = str(r.payload.get("title") or r.payload.get("hook") or r.payload.get("content") or "")[:120]
-            # Lift Notion link: prefer explicit notion_url, then notion_id (page UUID).
             notion_url = str(r.payload.get("notion_url") or "")
             if not notion_url:
                 pid = r.payload.get("notion_id") or r.payload.get("page_id")
@@ -43,13 +44,16 @@ def get_queue() -> dict:
         items.append({
             "id": r.id,
             "ts_created": r.ts_created.isoformat() if r.ts_created else None,
+            "ts_decided": r.ts_decided.isoformat() if r.ts_decided else None,
             "crew_name": r.crew_name,
             "proposal_type": r.proposal_type,
             "preview": preview,
             "status": r.status,
+            "decision_note": r.decision_note,
             "notion_url": notion_url,
         })
-    return {"items": items, "count": len(items)}
+    pending = sum(1 for i in items if i["status"] == "pending")
+    return {"items": items, "count": len(items), "pending": pending}
 
 
 def _fetch_content_board() -> dict:
