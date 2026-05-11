@@ -357,6 +357,34 @@ function renderQueue(d) {
       header, previewWrap, actionEl
     ));
   });
+
+  // ── Notion content activity (read-only, M8a) ──────────────────────────────
+  const activity = d.notion_activity || [];
+  if (activity.length > 0) {
+    const divider = el('div', { class: 'queue-section-label' }, 'Content Activity (7d) — read-only');
+    body.appendChild(divider);
+
+    const NOTION_STATUS_CHIP = {
+      'Posted':   { cls: 'qs-approved', label: 'POSTED'   },
+      'Approved': { cls: 'qs-approved', label: 'APPROVED' },
+      'Rejected': { cls: 'qs-rejected', label: 'REJECTED' },
+      'Skipped':  { cls: 'qs-rejected', label: 'SKIPPED'  },
+    };
+
+    activity.forEach(function(a) {
+      const sc = NOTION_STATUS_CHIP[a.status] || { cls: 'qs-pending', label: a.status };
+      const chip = el('span', { class: 'queue-status-chip ' + sc.cls }, sc.label);
+      const platform = el('span', { class: 'queue-type-badge qt-content' }, a.platform || 'content');
+      const age = el('span', { class: 'queue-age' }, a.scheduled_date ? a.scheduled_date.slice(5) : '');
+      const header = el('div', { class: 'queue-header' }, platform, chip, age);
+
+      const titleEl = el('span');
+      titleEl.textContent = a.title || '';
+      const preview = el('div', { class: 'queue-preview' }, maybeLink(titleEl, a.notion_url));
+
+      body.appendChild(el('div', { class: 'queue-item' }, header, preview));
+    });
+  }
 }
 
 async function refreshQueue() {

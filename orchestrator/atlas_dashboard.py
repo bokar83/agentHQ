@@ -24,9 +24,95 @@ def get_state() -> dict:
     return get_guard().state_summary()
 
 
+def _fetch_notion_activity(days: int = 7) -> list:
+    """Read-only Notion content activity: Posted/Approved/Rejected/Skipped in last N days.
+    Deduped against approval_queue rows (same notion_id already shown there).
+    M8a: read-only display. M8b (actionable) gates on Echo M3.
+    """
+    import os
+    from datetime import datetime, timezone, timedelta
+    try:
+        from skills.forge_cli.notion_client import NotionClient
+        secret = os.environ.get("NOTION_SECRET") or os.environ.get("NOTION_API_KEY")
+        db_id = os.environ.get("FORGE_CONTENT_DB", "")
+        if not db_id or not secret:
+            return []
+        nc = NotionClient(secret=secret)
+        cutoff_dt = datetime.now(timezone.utc) - timedelta(days=days)
+
+        # Fetch recently Posted items (the most common decided state)
+        results = nc.query_database(
+            db_id,
+            filter_obj={"or": [
+                {"property": "Status", "select": {"equals": "Posted"}},
+                {"property": "Status", "select": {"equals": "Approved"}},
+                {"property": "Status", "select": {"equals": "Rejected"}},
+                {"property": "Status", "select": {"equals": "Skipped"}},
+            ]},
+            sorts=[{"property": "Scheduled Date", "direction": "descending"}],
+        )
+
+        # Fetch notion_ids already in approval_queue to dedup
+        try:
+            from memory import _pg_conn
+            conn = _pg_conn()
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT payload->>'notion_id' FROM approval_queue "
+                "WHERE crew_name='griot' AND ts_created > NOW() - INTERVAL '%s days'",
+                (days,)
+            )
+            already_queued = {r[0] for r in cur.fetchall() if r[0]}
+            conn.close()
+        except Exception:
+            already_queued = set()
+
+        activity = []
+        for p in (results or []):
+            # Filter by last_edited_time for recency
+            edited_str = p.get("last_edited_time", "")
+            try:
+                edited_dt = datetime.fromisoformat(edited_str.replace("Z", "+00:00"))
+                if edited_dt < cutoff_dt:
+                    continue
+            except Exception:
+                continue
+
+            props = p.get("properties", {})
+            title_list = (props.get("Title") or props.get("Name") or {}).get("title", [])
+            title = title_list[0].get("text", {}).get("content", "")[:80] if title_list else ""
+            status = (props.get("Status", {}).get("select") or {}).get("name", "")
+            sched = ((props.get("Scheduled Date") or {}).get("date") or {}).get("start", "")
+            platform_list = (props.get("Platform") or {}).get("multi_select") or []
+            platform = platform_list[0].get("name", "") if platform_list else ""
+            notion_id = p.get("id", "")
+            notion_url = p.get("url", "")
+
+            if notion_id in already_queued:
+                continue
+
+            activity.append({
+                "notion_id": notion_id,
+                "title": title,
+                "status": status,
+                "scheduled_date": sched,
+                "platform": platform,
+                "notion_url": notion_url,
+                "last_edited": edited_str[:16],
+            })
+            if len(activity) >= 15:
+                break
+
+        return activity
+    except Exception as e:
+        logger.warning(f"_fetch_notion_activity: {e}")
+        return []
+
+
 def get_queue() -> dict:
-    """Approval Queue card: all items from last 48h (any status), newest first.
+    """Approval Queue card: all items from last 7d (any status), newest first.
     Pending items show approve/reject buttons. Decided items show outcome + who/when.
+    Also includes read-only Notion content activity (M8a).
     """
     import approval_queue
     rows = approval_queue.list_recent(hours=168, limit=40)  # 7 days
@@ -53,7 +139,8 @@ def get_queue() -> dict:
             "notion_url": notion_url,
         })
     pending = sum(1 for i in items if i["status"] == "pending")
-    return {"items": items, "count": len(items), "pending": pending}
+    notion_activity = _fetch_notion_activity(days=7)
+    return {"items": items, "count": len(items), "pending": pending, "notion_activity": notion_activity}
 
 
 def _fetch_content_board() -> dict:
@@ -1048,9 +1135,9 @@ def flip_milestone(codename: str, mid: str, status: str, notes: str | None = Non
         conn = _pg_conn()
         cur = conn.cursor()
 
-        # Fetch current row to get old_status
+        # Fetch current row to get old_status and canonical case values
         cur.execute(
-            "SELECT id, status FROM milestones WHERE codename=%s AND mid=%s",
+            "SELECT id, status, codename, mid FROM milestones WHERE LOWER(codename)=LOWER(%s) AND LOWER(mid)=LOWER(%s)",
             (codename, mid),
         )
         row = cur.fetchone()
@@ -1060,7 +1147,15 @@ def flip_milestone(codename: str, mid: str, status: str, notes: str | None = Non
                 "ok": False,
                 "error": f"Milestone {codename}/{mid} not found. Use /milestones {codename} to see valid IDs.",
             }
-        old_status = row["status"] if isinstance(row, dict) else row[1]
+        
+        if isinstance(row, dict):
+            old_status = row["status"]
+            canonical_codename = row["codename"]
+            canonical_mid = row["mid"]
+        else:
+            old_status = row[1]
+            canonical_codename = row[2]
+            canonical_mid = row[3]
 
         # Build UPDATE dynamically to handle optional notes + shipped_at
         set_parts = ["status=%s", "updated_at=NOW()"]
@@ -1073,7 +1168,7 @@ def flip_milestone(codename: str, mid: str, status: str, notes: str | None = Non
         if status == "shipped":
             set_parts.append("shipped_at=NOW()")
 
-        params += [codename, mid]
+        params += [canonical_codename, canonical_mid]
         cur.execute(
             f"UPDATE milestones SET {', '.join(set_parts)} WHERE codename=%s AND mid=%s",
             params,
@@ -1083,7 +1178,7 @@ def flip_milestone(codename: str, mid: str, status: str, notes: str | None = Non
         # Fetch new status for confirmation
         cur.execute(
             "SELECT status FROM milestones WHERE codename=%s AND mid=%s",
-            (codename, mid),
+            (canonical_codename, canonical_mid),
         )
         new_row = cur.fetchone()
         new_status = new_row["status"] if isinstance(new_row, dict) else new_row[0]
@@ -1091,8 +1186,8 @@ def flip_milestone(codename: str, mid: str, status: str, notes: str | None = Non
 
         return {
             "ok": True,
-            "codename": codename,
-            "mid": mid,
+            "codename": canonical_codename,
+            "mid": canonical_mid,
             "old_status": old_status,
             "new_status": new_status,
         }
