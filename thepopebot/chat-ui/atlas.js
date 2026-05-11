@@ -278,17 +278,54 @@ async function refreshState() {
 }
 
 // Queue card
+const QUEUE_TYPE_LABEL = {
+  'weight-mutation':   { label: 'Weight',   cls: 'qt-weight'   },
+  'content-proposal':  { label: 'Content',  cls: 'qt-content'  },
+  'outreach-draft':    { label: 'Outreach', cls: 'qt-outreach' },
+  'deploy-approval':   { label: 'Deploy',   cls: 'qt-deploy'   },
+  'spend-gate':        { label: 'Spend',    cls: 'qt-spend'    },
+  'commit-proposal':   { label: 'Commit',   cls: 'qt-commit'   },
+};
+
+function _timeAgo(isoStr) {
+  if (!isoStr) return '';
+  const diff = Math.floor((Date.now() - new Date(isoStr).getTime()) / 1000);
+  if (diff < 60)   return diff + 's ago';
+  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  return Math.floor(diff / 86400) + 'd ago';
+}
+
 function renderQueue(d) {
   const body = document.getElementById('card-queue-body');
   body.replaceChildren();
   const items = d.items || [];
+
+  // Update topbar queue badge
+  const badge = document.getElementById('sync-badge');
+  const qBadge = document.getElementById('chat-queue-badge');
+  if (qBadge) {
+    if (items.length > 0) {
+      qBadge.textContent = items.length + ' pending';
+      qBadge.className = 'badge badge-warn';
+      qBadge.style.display = '';
+    } else {
+      qBadge.style.display = 'none';
+    }
+  }
+
   if (!items.length) {
     body.appendChild(el('p', { class: 'empty-state' }, 'No pending items'));
     return;
   }
   items.forEach(function(item) {
-    const crew = el('div', { class: 'queue-crew' });
-    crew.textContent = item.crew_name || '';
+    // Header row: crew + type badge + age
+    const typeDef = QUEUE_TYPE_LABEL[item.proposal_type] || { label: item.proposal_type || 'item', cls: 'qt-default' };
+    const typeBadge = el('span', { class: 'queue-type-badge ' + typeDef.cls }, typeDef.label);
+    const crew = el('span', { class: 'queue-crew-inline' }, (item.crew_name || '').toUpperCase());
+    const age = el('span', { class: 'queue-age' }, _timeAgo(item.ts_created));
+    const header = el('div', { class: 'queue-header' }, crew, typeBadge, age);
+
     const previewSpan = el('span');
     previewSpan.textContent = item.preview || '';
     const previewWrap = el('div', { class: 'queue-preview' }, maybeLink(previewSpan, item.notion_url));
@@ -299,7 +336,7 @@ function renderQueue(d) {
     rejectBtn.addEventListener('click', function() { actionQueueReject(item.id, approveBtn, rejectBtn); });
 
     body.appendChild(el('div', { class: 'queue-item' },
-      crew, previewWrap,
+      header, previewWrap,
       el('div', { class: 'queue-actions' }, approveBtn, rejectBtn)
     ));
   });

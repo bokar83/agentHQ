@@ -415,20 +415,58 @@ html, body {
 
 /* Queue items */
 .queue-item {
-  padding: 8px 0;
+  padding: 10px 0;
   border-bottom: 1px solid var(--hairline);
 }
 
 .queue-item:last-child { border-bottom: none; }
 
-.queue-crew {
+.queue-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+  flex-wrap: wrap;
+}
+
+.queue-crew { display: none; } /* legacy — replaced by queue-crew-inline */
+
+.queue-crew-inline {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.06em;
-  text-transform: uppercase;
   color: var(--lapis);
-  margin-bottom: 4px;
+}
+
+.queue-age {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-muted);
+  margin-left: auto;
+}
+
+.queue-type-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+.qt-weight   { background: rgba(167,139,250,.12); color: #b8a4fc; border: 1px solid rgba(167,139,250,.2); }
+.qt-content  { background: rgba(111,155,110,.12); color: #7ecf7c; border: 1px solid rgba(111,155,110,.2); }
+.qt-outreach { background: rgba(74,122,140,.12);  color: #6bc4db; border: 1px solid rgba(74,122,140,.2); }
+.qt-deploy   { background: rgba(193,154,107,.12); color: var(--brass); border: 1px solid rgba(193,154,107,.2); }
+.qt-spend    { background: rgba(194,90,110,.10);  color: var(--rose); border: 1px solid rgba(194,90,110,.2); }
+.qt-commit   { background: rgba(255,255,255,.05); color: var(--ink-dim); border: 1px solid var(--hairline-md); }
+.qt-default  { background: rgba(255,255,255,.04); color: var(--ink-muted); border: 1px solid var(--hairline); }
+
+.badge-warn {
+  background: rgba(194,90,110,.15);
+  color: var(--rose);
+  border: 1px solid rgba(194,90,110,.3);
 }
 
 .queue-preview {
