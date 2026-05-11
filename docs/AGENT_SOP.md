@@ -4,6 +4,26 @@
 
 Applies to every coding-agent session (Claude Code, Codex, any future agent). Agent-specific addenda live in `CLAUDE.md` and `CODEX.md` at the repo root.
 
+---
+
+## 🚨 HARD RULE 0: NEVER SEND AN EMAIL WITHOUT EXPLICIT PER-BATCH AUTHORIZATION
+
+**Rank: above all other rules.** If you remember nothing else from this file, remember this.
+
+1. **No send without Boubacar saying "send this email" in the current session, for this specific batch.** Drafting, queueing, building scripts, verifying credentials — all allowed without authorization. Pressing the Send button on the Gmail API — requires explicit, in-session, per-batch go-ahead. Approval for batch 1 does NOT carry to batch 2.
+2. **NEVER re-send to "verify it went out".** Duplicates to cold prospects are unrecoverable. To verify: read the sent message metadata. Don't re-fire.
+3. **From-line MUST be `boubacar@catalystworks.consulting`** (or another `*@catalystworks.consulting` alias if Boubacar specifies). Path: cw OAuth credentials at `/app/secrets/gws-oauth-credentials-cw.json` → `oauth2/token` → `gmail/v1/users/me/messages/send`.
+4. **DO NOT use `gws gmail messages send` CLI** in orc-crewai for outbound — it's authed as bokar83@gmail.com and silently rewrites the From header to bokar83. Verified broken 2026-05-11.
+5. **Mandatory verify-after-send.** Fetch `/messages/<id>?format=metadata` and assert the From header matches intended. `labelIds: [SENT]` alone is NOT proof — the API will rewrite headers and still report SENT.
+
+**Wired Python pattern (use this, copy from here):** `orchestrator/tools.py::_gws_request(account="boubacar@catalystworks.consulting", ...)` calls the right credential. `skills/outreach/sequence_engine.py::_create_draft(auto_send=True)` is the production send path used by SW T1-T5 outreach.
+
+**Why this rule exists at the top of the file:** Same "how do I send an email" + "From-line is wrong" + "agent sent without permission" question has come up across multiple Claude Code + Codex sessions. The fix is to make it impossible to miss. If your session log doesn't show Boubacar saying "send this email", you don't have authorization, full stop.
+
+See `CLAUDE.md` for the full Python send template + the 2026-05-11 incident write-up.
+
+---
+
 ## Session Start
 
 1. Read `D:\Ai_Sandbox\agentsHQ\docs\memory\MEMORY.md` and every linked file.

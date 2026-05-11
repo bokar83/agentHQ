@@ -2,6 +2,77 @@
 
 **Read `docs/AGENT_SOP.md` first, every session. No exceptions.** Shared rules, session-start steps, hard rules, coding principles, skill triggers live there. File = Claude-Code-specific additions only.
 
+---
+
+## 🚨 HARD RULE: EMAIL SENDING (read every session, no exceptions)
+
+**Boubacar's standing instruction (2026-05-11):** You may NEVER send an email until Boubacar explicitly says "send this email" (or equivalent: "ship it", "go ahead and send", "fire it"). Drafting, queueing, building the script, verifying the From-line — all allowed. Pressing send — only after explicit go-ahead, IN THIS SESSION, for THIS specific email batch. Approval for one batch does NOT carry to the next.
+
+**If a prior agent or memory says "send", but the current session's user has not said it, you do NOT send.** Memories of past authorizations expire at the session boundary.
+
+**If a send fails or doesn't appear to land:** DEBUG by reading the API response, fetching the sent message metadata, checking server-side logs. Do NOT re-send to "verify it went out". A duplicate-send to a cold prospect is unrecoverable and damages the relationship.
+
+**Channel-specific send rules:**
+
+| Outbound | From-line | Path | Why |
+|---|---|---|---|
+| Cold outreach (Catalyst Works + Signal Works) | `boubacar@catalystworks.consulting` | cw OAuth + direct Gmail API (see below) | OAuth identity matches From, no rewrite |
+| Internal/notifications to Boubacar | `boubacar@catalystworks.consulting` | Same | Already wired in `tools.py` |
+| Signal Works inbound replies | (sender writes to) `signal@catalystworks.consulting` | alias routes to boubacar@ inbox | optics on SW website |
+
+**The canonical send path (use this, nothing else):**
+
+```python
+# Inside orc-crewai container, OR via SSH+docker exec
+import json, base64, httpx
+from email.mime.text import MIMEText
+
+with open("/app/secrets/gws-oauth-credentials-cw.json") as f:
+    c = json.load(f)
+token = httpx.post("https://oauth2.googleapis.com/token", data={
+    "client_id": c["client_id"], "client_secret": c["client_secret"],
+    "refresh_token": c["refresh_token"], "grant_type": "refresh_token",
+}, timeout=15).json()["access_token"]
+
+msg = MIMEText(body, "plain", "utf-8")
+msg["From"] = "boubacar@catalystworks.consulting"   # Honored. OAuth identity matches.
+msg["To"] = to_addr
+msg["Subject"] = subject
+raw = base64.urlsafe_b64encode(msg.as_bytes()).decode("ascii").rstrip("=")
+
+resp = httpx.post(
+    "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
+    headers={"Authorization": f"Bearer {token}"},
+    json={"raw": raw}, timeout=30,
+)
+msg_id = resp.json()["id"]
+
+# MANDATORY verify-after-send. labelIds:[SENT] alone is NOT proof.
+v = httpx.get(
+    f"https://gmail.googleapis.com/gmail/v1/users/me/messages/{msg_id}",
+    headers={"Authorization": f"Bearer {token}"},
+    params={"format": "metadata"}, timeout=20,
+).json()
+from_hdr = next(h["value"] for h in v["payload"]["headers"] if h["name"].lower() == "from")
+assert from_hdr.endswith("boubacar@catalystworks.consulting"), f"From rewritten: {from_hdr}"
+```
+
+**DO NOT use:**
+- `gws gmail users messages send` CLI from `orc-crewai` (authed as bokar83@gmail.com → silently rewrites From to bokar83, prospects see personal Gmail). Verified broken 2026-05-11.
+- Gmail MCP `create_draft` and calling it done (creates a draft, never sends).
+- Any path that lacks a verify-after-send step.
+
+**Wired Python tools that already do this correctly:**
+- `orchestrator/tools.py::_gws_request(account="boubacar@catalystworks.consulting", ...)` — POST to `gmail/v1/users/me/messages/send`
+- `signal_works/gmail_draft.py` — draft variant of the same pattern
+- `skills/outreach/sequence_engine.py::_create_draft(..., auto_send=True)` — production send path used by SW T1-T5 outreach
+
+**Why this rule exists:** 2026-05-11 incident. Agent sent batch 1 of cold-teardown outreach without final explicit go-ahead the second time (interpreted "verify it went out" as "re-send to verify"). Result: 3 prospects each received 2 emails with mismatched From-lines. Unrecoverable. Boubacar had to write this rule because the same gws-vs-cw + send-permission question keeps reappearing across sessions.
+
+See: `~/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/feedback_cw_send_canonical_path.md` for the full context.
+
+---
+
 ## Active Roadmaps
 
 Multi-session projects tracked in `docs/roadmap/<codename>.md`. `roadmap` skill manages them (list / show / next / log / new / archive). Read at session start, log at session end.
