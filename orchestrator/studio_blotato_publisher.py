@@ -87,6 +87,11 @@ PROP_SUBMISSION_ID = "Submission ID"
 PROP_QA_NOTES = "QA notes"
 PROP_X_CAPTION = "X Caption"
 
+# Platforms that reject text-only posts. Blotato will return errors like
+# "Publishing on instagram requires an image or a video" or
+# "TypeError: Failed to parse URL from undefined" when mediaUrls is empty.
+_MEDIA_REQUIRED_PLATFORMS = {"instagram", "youtube", "tiktok", "pinterest"}
+
 # Channel name → env-var channel code.
 _CHANNEL_CODE: dict[str, str] = {
     "Under the Baobab": "BAOBAB",
@@ -273,6 +278,8 @@ def studio_blotato_publisher_tick(dry_run: bool = False) -> dict:
         draft = _prop_text(rec, PROP_DRAFT)
         x_caption = _prop_text(rec, PROP_X_CAPTION)
         asset_url = _prop_text(rec, PROP_ASSET_URL)
+        rec_published = 0
+        rec_failed = 0
 
         if not platforms:
             logger.warning(f"STUDIO PUBLISHER: skip {page_id} ({channel}) — Platform field empty")
@@ -334,6 +341,23 @@ def studio_blotato_publisher_tick(dry_run: bool = False) -> dict:
                 skipped += 1
                 continue
 
+            # Media-required guard: IG/YT/TikTok/Pinterest reject text-only posts.
+            # Without this guard, Blotato returns opaque errors (e.g. "Failed to
+            # parse URL from undefined") and counts as platform failure.
+            if not media_urls and platform.lower() in _MEDIA_REQUIRED_PLATFORMS:
+                msg = f"Asset URL missing — {platform} requires media"
+                logger.warning(
+                    f"STUDIO PUBLISHER: skip {page_id} ({channel}/{platform}) — {msg}"
+                )
+                if not dry_run:
+                    _write_props(notion, page_id, {
+                        PROP_QA_NOTES: {"rich_text": [{"text": {"content": msg}}]},
+                    })
+                summaries.append(f"⏭️ {channel}/{platform}: {msg}")
+                rec_failed += 1
+                failed += 1
+                continue
+
             if dry_run:
                 logger.info(
                     f"STUDIO PUBLISHER [DRY RUN]: {page_id} ({channel}/{platform}) "
@@ -357,6 +381,7 @@ def studio_blotato_publisher_tick(dry_run: bool = False) -> dict:
                 logger.error(f"STUDIO PUBLISHER: publish error {page_id} ({channel}/{platform}): {e}")
                 _send_telegram(f"❌ Studio Publisher: {channel}/{platform} — {e}")
                 summaries.append(f"❌ {channel}/{platform}: publish error — {e}")
+                rec_failed += 1
                 failed += 1
                 continue
 
@@ -387,6 +412,7 @@ def studio_blotato_publisher_tick(dry_run: bool = False) -> dict:
                 if result.public_url:
                     props_update[PROP_POSTED_URL] = {"url": result.public_url}
                 _write_props(notion, page_id, props_update)
+                rec_published += 1
                 published += 1
                 summaries.append(
                     f"✅ {channel}/{platform}: posted in {result.elapsed_sec:.1f}s "
@@ -404,6 +430,7 @@ def studio_blotato_publisher_tick(dry_run: bool = False) -> dict:
                     f"❌ Studio Publisher: {channel}/{platform} failed — {result.error_message}"
                 )
                 summaries.append(f"❌ {channel}/{platform}: Blotato failed — {result.error_message}")
+                rec_failed += 1
                 failed += 1
             else:
                 # Timeout: leave in publishing for next tick TTL check.
@@ -413,10 +440,19 @@ def studio_blotato_publisher_tick(dry_run: bool = False) -> dict:
                 )
                 summaries.append(f"⏱️ {channel}/{platform}: poll timeout — left in publishing")
 
-        # After all platforms: flip to published if any succeeded, else publish-failed.
+        # Per-record final status: published only if ALL non-timeout platforms
+        # succeeded. Any failure leaves record at publish-failed so retry can
+        # pick it up. Timeouts stay in 'rendering' for the orphan-TTL sweep.
         if not dry_run:
-            final_status = "published" if published > 0 else "publish-failed"
-            _flip_status(notion, page_id, final_status)
+            if rec_failed == 0 and rec_published > 0:
+                final_status = "published"
+            elif rec_published == 0 and rec_failed == 0:
+                # All platforms timed out: leave at 'rendering' for TTL sweep.
+                final_status = None
+            else:
+                final_status = "publish-failed"
+            if final_status is not None:
+                _flip_status(notion, page_id, final_status)
 
     summary = {
         "date": today,
