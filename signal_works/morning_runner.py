@@ -137,9 +137,10 @@ def _main_body():
         logger.info("STEP 3: Signal Works sequence T1-T4 (drafts, manual review)...")
         try:
             from skills.outreach.sequence_engine import run_sequence
-            sw_result = run_sequence("sw", dry_run=False, daily_limit=35)
+            sw_result = run_sequence("sw", dry_run=False, t1_cap=35, followup_cap=150)
             sw_drafted = sw_result.get("drafted", 0) + sw_result.get("sent", 0)
-            logger.info(f"  Done. {sw_drafted} SW sequence drafts created.")
+            sw_per_touch = sw_result.get("per_touch", {})
+            logger.info(f"  Done. {sw_drafted} SW sequence drafts created. per_touch={sw_per_touch}")
             log_step("sw_sequence", attempted=35, succeeded=sw_drafted)
         except Exception as e:
             logger.error(f"  Signal Works sequence failed: {e}")
@@ -181,30 +182,19 @@ def _main_body():
         logger.info("STEP 5: Catalyst Works sequence T1-T5 (auto-send)...")
         try:
             from skills.outreach.sequence_engine import run_sequence
-            cw_result = run_sequence("cw", dry_run=False, daily_limit=15)
-            cw_drafted = cw_result.get("drafted", 0)
-            logger.info(f"  Done. {cw_drafted} CW emails drafted.")
+            cw_result = run_sequence("cw", dry_run=False, t1_cap=15, followup_cap=150)
+            cw_drafted = cw_result.get("drafted", 0) + cw_result.get("sent", 0)
+            cw_per_touch = cw_result.get("per_touch", {})
+            logger.info(f"  Done. {cw_drafted} CW emails drafted. per_touch={cw_per_touch}")
             log_step("cw_sequence", attempted=15, succeeded=cw_drafted)
         except Exception as e:
             logger.error(f"  CW sequence failed: {e}")
             log_step("cw_sequence", attempted=15, reason=f"error: {type(e).__name__}")
 
-
-    # Step 5b: SW gap fill -- CW shortfall covered by extra SW to hit 50 total
-    if not is_weekend:
-        _gap = 50 - sw_drafted - cw_drafted
-        if _gap > 0:
-            logger.info(f"STEP 5b: SW gap fill -- need {_gap} more to hit 50 total...")
-            try:
-                from skills.outreach.sequence_engine import run_sequence
-                _gap_result = run_sequence("sw", dry_run=False, daily_limit=_gap)
-                _extra = _gap_result.get("drafted", 0)
-                sw_drafted += _extra
-                logger.info(f"  Done. {_extra} extra SW drafts. Total SW today: {sw_drafted}")
-                log_step("sw_gap_fill", attempted=_gap, succeeded=_extra)
-            except Exception as e:
-                logger.error(f"  SW gap fill failed: {e}")
-                log_step("sw_gap_fill", attempted=_gap, reason=f"error: {type(e).__name__}")
+    # Step 5b removed 2026-05-11: per-touch caps in sequence_engine handle cascade
+    # naturally. Old gap-fill burned SW T2 cap whenever CW T1 pool was empty
+    # (root cause of 50-email ceiling). Hunter/Apollo lead harvest is the real
+    # fix for low CW T1 counts.
 
     # ── Summary ───────────────────────────────────────────────────
     total = sw_drafted + cw_drafted
