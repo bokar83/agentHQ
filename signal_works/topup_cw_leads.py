@@ -34,10 +34,18 @@ DAILY_MINIMUM = 20
 
 
 def _count_ready_cw_leads(conn) -> int:
+    """Count CW-pipeline-ready leads only.
+
+    Previously this counted every non-signal_works lead, which trips the
+    short-circuit when apollo_studio / serper_linkedin / contact-form leads
+    sit in DB even though zero Apollo CW leads are actually ready. The
+    sequence_engine source filter is `apollo_catalyst_works%`, so this
+    readiness check must align with that source family.
+    """
     cur = conn.cursor()
     cur.execute("""
         SELECT COUNT(*) as n FROM leads
-        WHERE source IS DISTINCT FROM 'signal_works'
+        WHERE source LIKE 'apollo_catalyst_works%'
           AND email IS NOT NULL AND email != ''
           AND LOWER(status) = 'new'
           AND last_contacted_at IS NULL
