@@ -85,6 +85,56 @@ If the answer is "none — this is a general best practice or synthesized insigh
 
 **Why:** AI can replicate polish and even voice patterns. It cannot replicate Boubacar's specific lived experience. Posts that pass voice checks but contain no earned anchor are indistinguishable from AI content in a trust-scarce market.
 
+## I-Count Discipline (lessons from flagship session 2026-05-11)
+
+**Rule:** Voice trim must never replace earned "I" with passive voice. Friend-over-coffee feel comes from active first-person voice. Passive constructions ("got built," "got pointed at," "gets dropped") sound like a whitepaper.
+
+### The right way to thin "I" stacks
+
+When a post has 25+ first-person pronouns in <1500 words, the problem is usually 3-6 redundant stacks, not the count itself. Surgical cuts only.
+
+**Keep these I's:**
+- Opinion ownership: "I have a low tolerance for this pattern"
+- Witness moment: "I have watched this in my own system"
+- Scene: "I ran an adversarial code review on agentsHQ"
+- Stance: "I do not soften it in client conversations"
+- Anchor: "I built agentsHQ before teaching anyone else"
+- Origin: "My mother worked for the government telecom company"
+
+**Cut these I's (redundancy patterns):**
+- "I bring that up because..." → just say the thing
+- "I keep these names because..." → say what they cover, skip the framing
+- "Every time I added... Every time I named..." → keep one I-clause, swing the second to "you"
+- "before I taught anyone" → "before teaching anyone" (one I, not two)
+- "This is why I built X. Not because... Because I needed it..." → "That is why X looks the way it does. Not because... Because it had to work on..."
+
+### Hard rule: never use passive voice to dodge an "I"
+
+Wrong: "The reviewer got pointed at the notes" / "got built" / "gets dropped"
+Right: "I pointed the reviewer at the notes" / "I built it" / "an agent gets dropped" (agent-active is fine)
+
+If the only way to avoid an "I" is passive voice — keep the "I." Reader trusts the human, not the construction.
+
+### Target I-count
+
+- Short feed post (<300 words): 3-7 I's is normal
+- LinkedIn post (200-400 words): 8-14 I's
+- Long article (1000-1500 words): 18-25 I's — anything above ~28 = check for redundant stacks
+- I-count is a trailing indicator, not a target. Don't optimize for the number. Optimize for friend-over-coffee feel.
+
+## Date References (lessons 2026-05-11)
+
+**Rule:** Posts get cross-published over days/weeks. Avoid hard date anchors that age badly.
+
+- ❌ "Two days ago" — by ship date it's wrong
+- ❌ "Yesterday I did X" — same
+- ✅ "A few days ago"
+- ✅ "Last week"
+- ✅ "Recently"
+- ✅ Specific event with permanent reference: "When I ran the adversarial code review on agentsHQ" (no time anchor)
+
+For breaking news / current-event posts (Timely content type), specific dates are fine. For Evergreen content, soft anchors.
+
 ## Voice Review Output Contract
 
 Every voice review must produce output in exactly three layers — no exceptions, no prose dumps:
