@@ -20,7 +20,7 @@ CALENDLY_URL = os.environ.get(
     "https://calendly.com/boubacarbarry/signal-works-discovery-call",
 )
 
-# Video play page URLs -- Vercel-hosted autoplay pages (not Drive links)
+# Video play page URLs: Vercel-hosted autoplay pages (not Drive links)
 # Click opens a black-background page that autoplays the MP4 immediately
 VIDEO_PLAY_URLS = {
     "roofer": os.environ.get(
@@ -77,8 +77,8 @@ def _has_no_website(lead: dict) -> bool:
 # ── Subject line by niche ─────────────────────────────────────────────────────
 #
 # A/B TEST (PAUSED 2026-04-28):
-#   Variant A (original): score-based -- "ChatGPT doesn't know you exist"
-#   Variant B (new):      team-power framing -- "your competitors just got a 20-person AI team"
+#   Variant A (original): score-based: "ChatGPT doesn't know you exist"
+#   Variant B (new):      team-power framing: "your competitors just got a 20-person AI team"
 # Paused to avoid conflicting with the new SW T1-T4 sequence engine launch.
 # Re-enable after 2026-05-12: flip AB_TEST_ACTIVE to True and define a
 # measurable criterion (reply rate over a 20-email batch, 5 business days).
@@ -98,33 +98,42 @@ def _ab_variant(lead: dict) -> str:
 
 
 def _subject(lead: dict) -> str:
+    # Identify business name versus personal name
     name = lead.get("name", "your business")
+    source = (lead.get("source") or "").lower()
+    is_cw = "apollo" in source or "cw" in source or "catalyst" in source
+    company = lead.get("company") or lead.get("company_name")
+    if is_cw and company:
+        business_name = company
+    else:
+        business_name = name
+
     score = lead.get("ai_score", 0)
     niche = (lead.get("niche") or "").lower()
 
     if _has_no_website(lead):
         if _ab_variant(lead) == "B":
-            return f"Your competitors just got a 20-person AI team. {name} hasn't."
-        return f"{name} has no website -- and AI can't find you at all"
+            return f"Your competitors just got a 20-person AI team. {business_name} hasn't."
+        return f"{business_name} has no website, and AI can't find you at all"
 
     if _ab_variant(lead) == "B":
         # Variant B: team-power framing, niche-specific
         if "dentist" in niche:
-            return f"Competing dental practices just got a 20-person AI team. Here's what that means for {name}."
+            return f"Competing dental practices just got a 20-person AI team. Here's what that means for {business_name}."
         elif "roofer" in niche or "roofing" in niche:
-            return f"Your competitors just got a 20-person AI team. {name} is still invisible on ChatGPT."
+            return f"Your competitors just got a 20-person AI team. {business_name} is still invisible on ChatGPT."
         elif "hvac" in niche:
-            return f"Other HVAC companies just got a 20-person AI team. Homeowners can't find {name} yet."
-        return f"Your competitors just got a 20-person AI team. {name} scored {score}/100 on AI visibility."
+            return f"Other HVAC companies just got a 20-person AI team. Homeowners can't find {business_name} yet."
+        return f"Your competitors just got a 20-person AI team. {business_name} scored {score}/100 on AI visibility."
 
     # Variant A (original)
     if "dentist" in niche:
-        return f"ChatGPT doesn't know {name} exists (AI score: {score}/100)"
+        return f"ChatGPT doesn't know {business_name} exists (AI score: {score}/100)"
     elif "roofer" in niche or "roofing" in niche:
-        return f"ChatGPT doesn't know {name} exists (your AI score: {score}/100)"
+        return f"ChatGPT doesn't know {business_name} exists (your AI score: {score}/100)"
     elif "hvac" in niche:
-        return f"Homeowners can't find {name} on ChatGPT (AI score: {score}/100)"
-    return f"Your AI visibility score: {score}/100 -- {name} isn't showing up in ChatGPT"
+        return f"Homeowners can't find {business_name} on ChatGPT (AI score: {score}/100)"
+    return f"Your AI visibility score is {score}/100: {business_name} isn't showing up in ChatGPT"
 
 
 # ── Quick wins HTML ───────────────────────────────────────────────────────────
@@ -133,7 +142,7 @@ def _quick_wins_html(lead: dict) -> str:
     if _has_no_website(lead):
         wins = [
             "Build a website. AI tools can only cite businesses with a web presence. Without one, you are invisible.",
-            "Claim your Google Business Profile and Bing Places listing now -- free, 30 minutes, immediate visibility lift.",
+            "Claim your Google Business Profile and Bing Places listing now (free, 30 minutes, immediate visibility lift).",
             "Once your site is live, add structured data and AI-optimized content. That is what gets you cited in ChatGPT.",
         ]
         rows = ""
@@ -222,18 +231,27 @@ def _bar_width(score: int) -> str:
 
 def _score_label(score: int, no_website: bool = False) -> str:
     if no_website:
-        return "No web presence -- invisible to AI"
+        return "No web presence: invisible to AI"
     if score <= 20:
-        return "Critical -- not visible to AI"
+        return "Critical: not visible to AI"
     elif score <= 50:
-        return "Below average -- partially visible"
-    return "Moderate -- room to improve"
+        return "Below average: partially visible"
+    return "Moderate: room to improve"
 
 
 # ── Opening body paragraph by niche ──────────────────────────────────────────
 
 def _opening(lead: dict) -> str:
+    # Identify business name versus personal name
     name = lead.get("name", "your business")
+    source = (lead.get("source") or "").lower()
+    is_cw = "apollo" in source or "cw" in source or "catalyst" in source
+    company = lead.get("company") or lead.get("company_name")
+    if is_cw and company:
+        business_name = company
+    else:
+        business_name = name
+
     niche_raw = (lead.get("niche") or "local business").lower()
     city = lead.get("city", "your city")
     score = lead.get("ai_score", 0)
@@ -298,56 +316,56 @@ def _opening(lead: dict) -> str:
         if _ab_variant(lead) == "B":
             # Variant B: team-power framing for no-website leads
             if "dentist" in niche_raw:
-                problem = f"Competing pediatric practices in {city} are using AI tools to show up every time a parent asks ChatGPT for a dentist. {name} has no website -- so there is nothing for AI to find."
+                problem = f"Competing pediatric practices in {city} are using AI tools to show up every time a parent asks ChatGPT for a dentist. {business_name} has no website, so there is nothing for AI to find."
             elif "roofer" in niche_raw or "roofing" in niche_raw:
-                problem = f"Competing roofers in {city} are using AI tools to capture every homeowner searching on ChatGPT. {name} has no website -- so there is nothing for AI to find."
+                problem = f"Competing roofers in {city} are using AI tools to capture every homeowner searching on ChatGPT. {business_name} has no website, so there is nothing for AI to find."
             elif "hvac" in niche_raw:
-                problem = f"Competing HVAC companies in {city} are using AI tools to be the first call when a homeowner needs help. {name} has no website -- so there is nothing for AI to find."
+                problem = f"Competing HVAC companies in {city} are using AI tools to be the first call when a homeowner needs help. {business_name} has no website, so there is nothing for AI to find."
             else:
-                problem = f"Your competitors in {city} are using AI tools to get found first. {name} has no web presence -- so AI has nothing to cite."
-            scan_line = f"That is fixable. I put together a quick demo showing what {name} could look like with a site built for AI visibility from day one."
+                problem = f"Your competitors in {city} are using AI tools to get found first. {business_name} has no web presence, so AI has nothing to cite."
+            scan_line = f"That is fixable. I put together a quick demo showing what {business_name} could look like with a site built for AI visibility from day one."
         else:
             # Variant A (original): no-website angle
             if "dentist" in niche_raw:
-                problem = f"I tried to find {name} online. I couldn't. No website, no AI presence -- parents asking ChatGPT for a pediatric dentist in {city} will never land on you."
+                problem = f"I tried to find {business_name} online and couldn't. With no website and no AI presence, parents asking ChatGPT for a pediatric dentist in {city} will never land on you."
             elif "roofer" in niche_raw or "roofing" in niche_raw:
-                problem = f"I tried to find {name} online. I couldn't. No website, no AI presence -- homeowners asking ChatGPT for a roofer in {city} will never find you."
+                problem = f"I tried to find {business_name} online and couldn't. With no website and no AI presence, homeowners asking ChatGPT for a roofer in {city} will never find you."
             elif "hvac" in niche_raw:
-                problem = f"I tried to find {name} online. I couldn't. No website, no AI presence -- homeowners asking ChatGPT for emergency HVAC help in {city} will never call you."
+                problem = f"I tried to find {business_name} online and couldn't. With no website and no AI presence, homeowners asking ChatGPT for emergency HVAC help in {city} will never call you."
             else:
-                problem = f"I tried to find {name} online. I couldn't. Without a web presence, AI tools have nothing to cite -- and you stay invisible."
-            scan_line = f"That is fixable. I put together a quick demo showing what {name} could look like with a site built for AI visibility from day one."
+                problem = f"I tried to find {business_name} online and couldn't. Without a web presence, AI tools have nothing to cite, and you stay invisible."
+            scan_line = f"That is fixable. I put together a quick demo showing what {business_name} could look like with a site built for AI visibility from day one."
         return f"{greeting}\n{problem}\n{scan_line}"
 
     if _ab_variant(lead) == "B":
         # Variant B: competitors-got-a-team framing
         if "dentist" in niche_raw:
-            problem = f"Competing pediatric practices in {city} are already using AI tools to be the name ChatGPT recommends to parents. I ran {name} through an AI visibility scan. You scored {score}/100."
+            problem = f"Competing pediatric practices in {city} are already using AI tools to be the name ChatGPT recommends to parents. I ran {business_name} through an AI visibility scan. You scored {score}/100."
             scan_line = f"That gap is closable. Here is what it looks like:"
         elif "roofer" in niche_raw or "roofing" in niche_raw:
-            problem = f"Competing roofers in {city} are already using AI tools to capture homeowners searching on ChatGPT. I ran {name} through a scan. You scored {score}/100."
+            problem = f"Competing roofers in {city} are already using AI tools to capture homeowners searching on ChatGPT. I ran {business_name} through a scan. You scored {score}/100."
             scan_line = f"That gap is closable. Here is what it looks like:"
         elif "hvac" in niche_raw:
-            problem = f"Competing HVAC companies in {city} are already using AI tools to be the first call when homeowners need help. I ran {name} through a scan. You scored {score}/100."
+            problem = f"Competing HVAC companies in {city} are already using AI tools to be the first call when homeowners need help. I ran {business_name} through a scan. You scored {score}/100."
             scan_line = f"That gap is closable. Here is what it looks like:"
         else:
-            problem = f"Your competitors in {city} are already using AI tools to get found first. I ran {name} through an AI visibility scan. You scored {score}/100."
+            problem = f"Your competitors in {city} are already using AI tools to get found first. I ran {business_name} through an AI visibility scan. You scored {score}/100."
             scan_line = f"That gap is closable. Here is what it looks like:"
         return f"{greeting}\n{problem}\n{scan_line}"
 
     # Variant A (original)
     if "dentist" in niche_raw:
         problem = f"Right now, a parent in {city} is asking ChatGPT for a pediatric dentist. They are getting a name. It is not yours."
-        scan_line = f"I ran {name} through an AI visibility scan. You scored {score}/100."
+        scan_line = f"I ran {business_name} through an AI visibility scan. You scored {score}/100."
     elif "roofer" in niche_raw or "roofing" in niche_raw:
         problem = f"Right now, someone in {city} is asking ChatGPT for a roofer. They are getting a name. It is not yours."
-        scan_line = f"I ran {name} through an AI visibility scan. You scored {score}/100."
+        scan_line = f"I ran {business_name} through an AI visibility scan. You scored {score}/100."
     elif "hvac" in niche_raw:
         problem = f"Right now, a homeowner in {city} is asking ChatGPT for emergency HVAC help. They are getting a name. It is not yours."
-        scan_line = f"I ran {name} through an AI visibility scan. You scored {score}/100."
+        scan_line = f"I ran {business_name} through an AI visibility scan. You scored {score}/100."
     else:
         problem = f"Right now, someone in {city} is searching for a {niche_raw}. AI tools are pointing them elsewhere."
-        scan_line = f"I ran {name} through an AI visibility scan. You scored {score}/100."
+        scan_line = f"I ran {business_name} through an AI visibility scan. You scored {score}/100."
 
     return f"{greeting}\n{problem}\n{scan_line}"
 
@@ -368,12 +386,12 @@ def _closing(lead: dict) -> str:
 
     if _has_no_website(lead):
         return (
-            f"I build AI-visible websites for {label} in {city} -- sites that rank in ChatGPT and Google AI "
+            f"I build AI-visible websites for {label} in {city}: sites that rank in ChatGPT and Google AI "
             "from day one, not as an afterthought.\n"
             "If you want to see what that looks like for your business, 20 minutes is enough:"
         )
     return (
-        f"I help {label} in {city} become the business AI recommends -- "
+        f"I help {label} in {city} become the business AI recommends "
         "through website optimization, structured data, and content that AI tools actually read and cite.\n"
         "If the gap is real to you, let's talk. 20 minutes, no pitch:"
     )
@@ -385,7 +403,17 @@ def render_html(lead: dict) -> str:
     niche = (lead.get("niche") or "").lower()
     cfg = NICHE_CONFIG.get(niche, DEFAULT_CONFIG)
     score = int(lead.get("ai_score") or 0)
+    
+    # Identify business name versus personal name
     name = lead.get("name", "your business")
+    source = (lead.get("source") or "").lower()
+    is_cw = "apollo" in source or "cw" in source or "catalyst" in source
+    company = lead.get("company") or lead.get("company_name")
+    if is_cw and company:
+        business_name = company
+    else:
+        business_name = name
+
     video_url = lead.get("video_url") or VIDEO_PLAY_URLS.get(niche, DEFAULT_VIDEO_URL)
     city = lead.get("city", "Salt Lake City")
     no_website = _has_no_website(lead)
@@ -401,7 +429,7 @@ def render_html(lead: dict) -> str:
     html = f"""<!--
   ACCESSIBILITY RULE (enforced permanently):
   Never use color as the sole signal. Always pair color with shape or text.
-  - Status indicators: X symbol for fail, checkmark for pass -- never dots only
+  - Status indicators: X symbol for fail, checkmark for pass (never dots only)
   - Red text labels are OK when the WORD carries the meaning (e.g. "CRITICAL")
   - Score bars always have a text label below (Critical / Below Average / Good)
   - Affects ~8% of men who are red-green colorblind
@@ -465,7 +493,7 @@ def render_html(lead: dict) -> str:
           <!-- Middle: business name + bar -->
           <td style="padding:0 14px;">
             <div style="color:#F1F5F9;font-size:14px;font-weight:700;margin-bottom:6px;
-                        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;">{name}</div>
+                        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;">{business_name}</div>
             <table width="100%" cellpadding="0" cellspacing="0" border="0">
               <tr><td style="background:#1E293B;border-radius:3px;height:5px;padding:0;">
                 <table cellpadding="0" cellspacing="0" border="0" style="width:{_bar_width(score)};">
@@ -503,7 +531,7 @@ def render_html(lead: dict) -> str:
         {_quick_wins_html(lead)}
       </div>
       <div class="body-text" style="color:#1a1a1a;">
-        <p>I put together a 20-second video showing what {name} could look like {"built for AI from day one" if no_website else "when this is fixed"}.</p>
+        <p>I put together a 20-second video showing what {business_name} could look like {"built for AI from day one" if no_website else "when this is fixed"}.</p>
       </div>
     </td>
   </tr>
@@ -524,7 +552,7 @@ def render_html(lead: dict) -> str:
                             border-left:16px solid {cfg['accent']};margin-left:4px;"></div>
               </td></tr>
             </table>
-            <p style="color:#ffffff;font-size:14px;font-weight:700;margin:0 0 4px 0;">Watch: {name} -- AI-visible</p>
+            <p style="color:#ffffff;font-size:14px;font-weight:700;margin:0 0 4px 0;">Watch: {business_name} (AI-visible)</p>
             <p style="color:#6b7280;font-size:11px;margin:0;">20 seconds &middot; no sound required</p>
           </td></tr>
         </table>
@@ -576,7 +604,7 @@ def _gws_env() -> dict:
     import platform
     env = {**os.environ}
     if platform.system() != "Windows":
-        # Inside Docker container -- point to mounted secrets
+        # Inside Docker container: point to mounted secrets
         env["GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE"] = os.environ.get(
             "GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE",
             "/app/secrets/gws-oauth-credentials.json",
@@ -586,7 +614,7 @@ def _gws_env() -> dict:
             "GOOGLE_WORKSPACE_CLI_CONFIG_DIR",
             "/app/.config/gws",
         )
-    # On Windows, gws uses C:/Users/<user>/.config/gws by default -- no override needed
+    # On Windows, gws uses C:/Users/<user>/.config/gws by default (no override needed)
     return env
 
 

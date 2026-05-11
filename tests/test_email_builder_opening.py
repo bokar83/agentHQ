@@ -8,7 +8,7 @@ def _base_lead():
         "niche": "roofer",
         "city": "Salt Lake City",
         "ai_score": 42,
-        "owner_name": "Bill",
+        "owner_name": "Bill Smith",
         "has_website": True,
         "website_url": "https://acme.example",
     }

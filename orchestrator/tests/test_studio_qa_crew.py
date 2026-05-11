@@ -32,10 +32,7 @@ def test_spellcheck_catches_common_typos():
     assert "teh" in r.detail.lower()
 
 
-def test_spellcheck_catches_double_space():
-    r = qa.check_spellcheck_grammar("This  has double  spaces.")
-    assert not r.passed
-    assert "double-space" in r.detail
+# Double-space check is no longer active because SCENE markers can leave double-spaces.
 
 
 def test_spellcheck_rejects_empty_text():
@@ -62,7 +59,7 @@ def test_banned_phrases_catches_engagement_bait():
 # ═════════════════════════════════════════════════════════════════════════════
 
 def test_length_within_short_target():
-    r = qa.check_length_target("a" * 200, "short (<60s)")
+    r = qa.check_length_target(" ".join(["word"] * 100), "short (<60s)")
     assert r.passed
 
 
@@ -73,7 +70,7 @@ def test_length_too_short_for_long_form():
 
 
 def test_length_too_long_for_short_form():
-    r = qa.check_length_target("a" * 500, "short (<60s)")
+    r = qa.check_length_target(" ".join(["word"] * 300), "short (<60s)")
     assert not r.passed
     assert "max" in r.detail
 
@@ -242,7 +239,7 @@ def test_run_qa_all_pass():
     # Length is borderline; verify each check's pass/fail individually
     # rather than asserting full pass (the short text is right at boundary).
     assert isinstance(report.checks, list)
-    assert len(report.checks) == 8
+    assert len(report.checks) == 11
 
 
 def test_run_qa_collects_all_8_results():
@@ -251,6 +248,7 @@ def test_run_qa_collects_all_8_results():
     assert check_names == [
         "spellcheck", "banned_phrases", "length_target", "hook_present",
         "source_citation", "cta_present", "personal_rules", "brand_voice",
+        "retention_loops", "ai_origin_safe", "four_part_formula",
     ]
 
 
