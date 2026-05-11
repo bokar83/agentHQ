@@ -1,11 +1,175 @@
 ---
 name: website-teardown
-description: 6-phase pipeline that audits a prospect website and produces an internal viability report (PURSUE/DROP verdict, price band) plus a client-facing teardown report with before/after mockup. Triggers on "website-teardown", "teardown this site", "audit this prospect site", "run a teardown", "should we pursue this lead", "is this site worth pursuing", or /website-teardown URL.
+description: Two-mode pipeline that audits a prospect website. COLD mode = lean outbound-email teardown (Phase 0 auto-filter + 3-leak markdown + paste-ready cold email). WARM mode = full 6-phase pipeline with HTML internal-viability + client-facing report + before/after mockup. Triggers on "website-teardown", "teardown this site", "cold teardown", "warm teardown", "run a teardown", "should we pursue this lead", or /website-teardown URL.
 ---
 
 # website-teardown
 
 **Trigger:** `/website-teardown URL` or "teardown DOMAIN"
+
+**Two modes, pick by intent:**
+
+| Mode | Use when | Audience | Output | Cost |
+|---|---|---|---|---|
+| `cold` (default) | Outbound to a prospect who has never heard of us. Goal: provoke reply. | Stranger | Paste-ready cold email + 3-leak markdown + HTML review board on localhost. NO sample link, NO HTML report in the email. | ~$0.005/site |
+| `warm` | Booked-call prospect, referral, or paid teardown. Goal: justify scope + close. | Already curious | Full HTML internal-viability + client-facing teardown + before/after Kie mockup. | ~$0.50/site |
+
+Routing rule: if Boubacar says "cold teardown" / "teardown this lead" / "prospect outbound" → cold. If "full teardown" / "warm teardown" / "send them a teardown report" / "post-call deliverable" → warm. If ambiguous, ask.
+
+---
+
+## COLD MODE (lean, outbound-driven)
+
+### Phase 0: Auto-filter pre-gate (REQUIRED, runs BEFORE full audit)
+
+**Decision:** PURSUE / DEFER / DROP based on website-datedness. Avoid spending money + time on leads that aren't worth pursuing.
+
+**Cost:** ~$0.005/site (1 HTTP fetch + 1 Haiku-4.5 classification via OpenRouter)
+
+**Hard stops (auto-DROP):**
+- `site_dead`: fetch failed / 404 / expired domain
+- `agency_owned`: footer says "Built by X" / "Designed by X" marketing agency
+- `closed_business`: "permanently closed", no products, no CTA
+- `already_modern`: clearly Apple-tier site, custom animations, dark-mode toggle — nothing to fix
+- `out_of_scope`: national chain or corporate giant (Mr. Rooter, QXO, etc.) — not owner-operated
+
+**Scoring rubric (datedness 0-100):**
+- 70-100 = PURSUE. Dated (pre-2022 design), broken forms, no mobile CTA, big leak surface
+- 40-69 = DEFER. Mid-tier. Modernish but craft-gap exists. Revisit Q3.
+- 0-39 = DROP. Already polished. No pitch to make.
+
+**Signals captured (HTTP fetch, no LLM needed):**
+- copyright year, mobile viewport meta, framework (Wix/Squarespace/WordPress/Tailwind/Bootstrap-3), slideshow/carousel presence, form input count, JSON-LD schema, "Built by" agency credit, title + H1, HTML size, 404/closed-business strings.
+
+**LLM call:** Haiku-4.5 via OpenRouter. Strict JSON output: `{datedness_score, verdict, verdict_reason, hard_stop, leaks_visible[], tier_estimate, owner_eyetest_one_liner}`.
+
+**Reference implementation:** `agent_outputs/teardowns/phase0_filter.py` (gitignored but reusable — copy into the run dir).
+
+**Output:** `phase0-board.html` rendered with TL;DR card (PURSUE/DEFER/DROP counts + avg datedness), then 3 grouped sections, each lead as a card with score-pill, verdict badge, chips (Wix/WordPress/©2020/carousel/N form fields), owner-eye-test one-liner, expandable leaks list.
+
+### Phase 1: Full teardown (only PURSUE leads from Phase 0)
+
+For each PURSUE lead, run a focused WebFetch pass + ≤1 competitor scan. Identify 3 concrete conversion leaks with cited site copy. Write to `agent_outputs/teardowns/<id>_<slug>_teardown.md`.
+
+**Required sections in the .md (for `render.py` to parse):**
+
+```markdown
+# <Business Name> — Cold Teardown
+**Lead ID:** <id> | **Niche:** <niche> | **City:** <city> | **Owner:** <email>
+**Site:** <url>
+**Date:** <YYYY-MM-DD>
+
+## The Hook (for cold email)
+**Subject line option A:** <50 char max>
+**Subject line option B:** <50 char max>
+**Opening hook (1-2 sentences):** <references a specific element on their site>
+
+## The Reality — 3 Biggest Conversion Leaks
+
+### Leak 1: <specific name>
+**What's happening:** <quote actual copy/element>
+**Why it costs them money:** <1 sentence, no unverified %>
+**How they can verify in 60 sec:** <imperative instruction>
+
+### Leak 2: ...
+### Leak 3: ...
+
+## The Redesign Blueprint (3 high-impact changes Catalyst would make)
+1. **<change name>:** <what + outcome framing>
+2. ...
+3. ...
+
+## Cold-Email Body (draft, ready to send)
+Subject: <subject>
+
+<email body following the Council Mandates below>
+
+## Analysis Notes (internal)
+- **Above-the-fold check:** ...
+- **Mobile sticky CTA:** ...
+- **Form friction:** <# fields>
+- **Trust markers above fold:** ...
+- **Page-load gut check:** ...
+- **Copyright year:** ...
+- **Internal fit score (1-10):** <N>
+- **Recommended next move:** SEND / SKIP / NEEDS WARM-UP first
+```
+
+### Phase 2: Render HTML for Boubacar review
+
+Use `render.py` (in `agent_outputs/teardowns/`) to convert each `.md` → standalone HTML with:
+- TL;DR card with /100 score (score = `fit_1_10 * 10`), color-coded (green ≥80, amber 60-79, red <60)
+- Paste-ready email card at top (gold border, monospace, subject highlighted, sig dimmed)
+- Subject options A/B as hook cards
+- 3 leak cards (red border, structured What/Why/Verify)
+- 3 fix cards (green border)
+- Collapsible internal analysis notes
+
+Plus an `index.html` card-grid landing page with batch TL;DR (avg score, PURSUE count). Serve at `localhost:8765`.
+
+### Phase 3: Send (REQUIRES EXPLICIT BOUBACAR AUTHORIZATION)
+
+**HARD RULE 0 (see `CLAUDE.md` / `AGENTS.md` / `docs/AGENT_SOP.md`):** No email send without Boubacar saying "send this email" / "send batch N" in the current session, for this specific batch. Past authorizations do NOT carry. NEVER re-send to "verify".
+
+**Send path** (from `feedback_cw_send_canonical_path.md`):
+- From: `boubacar@catalystworks.consulting`
+- Credentials: `/app/secrets/gws-oauth-credentials-cw.json` (cw OAuth, identity = boubacar@catalystworks.consulting)
+- API: `POST gmail.googleapis.com/gmail/v1/users/me/messages/send`
+- Mandatory: verify-after-send via `GET /messages/<id>?format=metadata`, assert From-header matches intended
+- DO NOT use `gws gmail messages send` CLI (authed as bokar83, silently rewrites From)
+
+### Council Mandates (encoded from Sankofa Council review 2026-05-11)
+
+These rules govern the cold-email body. Sankofa Council review confirmed 72% convergence on these, unanimous on the trust-anchor blocker.
+
+**1. Lead with a witnessed loss, not a finding.**
+- ❌ "Hey, looked at sandsroofingutah.com this morning. Your form asks for 8 required fields..."
+- ✅ "Pulled up sandsroofingutah.com on my phone. Picture a homeowner with a leaking roof. They land, hit field 3 of 8, and call the next roofer."
+- The opener must declare a job walked away. Mechanics are abstract. Loss is visceral.
+
+**2. Replace stats with consequences.**
+- ❌ "Usually moves form completion 20 to 40 percent for trade sites."
+- ✅ "They call the next roofer."
+- Trade owners discount % from strangers. Lost-call image is undeniable. Matches `feedback_verified_stats_only.md`.
+
+**3. Honest hypothetical opener (Boubacar's rule, overrides council's first-person simulation).**
+- The opener template = `Pulled up {URL} on my phone {time_modifier}. {literal_finding}.` (literal action lane) + `Picture a {customer_archetype} {context}. They {action}, hit {friction_point}, and {consequence}.` (clearly hypothetical lane). Never blur. Never fabricate.
+
+**4. Referral anchor (P.S. line). Optional but high-leverage.**
+- When populated: `P.S. {Name} at {Business} in {City} said I should take a look at yours.` → reply rate target 5-10%.
+- When empty: no P.S., ship email. Ceiling ~1% reply rate.
+- NEVER fabricate. Skill schema field: `referral_anchor` = optional. If empty, P.S. simply does not fire.
+
+**5. Banned phrases (skill linter rule):**
+- "looked at", "Quick note", "I noticed", "no pitch", "Happy to send", "Worth a 15-minute call", "moves form completion", "{N}% lift"
+
+**6. Subject line in body.**
+- Always include `Subject: <line>` as the literal first line of the email body so paste-and-send doesn't drop it.
+
+**7. Signature:**
+- First-name only. `Boubacar / Signal Works / 801-888-1963`
+- DROP "(a Catalyst Works brand)" tag in cold email body. Internal context.
+- NO unverified credibility claims ("Fixed 114 Utah trade sites" stays out until earned).
+
+**8. CTA:**
+- Single: `https://calendly.com/boubacarbarry/signal-works-discovery-call`
+- NO sample-report link, NO HTML teardown link in the cold email (would trigger spam classifier + reads as templated). Save the full teardown HTML for the reply-2 warm follow-up.
+
+### Cold-mode accept criteria (before claiming task complete)
+
+- [ ] Phase 0 board HTML exists with TL;DR + PURSUE/DEFER/DROP grouping
+- [ ] Per-lead `.md` written for each PURSUE
+- [ ] Per-lead `.html` rendered with TL;DR + paste-ready email card + score + collapsible notes
+- [ ] `index.html` card-grid page exists
+- [ ] localhost server live on :8765
+- [ ] No em-dashes in any email body
+- [ ] No banned phrases in any email body
+- [ ] No referral-anchor P.S. unless `referral_anchor` field is explicitly populated
+- [ ] **NO email sent without explicit Boubacar "send batch N" authorization (HARD RULE 0)**
+
+---
+
+## WARM MODE (full 6-phase pipeline)
 
 **What it is:** Thin orchestrator. Chains 5 existing skills in a 6-phase pipeline. No analytical logic lives here: every audit step delegates to the source skill. Produces two reports from one research pass.
 
