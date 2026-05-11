@@ -2,8 +2,34 @@
 
 **Owner:** Boubacar Barry  
 **System:** Catalyst Works Consulting : AI-Augmented Practice  
-**Version:** 2.0  
-**Last Updated:** 2026-03-20
+**Version:** 2.1  
+**Last Updated:** 2026-05-11
+
+---
+
+## 🚨 HARD RULE: EMAIL SENDING (top-priority, no exceptions)
+
+**Boubacar's standing instruction:** No agent may send an email until Boubacar explicitly says "send this email" (or equivalent direct go-ahead) IN THE CURRENT SESSION, for THE CURRENT BATCH. Past authorizations do NOT carry forward. Drafting, queueing, verifying — fine. Pressing send — only on explicit go-ahead.
+
+**Never re-send to "verify a previous send went out".** Duplicate sends to cold prospects are unrecoverable. To verify: fetch sent message metadata via Gmail API and inspect headers. Do NOT re-fire.
+
+**Canonical outbound path** (use this, nothing else):
+
+- From-line: `boubacar@catalystworks.consulting`
+- Credentials: `/app/secrets/gws-oauth-credentials-cw.json` (cw OAuth, identity = boubacar@catalystworks.consulting)
+- API: `POST https://gmail.googleapis.com/gmail/v1/users/me/messages/send` with Bearer token from `oauth2/token` refresh
+- Mandatory: verify-after-send via `GET /messages/<id>?format=metadata` and assert `From` header matches intended sender
+- Wired tool: `orchestrator/tools.py::_gws_request(account="boubacar@catalystworks.consulting", ...)`
+- Reference implementation: `skills/outreach/sequence_engine.py::_create_draft(auto_send=True)`
+
+**DO NOT use:**
+
+- `gws gmail users messages send` CLI inside `orc-crewai` → it is authed as `bokar83@gmail.com` and silently rewrites the From header. Prospects see a personal Gmail. Verified broken 2026-05-11.
+- Gmail MCP `create_draft` → creates a draft, never sends.
+
+**Why this rule exists:** 2026-05-11 incident. Agent re-sent a cold-teardown batch interpreting "verify it went out" as "send again". 3 prospects each received 2 emails. Unrecoverable. Same gws-vs-cw + send-permission confusion has come up across multiple sessions. This rule is the fix.
+
+See `CLAUDE.md` (for Claude Code sessions) and `~/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/feedback_cw_send_canonical_path.md` for the full details.
 
 ---
 
