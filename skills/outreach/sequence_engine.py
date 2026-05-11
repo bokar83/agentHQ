@@ -48,6 +48,13 @@ TOUCH_DAYS_SW = {1: 0, 2: 3, 3: 7, 4: 12, 5: 17}
 TOUCH_DAYS_CW = {1: 0, 2: 6, 3: 9, 4: 14, 5: 19}
 TOUCH_DAYS_STUDIO = {1: 0, 2: 5, 3: 11, 4: 18}
 
+# Per-touch draft caps (separate from send-rate cap in send_scheduler.py).
+# T1 caps fresh-lead drafting; T2-T5 each get their own pool so a backlog at any
+# follow-up touch cannot starve T1. Sends are still throttled by DAILY_CAPS in
+# signal_works/send_scheduler.py — these caps only bound draft creation volume.
+T1_DAILY_CAP = 50
+T2_T5_SOFT_CAP_PER_TOUCH = 150
+
 def _touch_days(pipeline: str) -> dict:
     if pipeline == "cw":
         return TOUCH_DAYS_CW
@@ -595,12 +602,28 @@ def _render(body_or_builder, lead: dict) -> str:
 
 # ── Main runner ───────────────────────────────────────────────────────────────
 
-def run_sequence(pipeline: str, dry_run: bool = False, daily_limit: int = 10) -> dict:
+def run_sequence(
+    pipeline: str,
+    dry_run: bool = False,
+    t1_cap: int = T1_DAILY_CAP,
+    followup_cap: int = T2_T5_SOFT_CAP_PER_TOUCH,
+    daily_limit: int = None,
+) -> dict:
     """
-    Process all due touches for a pipeline up to daily_limit total emails.
+    Process all due touches for a pipeline with per-touch caps.
+    T1 capped at t1_cap (fresh leads). T2-T5 each capped at followup_cap.
     Auto-send controlled by AUTO_SEND_CW / AUTO_SEND_SW env vars (default: draft).
-    Returns summary dict.
+
+    daily_limit (legacy): if passed, applies as an overall ceiling on top of
+    per-touch caps. Callers should migrate to t1_cap/followup_cap.
+
+    Returns summary dict including per_touch breakdown.
     """
+    if daily_limit is not None:
+        logger.warning(
+            "run_sequence: daily_limit is deprecated, use t1_cap/followup_cap. "
+            f"Applying as overall ceiling={daily_limit}."
+        )
     auto_send_cw = os.environ.get("AUTO_SEND_CW", "false").lower() == "true"
     auto_send_sw = os.environ.get("AUTO_SEND_SW", "false").lower() == "true"
     auto_send_studio = os.environ.get("AUTO_SEND_STUDIO", "false").lower() == "true"
@@ -616,19 +639,28 @@ def run_sequence(pipeline: str, dry_run: bool = False, daily_limit: int = 10) ->
     total_sent = 0
     total_failed = 0
     results = []
+    per_touch_counts = {}
 
     max_touch = 5 if pipeline in ("cw", "sw") else 4
     for touch in range(1, max_touch + 1):
-        if total_sent + total_failed >= daily_limit:
-            break
-        leads = _get_due_leads(conn, pipeline, touch, limit=daily_limit - total_sent - total_failed)
+        cap = t1_cap if touch == 1 else followup_cap
+        if daily_limit is not None:
+            remaining = daily_limit - total_sent - total_failed
+            if remaining <= 0:
+                per_touch_counts[touch] = 0
+                break
+            cap = min(cap, remaining)
+
+        leads = _get_due_leads(conn, pipeline, touch, limit=cap)
         if not leads:
+            per_touch_counts[touch] = 0
             logger.info(f"[{pipeline.upper()}] T{touch}: no leads due")
             continue
 
-        logger.info(f"[{pipeline.upper()}] T{touch}: {len(leads)} leads due")
+        logger.info(f"[{pipeline.upper()}] T{touch}: {len(leads)} leads due (cap={cap})")
         subject_tpl, body_tpl = _load_template(pipeline, touch)
 
+        touch_drafted = 0
         for lead in leads:
             name = lead.get("name", "")
             email = lead.get("email", "")
@@ -642,6 +674,7 @@ def run_sequence(pipeline: str, dry_run: bool = False, daily_limit: int = 10) ->
                     pipeline=pipeline, subject=subject, gmail_id="", status="dry-run",
                 )
                 results.append({"name": name, "email": email, "touch": touch, "status": "dry-run"})
+                touch_drafted += 1
                 continue
 
             result_id = _create_draft(email, subject, body, pipeline, auto_send=auto_send)
@@ -652,6 +685,7 @@ def run_sequence(pipeline: str, dry_run: bool = False, daily_limit: int = 10) ->
                            lead_email=email, gmail_id=result_id or "",
                            status=touch_status)
                 total_sent += 1
+                touch_drafted += 1
                 results.append({"name": name, "email": email, "touch": touch,
                                  "status": touch_status})
             else:
@@ -661,11 +695,21 @@ def run_sequence(pipeline: str, dry_run: bool = False, daily_limit: int = 10) ->
                 )
                 total_failed += 1
                 results.append({"name": name, "email": email, "touch": touch, "status": "failed"})
+        per_touch_counts[touch] = touch_drafted
 
     conn.close()
     action = "sent" if auto_send else "drafted"
-    logger.info(f"[{pipeline.upper()}] Sequence done: {total_sent} {action}, {total_failed} failed")
-    return {"pipeline": pipeline, action: total_sent, "failed": total_failed, "results": results}
+    logger.info(
+        f"[{pipeline.upper()}] Sequence done: {total_sent} {action}, {total_failed} failed. "
+        f"per_touch={per_touch_counts}"
+    )
+    return {
+        "pipeline": pipeline,
+        action: total_sent,
+        "failed": total_failed,
+        "per_touch": per_touch_counts,
+        "results": results,
+    }
 
 
 # ── CLI ───────────────────────────────────────────────────────────────────────

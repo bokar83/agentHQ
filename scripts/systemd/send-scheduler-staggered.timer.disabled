@@ -1,0 +1,30 @@
+[Unit]
+Description=Fire send-scheduler in 8 staggered windows for high-volume cold outreach (DORMANT)
+
+# DORMANT FILE -- not installed. Activate by:
+#   1. Confirm domain warmed + AUTO_SEND_CW/SW=true + ramp plan in motion
+#   2. systemctl stop send-scheduler.timer && systemctl disable send-scheduler.timer
+#   3. cp send-scheduler-staggered.timer.disabled /etc/systemd/system/send-scheduler.timer
+#      (overwrites existing 6-window timer)
+#   4. systemctl daemon-reload && systemctl enable --now send-scheduler.timer
+#
+# Pairs with raised DAILY_CAPS in signal_works/send_scheduler.py.
+# Default cap stays at 35 SW + 15 CW + 15 Studio = 65/day until ramp completes.
+# 8-window schedule supports up to ~450/day combined when caps are raised.
+
+[Timer]
+# 8 windows, ~2h apart, 06:00-20:00 MT, weekdays only
+# At 450/day target: ~56 sends per window
+OnCalendar=Mon-Fri *-*-* 06:00:00 America/Denver
+OnCalendar=Mon-Fri *-*-* 08:00:00 America/Denver
+OnCalendar=Mon-Fri *-*-* 10:00:00 America/Denver
+OnCalendar=Mon-Fri *-*-* 12:00:00 America/Denver
+OnCalendar=Mon-Fri *-*-* 14:00:00 America/Denver
+OnCalendar=Mon-Fri *-*-* 16:00:00 America/Denver
+OnCalendar=Mon-Fri *-*-* 18:00:00 America/Denver
+OnCalendar=Mon-Fri *-*-* 20:00:00 America/Denver
+Persistent=false
+Unit=send-scheduler.service
+
+[Install]
+WantedBy=timers.target

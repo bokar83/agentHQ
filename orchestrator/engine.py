@@ -92,7 +92,9 @@ def run_orchestrator(task_request: str, from_number: str = "unknown", session_ke
         try:
             from skills.outreach.sequence_engine import run_sequence
             pipeline = "sw" if "signal" in task_request.lower() else "cw"
-            result = run_sequence(pipeline, dry_run=False, daily_limit=10)
+            # On-demand chat-driven call: use t1_cap=10 to bound a manual fire,
+            # cascade caps default to followup_cap=150.
+            result = run_sequence(pipeline, dry_run=False, t1_cap=10)
             action_key = "sent" if pipeline == "cw" else "drafted"
             count = result.get(action_key, 0)
             results = result.get("results", [])
