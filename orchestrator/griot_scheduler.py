@@ -143,7 +143,7 @@ def _fetch_occupancy(notion) -> dict:
     for p in posts:
         props = p.get("properties", {})
         status = _select(props.get("Status", {}))
-        if status not in ("Queued", "Ready", "Posted", "Publishing", "PublishFailed"):
+        if status not in ("Queued", "Ready", "Published", "Publishing", "PublishFailed"):
             continue
         sd = _date_start(props.get("Scheduled Date", {}))
         if not sd:

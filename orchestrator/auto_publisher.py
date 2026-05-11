@@ -291,7 +291,7 @@ def _fetch_due_queued(notion, today_iso: str, now_local: Optional[datetime] = No
     for p in posts:
         props = p.get("properties", {})
         st = _select(props.get("Status", {}))
-        if st not in ("Publishing", "Posted", "PublishFailed"):
+        if st not in ("Publishing", "Published", "PublishFailed"):
             continue
         sd = _date_start(props.get("Scheduled Date", {}))
         if not sd or sd[:10] != today_iso:
@@ -406,7 +406,7 @@ def _flip_to_posted(
     """
     url_field = "LinkedIn Posted URL" if platform == "LinkedIn" else "X Posted URL"
     properties = {
-        "Status": {"select": {"name": "Posted"}},
+        "Status": {"select": {"name": "Published"}},
         url_field: {"url": public_url},
         "Posted Date": {"date": {"start": posted_at_iso}},
     }
