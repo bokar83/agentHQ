@@ -3107,3 +3107,22 @@ The background scheduling engine is now fully instrumented with high-craft traci
 1. Echo M1: slash command surface (/propose, /ack, /reject) + Telegram one-tap
 2. Atlas M9d-A: Weekly Synthesis crew
 3. Collect 50+ trace files for systemic HALO optimization runs
+
+### 2026-05-10 (evening session): A5 + A8 + A26 + milestone rename + spend fix
+
+**What shipped:**
+
+- **A5 Chairman enabled** — `autonomy_state.json` chairman.enabled=true, dry_run=false. 633 task_outcomes >> 7 threshold. First real tick tomorrow Monday 2026-05-11 06:00 MT. Weight mutations go to approval_queue for Telegram approve/reject before applying.
+- **A8 CEO Desk Dashboard** — Approval Queue card upgraded: type badges (Weight/Content/Outreach/Deploy/Spend/Commit), age display, 7-day history (all statuses), status chips (APPROVED/REJECTED/ENHANCING). Topbar pending count badge.
+- **A8a Queue Notion Activity** — Read-only Notion content activity section below approval items. Shows Posted/Approved/Rejected/Skipped posts from last 7 days. Deduped vs approval_queue.
+- **A26 Live Roadmap DB** — milestones table live, flip_milestone() wired, /shipped + /milestones Telegram, webchat intent, roadmap.html DOM render. Selector bars compute from live DB.
+- **Milestone ID rename** — All 71 milestone IDs renamed to codename-prefix format: A (Atlas), E (Echo), C (Compass), S (Studio), H (Harvest). Map at `docs/reference/milestone-id-map.md`. DB + seed + roadmap.html + all 5 .md files updated.
+- **Spend fix** — provider_today now uses llm_calls table (MT timezone) not OpenRouter UTC-reset daily counter. Was showing $0.18 when real spend was $4.65.
+- **Queue 7-day window** — approval_queue history expanded from 48h to 7 days so past decisions visible.
+- **A8b** filed — actionable Notion queue, gates on E3 (Echo multi-agent ingestion).
+- Signal Works roadmap prefix reserved: SW.
+
+**Next:**
+- A9d-A Deep Memory Garden — target 2026-05-18
+- A3 Reconciliation Polling — gate lifts 2026-05-11 (7-day tap data)
+- A25 Event Bus — gates on A23+A24 stable 30 days → 2026-06-10
