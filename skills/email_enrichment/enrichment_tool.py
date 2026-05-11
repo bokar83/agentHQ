@@ -533,9 +533,18 @@ def enrich_missing_emails(limit: int = 999) -> dict:
             # ── Step 2: Scrape website for email ─────────────────
             found_email, _scrape_note, _ = _scrape_for_email(website)
             if found_email:
-                _save_email(conn, lead_id, found_email)
-                has_email = True
-                _write_note(conn, lead_id, f"[{today}] Enriched — email found via scrape: {found_email}")
+                # Gate before saving so we never persist role mailboxes
+                # / catch-alls / disposable addresses to the DB.
+                try:
+                    from signal_works.email_gate import gate_email as _gate, EmailGateDrop as _Drop
+                    found_email = _gate(found_email, source="enrichment_scrape")
+                    _save_email(conn, lead_id, found_email)
+                    has_email = True
+                    _write_note(conn, lead_id, f"[{today}] Enriched — email found via scrape: {found_email}")
+                except _Drop as _de:
+                    logger.info(f"Enrichment: scrape email {found_email} dropped ({_de.reason})")
+                    _write_note(conn, lead_id, f"[{today}] Enriched — scrape email rejected by gate: {_de.reason}")
+                    found_email = None
             else:
                 _write_note(conn, lead_id, f"[{today}] Enriched — no email found after scraping.")
 
@@ -551,11 +560,20 @@ def enrich_missing_emails(limit: int = 999) -> dict:
                 if _domain:
                     _hunter_email = _hunter_domain_search(_domain)
                     if _hunter_email:
-                        _save_email(conn, lead_id, _hunter_email)
-                        has_email = True
-                        found_email = _hunter_email
-                        logger.info(f"Enrichment: Hunter found {_hunter_email} at {_domain}")
-                        _write_note(conn, lead_id, f"[{today}] Enriched — email found via Hunter domain search: {_hunter_email}")
+                        # hunter_client gates internally per-tier candidate;
+                        # this defensive call covers anything the verifier
+                        # missed and tags the metric source correctly.
+                        try:
+                            from signal_works.email_gate import gate_email as _gate, EmailGateDrop as _Drop
+                            _hunter_email = _gate(_hunter_email, source="enrichment_hunter")
+                            _save_email(conn, lead_id, _hunter_email)
+                            has_email = True
+                            found_email = _hunter_email
+                            logger.info(f"Enrichment: Hunter found {_hunter_email} at {_domain}")
+                            _write_note(conn, lead_id, f"[{today}] Enriched — email found via Hunter domain search: {_hunter_email}")
+                        except _Drop as _de:
+                            logger.info(f"Enrichment: Hunter email {_hunter_email} dropped ({_de.reason})")
+                            _write_note(conn, lead_id, f"[{today}] Enriched — Hunter email rejected by gate: {_de.reason}")
             except HunterCapReached:
                 logger.warning("Enrichment: Hunter daily cap reached, skipping for rest of enrichment run")
             except Exception as _he:
@@ -571,10 +589,16 @@ def enrich_missing_emails(limit: int = 999) -> dict:
                 want_phone=True,
             ) or {"email": None, "phone": None, "error": "none_returned"}
             if prospeo.get("email"):
-                _save_email(conn, lead_id, prospeo["email"])
-                has_email = True
-                found_email = prospeo["email"]
-                _write_note(conn, lead_id, f"[{today}] Enriched — email found via Prospeo: {prospeo['email']}")
+                try:
+                    from signal_works.email_gate import gate_email as _gate, EmailGateDrop as _Drop
+                    _p_email = _gate(prospeo["email"], source="enrichment_prospeo")
+                    _save_email(conn, lead_id, _p_email)
+                    has_email = True
+                    found_email = _p_email
+                    _write_note(conn, lead_id, f"[{today}] Enriched — email found via Prospeo: {_p_email}")
+                except _Drop as _de:
+                    logger.info(f"Enrichment: Prospeo email {prospeo['email']} dropped ({_de.reason})")
+                    _write_note(conn, lead_id, f"[{today}] Enriched — Prospeo email rejected by gate: {_de.reason}")
             elif prospeo.get("company_domain") and not has_email:
                 # Prospeo returned a verified company domain even though email was UNAVAILABLE
                 # Use it to scrape the actual business site directly
@@ -583,10 +607,16 @@ def enrich_missing_emails(limit: int = 999) -> dict:
                     domain_url = f"https://{domain_url}"
                 scrape_email, _note, _ = _scrape_for_email(domain_url)
                 if scrape_email:
-                    _save_email(conn, lead_id, scrape_email)
-                    has_email = True
-                    found_email = scrape_email
-                    _write_note(conn, lead_id, f"[{today}] Enriched — email scraped from Prospeo domain {prospeo['company_domain']}: {scrape_email}")
+                    try:
+                        from signal_works.email_gate import gate_email as _gate, EmailGateDrop as _Drop
+                        scrape_email = _gate(scrape_email, source="enrichment_prospeo_domain")
+                        _save_email(conn, lead_id, scrape_email)
+                        has_email = True
+                        found_email = scrape_email
+                        _write_note(conn, lead_id, f"[{today}] Enriched — email scraped from Prospeo domain {prospeo['company_domain']}: {scrape_email}")
+                    except _Drop as _de:
+                        logger.info(f"Enrichment: Prospeo-domain scrape email {scrape_email} dropped ({_de.reason})")
+                        _write_note(conn, lead_id, f"[{today}] Enriched — Prospeo-domain scrape rejected by gate: {_de.reason}")
             if prospeo.get("phone") and not has_phone:
                 _save_phone(conn, lead_id, prospeo["phone"])
                 has_phone = True

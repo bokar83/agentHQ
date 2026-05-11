@@ -21,6 +21,7 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 from skills.apollo_skill.apollo_client import harvest_leads, CW_ICP_WIDENED
+from signal_works.email_gate import gate_email, EmailGateDrop
 try:
     from orchestrator.db import get_crm_connection, ensure_leads_columns, get_resend_queue
 except ModuleNotFoundError:
@@ -119,6 +120,11 @@ def topup_cw_leads(minimum: int = DAILY_MINIMUM, dry_run: bool = False, force_fr
     for lead in fresh:
         if not lead.get("email"):
             continue
+        try:
+            lead["email"] = gate_email(lead["email"], source="cw_topup_apollo")
+        except EmailGateDrop as e:
+            logger.info(f"CW topup: dropped {lead.get('email')} ({e.reason})")
+            continue
         if _is_duplicate(conn, lead["email"]):
             continue
         lead["email_source"] = "apollo_fresh"
@@ -128,6 +134,14 @@ def topup_cw_leads(minimum: int = DAILY_MINIMUM, dry_run: bool = False, force_fr
     # Slot 6-10: resend queue
     resends = get_resend_queue(limit=target_resend, days_back=60)
     for r in resends:
+        # Resend queue emails already passed the gate on first harvest,
+        # but re-gating cheaply via the in-run cache catches any rule
+        # changes since they were added.
+        try:
+            r["email"] = gate_email(r["email"], source="cw_topup_resend")
+        except EmailGateDrop as e:
+            logger.info(f"CW topup: resend dropped {r.get('email')} ({e.reason})")
+            continue
         if _is_duplicate(conn, r["email"]):
             continue
         lead = {
@@ -143,6 +157,11 @@ def topup_cw_leads(minimum: int = DAILY_MINIMUM, dry_run: bool = False, force_fr
         topup_extra = harvest_leads(CW_ICP_WIDENED, target=gap, max_pages=12)
         for lead in topup_extra:
             if not lead.get("email"):
+                continue
+            try:
+                lead["email"] = gate_email(lead["email"], source="cw_topup_apollo")
+            except EmailGateDrop as e:
+                logger.info(f"CW topup gap-fill: dropped {lead.get('email')} ({e.reason})")
                 continue
             if _is_duplicate(conn, lead["email"]):
                 continue

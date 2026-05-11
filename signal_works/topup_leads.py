@@ -18,6 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from signal_works.lead_scraper import scrape_google_maps_leads, find_email_from_website
 from signal_works.expansion_ladder import PAIRS
 from signal_works.hunter_client import domain_search, HunterCapReached, reset_daily_counter
+from signal_works.email_gate import gate_email, EmailGateDrop
 from skills.apollo_skill.apollo_client import find_owner_by_company
 
 try:
@@ -77,7 +78,11 @@ def _resolve_email(business: dict, hunter_disabled: bool) -> tuple[str, str, str
         try:
             email = find_email_from_website(website)
             if email:
-                return email, "firecrawl", ""
+                try:
+                    vetted = gate_email(email, source="sw_topup_firecrawl")
+                    return vetted, "firecrawl", ""
+                except EmailGateDrop as e:
+                    logger.info(f"_resolve_email: firecrawl email {email} dropped ({e.reason})")
         except Exception as e:
             logger.warning(f"_resolve_email: Firecrawl error on {website}: {e}")
 
@@ -87,7 +92,11 @@ def _resolve_email(business: dict, hunter_disabled: bool) -> tuple[str, str, str
     apollo_domain = (apollo.get("domain") if apollo else "") or ""
 
     if apollo_email:
-        return apollo_email, "apollo_strict", apollo_name
+        try:
+            vetted = gate_email(apollo_email, source="sw_topup_apollo")
+            return vetted, "apollo_strict", apollo_name
+        except EmailGateDrop as e:
+            logger.info(f"_resolve_email: apollo email {apollo_email} dropped ({e.reason})")
 
     # Hunter.io fallback. Try Apollo's domain first (better-formatted), then
     # fall back to the website Serper already gave us. Apollo people DB has
@@ -111,7 +120,14 @@ def _resolve_email(business: dict, hunter_disabled: bool) -> tuple[str, str, str
     try:
         email = domain_search(candidate_domain)
         if email:
-            return email, "hunter_domain", apollo_name
+            # hunter_client.domain_search already runs gate_email internally on
+            # each tier candidate. The defensive re-gate here covers manual
+            # overrides and keeps a uniform drop-log source tag.
+            try:
+                vetted = gate_email(email, source="sw_topup_hunter")
+                return vetted, "hunter_domain", apollo_name
+            except EmailGateDrop as e:
+                logger.info(f"_resolve_email: hunter email {email} dropped ({e.reason})")
     except HunterCapReached:
         logger.warning("_resolve_email: Hunter cap reached, skipping for rest of run")
         raise

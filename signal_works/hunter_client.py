@@ -17,6 +17,8 @@ import os
 
 import httpx
 
+from signal_works.email_gate import gate_email, EmailGateDrop
+
 logger = logging.getLogger(__name__)
 
 HUNTER_API_URL = "https://api.hunter.io/v2/domain-search"
@@ -104,7 +106,12 @@ def domain_search(domain: str) -> str | None:
     owner_hits = [e for e in emails if e.get("value") and e.get("confidence", 0) >= 80]
     if owner_hits:
         owner_hits.sort(key=lambda e: e.get("confidence", 0), reverse=True)
-        return owner_hits[0]["value"]
+        for hit in owner_hits:
+            try:
+                return gate_email(hit["value"], source="hunter_tier1")
+            except EmailGateDrop as e:
+                logger.info(f"hunter_client: tier1 dropped {hit['value']} ({e.reason})")
+                continue
 
     # Tier 2: senior fallback (only fires if tier 1 returned nothing useful)
     if not emails:
@@ -126,8 +133,14 @@ def domain_search(domain: str) -> str | None:
     ]
     if senior_hits:
         senior_hits.sort(key=lambda e: e.get("confidence", 0), reverse=True)
-        logger.info(f"hunter_client: senior-tier email used at {domain}")
-        return senior_hits[0]["value"]
+        for hit in senior_hits:
+            try:
+                vetted = gate_email(hit["value"], source="hunter_tier2")
+                logger.info(f"hunter_client: senior-tier email used at {domain}")
+                return vetted
+            except EmailGateDrop as e:
+                logger.info(f"hunter_client: tier2 dropped {hit['value']} ({e.reason})")
+                continue
 
     # Tier 3: catch-all -- unfiltered domain search for tiny shops
     _call_count += 1
@@ -140,8 +153,14 @@ def domain_search(domain: str) -> str | None:
     ]
     if any_emails:
         any_emails.sort(key=lambda e: e.get("confidence", 0), reverse=True)
-        logger.info(f"hunter_client: any-tier email used at {domain}")
-        return any_emails[0]["value"]
+        for hit in any_emails:
+            try:
+                vetted = gate_email(hit["value"], source="hunter_tier3")
+                logger.info(f"hunter_client: any-tier email used at {domain}")
+                return vetted
+            except EmailGateDrop as e:
+                logger.info(f"hunter_client: tier3 dropped {hit['value']} ({e.reason})")
+                continue
 
     logger.info(f"hunter_client: no deliverable email at {domain}")
     return None
