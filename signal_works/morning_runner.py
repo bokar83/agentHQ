@@ -122,8 +122,14 @@ def _main_body():
     logger.info("STEP 2: Signal Works lead harvest (target: 35 email leads)...")
     try:
         from signal_works.topup_leads import topup
-        sw_leads = topup(minimum=35)
-        logger.info(f"  Done. {sw_leads} Signal Works email leads ready.")
+        from signal_works.harvest_until_target import _count_today_sw_with_email
+        topup(minimum=35)
+        # DB truth, not topup() return value. The return value counts
+        # UPDATE-on-match as a fresh save, masking re-discovery of the same
+        # 250 Provo/Vegas leads day after day. Read fresh-inserted-with-email
+        # straight from the leads table for an honest metric.
+        sw_leads = _count_today_sw_with_email()
+        logger.info(f"  Done. {sw_leads} SW email leads created today (DB truth).")
         log_step("sw_harvest", attempted=35, succeeded=sw_leads)
     except Exception as e:
         logger.error(f"  Signal Works topup failed: {e}")
@@ -151,8 +157,14 @@ def _main_body():
     cw_leads = 0
     try:
         from signal_works.topup_cw_leads import topup_cw_leads
-        cw_leads = topup_cw_leads(minimum=20)
-        logger.info(f"  Done. {cw_leads} CW email leads ready.")
+        from signal_works.harvest_until_target import _count_today_cw_with_email
+        # force_fresh=True bypasses the _count_ready_cw_leads short-circuit so
+        # Apollo harvest runs every morning regardless of stale ready-pool count.
+        # Previously this caused CW T1 to go dead from 2026-05-08 onward.
+        topup_cw_leads(minimum=20, force_fresh=True)
+        # DB truth for the metric, not topup_cw_leads() return value.
+        cw_leads = _count_today_cw_with_email()
+        logger.info(f"  Done. {cw_leads} CW email leads created today (DB truth).")
         log_step("cw_harvest", attempted=20, succeeded=cw_leads)
     except Exception as e:
         logger.error(f"  CW Apollo topup failed: {e}")
