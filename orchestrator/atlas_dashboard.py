@@ -45,8 +45,6 @@ def _fetch_notion_activity(days: int = 7) -> list:
             db_id,
             filter_obj={"or": [
                 {"property": "Status", "select": {"equals": "Published"}},
-                {"property": "Status", "select": {"equals": "Approved"}},
-                {"property": "Status", "select": {"equals": "Rejected"}},
                 {"property": "Status", "select": {"equals": "Skipped"}},
             ]},
             sorts=[{"property": "Scheduled Date", "direction": "descending"}],
