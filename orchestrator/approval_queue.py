@@ -216,6 +216,28 @@ def list_pending(limit: int = 10) -> list:
     return [_row_to_queue(r) for r in rows]
 
 
+def list_recent(hours: int = 48, limit: int = 50) -> list:
+    """Return all rows (any status) created in the last N hours, newest first.
+
+    Used by the Atlas dashboard queue card to show history even after items
+    are approved/rejected via Telegram buttons.
+    """
+    conn = _conn()
+    cur = conn.cursor()
+    cur.execute(
+        f"""
+        SELECT {_SELECT_COLS} FROM approval_queue
+         WHERE ts_created > now() - (%s || ' hours')::interval
+         ORDER BY ts_created DESC
+         LIMIT %s
+        """,
+        (str(hours), limit),
+    )
+    rows = cur.fetchall()
+    cur.close()
+    return [_row_to_queue(r) for r in rows]
+
+
 def count_pending() -> int:
     """Return the total number of pending rows (no LIMIT).
 

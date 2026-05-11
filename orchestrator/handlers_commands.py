@@ -378,16 +378,25 @@ def _cmd_queue(text: str, chat_id: str) -> bool:
     if not text.lower().startswith("/queue"):
         return False
     from notifier import send_message as _send
-    from approval_queue import list_pending
-    rows = list_pending(limit=10)
-    if not rows:
+    from unified_queue import list_all_pending
+    items = list_all_pending(limit=15)
+    if not items:
         _send(chat_id, "Queue empty. No pending proposals.")
         return True
-    lines = [f"Pending proposals ({len(rows)}):"]
+    lines = [f"Pending ({len(items)}):"]
     now = datetime.now(timezone.utc)
-    for r in rows:
-        age_min = int((now - r.ts_created).total_seconds() / 60) if r.ts_created else 0
-        lines.append(f"  #{r.id}  {r.crew_name}  {r.proposal_type}  ({age_min}m)")
+    for item in items:
+        created = item.get("created_at") or ""
+        try:
+            from datetime import datetime as _dt
+            ts = _dt.fromisoformat(created.replace("Z", "+00:00"))
+            age_min = int((now - ts).total_seconds() / 60)
+            age = f"{age_min}m"
+        except Exception:
+            age = "?"
+        lines.append(f"  {item['label']}  {item['crew_name']}  {item['proposal_type']}  ({age})")
+    lines.append("\nApprove: /approve <id>  |  Reject: /reject <id>")
+    lines.append("(Q# = content queue, P# = commit proposal)")
     _send(chat_id, "\n".join(lines))
     return True
 
@@ -396,22 +405,18 @@ def _cmd_approve(text: str, chat_id: str) -> bool:
     if not text.lower().startswith("/approve"):
         return False
     from notifier import send_message as _send
-    from approval_queue import approve as _aq_approve
+    from unified_queue import approve_any
     parts = text.strip().split(maxsplit=2)
     if len(parts) < 2:
-        _send(chat_id, "Usage: /approve <id> [note]")
+        _send(chat_id, "Usage: /approve <id> [note]\n(Q# for content queue, P<hex> for commit proposals)")
         return True
-    try:
-        qid = int(parts[1])
-    except ValueError:
-        _send(chat_id, f"Invalid queue id: {parts[1]}")
-        return True
+    id_str = parts[1]
     note = parts[2] if len(parts) > 2 else None
-    row = _aq_approve(qid, note=note)
-    if row is None:
-        _send(chat_id, f"Queue #{qid}: not found or already decided.")
+    result = approve_any(id_str, note=note)
+    if result.get("ok"):
+        _send(chat_id, f"{id_str}: approved.")
     else:
-        _send(chat_id, f"Queue #{qid}: approved.")
+        _send(chat_id, f"{id_str}: {result.get('error', 'failed')}")
     return True
 
 
@@ -419,16 +424,13 @@ def _cmd_reject(text: str, chat_id: str) -> bool:
     if not text.lower().startswith("/reject"):
         return False
     from notifier import send_message as _send
-    from approval_queue import reject as _aq_reject, KNOWN_FEEDBACK_TAGS
+    from unified_queue import reject_any
+    from approval_queue import KNOWN_FEEDBACK_TAGS
     parts = text.strip().split(maxsplit=3)
     if len(parts) < 2:
-        _send(chat_id, "Usage: /reject <id> [tag] [note]")
+        _send(chat_id, "Usage: /reject <id> [tag] [note]\n(Q# for content queue, P<hex> for commit proposals)")
         return True
-    try:
-        qid = int(parts[1])
-    except ValueError:
-        _send(chat_id, f"Invalid queue id: {parts[1]}")
-        return True
+    id_str = parts[1]
     tag = None
     note = None
     if len(parts) > 2:
@@ -437,11 +439,11 @@ def _cmd_reject(text: str, chat_id: str) -> bool:
             note = parts[3] if len(parts) > 3 else None
         else:
             note = " ".join(parts[2:])
-    row = _aq_reject(qid, note=note, feedback_tag=tag)
-    if row is None:
-        _send(chat_id, f"Queue #{qid}: not found or already decided.")
+    result = reject_any(id_str, note=note, feedback_tag=tag)
+    if result.get("ok"):
+        _send(chat_id, f"{id_str}: rejected. Tag: {tag or 'none'}")
     else:
-        _send(chat_id, f"Queue #{qid}: rejected. Tag: {tag or 'none'}")
+        _send(chat_id, f"{id_str}: {result.get('error', 'failed')}")
     return True
 
 
