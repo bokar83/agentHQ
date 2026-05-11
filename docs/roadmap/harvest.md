@@ -291,7 +291,7 @@ skills/signal-works-conversion/
 
 ### H1e: catalystworks.consulting v3-WOW (cinematic + Constraints AI live demo)
 
-**Status:** Tier 1 shipped 2026-05-01. **Tier 2 partial-ship 2026-05-11** to `dev-v3-WOW` (commits `f63e5f2`, `aba107d`): T2.1 outcomes strip, T2.5 SEO polish, T2.6 mobile a11y, T2.8 worker fallback hardening (deploy still pending). Tier 3 not yet built.
+**Status:** Tier 1 shipped 2026-05-01. **Tier 2 FULLY LIVE 2026-05-11** at <https://catalystworks.consulting/> — all 9 Tier-2 tasks landed (T2.1 outcomes strip, T2.2 5 lens pages, T2.3 3 industry pages, T2.4 Three.js pin, T2.5 SEO polish, T2.6 mobile a11y, T2.7 paid Calendly CTA, T2.8 worker hardening + n8n endpoint, T2.9 image case + perf hints). Tier 3 not yet built.
 
 **What shipped (Tier 1, 2026-05-01):**
 - Single-page cinematic dark theme (deep navy + amber + cyan accents)
@@ -310,13 +310,13 @@ skills/signal-works-conversion/
 | # | Task | Time | Why |
 |---|---|---|---|
 | T2.1 ✅ | Anonymized 30-day-outcome strip below offer (3 rows: industry / what was stuck / what changed). Use real informal Signal Sessions Boubacar has run; composite if needed (clearly labeled). | 90 min | Closes the "no social proof" cold-read gap (Sankofa Outsider). **Shipped 2026-05-11 (f63e5f2):** `.offer-outcomes` block, 3-col desktop / 1-col <880px, cinematic tokens, composite disclaimer. |
-| T2.2 | Programmatic SEO: 5 lens-explainer pages (`/lens/throughput`, `/lens/friction`, `/lens/decision`, `/lens/information`, `/lens/inference`) | 3 hr | Site has 3 ranking pages today. 8 pages rank for ~8x more long-tail. |
-| T2.3 | Programmatic SEO: 3 industry-specific pages (`/for/professional-services`, `/for/hvac`, `/for/healthcare-smb`) | 2 hr | Adds vertical entry points |
-| T2.4 | Migrate Three.js off deprecated UMD build (`build/three.min.js` → ES module or pin `three@0.149`) | 10 min | Prevents silent breakage on next CDN update (audit #11) |
+| T2.2 ✅ | Programmatic SEO: 5 lens-explainer pages (`/lens/throughput`, `/lens/friction`, `/lens/decision`, `/lens/information`, `/lens/inference`) | 3 hr | Site has 3 ranking pages today. 8 pages rank for ~8x more long-tail. **Shipped 2026-05-11 (91110d5):** all 5 pages live, shared `styles/lens-pages.css`, full Article JSON-LD, cross-link grid, sitemap.xml updated, lens cards on homepage now anchor-link into each page. |
+| T2.3 ✅ | Programmatic SEO: 3 industry-specific pages (`/for/professional-services`, `/for/hvac`, `/for/healthcare-smb`) | 2 hr | Adds vertical entry points. **Shipped 2026-05-11 (91110d5):** all 3 pages live, 3-card constraint-pattern grid, CTA strip, vertical-to-vertical cross-links + back to lens protocol. |
+| T2.4 ✅ | Migrate Three.js off deprecated UMD build (`build/three.min.js` → ES module or pin `three@0.149`) | 10 min | Prevents silent breakage on next CDN update (audit #11). **Shipped 2026-05-11 (91110d5):** `three@0.149.0` (last UMD release) + `crossorigin="anonymous"`. |
 | T2.5 ✅ | Title + meta rewrite with "Salt Lake City", "Utah", "fractional advisor" keywords | 4 min | Closes local-SEO gap (audit #8). **Shipped 2026-05-11 (f63e5f2):** title + description + `og:*` + `twitter:*` all weave SLC + Utah + fractional advisor + diagnostic business consulting. |
 | T2.6 ✅ | Footer link tap targets to 44x44 min height on mobile | 4 min | Mobile a11y standard (audit #12). **Shipped 2026-05-11 (f63e5f2):** `@media (max-width: 480px)` rule on `.foot-links a` + `footer .brand`, verified via Playwright DOM measure (all 44px). |
-| T2.7 | Create paid `Executive Signal Session` Calendly event type (90-min, $497, Stripe-wired) and switch CTA from discovery-call URL to direct booking | 30 min on Calendly side | Removes one funnel step. Currently using free discovery as stepping stone. |
-| T2.8 🟡 | Deploy `_worker.js` to Cloudflare Workers; set OPENROUTER_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_KEY, HASH_SALT secrets; paste deployed URL into `WORKER_URL` constant in `index.html` | 20 min | Activates real Claude/GPT diagnoses + Supabase capture (currently simulated mode). **2026-05-11 (f63e5f2):** front-end hook hardened with `AbortController` + 12s timeout + try/catch/finally; seamless fallback to `simulate()` when `WORKER_URL=''`. **Still pending:** `wrangler deploy` + secrets + paste URL into `index.html`. |
+| T2.7 ✅ | Create paid `Executive Signal Session` Calendly event type (90-min, $497, Stripe-wired) and switch CTA from discovery-call URL to direct booking | 30 min on Calendly side | Removes one funnel step. **Already shipped to main on 2026-05-01 (16e3df5):** event type `Signal Session: Business Constraint Diagnostic` (slug `signal-session-business-constraint-diagnostic`) confirmed live via Calendly MCP (90 min, is_paid=true, active=true). CTA + fineprint copy updated in same commit. dev-v3-WOW had a duplicate attempt (`e37b9c0`) — dropped during the merge to avoid clobbering main's better copy. |
+| T2.8 ✅ | Deploy `_worker.js` to Cloudflare Workers; set OPENROUTER_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_KEY, HASH_SALT secrets; paste deployed URL into `WORKER_URL` constant in `index.html` | 20 min | **Pivoted to n8n, not Cloudflare:** worker is live at `https://n8n.srv1040886.hstgr.cloud/webhook/catalystworks-constraints-ai` (commit d4f18a1 on main, 2026-05-01) running the locked Constraints AI prompt against OpenRouter `gpt-4o-mini`. Cloudflare wrangler deploy scaffold (`worker-deploy/`) committed for future portability but not needed for live operation. Front-end hook hardened (`ec3efbd`): `AbortController` + 22s timeout (bumped from 12s after Karpathy review — covers n8n cold-start + OpenRouter latency) + `try/catch/finally`. |
 | T2.9 ✅ | Production case-sensitivity hardening + image perf hints | 10 min | Prevents Linux/Hostinger 404 on `Boubacar.JPG`. **Shipped 2026-05-11 (aba107d):** `git mv` rename to `Boubacar.jpg`, `loading="lazy" decoding="async"` on below-fold images, `decoding="async" fetchpriority="high"` on header logo. |
 
 **Tier 3 (target: within 30 days of 2026-05-01, due 2026-05-31):**
@@ -330,8 +330,11 @@ skills/signal-works-conversion/
 | T3.5 | Add Stripe direct-payment to Signal Session offer card (skip Calendly discovery, sell straight to $497) once first 3 paid sessions happen via T2.7 path | Tightens funnel |
 
 **Live URLs:**
-- Branch: https://github.com/bokar83/catalystworks-site/tree/dev-v3-WOW
-- Live (after deploy): https://catalystworks.consulting/
+
+- Production: <https://catalystworks.consulting/> — Tier 2 fully shipped 2026-05-11
+- 5 lens pages live: `/lens/throughput`, `/lens/friction`, `/lens/decision`, `/lens/information`, `/lens/inference` (clean URLs via `.htaccess`)
+- 3 industry pages live: `/for/professional-services`, `/for/hvac`, `/for/healthcare-smb`
+- Branch (now merged): <https://github.com/bokar83/catalystworks-site/tree/release/v3-WOW-tier2>
 - Localhost preview: `cd output/websites/catalystworks-site && python -m http.server 8745`
 
 **Sankofa Council verdict (2026-05-01):** the site is a $100k positioning piece. Tier 1 added the conversion mechanics (capture, risk reversal, Calendly). Tier 2 + 3 turn it into a $100k revenue piece.
@@ -580,6 +583,47 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 ---
 
 ## Session Log
+
+### 2026-05-11 — H1e Tier 2 FULLY LIVE (all 9 tasks shipped + Karpathy-reviewed merge)
+
+Production verified at <https://catalystworks.consulting/> — homepage, all 5 lens pages, all 3 industry pages return 200; clean URLs via `.htaccess` working (`/lens/throughput` resolves without `.html`); Three.js pinned to 0.149.0; n8n worker endpoint live with 22s timeout; outcomes strip rendering.
+
+#### Branches + commit graph
+
+- `dev-v3-WOW` accumulated: `f63e5f2` (T2.1+T2.5+T2.6+T2.8 hook), `aba107d` (T2.9 image case + perf), `882132c` (T2.2+T2.3+T2.4), `e37b9c0` (T2.7 dup — later dropped).
+- `release/v3-WOW-tier2` cherry-picked off `origin/main`: `6497180` → `ec3efbd` → `83ec41a` (timeout 12→22s) → `91110d5` (T2.2+T2.3+T2.4) → `38e6777` (Karpathy fixes: worker resync + htaccess consolidate).
+- `main` fast-forwarded to `38e6777`, pushed to `bokar83/catalystworks-site`.
+- Hostinger Git auto-deploy fired ~2 min after push; production `last-modified` header confirmed.
+
+#### What went into the release branch
+
+- T2.1 outcomes strip (`.offer-outcomes` block, 3-col desktop, 1-col mobile, composite-outcomes disclaimer).
+- T2.2 five lens pages built off a single `lens/throughput.html` template (164–178 lines each), four parallel subagent runs.
+- T2.3 three industry pages off the same template (175–179 lines each), three parallel subagent runs.
+- T2.4 Three.js pinned to `0.149.0` + `crossorigin="anonymous"`.
+- T2.5 SEO title/meta polish (SLC + Utah + fractional advisor + diagnostic business consulting).
+- T2.6 mobile 44px touch targets on every footer link + brand mark.
+- T2.7 already on main (`16e3df5`) — dropped the dev-v3-WOW dup; verified live Calendly event type via the Calendly MCP.
+- T2.8 worker hook hardened (`AbortController` + 22s timeout + `try/catch/finally`); n8n endpoint was already wired on main (`d4f18a1`), so no Cloudflare `wrangler deploy` needed for go-live. `worker-deploy/` scaffold still committed for future portability.
+- T2.9 `Boubacar.JPG` → `Boubacar.jpg` case rename + `loading="lazy" decoding="async"` on below-fold images + `fetchpriority="high"` on header logo.
+
+#### Merge discipline
+
+- Three-way merge would have produced conflict markers on `index.html` and `_worker.js`. Used a cherry-pick to `release/v3-WOW-tier2` instead so each commit's resolution was explicit.
+- One real conflict during the `aba107d` pick (about portrait `<img>` tag — main had first-name alt + old uppercase ext; dev-v3-WOW had lowercase ext + lazy hints). Resolved by keeping main's first-name alt and dev-v3-WOW's lowercase + perf hints.
+- `f63e5f2` auto-merged cleanly because main's WORKER_URL + paid Calendly URL + improved CTA copy + thesis block all sit on different line ranges than the outcomes strip + SEO meta + footer 44px + worker hook hardening. Re-audited the result post-merge to confirm main's better fineprint copy survived.
+
+#### Karpathy review findings (acted on before push)
+
+1. AbortController timeout bumped from 12s → 22s to cover n8n cold-start + OpenRouter latency budget (8–18s typical).
+2. `worker-deploy/src/index.js` was a copy of `_worker.js` from before main's first-name scrub. Re-synced from canonical `_worker.js` so any future `bash worker-deploy/deploy.sh` ships matching guardrails.
+3. `.htaccess` `^signal/([^\.]+)$` mirror rule was redundant — the single-rule clean-URL rewrite already handles arbitrary depth because `[^\.]+` matches across `/`. Dropped the duplicate rule + added a comment explaining the depth-agnostic match.
+
+#### Side wins this session
+
+- Cleared the "T2.7 needs Boubacar's Calendly UI work" deferral — the paid event type already existed since 2026-05-02. Queried Calendly MCP, confirmed, dropped the dup commit.
+- Cleared the "T2.8 needs `wrangler login`" deferral — main already pivoted to n8n on 2026-05-01. The Cloudflare deploy scaffold remains as a portability fallback but is not blocking go-live.
+- Built `styles/lens-pages.css` (308 lines) as a reusable cinematic stylesheet for any future lens/industry/explainer pages — sidesteps copying the 1900+ line index.html for each new SEO page.
 
 ### 2026-05-11 — H1e Tier 2 Partial Ship (T2.1 + T2.5 + T2.6 + T2.8 + T2.9)
 
