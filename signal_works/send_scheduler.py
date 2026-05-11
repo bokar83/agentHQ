@@ -185,12 +185,102 @@ def _count_sent_today(pipeline: str) -> int:
         return 0
 
 
+def _telegram_alert(msg: str) -> None:
+    """Best-effort Telegram alert. Uses orchestrator bot token. Never raises."""
+    import urllib.parse, urllib.request
+    token = os.getenv("ORCHESTRATOR_TELEGRAM_BOT_TOKEN")
+    chat_id = os.getenv("TELEGRAM_CHAT_ID")
+    if not token or not chat_id:
+        return
+    try:
+        data = urllib.parse.urlencode({"chat_id": chat_id, "text": msg[:4000]}).encode()
+        req = urllib.request.Request(
+            f"https://api.telegram.org/bot{token}/sendMessage", data=data, method="POST",
+        )
+        urllib.request.urlopen(req, timeout=15).read()
+    except Exception:
+        pass
+
+
+def _bounce_rate_kill_switch() -> bool:
+    """Pre-send reputation guard. Returns True if sending should HALT.
+
+    Checks 7-day rolling bounce rate from sw_email_log. Thresholds (Ship 2c):
+      > 2%  -> pause sends, Telegram alert
+      > 3%  -> pause + auto-drop pending sequences 48h (mark in alert; manual
+               drop still required until a queue table exists)
+
+    Fail-open: any DB error returns False so the gate itself cannot kill
+    legitimate sending.
+    """
+    try:
+        try:
+            from orchestrator.db import get_crm_connection
+        except ModuleNotFoundError:
+            sys.path.insert(0, "/app")
+            from db import get_crm_connection  # type: ignore
+        conn = get_crm_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT
+              SUM(CASE WHEN status IN ('bounced','failed') THEN 1 ELSE 0 END)::float
+                / NULLIF(COUNT(*), 0) AS bounce_rate,
+              COUNT(*) AS total
+            FROM sw_email_log
+            WHERE created_at > NOW() - INTERVAL '7 days'
+        """)
+        row = cur.fetchone()
+        conn.close()
+    except Exception as e:
+        logger.warning(f"bounce kill-switch: query failed (fail-open): {e}")
+        return False
+
+    if not row:
+        return False
+    bounce_rate = row["bounce_rate"]
+    total = row["total"] or 0
+    # Need >=50 sends in the window before the rate is meaningful. Below
+    # that, 1 bounce trips the gate spuriously.
+    if total < 50:
+        return False
+    if bounce_rate is None:
+        return False
+
+    if bounce_rate > 0.03:
+        _telegram_alert(
+            f"REPUTATION CRITICAL: 7-day bounce rate {bounce_rate:.1%} > 3% "
+            f"(n={total}). Sending paused. Auto-drop pending sequences 48h required."
+        )
+        logger.error(
+            f"bounce kill-switch: rate {bounce_rate:.1%} > 3% threshold (n={total})"
+        )
+        return True
+    if bounce_rate > 0.02:
+        _telegram_alert(
+            f"REPUTATION ALERT: 7-day bounce rate {bounce_rate:.1%} > 2% "
+            f"(n={total}). Sending paused."
+        )
+        logger.error(
+            f"bounce kill-switch: rate {bounce_rate:.1%} > 2% threshold (n={total})"
+        )
+        return True
+    return False
+
+
 def run_batch(pipeline: str = "all", batch_size: int = None,
               dry_run: bool = False) -> dict:
     """
     Fetch Gmail drafts and send up to batch_size per pipeline,
     with randomized delays between individual sends.
+
+    Reputation guard (Ship 2c): if the 7-day rolling bounce rate from
+    sw_email_log exceeds 2%, this run is aborted and a Telegram alert
+    fires. Skipped when dry_run=True so test runs are never gated.
     """
+    if not dry_run and _bounce_rate_kill_switch():
+        logger.error("run_batch: bounce-rate kill switch tripped, aborting batch")
+        return {"total_sent": 0, "by_pipeline": {}, "halted": "bounce_rate"}
+
     pipelines = PIPE_ORDER if pipeline == "all" else [pipeline]
 
     token = _get_access_token()

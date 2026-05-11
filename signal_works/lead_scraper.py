@@ -39,13 +39,11 @@ SKIP_EMAIL_DOMAINS = {
     "maps.google.com",
 }
 
-# Prefixes that indicate generic/role emails unlikely to reach a real person
-SKIP_EMAIL_PREFIXES = {
-    "noreply", "no-reply", "donotreply", "do-not-reply",
-    "admin", "webmaster", "postmaster", "mailer-daemon",
-    "info@info", "contact@contact", "hello@hello",
-    "support@support", "sales@sales",
-}
+# Prefixes that indicate generic/role emails unlikely to reach a real person.
+# Canonical source: signal_works.email_gate.ROLE_PREFIXES (Ship 2c). The local
+# placeholder set was incomplete -- info, sales, support, etc were missing
+# entirely or only matched the redundant "info@info" self-pair pattern.
+from signal_works.email_gate import ROLE_PREFIXES as SKIP_EMAIL_PREFIXES  # noqa: E402
 
 # Local parts that are placeholders, not real addresses
 _PLACEHOLDER_RE = re.compile(r"^(your|name|email|address|user|username|test|sample|demo)@", re.I)
@@ -54,7 +52,14 @@ _TRUNCATED_RE = re.compile(r"^\.*\.\.\.")
 
 
 def _is_valid_email(email: str) -> bool:
-    """Return True only if email looks like a real, deliverable business address."""
+    """Return True only if email looks like a real, deliverable business address.
+
+    Role-prefix check matches the canonical Ship 2c set, with trailing
+    digits stripped (info2@biz.com -> info -> rejected). Uses the same
+    rules as signal_works.email_gate.gate_email step 1, but stays local-
+    only to keep this hot-path zero-cost (no Hunter Email Verifier calls
+    are made here -- the caller will gate-verify the selected email).
+    """
     if not email or "@" not in email:
         return False
     local, domain = email.rsplit("@", 1)
@@ -67,8 +72,10 @@ def _is_valid_email(email: str) -> bool:
     # Reject known skip domains
     if domain in SKIP_EMAIL_DOMAINS:
         return False
-    # Reject generic prefixes
-    if local.lower() in SKIP_EMAIL_PREFIXES:
+    # Reject role prefixes (canonical set; strip trailing digits)
+    import re as _re
+    stripped_local = _re.sub(r"\d+$", "", local.lower())
+    if stripped_local in SKIP_EMAIL_PREFIXES:
         return False
     # Must have a real TLD (at least 2 chars, not purely numeric)
     tld = domain.rsplit(".", 1)[-1]

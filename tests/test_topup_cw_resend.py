@@ -5,6 +5,19 @@ from unittest.mock import patch, MagicMock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from signal_works.topup_cw_leads import topup_cw_leads
+from signal_works.email_gate import reset_verify_cache
+
+
+def setup_function():
+    reset_verify_cache()
+
+
+def _passthrough_gate(email, source="unknown", allow_webmail=False, skip_verifier=False):
+    """Stub for signal_works.topup_cw_leads.gate_email — Ship 2c gate is
+    exercised directly in tests/test_email_gate.py. These tests focus on
+    hybrid fresh+resend flow and should not hit the live Hunter Email
+    Verifier."""
+    return email
 
 
 def test_hybrid_uses_5_fresh_5_resend():
@@ -18,6 +31,7 @@ def test_hybrid_uses_5_fresh_5_resend():
     ]
     with patch("signal_works.topup_cw_leads.get_resend_queue", return_value=fake_resends), \
          patch("signal_works.topup_cw_leads.harvest_leads", return_value=fake_fresh) as mock_harvest, \
+         patch("signal_works.topup_cw_leads.gate_email", side_effect=_passthrough_gate), \
          patch("signal_works.topup_cw_leads._save_cw_lead", return_value=True), \
          patch("signal_works.topup_cw_leads._count_ready_cw_leads", return_value=0), \
          patch("signal_works.topup_cw_leads._is_duplicate", return_value=False), \
@@ -38,6 +52,7 @@ def test_resend_short_falls_back_to_apollo_topup():
     """When resend queue returns <5, the gap is filled by extra Apollo fresh."""
     with patch("signal_works.topup_cw_leads.get_resend_queue", return_value=[]), \
          patch("signal_works.topup_cw_leads.harvest_leads") as mock_harvest, \
+         patch("signal_works.topup_cw_leads.gate_email", side_effect=_passthrough_gate), \
          patch("signal_works.topup_cw_leads._save_cw_lead", return_value=True), \
          patch("signal_works.topup_cw_leads._count_ready_cw_leads", return_value=0), \
          patch("signal_works.topup_cw_leads._is_duplicate", return_value=False), \

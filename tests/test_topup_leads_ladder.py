@@ -5,6 +5,21 @@ from unittest.mock import patch, MagicMock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from signal_works.topup_leads import topup
+from signal_works.email_gate import reset_verify_cache
+
+
+def setup_function():
+    # Ship 2c: clear gate cache between tests so verifier mock state is clean.
+    reset_verify_cache()
+
+
+# Patch the email_gate at the topup_leads import site so the email-gate hard-
+# gate doesn't fire the live Hunter Email Verifier during ladder tests. The
+# legitimate "happy path" emails (found@biz.com, real@biz.com, owner@biz.com)
+# are passed through unchanged; role-mailbox checks are exercised in
+# tests/test_email_gate.py.
+def _passthrough_gate(email, source="unknown", allow_webmail=False, skip_verifier=False):
+    return email
 
 
 def _fake_lead(name: str, has_website: bool = True) -> dict:
@@ -20,6 +35,7 @@ def test_ladder_stops_at_target():
     """Hits target=10 in tier 1, never advances to tier 2."""
     with patch("signal_works.topup_leads.scrape_google_maps_leads") as mock_scrape, \
          patch("signal_works.topup_leads.find_email_from_website", return_value="found@biz.com"), \
+         patch("signal_works.topup_leads.gate_email", side_effect=_passthrough_gate), \
          patch("signal_works.topup_leads._save_lead", return_value=True):
         mock_scrape.return_value = [_fake_lead(f"Biz{i}") for i in range(15)]
         n = topup(minimum=10, dry_run=True)
@@ -45,6 +61,7 @@ def test_circuit_breaker_after_5_double_failures():
 def test_firecrawl_email_used_when_found():
     with patch("signal_works.topup_leads.scrape_google_maps_leads") as mock_scrape, \
          patch("signal_works.topup_leads.find_email_from_website", return_value="real@biz.com"), \
+         patch("signal_works.topup_leads.gate_email", side_effect=_passthrough_gate), \
          patch("signal_works.topup_leads.find_owner_by_company") as mock_apollo, \
          patch("signal_works.topup_leads.domain_search") as mock_hunter, \
          patch("signal_works.topup_leads._save_lead", return_value=True):
@@ -57,6 +74,7 @@ def test_firecrawl_email_used_when_found():
 def test_apollo_used_when_firecrawl_misses():
     with patch("signal_works.topup_leads.scrape_google_maps_leads") as mock_scrape, \
          patch("signal_works.topup_leads.find_email_from_website", return_value=""), \
+         patch("signal_works.topup_leads.gate_email", side_effect=_passthrough_gate), \
          patch("signal_works.topup_leads.find_owner_by_company") as mock_apollo, \
          patch("signal_works.topup_leads.domain_search") as mock_hunter, \
          patch("signal_works.topup_leads._save_lead", return_value=True):
@@ -70,6 +88,7 @@ def test_apollo_used_when_firecrawl_misses():
 def test_hunter_used_when_apollo_finds_domain_but_no_owner():
     with patch("signal_works.topup_leads.scrape_google_maps_leads") as mock_scrape, \
          patch("signal_works.topup_leads.find_email_from_website", return_value=""), \
+         patch("signal_works.topup_leads.gate_email", side_effect=_passthrough_gate), \
          patch("signal_works.topup_leads.find_owner_by_company") as mock_apollo, \
          patch("signal_works.topup_leads.domain_search", return_value="found@biz.com") as mock_hunter, \
          patch("signal_works.topup_leads._save_lead", return_value=True):
