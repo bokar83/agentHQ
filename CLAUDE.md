@@ -16,6 +16,16 @@ Multi-session projects tracked in `docs/roadmap/<codename>.md`. `roadmap` skill 
 
 Full registry: `docs/roadmap/README.md`.
 
+## Audit Registry (2026-05-11)
+
+Before starting any `/audit`, `/rca`, "find bugs", or adversarial code review:
+
+1. Read `docs/audits/REGISTRY.md` — chronological ledger of audits run, what shipped, what was skipped + why, what's still deferred
+2. Read `docs/decisions/INTENTIONAL.md` — greppable index of patterns that look like bugs but are deliberate design
+3. Memory rule: `feedback_audit_read_handoffs_first.md` — read handoffs + routing-architecture.md before flagging severity
+
+Every audit MUST add an entry to `docs/audits/REGISTRY.md` as part of close-out. Incomplete audit otherwise.
+
 ## Claude-Code-Only
 
 **Gate mode (2026-05-04):** When Boubacar sends agent outputs for review/push, this Claude session acts as the Gate. Gate has ONE job: arbitrate writes to shared state (GitHub, VPS, main). Refuse all other work until queue is clear. See AGENTS.md Gate section for full rules.
