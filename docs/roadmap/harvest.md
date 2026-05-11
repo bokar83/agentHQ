@@ -291,7 +291,7 @@ skills/signal-works-conversion/
 
 ### H1e: catalystworks.consulting v3-WOW (cinematic + Constraints AI live demo)
 
-**Status:** Tier 1 shipped 2026-05-01 to `dev-v3-WOW` branch. Sankofa Council + design+SEO audit run. Tier 2 + Tier 3 planned below, not yet built.
+**Status:** Tier 1 shipped 2026-05-01. **Tier 2 partial-ship 2026-05-11** to `dev-v3-WOW` (commits `f63e5f2`, `aba107d`): T2.1 outcomes strip, T2.5 SEO polish, T2.6 mobile a11y, T2.8 worker fallback hardening (deploy still pending). Tier 3 not yet built.
 
 **What shipped (Tier 1, 2026-05-01):**
 - Single-page cinematic dark theme (deep navy + amber + cyan accents)
@@ -309,14 +309,15 @@ skills/signal-works-conversion/
 
 | # | Task | Time | Why |
 |---|---|---|---|
-| T2.1 | Anonymized 30-day-outcome strip below offer (3 rows: industry / what was stuck / what changed). Use real informal Signal Sessions Boubacar has run; composite if needed (clearly labeled). | 90 min | Closes the "no social proof" cold-read gap (Sankofa Outsider) |
+| T2.1 ✅ | Anonymized 30-day-outcome strip below offer (3 rows: industry / what was stuck / what changed). Use real informal Signal Sessions Boubacar has run; composite if needed (clearly labeled). | 90 min | Closes the "no social proof" cold-read gap (Sankofa Outsider). **Shipped 2026-05-11 (f63e5f2):** `.offer-outcomes` block, 3-col desktop / 1-col <880px, cinematic tokens, composite disclaimer. |
 | T2.2 | Programmatic SEO: 5 lens-explainer pages (`/lens/throughput`, `/lens/friction`, `/lens/decision`, `/lens/information`, `/lens/inference`) | 3 hr | Site has 3 ranking pages today. 8 pages rank for ~8x more long-tail. |
 | T2.3 | Programmatic SEO: 3 industry-specific pages (`/for/professional-services`, `/for/hvac`, `/for/healthcare-smb`) | 2 hr | Adds vertical entry points |
 | T2.4 | Migrate Three.js off deprecated UMD build (`build/three.min.js` → ES module or pin `three@0.149`) | 10 min | Prevents silent breakage on next CDN update (audit #11) |
-| T2.5 | Title + meta rewrite with "Salt Lake City", "Utah", "fractional advisor" keywords | 4 min | Closes local-SEO gap (audit #8) |
-| T2.6 | Footer link tap targets to 44x44 min height on mobile | 4 min | Mobile a11y standard (audit #12) |
+| T2.5 ✅ | Title + meta rewrite with "Salt Lake City", "Utah", "fractional advisor" keywords | 4 min | Closes local-SEO gap (audit #8). **Shipped 2026-05-11 (f63e5f2):** title + description + `og:*` + `twitter:*` all weave SLC + Utah + fractional advisor + diagnostic business consulting. |
+| T2.6 ✅ | Footer link tap targets to 44x44 min height on mobile | 4 min | Mobile a11y standard (audit #12). **Shipped 2026-05-11 (f63e5f2):** `@media (max-width: 480px)` rule on `.foot-links a` + `footer .brand`, verified via Playwright DOM measure (all 44px). |
 | T2.7 | Create paid `Executive Signal Session` Calendly event type (90-min, $497, Stripe-wired) and switch CTA from discovery-call URL to direct booking | 30 min on Calendly side | Removes one funnel step. Currently using free discovery as stepping stone. |
-| T2.8 | Deploy `_worker.js` to Cloudflare Workers; set OPENROUTER_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_KEY, HASH_SALT secrets; paste deployed URL into `WORKER_URL` constant in `index.html` | 20 min | Activates real Claude/GPT diagnoses + Supabase capture (currently simulated mode) |
+| T2.8 🟡 | Deploy `_worker.js` to Cloudflare Workers; set OPENROUTER_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_KEY, HASH_SALT secrets; paste deployed URL into `WORKER_URL` constant in `index.html` | 20 min | Activates real Claude/GPT diagnoses + Supabase capture (currently simulated mode). **2026-05-11 (f63e5f2):** front-end hook hardened with `AbortController` + 12s timeout + try/catch/finally; seamless fallback to `simulate()` when `WORKER_URL=''`. **Still pending:** `wrangler deploy` + secrets + paste URL into `index.html`. |
+| T2.9 ✅ | Production case-sensitivity hardening + image perf hints | 10 min | Prevents Linux/Hostinger 404 on `Boubacar.JPG`. **Shipped 2026-05-11 (aba107d):** `git mv` rename to `Boubacar.jpg`, `loading="lazy" decoding="async"` on below-fold images, `decoding="async" fetchpriority="high"` on header logo. |
 
 **Tier 3 (target: within 30 days of 2026-05-01, due 2026-05-31):**
 
@@ -579,6 +580,49 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 ---
 
 ## Session Log
+
+### 2026-05-11 — H1e Tier 2 Partial Ship (T2.1 + T2.5 + T2.6 + T2.8 + T2.9)
+
+Branch: `dev-v3-WOW` on `bokar83/catalystworks-site`. Two commits: `f63e5f2` (T2 bundle) + `aba107d` (image case + perf hints). Submodule pointer bumped in `output` (`b22c27a`).
+
+#### T2.1 Outcomes Strip (90 min)
+
+- New `.offer-outcomes` block below the Signal Session price card.
+- Three anonymized composite cases (Professional Services / Residential Trades / Healthcare SMB) — constraint + 30-day outcome, with metric in amber.
+- CSS tokens: `rgba(22,29,39,0.5)` bg, `1px solid var(--line)`, amber gradient top accent, cyan CASE tags, mono labels.
+- Responsive: 3-col desktop, single-col stack at `<880px`. Hover lifts the card 2px + brightens border to amber-32%.
+- Composite-outcomes disclaimer in fineprint preserves honesty.
+
+#### T2.5 SEO polish (4 min)
+
+- `<title>`, `<meta name="description">`, `og:title`, `og:description`, `twitter:title`, `twitter:description` all weave "Salt Lake City", "Utah", "fractional advisor", "diagnostic business consulting".
+- Premium tone preserved — no keyword stuffing.
+
+#### T2.6 Mobile a11y (4 min)
+
+- `@media (max-width: 480px)` rule enforces `min-height: 44px; min-width: 44px` on every `.foot-links a` + `footer .brand` via `inline-flex` centering.
+- WCAG 2.5.5 ✓. Verified live in Playwright (`getBoundingClientRect().height === 44` on all four footer links).
+
+#### T2.8 Worker fallback hardening (front-end only — deploy still pending)
+
+- Wrapped live-Worker fetch in `AbortController` + 12s timeout + `try/catch/finally` with guaranteed `clearTimeout`.
+- Simulated five-lens stub remains seamless fallback when `WORKER_URL=''`.
+- Not yet: `wrangler deploy`, set `OPENROUTER_API_KEY` / `SUPABASE_URL` / `SUPABASE_SERVICE_KEY` / `HASH_SALT`, paste deployed URL into `WORKER_URL` constant.
+
+#### T2.9 Console errors triage + production safety (bonus)
+
+- Earlier Playwright run logged `ERR_CONNECTION_RESET` on `CatalystWorks_logo.jpg` and `Boubacar.JPG`. Root cause = `python -m http.server` is single-threaded; six parallel image fetches overrun its accept queue. Cloudflare/nginx in prod handles concurrency fine, so prod behaviour was unaffected — but:
+- Real prod risk caught: `Boubacar.JPG` (uppercase ext) would 404 on Linux/Hostinger (case-sensitive FS). Renamed via `git mv` to `Boubacar.jpg`; updated the one `<img src>` reference.
+- Added `loading="lazy" decoding="async"` to below-fold images; `decoding="async" fetchpriority="high"` to header logo. Tightens LCP budget in prod, reduces concurrent-fetch pressure in local dev.
+- Local-dev workflow tip (no code change): use `npx serve -p 8745` or `npx http-server -p 8745` instead of `python -m http.server` to get a threaded socket and silence the dev-only console noise.
+
+#### Still open on H1e Tier 2 after this session
+
+- T2.2 / T2.3 — programmatic SEO pages (5 lens + 3 industry). Big unlock, ~5 hr.
+- T2.4 — migrate Three.js off deprecated UMD build. 10 min, prevents silent breakage.
+- T2.7 — paid Calendly event type wired to Stripe. ~30 min on Calendly side.
+- T2.8 deploy half — `wrangler deploy` + secrets + paste `WORKER_URL`. ~20 min.
+- Then merge `dev-v3-WOW` → `main` and ship live to <https://catalystworks.consulting/>.
 
 ### 2026-05-07 — Notion CRM Sync DELETED + Parity Audit + Atlas M19 Queued
 
