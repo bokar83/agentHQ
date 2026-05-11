@@ -40,11 +40,11 @@ def _fetch_notion_activity(days: int = 7) -> list:
         nc = NotionClient(secret=secret)
         cutoff_dt = datetime.now(timezone.utc) - timedelta(days=days)
 
-        # Fetch recently Posted items (the most common decided state)
+        # Fetch recently Published/decided items
         results = nc.query_database(
             db_id,
             filter_obj={"or": [
-                {"property": "Status", "select": {"equals": "Posted"}},
+                {"property": "Status", "select": {"equals": "Published"}},
                 {"property": "Status", "select": {"equals": "Approved"}},
                 {"property": "Status", "select": {"equals": "Rejected"}},
                 {"property": "Status", "select": {"equals": "Skipped"}},
@@ -207,13 +207,13 @@ def _fetch_content_board() -> dict:
             sorts=[{"property": "Scheduled Date", "direction": "descending"}],
         )
         past_due = [_parse_page(p) for p in (past_due_results or [])]
-        past_due = [i for i in past_due if i["status"] not in ("Posted", "Skipped", "Archived", "Done")][:5]
+        past_due = [i for i in past_due if i["status"] not in ("Published", "Skipped", "Archived", "Done")][:5]
 
-        # 3. Recent posted: last 3 Posted items
+        # 3. Recent published: last 3 Published items
         recent_results = nc.query_database(
             db_id,
             filter_obj={
-                "property": "Status", "select": {"equals": "Posted"}
+                "property": "Status", "select": {"equals": "Published"}
             },
             sorts=[{"property": "Scheduled Date", "direction": "descending"}],
         )
