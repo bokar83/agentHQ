@@ -60,6 +60,13 @@ CONTENT_DB_ID = os.environ.get("FORGE_CONTENT_DB", "339bcf1a-3029-81d1-8377-dc2f
 # against orphaned in-flight rows from a process crash during polling.
 PUBLISHING_TTL_HOURS = 24
 
+# CTQ gate (Option 3 — 2026-05-11). Posts must have Total Score >= CTQ_MIN_SCORE
+# before auto_publisher will publish them.
+# Mode: "warn" logs but publishes; "block" skips publish.
+# Backfill in-flight: keep "warn" until all queued records carry a score, then flip.
+CTQ_GATE_MODE = os.environ.get("CTQ_GATE_MODE", "warn").lower()  # "warn" | "block"
+CTQ_MIN_SCORE = float(os.environ.get("CTQ_MIN_SCORE", "8"))
+
 # Default schedule when data/auto_publisher_schedule.json is missing.
 _DEFAULT_SCHEDULE = {
     "platform_slots": {
@@ -189,6 +196,10 @@ def _multi(prop):
 def _date_start(prop):
     d = prop.get("date") if prop else None
     return d.get("start") if d else None
+
+
+def _number(prop):
+    return prop.get("number") if prop else None
 
 
 def _last_edited_time(page) -> Optional[str]:
@@ -327,6 +338,19 @@ def _fetch_due_queued(notion, today_iso: str, now_local: Optional[datetime] = No
                 if now_local < slot_time:
                     continue  # slot time hasn't arrived yet
 
+            # CTQ gate (Option 3). Records without a Total Score, or below
+            # CTQ_MIN_SCORE, get logged. In "block" mode they are skipped.
+            score = _number(props.get("Total Score", {}))
+            title_for_log = _title(props.get("Title", {}))[:60]
+            if score is None or score < CTQ_MIN_SCORE:
+                logger.warning(
+                    "auto_publisher: CTQ gate %s — '%s' (%s) score=%s min=%s",
+                    "BLOCK" if CTQ_GATE_MODE == "block" else "WARN",
+                    title_for_log, pf, score, CTQ_MIN_SCORE,
+                )
+                if CTQ_GATE_MODE == "block":
+                    continue
+
             due.append({
                 "notion_id": p["id"],
                 "title": _title(props.get("Title", {})),
@@ -335,6 +359,7 @@ def _fetch_due_queued(notion, today_iso: str, now_local: Optional[datetime] = No
                 "platform": pf,
                 "scheduled_date": sd_iso,
                 "is_past_due": sd_iso < today_iso,
+                "ctq_score": score,
             })
             break  # one publish per record (first matching platform)
     # Stable order: oldest scheduled first, then platform alpha.
