@@ -285,10 +285,35 @@ def _fetch_provider_spend() -> dict:
             cdata = _json.loads(r.read()).get("data", {})
         balance = round(float(cdata.get("total_credits", 0)) - float(cdata.get("total_usage", 0)), 4)
 
+        # OpenRouter usage_daily resets at UTC midnight, not MT midnight.
+        # Use llm_calls table (AT TIME ZONE 'America/Denver') for MT-correct today/week/month.
+        # Fall back to OR API values if DB query fails.
+        try:
+            from memory import _pg_conn as _pg
+            _conn = _pg()
+            _cur = _conn.cursor()
+            _cur.execute("""
+                SELECT
+                    SUM(CASE WHEN ts >= date_trunc('day',  NOW() AT TIME ZONE 'America/Denver') THEN cost_usd ELSE 0 END) AS today_usd,
+                    SUM(CASE WHEN ts >= date_trunc('week', NOW() AT TIME ZONE 'America/Denver') THEN cost_usd ELSE 0 END) AS week_usd,
+                    SUM(CASE WHEN ts >= date_trunc('month',NOW() AT TIME ZONE 'America/Denver') THEN cost_usd ELSE 0 END) AS month_usd
+                FROM llm_calls
+                WHERE ts >= date_trunc('month', NOW() AT TIME ZONE 'America/Denver')
+            """)
+            _row = _cur.fetchone()
+            _conn.close()
+            _today = round(float((_row["today_usd"] if isinstance(_row, dict) else _row[0]) or 0), 4)
+            _week  = round(float((_row["week_usd"]  if isinstance(_row, dict) else _row[1]) or 0), 4)
+            _month = round(float((_row["month_usd"] if isinstance(_row, dict) else _row[2]) or 0), 4)
+        except Exception:
+            _today = round(float(data.get("usage_daily",  0) or 0), 4)
+            _week  = round(float(data.get("usage_weekly", 0) or 0), 4)
+            _month = round(float(data.get("usage_monthly",0) or 0), 4)
+
         return {
-            "provider_today":   round(float(data.get("usage_daily",   0) or 0), 4),
-            "provider_week":    round(float(data.get("usage_weekly",  0) or 0), 4),
-            "provider_month":   round(float(data.get("usage_monthly", 0) or 0), 4),
+            "provider_today":   _today,
+            "provider_week":    _week,
+            "provider_month":   _month,
             "provider_balance": balance,
         }
     except Exception as e:
