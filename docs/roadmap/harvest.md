@@ -329,6 +329,7 @@ skills/signal-works-conversion/
 | T3.4 🟡 | Email follow-up sequence wired (3 emails over 14 days after capture) | **2026-05-11 BLOCKED:** same Supabase-access blocker as T3.1; n8n capture endpoint exists but agent cannot query the events table. Either grant access or build the sequence inside n8n workflow UI. |
 | T3.5 🟡 | Stripe direct-payment on Signal Session offer card | **2026-05-11 NEEDS DECISION:** Calendly+Stripe (current paid event) already direct-pays. T3.5 = add a parallel Stripe-only checkout that skips Calendly entirely, OR replace the Calendly path. Boubacar to choose. |
 | Theme parity ✅ | `governance.html` re-themed to v3-WOW palette so legacy AI-Governance page matches homepage. `ai-data-audit.html` intentionally left alone — own cohesive slate/red/warm identity, not a v3-WOW mismatch. | **Shipped 2026-05-11 (14b3868):** governance.html `:root` swapped to ink/paper/amber/cyan with legacy navy/carbon/orange/clay kept as aliases pointing at the new tokens (zero-churn migration across 500+ `var()` references). Fonts: Spectral + Public Sans + JetBrains Mono. |
+| Tier 3 polish round 2 ✅ | Unified site-wide nav + mobile hamburger drawer + `/signal` 403 fix + lens-card / outcome-card hover affordances + bigger cursor center + canonical Notion content for issue 1+2 + clean-URL hrefs across all 15 pages | **Shipped 2026-05-11 (5c86a39 → c641f3c):** five-fix UX bundle. Lens + outcome cards now show clickable hover state with sliding CTA chip. Cursor dot bumped 6→9px. `.htaccess` rewrite handles `^signal/?$` + `DirectorySlash Off` + `Cache-Control: no-cache` on .html+.css. Issue 1 + 2 rebuilt from canonical Notion Content Board entries (synthesized prose retired). Floating-transparent nav ported from index.html to all 14 other pages with scroll-fade. ai-data-audit page dedup'd "Catalyst Works" brand line. 120 internal `href="*.html"` stripped to clean URLs site-wide. Canonical / og:url / twitter:url meta stripped too. |
 
 **Live URLs:**
 
@@ -713,6 +714,31 @@ Active revenue-seeking lane launched. Not waiting on Rod, not waiting on SW T1-T
 - 0 replies + 0 bookings → trust-anchor blocker is real, pause cold pipeline until first SW client lands
 
 ---
+
+### 2026-05-11 — H1e Tier 3 polish round 2 (UX hover affordances + nav unification + /signal 403 + canonical issues + clean URLs)
+
+Eight commits on `bokar83/catalystworks-site` main between `5c86a39` and `c641f3c`. Submodule pointer bumped twice on `output`. Hostinger auto-deployed in ~2 min after each push; `last-modified` headers + curl content checks verified each change.
+
+#### Polish round 2 — what shipped
+
+- **Hover affordances on lens cards + outcome cards** (`5c86a39`): the 5 method-section lens cards on the homepage now show a 3px lift + amber-border + amber-halo shadow + h3-flip-to-amber on hover, plus a sliding "Read the lens →" mono-uppercase CTA chip that fades in from `opacity:0.55; translateX(-4px)`. The 3 outcome-strip cards (Professional Services / Residential Trade / Healthcare SMB) converted from `<article>` to `<a href="for/*">` so the industry pages now have a real entry point from the homepage, with matching hover state + "See the protocol for this industry →" chip.
+- **Custom cursor center bumped** 6px → 9px, glow 12 → 14px, alpha 0.6 → 0.7. Subtle, not loud.
+- **/signal 403 fixed** belt-and-suspenders: explicit `RewriteRule ^signal/?$ signal.html [NC,L]` BEFORE the generic clean-URL rule, `DirectorySlash Off` to stop LiteSpeed's auto-trailing-slash redirect, and `Cache-Control: no-cache, must-revalidate, max-age=0` on `.html` and `.css` files so future 403/style fixes invalidate immediately instead of living in browser caches for hours.
+- **Newsletter archive completed** (`5c86a39` then `766538a`): `signal/issue-1.html` and `signal/issue-2.html` built from `issue-3.html` template, then rebuilt with the canonical body text pulled from the Notion Content Board (Boubacar's correction: "look in the github repo archives... they should be in the content board as sent too"). Beehiiv post URLs preserved as authoritative source links in each issue's sources block.
+- **Unified floating-transparent nav on all 15 pages** (`93e8551` → `3cb67a2`): ported the index.html `position: fixed; background: rgba(10,14,20,0); backdrop-filter: blur(0)` → `.scrolled` state with `rgba(10,14,20,0.78); blur(16px) saturate(1.4)` to lens-pages.css (covers 8 pages) and inlined the same pattern in governance.html / signal.html / signal/issue-* / ai-data-audit.html. Mobile hamburger + slide-in drawer on every page; drawer base styles moved OUT of the `@media (max-width: 760px)` block to fix a desktop layout leak. Logo IMG on every page (was missing on governance; broken on `/signal/` because relative path 404'd at trailing-slash form). All logo srcs now absolute `/CatalystWorks_logo.jpg`.
+- **ai-data-audit dedup** (`3cb67a2`): page had two "Catalyst Works" brand bars stacked (unified nav + page's site-nav). Dropped the site-nav brand block, kept only the slim slot-counter as `.site-slot-bar` below the floating nav. Unified nav switched from orange (#FFA500) to v3-WOW amber (#E8A66B) for cross-page color coherence.
+- **Clean URL hrefs site-wide** (`36d539f` → `c641f3c`): 120 internal `<a href="*.html">` stripped to clean form (e.g. `governance.html` → `governance`) across all 15 pages, plus canonical / og:url / twitter:url meta on 10 pages. Search engines + social shares now index the clean URL as the single authoritative form.
+
+#### Polish round 2 — process memory recorded
+
+- New rule: **`.html` + same-name directory collision on Hostinger always 403s** (`feedback_directory_vs_html_collision_403.md`). When `signal.html` + `signal/` both exist, `/signal` 403s because Apache/LiteSpeed auto-trailing-slashes and `Options -Indexes` blocks listing. Fix template lives in the memory file. The `hostinger-deploy` skill SKILL.md now ships with an auto-audit shell loop that flags every such collision before deploy.
+- New rule: **Notion Content Board is the canonical source-of-truth for every published Catalyst Works newsletter / LinkedIn / X post** (`feedback_content_board_is_source_of_truth.md`). Query the Notion MCP first before re-authoring previously-shipped content. Crosswalk table in the memory file maps `/signal/issue-N` web URLs to Notion page IDs and Beehiiv post URLs.
+
+#### Polish round 2 — still open after this session
+
+- T3.1 + T3.4 still blocked on Supabase access to `diagnostic_submissions` and capture-events tables (different org from this session's MCP scope).
+- T3.5 still pending Boubacar funnel decision (Stripe-only vs Calendly+Stripe parallel).
+- `ai-data-audit.html` retains its slate/red identity intentionally (Boubacar approved 2026-05-11). No further theme work required.
 
 ### 2026-05-11 — H1e Tier 3 partial ship + governance theme parity
 
