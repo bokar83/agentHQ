@@ -475,11 +475,11 @@ def handle_callback_query(update: dict) -> bool:
                 "Status": {"select": {"name": "Multiply"}}
             })
             try:
-                from content_multiplier_crew import multiply_source
+                from content_multiplier_crew import multiply_from_page_id
             except ImportError:
-                from orchestrator.content_multiplier_crew import multiply_source
+                from orchestrator.content_multiplier_crew import multiply_from_page_id
             import threading
-            threading.Thread(target=multiply_source, args=(notion_page_id,), daemon=True).start()
+            threading.Thread(target=multiply_from_page_id, args=(notion_page_id,), daemon=True).start()
             answer_callback_query(cb_id, "Approved. Status set to Multiply.")
             send_message(cb_chat_id, f"Content Scout: approved. Notion page {notion_page_id[:8]}... queued for multiplication.")
         except Exception as e:

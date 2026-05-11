@@ -1005,6 +1005,30 @@ def _remix_notes_from_page(page: dict[str, Any]) -> dict[str, Any] | None:
     return {"fixable_strips": fixable, "concept_to_keep": concept, "remix_hint": hint}
 
 
+def multiply_from_page_id(page_id: str) -> dict[str, Any]:
+    """Fetch a Notion Content Board page, extract its source URL + QA fields, and multiply.
+
+    Used by scout_approve immediate-fire and /multiply <notion_page_id>.
+    Mirrors the extraction path inside multiplier_tick() so the poller and
+    on-demand triggers behave identically. On success, sets Status -> Idea.
+    """
+    notion = _notion_client()
+    page = notion.get_page(page_id)
+    source = _source_from_page(page)
+    qa_verdict = _plain_text_prop(page, "QA Verdict") or None
+    remix_notes = _remix_notes_from_page(page)
+    result = multiply_source(
+        source,
+        source_type="auto",
+        source_trend_notion_id=page_id,
+        mode="auto",
+        qa_verdict=qa_verdict,
+        remix_notes=remix_notes,
+    )
+    notion.update_page(page_id, properties={"Status": {"select": {"name": "Idea"}}})
+    return result
+
+
 def multiplier_tick() -> None:
     if not _MULTIPLIER_LOCK.acquire(blocking=False):
         logger.info("content multiplier tick: already running, skipping.")

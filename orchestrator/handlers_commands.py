@@ -1044,10 +1044,14 @@ def _cmd_multiply(text: str, chat_id: str) -> bool:
     def _do_multiply():
         try:
             try:
-                from content_multiplier_crew import multiply_source
+                from content_multiplier_crew import multiply_from_page_id, multiply_source
             except ImportError:
-                from orchestrator.content_multiplier_crew import multiply_source
-            multiply_source(source)
+                from orchestrator.content_multiplier_crew import multiply_from_page_id, multiply_source
+            # URL -> direct multiply. Otherwise treat as Notion page_id and use page-extraction path.
+            if "://" in source or source.lower().startswith(("http", "www.")):
+                multiply_source(source)
+            else:
+                multiply_from_page_id(source)
         except Exception as e:
             logger.error(f'/multiply error: {e}', exc_info=True)
             _send(chat_id, f"Multiplier failed: {e}")
