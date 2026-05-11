@@ -12,6 +12,12 @@ set -e
 
 if [ -d /app/orchestrator ] && [ "$(ls -A /app/orchestrator/*.py 2>/dev/null)" ]; then
     cp /app/orchestrator/*.py /app/ 2>/dev/null || true
+    # Also sync orchestrator/*.json so config edits actually deploy. Without
+    # this, modules that read JSON via CWD-resolved fallback get the stale
+    # baked copy. Hit 2026-05-11 when studio_trend_seeds.default.json re-seed
+    # had no effect because /app/studio_trend_seeds.default.json was missing
+    # and the loader fell back to inline _DEFAULT_SEEDS in code.
+    cp /app/orchestrator/*.json /app/ 2>/dev/null || true
     find /app -maxdepth 1 -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true
 fi
 
