@@ -4,6 +4,8 @@ Schema: `YYYY-MM-DD | placement | leverage type | next action | target date`
 
 PROCEED verdicts append here automatically. PROCEED without a follow-up entry is incomplete.
 
+2026-05-11 | enhance skills/hyperframes/patterns.md (HeyGen reference repo) | continuous-improvement | DONE 2026-05-11: appended (1) timeline-padding pattern (no-op tween to prevent black-frame flashes when GSAP timeline < master slot duration, with verify-in-console snippet), (2) caption-track pattern (per-line body-level `.cap clip` divs w/ unique high track indices 20+). Verify: next Studio shorts build using fast-cut beats applies timeline-padding without prompting; next caption-heavy comp uses dedicated track indices instead of stacking on same track. | DONE 2026-05-11
+
 2026-05-10 | Jaya Gupta AI Moat — 3 placements | continuous-improvement + producing-motion | SHIPPED: (1) engagement-ops Discovery Diagnostics section — chosen-vs-seen lens active; verify use on next discovery call. (2) docs/patterns/altitude-alignment.md — SW audit Story vs. Shape section; verify appears in next SW audit deliverable. (3) skills/ctq-social/references/content-seeds-org-moat.md — 3 post seeds; verify at least 1 drafted by 2026-05-24. Archive seeds file if no draft by then. | 2026-05-24
 
 2026-05-10 | enhance docs/styleguides + 5 skills (DESIGN.md format) | continuous-improvement + founder-time-reduction | Phase 3: add YAML token front-matter to styleguide_master.md + CURRENT_TYPOGRAPHY.md + add loader extraction instruction to skills | DONE 2026-05-10: YAML tokens added to both files, extraction instruction added to all 6 skills

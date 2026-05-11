@@ -4,6 +4,8 @@ Schema: `YYYY-MM-DD | source | verdict | placement | leverage type`
 
 Verdicts: `PROCEED` | `DON'T PROCEED` | `ARCHIVE-AND-NOTE`
 
+2026-05-11 | https://github.com/heygen-com/hyperframes-launch-video | PROCEED | enhance skills/hyperframes/patterns.md (timeline-padding pattern + caption-track pattern) | continuous-improvement (Studio + HyperFrames pipeline)
+
 2026-05-10 | Jaya Gupta — "The Next Biggest Moat in AI" (X article, text-jaya-gupta-ai-moat) | PROCEED | enhance skills/engagement-ops (chosen-vs-seen diagnostic) + new docs/patterns/altitude-alignment.md (SW audit lens) + new skills/ctq-social/references/content-seeds-org-moat.md (3 post skeletons) | continuous-improvement + producing-motion (content board)
 
 2026-05-10 | [Greg Isenberg — design.md thread](https://x.com/gregisenberg/status/2052110589682749869) | PROCEED | enhance docs/styleguides + 5 skills | continuous-improvement + founder-time-reduction
