@@ -214,8 +214,10 @@ my-video/
 /temp-*.html
 /test-*.png
 /iteration-*.png
+/prod-*.png
 /*.tmp.png
 /*.draft.html
 /*.draft.png
+/.tmp_screenshots/
 sandbox/codex-hunter-force-fresh
 sandbox/codex-hunter-force-fresh-2

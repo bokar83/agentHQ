@@ -343,12 +343,20 @@ QA classifies each failure as FATAL or FIXABLE. All FIXABLE = qa-remix. Any FATA
 
 **What's left (M3.7.3 — next session):**
 
-- [ ] Wire `scout_approve:` callback in handlers_approvals.py to fire crew
-- [ ] Add `/multiply` router intent
-- [ ] Heartbeat wake `multiplier-tick` every 5m for Status=Multiply Notion records
-- [ ] Bulk Telegram review handler (`multiplier_approve_all:` / `multiplier_per_piece:` / `multiplier_reject_all:`)
+- [x] Wire `scout_approve:` callback in handlers_approvals.py to fire crew (2026-05-11 — commit 2621e3c + 427b4ee re-signal; sets Status=Multiply + spawns `multiply_from_page_id()` immediately, no 5-min poller wait)
+- [x] Add `/multiply` router intent (2026-05-11 — `_cmd_multiply` registered in `_COMMANDS`; URL → `multiply_source`, page_id → `multiply_from_page_id`)
+- [x] Heartbeat wake `multiplier-tick` every 5m for Status=Multiply Notion records (verified intact in scheduler.py:679)
+- [x] Bulk Telegram review handler (`multiplier_approve_all:` / `multiplier_per_piece:` / `multiplier_reject_all:`) (verified intact in handlers_approvals.py:590/606)
 - [ ] Notion schema extension: add `Multiplier Run ID` (rich_text), `Piece Type` (select), `Source Treatment` (select), `QA Verdict` (select) properties
 - [ ] Sankofa Council CTQ filter integration (deferred from v1 for speed)
+
+**S3.7.3 SHIPPED 2026-05-11:**
+- `orchestrator/handlers_approvals.py` — scout_approve sets Status=Multiply + immediate-fire `multiply_from_page_id()`
+- `orchestrator/handlers_commands.py` — `/multiply <notion_page_id|url>` command added + registered
+- `orchestrator/content_multiplier_crew.py` — new `multiply_from_page_id()` helper mirrors poller extraction (page → URL → QA verdict + remix_notes → `multiply_source()` → Status=Idea). Without this, immediate-fire would have passed raw `notion_page_id` as `source_url` and ingested garbage.
+- Tests: `orchestrator/tests/test_content_multiplier.py` 21/21 pass
+- Deployed: orc-crewai restarted, multiplier_from_page_id loaded in /app/ verified
+- Incident: pre-commit hook swept staged files into concurrent `2621e3c chore(gws-auth)` commit — code shipped correctly but mislabeled; `427b4ee` re-signal documents truth. See `feedback_atomic_powershell_commit.md` for failure mode + recovery.
 
 **Cost:** ~$0.20-0.30/run × ~10-15 runs/week (more with 3x scout cadence) = $3-5/week.
 
