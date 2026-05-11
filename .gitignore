@@ -19,6 +19,7 @@ Python/
 
 # ── Generated outputs ─────────────────────────────────────────
 outputs/council/
+.tmp_screenshots/
 
 # ── Environment & Secrets ────────────────────────────────────
 # NEVER commit any file containing real secrets.
