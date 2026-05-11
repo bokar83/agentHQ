@@ -22,7 +22,7 @@ Full registry: `docs/roadmap/README.md`.
 
 **No push/deploy without gate review.** Never `git push`, `ssh ... orc_rebuild.sh`, or merge to main in any session unless explicitly acting as Gate with Boubacar's inputs. Other Claude sessions = coding agents only.
 
-**Container deploys (2026-05-05): NO REBUILD for code changes.** Code dirs are volume-mounted in `docker-compose.yml`. Deploy = `ssh root@72.60.209.109 "cd /root/agentsHQ && git pull && docker compose up -d orchestrator"` (~10 sec). DO NOT run `scripts/orc_rebuild.sh` or `docker compose build` for code changes -- only when `requirements.txt` changes. See AGENT_SOP.md for full rule.
+**Container deploys (2026-05-05): NO REBUILD for code changes.** Code dirs are volume-mounted in `docker-compose.yml`. Deploy = `ssh root@72.60.209.109 "cd /root/agentsHQ && git pull && docker compose restart orchestrator"` (~10 sec). DO NOT use `up -d` if container is already running -- it skips the restart and old Python modules stay loaded. DO NOT run `scripts/orc_rebuild.sh` or `docker compose build` for code changes -- only when `requirements.txt` changes. See AGENT_SOP.md for full rule.
 
 ## Hard Rule: Task Table as Live Registry (2026-05-04)
 

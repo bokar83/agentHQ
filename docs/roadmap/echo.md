@@ -254,3 +254,22 @@ After shipping the coordination substrate (claim/lease + queue + heartbeat) on `
 - M1 has not started yet. Boubacar approved start "right now" at end of session.
 
 **Next session:** start M1 build at step 1 above.
+
+### 2026-05-10: Echo M3 SHIPPED — unified ingestion queue live on VPS
+
+**What shipped (commit 731e27b):**
+
+- `orchestrator/unified_queue.py`: new module — `list_all_pending()` merges approval_queue + tasks table; `list_all_recent()` same merge all statuses; `approve_any(id)` / `reject_any(id)` route by id format (integer → approval_queue, hex → proposal.ack)
+- `orchestrator/approval_queue.py`: added `list_recent(hours, limit)` — all statuses, time-bounded, used by Atlas dashboard card
+- `orchestrator/handlers_commands.py`: `/queue` now calls `unified_queue.list_all_pending()` and shows Q# (content) + P# (commit proposal) labels; `/approve` and `/reject` accept both id formats via `approve_any/reject_any`
+
+**Sankofa Council verdict (pre-build):** Do not merge approval_queue and tasks tables — divergent schemas, different side effects (episodic_memory, Hermes trigger, multi-agent coordination). Build display+routing unification layer only. Correct call.
+
+**Findings during build:**
+- Griot, Concierge already route through `approval_queue.enqueue()` — no raw Telegram sends to fix
+- Hunter crew does not exist in orchestrator — no routing change needed
+- Other agent (Atlas dashboard session) landed `list_recent` on `atlas_dashboard.get_queue()` in parallel — no conflict
+
+**Atlas M18 (HALO Loop) also marked shipped this session via flip_milestone().**
+
+**Next:** Echo roadmap M4 deferred indefinitely. Candidate next work: batched Telegram notify (one ping per cycle showing counts by type, not per-item pings).
