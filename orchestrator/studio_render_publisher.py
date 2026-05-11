@@ -529,9 +529,15 @@ def _update_notion(notion_id: str, asset_url: str, dry_run: bool, *, x_caption: 
     if not _NOTION_TOKEN or not notion_id:
         logger.warning("render_publisher: Notion update skipped (missing token or id)")
         return False
+    # Render-gate: never flip a record to 'scheduled' without a usable Asset URL.
+    # Empty Asset URL means render or Drive upload failed silently; letting the
+    # publisher pick this up means Blotato fires with media_urls=[] and IG/YT/TT
+    # reject with opaque errors. Set 'render-failed' instead so the failure is
+    # visible and the publisher tick skips the record.
+    status_name = "scheduled" if asset_url else "render-failed"
     try:
         props: dict = {
-            "Status": {"select": {"name": "scheduled"}},
+            "Status": {"select": {"name": status_name}},
             "Asset URL": {"url": asset_url or None},
             "Scheduled Date": {"date": {"start": datetime.now(timezone.utc).strftime("%Y-%m-%d")}},
             "Platform": {"multi_select": [
@@ -541,6 +547,9 @@ def _update_notion(notion_id: str, asset_url: str, dry_run: bool, *, x_caption: 
                 {"name": "YouTube"},
             ]},
         }
+        if not asset_url:
+            props["QA notes"] = {"rich_text": [{"text": {"content": "Render produced no Asset URL — Drive upload failed or render crashed. Check workspace/renders/ and render_publisher logs."}}]}
+            logger.error("render_publisher: %s flagged render-failed (asset_url empty)", notion_id)
         if x_caption:
             props["X Caption"] = {"rich_text": [{"text": {"content": x_caption[:240]}}]}
         resp = httpx.patch(
