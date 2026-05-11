@@ -50,7 +50,7 @@ def test_flip_milestone_invalid_status():
 def test_flip_milestone_with_notes():
     """Notes parameter is included in the UPDATE when provided."""
     from atlas_dashboard import flip_milestone
-    before = {"id": 1, "status": "queued"}
+    before = {"id": 1, "status": "queued", "codename": "atlas", "mid": "M5"}
     after  = {"status": "active"}
     conn, cur = _make_conn([before, after])
     with patch("atlas_dashboard._pg_conn", return_value=conn):

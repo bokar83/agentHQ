@@ -204,10 +204,33 @@ def _fire(wake: WakeRegistration, now: datetime) -> None:
         _update_last_fired(wake, now)
         return
 
+    # Fail-open OTel heartbeat wake tracing
+    tracer = None
+    span_id = None
+    start_ts = None
+    try:
+        from halo_tracer import get_tracer, _now_iso
+        tracer = get_tracer()
+        if tracer:
+            start_ts = _now_iso()
+            span_id = tracer.on_heartbeat_wake_started(wake.name, wake.crew_name, start_ts)
+    except Exception as trace_err:
+        logger.warning(f"HEARTBEAT: trace start failed (non-fatal): {trace_err}")
+
     try:
         wake.callback()
+        if tracer and span_id and start_ts:
+            try:
+                tracer.on_heartbeat_wake_completed(wake.name, wake.crew_name, span_id, start_ts, _now_iso())
+            except Exception as trace_err:
+                logger.warning(f"HEARTBEAT: trace completion failed (non-fatal): {trace_err}")
     except Exception as e:
         logger.error(f"HEARTBEAT: callback {wake.name} raised: {e}", exc_info=True)
+        if tracer and span_id and start_ts:
+            try:
+                tracer.on_heartbeat_wake_failed(wake.name, wake.crew_name, span_id, str(e), start_ts, _now_iso())
+            except Exception as trace_err:
+                logger.warning(f"HEARTBEAT: trace failure logging failed (non-fatal): {trace_err}")
     finally:
         _update_last_fired(wake, now)
 

@@ -110,9 +110,82 @@ class HaloTracer:
 
     def _trace_for_crew(self, crew_name: str | None) -> str:
         key = crew_name or "unknown"
-        if key not in self._crew_traces:
-            self._crew_traces[key] = str(uuid.uuid4()).replace("-", "")
-        return self._crew_traces[key]
+        with self._lock:
+            if key not in self._crew_traces:
+                self._crew_traces[key] = str(uuid.uuid4()).replace("-", "")
+            return self._crew_traces[key]
+
+    # ------------------------------------------------------------------
+    # Heartbeat / Scheduler events
+    # ------------------------------------------------------------------
+
+    def on_heartbeat_wake_started(self, wake_name: str, crew_name: str, ts: str) -> str:
+        tid = self._trace_for_crew(crew_name)
+        sid = str(uuid.uuid4()).replace("-", "")
+        span = _build_span(
+            span_id=sid,
+            trace_id=tid,
+            parent_span_id="",
+            name=f"heartbeat.wake.{wake_name}",
+            start_time=ts,
+            end_time=ts,
+            status_code="STATUS_CODE_OK",
+            status_message="",
+            observation_kind="SERVER",
+            attributes={
+                "heartbeat.wake_name": wake_name,
+                "heartbeat.crew_name": crew_name,
+            },
+        )
+        self._write(span)
+        return sid
+
+    def on_heartbeat_wake_completed(
+        self, wake_name: str, crew_name: str, span_id: str, start_ts: str, ts: str
+    ) -> None:
+        tid = self._trace_for_crew(crew_name)
+        span = _build_span(
+            span_id=span_id,
+            trace_id=tid,
+            parent_span_id="",
+            name=f"heartbeat.wake.{wake_name}",
+            start_time=start_ts,
+            end_time=ts,
+            status_code="STATUS_CODE_OK",
+            status_message="",
+            observation_kind="SERVER",
+            attributes={
+                "heartbeat.wake_name": wake_name,
+                "heartbeat.crew_name": crew_name,
+            },
+        )
+        self._write(span)
+        with self._lock:
+            self._crew_traces.pop(crew_name, None)
+
+    def on_heartbeat_wake_failed(
+        self, wake_name: str, crew_name: str, span_id: str, error: str, start_ts: str, ts: str
+    ) -> None:
+        tid = self._trace_for_crew(crew_name)
+        span = _build_span(
+            span_id=span_id,
+            trace_id=tid,
+            parent_span_id="",
+            name=f"heartbeat.wake.{wake_name}",
+            start_time=start_ts,
+            end_time=ts,
+            status_code="STATUS_CODE_ERROR",
+            status_message=error[:500] if error else "",
+            observation_kind="SERVER",
+            attributes={
+                "heartbeat.wake_name": wake_name,
+                "heartbeat.crew_name": crew_name,
+                "error.message": error,
+            },
+        )
+        self._write(span)
+        with self._lock:
+            self._crew_traces.pop(crew_name, None)
 
     # ------------------------------------------------------------------
     # Crew-level events
@@ -136,7 +209,8 @@ class HaloTracer:
 
     def on_crew_kickoff_completed(self, crew_name: str | None, ts: str) -> None:
         # Reset trace so next run gets a fresh trace_id.
-        self._crew_traces.pop(crew_name or "unknown", None)
+        with self._lock:
+            self._crew_traces.pop(crew_name or "unknown", None)
 
     def on_crew_kickoff_failed(self, crew_name: str | None, error: str, ts: str) -> None:
         tid = self._trace_for_crew(crew_name)
@@ -153,7 +227,8 @@ class HaloTracer:
             attributes={"agent.name": crew_name or "unknown", "error.message": error},
         )
         self._write(span)
-        self._crew_traces.pop(crew_name or "unknown", None)
+        with self._lock:
+            self._crew_traces.pop(crew_name or "unknown", None)
 
     # ------------------------------------------------------------------
     # LLM events
@@ -491,6 +566,11 @@ class HaloTracerListener:
 # ---------------------------------------------------------------------------
 
 _tracer: HaloTracer | None = None
+
+
+def get_tracer() -> HaloTracer | None:
+    """Return the active HaloTracer instance, or None if tracing is disabled."""
+    return _tracer
 
 
 def maybe_install_halo_tracer() -> None:
