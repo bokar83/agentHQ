@@ -9,7 +9,7 @@ Type=oneshot
 ExecStart=/usr/bin/docker exec orc-crewai python3 -m signal_works.morning_runner
 StandardOutput=append:/var/log/signal_works_morning.log
 StandardError=append:/var/log/signal_works_morning.log
-TimeoutStartSec=30min
+TimeoutStartSec=240min
 
 [Install]
 WantedBy=multi-user.target
