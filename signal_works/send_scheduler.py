@@ -142,8 +142,16 @@ def _list_drafts(token: str, max_results: int = 200) -> list[dict]:
     return drafts
 
 
-def _send_draft(token: str, draft_id: str, dry_run: bool = False) -> bool:
-    """Send a Gmail draft by ID. Returns True on success."""
+def _send_draft(token: str, draft_id: str, dry_run: bool = False,
+                draft_meta: dict | None = None,
+                pipeline: str | None = None) -> bool:
+    """Send a Gmail draft by ID. Returns True on success.
+
+    On success, also writes a 'sent' event to email_events (migration 009).
+    draft_meta should carry {to, subject, message_id, thread_id} so the event
+    row can be populated. pipeline is the brand label ('cw' | 'sw' | 'studio').
+    Both are optional — when omitted, no email_events row is written and the
+    caller is responsible for the audit trail."""
     import httpx
     if dry_run:
         logger.info(f"  [DRY-RUN] Would send draft {draft_id}")
@@ -156,9 +164,49 @@ def _send_draft(token: str, draft_id: str, dry_run: bool = False) -> bool:
             timeout=20,
         )
         resp.raise_for_status()
+        sent_body = resp.json() if resp.content else {}
+
+        # Mirror into email_events canonical ledger
+        if draft_meta is not None and pipeline:
+            try:
+                from signal_works.email_events import log_event
+                # Gmail's drafts/send response includes message id + thread id
+                msg_id = sent_body.get("id") or draft_meta.get("message_id", "")
+                thread_id = sent_body.get("threadId") or draft_meta.get("thread_id", "")
+                log_event(
+                    brand=pipeline if pipeline in ("cw", "sw", "studio") else "cw",
+                    event_type="sent",
+                    to_addr=draft_meta.get("to", ""),
+                    from_addr="boubacar@catalystworks.consulting",
+                    subject=draft_meta.get("subject", ""),
+                    gmail_message_id=msg_id or None,
+                    gmail_thread_id=thread_id or None,
+                    pipeline="send_scheduler",
+                    direction="outbound",
+                    metadata={"source": "send_scheduler", "draft_id": draft_id},
+                )
+            except Exception as e:
+                logger.warning(f"  email_events log failed (non-fatal): {e}")
         return True
     except Exception as e:
         logger.error(f"  Failed to send draft {draft_id}: {e}")
+        # Log the failure too so the funnel sees it
+        if draft_meta is not None and pipeline:
+            try:
+                from signal_works.email_events import log_event
+                log_event(
+                    brand=pipeline if pipeline in ("cw", "sw", "studio") else "cw",
+                    event_type="failed",
+                    to_addr=draft_meta.get("to", ""),
+                    from_addr="boubacar@catalystworks.consulting",
+                    subject=draft_meta.get("subject", ""),
+                    pipeline="send_scheduler",
+                    direction="outbound",
+                    metadata={"source": "send_scheduler", "draft_id": draft_id,
+                              "error": str(e)[:200]},
+                )
+            except Exception:
+                pass
         return False
 
 
@@ -316,7 +364,18 @@ def run_batch(pipeline: str = "all", batch_size: int = None,
 
         sent = 0
         for draft in pipe_drafts[:to_send]:
-            ok = _send_draft(token, draft["draft_id"], dry_run=dry_run)
+            ok = _send_draft(
+                token,
+                draft["draft_id"],
+                dry_run=dry_run,
+                draft_meta={
+                    "to": draft.get("to", ""),
+                    "subject": draft.get("subject", ""),
+                    "message_id": draft.get("message_id", ""),
+                    "thread_id": draft.get("thread_id", ""),
+                },
+                pipeline=pipe,
+            )
             if ok:
                 sent += 1
                 total_sent += 1
