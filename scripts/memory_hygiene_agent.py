@@ -136,10 +136,17 @@ def collect_handoff_citations(lookback_days: int) -> dict[str, list[str]]:
     return {k: sorted(v) for k, v in citations.items()}
 
 
-def scan_promotion_candidates(citations: dict[str, list[str]]) -> list[dict]:
-    """Files cited >= PROMOTION_FIRE_THRESHOLD across distinct handoffs."""
+def scan_promotion_candidates(citations: dict[str, list[str]], topic_files: list[Path]) -> list[dict]:
+    """Files cited >= PROMOTION_FIRE_THRESHOLD across distinct handoffs.
+    Only counts citations where target file actually exists in memory dir —
+    handoffs sometimes reference typo'd paths or planned-but-never-created
+    files, which inflated the first 2026-05-12 smoke-test signal.
+    """
+    existing_names = {f.name for f in topic_files}
     candidates = []
     for filename, handoffs in citations.items():
+        if filename not in existing_names:
+            continue
         if len(handoffs) >= PROMOTION_FIRE_THRESHOLD:
             candidates.append({
                 "rule": filename,
@@ -243,7 +250,7 @@ def main(dry_run: bool = False) -> int:
     line_count = count_memory_lines()
     topic_files = list_memory_topic_files()
     citations = collect_handoff_citations(CITATION_LOOKBACK_DAYS)
-    candidates = scan_promotion_candidates(citations)
+    candidates = scan_promotion_candidates(citations, topic_files)
     cold = scan_cold_entries(topic_files, citations)
 
     severity, report, exception = build_report(line_count, candidates, cold)
