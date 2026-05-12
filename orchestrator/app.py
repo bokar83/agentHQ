@@ -36,6 +36,7 @@ from fastapi import (
     FastAPI,
     Header,
     HTTPException,
+    Query,
     Request,
     UploadFile,
 )
