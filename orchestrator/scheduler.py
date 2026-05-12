@@ -537,7 +537,8 @@ def _collect_roadmap_next_actions() -> list[dict]:
         # file is the authoritative next-action. Scan from bottom up.
         next_markers = ("**Next:**", "**Next session:**", "**Next studio session:**",
                         "**Next session priorities:**", "**Next steps:**",
-                        "**Next steps to close")
+                        "**Next steps to close", "**What's next:**",
+                        "**Next milestone:**", "**Up next:**")
         body_lines = body.splitlines()
         for i in range(len(body_lines) - 1, -1, -1):
             line = body_lines[i].strip()
@@ -578,6 +579,24 @@ def _collect_roadmap_next_actions() -> list[dict]:
                         summary = stripped[2:].strip()
                         break
                 if summary:
+                    break
+        if not summary:
+            # Third fallback: scan for the next un-shipped milestone marker
+            # in `## Status Snapshot` or `## Milestones`. Catches roadmaps
+            # like compass.md where progress is tracked as `M8 QUEUED ...`
+            # rather than a `**Next:**` line.
+            unshipped_markers = ("⏳ QUEUED", "⏳ ARMED", "⏳ IN PROGRESS",
+                                 "QUEUED (next", "🟡 IN PROGRESS", "🟢 NEXT")
+            for raw in body_lines:
+                stripped = raw.strip()
+                if any(m in stripped for m in unshipped_markers) and not stripped.startswith("##"):
+                    # Strip the leading list-marker / heading-prefix so the
+                    # summary reads cleanly in Telegram.
+                    cleaned = stripped.lstrip("-#*").strip()
+                    # Drop "### " or "## " if it survived.
+                    if cleaned.startswith(("### ", "## ")):
+                        cleaned = cleaned.split(" ", 1)[1] if " " in cleaned else cleaned
+                    summary = cleaned
                     break
         if not summary:
             summary = "No next-actions section found"
