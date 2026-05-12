@@ -317,27 +317,61 @@ def _main_body():
             logger.error(f"  CW sequence failed: {e}")
             log_step("cw_sequence", attempted=15, reason=f"error: {type(e).__name__}")
 
-        # ── Step 5b: Recycle yesterday's CW queue if below floor ──
-        # If CW T1 lead pool was thin today and the sequence drafted fewer than
-        # CW_THRESHOLD, top up by re-touching recently-contacted CW leads. Honors
-        # the existing CW auto-send rule (AUTO_SEND_CW env). Pure additive, never
-        # blocks. Never raises.
+        # ── Step 5b: T-advance recycle when below floor ──
+        # If today's CW T1 pool was thin and Step 5 produced fewer than
+        # CW_THRESHOLD drafts/sends, age-back the last_contacted_at on a cohort
+        # of leads we contacted in the past 7 days (T1..T4) so their *next*
+        # touch becomes due. Then re-run run_sequence("cw") with t1_cap=0 so
+        # only follow-ups fire. Finally mark those new sw_email_log rows as
+        # recycle=TRUE so analytics can separate primary volume from recycle.
+        #
+        # All existing template/personalisation/auto-send logic is reused. No
+        # duplicate touch-progression code in recycle_cw. Honors AUTO_SEND_CW.
         if cw_drafted < CW_THRESHOLD:
             _RUN_STATE["step"] = "cw_recycle"
             shortfall = CW_THRESHOLD - cw_drafted
             logger.info(
                 f"STEP 5b: CW drafted {cw_drafted}/{CW_THRESHOLD}. "
-                f"Recycling yesterday's CW queue to top up shortfall of {shortfall}..."
+                f"T-advancing recyclable leads to top up shortfall of {shortfall}..."
             )
             try:
-                from signal_works.recycle_cw import recycle_yesterdays_cw
-                recycled_emails = recycle_yesterdays_cw(min_floor=shortfall)
-                cw_recycled = len(recycled_emails)
-                logger.info(
-                    f"  Recycle attempted on {cw_recycled} prior CW touches "
-                    f"({', '.join(recycled_emails[:3])}{'...' if cw_recycled > 3 else ''})."
+                from signal_works.recycle_cw import (
+                    recycle_yesterdays_cw,
+                    mark_today_recycled,
                 )
-                log_step("cw_recycle", attempted=shortfall, succeeded=cw_recycled)
+                advanced_emails = recycle_yesterdays_cw(min_floor=shortfall)
+                logger.info(
+                    f"  Advanced {len(advanced_emails)} CW leads "
+                    f"({', '.join(advanced_emails[:3])}"
+                    f"{'...' if len(advanced_emails) > 3 else ''})."
+                )
+                if advanced_emails:
+                    # Re-run CW sequence: T1 disabled, followups capped at the
+                    # advanced cohort size. _get_due_leads now finds these leads
+                    # because we just aged their last_contacted_at past the gap.
+                    recycle_result = run_sequence(
+                        "cw", dry_run=False,
+                        t1_cap=0, followup_cap=len(advanced_emails),
+                    )
+                    cw_recycled = (
+                        recycle_result.get("drafted", 0)
+                        + recycle_result.get("sent", 0)
+                    )
+                    # Mark the rows we just wrote as recycle=TRUE (recycle BOOL
+                    # column on sw_email_log, added by migration 008).
+                    mark_today_recycled(advanced_emails)
+                    logger.info(
+                        f"  Recycle pass: {cw_recycled} touches sent/drafted. "
+                        f"per_touch={recycle_result.get('per_touch', {})}"
+                    )
+                    log_step(
+                        "cw_recycle",
+                        attempted=len(advanced_emails),
+                        succeeded=cw_recycled,
+                    )
+                else:
+                    log_step("cw_recycle", attempted=shortfall, succeeded=0,
+                             reason="no_eligible_leads")
             except Exception as e:
                 logger.error(f"  CW recycle failed (non-fatal): {e}")
                 log_step("cw_recycle", attempted=shortfall,
