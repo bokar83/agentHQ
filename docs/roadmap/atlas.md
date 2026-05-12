@@ -28,6 +28,7 @@ Last session ended **2026-05-10 (Gate conflict backlog cleared, phantom lock roo
 1. **Clear Gate conflict backlog** — 4 branches (`fix/studio-production-import`, `fix/studio-qa-fail-chat-id`, `feature/gws-email-rules-update`, `fix/studio-drive-upload`) conflict with each other. Gate stuck cycling. Drop or resolve.
 2. **Verify sw_email_log populating** — after morning_runner fires: `docker exec orc-postgres psql -U postgres -d postgres -c "SELECT pipeline, touch, status, COUNT(*) FROM sw_email_log WHERE created_at >= NOW() - INTERVAL '1 day' GROUP BY pipeline, touch, status"`
 3. Flip `AUTO_SEND_SW=true` after lead quality confirmed (VPS `.env` + `docker compose up -d orchestrator`)
+3a. **[NEW 2026-05-12] Second Brain Ingest Layer — Phase A:** `web-session-harvester` skill (skool + x-bookmarks + yt-watch-later adapters) + cron + hoarder-rate metric. Spec: [atlas-second-brain-phase-a.md](atlas-second-brain-phase-a.md). Target ship 2026-05-25. Build start 2026-05-12. Gates Post 5 "build reveal" publish 5/18.
 4. ✅ DONE 2026-05-11: M18 HALO unlock: instrumented Atlas heartbeat with thread-safe OTel JSONL `halo_tracer.py` and validated with comprehensive Pytest suite.
 6. ✅ DONE 2026-05-10: Fix `newsletter_editorial_input` table missing — migration 006 run on VPS orc-postgres; `get_reply_for_week()` wrapped non-fatal.
 5. ✅ DONE 2026-05-09: `check_routing_gaps.py` pre-commit wired (step 7, warn-only). Coverage 86% (59/69). 11 warnings = real gaps/overlaps, not fixture bugs. Run weekly to track sub-skill routing improvements.
