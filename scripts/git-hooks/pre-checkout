@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+# pre-checkout: refuse `git checkout <branch>` if the target branch is held
+# by another agent session via the coordination claims table (Postgres `tasks`).
+#
+# Git invokes this with:
+#   $1 = previous HEAD SHA
+#   $2 = new HEAD SHA
+#   $3 = "1" for branch checkout, "0" for file checkout
+#
+# Behavior:
+# - file checkouts ($3=0)        -> always allow
+# - branch checkout to same SHA   -> allow (noop)
+# - branch held by current session -> allow (same holder)
+# - branch held by other session   -> refuse, print actionable hint
+# - postgres unreachable          -> allow (fail-open) + stderr warning
+#
+# Off-by-default for first 24h. Set CW_PRECHECKOUT_ENFORCE=1 to enforce.
+# Override per-call with PRECHECKOUT_BYPASS=1 (e.g. emergency human ops).
+#
+# Why this exists: 2026-05-12 incident — concurrent Claude Code sessions on the
+# same working tree caused branch flips mid-edit, destroying in-progress work.
+# Postgres claims table (built 2026-05-10) was already the multi-tenant
+# coordination layer but no enforcement bridged git operations to it. This hook
+# is that bridge. Harness-agnostic — fires for CC, Antigravity, Codex, cron,
+# manual git. See docs/handoff/2026-05-12-session-collision-fix.md.
+
+set -u
+
+# File checkout -> allow
+if [ "${3:-0}" != "1" ]; then
+  exit 0
+fi
+
+# Same SHA (no actual branch change) -> allow
+if [ "${1:-}" = "${2:-}" ]; then
+  exit 0
+fi
+
+# Bypass switch (per-call emergency)
+if [ "${PRECHECKOUT_BYPASS:-}" = "1" ]; then
+  echo "pre-checkout: PRECHECKOUT_BYPASS=1, skipping claim check" >&2
+  exit 0
+fi
+
+# Resolve the target branch name from the new SHA. `git checkout <branch>`
+# leaves the target branch in HEAD by the time pre-checkout runs.
+TARGET=$(git symbolic-ref --short HEAD 2>/dev/null || true)
+if [ -z "$TARGET" ]; then
+  # Detached HEAD or unresolvable — allow
+  exit 0
+fi
+
+# Session identity, in order of preference:
+#   CLAUDE_SESSION_ID, ANTIGRAVITY_SESSION_ID, then fallback to PID@host
+SESSION_ID="${CLAUDE_SESSION_ID:-${ANTIGRAVITY_SESSION_ID:-$$@$(hostname)}}"
+
+# Query the canonical coordination DB on the VPS via docker exec — matches the
+# pattern in scripts/gate_poll.py (host has no psycopg2, must go via VPS).
+QUERY="SELECT claimed_by FROM tasks WHERE resource = 'branch:${TARGET}' AND status = 'running' AND lease_expires_at > now() LIMIT 1;"
+
+HOLDER=$(ssh -o ConnectTimeout=3 -o BatchMode=yes root@72.60.209.109 \
+  "docker exec orc-postgres psql -U postgres -d postgres -t -A -c \"${QUERY}\"" \
+  2>/dev/null | head -1 | tr -d '[:space:]')
+
+# Postgres unreachable -> fail-open (warn but allow). Aligns with AGENTS.md
+# emergency-fallback rule.
+if [ -z "${HOLDER:-}" ] && [ "$?" -ne 0 ]; then
+  echo "pre-checkout: WARN claims-DB unreachable, allowing checkout" >&2
+  exit 0
+fi
+
+# No holder -> branch is free, allow
+if [ -z "${HOLDER:-}" ]; then
+  exit 0
+fi
+
+# Held by current session -> allow
+if [ "$HOLDER" = "$SESSION_ID" ]; then
+  exit 0
+fi
+
+# Held by another session -> enforce if enabled, else warn
+if [ "${CW_PRECHECKOUT_ENFORCE:-0}" != "1" ]; then
+  cat >&2 <<EOF
+pre-checkout: WARN branch '${TARGET}' is held by session '${HOLDER}'
+pre-checkout: WARN current session '${SESSION_ID}' would collide
+pre-checkout: WARN proceeding anyway (CW_PRECHECKOUT_ENFORCE=0)
+EOF
+  exit 0
+fi
+
+cat >&2 <<EOF
+error: branch '${TARGET}' is held by session '${HOLDER}'
+hint: use 'worktree-claim ${TARGET}' to work on a sibling worktree instead
+hint: or 'PRECHECKOUT_BYPASS=1 git checkout ${TARGET}' if '${HOLDER}' is dead
+hint: stale claims are reaped automatically every 5 min by gate_poll
+EOF
+exit 1

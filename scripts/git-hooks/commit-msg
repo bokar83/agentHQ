@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# commit-msg: append `Session-Id: <id>` trailer to every commit so reflog
+# forensics can attribute commits to specific agent sessions even though git
+# user.name is the same across all sessions ($USER on Boubacar's machines).
+#
+# Off-by-default — set CW_SESSION_TRAILER=1 in env to enable. Once stable for
+# 7 days, flip default-on in this script.
+
+set -u
+
+[ "${CW_SESSION_TRAILER:-0}" = "1" ] || exit 0
+
+MSG_FILE="$1"
+[ -f "$MSG_FILE" ] || exit 0
+
+# Skip if trailer already present (avoids duplication on amend/rebase)
+if grep -q '^Session-Id:' "$MSG_FILE"; then
+  exit 0
+fi
+
+SESSION_ID="${CLAUDE_SESSION_ID:-${ANTIGRAVITY_SESSION_ID:-$$@$(hostname)}}"
+
+# Append trailer (git convention: blank line before trailer block if not already)
+if [ -s "$MSG_FILE" ]; then
+  # Ensure exactly one blank line before trailer
+  printf '\n' >> "$MSG_FILE"
+fi
+printf 'Session-Id: %s\n' "$SESSION_ID" >> "$MSG_FILE"
+
+exit 0
