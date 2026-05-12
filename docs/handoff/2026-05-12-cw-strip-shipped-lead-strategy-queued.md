@@ -51,13 +51,20 @@ Boubacar invoked /council on the question of whether to cancel Apollo + Hunter s
 
 ## Next session must start here
 
-**Boubacar opens a separate tab and runs the prompt at the bottom of this file.** That session does NOT continue this work — it runs the H1j lead-strategy review independently with fresh head + absorbs the 2 X-sourced links.
+**Strategy review is RUNNING IN A SEPARATE TAB right now (2026-05-12 ~13:30 MT).** No next-session prompt needed for this tab. Strategy work continues in parallel session per the no-time-cap + multi-pass + 95%-gate prompt pattern (saved as `feedback_strategic_review_prompt_pattern.md`).
 
-This session is closing. After Boubacar pastes the prompt and confirms the new tab is moving:
+**Verified live on VPS at session close:**
+- `feat/strip-cw-automation` merged + live (grep `CW automation REMOVED` returns 1 match in `/root/agentsHQ/signal_works/morning_runner.py`)
+- `feat/council-premortem-mode` merged + live (grep `PREMORTEM_VOICE_MANDATES` returns 2 matches in `/root/agentsHQ/orchestrator/council.py`)
+- Both branches auto-merged by Gate, tests green
 
-1. Watch this evening's Hunter post-fix pull. Log yield to a memory entry by morning.
-2. Confirm Gate merged both `[READY]` branches (`feat/strip-cw-automation` + `feat/council-premortem-mode`).
-3. Verify VPS has the strip live: `ssh root@72.60.209.109 "cd /root/agentsHQ && git pull && grep -n 'CW automation REMOVED' /root/agentsHQ/signal_works/morning_runner.py"`.
+**Parallel session in flight:** Atlas M8 mission-control dashboard work (`orchestrator/app.py`, `orchestrator/atlas_dashboard.py`, `orchestrator/tests/test_atlas_dashboard.py`). Stashed at `atlas-m8-dashboard-parallel-session-WIP-2026-05-12` so the owning session can pick it back up.
+
+**Open items (NOT blocking this tab):**
+- Hunter post-fix pull yield logging (Boubacar tracking)
+- Prospeo `INVALID_DATAPOINTS` ticket (separate work)
+- Apollo Free-tier behavior for SW chain post-2026-05-28 (deadline 16 days out)
+- X-reader r.jina.ai pattern is wired into the strategy review prompt — no separate ticket needed
 
 ## Files changed this session
 
