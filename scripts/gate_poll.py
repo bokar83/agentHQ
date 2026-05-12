@@ -47,7 +47,7 @@ PROTECTED_BRANCHES = {
     "fix/chat-empty-model-resolution",
 }
 SKIP_PREFIXES = ("archive/",)
-READY_BRANCHES_PREFIXES = ("feature/", "feat/", "fix/", "docs/", "chore/", "refactor/", "test/")
+READY_BRANCHES_PREFIXES = ("feature/", "feat/", "fix/", "docs/", "chore/", "refactor/", "test/", "compass/")
 
 
 def _load_env() -> None:
