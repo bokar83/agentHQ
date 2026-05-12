@@ -220,7 +220,13 @@ Skills that commonly need updates after website/design work:
 - `~/.claude/skills/blotato/SKILL.md`
 - `~/.claude/skills/kie_media/SKILL.md`
 
-The global `~/.claude/skills/` versions are the active ones the harness loads. If an agentsHQ project copy exists at `d:/Ai_Sandbox/agentsHQ/skills/<name>/SKILL.md`, sync it too — but the global is canonical.
+**Mirror discipline (updated 2026-05-11):** Every skill exists in BOTH `~/.claude/skills/<name>/` (local Claude Code authoring) AND `d:/Ai_Sandbox/agentsHQ/skills/<name>/` (repo, deployed to VPS for CrewAI runtime). After every skill edit, copy to BOTH sides. Repo is canonical because it deploys to VPS — but neither side is a subset; both must be in sync byte-for-byte. Verify with `diff -q ~/.claude/skills/<name>/SKILL.md d:/Ai_Sandbox/agentsHQ/skills/<name>/SKILL.md`.
+
+**If a drift appears between local and repo:** MERGE both sides' unique content. Never pick a side and silently overwrite. Per Boubacar's standing rule: never delete, always archive. Backup both versions to `zzzArchive/skills-pre-merge-YYYYMMDD/<name>.{local,repo}.SKILL.md` before merging.
+
+**Cascading renames:** When you rename a skill's YAML `name:` field, also fix `routing-eval.jsonl` `expected:` rows, body slash-command refs (`/old:NAME` → `/NAME`), `references/*.md` slash-command refs, then regen `docs/agentsHQ_inventory.json` (via `python scripts/inventory_snapshot.py`) and `docs/SKILLS_INDEX.md` (via `python scripts/lint_and_index_skills.py`). Verify with `python scripts/skill_eval.py skills/<name>` (must return PASS).
+
+**Canonical spec for SKILL.md structure:** `d:/Ai_Sandbox/agentsHQ/skills/boubacar-skill-creator/SKILL.md` (374-line authoritative version). Score skills against it using the 6-criterion compliance audit (CANONICAL/MINOR DRIFT/ROGUE buckets) — used by `agentshq-absorb` Phase 2.5.
 
 **Markdown lint warnings on skill edits (MD031 fence blank-lines, MD034 bare-urls, MD060 table-pipe-spacing) are cosmetic. Content lands clean. Do NOT let them stop the edit.**
 
