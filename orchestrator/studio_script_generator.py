@@ -88,11 +88,14 @@ def generate_script(
         stub["voice_role"] = voice_role
         return stub
 
+    director_tag = brand.get("director_tag", "")
+
     system_prompt = _build_system_prompt(
         channel_id, script_tone, visual_style, hook_budget, loop_interval, target_words,
         dossier=dossier,
+        director_tag=director_tag,
     )
-    user_prompt = _build_user_prompt(hook, twist, niche, title)
+    user_prompt = _build_user_prompt(hook, twist, niche, title, target_words=target_words)
 
     raw_script = _call_llm(system_prompt, user_prompt)
     clean_script = _post_process(raw_script, pronunciation_dict, loop_interval)
@@ -101,8 +104,9 @@ def generate_script(
     duration_sec = int(word_count / 150 * 60)
     scenes_hint = _extract_scene_hints(clean_script)
 
-    # Strip colons from title — ffmpeg drawtext and file naming both fail on colons
-    title = title.replace(":", ",")
+    # Strip colons + em-dashes from title — ffmpeg drawtext and file naming
+    # both fail on colons; em-dashes leak into drawtext if not normalized here.
+    title = title.replace(":", ",").replace("—", ",").replace(" -- ", ", ")
 
     return {
         "title": title,
@@ -127,11 +131,19 @@ def _build_system_prompt(
     target_words: int,
     *,
     dossier: str = "",
+    director_tag: str = "",
 ) -> str:
     dossier_block = ""
     if dossier:
         dossier_block = f"\n\nCHANNEL INTELLIGENCE DOSSIER — use this to inform hooks, topics, and angle choices:\n{dossier}\n"
-    return f"""You are a professional YouTube scriptwriter for the "{channel_id}" channel.{dossier_block}
+    director_block = ""
+    if director_tag:
+        director_block = (
+            f"\n\nNARRATOR PERSONA: Write as a {director_tag}. Every claim and "
+            f"reframe should sound like it comes from this lens (executive register, "
+            f"calm authority, lived expertise — not influencer hype).\n"
+        )
+    return f"""You are a professional YouTube scriptwriter for the "{channel_id}" channel.{dossier_block}{director_block}
 
 VOICE AND TONE: {tone}
 VISUAL STYLE THIS CHANNEL USES: {visual_style}
@@ -148,7 +160,7 @@ HARD RULES — follow exactly:
    Where phrase is one of: "But here is the part nobody talks about." / "Stay with me, because this is where it gets surprising." / "Here is what the research actually shows." / "And this next part changes everything." / "Most people get this completely wrong."
    These ARE narrated aloud — they are spoken by the narrator to keep viewers watching.
 4. End with a clear CTA (subscribe, share, or watch another video) in the last paragraph.
-5. Target length: ~{target_words} words (~{int(target_words / 150 * 60)} seconds at 150 wpm). HARD CAP: never exceed {target_words + 20} words total. Count every word before submitting.
+5. Target length: {target_words}-{int(target_words * 1.75)} words ({int(target_words / 150 * 60)}-{int(target_words * 1.75 / 150 * 60)} seconds at 150 wpm). HARD CAP: never exceed {int(target_words * 1.75)} words total. Count every word before submitting — if your draft is over the cap, cut filler before returning.
 6. NO em-dashes (use commas or periods instead).
 7. NO first-person Boubacar references. This is a faceless channel.
 8. NO fabricated client stories or testimonials.
@@ -168,7 +180,7 @@ That number drops by half before a child's fifth birthday...
 OUTPUT: Return only the script text. No preamble, no "Here is your script", no metadata."""
 
 
-def _build_user_prompt(hook: str, twist: str, niche: str, title: str) -> str:
+def _build_user_prompt(hook: str, twist: str, niche: str, title: str, *, target_words: int = 0) -> str:
     parts = [
         f'VIDEO TITLE: "{title}"',
         f'OPENING LINE (use this or riff from it): {hook}',
@@ -178,6 +190,11 @@ def _build_user_prompt(hook: str, twist: str, niche: str, title: str) -> str:
             f'VIDEO CONCEPT BRIEF (who this is for, what insight it delivers, how it ends):\n{twist}'
         )
     parts.append(f'NICHE: {niche}')
+    if target_words:
+        parts.append(
+            f'LENGTH: {target_words}-{int(target_words * 1.75)} words. '
+            f'Stop before {int(target_words * 1.75)}. Cut filler over the cap.'
+        )
     parts.append(
         "Write the full script now. Follow the concept brief exactly — "
         "this video was designed for a specific audience, not a generic one."
