@@ -5,6 +5,8 @@ status: active
 
 # orchestrator/ - The Python Brain
 
+**Standing rules:** read `docs/RULES.md` before any task. Apply at every action boundary. (2026-05-11 — RCA fix Layer 2.)
+
 This is the core runtime. Every AI request flows through here.
 
 ## What lives here

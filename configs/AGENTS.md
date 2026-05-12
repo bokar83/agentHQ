@@ -1,5 +1,7 @@
 # configs/
 
+**Standing rules:** read `docs/RULES.md` before any task. Apply at every action boundary. (2026-05-11 — RCA fix Layer 2.)
+
 Brand configuration files for agentsHQ clients and projects.
 
 **What goes here:** `brand_config.<slug>.json` files consumed by `orchestrator/studio_brand_config.py` and related Studio pipeline scripts.

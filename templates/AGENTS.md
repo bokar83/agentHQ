@@ -5,6 +5,8 @@ status: active
 
 # templates/ - Email + Document Templates
 
+**Standing rules:** read `docs/RULES.md` before any task. Apply at every action boundary. (2026-05-11 — RCA fix Layer 2.)
+
 Templates used by orchestrator agents to produce consistent output. Distinct from `skills/<skill>/templates/` (per-skill templates) and from `signal_works/templates/` (legacy SW templates being phased out).
 
 ## What lives here

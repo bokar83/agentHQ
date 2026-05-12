@@ -5,6 +5,8 @@ status: active - future satellite
 
 # signal_works/ - Signal Works Outreach Pipeline
 
+**Standing rules:** read `docs/RULES.md` before any task. Apply at every action boundary. (2026-05-11 — RCA fix Layer 2.)
+
 Daily cold outreach pipeline: 20 drafts/day (10 Signal Works + 10 Catalyst Works).
 
 ## Current status

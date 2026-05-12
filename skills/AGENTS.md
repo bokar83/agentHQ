@@ -5,6 +5,8 @@ status: active
 
 # skills/ - The Skill Library
 
+**Standing rules:** read `docs/RULES.md` before any task. Apply at every action boundary. (2026-05-11 — RCA fix Layer 2.)
+
 71 skills. One folder per skill. Flat structure by design.
 
 ## What lives here
