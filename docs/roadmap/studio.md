@@ -1129,3 +1129,46 @@ Phase 3 — YAML machine-readable tokens:
 **Next studio session:**
 - SW demo build validation: verify agent loads `docs/styleguides/INDEX.md` unprompted — target 2026-05-17
 - First M3.4 video produced end-to-end: confirm hook/climax clips render as real video (not KB fallback) in next studio run
+
+---
+
+### 2026-05-11 — Blotato silent-failure chain fixed + AIC re-seeded
+
+**Incident:** 3 Blotato posts failed May 11 9:24 AM (1 YT "Failed to parse URL from undefined", 2 IG "requires image or video"). Pipeline DB marked records `Status=published` despite failures.
+
+**Root cause — 3 chained bugs:**
+1. `studio_render_publisher.py:534` flipped Status=scheduled regardless of Drive upload outcome (no render-gate)
+2. `studio_blotato_publisher.py:283` skip-guard required BOTH draft + asset empty — draft alone allowed IG/YT/TT to fire with media_urls=[]
+3. `studio_blotato_publisher.py:418` module-level `published` counter cross-contaminated records — first X success flipped ALL subsequent records to Status=published
+
+**Shipped (all Gate-merged):**
+- `d4df7e8` — per-record counter + media-required guard (IG/YT/TikTok/Pinterest skip when media empty)
+- `337ef42` — render-gate: empty asset_url → Status=`render-failed`, blocks publisher pickup
+- `dbaca0e` — AIC re-seed to citation-friendly source queries (Goldman/McKinsey/MIT/Stanford/Anthropic Economic Index/OECD/Brookings/WEF/Pew/BLS/Oxford)
+- `978982e` — docker-entrypoint.sh extended to sync `orchestrator/*.json` (JSON config edits had been silently no-op'd until rebuild)
+
+**Recovery:** 2 records (Hannatu UTB, Parents 1stGen) reset to render-failed, rescheduled 5/15 + 5/16. Manual workaround applied for JSON sync (copied seed JSON into container `/app/` until entrypoint rebuild).
+
+**Scout result post re-seed:** 11 new picks across all 3 channels. AIC unblocked — 3 picks landed (was 5 records total over 6 weeks).
+
+**Channel queue depth after session:**
+- UTB: 9 actionable (5 scouted, 2 scheduled w/asset, 1 queued, 1 render-failed)
+- AIC: 3 actionable (3 scouted w/ citation-friendly seeds — first real flow in 6 weeks)
+- 1stGen: 5 actionable (3 scouted, 1 scheduled w/asset, 1 render-failed)
+
+**QA gate question — Sankofa verdict: don't touch.** source_citation already auto-skips for shorts (`length_target=="short (<60s)"`) AND for storytelling niches. AIC `target_duration_sec=55` → hits shorts path → already exempt. 4 historical AIC qa-failed records were from pre-shorts-first era. 5-record sample = no calibration data.
+
+**Watch window 7-14 days:**
+- `Status=publish-failed` count (validates Bug B+C fix)
+- `Status=render-failed` count (NEW signal — validates Bug A fix surfacing real render crashes)
+- AIC content quality on next 3 production drafts — answers QA strictness with real data
+- Decide Layer 2 retry tick + generic reconciler if `publish-failed` pattern accumulates
+
+**Deferred per Sankofa Executor:**
+- Layer 2 retry tick — wait for failure-data
+- Layer 3 Blotato `/v2/posts?status=failed` reconciler — wait for API verification
+- QA calibration log (postgres `qa_decisions` table) — next session
+
+**Next studio session:**
+- Inspect first 3 AIC drafts post-production-crew tick: do citation-friendly seeds produce credible scripts?
+- Watch-window pipeline health check at +7d (2026-05-18)
