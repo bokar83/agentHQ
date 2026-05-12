@@ -331,8 +331,12 @@ def _main_body():
             )
             try:
                 from signal_works.recycle_cw import recycle_yesterdays_cw
-                cw_recycled = recycle_yesterdays_cw(min_floor=shortfall)
-                logger.info(f"  Recycle attempted on {cw_recycled} prior CW touches.")
+                recycled_emails = recycle_yesterdays_cw(min_floor=shortfall)
+                cw_recycled = len(recycled_emails)
+                logger.info(
+                    f"  Recycle attempted on {cw_recycled} prior CW touches "
+                    f"({', '.join(recycled_emails[:3])}{'...' if cw_recycled > 3 else ''})."
+                )
                 log_step("cw_recycle", attempted=shortfall, succeeded=cw_recycled)
             except Exception as e:
                 logger.error(f"  CW recycle failed (non-fatal): {e}")
