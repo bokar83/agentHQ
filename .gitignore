@@ -126,6 +126,7 @@ test_sankofa.py
 test_mermaid.py
 *.md.bak
 data/
+!skills/ui-ux-pro-max/data/
 docs/research/
 
 # ── Temp uploads (audio, video, chunks — never commit) ───────
