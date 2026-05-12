@@ -454,6 +454,225 @@ def _consume_sw_run_complete() -> dict | None:
         return None
 
 
+_REPO_ROOT = os.path.abspath(os.path.join(_SCRIPT_DIR, ".."))
+_HANDOFF_DIR = os.path.join(_DOCS_DIR, "handoff")
+_ROADMAP_DIR = os.path.join(_DOCS_DIR, "roadmap")
+_ROADMAP_EXCLUDE = {"README.md", "future-enhancements.md"}
+_DIGEST_ROW_SUMMARY_CAP = 80
+
+
+def _truncate(text: str, cap: int = _DIGEST_ROW_SUMMARY_CAP) -> str:
+    text = " ".join(text.split())
+    return text if len(text) <= cap else text[: cap - 1].rstrip() + "…"
+
+
+def _collect_yesterday_handoffs() -> list[dict]:
+    """Return rows for yesterday's docs/handoff/<date>-*.md files.
+
+    Summary = first non-blank paragraph after `## TL;DR` if present, else first
+    5 non-blank lines concatenated. Owner = None for now (no convention exists;
+    Council verdict accepts maximum red-flag signal).
+    """
+    import glob
+    rows: list[dict] = []
+    if not os.path.isdir(_HANDOFF_DIR):
+        return rows
+    tz = pytz.timezone(TIMEZONE)
+    yesterday = (datetime.now(tz).date().toordinal() - 1)
+    yday_str = datetime.fromordinal(yesterday).strftime("%Y-%m-%d")
+    for path in sorted(glob.glob(os.path.join(_HANDOFF_DIR, f"{yday_str}-*.md"))):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                head = [next(f, "") for _ in range(40)]
+        except Exception:
+            continue
+        summary = ""
+        for i, line in enumerate(head):
+            if line.strip().lower().startswith("## tl;dr"):
+                for follow in head[i + 1 :]:
+                    if follow.strip():
+                        summary = follow.strip()
+                        break
+                break
+        if not summary:
+            summary = " ".join(l.strip() for l in head[:6] if l.strip() and not l.startswith("#"))
+        title = os.path.basename(path).replace(f"{yday_str}-", "").replace(".md", "")
+        rows.append({
+            "title": title,
+            "summary": _truncate(summary),
+            "owner": None,
+            "link": path,
+        })
+    return rows
+
+
+def _collect_roadmap_next_actions() -> list[dict]:
+    """Return one row per active roadmap with its current next-action.
+
+    Active = all docs/roadmap/*.md except README.md + future-enhancements.md.
+    Summary = first un-done item from `## Session-Start Cheat Block` or
+    `**Default next moves**` section. Owner = parsed `**Owner:**` header line.
+    """
+    import glob
+    rows: list[dict] = []
+    if not os.path.isdir(_ROADMAP_DIR):
+        return rows
+    for path in sorted(glob.glob(os.path.join(_ROADMAP_DIR, "*.md"))):
+        fname = os.path.basename(path)
+        if fname in _ROADMAP_EXCLUDE:
+            continue
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                body = f.read()
+        except Exception:
+            continue
+        owner = None
+        for line in body.splitlines()[:20]:
+            if line.startswith("**Owner:**"):
+                owner = line.split("**Owner:**", 1)[1].strip()
+                break
+        summary = ""
+        # Strategy: roadmaps log progress chronologically. The most recent
+        # **Next:** / **Next session:** / **Next studio session:** line in the
+        # file is the authoritative next-action. Scan from bottom up.
+        next_markers = ("**Next:**", "**Next session:**", "**Next studio session:**",
+                        "**Next session priorities:**", "**Next steps:**",
+                        "**Next steps to close")
+        body_lines = body.splitlines()
+        for i in range(len(body_lines) - 1, -1, -1):
+            line = body_lines[i].strip()
+            if any(line.startswith(m) for m in next_markers):
+                for marker in next_markers:
+                    if line.startswith(marker):
+                        inline = line[len(marker):].strip()
+                        if inline:
+                            summary = inline
+                        else:
+                            for follow in body_lines[i + 1 : i + 12]:
+                                fs = follow.strip()
+                                if fs and not fs.startswith("**") and not fs.startswith("##"):
+                                    summary = fs.lstrip("-* ").strip()
+                                    break
+                        break
+                if summary:
+                    break
+        if not summary:
+            # Fall back to top-of-file cheat block (atlas pattern).
+            for marker in ("**Default next moves", "## Session-Start Cheat Block"):
+                marker_idx = body.find(marker)
+                if marker_idx == -1:
+                    continue
+                segment = body[marker_idx : marker_idx + 4000]
+                for raw in segment.splitlines()[1:]:
+                    stripped = raw.strip()
+                    if not stripped or stripped.startswith("##"):
+                        if stripped.startswith("##"):
+                            break
+                        continue
+                    if "✅ DONE" in raw or "✅ Done" in raw:
+                        continue
+                    if stripped[0].isdigit() and "." in stripped[:4]:
+                        summary = stripped.split(".", 1)[1].strip()
+                        break
+                    if stripped.startswith("- "):
+                        summary = stripped[2:].strip()
+                        break
+                if summary:
+                    break
+        if not summary:
+            summary = "No next-actions section found"
+        rows.append({
+            "title": fname.replace(".md", ""),
+            "summary": _truncate(summary),
+            "owner": owner,
+            "link": None,
+        })
+    return rows
+
+
+def _collect_open_ready_branches() -> list[dict]:
+    """Return rows for remote branches whose tip commit subject contains [READY].
+
+    Uses git over subprocess with 10s timeout. Any failure returns [] silently.
+    """
+    import subprocess
+    rows: list[dict] = []
+    try:
+        out = subprocess.run(
+            ["git", "branch", "-r", "--no-merged", "origin/main"],
+            cwd=_REPO_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            creationflags=SUBPROCESS_FLAGS,
+        )
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
+        logger.warning(f"DIGEST: git branch -r failed: {e}")
+        return rows
+    if out.returncode != 0:
+        return rows
+    branches = [b.strip() for b in out.stdout.splitlines() if b.strip() and "->" not in b]
+    # Skip archive/ and sandbox/ namespaces — those are intentionally parked,
+    # not active candidates for Gate merge.
+    branches = [b for b in branches if not b.replace("origin/", "", 1).startswith(("archive/", "sandbox/"))]
+    for branch in branches:
+        try:
+            tip = subprocess.run(
+                ["git", "log", "-1", "--format=%s%x1f%an", branch],
+                cwd=_REPO_ROOT,
+                capture_output=True,
+                text=True,
+                timeout=10,
+                creationflags=SUBPROCESS_FLAGS,
+            )
+        except (subprocess.TimeoutExpired, OSError):
+            continue
+        if tip.returncode != 0 or "\x1f" not in tip.stdout:
+            continue
+        subject, author = tip.stdout.strip().split("\x1f", 1)
+        if "[READY]" not in subject:
+            continue
+        short = branch.replace("origin/", "", 1)
+        rows.append({
+            "title": short,
+            "summary": _truncate(subject),
+            "owner": author or None,
+            "link": None,
+        })
+    return rows
+
+
+def _collect_today_schedules() -> list[dict]:
+    """Return /schedule items firing today.
+
+    State path not yet confirmed (Council blueprint open question). Until
+    /schedule's persistence path is wired, this returns [] and logs at DEBUG.
+    """
+    candidates = [
+        os.path.join(_REPO_ROOT, ".claude", "schedules"),
+        os.path.join(_REPO_ROOT, "data", "schedules.json"),
+        os.path.expanduser("~/.claude/schedules"),
+    ]
+    for p in candidates:
+        if os.path.exists(p):
+            logger.debug(f"DIGEST: schedule state found at {p} but parser not yet implemented")
+            return []
+    logger.debug("DIGEST: no schedule state found at known paths, skipping section")
+    return []
+
+
+def _render_digest_section(name: str, rows: list[dict]) -> list[str]:
+    """Format one section as pipe-delimited inline rows. Blank owner = ⚠️."""
+    header = f"{name} ({len(rows)})"
+    if not rows:
+        return [header]
+    out = [header]
+    for r in rows:
+        owner = r.get("owner") or "⚠️"
+        out.append(f"- {r['title']} | {owner} | {r.get('summary', '')}")
+    return out
+
+
 def _run_morning_digest():
     """7am MT: Telegram digest of autonomy state + SW outreach run summary.
 
@@ -515,6 +734,25 @@ def _run_morning_digest():
                 lines.append("Pending approvals: 0")
         except Exception as _e:
             logger.warning(f"DIGEST: pending-approvals read failed: {_e}")
+
+        _debt = 0
+        for _section_name, _collector in (
+            ("📋 Yesterday handoffs", _collect_yesterday_handoffs),
+            ("🗺 Roadmap next-actions", _collect_roadmap_next_actions),
+            ("🚦 Open [READY] branches", _collect_open_ready_branches),
+            ("⏰ /schedule firing today", _collect_today_schedules),
+        ):
+            try:
+                _rows = _collector()
+                lines.append("")
+                lines.extend(_render_digest_section(_section_name, _rows))
+                _debt += sum(1 for r in _rows if not r.get("owner"))
+            except Exception as _e:
+                logger.warning(f"DIGEST: {_section_name} collector failed: {_e}")
+
+        if _debt > 0:
+            lines.append("")
+            lines.append(f"⚠️ Accountability debt: {_debt} rows missing owner — see above.")
 
         _send_telegram_alert("\n".join(lines))
     except Exception as e:
