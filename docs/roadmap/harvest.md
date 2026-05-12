@@ -662,6 +662,41 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 
 ---
 
+### H1j: Lead-strategy review post-CW-strip (2026-05-13)
+
+**Status:** 🔄 SCHEDULED 2026-05-13 (Wednesday).
+**Why this exists:** CW automation stripped 2026-05-12 (commit `53b25f1` on `feat/strip-cw-automation`). Apollo cancelled (plan ends 2026-05-28). Sankofa Council premortem verdict: infra-work was substituting for recognition-work. Need a fresh-head review of how leads ACTUALLY come in from May 13 → June 30 now that auto-harvest CW is gone and Apollo is on its way out.
+
+**Context (do not skip — read before reviewing):**
+- `docs/handoff/2026-05-12-cw-strip-rationale.md` — full strip rationale
+- Memory: `project_cw_automation_stripped_2026-05-12.md`
+- Memory: `feedback_sw_pipeline_bottleneck.md` — "calls > emails > infrastructure"
+- Memory: `feedback_hunter_apollo_paid_required.md` — Hunter is SW-load-bearing
+- This session's Sankofa premortem output (4 scenarios)
+- Hunter post-fix pull result from 2026-05-12 evening (yield numbers)
+- Prospeo `INVALID_DATAPOINTS` ticket state (separate Tue ticket)
+
+**Inputs needed before the review:**
+1. Answer to CC's 10-names question — *Can Boubacar name 10 people today who already know who he is and have a reason to take his call?* Yes/no + the list (or the recognition-action plan if no).
+2. Hunter post-fix pull yield (decides Hunter Starter keep/cancel question).
+3. Apollo Free-tier behavior verification for SW chain (or decision to strip Apollo from SW entirely before 2026-05-28).
+4. Inbound signal metric baseline — count of unsolicited DMs + non-network engagement last 30 days.
+
+**Review questions to answer:**
+1. Where do CW leads actually come from now? (Permission-filter sources only: warm referrals, SW upsells, content engagement, prior contact.)
+2. Where do SW leads come from? (Hunter+Prospeo chain post-Apollo, or replacement?)
+3. Is paid leads a real option (memory verdict already says no, but verify against current data)?
+4. SW → CW upsell ladder — is it built? Does SW conversion automatically queue a CW upsell touch?
+5. Content as recognition engine — what's the weekly publish cadence? Where are posts going? Who's tracking response?
+6. Inbound signal metric — where does it live (Notion DB? markdown log? Supabase table?), what's the weekly cadence, what triggers a re-council if it stays at zero?
+7. What's the SINGLE next-90-day decision? (Quarterly framing per Smart Brevity + 12WY rules.)
+
+**Success criterion:** One written strategy doc (HTML deliverable per memory rule) covering the 7 review questions, with concrete actions, owners, and check-in cadence locked. Boubacar reads it on localhost preview, edits or approves, then it lives at `docs/strategy/lead-strategy-2026-05-13.html`.
+
+**Output format:** HTML on localhost first, NOT markdown. Per `feedback_html_deliverables_localhost.md`. Email a copy to Boubacar after approval per `feedback_session_digest_html_email.md` if review fires as full Boubacar-facing artifact.
+
+---
+
 ### H-notion-sever: Severing Notion-Supabase CRM Link and Archiving Notion DB (Sync Code Deleted)
 
 **Status:** Sync code DELETED 2026-05-07. Supabase = sole CRM system of record.
@@ -693,6 +728,29 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 ---
 
 ## Session Log
+
+### 2026-05-12 — CW automation stripped + Apollo cancelled + H1j scheduled for 2026-05-13
+
+Sankofa Council premortem (4 scenarios) + parallel CC CLI council both converged: zero replies on 127 CW sends + 142 messaged all-time = Apollo cold-scrape is wrong channel for consulting. Sourcing was fine (97.6% email coverage on widened ICP); conversion failed because prospects didn't already know who Boubacar is.
+
+**Shipped (pushed [READY] for Gate):**
+- `feat/strip-cw-automation` (`53b25f1`) — `signal_works/morning_runner.py` Steps 4/4.5/5/5b removed. Health-check SW-only. Rationale doc at `docs/handoff/2026-05-12-cw-strip-rationale.md`.
+- `feat/council-premortem-mode` (`a102698`) — `SankofaCouncil.run(mode="premortem")` + auto-detect on "premortem this". Skill docs mirror DEAD-PROJECT MODE.
+
+**Apollo subscription cancelled by Boubacar.** Plan active until 2026-05-28, then Free tier. SW still imports `apollo_client.find_owner_by_company` in `topup_leads.py:35` — needs Free-tier verification OR Apollo-from-SW strip before 2026-05-28. Memory already flags Apollo as "dead weight for trades-SMBs."
+
+**Hunter Starter kept** ($49/mo). SW load-bearing. Post-fix pull running evening 2026-05-12 — yield TBD.
+
+**Open items for 2026-05-13 (Wednesday) H1j review:**
+1. Answer CC's 10-names question in writing
+2. Hunter pull yield logged
+3. Prospeo `INVALID_DATAPOINTS` ticket opened/triaged
+4. Inbound signal metric baseline counted
+5. Write `docs/strategy/lead-strategy-2026-05-13.html` covering 7 review questions
+
+Memory saved: `project_cw_automation_stripped_2026-05-12.md`.
+
+---
 
 ### 2026-05-11 — H1h: Cold-mode website-teardown shipped + batch 1 sent, batch 2 generating
 
