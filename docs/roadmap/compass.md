@@ -27,7 +27,7 @@ Done = all five true at the same time.
 
 ## Status Snapshot
 
-*Last updated: 2026-05-10*
+*Last updated: 2026-05-12*
 
 - M0 SHIPPED 2026-05-02: `docs/GOVERNANCE.md` (64 lines) routing table + AGENT_SOP top-of-file annotation + this roadmap + folder-purpose pre-commit hook (the M0 enforcement piece).
 - M1 SHIPPED 2026-05-02: AGENTS.md compliance audit + backfill. 100% folder coverage (was 32%).
@@ -38,6 +38,8 @@ Done = all five true at the same time.
 - M6 SHIPPED 2026-05-10: Pre-Hermes security lockdown. Vercel token redacted from .vscode/settings.json, purged from all git history via filter-repo. Hermes write boundaries codified in CLAUDE.md (allowed/forbidden paths, wildcard prohibition). Gate conflict alert dedup + Telegram approve/reject buttons shipped. 7/7 governance tests pass. Branch: audit/compass-m6-lockdown.
 - M7 SHIPPED 2026-05-10: Branch discipline + secret scan hardening. CLAUDE_AGENT_ID injected at spawn, filter-repo hard rule in AGENT_SOP + pre-commit guard, vendor token scanner (all file types incl. markdown), gate-side token scan before merge. 9/9 tests pass. Today's crisis cannot recur.
 - M8 QUEUED (next week): Scale to 20-40 agents. File-dependency pre-assignment, connection pooling, orc-hermes container isolation, per-task state recovery. Blocked on M7 ship.
+- C8 SHIPPED 2026-05-11 (tonight): MEMORY.md hygiene pass. 217 → 174 lines. Pruned 24 stale/dup entries to MEMORY_ARCHIVE.md. AGENT_SOP.md promotion rule live (3+ fires + verb-protocol = skill candidate). Backup `MEMORY.pre-c8-2026-05-11.md` preserved. agentmemory absorb = ARCHIVE-AND-NOTE.
+- C9 SHIPPED 2026-05-12 (autonomous reframe): memory-hygiene agent runs locally via Windows Task Scheduler, 1st of month 06:00 MT. Silent OK → morning digest. Exception → Telegram approval queue. No Boubacar attention except on exception. Boubacar input: "anything important enough to schedule = important enough to be autonomous."
 
 **Coverage today:**
 
@@ -329,6 +331,89 @@ Action required: Check 3 reviewed 2026-05-09: Read*/Edit*/Write* broad allows ar
 
 ---
 
+### C8: MEMORY.md hygiene + tiered-memory architecture ✅ SHIPPED 2026-05-11
+
+**Trigger:** MEMORY.md = 217 lines vs ~200-line soft truncation cap. Bottom ~17 lines silently dropped from per-turn system prompt injection. Tail currently includes load-bearing entries (morning_digest, html-deliverables-localhost, html-full-repertoire, memory-enforcement-gate). Surfaced 2026-05-11 during rohitg00/agentmemory absorb evaluation.
+
+**Why not install agentmemory:** ARCHIVE-AND-NOTE verdict (absorb-log.md 2026-05-11). Auto-capture pollutes curated rules. Privacy filter trust unknown on cw OAuth/Apollo keys. Pre-1.0 (#149 recursion warning). Heavy install footprint (iii-engine binary + npm + 12 hooks + ports 3111/3113) for unproven gain on stack already running 3-tier memory manually (hot=MEMORY.md top, warm=topic files, cold=handoff/archive).
+
+**Real root cause:** promotion discipline gap. Pattern fires 3+ times → should promote memory rule to skill SOP. Skills don't count against MEMORY.md cap. Today: memory rules accumulate without promotion path → cap pressure → truncation.
+
+**Scope:**
+
+1. **Map MEMORY.md entries** — classify each line: (a) keep as rule, (b) promote to skill, (c) prune (stale/duplicate/already-codified), (d) move detail to topic file + keep one-line index hook.
+2. **Tighten index lines** — every entry ≤150 chars per existing standard. Many today are 200-300.
+3. **Promotion protocol** — codify rule: memory rule fired 3+ times → skill candidate. Add to AGENT_SOP.md hygiene section.
+4. **Monthly prune cadence** — first of month sweep. Schedule via roadmap skill or governance pre-commit retirement hook (M2 stage already exists).
+5. **Skip agentmemory v0.9.x.** Revisit when v1.0 + INJECT_CONTEXT default-on + sandbox refactor + #149 resolved. OR if MEMORY.md hits >250 lines with critical rules dropping after C8 hygiene.
+
+**Files touched (planned):**
+- `~/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/MEMORY.md` (prune to <200 lines)
+- Topic files under same dir (absorb migrated detail)
+- `docs/AGENT_SOP.md` (memory→skill promotion rule)
+- New skills (TBD count) — promoted from 3+ fire-count memory rules
+
+**Acceptance:**
+- MEMORY.md ≤180 lines (20-line headroom below cap)
+- No load-bearing entry in lines 200-220 (verify by reading injected context)
+- AGENT_SOP.md has explicit memory→skill promotion criteria
+- Monthly prune scheduled (cron or roadmap milestone repeats)
+
+**Decision window:** tonight OR next few days (Boubacar choice 2026-05-11). → **DECIDED tonight 2026-05-11.**
+
+**Shipped 2026-05-11 (this session):**
+- MEMORY.md: 217 → 174 lines (43-line cut, 20%). Hot-zone expanded (Env-first, OpenRouter SDK, Score /100 promoted). Workflow section compressed via merged-line pattern.
+- Backup: `MEMORY.pre-c8-2026-05-11.md` preserved for diff/audit.
+- Archive: pruned 24 entries (stale fix-logs + duplicates of CLAUDE.md hard rules / top-zone) moved to `MEMORY_ARCHIVE.md` § "Archived from MEMORY.md 2026-05-11 (C8 hygiene pass)". Topic files preserved on disk per never-delete rule.
+- AGENT_SOP.md: Memory→Skill promotion rule added (line 107). Verb-protocol rules ("BEFORE X, do Y") = skill candidates after 3+ fires. Pure-fact rules stay in memory.
+- Skipped agentmemory install — ARCHIVE-AND-NOTE in absorb-log.md.
+
+**Files touched:**
+- `~/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/MEMORY.md` (rewritten, 174 lines)
+- `~/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/MEMORY_ARCHIVE.md` (appended C8 prune section)
+- `~/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/project_compass_c8_memory_hygiene.md` (new)
+- `~/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/MEMORY.pre-c8-2026-05-11.md` (backup)
+- `docs/AGENT_SOP.md` (promotion rule)
+- `docs/reviews/absorb-log.md` (agentmemory ARCHIVE-AND-NOTE entry)
+
+**Acceptance verified:**
+- ✅ MEMORY.md = 174 lines (≤180 target, 6-line headroom)
+- ✅ AGENT_SOP.md has explicit memory→skill promotion criteria
+- ✅ Monthly prune scheduled as C9 (see below)
+
+---
+
+### C9: Autonomous monthly memory-hygiene agent ✅ SHIPPED 2026-05-12
+
+**Decision rationale (2026-05-12):** Anything important enough to schedule = important enough to be autonomous. Boubacar attention is the constraint we're optimizing away. C9 fires on its own, reports into morning digest, escalates to Telegram only on exception.
+
+**Architecture:**
+
+- **Where it runs:** local Windows workstation (NOT VPS). Memory dir = `~/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/` is local-only by design (`feedback_vps_no_memory_load.md`). VPS sync = stale risk we don't want. Job owns local memory dir natively.
+- **Trigger:** Windows Task Scheduler, 1st of month 06:00 MT (matches morning_digest cadence).
+- **Script:** `scripts/memory_hygiene_agent.py` (lives in repo, runs locally).
+- **Reports:** appends "Memory hygiene" section to morning_digest email. Telegram only on exception (>180 lines OR promotion candidates flagged).
+
+**Job logic:**
+
+1. Count MEMORY.md lines.
+2. If <170 → "OK" report, no action.
+3. If 170-180 → grep last 30 days of `docs/handoff/` for memory-rule file citations. Surface cold entries (no cite in 30 days) as auto-archive candidates. Telegram approve/reject via existing approval_queue + inline buttons pattern.
+4. If >180 → block-tier. Telegram alert with proposed prune diff. Wait for Boubacar approve/reject.
+5. **Promotion scan:** any memory-rule file cited 3+ times across 3+ distinct sessions in handoff archive = skill candidate. Surface in monthly digest section. DO NOT auto-promote — skills need design review.
+
+**Files shipped this session (2026-05-12 early-morning continuation of C8 session):**
+
+- `scripts/memory_hygiene_agent.py` — line count + promotion scan + Telegram approval-queue integration
+- `scripts/memory_hygiene_schedule.md` — Windows Task Scheduler one-shot install command + WSL cron alternative
+
+**Retire when:**
+
+- Tiered-memory architecture ships (Atlas/Hermes orchestrator-memory milestone) AND covers local Claude Code memory, OR
+- agentmemory v1.0 reopen condition fires AND we install it (would replace this entire job)
+
+---
+
 ## Descoped Items
 
 - **300-line meta-document constitution.** Sankofa Council 2026-05-02 verdict: that's the dying-enterprise pattern. Skipped in favor of 64-line routing table + load-bearing AGENT_SOP.
@@ -441,3 +526,35 @@ Compass status: M2.5 added and immediately SHIPPED. All prior milestones unchang
 - `scripts/pre-commit-hook.sh` (tracked source) synced with `.git/hooks/pre-commit` (installed) -- was missing checks 7 (routing gap) and 8 (filter-repo guard) since M7.
 
 No Compass milestone change -- governance hygiene, not a new milestone.
+
+### 2026-05-11: C8 SHIPPED tonight — MEMORY.md hygiene executed + C9 monthly cadence armed
+
+Triggered by rohitg00/agentmemory absorb evaluation. agentmemory = npm pkg + iii-engine runtime + MCP server for cross-session memory (PostToolUse auto-capture, hybrid search, 4-tier consolidation+decay). Verdict ARCHIVE-AND-NOTE (absorb-log.md 2026-05-11). Not redundant with claude-mem (web UI) or context-mode (within-session output compression) — genuine gap, but conflicts with curated-memory philosophy + heavy install + pre-1.0 risk.
+
+Surfaced real bottleneck: MEMORY.md at 217 vs ~200 truncation cap. Tail load-bearing rules silently dropping. Root cause = promotion discipline gap: memory rules accumulate without "rule fires 3+ times → promote to skill" protocol.
+
+**Same session executed C8 in full:**
+1. Read all 30+ MEMORY.md topic file references — classified keep/promote/prune/move-detail.
+2. Pruned 24 entries to MEMORY_ARCHIVE.md (stale fix-logs: SecureWatch, pyc-stale, Studio old bugs, Codex review; duplicates of CLAUDE.md hard rules: coordination claims, audit-handoffs-first, memory-enforcement-gate; duplicates of top-zone: Smart Brevity, 12WY, verified-stats, email-both).
+3. Rewrote MEMORY.md tight. Promoted Env-first / OpenRouter SDK / Score-/100 to hot-zone (lines 1-32). Compressed Workflow section via merged-line pattern (one line covers related-cluster of rules).
+4. Result: 217 → 174 lines. 6-line headroom under 180 cap.
+5. AGENT_SOP.md (line 107): Memory→Skill promotion rule. Verb-protocol rules ("BEFORE X, do Y") = skill candidates after 3+ fires. Pure-fact rules ("Guinea not Senegal") stay in memory.
+6. Backup preserved: `MEMORY.pre-c8-2026-05-11.md`.
+
+**C9 ARMED:** Monthly prune cadence first run 2026-06-01. Trigger mechanism (calendar / cron / session-start reminder) pending Boubacar choice.
+
+**agentmemory revisit conditions unchanged:** v1.0 + INJECT_CONTEXT default-on + sandbox refactor + #149 resolved, OR MEMORY.md >250 lines after C8 hygiene fails to hold.
+
+### 2026-05-12: Mnilax 12-rule CLAUDE.md absorb — ARCHIVE-AND-NOTE
+
+X thread @Mnilax framing as "Karpathy Evolution v8" (<https://x.com/i/status/2053116311132155938>). Two-layer misattribution: Karpathy wrote a complaint thread Jan 2026; Forrest Chang turned it into 4 rules; Mnilax added 4 more under Karpathy brand. Chang's-4 already absorbed 2026-05-03 (AGENT_SOP.md:164-169).
+
+**Council + 2 rounds red/blue adversarial → converged DO-NOTHING.**
+
+Of 8 added rules: 4 covered/noise (token-budget covered by context-budget-discipline.md, read-before-write by superpowers:brainstorming, checkpoint by verification-before-completion, match-convention no observed incident); 4 candidate (5 model-judgment, 7 surface-conflicts, 9 tests-verify-intent, 12 fail-loud).
+
+**Round 2 BLOCKER:** "Wire Rule-12 into orchestrator/gate_agent.py review prompt" = fiction. gate_agent.py has NO LLM review subsystem — currently Telegram approve/reject flow against HIGH_RISK_PREFIXES only. "One prompt-line edit" hides net-new LLM-review infrastructure. PreToolUse hook path killed by 2026-05-02 incident precedent (810k token cap, $57/4.5h, AGENT_SOP.md:98). Incident citations weak: gate_poll prefix RCA is parity bug (no test, Rule 9 inapplicable); Studio Blotato chain Rule 12 only suggestive (LLM lacks "scheduled=rendered+upload-confirmed" domain semantics). Rename cost grep: 29 file hits.
+
+**Verdict logged absorb-log.md 2026-05-12.** No SOP edit, no CLAUDE.md edit, no skill edit, no hook, no gate_agent change. REOPEN CONDITION: 2 incidents by 2026-06-11 that one of Rule 5/7/9/12 would have caught with concrete diff signature — new absorb pass own Sankofa sourced from agentsHQ incidents.
+
+**Meta-lesson reinforced:** incident-derived governance > viral-derived governance. X threads = prompts to surface unwritten rules from our own incident log, not artifacts to absorb wholesale.
