@@ -44,9 +44,12 @@ logger = logging.getLogger(__name__)
 # SW: 5 touches at Day 0/3/7/12/17 (T5 = SaaS audit upsell for non-responders)
 # CW: 5 touches at Day 0/6/9/14/19 (T2 = SaaS PDF value-add)
 # Studio: 4 touches at Day 0/5/11/18 (website + AI presence angle)
+# Constraints AI: 3 touches at Day 0/2/4 — warm inbound from the
+# catalystworks.consulting demo, self-identified, faster cadence justified.
 TOUCH_DAYS_SW = {1: 0, 2: 3, 3: 7, 4: 12, 5: 17}
 TOUCH_DAYS_CW = {1: 0, 2: 6, 3: 9, 4: 14, 5: 19}
 TOUCH_DAYS_STUDIO = {1: 0, 2: 5, 3: 11, 4: 18}
+TOUCH_DAYS_CONSTRAINTS_AI = {1: 0, 2: 2, 3: 4}
 
 # Per-touch draft caps (separate from send-rate cap in send_scheduler.py).
 # T1 caps fresh-lead drafting; T2-T5 each get their own pool so a backlog at any
@@ -60,6 +63,8 @@ def _touch_days(pipeline: str) -> dict:
         return TOUCH_DAYS_CW
     if pipeline == "studio":
         return TOUCH_DAYS_STUDIO
+    if pipeline == "constraints_ai":
+        return TOUCH_DAYS_CONSTRAINTS_AI
     return TOUCH_DAYS_SW
 
 CW_ACCOUNT = "catalystworks.ai@gmail.com"
@@ -85,6 +90,11 @@ TEMPLATES = {
         2: "templates.email.studio_t2",
         3: "templates.email.studio_t3",
         4: "templates.email.studio_t4",
+    },
+    "constraints_ai": {
+        1: "templates.email.constraints_ai_t1",
+        2: "templates.email.constraints_ai_t2",
+        3: "templates.email.constraints_ai_t3",
     },
 }
 

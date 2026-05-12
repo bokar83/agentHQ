@@ -661,6 +661,25 @@ def gate_tick() -> None:
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    # Refuse to run Gate from anywhere other than the systemd unit. INVOCATION_ID
+    # is set by systemd and by nothing else; this is a hostname-independent way
+    # to confirm the process is the canonical gate-agent.service launch. Set
+    # GATE_FORCE_RUN=1 for legitimate manual debugging (e.g. dry-run on VPS).
+    #
+    # Why: 2026-05-12 incident — a Claude Code session running on Boubacar's
+    # laptop began executing Gate work and checked out other sessions' active
+    # branches mid-edit, destroying in-progress work. AGENTS.md:189 already
+    # says Gate is VPS-only; this guard turns the rule into an enforced fail.
+    if not os.environ.get("INVOCATION_ID") and not os.environ.get("GATE_FORCE_RUN"):
+        sys.stderr.write(
+            "gate_agent: refusing to run outside systemd.\n"
+            "hint: Gate is VPS-only (AGENTS.md:189). It runs as the\n"
+            "      gate-agent.service systemd unit on the VPS, not from\n"
+            "      a laptop tab or Claude Code session.\n"
+            "hint: set GATE_FORCE_RUN=1 for legitimate manual ops\n"
+            "      (e.g. SSH'd to VPS for a dry-run inspection).\n"
+        )
+        sys.exit(2)
     logging.basicConfig(level=logging.INFO)
     logger.info("gate: running single tick (standalone mode)")
     gate_tick()
