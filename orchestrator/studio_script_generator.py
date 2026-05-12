@@ -200,10 +200,14 @@ _RETENTION_PHRASES = [
 
 def _inject_retention_loops(text: str, interval: int = 200) -> str:
     """Ensure a [RETENTION:] marker appears at least every `interval` words.
-    Inserts one at the nearest paragraph break if a segment is missing one.
+
+    Tracks distance from the LAST emitted retention marker across paragraph
+    boundaries — the prior implementation re-injected when an LLM-placed
+    marker landed on a sibling paragraph, producing visible duplicate
+    `[RETENTION:]` lines back-to-back in narration.
     """
     paragraphs = text.split("\n\n")
-    result = []
+    result: list[str] = []
     words_since_retention = 0
     phrase_idx = 0
 
@@ -211,12 +215,23 @@ def _inject_retention_loops(text: str, interval: int = 200) -> str:
         has_retention = bool(re.search(r'\[RETENTION:', para))
         word_count = len(para.split())
 
-        if not has_retention and (words_since_retention + word_count) >= interval:
+        if has_retention:
+            words_since_retention = 0
+            result.append(para)
+            continue
+
+        # Don't inject when the immediately preceding emitted paragraph
+        # already ends with a retention marker — guards against the LLM
+        # placing the marker on the prior line and us appending another here.
+        if result and re.search(r'\[RETENTION:[^\]]*\]\s*$', result[-1]):
+            words_since_retention = word_count
+            result.append(para)
+            continue
+
+        if (words_since_retention + word_count) >= interval:
             phrase = _RETENTION_PHRASES[phrase_idx % len(_RETENTION_PHRASES)]
             phrase_idx += 1
             para = para.rstrip() + f"\n[RETENTION: {phrase}]"
-            words_since_retention = 0
-        elif has_retention:
             words_since_retention = 0
         else:
             words_since_retention += word_count
