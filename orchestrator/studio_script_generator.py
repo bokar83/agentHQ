@@ -314,13 +314,15 @@ def _post_process(
     # Strip em-dashes (house rule)
     text = text.replace("—", ", ").replace(" -- ", ", ")
 
-    # Hard truncate when over cap — done BEFORE retention injection so the
-    # injector does not pad a script we are about to shorten anyway.
+    # Inject retention loops first (so they count toward spoken length)
+    text = _inject_retention_loops(text, loop_interval)
+
+    # Hard truncate AFTER retention injection — markers are narrated aloud
+    # and must be counted in the spoken budget. Truncating first then
+    # injecting would push final spoken length above the cap by ~20-30
+    # words for short scripts with frequent retention intervals.
     if max_spoken_words:
         text = _truncate_to_cap(text, max_spoken_words)
-
-    # Guarantee retention loops every loop_interval words
-    text = _inject_retention_loops(text, loop_interval)
 
     # Apply SSML phonetic tags for ElevenLabs pronunciation
     for word, phonetic in pronunciation_dict.items():
