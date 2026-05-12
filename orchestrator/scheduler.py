@@ -454,7 +454,26 @@ def _consume_sw_run_complete() -> dict | None:
         return None
 
 
-_REPO_ROOT = os.path.abspath(os.path.join(_SCRIPT_DIR, ".."))
+def _resolve_repo_root() -> str:
+    """Find the repo root by walking up from this file looking for .git/.
+
+    Inside the orc-crewai container scheduler.py is copied to /app/ by the
+    entrypoint (not /app/orchestrator/), so a naive `..` from _SCRIPT_DIR
+    lands at `/` and breaks git subprocesses. Walk up instead, and fall back
+    to the parent of _DOCS_DIR (which IS resolved correctly above).
+    """
+    candidate = _SCRIPT_DIR
+    for _ in range(5):
+        if os.path.isdir(os.path.join(candidate, ".git")):
+            return candidate
+        parent = os.path.dirname(candidate)
+        if parent == candidate:
+            break
+        candidate = parent
+    return os.path.dirname(_DOCS_DIR) if _DOCS_DIR else _SCRIPT_DIR
+
+
+_REPO_ROOT = _resolve_repo_root()
 _HANDOFF_DIR = os.path.join(_DOCS_DIR, "handoff")
 _ROADMAP_DIR = os.path.join(_DOCS_DIR, "roadmap")
 _ROADMAP_EXCLUDE = {"README.md", "future-enhancements.md"}
