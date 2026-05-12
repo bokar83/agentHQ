@@ -273,3 +273,20 @@ After shipping the coordination substrate (claim/lease + queue + heartbeat) on `
 **Atlas M18 (HALO Loop) also marked shipped this session via flip_milestone().**
 
 **Next:** Echo roadmap M4 deferred indefinitely. Candidate next work: batched Telegram notify (one ping per cycle showing counts by type, not per-item pings).
+
+### 2026-05-11: Gate prefix parity fix shipped — alert spam RCA'd + closed
+
+**What shipped (commit 666bac0 merged via gate auto-merge):**
+- `orchestrator/gate_agent.py:229`: prefix filter expanded from `(feature/, feat/, fix/)` to canonical 7-prefix list `(feature/, feat/, fix/, docs/, chore/, refactor/, test/)` — matches `gate_poll.py:49`
+- `scripts/gate_poll.py`: added `/tmp/gate_poll_alerted.json` dedup sentinel keyed on `branch:tip_sha` — prevents re-alert spam at same SHA across cron ticks
+- 3 stuck spam-source branches auto-merged + deleted from origin during fix verification (`docs/atlas-session-log-2026-05-08`, `docs/roadmap-studio-2026-05-11`, `chore/gitignore-tmp-screenshots`)
+
+**Root cause:** prior `fix/gate-poll-prefix-coverage` (merged 2026-05-11 16:25) was one-sided — expanded gate_poll but left gate_agent's narrower filter. docs/+chore/ `[READY]` branches got detected + alerted but never reviewable → 5+ hours of Telegram spam.
+
+**Secondary incident:** I shipped fix via scp + commit-after, leaving VPS dirty tree → gate_agent "MERGE FAILED" alert loop. New memory rule: `feedback_never_scp_uncommitted.md` — code = git only.
+
+**Hardened rules added:**
+- `feedback_gate_poll_gate_agent_prefix_parity.md` — gate_poll + gate_agent MUST share prefix list; change both in same commit
+- `feedback_never_scp_uncommitted.md` — never scp code to VPS without git commit first
+
+**RCA doc:** `docs/handoff/2026-05-11-gate-poll-prefix-coverage-rca.md`
