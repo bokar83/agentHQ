@@ -9,6 +9,8 @@
 
 > **Note:** Partially populated 2026-04-28 from YC RFS S26 strategy session. Lock Done Definition in first revenue-focused session once Signal Works contract #1 signs.
 
+> **Bidirectional ladder partner (2026-05-11):** Ghost Works (GW) ghostwriting SKU validation tracked separately in [`ghost.md`](ghost.md) (codename `ghost`, G1-G7). SW ↔ GW = full AI presence stack — either entry path leads to bundle. SW-first: client buys site/funnel → upsell GW retainer. GW-first: client buys ghostwriting ($2K/mo) → upsell SW infrastructure. Bundle: SW + GW = $2.5K/mo. **On G7=BUILD outcome 2026-05-26, GW merges into this roadmap as Tier 3 and `ghost.md` archives.**
+
 ---
 
 ## Why This Is Separate
