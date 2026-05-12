@@ -411,11 +411,16 @@ def _ingest_youtube(url: str) -> tuple[str, str]:
         raise ValueError("Could not parse YouTube video id.")
     from youtube_transcript_api import YouTubeTranscriptApi
 
-    transcript = YouTubeTranscriptApi.get_transcript(video_id)
+    # youtube-transcript-api v1.0 removed the YouTubeTranscriptApi.get_transcript
+    # classmethod. The instance API returns FetchedTranscriptSnippet objects with
+    # attribute access (.text/.start) instead of dict items.
+    api = YouTubeTranscriptApi()
+    transcript = api.fetch(video_id)
     lines = []
     for item in transcript:
-        start = float(item.get("start") or 0.0)
-        lines.append(f"[{start:.1f}s] {item.get('text', '')}")
+        start = float(getattr(item, "start", 0.0) or 0.0)
+        text = getattr(item, "text", "") or ""
+        lines.append(f"[{start:.1f}s] {text}")
     return f"YouTube {video_id}", "\n".join(lines)
 
 
