@@ -20,10 +20,27 @@ import json
 import logging
 import os
 import threading
+import contextlib
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+
+@contextlib.contextmanager
+def _advisory_lock(file_path: Path):
+    """Advisory file lock for concurrent writes."""
+    try:
+        import fcntl
+        # Open in append mode just to get a file descriptor without truncating
+        with open(file_path, "a") as f:
+            fcntl.flock(f, fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(f, fcntl.LOCK_UN)
+    except ImportError:
+        # Windows fallback (local dev)
+        yield
 
 logger = logging.getLogger("agentsHQ.autonomy_guard")
 
@@ -94,13 +111,14 @@ class AutonomyGuard:
 
     def _load_state(self) -> dict:
         try:
-            if not self._state_file.exists():
-                self._state_file.parent.mkdir(parents=True, exist_ok=True)
-                state = self._default_state()
-                self._state_file.write_text(json.dumps(state, indent=2))
-                return state
-            loaded = json.loads(self._state_file.read_text())
-            return self._repair_state(loaded)
+            with _advisory_lock(self._state_file):
+                if not self._state_file.exists():
+                    self._state_file.parent.mkdir(parents=True, exist_ok=True)
+                    state = self._default_state()
+                    self._state_file.write_text(json.dumps(state, indent=2))
+                    return state
+                loaded = json.loads(self._state_file.read_text())
+                return self._repair_state(loaded)
         except Exception as e:
             logger.warning(f"autonomy_guard: failed to load state, using defaults: {e}")
             return self._default_state()
@@ -221,7 +239,8 @@ class AutonomyGuard:
 
     def _persist(self) -> None:
         try:
-            self._state_file.write_text(json.dumps(self._state, indent=2))
+            with _advisory_lock(self._state_file):
+                self._state_file.write_text(json.dumps(self._state, indent=2))
         except Exception as e:
             logger.warning(f"autonomy_guard: failed to persist state: {e}")
 
@@ -385,6 +404,62 @@ class AutonomyGuard:
                 "crews": dict(self._state.get("crews", {})),
                 "cap_usd": self._cap_usd,
             }
+
+    # SSE Intent Streaming & Pausing
+
+    def subscribe_feed(self):
+        import queue
+        q = queue.Queue(maxsize=100)
+        with self._lock:
+            if not hasattr(self, "_feed_listeners"):
+                self._feed_listeners = []
+            self._feed_listeners.append(q)
+        return q
+
+    def unsubscribe_feed(self, q):
+        with self._lock:
+            if hasattr(self, "_feed_listeners") and q in self._feed_listeners:
+                self._feed_listeners.remove(q)
+
+    def _broadcast(self, event_type: str, data: dict):
+        with self._lock:
+            if not hasattr(self, "_feed_listeners"):
+                return
+            for q in self._feed_listeners:
+                try:
+                    q.put_nowait({"event": event_type, "data": data})
+                except Exception:
+                    pass
+
+    def request_intent_approval(self, intent_id: str, crew_name: str, message: str, timeout: int = 300) -> bool:
+        """Blocks agent execution until intent is approved via M8 dashboard."""
+        event = threading.Event()
+        with self._lock:
+            if not hasattr(self, "_intent_events"):
+                self._intent_events = {}
+            self._intent_events[intent_id] = {"event": event, "approved": False}
+        
+        self._broadcast("intent", {"id": intent_id, "crew": crew_name, "message": message})
+        
+        # Block until resolved or timeout
+        event.wait(timeout)
+        
+        with self._lock:
+            res = self._intent_events.pop(intent_id, None)
+            return res["approved"] if res else False
+
+    def resolve_intent(self, intent_id: str, approved: bool) -> bool:
+        """Called by FastAPI when user clicks Approve/Reject on M8 dashboard."""
+        resolved = False
+        with self._lock:
+            if hasattr(self, "_intent_events") and intent_id in self._intent_events:
+                self._intent_events[intent_id]["approved"] = approved
+                self._intent_events[intent_id]["event"].set()
+                resolved = True
+        
+        if resolved:
+            self._broadcast("intent_resolved", {"id": intent_id, "approved": approved})
+        return resolved
 
 
 # Process-wide singleton (lazy init)

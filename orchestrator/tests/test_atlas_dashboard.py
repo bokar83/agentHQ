@@ -40,7 +40,7 @@ def test_get_queue_returns_pending_rows():
     mock_row.payload = {"title": "Test post"}
     mock_row.status = "pending"
 
-    with patch("approval_queue.list_pending", return_value=[mock_row]):
+    with patch("approval_queue.list_recent", return_value=[mock_row]):
         result = atlas_dashboard.get_queue()
 
     assert len(result["items"]) == 1
@@ -61,7 +61,7 @@ def test_get_queue_builds_notion_url_from_notion_id():
     mock_row.proposal_type = "post_candidate"
     mock_row.payload = {"title": "x", "notion_id": "341bcf1a-3029-8175-9710-e42c46133e08"}
     mock_row.status = "pending"
-    with patch("approval_queue.list_pending", return_value=[mock_row]):
+    with patch("approval_queue.list_recent", return_value=[mock_row]):
         item = atlas_dashboard.get_queue()["items"][0]
     assert item["notion_url"] == "https://www.notion.so/341bcf1a302981759710e42c46133e08"
 
@@ -76,7 +76,7 @@ def test_get_queue_prefers_explicit_notion_url():
     explicit = "https://app.notion.com/p/something-abc123"
     mock_row.payload = {"title": "x", "notion_url": explicit, "notion_id": "ignore"}
     mock_row.status = "pending"
-    with patch("approval_queue.list_pending", return_value=[mock_row]):
+    with patch("approval_queue.list_recent", return_value=[mock_row]):
         item = atlas_dashboard.get_queue()["items"][0]
     assert item["notion_url"] == explicit
 
