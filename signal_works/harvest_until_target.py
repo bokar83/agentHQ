@@ -196,7 +196,11 @@ def harvest_until_target(
     Returns dict with: total_with_email, sw_with_email, cw_with_email,
     passes_run, status (complete | ladder_exhausted | partial).
     """
-    # Raise Hunter cap for the day
+    # Raise Hunter cap for the day. As of 2026-05-12 topup() also raises to
+    # 400 internally for bare callers (morning_runner.topup(minimum=35)), so
+    # this set is mostly belt-and-suspenders. Kept explicit because callers
+    # of harvest_until_target.harvest_until_target() expect 400 regardless of
+    # the topup() default ever changing back.
     os.environ["HUNTER_MAX_SEARCHES_PER_DAY"] = str(HUNTER_CAP_DAILY)
 
     started_at = datetime.now(timezone.utc).isoformat()
