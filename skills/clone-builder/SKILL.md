@@ -1,13 +1,14 @@
 ---
 name: clone-builder
-description: |. Triggers on "clone-builder", "build this clone", "start building", "clone targets", "build the target".
+description: |
   Takes a Clone Targets Notion record by name and executes the full build pipeline:
   fetch Launch Brief → profile the target site → generate copy in target language →
   scaffold the build → deploy via vercel-launch → update Notion status to Building.
   Uses website-intelligence for competitive research, boub_voice_mastery for language
   copy, seo-strategy for keyword targeting, and vercel-launch for deployment.
-  Trigger with: "clone-builder", "/clone-builder [name]", "build [target name]",
-  "start building [target]", "go on [target name]".
+  Triggers on "clone-builder", "/clone-builder [name]", "build [target name]",
+  "start building [target]", "go on [target name]", "build this clone", "start building",
+  "clone targets", "build the target".
 allowed-tools: Read, Write, Grep, Glob, Bash, WebSearch, WebFetch, mcp__claude_ai_Notion__notion-search, mcp__claude_ai_Notion__notion-fetch, mcp__claude_ai_Notion__notion-update-page
 ---
 

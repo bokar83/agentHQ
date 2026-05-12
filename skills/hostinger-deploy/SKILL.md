@@ -1,10 +1,12 @@
 ---
 name: hostinger-deploy
-description: Full workflow for creating, updating, and deploying static websites on Hostinger via GitHub. Covers repo setup, local folder structure in agentsHQ, GitHub push, and Hostinger Git integration. Triggers on "hostinger", "deploy to hostinger", "hostinger deploy", "publish to hostinger", "live deploy".
+description: "THE production deploy path for all websites. Use for every live/production website deployment — always the right choice when a site needs to go live. Vercel is for previews only; Hostinger is where real sites live. Full workflow: repo setup, local folder in agentsHQ, GitHub push, Hostinger Git auto-deploy. Triggers on \"hostinger\", \"deploy to hostinger\", \"hostinger deploy\", \"publish to hostinger\", \"live deploy\", \"go live\", \"push to production\"."
 user-invocable: true
 ---
 
 # Hostinger Website Deploy Skill
+
+> **This is the production deploy path.** All live websites go here. Vercel is for preview/testing only.
 
 Use this skill whenever:
 - Creating a new static website for a client or project
@@ -34,6 +36,69 @@ d:\Ai_Sandbox\agentsHQ\output\
 
 Dev server: `python3 -m http.server 8080` from `d:\Ai_Sandbox\agentsHQ\output\`
 Preview at: `http://localhost:8080/{filename}.html`
+
+---
+
+## HARD RULES (learned in production)
+
+**Clean URLs require `.htaccess`:** Hostinger Apache serves static files by exact filename only. `/997` returns 404; `/997.html` returns 200. Every site with clean URL paths needs this in repo root:
+```apache
+Options -Indexes
+DirectorySlash Off
+RewriteEngine On
+
+# For each <name>.html that has a sibling <name>/ directory (e.g. signal.html + signal/),
+# add an explicit early rewrite BEFORE the generic rule. Without this, Apache/LiteSpeed
+# auto-trailing-slashes /name → /name/ → 403 (Options -Indexes blocks listing).
+# REPLACE the example with the real names from your site's `*.html + same-name dir/` audit:
+RewriteRule ^signal/?$ signal.html [NC,L]
+
+# Generic clean-URL rule — depth-agnostic, matches across "/"
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([^\.]+)$ $1.html [NC,L]
+
+# Force browsers to revalidate HTML so future 403 fixes propagate immediately
+# rather than living in client caches for hours.
+<FilesMatch "\.(html|htm)$">
+  Header set Cache-Control "no-cache, must-revalidate, max-age=0"
+</FilesMatch>
+```
+Commit this with the site. Do not wait for the 404 to discover it.
+
+**PRE-DEPLOY AUDIT: `.html` + same-name dir collision causes silent 403.** Before every deploy, run this audit at the site root:
+```bash
+for f in *.html; do
+  name="${f%.html}"
+  if [ -d "$name" ]; then
+    echo "COLLISION: /$name will 403 — both $f and $name/ exist; add 'RewriteRule ^$name/?$ $f [NC,L]' to .htaccess BEFORE the generic clean-URL rule"
+  fi
+done
+```
+If the audit reports any collision, the `.htaccess` MUST have a matching `RewriteRule ^<name>/?$ <name>.html [NC,L]` rule before deploy. Verified 2026-05-11 on catalystworks.consulting — `/signal` returned 403 for hours after the first deploy because `signal.html` + `signal/` collided and the `.htaccess` only handled `^signal$` (no trailing slash). Fix needed both no-slash AND with-slash forms. See `feedback_directory_vs_html_collision_403.md`.
+
+**Local sandbox = no push without approval:** Test changes locally → show result to Boubacar → push only if approved. Never push to "sync" a revert of your own local test. The live site was never touched.
+
+**Vercel = preview/mobile test only. NEVER production.** The deploy-to-vercel skill description now reflects this. All live sites → Hostinger.
+
+**Next.js 15 partial dynamic segments cause site-wide 404.** A folder named `prefix-[slug]/` (mixing literal text + dynamic param in the same segment) is silently ignored by the App Router. Symptoms: build prerenders the routes locally but production returns 404. Fix: rename to nested `prefix/[slug]/` and add a `rewrites()` block to `next.config.ts` so the public flat URL keeps working:
+```ts
+async rewrites() {
+  return [
+    { source: '/foo/prefix-:slug/', destination: '/foo/prefix/:slug/' },
+  ]
+},
+```
+Caught on calculatorz.tools 2026-05-07 (51 state-paycheck pages). See `feedback_nextjs15_partial_dynamic_segments.md`.
+
+**Next.js `rewrites()` DOES survive Hostinger deploy (confirmed 2026-05-07 on calculatorz.tools).** Both flat (`/finance/take-home-pay-calculator-california/`) and nested (`/finance/take-home-pay-calculator/california/`) returned 200 in production. No `.htaccess` Apache mirror needed when `rewrites()` is set in `next.config.ts`. Hostinger's Git auto-deploy preserves the Next.js routing layer. Still verify after every deploy: hit both flat + nested URLs — if flat 404s, fall back to mirroring rewrite in `.htaccess`.
+
+**Repo-local SSL cert config can break GitHub push/pull.** Some calculatorz-app and similar Next.js repos ship with `http.sslCAInfo` pointing at `C:/Program Files/Git/mingw64/etc/ssl/certs/ca-bundle.crt` which doesn't exist on this machine. Symptom: `unable to get local issuer certificate (20)` on every git push/pull. **Do NOT edit the repo config** (CLAUDE.md hard rule). Bypass per-command:
+```bash
+git -c http.sslBackend=schannel -c http.sslCAInfo= push origin main
+git -c http.sslBackend=schannel -c http.sslCAInfo= pull origin main
+```
+See `feedback_git_ssl_bypass_one_shot.md`.
 
 ---
 

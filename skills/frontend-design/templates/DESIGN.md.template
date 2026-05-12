@@ -1,0 +1,85 @@
+# DESIGN.md — {{PROJECT_NAME}}
+
+> Visual decisions for this project. Loaded at session start. Once set, these decisions are LOCKED for the project.
+> If this file does not exist for a project, create it AFTER PRODUCT.md and BEFORE writing HTML.
+
+## Typography (LOCKED)
+
+| Use | Font | Weight | Source |
+|---|---|---|---|
+| Display / Headlines | | | |
+| Body / UI | | | |
+| Pull-quotes / italic | | | |
+| Data / Code | JetBrains Mono | 400 | Google Fonts |
+
+**Reflex-reject confirmation:** None of the picks above are on the reflex-reject list (Inter, DM Sans, Plus Jakarta Sans, Space Grotesk, Syne, Outfit, Fraunces, Newsreader, Lora, Crimson, Cormorant, Playfair, IBM Plex, Source Serif 4, DM Serif Display, Instrument). If they are, this DESIGN.md is invalid.
+
+**Google Fonts import:**
+
+```html
+<!-- paste exact import here -->
+```
+
+## Palette (LOCKED, max 4 colors)
+
+| Token | Hex | Role | Anchored in |
+|---|---|---|---|
+| `--surface` | | background | |
+| `--ink` | | text | |
+| `--accent` | | CTA / focal moments | |
+| `--ornament` (optional) | | warmth or distinctive ornament | |
+
+**Anchored-in:** where did this color come from? "Photograph of the actual roof tiles." "Cover of book X." NOT "we like blue."
+
+**Category-reflex rejection:** None of these colors match the category-default palette. Confirm explicitly.
+
+## Spacing scale
+
+8px base unit, multiples only: 8 / 16 / 24 / 32 / 48 / 64 / 96 / 128.
+
+## Type scale (LOCKED)
+
+| Token | Size | Weight | Line height | Letter spacing | Font |
+|---|---|---|---|---|---|
+| display | | | | | |
+| h1 | | | | | |
+| h2 | | | | | |
+| h3 | | | | | |
+| body-lg | | | | | |
+| body | | | | | |
+| body-sm | | | | | |
+| label (uppercase) | | | | +0.1em | |
+
+## Motion vocabulary
+
+- **Default ease:** `cubic-bezier(0.22, 1, 0.36, 1)` (no bounce as default)
+- **Entrance pattern:**
+- **Hover pattern:**
+- **Scroll-trigger pattern:**
+
+## Interaction primitives
+
+- **Cursor:** {custom dot+ring | system | hidden on mobile via @media (hover:hover)}
+- **Focus state:** 2px outline with offset, color from accent
+- **Active/pressed state:**
+
+## Anti-pattern compliance
+
+- [ ] No side-stripe colored borders >1px
+- [ ] No gradient text
+- [ ] No glassmorphism as default
+- [ ] No hero-metric template
+- [ ] No identical card grid for services
+- [ ] No modal as primary CTA path
+- [ ] No em-dashes in body copy
+- [ ] No bounce easing as default
+- [ ] No category-reflex palette
+- [ ] No reflex-reject fonts
+
+## Build log entry
+
+| Slug | Layout type | Font pairing | Color story | Date | Live URL | /design-audit score |
+|---|---|---|---|---|---|---|
+| | | | | | | / 20 |
+
+(Append to `workspace/demo-sites/build-log.md` after build ships and is audited.)

@@ -1,12 +1,12 @@
 ---
 name: clone-scout
-description: |. Triggers on "clone scout", "find sites to clone", "find high traffic sites", "scout clone targets", "find profitable sites".
+description: |
   Scouts high-traffic websites and web apps that can be cloned and monetized via AdSense.
   Starts from verified traffic data (SimilarWeb, Semrush, Ahrefs estimates), not self-reported
   revenue. Finds utility tools, converters, calculators, AI tools, and single-purpose web apps
   with millions of monthly visits and no French/Arabic equivalent. Scores on clone viability,
   logs qualifying targets to the Clone Targets Notion database.
-  Trigger with: "clone scout", "/clone-scout", "find sites to clone", "find high traffic sites",
+  Triggers on "clone scout", "/clone-scout", "find sites to clone", "find high traffic sites",
   "find converter sites", "find utility tools", "find AI tools to clone", "scout clone targets",
   "find profitable sites", "clone factory".
 allowed-tools: Read, Write, Grep, Glob, Bash, WebSearch, WebFetch

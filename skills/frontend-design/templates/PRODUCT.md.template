@@ -1,0 +1,55 @@
+# PRODUCT.md — {{PROJECT_NAME}}
+
+> Strategic context for this project. Loaded at session start. Persists between sessions so design doesn't drift back to defaults.
+> If this file does not exist for a project, create it BEFORE building. Interview the user (or read brand.md / engagement notes) — never synthesize from scratch.
+
+## Register
+
+`brand` OR `product`
+
+- **brand** = the design IS the product. Examples: Signal Works demo sites, agency portfolio pieces, brand-led builds, lead magnets where the visual quality is the message.
+- **product** = the design SERVES the product. Examples: internal dashboards, CW landing page (the diagnostic methodology is the product, the page is the carrier), utility tools.
+
+This single bit changes how aggressive the design should be. `brand` register tolerates more cinematic motion, more typographic risk, more distinctive palette choices. `product` register tolerates less.
+
+## What this is
+
+One paragraph. What the project IS. Not what it does, what it IS. "A scroll-driven website that shows a roofer's 20-year track record through aerial photography of completed roofs" not "a roofer's website."
+
+## Who it's for
+
+Specific person. Not a segment. "A homeowner in Salt Lake County, 35-55, who has noticed water stains on their ceiling and is looking up roofers on their phone tonight" not "homeowners."
+
+## Three voice words (concrete physical-object words)
+
+NOT: modern, professional, friendly, sleek, premium, elegant.
+YES: warm and mechanical and opinionated; weighty and hand-set like a magazine cover; scrappy punk-zine photocopier-pressed; quiet and considered like a Japanese tea bowl.
+
+1.
+2.
+3.
+
+## Anti-references
+
+What this project is NOT. Three named examples of work that would be wrong for this brand. Use real names: Apple, Linear, Stripe, the local competitor's site, "every other dental site I've seen." Anti-references are the most useful thing in this file.
+
+1.
+2.
+3.
+
+## Audience reflexes (palette/category traps to reject)
+
+What would a stranger guess about this category from a typical site? List the visual reflexes the design must NOT default to.
+
+For example, for a pediatric dentist:
+- Reflex: navy + sky blue + coral + cartoon tooth + Fraunces serif → REJECT
+- Reflex: blue + white + smiling stock-photo dentist → REJECT
+- Reflex: bright + playful + Comic Sans-adjacent → REJECT
+
+## Success criterion (visual)
+
+What does "this design works" look like? Not "users convert." Not "passes accessibility." A specific visual moment. "When a homeowner shows their spouse, the spouse says 'wait, scroll back to that aerial shot'" or "when a Signal Works prospect lands, they immediately ask 'who built this?'"
+
+## Failure mode to avoid
+
+The one thing that would make this design wrong for the brand. "If this looks like every other AI-built dental site, it failed." "If the visitor cannot tell within 5 seconds that this is not Inter and a card grid, it failed."

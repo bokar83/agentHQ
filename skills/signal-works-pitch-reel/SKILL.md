@@ -1,11 +1,12 @@
 ---
 name: signal-works-pitch-reel
-description: >. Triggers on "signal works pitch reel", "pitch reel", "generate pitch video", "SW pitch reel", "build pitch reel".
+description: >
   Generates a Signal Works pitch reel video from website demo screenshots.
   Auto-generates niche-specific copywriting, builds a HyperFrames composition,
   renders the MP4, uploads to Google Drive, and logs to the Notion Content Board.
   Trigger when user provides a screenshots folder path and a niche name.
   Niches supported: roofer, pediatric dentist, hvac (extend as needed).
+  Triggers on "signal works pitch reel", "pitch reel", "generate pitch video", "SW pitch reel", "build pitch reel".
 ---
 
 # Signal Works Pitch Reel Skill

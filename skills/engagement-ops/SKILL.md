@@ -42,14 +42,14 @@ Created the moment a paid engagement is booked. Written before the kickoff sessi
 Required sections:
 
 - **Header:** type (Signal Session / SHIELD / Advisory / Custom), client name + role + company, booked date, session date, status
-- **Objective Statement** :  pull `objective-statement` pattern. 25 words or fewer.
-- **Completion criteria** :  pull `completion-criteria` pattern. What "money well spent" looks like in their words.
-- **Constraint snapshot** :  pull `constraint-matrix` (light version). Which of scope / schedule / resources is most constrained, moderately, least, and the implication.
-- **Prework checklist** :  concrete items to do before the session. Always include: pull public footprint, run pre-session diagnostic, send pre-session email, Honest Mirror prep.
-- **In-session structure** :  time-boxed agenda. For Signal Session, default to OS v2.0 scaled to the booking length. For SHIELD, default to AMPLIFY-anchored kickoff.
-- **Risks (parking lot)** :  pull `parking-lot` pattern. Capture, don't process.
-- **After-session deliverable** :  what's owed, by when.
-- **Patterns pulled / deliberately not pulled** :  log the decision. This is how we learn what rigor earns its keep at each scale.
+- **Objective Statement** — pull `objective-statement` pattern. 25 words or fewer.
+- **Completion criteria** — pull `completion-criteria` pattern. What "money well spent" looks like in their words.
+- **Constraint snapshot** — pull `constraint-matrix` (light version). Which of scope / schedule / resources is most constrained, moderately, least, and the implication.
+- **Prework checklist** — concrete items to do before the session. Always include: pull public footprint, run pre-session diagnostic, send pre-session email, Honest Mirror prep.
+- **In-session structure** — time-boxed agenda. For Signal Session, default to OS v2.0 scaled to the booking length. For SHIELD, default to AMPLIFY-anchored kickoff.
+- **Risks (parking lot)** — pull `parking-lot` pattern. Capture, don't process.
+- **After-session deliverable** — what's owed, by when.
+- **Patterns pulled / deliberately not pulled** — log the decision. This is how we learn what rigor earns its keep at each scale.
 
 ### 2. Session Notes (`session-notes.md`)
 
@@ -58,12 +58,12 @@ Append-only journal. One entry per session.
 Each entry has:
 
 - **Date + duration**
-- **What they said in their own words** (the real signal :  quotes if possible)
+- **What they said in their own words** (the real signal — quotes if possible)
 - **What was decided**
 - **What surprised you**
 - **Follow-ups generated** (each one goes to the tracker)
 
-For SHIELD-style multi-session engagements, also append: **constraint-matrix re-read** :  has any of scope/schedule/resources shifted? Triggers a tracker update if yes.
+For SHIELD-style multi-session engagements, also append: **constraint-matrix re-read** — has any of scope/schedule/resources shifted? Triggers a tracker update if yes.
 
 ### 3. Deliverable Tracker (`deliverable-tracker.md`)
 
@@ -76,7 +76,7 @@ Simple table. Updated whenever a commitment is made or fulfilled.
 
 Status values are tight: `not started`, `drafting`, `in review`, `shipped`, `late`, `cancelled`. No improvising.
 
-When something goes `late`, the next session-notes entry must include a one-line reason. This is the lightweight version of MITAR :  Monitor, Investigate, Take Action, Report :  without the enterprise weight.
+When something goes `late`, the next session-notes entry must include a one-line reason. This is the lightweight version of MITAR — Monitor, Investigate, Take Action, Report — without the enterprise weight.
 
 ### 4. Closeout Memo (`closeout-memo.html`)
 
@@ -84,15 +84,15 @@ Created within 5 days of last session. Pull `closeout-meeting` pattern. **Produc
 
 Three sections only:
 
-- **Successes** :  what worked, in their words and yours
-- **Challenges** :  what didn't, what you'd change next time
-- **Lessons learned** :  things to bake into future engagements (these can graduate into pattern library updates)
+- **Successes** — what worked, in their words and yours
+- **Challenges** — what didn't, what you'd change next time
+- **Lessons learned** — things to bake into future engagements (these can graduate into pattern library updates)
 
 Plus one decision section:
 
 - **Next-engagement candidate?** Yes / No / Maybe + reason. If yes, what shape (SHIELD / advisory / referral introduction)?
 
-If a closeout memo produces a lesson worth keeping, propose adding it to either the relevant pattern in the rigor library or to MEMORY.md as a feedback entry. Don't auto-write :  propose, then ask.
+If a closeout memo produces a lesson worth keeping, propose adding it to either the relevant pattern in the rigor library or to MEMORY.md as a feedback entry. Don't auto-write — propose, then ask.
 
 ## Pulling from the rigor library
 
@@ -199,3 +199,15 @@ Use this as a client-side diagnostic during discovery calls for CW automation en
 - **Process LARP at small scale.** A Constraint Matrix on a $497 Signal Session takes 3 minutes. A full Risk Management Plan on a $497 Signal Session is theatre. Pull the light version, skip the heavy one.
 - **Artifact drift.** If the brief and the session-notes contradict each other (e.g., the brief says "scope most constrained," the notes say "we expanded scope mid-session"), update the brief or note the contradiction explicitly. Don't let the file rot.
 - **Closeout skipped.** The closeout memo is where lessons compound. If it gets skipped for 3 engagements in a row, the rigor library never gets sharper. Always do the 5-day closeout, even if it's 200 words.
+
+## Deliverable QA (reader-testing pass)
+
+Before sending any CW/SW deliverable (proposal, audit report, brief, spec), run a reader-testing pass:
+
+1. Predict 5 questions a reader would ask when encountering this doc cold.
+2. Spawn a sub-agent with only the doc content (no conversation context) and each question.
+3. If sub-agent misinterprets, can't answer, or surfaces ambiguity — fix those sections before sending.
+
+Catches blind spots that make sense to the author but confuse the client. One pass takes ~3 minutes. Skip it and you ship the author's assumptions, not a client-ready doc.
+
+**In Claude.ai (no sub-agents):** open a fresh conversation, paste doc, ask the 5 questions manually.

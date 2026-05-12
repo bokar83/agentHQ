@@ -5,7 +5,7 @@ description: Manage living roadmaps for multi-session projects in docs/roadmap/.
 
 # Roadmap Skill
 
-Living roadmaps for multi-session projects. Small, focused, no planning logic. Per-milestone planning happens via `superpowers:brainstorming` and `superpowers:writing-plans`.
+Living roadmaps for multi-session projects. Small, focused, no planning logic — planning happens via `superpowers:brainstorming` and `superpowers:writing-plans` per milestone.
 
 ## Where roadmaps live
 
@@ -16,7 +16,7 @@ d:/Ai_Sandbox/agentsHQ/docs/roadmap/
 └── future-enhancements.md  (legacy backlog, not a roadmap)
 ```
 
-Roadmaps are git-tracked. They sync to VPS via `git pull` like all other code. Crews on VPS do NOT read roadmaps. Roadmaps are planning artifacts for the human plus planning agent.
+Roadmaps are git-tracked. They sync to VPS via `git pull` like all other code. Crews on VPS do NOT read roadmaps — roadmaps are planning artifacts for the human + planning agent.
 
 ## Codename rules
 
@@ -41,12 +41,12 @@ Roadmaps are git-tracked. They sync to VPS via `git pull` like all other code. C
 
 ## Body sections (in order)
 
-1. **Done Definition.** Locked goalpost. Changes only with explicit re-scoping.
-2. **Status Snapshot.** What's live today. Updated every session.
-3. **Milestones.** M1..Mn with status (queued / in-progress / shipped / blocked / descoped), trigger gates, blockers, ETA.
-4. **Descoped Items.** Explicit no-builds with reason. Prevents relitigating.
-5. **Cross-References.** Memory entries, specs, modules, related skills.
-6. **Session Log.** Append-only journal. Each entry: date, what changed, what's next.
+1. **Done Definition** — locked goalpost. Changes only with explicit re-scoping.
+2. **Status Snapshot** — what's live today. Updated every session.
+3. **Milestones** — M1..Mn with status (queued / in-progress / shipped / blocked / descoped), trigger gates, blockers, ETA.
+4. **Descoped Items** — explicit no-builds with reason. Prevents relitigating.
+5. **Cross-References** — memory entries, specs, modules, related skills.
+6. **Session Log** — append-only journal. Each entry: date, what changed, what's next.
 
 ## Commands
 
@@ -86,7 +86,7 @@ When user says: "log session for atlas", "update atlas", "session done for atlas
 
 Action:
 1. Read `docs/roadmap/<codename>.md`
-2. Append a session-log entry: `### YYYY-MM-DD: <one-line summary>` followed by what changed and what's next
+2. Append a session-log entry: `### YYYY-MM-DD — <one-line summary>` followed by what changed and what's next
 3. Update milestone statuses if any changed during the session
 4. Save the file
 

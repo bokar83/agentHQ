@@ -10,6 +10,33 @@ Named after the Akan concept: look backward to move forward wisely.
 **Use when:** You need a decision stress-tested, not validated.
 **Skip when:** The user wants confirmation, a summary, or a quick answer.
 
+---
+
+## COUNCIL ESCALATION CHECK (run this FIRST, before any voice speaks)
+
+Score the item against these four signals. If 2 or more fire, STOP and escalate.
+
+| Signal | Fires when... |
+|--------|--------------|
+| **Irreversibility** | Pricing change, offer structure, major pivot, client proposal, public commitment, hiring/firing |
+| **Insider fog** | Boubacar has been living inside this decision for multiple sessions, references prior context heavily, or already has a preferred answer |
+| **Deliverable grade** | Output goes to a client, is permanent, or will be published (audit, strategy doc, proposal, pricing page) |
+| **Stakes asymmetry** | Cost of being wrong is significantly higher than cost of waiting 10 minutes for a deeper analysis |
+
+**If 2+ signals fire:**
+
+> **Council escalation:** This item hits [list the signals]. Sankofa gives you 5 voices in one pass. Council runs them in parallel, cross-reviews anonymously, and iterates until convergence. For this one, Council is the right tool.
+>
+> Run: `council this [paste your question + context]`
+>
+> Want to proceed with Council instead? Or continue with Sankofa now?
+
+Wait for Boubacar's answer before proceeding.
+
+**If 0-1 signals fire:** proceed directly to Council Structure below. No escalation message needed.
+
+---
+
 ## Council Structure
 
 Run all five voices in order. Each speaks in its own section. No voice softens, agrees prematurely, or hedges.
@@ -63,11 +90,24 @@ After all five voices speak, deliver a forced verdict.
 **Frame shift:** It is 6 months from now. This plan is dead. Every voice speaks in retrospective tense — not "this could fail" but "this failed, here is why."
 
 **Per-voice retrospective mandate:**
+
 - THE CONTRARIAN: name the chain of events that killed it. Start from the moment it became unfixable.
 - THE FIRST PRINCIPLES THINKER: name the single assumption that was wrong from the start. The one nobody wrote down.
 - THE OUTSIDER: describe what an outside observer saw coming that insiders ignored.
 - THE EXPANSIONIST: name what was never tried that would have saved it.
 - THE EXECUTOR: name the earliest warning sign that was visible but ignored, and the exact week it appeared.
+
+---
+
+## POST-RUN COUNCIL FLAG
+
+After Chairman Synthesis, check: did the Chairman surface REAL tension between voices (not minor disagreement, but fundamentally opposing verdicts)?
+
+If yes, add this line at the very end of your output:
+
+> **Note:** Voices split on [the core tension]. Council's cross-review iteration would pressure-test this further. Worth running if this decision matters.
+
+---
 
 ## Output Rules
 

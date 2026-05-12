@@ -229,6 +229,42 @@ Run this rubric at Pass 2, after Hook and CTA audits. Log the score in the CTQ o
 
 ---
 
+## Flagship Article Workflow (lessons from 2026-05-11 session)
+
+Flagship articles need extra rigor. Short-post mistakes are recoverable in a day. Flagship mistakes age publicly and cross-post to multiple platforms.
+
+### Hard rules for flagship articles
+
+1. **Show the full draft alongside every score report.** Never split. Reader can't evaluate "9.5/10" without seeing the text. Single message: draft first, score second.
+2. **Voice scan must include markdown headings.** Banned words in `##` headings count too. Easy regex miss in v3-v5 of the flagship — caught `actually` only on re-read.
+3. **Date references soft-anchored.** "Two days ago" ages by ship date. Use "a few days ago" / "recently" / event-anchored references. See `boub_voice_mastery` for rule.
+4. **Anchor to ONE specific cultural-bridge scene, not multiple.** Flagship has space for depth. Use it. Conakry motor-taxi scene + mother+government telecom is one earned anchor, fully drawn. Don't dilute with 2 weaker ones.
+5. **Hard fact check before lock.** Country, city, family role, current titles, exact product names. Wrong country in a flagship is reputational. Boubacar = Guinea, Conakry, mother at government telecom company.
+6. **CTA = subtle, not pushy.** Calendly link bare. No price in the article (price = pre-qualification in the booking flow itself). Disqualifier-soft close ("if it is not your moment, save the link") preserves trust on cold readers.
+7. **Cross-posting plan logged in Source Note.** Flagship goes to LinkedIn Article, X, boubacarbarry.com, catalystworks.consulting. Document the plan on the Notion record so it doesn't get lost.
+
+### Friend-over-coffee test (mandatory final pass)
+
+Before declaring a flagship done, read it aloud. Ask: would a smart friend say this over coffee, or does it sound like a consultant explaining a methodology?
+
+Red flags that mean the article drifted into whitepaper:
+- Passive voice ("got built," "got pointed at," "is being done")
+- Sentences that could appear in any AI consultant's blog
+- Stacked "I" statements that flatten to autobiography (cut redundancy, don't replace with passive)
+- Section that explains a framework without one human moment inside it
+
+If the friend-over-coffee test fails, the I-count or word count is NOT the problem. The voice is. Roll back, surgical trim only.
+
+### The "I" trap (caught 2026-05-11)
+
+When a flagship has 25-30 first-person pronouns and feels heavy, the instinct is to slash them. Don't. Replacing earned "I" with passive voice ("the reviewer got pointed at" instead of "I pointed the reviewer at") makes the article sound corporate and cold. The reader trusts the human, not the construction.
+
+Right move: surgical cut 5-8 redundant stacks. Target ~22 I's for a 1400-word piece. Keep every I that owns an opinion, witnesses a moment, or anchors a scene. Cut the I's that frame, restate, or chain.
+
+See `boub_voice_mastery` "I-Count Discipline" for full pattern list.
+
+---
+
 ## Story Review (replaces standard CTQ for Content Type=Story posts)
 
 Story posts are NOT scored against the standard CTQ rubric. They follow a different review.
