@@ -135,7 +135,7 @@ def _render_format(
 
     logger.info("render_publisher: ffmpeg rendering %s (%dx%d@%d)", fmt, w, h, fps)
     try:
-        _ffmpeg_render(manifest, output_path, w, h, fps, fmt, channel_id)
+        _ffmpeg_render(manifest, output_path, w, h, fps, fmt, channel_id, project_dir)
     except Exception as exc:
         logger.error("render_publisher: %s render failed: %s", fmt, exc)
         return None
@@ -165,6 +165,7 @@ def _ffmpeg_render(
     fps: int,
     fmt: str,
     channel_id: str | None = None,
+    project_dir: Path | None = None,
 ) -> None:
     """Render MP4 from image scenes + audio using ffmpeg Ken Burns pipeline.
 
@@ -192,7 +193,7 @@ def _ffmpeg_render(
 
     intro_dur = _probe_duration(intro_asset) if has_intro else 0.0
 
-    motion_sidecar = _load_motion_sidecar(project_dir)
+    motion_sidecar = _load_motion_sidecar(project_dir) if project_dir else {}
 
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp = Path(tmpdir)
@@ -563,7 +564,7 @@ def _update_notion(notion_id: str, asset_url: str, dry_run: bool, *, x_caption: 
             timeout=15,
         )
         resp.raise_for_status()
-        logger.info("render_publisher: Notion %s → scheduled", notion_id)
+        logger.info("render_publisher: Notion %s → %s", notion_id, status_name)
         return True
     except Exception as exc:
         logger.error("render_publisher: Notion update failed for %s: %s", notion_id, exc)
@@ -586,20 +587,21 @@ def _notify_telegram(
         return
     try:
         from notifier import send_message
-        lf = renders.get("long_form", {})
-        sh = renders.get("shorts", {})
-        sq = renders.get("square", {})
-        lf_url = lf.get("drive_url") or "MISSING"
-        sh_url = sh.get("drive_url") or "MISSING"
-        sq_url = sq.get("drive_url") or "MISSING"
-        lines = [
-            f"Video ready: {title or channel_id}",
-            f"Channel: {channel_id}",
-            f"Long form: {lf_url}",
-            f"Shorts: {sh_url}",
-            f"Square: {sq_url}",
-            f"Notion: {notion_id}",
-        ]
+        # Shorts-first per _PLATFORM_SPECS. Long-form / Square return when re-enabled.
+        lines = [f"Channel: {channel_id}", f"Notion: {notion_id}"]
+        any_success = False
+        for fmt_key, label in (("shorts", "Shorts"), ("long_form", "Long form"), ("square", "Square")):
+            data = renders.get(fmt_key)
+            if not data:
+                continue  # format not in _PLATFORM_SPECS — don't surface a stale row
+            url = data.get("drive_url") or ""
+            if url:
+                lines.append(f"{label}: {url}")
+                any_success = True
+            else:
+                lines.append(f"{label}: RENDER FAILED — check logs (workspace/renders/, render_publisher)")
+        headline = f"Video ready: {title or channel_id}" if any_success else f"Render FAILED: {title or channel_id}"
+        lines.insert(0, headline)
         chat_id = os.environ.get("OWNER_TELEGRAM_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID", "")
         send_message(chat_id, "\n".join(lines))
     except Exception as exc:
@@ -621,23 +623,36 @@ def _notify_email(
         return
     try:
         import subprocess
-        lf = renders.get("long_form", {})
-        sh = renders.get("shorts", {})
-        sq = renders.get("square", {})
-        lf_url = lf.get("drive_url") or "not available"
-        sh_url = sh.get("drive_url") or "not available"
-        sq_url = sq.get("drive_url") or "not available"
-
-        subject = f"Studio render complete: {title or channel_id}"
+        # Shorts-first per _PLATFORM_SPECS. Only surface formats that were actually rendered.
+        any_success = False
+        asset_items = []
+        for fmt_key, label, aspect in (
+            ("shorts", "Shorts", "9:16"),
+            ("long_form", "Long form", "16:9"),
+            ("square", "Square", "1:1"),
+        ):
+            data = renders.get(fmt_key)
+            if not data:
+                continue  # format not in _PLATFORM_SPECS
+            url = data.get("drive_url") or ""
+            if url:
+                asset_items.append(
+                    f"<li><b>{label} ({aspect}):</b> <a href=\"{url}\">{url}</a></li>"
+                )
+                any_success = True
+            else:
+                asset_items.append(
+                    f"<li><b>{label} ({aspect}):</b> "
+                    f"<span style=\"color:#c00\">RENDER FAILED — check workspace/renders/ and render_publisher logs</span></li>"
+                )
+        headline = "Video Ready" if any_success else "RENDER FAILED"
+        subject_prefix = "Studio render complete" if any_success else "Studio render FAILED"
+        subject = f"{subject_prefix}: {title or channel_id}"
         body = (
-            f"<h2>Video Ready: {title or channel_id}</h2>"
+            f"<h2>{headline}: {title or channel_id}</h2>"
             f"<p><b>Channel:</b> {channel_id}</p>"
             f"<h3>Assets</h3>"
-            f"<ul>"
-            f"<li><b>Long form (16:9):</b> <a href=\"{lf_url}\">{lf_url}</a></li>"
-            f"<li><b>Shorts (9:16):</b> <a href=\"{sh_url}\">{sh_url}</a></li>"
-            f"<li><b>Square (1:1):</b> <a href=\"{sq_url}\">{sq_url}</a></li>"
-            f"</ul>"
+            f"<ul>{''.join(asset_items)}</ul>"
             f"<p>Notion: {notion_id}</p>"
         )
         # Send from channel alias so recipient knows which channel produced it
