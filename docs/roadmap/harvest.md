@@ -662,9 +662,9 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 
 ---
 
-### H1j: Lead-strategy review post-CW-strip (2026-05-13)
+### H1j: Lead-strategy review post-CW-strip (2026-05-12 — moved up)
 
-**Status:** 🔄 SCHEDULED 2026-05-13 (Wednesday).
+**Status:** 🔄 RUNNING NOW in separate session 2026-05-12 evening. Includes absorb of 2 X-sourced links (HTML lead-gen + LinkedIn lead-gen) that tie directly into the post-CW-strip strategy.
 **Why this exists:** CW automation stripped 2026-05-12 (commit `53b25f1` on `feat/strip-cw-automation`). Apollo cancelled (plan ends 2026-05-28). Sankofa Council premortem verdict: infra-work was substituting for recognition-work. Need a fresh-head review of how leads ACTUALLY come in from May 13 → June 30 now that auto-harvest CW is gone and Apollo is on its way out.
 
 **Context (do not skip — read before reviewing):**
