@@ -37,30 +37,43 @@ def _slugify(channel_id: str) -> str:
 
 
 def load_brand_config(channel_id: str) -> dict[str, Any]:
-    """Return brand config for channel_id. Never raises — falls back to placeholder."""
-    slug = _slugify(channel_id)
+    """Return brand config for channel_id. Never raises — falls back to placeholder.
 
-    if _NOTION_BRAND_DB_ID:
-        cfg = _load_from_notion(slug) or _load_from_notion(channel_id)
-        if cfg:
-            logger.info("brand_config loaded from Notion for %s", channel_id)
-            return cfg
+    Resolution: file/placeholder loaded first as base, Notion DB row (if any)
+    merged on top. Notion is authoritative for keys it provides, but partial
+    Notion rows do not blow away duration/hook_budget/director_tag defaults
+    that live only in the JSON file.
+    """
+    slug = _slugify(channel_id)
 
     per_channel_path = _CONFIGS_DIR / f"brand_config.{slug}.json"
     if not per_channel_path.exists():
         per_channel_path = _CONFIGS_DIR / f"brand_config.{channel_id}.json"
-    if per_channel_path.exists():
-        cfg = _load_json(per_channel_path)
-        if cfg:
-            logger.info("brand_config loaded from %s", per_channel_path.name)
-            return _fill_placeholders_with_defaults(cfg)
 
-    logger.warning(
-        "brand_config: no config for '%s', using placeholder. "
-        "Run M2 to fill brand values.",
-        channel_id,
-    )
-    return _load_json(_PLACEHOLDER_PATH) or {}
+    base: dict = {}
+    if per_channel_path.exists():
+        loaded = _load_json(per_channel_path)
+        if loaded:
+            logger.info("brand_config base from %s", per_channel_path.name)
+            base = _fill_placeholders_with_defaults(loaded)
+
+    if not base:
+        base = _load_json(_PLACEHOLDER_PATH) or {}
+        if base:
+            logger.warning(
+                "brand_config: no per-channel file for '%s', using placeholder base.",
+                channel_id,
+            )
+
+    if _NOTION_BRAND_DB_ID:
+        notion_cfg = _load_from_notion(slug) or _load_from_notion(channel_id)
+        if notion_cfg:
+            logger.info("brand_config: merging Notion overrides for %s", channel_id)
+            for k, v in notion_cfg.items():
+                if v not in (None, ""):
+                    base[k] = v
+
+    return base
 
 
 def is_brand_ready(channel_id: str) -> bool:
@@ -86,9 +99,15 @@ def _load_json(path: Path) -> dict | None:
 
 
 def _load_from_notion(channel_id: str) -> dict | None:
+    token = (
+        os.environ.get("NOTION_TOKEN")
+        or os.environ.get("NOTION_SECRET")
+        or os.environ.get("NOTION_API_KEY")
+    )
+    if not token:
+        return None
     try:
         import httpx
-        token = os.environ["NOTION_TOKEN"]
         headers = {
             "Authorization": f"Bearer {token}",
             "Notion-Version": "2022-06-28",
