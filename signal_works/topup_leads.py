@@ -2,13 +2,25 @@
 signal_works/topup_leads.py
 ===========================
 SW lead harvest. Walks the geo expansion ladder, resolves emails
-through 4 layers (Firecrawl, Apollo strict, Hunter, skip), and stops
-when the daily target is hit.
+through 5 layers (Firecrawl, Apollo, Hunter domain-search,
+Prospeo person-enrich, skip), and stops when the daily target is hit.
+
+Per-process behavior (locked 2026-05-12 after harvest stalled on 200-cap):
+- Raises Hunter per-process cap to 400 internally. Callers that already
+  set HUNTER_MAX_SEARCHES_PER_DAY are honored; bare callers
+  (morning_runner.topup(minimum=35)) get the 400 cap automatically.
+- 45-minute wall-clock cap. Exits gracefully if the loop runs over,
+  even if `minimum` is not hit. Telegram alert on wall-clock exit.
+- Apollo owner-less -> Hunter domain-search -> Prospeo person-enrich
+  fallback chain. Apollo find_owner_by_company has ~0% hit rate on
+  trades-SMBs; without the fallback, leads save phone-only and never
+  count toward the email-target, so topup loops forever.
 """
 import argparse
 import logging
 import os
 import sys
+import time
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -19,6 +31,7 @@ from signal_works.lead_scraper import scrape_google_maps_leads, find_email_from_
 from signal_works.expansion_ladder import PAIRS
 from signal_works.hunter_client import domain_search, HunterCapReached, reset_daily_counter
 from signal_works.email_gate import gate_email, EmailGateDrop
+from signal_works.prospeo_client import prospeo_enrich_company
 from skills.apollo_skill.apollo_client import find_owner_by_company
 
 try:
@@ -36,6 +49,8 @@ CIRCUIT_BREAKER_THRESHOLD = 50  # 50 consecutive double-fails -> disable Hunter
 # Was 5. Raised 2026-05-05 because Apollo find_owner_by_company has ~0% hit rate
 # on local trades-SMBs (663 misses, 1 hit in one Phoenix/Vegas pass). Old threshold
 # tripped on lead 1-5 every run, killing Hunter.io fallback before it fired.
+HUNTER_CAP_DAILY = 400  # see hunter_client._max_calls(); env override honored
+WALL_CLOCK_SECONDS = 45 * 60  # 45-minute wall-clock cap per topup() invocation
 
 
 def _telegram_alert(msg: str) -> None:
@@ -65,15 +80,39 @@ def _save_lead(lead: dict, dry_run: bool) -> bool:
         return False
 
 
-def _resolve_email(business: dict, hunter_disabled: bool) -> tuple[str, str, str]:
-    """Walk the 4-layer resolution chain.
+def _candidate_domain(apollo_domain: str, website: str) -> str:
+    """Pick best domain for Hunter/Prospeo lookup. Apollo's first, then website."""
+    if apollo_domain:
+        return apollo_domain
+    if not website:
+        return ""
+    from urllib.parse import urlparse
+    try:
+        parsed = urlparse(website if website.startswith("http") else f"https://{website}")
+        return parsed.netloc.replace("www.", "")
+    except Exception:
+        return ""
 
-    Returns (email, source, owner_name). source in {"firecrawl", "apollo_strict",
-    "hunter_domain", ""}. owner_name is the resolved person name from Apollo when
-    available, otherwise empty string. Empty source means no email found.
-    Raises HunterCapReached if Hunter cap hits during this call.
+
+def _resolve_email(business: dict, hunter_disabled: bool) -> tuple[str, str, str]:
+    """Walk the 5-layer resolution chain.
+
+    Order: Firecrawl scrape -> Apollo find_owner_by_company -> Hunter
+    domain-search -> Prospeo company-enrich -> give up.
+
+    Returns (email, source, owner_name). source in {"firecrawl",
+    "apollo_strict", "hunter_domain", "prospeo", ""}. owner_name is the
+    resolved person name from Apollo or Prospeo when available, otherwise
+    empty string. Empty source means no email found.
+
+    Raises HunterCapReached if Hunter cap hits during this call. Prospeo
+    failures degrade silently (no cap exception today; we just log).
     """
     website = business.get("website_url") or ""
+    business_name = business.get("business_name", "")
+    city = business.get("city", "")
+
+    # Layer 1: Firecrawl scrape of the lead's own website
     if website and not business.get("no_website"):
         try:
             email = find_email_from_website(website)
@@ -86,7 +125,8 @@ def _resolve_email(business: dict, hunter_disabled: bool) -> tuple[str, str, str
         except Exception as e:
             logger.warning(f"_resolve_email: Firecrawl error on {website}: {e}")
 
-    apollo = find_owner_by_company(business["business_name"], business.get("city", ""))
+    # Layer 2: Apollo find_owner_by_company (org search + people reveal)
+    apollo = find_owner_by_company(business_name, city)
     apollo_email = apollo.get("email") if apollo else None
     apollo_name = (apollo.get("name") if apollo else "") or ""
     apollo_domain = (apollo.get("domain") if apollo else "") or ""
@@ -98,58 +138,103 @@ def _resolve_email(business: dict, hunter_disabled: bool) -> tuple[str, str, str
         except EmailGateDrop as e:
             logger.info(f"_resolve_email: apollo email {apollo_email} dropped ({e.reason})")
 
-    # Hunter.io fallback. Try Apollo's domain first (better-formatted), then
-    # fall back to the website Serper already gave us. Apollo people DB has
-    # near-zero coverage of local trades-SMBs, so most calls reach this point
-    # with apollo=None. The website-domain path is the actual workhorse.
-    if hunter_disabled:
-        return "", "", ""
+    # Apollo people DB has ~0% hit rate on trades-SMBs. Most calls land
+    # here with apollo=None or owner-less. Fall through to Hunter domain
+    # search on whatever domain we have (Apollo's if any, else website).
+    candidate_domain = _candidate_domain(apollo_domain, website)
 
-    candidate_domain = apollo_domain
-    if not candidate_domain and website:
-        from urllib.parse import urlparse
+    # Layer 3: Hunter domain-search
+    if candidate_domain and not hunter_disabled:
         try:
-            parsed = urlparse(website if website.startswith("http") else f"https://{website}")
-            candidate_domain = parsed.netloc.replace("www.", "")
-        except Exception:
-            candidate_domain = ""
+            email = domain_search(candidate_domain)
+            if email:
+                # hunter_client.domain_search already runs gate_email internally on
+                # each tier candidate. The defensive re-gate here covers manual
+                # overrides and keeps a uniform drop-log source tag.
+                try:
+                    vetted = gate_email(email, source="sw_topup_hunter")
+                    return vetted, "hunter_domain", apollo_name
+                except EmailGateDrop as e:
+                    logger.info(f"_resolve_email: hunter email {email} dropped ({e.reason})")
+        except HunterCapReached:
+            logger.warning("_resolve_email: Hunter cap reached, skipping for rest of run")
+            raise
+        except Exception as e:
+            logger.warning(f"_resolve_email: Hunter error on {candidate_domain}: {e}")
 
-    if not candidate_domain:
-        return "", "", ""
+    # Layer 4: Prospeo person-enrich. Paid (1 cr/email, 10 cr/phone) but
+    # higher hit rate on small-business decision-makers than Hunter when
+    # the company has any web presence at all. Skipped if no candidate
+    # domain (Prospeo needs at least a company hint).
+    if candidate_domain:
+        try:
+            prospeo_result = prospeo_enrich_company(
+                business_name=business_name,
+                domain=candidate_domain,
+                city=city,
+                want_phone=False,  # phone-enrich is 10 credits; keep cheap here
+            )
+        except Exception as e:
+            logger.warning(f"_resolve_email: Prospeo error on {candidate_domain}: {e}")
+            prospeo_result = None
 
-    try:
-        email = domain_search(candidate_domain)
-        if email:
-            # hunter_client.domain_search already runs gate_email internally on
-            # each tier candidate. The defensive re-gate here covers manual
-            # overrides and keeps a uniform drop-log source tag.
+        if prospeo_result and prospeo_result.get("email"):
             try:
-                vetted = gate_email(email, source="sw_topup_hunter")
-                return vetted, "hunter_domain", apollo_name
+                vetted = gate_email(prospeo_result["email"], source="sw_topup_prospeo")
+                prospeo_name = (prospeo_result.get("name") or apollo_name or "").strip()
+                return vetted, "prospeo", prospeo_name
             except EmailGateDrop as e:
-                logger.info(f"_resolve_email: hunter email {email} dropped ({e.reason})")
-    except HunterCapReached:
-        logger.warning("_resolve_email: Hunter cap reached, skipping for rest of run")
-        raise
-    except Exception as e:
-        logger.warning(f"_resolve_email: Hunter error on {candidate_domain}: {e}")
+                logger.info(
+                    f"_resolve_email: prospeo email {prospeo_result['email']} dropped ({e.reason})"
+                )
+
     return "", "", ""
 
 
 def topup(minimum: int = DAILY_MINIMUM, dry_run: bool = False) -> int:
     """Harvest SW leads until `minimum` saved emails, walking the ladder.
 
-    Returns count of leads saved this run.
+    Per-process protections (locked 2026-05-12):
+    - Hunter per-process cap raised to 400 internally via env (override
+      with HUNTER_MAX_SEARCHES_PER_DAY before call to keep a lower ceiling).
+    - 45-minute wall-clock cap. Exits gracefully and fires Telegram alert
+      if the loop runs past the deadline regardless of `minimum`.
+    - Resolution chain: Firecrawl -> Apollo -> Hunter domain-search ->
+      Prospeo company-enrich -> phone/website-only save (does not count
+      toward email target).
+
+    Returns count of email-verified leads saved this run.
     """
+    # Raise Hunter per-process cap to 400 unless caller pinned a lower value.
+    # Honors any explicit lower override (e.g. tests set "9").
+    env_cap = os.environ.get("HUNTER_MAX_SEARCHES_PER_DAY")
+    if not env_cap or int(env_cap) < HUNTER_CAP_DAILY:
+        # Only raise; never lower a stricter caller-set value (tests rely on this).
+        if not env_cap:
+            os.environ["HUNTER_MAX_SEARCHES_PER_DAY"] = str(HUNTER_CAP_DAILY)
+
     reset_daily_counter()
     saved = 0
     consecutive_double_fails = 0
     hunter_disabled = False
     cap_alert_sent = False
     breaker_alert_sent = False
+    wall_clock_alert_sent = False
+    started_at = time.monotonic()
 
     for niche, city, tier, default_target in PAIRS:
         if saved >= minimum:
+            break
+        if time.monotonic() - started_at > WALL_CLOCK_SECONDS:
+            if not wall_clock_alert_sent:
+                _telegram_alert(
+                    f"SW pipeline: 45min wall-clock cap hit at {saved}/{minimum} leads. "
+                    "Exiting topup() gracefully. Re-run will pick up next ladder pair."
+                )
+                wall_clock_alert_sent = True
+            logger.warning(
+                f"topup: wall-clock cap ({WALL_CLOCK_SECONDS}s) reached at {saved}/{minimum}, exiting"
+            )
             break
 
         try:
@@ -160,6 +245,19 @@ def topup(minimum: int = DAILY_MINIMUM, dry_run: bool = False) -> int:
 
         for biz in scraped:
             if saved >= minimum:
+                break
+            if time.monotonic() - started_at > WALL_CLOCK_SECONDS:
+                # Inner-loop wall-clock guard. Same alert as outer; broken out
+                # so we exit mid-scrape-batch instead of mid-niche.
+                if not wall_clock_alert_sent:
+                    _telegram_alert(
+                        f"SW pipeline: 45min wall-clock cap hit at {saved}/{minimum} leads. "
+                        "Exiting topup() gracefully. Re-run will pick up next ladder pair."
+                    )
+                    wall_clock_alert_sent = True
+                logger.warning(
+                    f"topup: wall-clock cap reached mid-niche at {saved}/{minimum}, exiting"
+                )
                 break
             biz["niche"] = niche
             biz["city"] = city
@@ -172,11 +270,16 @@ def topup(minimum: int = DAILY_MINIMUM, dry_run: bool = False) -> int:
                 hunter_disabled = True
                 if not cap_alert_sent:
                     _telegram_alert(
-                        "SW pipeline: Hunter daily cap hit. Falling back to skip for "
-                        "remaining leads. Run continues."
+                        "SW pipeline: Hunter daily cap hit. Falling back to Prospeo "
+                        "(then skip) for remaining leads. Run continues."
                     )
                     cap_alert_sent = True
-                email, source, owner_name = "", "", ""
+                # Hunter cap doesn't kill Prospeo; re-resolve with hunter disabled
+                # so Prospeo still runs as the layer-4 fallback for THIS lead.
+                try:
+                    email, source, owner_name = _resolve_email(biz, hunter_disabled=True)
+                except Exception:
+                    email, source, owner_name = "", "", ""
 
             if not email:
                 # Track consecutive double-failures (Firecrawl AND Apollo both failed)
