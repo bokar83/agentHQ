@@ -6,6 +6,30 @@ Append-only ledger of code/system audits. Most recent at top. Every audit MUST a
 
 ---
 
+## 2026-05-11 — Skill Mirror Audit (local vs repo + architecture compliance)
+
+**Trigger**: Boubacar standing rule — every skill in `~/.claude/skills/` must mirror to `agentsHQ/skills/` for VPS CrewAI access. Plus extension: enforce skill architecture spec (boubacar-skill-creator).
+**Scope**: 81 local skills + 75 repo skills + 8 hidden-agent Python files + 6-criteria architecture compliance check across 74 SKILL.md files
+**Method**: Read-only inventory → diff/spot-check → hidden-agent scan → 6-criteria scoring → Karpathy + Sankofa on rogue skills (>5 found)
+**Output**: `docs/audits/2026-05-11-skill-mirror-audit.md`
+
+### Findings
+- 70 skills aligned, 11 LOCAL-ONLY (8 universal + 3 empty placeholders to skip)
+- 2 SKILL.md DRIFT: `karpathy` (full content divergence), `sankofa` (each side has unique sections)
+- 2 STRUCTURAL DRIFT: `ui-ux-pro-max` (1.9M local vs 49K repo, 35 files missing), `frontend-design` (12 reference docs + 2 templates missing in repo)
+- 6 ROGUE skills (architecture violators): `active`, `library`, `CatalystWorksSkills`, `superpowers` (delete — pure registry placeholders), `library/agentshq-dispatch`, `memory/qmd_semantic_retrieval` (audit — nested under rogue parents)
+- 0 truly hidden agents blocking VPS workflows; 1 ambiguous case (`ui-ux-pro-max/scripts/*.py` — Boubacar review on author-only vs runtime)
+- `rca` skill local-only is the most urgent miss — already cited in CLAUDE.md but not in repo
+
+### Read-only — no copies executed
+Awaiting Boubacar approval to proceed with Batch 1 (8 universal SKILL.md mirrors). Architecture cleanup gates everything: 4 rogue placeholders must be deleted before mirroring, OR sync proposal will propagate the drift to VPS.
+
+### Karpathy + Sankofa verdicts
+- Karpathy on rogue: 4 of 6 (`active`, `library`, `CatalystWorksSkills`, `superpowers`) are pure pollution — DELETE
+- Sankofa on rogue: 5 voices converge on DELETE the 4 placeholders; AUDIT the 2 nested
+
+---
+
 ## 2026-05-11 — Adversarial Code Review (full agentsHQ)
 
 **Trigger**: User-initiated full adversarial review across local + VPS

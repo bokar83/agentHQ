@@ -640,6 +640,26 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 
 ---
 
+### H1i: Warm-referrals outreach (friends & family) campaign
+
+**Status:** 🔄 IN PROGRESS 2026-05-11. Task `T-26620` logged in Notion DB.
+
+**Why this exists:** Active revenue-seeking initiative leveraging warm personal networks. While cold outbound (H1h) is in-flight, warm referrals provide a high-conversion, trust-gated pathway to land the crucial first Signal Works contract (H1).
+
+**Actions:**
+- [x] Create master task in Notion CRM `T-26620` (Sprint: Backlog, Owner: Boubacar).
+- [ ] List 5-10 well-connected friends or family members in professional services or business fields.
+- [ ] Draft highly personalized outreach prompts/templates (SMS, email, LinkedIn DM) asking for introductions to trade owners.
+- [ ] Complete initial outreach to list of warm contacts.
+- [ ] Process any referred leads through the custom website-teardown tool on localhost.
+
+**Success criteria:**
+- Warm outreach initiated to 5+ close contacts.
+- At least 1 qualified referral introduced to Boubacar.
+- Referral converts into a paid Signal Session or Tier 1 client.
+
+---
+
 ### H-notion-sever: Severing Notion-Supabase CRM Link and Archiving Notion DB (Sync Code Deleted)
 
 **Status:** Sync code DELETED 2026-05-07. Supabase = sole CRM system of record.
@@ -934,6 +954,19 @@ Branch: `feature/saas-audit-upsell` [READY].
 **Note on coordination claim:** Postgres not reachable from Windows dev session. Single agent, no contention risk. Branch claimed implicitly via git checkout -b.
 
 **Next:** run end-to-end against next SW prospect after Elevate. Confirm both reports generate, no internal leakage, em-dash sweep clean, slider renders.
+
+### 2026-05-11: Revenue-Focused Warm Leads campaign & Option D Operational Cleanups
+
+Logged warm-referrals campaign task in Notion (`T-26620`) and added the corresponding sub-milestone `H1i` to `harvest.md` to establish the friends-and-family warm-acquisition track in parallel to the cold-outbound lane. Shipped Option D Operational Cleanups to local git feature branch.
+
+**What shipped:**
+- **Warm referrals milestone:** Created `H1i` milestone in `docs/roadmap/harvest.md` tracking warm networking and referral templates.
+- **Notion tasking:** Successfully executed Notion API integration to log `T-26620` with sprint `Backlog` and owner `Boubacar`.
+- **Option D fixes:** Corrected assertions inside `test_studio_qa_crew.py`, scrubbed legacy em-dashes across `email_builder.py`, and resolved the name-injection greeting confidence bug (name evaluation split tokens check).
+
+**Next:**
+- Draft the personalized warm referral outreach scripts for SMS, email, and LinkedIn.
+- Run referred prospect sites through localhost teardowns.
 
 ### 2026-05-04: Design quality lift session SHIPPED - taste-skill absorbed, 4 skills upgraded, followup queue cleared
 
