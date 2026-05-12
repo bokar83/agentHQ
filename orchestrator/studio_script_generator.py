@@ -98,7 +98,11 @@ def generate_script(
     user_prompt = _build_user_prompt(hook, twist, niche, title, target_words=target_words)
 
     raw_script = _call_llm(system_prompt, user_prompt)
-    clean_script = _post_process(raw_script, pronunciation_dict, loop_interval)
+    max_spoken_words = int(target_words * 1.75) if target_words else 0
+    clean_script = _post_process(
+        raw_script, pronunciation_dict, loop_interval,
+        max_spoken_words=max_spoken_words,
+    )
 
     word_count = len(clean_script.split())
     duration_sec = int(word_count / 150 * 60)
@@ -258,9 +262,62 @@ def _inject_retention_loops(text: str, interval: int = 200) -> str:
     return "\n\n".join(result)
 
 
-def _post_process(text: str, pronunciation_dict: dict[str, str], loop_interval: int = 200) -> str:
+def _spoken_word_count(text: str) -> int:
+    """Spoken word count: SCENE markers stripped, RETENTION markers counted
+    (they ARE narrated aloud per Rule 3)."""
+    spoken = re.sub(r'\[SCENE:[^\]]*\]', '', text)
+    return len(spoken.split())
+
+
+def _truncate_to_cap(text: str, max_spoken: int) -> str:
+    """Truncate at paragraph/sentence boundary so spoken-word count <= max_spoken.
+    Preserves the final paragraph (CTA) by appending it after the cut.
+    """
+    if _spoken_word_count(text) <= max_spoken:
+        return text
+    paragraphs = [p for p in text.split("\n\n") if p.strip()]
+    if len(paragraphs) < 2:
+        return text
+    cta = paragraphs[-1]
+    cta_spoken = _spoken_word_count(cta)
+    budget = max_spoken - cta_spoken
+    if budget <= 0:
+        return text  # CTA alone exceeds cap; bail rather than mangle
+    kept: list[str] = []
+    running = 0
+    for para in paragraphs[:-1]:
+        para_spoken = _spoken_word_count(para)
+        if running + para_spoken > budget:
+            sentences = re.split(r'(?<=[.!?])\s+', para)
+            partial: list[str] = []
+            for s in sentences:
+                s_spoken = _spoken_word_count(s)
+                if running + s_spoken > budget:
+                    break
+                partial.append(s)
+                running += s_spoken
+            if partial:
+                kept.append(" ".join(partial))
+            break
+        kept.append(para)
+        running += para_spoken
+    kept.append(cta)
+    return "\n\n".join(kept)
+
+
+def _post_process(
+    text: str,
+    pronunciation_dict: dict[str, str],
+    loop_interval: int = 200,
+    max_spoken_words: int = 0,
+) -> str:
     # Strip em-dashes (house rule)
     text = text.replace("—", ", ").replace(" -- ", ", ")
+
+    # Hard truncate when over cap — done BEFORE retention injection so the
+    # injector does not pad a script we are about to shorten anyway.
+    if max_spoken_words:
+        text = _truncate_to_cap(text, max_spoken_words)
 
     # Guarantee retention loops every loop_interval words
     text = _inject_retention_loops(text, loop_interval)
