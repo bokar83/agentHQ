@@ -166,12 +166,23 @@ def _resolve_email(business: dict, hunter_disabled: bool) -> tuple[str, str, str
     # higher hit rate on small-business decision-makers than Hunter when
     # the company has any web presence at all. Skipped if no candidate
     # domain (Prospeo needs at least a company hint).
+    #
+    # owner_name passthrough (2026-05-12 schema fix): Prospeo /enrich-person
+    # REQUIRES a person identifier (first/last + company, OR full_name +
+    # company, OR linkedin_url, OR person_id). When Apollo found the
+    # person but the email reveal missed, apollo_name is populated --
+    # forward it so Prospeo can target the same decision-maker directly
+    # (1 credit, no /search-person hop). When apollo_name is empty,
+    # prospeo_client falls back to /search-person internally to locate a
+    # decision-maker by company website. See prospeo_client docstring
+    # for the full schema rationale.
     if candidate_domain:
         try:
             prospeo_result = prospeo_enrich_company(
                 business_name=business_name,
                 domain=candidate_domain,
                 city=city,
+                owner_name=apollo_name,
                 want_phone=False,  # phone-enrich is 10 credits; keep cheap here
             )
         except Exception as e:
