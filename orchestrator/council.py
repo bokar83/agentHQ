@@ -266,13 +266,29 @@ class SankofaCouncil:
         query: str,
         context: str = "",
         task_type: str = "consulting_deliverable",
+        mode: str = "standard",
     ) -> dict:
         """
         Run the full council pipeline. Returns result dict with:
           chairman_synthesis, convergence_note, divergence_surfaces,
           converged, convergence_score, rounds, member_responses,
           peer_reviews, models_used, log_file_path, html_file_path
+
+        Args:
+          mode: "standard" (default) — forward-looking stress-test.
+                "premortem" — DEAD-PROJECT MODE. Voices speak in retrospective
+                past tense from 6 months in the future, treating the decision
+                as already dead, naming what killed it. Mirrors Sankofa skill's
+                DEAD-PROJECT MODE. Also activated implicitly if the query
+                contains the phrase "premortem this".
         """
+        # Implicit premortem trigger: phrase appended to the query.
+        if mode == "standard" and "premortem this" in query.lower():
+            mode = "premortem"
+        if mode not in ("standard", "premortem"):
+            raise ValueError(f"council.run(mode=...) must be 'standard' or 'premortem', got: {mode!r}")
+        self._mode = mode
+
         full_query = f"{context}\n\n{query}".strip() if context else query
         all_rounds_data = []
         current_responses = None
@@ -323,6 +339,7 @@ class SankofaCouncil:
             "converged": converged,
             "convergence_score": convergence_score,
             "rounds": len(all_rounds_data),
+            "mode": mode,
             "member_responses": current_responses,
             "peer_reviews": all_rounds_data[-1]["peer_reviews"],
             "chairman_synthesis": chairman_result.get("recommendation", ""),
@@ -345,6 +362,44 @@ class SankofaCouncil:
         result["html_file_path"] = str(html_path)
         return result
 
+    # Per-voice retrospective mandates injected when mode="premortem".
+    # Mirrors Sankofa skill's DEAD-PROJECT MODE (skills/sankofa/SKILL.md).
+    PREMORTEM_VOICE_MANDATES = {
+        "contrarian": (
+            "Name the chain of events that killed it. Start from the moment it "
+            "became unfixable and walk back through the cascade."
+        ),
+        "first_principles": (
+            "Name the single assumption that was wrong from the start. "
+            "The one nobody wrote down."
+        ),
+        "outsider": (
+            "Describe what an outside observer saw coming that insiders ignored. "
+            "What was obvious from the outside that the people inside could not see?"
+        ),
+        "expansionist": (
+            "Name what was never tried that would have saved it. "
+            "The adjacent move, the unmade pivot, the leverage that was sitting right there."
+        ),
+        "executor": (
+            "Name the earliest warning sign that was visible but ignored, "
+            "and the exact week it appeared. Be specific about the signal and its date."
+        ),
+    }
+
+    PREMORTEM_PREAMBLE = (
+        "DEAD-PROJECT MODE — PREMORTEM\n"
+        "================================\n"
+        "It is 6 months from now. The decision below is dead. The plan failed.\n"
+        "Every word you write must be in retrospective past tense. Not 'this could "
+        "fail' — 'this failed, here is why.' Treat the failure as a fact already "
+        "observed, not a risk to assess.\n\n"
+        "YOUR SPECIFIC RETROSPECTIVE MANDATE:\n{mandate}\n\n"
+        "Do not hedge with 'might have' or 'could have.' Speak as a historian "
+        "narrating what already happened.\n"
+        "================================\n\n"
+    )
+
     def _gather_opinions(
         self, query: str, round_num: int, prior_responses: Optional[list]
     ) -> list:
@@ -352,9 +407,18 @@ class SankofaCouncil:
         Stage 1: Run all voices in parallel.
         Round 1: each voice sees only the query.
         Round 2+: voices see prior responses and must state hold/shift/concede.
+
+        When self._mode == "premortem", each voice's system prompt is prefixed
+        with the DEAD-PROJECT MODE preamble + a per-voice retrospective mandate.
         """
+        mode = getattr(self, "_mode", "standard")
+
         def call_voice(vc):
             system_prompt = load_prompt(vc["prompt_file"])
+            if mode == "premortem":
+                mandate = self.PREMORTEM_VOICE_MANDATES.get(vc["name"], "")
+                if mandate:
+                    system_prompt = self.PREMORTEM_PREAMBLE.format(mandate=mandate) + system_prompt
             if round_num == 1 or prior_responses is None:
                 user_content = query
             else:
@@ -498,6 +562,7 @@ class SankofaCouncil:
         log_data = {
             "timestamp": timestamp,
             "task_type": task_type,
+            "mode": result.get("mode", "standard"),
             "query": query[:500],
             "rounds": result["rounds"],
             "converged": result["converged"],

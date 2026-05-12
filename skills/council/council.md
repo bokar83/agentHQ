@@ -21,6 +21,8 @@ council this [your question + as much context as you can provide]
 
 The more context you provide, the sharper the output.
 
+**Premortem mode:** append `premortem this` to the query, or pass `mode="premortem"` to `SankofaCouncil.run()`. Voices speak from 6 months in the future, treating the decision as already dead. See PREMORTEM MODE section below.
+
 ## What happens
 
 1. Five voices analyze your question independently (in parallel)
@@ -42,6 +44,22 @@ The more context you provide, the sharper the output.
 - Not a way to get validation — the Contrarian will find the flaw
 - Not a summarizer — it produces sharper analysis than any single model
 - Not a chatbot — it produces a structured verdict with a next step
+
+## PREMORTEM MODE
+
+**Trigger:** Append `premortem this` to the query, OR pass `mode="premortem"` to `SankofaCouncil.run()`. Engine auto-detects the trigger phrase.
+
+**Frame shift:** It is 6 months from now. The decision is dead. Every voice speaks in retrospective past tense — not "this could fail" but "this failed, here is why."
+
+**Per-voice retrospective mandate:**
+
+- THE CONTRARIAN: name the chain of events that killed it. Start from the moment it became unfixable.
+- THE FIRST PRINCIPLES THINKER: name the single assumption that was wrong from the start. The one nobody wrote down.
+- THE OUTSIDER: describe what an outside observer saw coming that insiders ignored.
+- THE EXPANSIONIST: name what was never tried that would have saved it.
+- THE EXECUTOR: name the earliest warning sign that was visible but ignored, and the exact week it appeared.
+
+**When to use:** any decision involving money, time commitment, hiring, launching, or irreversible resource allocation. Mirrors Sankofa skill's DEAD-PROJECT MODE.
 
 ## Running it in this session
 

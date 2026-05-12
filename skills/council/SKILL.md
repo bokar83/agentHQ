@@ -1,6 +1,6 @@
 ---
 name: council
-description: Sankofa Council trigger and workflow documentation for high-stakes strategic review tasks.
+description: Sankofa Council trigger and workflow documentation for high-stakes strategic review tasks. Supports premortem mode (append "premortem this" to query) for retrospective failure-mode analysis.
 ---
 
 # Council
