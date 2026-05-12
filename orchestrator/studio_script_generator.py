@@ -219,6 +219,27 @@ _RETENTION_PHRASES = [
 ]
 
 
+def _collapse_adjacent_retention(text: str) -> str:
+    """Collapse adjacent [RETENTION:] markers separated only by whitespace.
+
+    Sonnet occasionally emits two retention markers back-to-back in adjacent
+    paragraphs. Different bug from the post-processor double-inject (fixed
+    in _inject_retention_loops) — this is the LLM itself stuttering. We
+    keep the first marker, drop the second when no narrated content sits
+    between them.
+    """
+    # Drop second of two markers separated only by blank lines / whitespace.
+    pattern = re.compile(
+        r'(\[RETENTION:[^\]]*\])\s*\n+\s*\[RETENTION:[^\]]*\]',
+        re.MULTILINE,
+    )
+    prev = None
+    while prev != text:
+        prev = text
+        text = pattern.sub(r'\1', text)
+    return text
+
+
 def _inject_retention_loops(text: str, interval: int = 200) -> str:
     """Ensure a [RETENTION:] marker appears at least every `interval` words.
 
@@ -314,8 +335,16 @@ def _post_process(
     # Strip em-dashes (house rule)
     text = text.replace("—", ", ").replace(" -- ", ", ")
 
+    # Collapse adjacent LLM-emitted retention markers BEFORE the injector
+    # runs (so the injector sees a clean baseline) and AFTER for safety.
+    text = _collapse_adjacent_retention(text)
+
     # Inject retention loops first (so they count toward spoken length)
     text = _inject_retention_loops(text, loop_interval)
+
+    # Second pass — catches the case where injector added one adjacent
+    # to a marker that escaped the pre-pass (e.g. on a long single para).
+    text = _collapse_adjacent_retention(text)
 
     # Hard truncate AFTER retention injection — markers are narrated aloud
     # and must be counted in the spoken budget. Truncating first then
