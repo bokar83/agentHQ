@@ -38,6 +38,7 @@ SKILL_EVAL_THRESHOLD = 0.8
 REPO_ROOT = Path(os.environ.get("REPO_ROOT", Path(__file__).resolve().parents[1]))
 ENV_FILE = REPO_ROOT / ".env"
 MAIN_BRANCH = "main"
+ALERTED_STATE_FILE = Path(os.environ.get("GATE_POLL_STATE", "/tmp/gate_poll_alerted.json"))
 
 PROTECTED_BRANCHES = {
     "main",
@@ -79,11 +80,12 @@ def _fetch() -> bool:
     return rc == 0
 
 
-def _ready_branches() -> list[str]:
+def _ready_branches() -> list[tuple[str, str]]:
+    """Return list of (branch, tip_sha) for branches with [READY] tip commit."""
     rc, out = _git(["branch", "-r", "--no-merged", f"origin/{MAIN_BRANCH}"])
     if rc != 0:
         return []
-    ready = []
+    ready: list[tuple[str, str]] = []
     for line in out.splitlines():
         branch = line.strip().lstrip("* ").removeprefix("origin/")
         if branch in PROTECTED_BRANCHES:
@@ -93,9 +95,29 @@ def _ready_branches() -> list[str]:
         if not any(branch.startswith(p) for p in READY_BRANCHES_PREFIXES):
             continue
         rc2, msg = _git(["log", "-1", "--format=%s", f"origin/{branch}"])
-        if rc2 == 0 and "[READY]" in msg:
-            ready.append(branch)
+        if rc2 != 0 or "[READY]" not in msg:
+            continue
+        rc3, sha = _git(["rev-parse", f"origin/{branch}"])
+        if rc3 == 0 and sha:
+            ready.append((branch, sha))
     return ready
+
+
+def _load_alerted_state() -> dict[str, str]:
+    """Return {branch: tip_sha} of branches already alerted at that SHA."""
+    try:
+        if ALERTED_STATE_FILE.exists():
+            return json.loads(ALERTED_STATE_FILE.read_text(encoding="utf-8"))
+    except Exception as exc:
+        print(f"[gate_poll] state load failed (treating as empty): {exc}", file=sys.stderr)
+    return {}
+
+
+def _save_alerted_state(state: dict[str, str]) -> None:
+    try:
+        ALERTED_STATE_FILE.write_text(json.dumps(state, indent=2, sort_keys=True), encoding="utf-8")
+    except Exception as exc:
+        print(f"[gate_poll] state save failed: {exc}", file=sys.stderr)
 
 
 def _notify(bot_token: str, chat_id: str, text: str) -> None:
@@ -191,9 +213,19 @@ def poll_once(bot_token: str, chat_id: str, dry_run: bool = False) -> list[str]:
     ready = _ready_branches()
     if not ready:
         print("[gate_poll] queue empty — no READY branches")
+        if ALERTED_STATE_FILE.exists():
+            _save_alerted_state({})
         return []
 
-    for branch in ready:
+    alerted = _load_alerted_state()
+    current_branches = {b for b, _ in ready}
+    alerted = {b: s for b, s in alerted.items() if b in current_branches}
+    suppressed: list[str] = []
+
+    for branch, sha in ready:
+        if alerted.get(branch) == sha:
+            suppressed.append(branch)
+            continue
         # Run skill quality check on any modified skills before LLM gate review
         skill_dirs = _changed_skills(branch)
         failures: list[str] = []
@@ -218,7 +250,15 @@ def poll_once(bot_token: str, chat_id: str, dry_run: bool = False) -> list[str]:
         if not dry_run and bot_token and chat_id:
             _notify(bot_token, chat_id, msg)
 
-    return ready
+        alerted[branch] = sha
+
+    if suppressed:
+        print(f"[gate_poll] dedup-suppressed (already alerted at tip SHA): {', '.join(suppressed)}")
+
+    if not dry_run:
+        _save_alerted_state(alerted)
+
+    return [b for b, _ in ready]
 
 
 def main() -> int:
