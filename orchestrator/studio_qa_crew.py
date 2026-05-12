@@ -143,8 +143,10 @@ def check_banned_phrases(text: str) -> QACheckResult:
 
 LENGTH_TARGETS = {
     # length_target name -> (min_words, max_words) at ~150 wpm spoken
-    # short: 55s target = ~137 words; allow up to 275 for natural delivery variance
-    "short (<60s)":    (30,   275),
+    # short: 55s target = ~137 words. Upper bound 240 (~96s) accommodates the
+    # 55-90s shorts-first range. Tightened 2026-05-12 from prior 275 cap after
+    # wet drafts shipped at 220-240w were silently accepted.
+    "short (<60s)":    (30,   240),
     "medium (60-180s)":(200,  600),   # 1-4 min
     "long (3-15m)":    (400, 2500),   # 3-15 min (10 min = ~1500 words)
 }
