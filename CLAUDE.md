@@ -105,6 +105,16 @@ Every audit MUST add an entry to `docs/audits/REGISTRY.md` as part of close-out.
 
 **Container deploys (2026-05-05): NO REBUILD for code changes.** Code dirs are volume-mounted in `docker-compose.yml`. Deploy = `ssh root@72.60.209.109 "cd /root/agentsHQ && git pull && docker compose restart orchestrator"` (~10 sec). DO NOT use `up -d` if container is already running -- it skips the restart and old Python modules stay loaded. DO NOT run `scripts/orc_rebuild.sh` or `docker compose build` for code changes -- only when `requirements.txt` changes. See AGENT_SOP.md for full rule.
 
+## Hard Rule: Deliverable Pre-Ship Gate (2026-05-11)
+
+Before any `Write` or `Edit` under `docs/`, `agent_outputs/`, `clients/`, `output/`, or any date-stamped artifact path (`*-YYYY-MM-DD.*`): state in chat — "Is this Boubacar-facing? If yes, deliverable is HTML + localhost served + emailed-if-important per `feedback_html_deliverables_localhost.md` + `feedback_session_digest_html_email.md`." If the gate is skipped on a Boubacar-facing artifact, log violation to `docs/audits/memory-enforcement-violations.md` (date | session | rule | how-detected).
+
+**Why:** `feedback_html_deliverables_localhost.md` + `feedback_html_full_repertoire.md` + `feedback_session_digest_html_email.md` existed in memory but failed to fire 4 times in one session 2026-05-11. Failure mode = no pre-Write checkpoint; deferred-consequence rules get pattern-matched-past. See RCA `docs/handoff/2026-05-11-memory-enforcement-gap-rca.md`.
+
+**Tripwire:** if any violation logged in next 3 docs-shipping sessions, escalate to PreToolUse hook on Write/Edit (block writes to deliverable paths absent gate output in same turn). Same-day escalation, no 2-week wait.
+
+**Exceptions** (gate not required, MD ok): registry files (`docs/reviews/*.md`, `docs/audits/*.md` as logs not deliverables), agent-internal handoffs (`docs/handoff/*.md`), skill source files (`skills/**/*.md`), memory files (`~/.claude/projects/.../memory/*.md`). When in doubt: gate fires.
+
 ## Hard Rule: Task Table as Live Registry (2026-05-04)
 
 Every Claude Code session MUST update the coordination task table in real time. Not after. Not at the end. As work happens. **This applies to ALL sessions — including direct (Boubacar-present) sessions — because multiple agents may run concurrently.**

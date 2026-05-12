@@ -45,6 +45,7 @@ Every roadmap gets a one or two word lowercase codename. Codenames are claimed f
 | compass | active | open-ended | governance model: where rules live, how they enforce, how they retire, anti-sprawl | [compass.md](compass.md) |
 | dashboards4sale | satellite-external | open-ended | multilingual budget dashboards as a standalone product, satellite to agentsHQ | n/a (external repo) |
 | echo | active | open-ended | async partnership substrate: agent proposes commits and acks, human responds asynchronously, neither blocks on the other | [echo.md](echo.md) |
+| ghost | active | validation-track | Ghost Works (GW) ghostwriting SKU validation — 1 paid retainer by 2026-07-01 or park; merges into harvest as Tier 3 on G7=BUILD | [ghost.md](ghost.md) |
 | harvest | active | open-ended | Catalyst Works revenue pipeline (stub until first revenue session) | [harvest.md](harvest.md) |
 | studio | active | open-ended | faceless agency running multiple branded channels on agentsHQ as adjacent revenue to Catalyst Works | [studio.md](studio.md) |
 

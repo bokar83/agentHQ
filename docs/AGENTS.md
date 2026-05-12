@@ -5,6 +5,8 @@ status: active
 
 # docs/ - Platform Documentation
 
+**Standing rules:** read `docs/RULES.md` before any task. Apply at every action boundary. (2026-05-11 — RCA fix Layer 2.)
+
 All system documentation: SOPs, roadmaps, playbooks, reference, handoffs.
 
 ## What lives here

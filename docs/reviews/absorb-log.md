@@ -4,6 +4,8 @@ Schema: `YYYY-MM-DD | source | verdict | placement | leverage type`
 
 Verdicts: `PROCEED` | `DON'T PROCEED` | `ARCHIVE-AND-NOTE`
 
+2026-05-11 | Nicolas Cole / Premium Ghostwriting Academy "Social Ghostwriting Claude Skills Pack" (Notion doc + 5 zipped Claude Skills + 102 named templates) — https://www.notion.so/boubacar/Social-Ghostwriting-Claude-Skills-Pack-a37bcf1a3029824bbe520189059a3427 | PROCEED (MODIFIED via Sankofa Council 2026-05-11) | (G1 SHIPPED) save 102 templates verbatim to skills/library/cole-templates/ as neutral swipe file + (G2 SHIPPED) docs/analysis/cole-format-vs-engagement-2026-05-11.md — format-fit crosstab on last 30 days of content board, G4 decision = RUN-narrow (only 8 matching format families, not full library) | continuous-improvement + producing-motion + founder-time-reduction (Boubacar content board + future GW SKU validation)
+
 2026-05-11 | https://github.com/heygen-com/hyperframes-launch-video | PROCEED | enhance skills/hyperframes/patterns.md (timeline-padding pattern + caption-track pattern) | continuous-improvement (Studio + HyperFrames pipeline)
 
 2026-05-10 | Jaya Gupta — "The Next Biggest Moat in AI" (X article, text-jaya-gupta-ai-moat) | PROCEED | enhance skills/engagement-ops (chosen-vs-seen diagnostic) + new docs/patterns/altitude-alignment.md (SW audit lens) + new skills/ctq-social/references/content-seeds-org-moat.md (3 post skeletons) | continuous-improvement + producing-motion (content board)
