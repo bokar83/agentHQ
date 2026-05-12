@@ -225,6 +225,7 @@ services:
       - ./skills:/app/skills
       - ./templates:/app/templates
       - ./orchestrator:/app/orchestrator
+      - ./docs:/app/docs:ro
       - /root/.notebooklm-mcp-cli:/root/.notebooklm-mcp-cli
       - ./logs:/app/logs
       - ./secrets:/app/secrets:ro
