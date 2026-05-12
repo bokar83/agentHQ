@@ -485,12 +485,52 @@ def _truncate(text: str, cap: int = _DIGEST_ROW_SUMMARY_CAP) -> str:
     return text if len(text) <= cap else text[: cap - 1].rstrip() + "…"
 
 
+def _normalize_owner(raw: str | None) -> str | None:
+    """Map raw author/owner strings to the agentsHQ display convention.
+
+    - Boubacar (any form: 'Boubacar Barry', 'bokar83', 'boubacar@catalystworks…')
+      -> 'Boubacar'  (memory rule: first name only in content)
+    - Anyone/anything else (Claude bot Co-Authored-By lines, GitHub Actions,
+      stray contributors) -> 'agentsHQ'  (these are agent-driven commits)
+    - Empty / unknown -> None  (renders as ⚠️ accountability-debt flag)
+    """
+    if not raw:
+        return None
+    r = raw.strip().lower()
+    if not r:
+        return None
+    if "boubacar" in r or "bokar83" in r:
+        return "Boubacar"
+    return "agentsHQ"
+
+
+def _git_author_for(path: str) -> str | None:
+    """Return the most recent commit author for a given file, or None on any failure."""
+    import subprocess
+    try:
+        out = subprocess.run(
+            ["git", "log", "-1", "--format=%an", "--", path],
+            cwd=_REPO_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=5,
+            creationflags=SUBPROCESS_FLAGS,
+        )
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        return None
+    if out.returncode != 0:
+        return None
+    return out.stdout.strip() or None
+
+
 def _collect_yesterday_handoffs() -> list[dict]:
     """Return rows for yesterday's docs/handoff/<date>-*.md files.
 
-    Summary = first non-blank paragraph after `## TL;DR` if present, else first
-    5 non-blank lines concatenated. Owner = None for now (no convention exists;
-    Council verdict accepts maximum red-flag signal).
+    Summary: first non-blank paragraph after `## TL;DR` if present, else first
+    5 non-blank lines concatenated.
+    Owner: parsed from a `**Owner:**` frontmatter line if present, else falls
+    back to the most-recent git author for the file. Normalized to
+    'Boubacar' / 'agentsHQ' / None per _normalize_owner().
     """
     import glob
     rows: list[dict] = []
@@ -506,20 +546,25 @@ def _collect_yesterday_handoffs() -> list[dict]:
         except Exception:
             continue
         summary = ""
+        owner_raw: str | None = None
         for i, line in enumerate(head):
-            if line.strip().lower().startswith("## tl;dr"):
+            ls = line.strip()
+            if ls.startswith("**Owner:**"):
+                owner_raw = ls.split("**Owner:**", 1)[1].strip()
+            if not summary and ls.lower().startswith("## tl;dr"):
                 for follow in head[i + 1 :]:
                     if follow.strip():
                         summary = follow.strip()
                         break
-                break
         if not summary:
             summary = " ".join(l.strip() for l in head[:6] if l.strip() and not l.startswith("#"))
+        if not owner_raw:
+            owner_raw = _git_author_for(path)
         title = os.path.basename(path).replace(f"{yday_str}-", "").replace(".md", "")
         rows.append({
             "title": title,
             "summary": _truncate(summary),
-            "owner": None,
+            "owner": _normalize_owner(owner_raw),
             "link": path,
         })
     return rows
@@ -545,11 +590,12 @@ def _collect_roadmap_next_actions() -> list[dict]:
                 body = f.read()
         except Exception:
             continue
-        owner = None
+        owner_raw = None
         for line in body.splitlines()[:20]:
             if line.startswith("**Owner:**"):
-                owner = line.split("**Owner:**", 1)[1].strip()
+                owner_raw = line.split("**Owner:**", 1)[1].strip()
                 break
+        owner = _normalize_owner(owner_raw) if owner_raw else None
         summary = ""
         # Strategy: roadmaps log progress chronologically. The most recent
         # **Next:** / **Next session:** / **Next studio session:** line in the
@@ -674,29 +720,10 @@ def _collect_open_ready_branches() -> list[dict]:
         rows.append({
             "title": short,
             "summary": _truncate(subject),
-            "owner": author or None,
+            "owner": _normalize_owner(author),
             "link": None,
         })
     return rows
-
-
-def _collect_today_schedules() -> list[dict]:
-    """Return /schedule items firing today.
-
-    State path not yet confirmed (Council blueprint open question). Until
-    /schedule's persistence path is wired, this returns [] and logs at DEBUG.
-    """
-    candidates = [
-        os.path.join(_REPO_ROOT, ".claude", "schedules"),
-        os.path.join(_REPO_ROOT, "data", "schedules.json"),
-        os.path.expanduser("~/.claude/schedules"),
-    ]
-    for p in candidates:
-        if os.path.exists(p):
-            logger.debug(f"DIGEST: schedule state found at {p} but parser not yet implemented")
-            return []
-    logger.debug("DIGEST: no schedule state found at known paths, skipping section")
-    return []
 
 
 def _render_digest_section(name: str, rows: list[dict]) -> list[str]:
@@ -778,7 +805,6 @@ def _run_morning_digest():
             ("📋 Yesterday handoffs", _collect_yesterday_handoffs),
             ("🗺 Roadmap next-actions", _collect_roadmap_next_actions),
             ("🚦 Open [READY] branches", _collect_open_ready_branches),
-            ("⏰ /schedule firing today", _collect_today_schedules),
         ):
             try:
                 _rows = _collector()

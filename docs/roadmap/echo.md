@@ -2,6 +2,8 @@
 
 **Codename:** `echo`. The agent and the human echo each other's work asynchronously: agent proposes, human acks, neither blocks on the other.
 
+**Owner:** Boubacar
+
 ---
 
 ## Done Definition
