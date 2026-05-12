@@ -558,3 +558,17 @@ Of 8 added rules: 4 covered/noise (token-budget covered by context-budget-discip
 **Verdict logged absorb-log.md 2026-05-12.** No SOP edit, no CLAUDE.md edit, no skill edit, no hook, no gate_agent change. REOPEN CONDITION: 2 incidents by 2026-06-11 that one of Rule 5/7/9/12 would have caught with concrete diff signature — new absorb pass own Sankofa sourced from agentsHQ incidents.
 
 **Meta-lesson reinforced:** incident-derived governance > viral-derived governance. X threads = prompts to surface unwritten rules from our own incident log, not artifacts to absorb wholesale.
+
+### 2026-05-12: gate prefix parity expansion — `compass/` added, canon list 7→8
+
+`compass/c8-c9-memory-hygiene` sat invisible to gate for 10h after [READY] push. gate_poll logged "queue empty — no READY branches" every 5min. Root cause: `compass/` not in either gate filter tuple (`scripts/gate_poll.py:50` + `orchestrator/gate_agent.py:229`).
+
+**Fix:** `feat/gate-prefix-add-compass` (merged via gate auto-merge c0254db parent 7315925). 2-line edit, both files same commit per `feedback_gate_poll_gate_agent_prefix_parity.md`. Memory rule updated 7→8 entries. gate_agent.py path corrected (`scripts/` → `orchestrator/` — memory had wrong path).
+
+**Why this happened:** Compass is an active roadmap workstream (C1-C9). Branch prefix `compass/` is natural for compass-scoped work but predates the gate's canon list. First compass branch through gate exposed the gap.
+
+**Karpathy audit during decision:** Two paths considered. Rebase+rename+force-push = bigger blast radius (concurrent session had pushed Phase A commits onto same branch — would rewrite under their feet). Prefix-expansion = 2-line edit, no force-push, no branch rename, permanent fix for recurring prefix. Picked expansion.
+
+**Verification:** After prefix-fix merged, next gate cron tick detected `compass/c8-c9-memory-hygiene` and auto-merged to c0254db. Real 3-way merge (2 parents), no conflicts. 10 files / 1008 insertions / 1 deletion — exactly the C8/C9 + Phase A intended diff.
+
+**Followups (deferred):** `[gate_poll] git fetch failed` recurring 3× in last 100 log lines — transient or growing? worth grep-trend check next session.
