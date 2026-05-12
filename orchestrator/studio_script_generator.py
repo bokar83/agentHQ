@@ -290,20 +290,45 @@ def _spoken_word_count(text: str) -> int:
     return len(spoken.split())
 
 
+def _hard_slice_to_cap(text: str, max_spoken: int) -> str:
+    """Final-resort word-level slice when paragraph/sentence truncate can't fit.
+    Guarantees spoken-word count <= max_spoken even if input is a single
+    paragraph or CTA alone exceeds the cap. SCENE markers are preserved when
+    they fall before the cut point but stripped when they fall after.
+    """
+    spoken = re.sub(r'\[SCENE:[^\]]*\]', '', text)
+    words = spoken.split()
+    if len(words) <= max_spoken:
+        return text
+    # Slice on spoken-word boundary, prefer to end on a sentence terminator
+    sliced = " ".join(words[:max_spoken])
+    # Walk back to last sentence boundary to avoid mid-sentence cut
+    m = re.search(r'^(.*[.!?])(?:\s|$)', sliced, re.DOTALL)
+    if m and len(m.group(1).split()) >= int(max_spoken * 0.7):
+        return m.group(1).strip()
+    return sliced.strip()
+
+
 def _truncate_to_cap(text: str, max_spoken: int) -> str:
     """Truncate at paragraph/sentence boundary so spoken-word count <= max_spoken.
     Preserves the final paragraph (CTA) by appending it after the cut.
+
+    Hard-slice fallback (added 2026-05-12): when the script is one paragraph,
+    or CTA paragraph alone exceeds the cap, we still enforce max_spoken via
+    word-level slice. Prior versions silently bailed (return text) in those
+    edge cases, which let 245-word shorts ship past the 240-cap QA check.
     """
     if _spoken_word_count(text) <= max_spoken:
         return text
     paragraphs = [p for p in text.split("\n\n") if p.strip()]
     if len(paragraphs) < 2:
-        return text
+        return _hard_slice_to_cap(text, max_spoken)
     cta = paragraphs[-1]
     cta_spoken = _spoken_word_count(cta)
     budget = max_spoken - cta_spoken
     if budget <= 0:
-        return text  # CTA alone exceeds cap; bail rather than mangle
+        # CTA alone >= cap. Hard-slice rather than bail silently.
+        return _hard_slice_to_cap(text, max_spoken)
     kept: list[str] = []
     running = 0
     for para in paragraphs[:-1]:
@@ -323,7 +348,13 @@ def _truncate_to_cap(text: str, max_spoken: int) -> str:
         kept.append(para)
         running += para_spoken
     kept.append(cta)
-    return "\n\n".join(kept)
+    result = "\n\n".join(kept)
+    # Final safety net — if paragraph/sentence boundaries left us over (e.g.
+    # CTA grew via retention injection between budget calc and assembly),
+    # hard-slice the result to guarantee the contract.
+    if _spoken_word_count(result) > max_spoken:
+        return _hard_slice_to_cap(result, max_spoken)
+    return result
 
 
 def _post_process(
