@@ -260,7 +260,9 @@ def _mark_sent(conn, lead_id: int, touch: int, pipeline: str, subject: str,
 def _log_to_orc_postgres(lead_id: int, lead_email: str, touch: int,
                          pipeline: str, subject: str,
                          gmail_id: str, status: str) -> None:
-    """Write one row to sw_email_log in orc-postgres. Non-fatal on any error."""
+    """Write one row to sw_email_log AND email_events (canonical ledger).
+    Non-fatal on any error. sw_email_log remains the immutable old log;
+    email_events is the new source of truth used by dashboards."""
     try:
         import psycopg2
         orc_conn = psycopg2.connect(
@@ -282,6 +284,31 @@ def _log_to_orc_postgres(lead_id: int, lead_email: str, touch: int,
         orc_conn.close()
     except Exception as e:
         logger.warning(f"sw_email_log: write failed (non-fatal): {e}")
+
+    # Mirror into email_events canonical ledger (migration 009)
+    try:
+        try:
+            from signal_works.email_events import log_event
+        except ModuleNotFoundError:
+            sys.path.insert(0, "/app")
+            from signal_works.email_events import log_event  # type: ignore
+        brand = pipeline if pipeline in ("cw", "sw", "studio") else "cw"
+        from_addr = (CW_ACCOUNT if pipeline == "cw"
+                     else "boubacar@catalystworks.consulting")
+        log_event(
+            brand=brand,
+            event_type=status,
+            to_addr=lead_email,
+            from_addr=from_addr,
+            subject=subject,
+            gmail_message_id=gmail_id or None,
+            pipeline=f"sequence_t{touch}",
+            direction="outbound",
+            lead_id=lead_id,
+            metadata={"touch": touch, "source": "sequence_engine"},
+        )
+    except Exception as e:
+        logger.warning(f"email_events: mirror write failed (non-fatal): {e}")
 
 
 # ── Gmail ─────────────────────────────────────────────────────────────────────

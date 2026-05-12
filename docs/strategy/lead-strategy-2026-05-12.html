@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lead Strategy v4 — 2026-05-12 → 2026-08-04</title>
+<style>
+  :root {
+    --bg: #f7f5f1;
+    --paper: #ffffff;
+    --ink: #1a1714;
+    --ink-soft: #4a4540;
+    --ink-muted: #6e6862;
+    --accent: #c1440e;
+    --green: #2d6a4f;
+    --red: #b3261e;
+    --amber: #b58105;
+    --rule: #e6e1da;
+    --shadow: 0 2px 16px rgba(26,23,20,0.06);
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    line-height: 1.55;
+    font-size: 16px;
+  }
+  .wrap {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 48px 32px 96px;
+  }
+  header.doc-head {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11pt;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+  h1 {
+    margin: 0;
+    font-size: 32pt;
+    line-height: 1.15;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  h1 .sub {
+    display: block;
+    font-size: 14pt;
+    color: var(--ink-soft);
+    font-weight: 500;
+    margin-top: 6px;
+  }
+  h2 {
+    font-size: 20pt;
+    margin: 48px 0 16px;
+    letter-spacing: -0.01em;
+    border-left: 4px solid var(--accent);
+    padding-left: 12px;
+  }
+  h3 {
+    font-size: 14pt;
+    margin: 28px 0 12px;
+    color: var(--ink);
+  }
+  p { margin: 12px 0; }
+  ul, ol { margin: 12px 0; padding-left: 22px; }
+  li { margin: 6px 0; }
+  strong { color: var(--ink); }
+
+  .tldr {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-left: 5px solid var(--accent);
+    border-radius: 4px;
+    padding: 24px;
+    margin: 24px 0 32px;
+    box-shadow: var(--shadow);
+  }
+  .tldr h3 {
+    margin-top: 0;
+    font-family: var(--mono);
+    font-size: 11pt;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .tldr p { font-size: 17pt; line-height: 1.5; margin: 4px 0; }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin: 16px 0 24px;
+  }
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .card .label {
+    font-family: var(--mono);
+    font-size: 9.5pt;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+  .card .num {
+    font-size: 28pt;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .card .num.good { color: var(--green); }
+  .card .num.warn { color: var(--amber); }
+  .card .num.bad { color: var(--red); }
+  .card .note { font-size: 10.5pt; color: var(--ink-muted); margin-top: 8px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 24px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    overflow: hidden;
+    font-size: 14.5px;
+  }
+  th, td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  th {
+    background: #f0ece4;
+    font-family: var(--mono);
+    font-size: 10.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+  }
+  tr:last-child td { border-bottom: none; }
+  td .small { font-size: 12px; color: var(--ink-muted); }
+
+  .lane-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: #efe9dc;
+    font-family: var(--mono);
+    font-size: 10pt;
+    color: var(--ink-soft);
+  }
+  .pill-kill { background: #fbe4e2; color: var(--red); }
+  .pill-new { background: #e1efe7; color: var(--green); }
+  .pill-warn { background: #faf0d4; color: var(--amber); }
+
+  .callout {
+    background: #f0ece4;
+    border-left: 4px solid var(--ink-soft);
+    padding: 14px 18px;
+    margin: 16px 0;
+    border-radius: 0 4px 4px 0;
+  }
+  .callout.warn { background: #faf0d4; border-left-color: var(--amber); }
+  .callout.bad { background: #fbe4e2; border-left-color: var(--red); }
+  .callout.good { background: #e1efe7; border-left-color: var(--green); }
+
+  details {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 14px 18px;
+    margin: 8px 0;
+  }
+  details summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--ink);
+    user-select: none;
+  }
+  details[open] summary { margin-bottom: 8px; }
+
+  .monday-action {
+    background: #1a1714;
+    color: #f7f5f1;
+    padding: 28px;
+    border-radius: 6px;
+    margin: 32px 0;
+  }
+  .monday-action h3 {
+    color: var(--accent);
+    margin-top: 0;
+    font-family: var(--mono);
+    font-size: 11pt;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .monday-action p { font-size: 16pt; line-height: 1.45; }
+  .monday-action code {
+    background: #2c2823;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 14px;
+  }
+  .monday-action blockquote {
+    border-left: 3px solid var(--accent);
+    margin: 16px 0;
+    padding: 8px 16px;
+    font-family: var(--mono);
+    font-size: 12pt;
+    color: #ddd6c8;
+  }
+
+  .sig {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    font-size: 11pt;
+    color: var(--ink-muted);
+    font-family: var(--mono);
+  }
+
+  .stamp {
+    display: inline-block;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 10.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    transform: rotate(-2deg);
+  }
+  .stamp.green { border-color: var(--green); color: var(--green); }
+
+  hr {
+    border: 0;
+    height: 1px;
+    background: var(--rule);
+    margin: 32px 0;
+  }
+
+  code.inline {
+    background: #efe9dc;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 13.5px;
+    font-family: var(--mono);
+  }
+
+  .legend {
+    font-size: 11pt;
+    color: var(--ink-muted);
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="doc-head">
+  <div class="eyebrow">Lead Strategy v4 &middot; 12-week cycle &middot; 2026-05-12 → 2026-08-04</div>
+  <h1>Stop hunting. Start hosting.
+    <span class="sub">One lane for 3 weeks. Daily reply, not weekly volume. Brandon holds the line.</span>
+  </h1>
+</header>
+
+<!-- TL;DR -->
+<div class="tldr">
+  <h3>The bottom line</h3>
+  <p><strong>500 cold sends. 0 human replies. 9.4% delivery failure. Run ONE lane for Weeks 1-3: the Daily Fast-Feedback Sprint to warm Utah contacts only.</strong> Eight lanes was the failure mode disguised as a plan. Brandon = daily 09:05 text. First-win ceremony fires on first real reply (engineered to land within 14 days via warm-only sends). Goalpost: 3 paying clients (1 each in SW + GW + CW) by 2026-08-04.</p>
+</div>
+
+<!-- Headline numbers -->
+<h2>Ground truth, today</h2>
+<p class="legend">Pulled live from Gmail + Supabase + orc-postgres 2026-05-12. The "3 replies" the data-wiring subagent found were all mailer-daemon bounces — verified via direct query. Real human replies = 0. Bounce rate is the silent killer.</p>
+<div class="card-grid">
+  <div class="card">
+    <div class="label">Sent all-time (cold)</div>
+    <div class="num">500</div>
+    <div class="note">CW + SW share one Gmail OAuth. Brand split is template-only at wire level.</div>
+  </div>
+  <div class="card">
+    <div class="label">Replies (real humans)</div>
+    <div class="num bad">0</div>
+    <div class="note">The 3 "replies" the new ledger flagged were all mailer-daemon bounces, not humans. Classifier bug. Real reply rate = 0.0%.</div>
+  </div>
+  <div class="card">
+    <div class="label">Delivery failure rate</div>
+    <div class="num bad">9.4%</div>
+    <div class="note">47 of 500 = bounces or mailer-daemon errors. Above Gmail's 2% throttle threshold. Sender reputation in danger.</div>
+  </div>
+  <div class="card">
+    <div class="label">Leads in Supabase</div>
+    <div class="num">2,963</div>
+    <div class="note">Of which 291 marked sent, 2,524 untouched. Permission filter cuts most.</div>
+  </div>
+</div>
+
+<div class="callout bad">
+  <strong>0 human replies in 500 sends is the headline.</strong> Two simultaneous failures: list quality (9.4% bouncing) AND copy/recognition (0% of delivered emails reply). Reply-detection classifier also misfiring — flagged mailer-daemon as "replied". List hygiene gate + classifier fix BOTH non-negotiable before next send. See M8 below.
+</div>
+
+<!-- Diagnosis -->
+<h2>A &middot; Diagnosis (one paragraph)</h2>
+<p><strong>Not channel-broken. Recognition-broken plus conversion-loop-blind plus list-quality-broken.</strong> 500 sends produced 0 real human replies + 47 delivery failures. Cold outreach to strangers is producing no signal. Sankofa Council ruled (2026-05-09) that calls beat emails beat infrastructure. Today's premortem added: your momentum is co-regulated, not self-generated. You don't need to hunt. You need to host and have one human expect you. The 8-lane v3 plan was a system designed to delay confirmation past your psychology's survival threshold.</p>
+
+<!-- Three brand flow -->
+<h2>B &middot; Three-brand lead flow</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Brand</th>
+      <th>Front door (Tier 1)</th>
+      <th>Front door (Tier 2)</th>
+      <th>Entry price</th>
+      <th>New lead sources</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>SW</strong></td>
+      <td>Cold-mode HTML teardown (shipped, H1h)</td>
+      <td>In-person Utah trade-association state-chapter talks (NRCA-Utah, MCAA-Utah, AGD-Utah)</td>
+      <td>$500 setup + $497/mo</td>
+      <td>r/sweatystartup, r/HVAC, r/Roofing, Utah trade meetups</td>
+    </tr>
+    <tr>
+      <td><strong>GW</strong></td>
+      <td>Voice Audit tripwire ($400 → $2K/mo retainer)</td>
+      <td>Ghostwrite-in-public (post 2 paid clients' work credited)</td>
+      <td>$400 → $2K/mo</td>
+      <td>r/Substack, r/personalbranding, LinkedIn founder DMs, X reply-game</td>
+    </tr>
+    <tr>
+      <td><strong>CW</strong></td>
+      <td>SW client upsell (month 2 trigger) + Signal Session</td>
+      <td>SBA SCORE Utah volunteer + Vistage SLC outside-expert + Utah Tech Council</td>
+      <td>$250 trial Signal Session → $1500 full → engagement</td>
+      <td>Permission-filter only: SW grads, 10-name list, Utah tech events</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout good">
+  <strong>Utah-local positioning is the unfair advantage.</strong> South Jordan = trade-density turf. Drive to Provo, SLC, Park City, Ogden for in-person. Cold magnets sign off "Boubacar — South Jordan, UT." Local trust anchor beats offshore-anonymous every time.
+</div>
+
+<!-- 7 failure modes -->
+<h2>C &middot; The 7 failure modes (Sankofa premortem, 2026-05-12)</h2>
+<p>Council voices spoke from 2026-08-04 retrospectively: the plan died. Here is how.</p>
+
+<table>
+  <thead>
+    <tr><th style="width:40px">#</th><th>Failure mode</th><th>When</th><th>The mechanism</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td><strong>Feedback Blackout Design</strong></td>
+      <td>W1 D1</td>
+      <td>Every lane had 72+ hr reply latency. Day 1 → silence → "no one sees me" → spiral begins.</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><strong>No Ritualized First Win</strong></td>
+      <td>W1 D1</td>
+      <td>Only win state was 3 paying clients (12 weeks out). No celebration of first reply. Identity never shifted.</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><strong>Shame Spiral via Zero-Reset Accounting</strong></td>
+      <td>W1 D3 (May 15)</td>
+      <td>Miss one morning → tracker red → reads as total failure → rebel → stop.</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><strong>Cognitive Overload from False Symmetry</strong></td>
+      <td>W1 ongoing</td>
+      <td>8 lanes weighted equally. Public Roast video (ego dopamine) logged same as warm referral (revenue). Drift to dopamine.</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td><strong>Automation as Enabler</strong></td>
+      <td>W1 ongoing</td>
+      <td>agentsHQ alerts on "post / prepare / build" — not on "did anyone say yes." Effort-logged, not outcome-enforced.</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td><strong>Avoidance of Closure by Design Contradiction</strong></td>
+      <td>W3 (May 26)</td>
+      <td>Free sessions marked "completed" without next-step ask. The metric that mattered (yes to next?) untracked.</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td><strong>Shiny-Drift by Design Vacuum</strong></td>
+      <td>W7 (Jun 30)</td>
+      <td>Mid-cycle, zero wins. Survival protocol didn't fire. You open Notion, start "Atlas 2.0", die in template-land.</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td><strong>Sender Reputation Cliff</strong> <span class="lane-pill pill-warn">NEW</span></td>
+      <td>W2-3</td>
+      <td>9.9% bounce rate. Gmail throttles. Cold lane dies from delivery failure before strategy failure.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- 7 prevention mechanics -->
+<h2>D &middot; The 7 prevention mechanics (your daily OS)</h2>
+<p>Each one wires to a specific failure mode. Each one belongs in your Google Calendar.</p>
+
+<details open>
+  <summary>M1 &middot; Daily Fast-Feedback Sprint — <code class="inline">M-F 09:00-09:15 MDT</code></summary>
+  <p>Send <strong>one pre-written, low-risk offer</strong> to a warm Utah target. Template:</p>
+  <blockquote style="margin: 12px 0; padding: 12px 16px; border-left: 3px solid var(--accent); background: #faf0d4; font-family: var(--mono); font-size: 13.5px;">
+    "Hey [Name], I'm testing a fast feedback method — can I audit your LinkedIn / website / hook line and give one tweak that gets more replies? Zero pitch. Reply 'Yes' and I'll send it by 5 PM."
+  </blockquote>
+  <p>Win = <strong>any reply, yes or no</strong>. Guaranteed signal within 8 hours. THIS UNLOCKS THE DAY. Nothing else opens until this is logged. Targets failure mode 1, 5.</p>
+</details>
+
+<details open>
+  <summary>M2 &middot; First Win Ceremony — fires on first REAL reply</summary>
+  <p>When the first human (NOT mailer-daemon) replies yes: Telegram fires <strong>🚀 FIRST WIN</strong>. Identity-shifting marker. Build <code class="inline">scripts/first_win_ceremony.py</code> watching <code class="inline">email_events.event_type='replied' AND from_addr NOT LIKE '%mailer-daemon%' AND from_addr NOT LIKE '%postmaster%'</code>. Targets failure mode 2.</p>
+  <p class="legend"><em>Current real-reply count = 0. The 3 in the ledger are mailer-daemon bounces. Engineered first-win = guaranteed within 14 days via M1 sprint to warm Utah contacts only (not cold).</em></p>
+</details>
+
+<details>
+  <summary>M3 &middot; Guilt-Free Reset Trigger — fires daily at 09:30 if sprint missed</summary>
+  <p>If 09:00-09:15 sprint not done: 09:30 Telegram fires:</p>
+  <blockquote style="margin: 12px 0; padding: 12px 16px; border-left: 3px solid var(--accent); background: #faf0d4; font-family: var(--mono); font-size: 13.5px;">
+    "Yesterday is gone. Today starts with one message."
+  </blockquote>
+  <p>Tomorrow's task list shows <strong>one micro-offer only</strong>. No backlog. Streak counts as <em>restarts per week</em>, not unbroken days. Targets failure mode 3.</p>
+</details>
+
+<details>
+  <summary>M4 &middot; Weekly Priority Triad Lock — <code class="inline">Sat 09:00 MDT</code> (light Sabbath work OK)</summary>
+  <p>30 min review. Lock 3 lanes for the week (Warm Sprint + Signal Session Wed + 1 rotation). Hide all others in Notion. Pre-write the 5 daily messages for Mon-Fri sprint. Targets failure mode 4.</p>
+</details>
+
+<details>
+  <summary>M5 &middot; Conversion Scorecard — <code class="inline">Sat 09:30 MDT</code></summary>
+  <table style="margin: 8px 0;">
+    <tr><th>Activity</th><th>Points</th></tr>
+    <tr><td>Live conversation (call, in-person)</td><td><strong>3</strong></td></tr>
+    <tr><td>Reply to cold DM</td><td><strong>2</strong></td></tr>
+    <tr><td>Public content (post, video)</td><td><strong>1</strong></td></tr>
+    <tr><td>Internal tooling / template work</td><td><strong>0</strong></td></tr>
+  </table>
+  <p>Score below 3 in a week → next week ONLY warm-sprint lane unlocks. Everything else locks. Targets failure mode 4, 5.</p>
+</details>
+
+<details>
+  <summary>M6 &middot; Auto-Close Script — after every paid Signal Session</summary>
+  <ul>
+    <li>T+24h: bot sends value ("Here's the one fix from your session")</li>
+    <li>T+72h: bot prompts you: <em>"Send: 'Want to lock in a paid 90-min follow-up? Reply Yes.'"</em></li>
+  </ul>
+  <p>Until the ask is sent, session status = <strong>incomplete</strong> in CRM. Cannot host another session while one is incomplete. Targets failure mode 6.</p>
+</details>
+
+<details>
+  <summary>M7 &middot; Idea Vault Lock — anytime a new idea hits</summary>
+  <p>Text Telegram: <code class="inline">Vault: [idea]</code>. Bot replies: <em>"Stored. Unlocks after 3 paying clients."</em> No task. No Notion page. No creation. System protects focus until revenue ships. Targets failure mode 7.</p>
+</details>
+
+<div class="callout bad">
+  <strong>M8 &middot; List Hygiene Gate + Reply Classifier Fix (NEW from data wiring)</strong> &nbsp; Two simultaneous fixes before any new cold send:
+  <ol style="margin-top: 8px;">
+    <li><strong>List hygiene:</strong> every queued lead goes through Hunter re-verification. Reject below 70 confidence. Bounce rate above 5% in a single batch → pause sends, manually scrub list. Sender reputation = the foundation of the whole cold lane.</li>
+    <li><strong>Reply classifier:</strong> <code class="inline">scripts/sync_replies_from_gmail.py</code> currently flags mailer-daemon/postmaster as "replied". Add filter: <code class="inline">if from_addr LIKE '%mailer-daemon%' OR '%postmaster%' → classify as bounce/delay, NOT replied.</code> Backfill: re-classify existing 3 replied rows.</li>
+  </ol>
+</div>
+
+<!-- 12-week ramp -->
+<h2>E &middot; 12-week ramp (rewritten from the verdict)</h2>
+<table>
+  <thead>
+    <tr><th>Weeks</th><th>What runs</th><th>Hours/wk</th><th>Why</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>W1-3</strong><br><span class="small">May 12 - Jun 1</span></td>
+      <td><strong>ONE lane only: Daily Warm Sprint.</strong> Saturday review. NO other lanes. Surface 3 historical replies + reply to them. Build the warm-Utah-contact list to 25 names.</td>
+      <td>8-10</td>
+      <td>Reply velocity before scale. Earn the right to expand.</td>
+    </tr>
+    <tr>
+      <td><strong>W4-6</strong><br><span class="small">Jun 2 - 22</span></td>
+      <td>Add: paid Signal Session Wed ($250 trial) + 10-name sprint expansion + start LinkedIn discipline lane (Logan pattern)</td>
+      <td>15</td>
+      <td>Only IF W1-3 hit ≥10 replies + ≥1 paid call booked</td>
+    </tr>
+    <tr>
+      <td><strong>W7</strong><br><span class="small">Jun 23-29</span></td>
+      <td><strong>Mid-cycle Council re-run.</strong> Pull data. Decide: scale what worked, kill what didn't.</td>
+      <td>5</td>
+      <td>Forced inflection. No "everything continues" default.</td>
+    </tr>
+    <tr>
+      <td><strong>W8-11</strong><br><span class="small">Jun 30 - Jul 27</span></td>
+      <td>Add: ONE bigger play — Reddit lane OR in-person Utah host (the Hive 2.0). Gated on first paying client landing.</td>
+      <td>20-25</td>
+      <td>Scale what proves itself. Don't run lanes for sport.</td>
+    </tr>
+    <tr>
+      <td><strong>W12</strong><br><span class="small">Jul 28 - Aug 4</span></td>
+      <td>Close out. Tally. Write v2 strategy for next 12 weeks based on what actually worked.</td>
+      <td>15</td>
+      <td>Honest reckoning. Cycle close.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>Sabbath enforced:</strong> Sun off. Sat = review + light only (M4 + M5 fire 09:00-10:00 Sat). M-F = sprint days. The plan respects the rule.
+</div>
+
+<!-- The 90-day decision -->
+<h2>F &middot; The single 90-day decision</h2>
+<div class="tldr">
+  <h3>The goalpost</h3>
+  <p><strong>Land 3 paying clients across SW + GW + CW combined by 2026-08-04. At least 1 in each brand.</strong></p>
+  <p style="font-size: 12pt; color: var(--ink-muted); margin-top: 8px;">12 weeks. One number. Three brands. No 12 actions. If 0/3 at mid-cycle 2026-06-30 → re-council, full rewrite. If 1/3 → continue. If 2-3/3 → scale what works.</p>
+</div>
+
+<!-- The Monday action -->
+<div class="monday-action">
+  <h3>Monday 2026-05-13 — Non-Negotiable First Action</h3>
+  <p>At <strong>09:00 MDT</strong>, send <em>this exact message</em> to <strong>3 warm Utah contacts</strong>:</p>
+  <blockquote>
+    Hey [Name], I'm testing a fast feedback method — can I audit your LinkedIn and give one tweak that gets more replies? Zero pitch. Reply 'Yes' and I'll send it by 5 PM.
+  </blockquote>
+  <p>At <strong>09:05 MDT</strong>, text Brandon: <em>"Sent 3 fast-feedback offers. Day 1 done."</em></p>
+  <p style="font-size: 12pt; color: #b7af9d; margin-top: 24px;">If you cannot name 3 by 08:30: 08:30-09:00 is the list-building, 09:00 is the sends. If you genuinely cannot find 3 warm Utah contacts → that becomes the strategy gap and Week 1 pivots to "build the warm list" before the sprint runs.</p>
+</div>
+
+<!-- Accountability partner spec -->
+<h2>G &middot; Accountability partner spec</h2>
+<p><strong>Selected: Brandon</strong> (recently met; video/commercial work for companies; expressed accountability interest)</p>
+<p><strong>Daily ping at 09:05 MDT</strong> — Boubacar sends Brandon one of three message templates:</p>
+<ul>
+  <li><code class="inline">"Sent 3. Waiting for replies."</code> (day done)</li>
+  <li><code class="inline">"Missed today. Reset tomorrow."</code> (failure mode 3 disarmed)</li>
+  <li><code class="inline">"Got a reply from [Name]. Sending audit by 5pm."</code> (first-win signal)</li>
+</ul>
+<p><strong>Brandon's role:</strong> reply within the hour, every weekday, for 4 weeks. Yes/no/nothing required — just acknowledge. The contract is acknowledgment, not advice.</p>
+<p><strong>Reciprocity built in:</strong> Brandon is also a GW prospect candidate (video/commercial work = client base he can introduce to + himself as a ghostwriting target). Run accountability as one channel, lead conversation as a separate weekly channel. Don't tangle them.</p>
+<p><strong>Tomorrow before 09:00:</strong> ask Brandon if he'll commit to the 4-week ping. If yes — lock. If no — list-building shifts to find a backup before sprint Day 1.</p>
+
+<!-- Kill / new / what stays -->
+<h2>H &middot; Kill / new / surprise</h2>
+<div class="card-grid">
+  <div class="card">
+    <div class="label pill-kill">Kill</div>
+    <ol style="padding-left: 18px; font-size: 14.5px;">
+      <li>Cold email at volume without HTML magnet attached</li>
+      <li>CW auto-harvest discussions (locked)</li>
+      <li>"Build audience for 2 years before monetizing" passive posture</li>
+      <li>Free Signal Sessions as default (paid $250 trial replaces, free reserved for select strategic accounts)</li>
+    </ol>
+  </div>
+  <div class="card">
+    <div class="label pill-new">New</div>
+    <ol style="padding-left: 18px; font-size: 14.5px;">
+      <li>Reply + send detection wired this week (subagent ✅ shipped, branch <code class="inline">feat/email-events-canonical-ledger</code>)</li>
+      <li>inbound-signal-log.md baseline by Friday 2026-05-15</li>
+      <li>Voice Audit tripwire ($400) for GW</li>
+      <li>Reverse Application page for SW (status-positive scarcity)</li>
+      <li>Brandon as accountability partner</li>
+      <li>List hygiene gate (Hunter ≥70 confidence) before any send</li>
+    </ol>
+  </div>
+  <div class="card">
+    <div class="label pill-warn">Surprise</div>
+    <ol style="padding-left: 18px; font-size: 14.5px;">
+      <li>The 3 "replies" the new ledger flagged were ALL mailer-daemon bounces. Real human reply count = 0.</li>
+      <li>9.4% delivery failure rate = Gmail will throttle sender reputation if not fixed.</li>
+      <li>One Gmail OAuth serves CW + SW — brand split is template-only, never wire-level.</li>
+      <li>Subagent applied the new email_events migration to orc-postgres, NOT Supabase. Two-DB drift continues until reconciled.</li>
+    </ol>
+  </div>
+</div>
+
+<!-- Premortem section -->
+<h2>I &middot; What kills this plan (the Council premortem in plain language)</h2>
+<p>The 5 voices were told to speak from 2026-08-04 retrospectively. Each named one specific cause of death. Synthesizing:</p>
+
+<details>
+  <summary>The Contrarian — "Died by a thousand distractions, not one stab"</summary>
+  <p>You built 8 lanes equally weighted. By Week 1 Day 3, ego-dopamine lanes (Public Roast video, LinkedIn posts) outpaced revenue lanes (warm referral, paid Signal Session) because nothing forced asymmetry. Prevention: M4 + M5 Priority Triad Lock + Scorecard.</p>
+</details>
+
+<details>
+  <summary>The First Principles Thinker — "The fatal assumption: that 'revenue' was the win condition"</summary>
+  <p>The atomic unit of momentum for your psychology is the micro-yes (a reply, a scheduled call, a show-up), not the dollar. Designing for clients first → 12 weeks of silence → flame-out. Prevention: M1 Daily Fast-Feedback Sprint + M2 First Win Ceremony.</p>
+</details>
+
+<details>
+  <summary>The Outsider — "Boubacar is not a hunter, he is a host"</summary>
+  <p>Your historical pattern of success was the April 2025 free weekly session at The Hive in South Jordan — 5 founders, 3 paid later, not because of pitch, because the room demanded follow-through. The 8-lane plan ignored this. Prevention: Hive 2.0 enters in W8-11 as the bigger play once the sprint proves base velocity.</p>
+</details>
+
+<details>
+  <summary>The Expansionist — "Build a stage where clients gather themselves"</summary>
+  <p>What was never tried: becoming the local host of the only Utah room where founders go to stop deferring. Counter-intuitive but historical-pattern-aligned. Prevention: gated behind first paying client, then runs as core engine W8+.</p>
+</details>
+
+<details>
+  <summary>The Executor — "The earliest warning sign: dread before sending each DM"</summary>
+  <p>The signal showed up Week 1 Day 2, May 14 2026. The system interpreted dread as motivational weakness when it was actually a fit-failure signal. Prevention: M3 Guilt-Free Reset Trigger normalizes the dread without permitting flameout.</p>
+</details>
+
+<!-- Open question -->
+<h2>J &middot; The one open question only you can answer</h2>
+<div class="callout warn">
+  <strong>Will Brandon agree to the daily 09:05 ping for 4 weeks?</strong> Ask him before 09:00 Monday. If yes, the plan locks. If no, the 09:00 sprint Day 1 is still non-negotiable but the load-bearing accountability wall has a backup-needed flag. The strategy doesn't fail if Brandon says no — but the first prevention mechanic gets weaker until the slot is filled.
+</div>
+
+<!-- Footer -->
+<hr>
+<p style="font-size: 12pt; color: var(--ink-muted);">
+  <strong>Cross-references:</strong> <code class="inline">docs/handoff/2026-05-12-cw-strip-rationale.md</code> · <code class="inline">docs/roadmap/harvest.md#H1j</code> · <code class="inline">outputs/council/2026-05-12-20-20-24.html</code> (full Sankofa Council premortem HTML) · <code class="inline">migrations/009_email_events.sql</code> (data-wiring fix, <code class="inline">feat/email-events-canonical-ledger</code>) · memory: <code class="inline">project_lead_strategy_2026-05-12.md</code> (writing now).
+</p>
+
+<div class="sig">
+  <span class="stamp green">v4 · LOCKED</span> &nbsp; Strategy doc &middot; 2026-05-12 &middot; Boubacar Barry &middot; South Jordan, UT &middot; <code>boubacar@catalystworks.consulting</code>
+</div>
+
+</div>
+</body>
+</html>

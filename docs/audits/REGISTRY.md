@@ -6,6 +6,36 @@ Append-only ledger of code/system audits. Most recent at top. Every audit MUST a
 
 ---
 
+## 2026-05-12 — Email Data Wiring Audit + Canonical Ledger Ship
+
+**Trigger**: Boubacar — "how many emails were sent across all 3 brands (CW, SW, GW) all-time" had no canonical answer. sw_email_log (164 rows, 2026-05-11+), email_jobs (2 rows unused), leads (0 rows), Notion (severed) — none authoritative. Strategy decisions were made on wrong numbers.
+**Scope**: every send-call site in repo; every email-related table in orc-postgres; Gmail Sent folder of both OAuth identities (cw + bokar83)
+**Method**: read-only inventory of send paths + tables → Gmail API paginated counts (NOT resultSizeEstimate) → Phase 2 schema design → migration 009 + backfill + wiring patches → Phase 4 validation
+**Output**:
+  - `docs/audits/email-data-wiring-2026-05-12.md` (audit)
+  - `docs/audits/email-data-wiring-2026-05-12-validation.md` (post-ship numbers)
+  - `migrations/009_email_events.sql`
+  - `scripts/backfill_email_events.py` + `scripts/sync_replies_from_gmail.py`
+  - `signal_works/email_events.py` (shared writer)
+  - wiring: `skills/outreach/sequence_engine.py`, `signal_works/send_scheduler.py`
+
+### Headline findings
+- All-time cold-outreach sent (Gmail ground truth): **446** (not 100+ as believed)
+- All-time replies: **3** (0.67% reply rate, n=446 — solid sample)
+- All-time bounces: **44** (9.9% — above 2% kill-switch threshold)
+- Brand split (CW vs SW) does NOT exist at wire level — both send from `boubacar@catalystworks.consulting`. Only sw_email_log's `pipeline` column carries it, and only from 2026-05-11+.
+- `send_scheduler._send_draft` never logged a `sent` event — 372 of the last 14d sends had no DB trail at all.
+- `_bounce_rate_kill_switch` queries sw_email_log (50-row sample) instead of Gmail (real bounces). Never tripped despite 9.9% real bounce rate.
+
+### Ship status
+- Migration 009 applied to VPS orc-postgres
+- Backfill complete: email_events now has 500 sent + 114 drafted + 44 bounced + 3 replied rows
+- Reply-sync cron written but not yet installed (deferred to next session)
+- Open/click tracking: deferred (requires pixel CDN — separate decision)
+- Branch `feat/email-events-canonical-ledger` [READY] — awaits Gate merge
+
+---
+
 ## 2026-05-11 — Skill Mirror Audit (local vs repo + architecture compliance)
 
 **Trigger**: Boubacar standing rule — every skill in `~/.claude/skills/` must mirror to `agentsHQ/skills/` for VPS CrewAI access. Plus extension: enforce skill architecture spec (boubacar-skill-creator).

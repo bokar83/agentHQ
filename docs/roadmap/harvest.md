@@ -662,6 +662,44 @@ These are paper cuts surfaced during 2026-04-29 work. None block the cash path. 
 
 ---
 
+### H1j: Lead-strategy review post-CW-strip — SHIPPED ✅ 2026-05-12
+
+**Status:** ✅ SHIPPED 2026-05-12 evening. Lead Strategy v4 written + Sankofa Council premortem applied + ground-truth data corrected.
+
+**Deliverable:** `docs/strategy/lead-strategy-2026-05-12.html` (served localhost:8801). The ONLY active master roadmap until 2026-08-04. All other roadmaps (harvest, ghost, atlas, compass, studio) feed into this.
+
+**Ground truth corrections that landed during the session:**
+- 500 cold sends all-time, NOT 100+/100+ as guessed. CW + SW share one Gmail OAuth.
+- 0 real human replies in 500 sends. The 3 "replies" the new email_events ledger flagged were all mailer-daemon bounces (classifier bug — fix in M8).
+- 9.4% delivery failure rate (44 hard bounces + 3 misclassified). Above Gmail's 2% throttle threshold.
+- Reply detection wired in branch `feat/email-events-canonical-ledger` (orc-postgres, NOT Supabase — two-DB drift to reconcile).
+
+**Key decisions locked:**
+- Weeks 1-3 = ONE lane only (Daily Fast-Feedback Sprint, M-F 09:00 MDT, warm Utah contacts, reply-dependent template). NO other lanes.
+- Brandon = accountability partner (daily 09:05 text, 4-week commitment confirmation due before 09:00 Mon 2026-05-13).
+- Signal Session = $250 paid trial (lower than $1500 full); free reserved for select strategic accounts.
+- 8-lane v3 plan rejected by Sankofa Council premortem as the failure mode itself. Lanes re-enter W4+ ONLY if W1-3 hits ≥10 replies + ≥1 paid call.
+- Goalpost: 3 paying clients (1 each in SW + GW + CW) by 2026-08-04 — single 12WY 90-day decision.
+- 7 prevention mechanics M1-M7 + M8 list hygiene gate to be wired into Google Calendar.
+- Idea Vault Lock: any new idea → "Stored. Unlocks after 3 paying clients."
+
+**Council premortem report:** `outputs/council/2026-05-12-20-20-24.html` — 5 voices speaking from 2026-08-04 retrospectively, named 7 failure modes + 7 calendar-level preventions.
+
+**Subagents that fed v4:**
+- GW conversion patterns (Dakota Robertson / Aprilynne Alter / Cole Schafer playbooks)
+- Creative + unconventional channels (Utah state-chapter talks, SBA SCORE, Vistage, curated 8-person dinner)
+- Trade-SMB watering-holes (r/sweatystartup, r/HVAC, r/Substack — Reddit-first since Boubacar is not on Facebook)
+- Counter-intuitive plays (Reverse Application, Backstop Letter, Public Roast)
+- Email data wiring (canonical email_events ledger, reply-detection cron — shipped on branch `feat/email-events-canonical-ledger`)
+
+**Cross-refs:**
+- Memory: `project_lead_strategy_2026-05-12.md`
+- Migration: `migrations/009_email_events.sql`
+- Followup handoff: `docs/handoff/2026-05-12-prospeo-invalid-datapoints.md` (stub)
+- Followup handoff: `docs/handoff/2026-05-13-inbound-signal-metric-prompt.md` (Wed/Thu coding session)
+
+---
+
 ### H-notion-sever: Severing Notion-Supabase CRM Link and Archiving Notion DB (Sync Code Deleted)
 
 **Status:** Sync code DELETED 2026-05-07. Supabase = sole CRM system of record.
