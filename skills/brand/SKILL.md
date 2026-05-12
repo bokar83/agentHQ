@@ -1,5 +1,5 @@
 ---
-name: ckm:brand
+name: brand
 description: Brand voice, visual identity, messaging frameworks, asset management, brand consistency. Activate for branded content, tone of voice, marketing assets, brand compliance, style guides. Triggers on "brand voice", "brand identity", "messaging framework", "brand compliance", "style guide", "brand asset".
 argument-hint: "[update|review|create] [args]"
 metadata:

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-25T21:52:29+00:00",
+  "generated_at": "2026-05-12T04:21:18+00:00",
   "repo_root": "D:\\Ai_Sandbox\\agentsHQ",
   "skills": [
     {
@@ -18,7 +18,8 @@
         "/dim"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
       "size_bytes": 10602
     },
@@ -41,20 +42,81 @@
         "/public"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 11458
+      "size_bytes": 12740
+    },
+    {
+      "slug": "active",
+      "name": "active",
+      "description": "Index for the active skill workspace — lists in-progress mirrored skills under skills/active/. Use when the user asks \"what's in the active workspace\", \"show me the active skills\", \"list dispatched skills\", or wants to find the active version of a mirrored skill. Triggers on \"active workspace\", \"active skills\", \"active bundle\", \"list active\", \"show me what's in active\".",
+      "trigger_phrases": [
+        "/active",
+        "/library",
+        "/agentshq-dispatch"
+      ],
+      "files": [
+        "SKILL.md",
+        "agentshq-dispatch",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 1512
+    },
+    {
+      "slug": "agentshq-absorb",
+      "name": "agentshq-absorb",
+      "description": "Use when evaluating any GitHub repo, live URL, MCP server, n8n workflow, PDF, raw doc, or local skill for inclusion in agentsHQ. Auto-fires on bare GitHub URLs (read-only analysis, never installs). Outputs PROCEED / DON'T PROCEED / ARCHIVE-AND-NOTE verdict with placement (enhance/extend/new skill/new tool/new agent/satellite) and leverage type (producing-motion/founder-time-reduction/continuous-improvement). Triggers on \"absorb\", \"should we absorb\", \"evaluate this for agentshq\", \"is this worth a",
+      "trigger_phrases": [
+        "/agentshq-absorb",
+        "/handoff",
+        "/memory",
+        "/hooks",
+        "/settings",
+        "/mcp",
+        "/absorb-",
+        "/workflows",
+        "/delete",
+        "/substitute",
+        "/env",
+        "/api"
+      ],
+      "files": [
+        "SKILL.md",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 31228
     },
     {
       "slug": "apollo_skill",
-      "name": "apollo_skill",
-      "description": "(no frontmatter)",
-      "size_bytes": 553
+      "name": "apollo-skill",
+      "description": "Agent-driven Apollo.io lead discovery for Catalyst Works Consulting, including Utah lead search, email reveal workflows, and owner lookup by company name. Triggers on \"apollo\", \"find leads\", \"lead search\", \"email reveal\", \"lookup company\", \"enrich leads\", \"Utah leads\".",
+      "trigger_phrases": [
+        "/decision-maker",
+        "/api_search",
+        "/enrich",
+        "/match",
+        "/api",
+        "/v1",
+        "/mixed_people",
+        "/apollo_skill",
+        "/apollo_client",
+        "/topup_cw_leads",
+        "/topup_leads",
+        "/orc_rebuild"
+      ],
+      "files": [
+        "SKILL.md",
+        "apollo_client.py",
+        "apollo_tool.py",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 3301
     },
     {
       "slug": "banner-design",
-      "name": "ckm:banner-design",
-      "description": "\"Design banners for social media, ads, website heroes, creative assets, and print. Multiple art direction options with AI-generated visuals. Actions: design, create, generate banner. Platforms: Facebook, Twitter/X, LinkedIn, YouTube, Instagram, Google Display, website hero, print. Styles: minimalist, gradient, bold typography, photo-based, illustrated, geometric, retro, glassmorphism, 3D, neon, duotone, editorial, collage. Uses ui-ux-pro-max, frontend-design, ai-artist, ai-multimodal skills.\"",
+      "name": "banner-design",
+      "description": "\"Design banners for social media, ads, website heroes, creative assets, and print. Multiple art direction options with AI-generated visuals. Actions: design, create, generate banner. Platforms: Facebook, Twitter/X, LinkedIn, YouTube, Instagram, Google Display, website hero, print. Styles: minimalist, gradient, bold typography, photo-based, illustrated, geometric, retro, glassmorphism, 3D, neon, duotone, editorial, collage. Uses ui-ux-pro-max, frontend-design, ai-artist, ai-multimodal skills. Tri",
       "trigger_phrases": [
         "/header",
         "/print",
@@ -72,31 +134,52 @@
       "files": [
         "SKILL.md"
       ],
-      "size_bytes": 8338
+      "size_bytes": 9466
     },
     {
       "slug": "boub_voice_mastery",
-      "name": "boub_voice_mastery",
-      "description": "(no frontmatter)",
-      "size_bytes": 1833
+      "name": "boub-voice-mastery",
+      "description": "Ensures AI-generated content sounds human, earned, direct, and specifically aligned with Boubacar Barry's voice. Triggers on \"voice check\", \"does this sound like me\", \"apply my voice\", \"voice mastery\", \"humanize this\", \"Boubacar voice\".",
+      "trigger_phrases": [
+        "/ctq-social",
+        "/references",
+        "/linkedin-craft",
+        "/human",
+        "/boub_voice_mastery",
+        "/brand-spine-audit",
+        "/devil",
+        "/family",
+        "/weeks"
+      ],
+      "files": [
+        "SKILL.md",
+        "__init__.py",
+        "routing-eval.jsonl",
+        "voice_polisher.py"
+      ],
+      "size_bytes": 9030
     },
     {
       "slug": "boubacar-prompts",
       "name": "boubacar-prompts",
       "description": "Use when improving, rewriting, or optimizing any AI prompt — agent backstories, task descriptions, system prompts, or one-off queries. Triggers on \"improve this prompt\", \"rewrite this prompt\", \"make this prompt better\", \"optimize this prompt\", or /prompt-engineer.",
       "trigger_phrases": [
+        "/viral-postmortem",
         "/agents"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 7155
+      "size_bytes": 8928
     },
     {
       "slug": "boubacar-skill-creator",
       "name": "boubacar-skill-creator",
-      "description": "Use when creating a new Claude Code skill, improving an existing skill, or capturing a repeatable workflow as a skill — specifically when working in Boubacar's agentsHQ project. Use this instead of the generic skill-creator. Triggers when user says \"create a skill\", \"build a skill\", \"turn this into a skill\", or \"I want a skill for X\".",
+      "description": "Use when creating a new Claude Code skill, improving an existing skill, or capturing a repeatable workflow as a skill — specifically when working in Boubacar's agentsHQ project. Use this instead of the generic skill-creator. Triggers when user says \"create a skill\", \"build a skill\", \"turn this into a skill\", \"I want a skill for X\", \"improve this skill\", \"audit this skill\", or \"make this a skill\".",
       "trigger_phrases": [
+        ", ",
+        "/skills",
         "/memory",
         "/user_boubacar",
         "/boubacar-skill-creator",
@@ -106,20 +189,21 @@
         "/skill-taxonomy",
         "/session-tracker",
         "/bash",
-        "/reflector",
-        "/skill_creator_learnings",
-        "/to"
+        "/check_folder_purpose"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 6722
+      "size_bytes": 19372
     },
     {
       "slug": "brand",
-      "name": "ckm:brand",
-      "description": "Brand voice, visual identity, messaging frameworks, asset management, brand consistency. Activate for branded content, tone of voice, marketing assets, brand compliance, style guides.",
+      "name": "brand",
+      "description": "Brand voice, visual identity, messaging frameworks, asset management, brand consistency. Activate for branded content, tone of voice, marketing assets, brand compliance, style guides. Triggers on \"brand voice\", \"brand identity\", \"messaging framework\", \"brand compliance\", \"style guide\", \"brand asset\".",
       "trigger_phrases": [
+        "/styleguides",
+        "/studio",
         "/inject-brand-context",
         "/validate-asset",
         "/compare",
@@ -129,25 +213,36 @@
         "/sync-brand-to-tokens",
         "/design-tokens",
         "/update",
-        "/voice-framework",
-        "/visual-identity",
-        "/messaging-framework"
+        "/voice-framework"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 3040
+      "size_bytes": 3676
+    },
+    {
+      "slug": "CatalystWorksSkills",
+      "name": "catalyst-works-skills",
+      "description": "Index for Catalyst Works practice-specific skills — agent-teams, news, sheet-mint, and sheet-mint-workspace. Use when the user asks about CW-internal skill packs, sheet-mint operations, the news scraper, or agent-teams composition. Each child is a real skill with its own SKILL.md. Triggers on \"catalyst works skills\", \"CW skills\", \"sheet-mint\", \"agent teams\", \"CW news\", \"list CW skills\".",
+      "trigger_phrases": [],
+      "files": [
+        "SKILL.md",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 1901
     },
     {
       "slug": "cli_hub",
       "name": "\"cli_hub\"",
-      "description": "\"Search the community CLI-Hub for pre-built agent-native CLIs (GIMP, Blender, OBS, etc.) and install them.\"",
+      "description": "\"Search the community CLI-Hub for pre-built agent-native CLIs (GIMP, Blender, OBS, etc.) and install them. Triggers on \\\"cli hub\\\", \\\"find a CLI\\\", \\\"agent CLI\\\", \\\"install CLI tool\\\", \\\"pre-built CLI\\\", \\\"CLI for\\\".\"",
       "trigger_phrases": [],
       "files": [
         "SKILL.md",
-        "cli_hub_tool.py"
+        "cli_hub_tool.py",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 1262
+      "size_bytes": 1413
     },
     {
       "slug": "client-intake",
@@ -162,14 +257,15 @@
         "/engagement-ops"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 6533
+      "size_bytes": 7514
     },
     {
       "slug": "clone-builder",
       "name": "clone-builder",
-      "description": "Takes a Clone Targets Notion record by name and executes the full build pipeline: fetch Launch Brief → profile the target site → generate copy in target language → scaffold the build → deploy via vercel-launch → update Notion status to Building. Uses website-intelligence for competitive research, boub_voice_mastery for language copy, seo-strategy for keyword targeting, and vercel-launch for deployment. Trigger with: \"clone-builder\", \"/clone-builder [name]\", \"build [target name]\", \"start building",
+      "description": "Takes a Clone Targets Notion record by name and executes the full build pipeline: fetch Launch Brief → profile the target site → generate copy in target language → scaffold the build → deploy via vercel-launch → update Notion status to Building. Uses website-intelligence for competitive research, boub_voice_mastery for language copy, seo-strategy for keyword targeting, and vercel-launch for deployment. Triggers on \"clone-builder\", \"/clone-builder [name]\", \"build [target name]\", \"start building [",
       "trigger_phrases": [
         "/fr",
         "/ar",
@@ -180,19 +276,20 @@
         "/utility",
         "/apps",
         "/fonts",
-        "/index",
-        "/lib",
-        "/content"
+        "/ui-styling",
+        "/references",
+        "/shadcn-theming"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 19345
+      "size_bytes": 19908
     },
     {
       "slug": "clone-scout",
       "name": "clone-scout",
-      "description": "Scouts high-traffic websites and web apps that can be cloned and monetized via AdSense. Starts from verified traffic data (SimilarWeb, Semrush, Ahrefs estimates), not self-reported revenue. Finds utility tools, converters, calculators, AI tools, and single-purpose web apps with millions of monthly visits and no French/Arabic equivalent. Scores on clone viability, logs qualifying targets to the Clone Targets Notion database. Trigger with: \"clone scout\", \"/clone-scout\", \"find sites to clone\", \"fin",
+      "description": "Scouts high-traffic websites and web apps that can be cloned and monetized via AdSense. Starts from verified traffic data (SimilarWeb, Semrush, Ahrefs estimates), not self-reported revenue. Finds utility tools, converters, calculators, AI tools, and single-purpose web apps with millions of monthly visits and no French/Arabic equivalent. Scores on clone viability, logs qualifying targets to the Clone Targets Notion database. Triggers on \"clone scout\", \"/clone-scout\", \"find sites to clone\", \"find ",
       "trigger_phrases": [
         "/month",
         "/clone-scout",
@@ -208,35 +305,160 @@
         "/productivity"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 26386
+      "size_bytes": 26980
     },
     {
       "slug": "cold-outreach",
       "name": "cold-outreach",
-      "description": "(no frontmatter)",
-      "size_bytes": 1845
-    },
-    {
-      "slug": "ctq-social",
-      "name": "ctq-social",
-      "description": "Use when reviewing, rewriting, or quality-checking any social media post or article draft for Boubacar Barry before publishing. Triggers on any LinkedIn post, X post, or article that needs to go through the Sankofa Council review process.",
+      "description": "Proven cold email templates for Catalyst Works Consulting. Two variants — sector-specific (when you know the prospect's industry) and size-based (when you're moving fast or the business type is ambiguous). Reply-first model, no Calendly in the initial email. Triggers on \"cold outreach\", \"cold email\", \"CW outreach\", \"send cold email\", \"outreach template\", \"T1 template\", \"outreach copy\".",
       "trigger_phrases": [
-        "/no",
-        "/savior",
-        "/governance"
+        "/outreach",
+        "/sequence_engine",
+        "/mr",
+        "/mrs",
+        "/ms",
+        "/week",
+        "/morning_runner"
       ],
       "files": [
         "SKILL.md"
       ],
-      "size_bytes": 15966
+      "size_bytes": 5493
+    },
+    {
+      "slug": "community",
+      "name": "community",
+      "description": "Index for the community skills repo clone — read-only mirror of an external skills marketplace catalog (apps, plugins, skills, tools). Use when looking for community-contributed skills, third-party agent patterns, or browsing the catalog. Do NOT author skills here. Triggers on \"community skills\", \"community catalog\", \"third-party skills\", \"browse community\", \"skills marketplace\".",
+      "trigger_phrases": [
+        "/community"
+      ],
+      "files": [
+        ".gitignore",
+        "CATALOG.md",
+        "CHANGELOG.md",
+        "CODE_OF_CONDUCT.md",
+        "CONTRIBUTING.md",
+        "LICENSE",
+        "LICENSE-CONTENT",
+        "README.md",
+        "SECURITY.md",
+        "SKILL.md",
+        "START_APP.bat",
+        "package-lock.json",
+        "package.json",
+        "skills_index.json",
+        "walkthrough.md"
+      ],
+      "size_bytes": 1883
+    },
+    {
+      "slug": "content_multiplier",
+      "name": "content_multiplier",
+      "description": "Takes ONE approved content source (article URL, YouTube video, post, PDF, raw text) and generates 9 atomic content pieces aligned to Boubacar's voice and the 8 diagnostic lenses. Operates in verbatim mode (cite source, use quotes) or remix mode (strip unverifiable elements, keep concept, write Boubacar's original take with no source citation). Pieces route to LinkedIn, X, and matching Studio channel video scripts. Triggers automatically on Trend Scout approval, on /multiply slash command, on \"mu",
+      "trigger_phrases": [
+        "/remix",
+        "/boub_voice_mastery",
+        "/orchestrator",
+        "/app",
+        "/skills",
+        "/multiply",
+        "/ctq-social",
+        "/alcohol",
+        "/transcript-style-dna",
+        "/roadmap",
+        "/studio",
+        "/forge_cli"
+      ],
+      "files": [
+        "SKILL.md",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 12074
+    },
+    {
+      "slug": "coordination",
+      "name": "coordination",
+      "description": "Coordination helpers for claiming, completing, and tracking concurrent agent work.",
+      "trigger_phrases": [],
+      "files": [
+        "SKILL.md",
+        "__init__.py",
+        "cli.py",
+        "proposal.py",
+        "routing-eval.jsonl",
+        "spawner.py"
+      ],
+      "size_bytes": 409
+    },
+    {
+      "slug": "council",
+      "name": "council",
+      "description": "Sankofa Council trigger and workflow documentation for high-stakes strategic review tasks.",
+      "trigger_phrases": [],
+      "files": [
+        "SKILL.md",
+        "council.md",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 206
+    },
+    {
+      "slug": "ctq-social",
+      "name": "ctq-social",
+      "description": "Use when reviewing, rewriting, or quality-checking any social media post or article draft for Boubacar Barry before publishing. Triggers on \"review this post\", \"quality check this draft\", \"ctq-social\", \"does this sound like me\", \"check this LinkedIn post\", \"review this tweet\", \"run ctq\", or any post needing Sankofa Council review before publishing.",
+      "trigger_phrases": [
+        "/ctq-social",
+        "/references",
+        "/linkedin-craft",
+        "/no",
+        "/deepseek-r1",
+        "/filler",
+        "/slop",
+        "/wit",
+        "/wisdom",
+        "/explanation",
+        "/boub_voice_mastery",
+        "/brand-spine-audit"
+      ],
+      "files": [
+        "SKILL.md",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 18104
+    },
+    {
+      "slug": "cw-automation-engagement",
+      "name": "cw-automation-engagement",
+      "description": "Operationalizes the Catalyst Works AI automation delivery engagement. Phase 3 scope: find a free case study client, build their automation, document results, capture testimonial. Triggers on \"automation engagement\", \"case study client\", \"build automation for\", \"n8n engagement\", or \"cw automation\".",
+      "trigger_phrases": [
+        "/week",
+        "/price",
+        "/output",
+        "/service",
+        "/dev",
+        "/after",
+        "/month",
+        "/case-studies",
+        "/hr",
+        "/roadmap",
+        "/harvest",
+        "/github"
+      ],
+      "files": [
+        "SKILL.md",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 7742
     },
     {
       "slug": "deploy-to-vercel",
       "name": "deploy-to-vercel",
-      "description": "Deploy applications and websites to Vercel. Use when the user requests deployment actions like \"deploy my app\", \"deploy and give me the link\", \"push this live\", or \"create a preview deployment\".",
+      "description": "\"BOUBACAR RULE: Vercel = preview and mobile testing ONLY. NOT for production. Use when user says 'get me a preview link', 'share with client for review', or 'test on mobile'. When a site needs to go LIVE, stop and use hostinger-deploy instead. Never propose Vercel as the production host.\"",
       "trigger_phrases": [
+        "/live",
         "/dev",
         "/null",
         "/project",
@@ -247,43 +469,67 @@
         "/deploy-to-vercel",
         "/resources",
         "/deploy",
-        "/path",
-        "/to"
+        "/path"
       ],
       "files": [
-        "Archive.zip",
         "SKILL.md"
       ],
-      "size_bytes": 12082
+      "size_bytes": 12530
     },
     {
       "slug": "design",
-      "name": "ckm:design",
+      "name": "design",
       "description": "\"Comprehensive design skill: brand identity, design tokens, UI styling, logo generation (55 styles, Gemini AI), corporate identity program (50 deliverables, CIP mockups), HTML presentations (Chart.js), banner design (22 styles, social/ads/web/print), icon design (15 styles, SVG, Gemini 3.1 Pro), social photos (HTML→screenshot, multi-platform). Actions: design logo, create CIP, generate mockups, build slides, design banner, generate icon, create social photos, social media images, brand identity,",
       "trigger_phrases": [
+        "/styleguides",
+        "/studio",
         "/ui",
+        "/ui-styling",
+        "/references",
+        "/shadcn-pdf",
         "/logo-design",
         "/cip-design",
         "/slides",
         "/banner-sizes-and-styles",
         "/photos",
-        "/social-photos-design",
-        "/icon-design",
-        "/skills",
-        "/design",
-        "/scripts",
-        "/logo"
+        "/social-photos-design"
+      ],
+      "files": [
+        "SKILL.md",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 13017
+    },
+    {
+      "slug": "design-audit",
+      "name": "design-audit",
+      "description": "Score any visual artifact (local HTML, PDF, slide, banner, social photo, OR live URL, OR multi-page live site) against the 5-dimension Impeccable rubric. Documents only, never fixes. Use when the user says /design-audit, \"audit this design\", \"score this page\", \"rate this build\", \"audit this site\", \"audit this URL\", or after any frontend-design / hyperframes / slides / banner-design build to verify quality before shipping. Three modes: local file, single URL, multi-page crawl.",
+      "trigger_phrases": [
+        "/pbakaus",
+        "/impeccable",
+        "/design-live",
+        "/design-audit",
+        "/demo-sites",
+        "/volta-studio",
+        "/index",
+        "/websites",
+        "/signal-works-demo-dental",
+        "/articles",
+        "/saas-audit",
+        "/catalystworks"
       ],
       "files": [
         "SKILL.md"
       ],
-      "size_bytes": 12248
+      "size_bytes": 15764
     },
     {
       "slug": "design-system",
-      "name": "ckm:design-system",
-      "description": "Token architecture, component specifications, and slide generation. Three-layer tokens (primitive→semantic→component), CSS variables, spacing/typography scales, component specs, strategic slide creation. Use for design tokens, systematic design, brand-compliant presentations.",
+      "name": "design-system",
+      "description": "Token architecture, component specifications, and slide generation. Three-layer tokens (primitive→semantic→component), CSS variables, spacing/typography scales, component specs, strategic slide creation. Use for design tokens, systematic design, brand-compliant presentations. Triggers on \"design tokens\", \"design system\", \"component specs\", \"create slides\", \"token architecture\".",
       "trigger_phrases": [
+        "/styleguides",
+        "/studio",
         "/typography",
         "/presentation",
         "/token-architecture",
@@ -293,14 +539,28 @@
         "/semantic-tokens",
         "/component-tokens",
         "/component-specs",
-        "/states-and-variants",
-        "/tailwind-integration",
-        "/brand-guidelines"
+        "/states-and-variants"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 7123
+      "size_bytes": 7745
+    },
+    {
+      "slug": "email_enrichment",
+      "name": "email-enrichment",
+      "description": "Email enrichment tool. Agent-internal only. enrichment_tool.enrich_missing_emails() imported by scheduler.py and tools.py. DO NOT archive.",
+      "trigger_phrases": [
+        "/scheduler",
+        "/tools"
+      ],
+      "files": [
+        "SKILL.md",
+        "enrichment_tool.py",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 328
     },
     {
       "slug": "engagement-ops",
@@ -312,34 +572,79 @@
         "/schedule",
         "/resources",
         "/reference",
-        "/pm-rigor-library"
+        "/pm-rigor-library",
+        "/local_crm",
+        "/client"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 8871
+      "size_bytes": 12953
+    },
+    {
+      "slug": "forge_cli",
+      "name": "forge-cli",
+      "description": "Core Notion client + Forge KPI/page-builder. Agent-internal only -- not Boubacar-invoked. notion_client.py (NotionClient) imported by atlas_dashboard, crews, griot, content_board_reorder, handlers, auto_publisher. DO NOT archive.",
+      "trigger_phrases": [],
+      "files": [
+        "SKILL.md",
+        "__init__.py",
+        "config.py",
+        "create_content_db.py",
+        "databases.py",
+        "forge.py",
+        "forge_config.json",
+        "kpi.py",
+        "notion_client.py",
+        "page_builder.py",
+        "routing-eval.jsonl",
+        "system_config.py"
+      ],
+      "size_bytes": 755
     },
     {
       "slug": "frontend-design",
       "name": "frontend-design",
-      "description": "Use when creating, updating, or reviewing any website, landing page, or HTML/CSS artifact — before writing any code",
+      "description": "Use when creating, updating, or reviewing any website, landing page, or HTML/CSS artifact. Must run before writing any code. Applies the Volta design standard and enforces the banned default skeleton. Triggers on \"build a landing page\", \"create a website\", \"redesign this site\", \"build a page\", \"frontend-design\", \"create an HTML page\", \"update the hero section\", \"build a clone\", any website build, redesign, section update, clone, demo site, or UI artifact request.",
       "trigger_phrases": [
         "/styleguides",
-        "/styleguide_master",
-        "/styleguide_websites",
-        "/code",
-        "/design-references",
-        "/fetch_design_references"
+        "/studio",
+        "/skills",
+        "/ui-ux-pro-max",
+        "/scripts",
+        "/search",
+        "/frontend-design",
+        "/components",
+        "/formal",
+        "/personal",
+        "/provocative",
+        "/no"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 3494
+      "size_bytes": 68838
+    },
+    {
+      "slug": "github_skill",
+      "name": "github-skill",
+      "description": "GitHub automation tool. Agent-internal only. github_tool.create_repo/create_issue/create_file imported by tools.py. DO NOT archive.",
+      "trigger_phrases": [
+        "/tools"
+      ],
+      "files": [
+        "SKILL.md",
+        "github_tool.py",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 277
     },
     {
       "slug": "gsap",
       "name": "gsap",
-      "description": "GSAP animation reference for HyperFrames. Covers gsap.to(), from(), fromTo(), easing, stagger, defaults, timelines (gsap.timeline(), position parameter, labels, nesting, playback), and performance (transforms, will-change, quickTo). Use when writing GSAP animations in HyperFrames compositions.",
+      "description": "GSAP animation reference for HyperFrames. Covers gsap.to(), from(), fromTo(), easing, stagger, defaults, timelines (gsap.timeline(), position parameter, labels, nesting, playback), and performance (transforms, will-change, quickTo). Use when writing GSAP animations in HyperFrames compositions. Triggers on \"gsap\", \"gsap animation\", \"gsap timeline\", \"gsap easing\", \"animate with gsap\".",
       "trigger_phrases": [
         "/from",
         "/effects",
@@ -349,63 +654,125 @@
         "/left"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 6603
+      "size_bytes": 6694
+    },
+    {
+      "slug": "hormozi-lead-gen",
+      "name": "hormozi-lead-gen",
+      "description": "Use when the operator asks for lead-gen work, cold outreach, warm reactivation, lead magnets, follow-up sequences, ICP definition, list-building, hooks, or offer creation for any brand (Catalyst Works, Signal Works, Studio, future ventures). Triggers on phrases like \"build lead gen\", \"cold email\", \"warm outreach\", \"lead magnet\", \"improve our hooks\", \"fix this email\", \"build a follow-up sequence\", \"score this offer\", \"Hormozi\", \"what's the ICP\". Codifies Alex Hormozi's $100M Leads + $100M Offers ",
+      "trigger_phrases": [
+        "/day",
+        "/no",
+        "/business",
+        "/email",
+        "/cold_outreach",
+        "/playbooks",
+        "/pipeline-building-playbook",
+        "/mo"
+      ],
+      "files": [
+        "SKILL.md",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 22553
     },
     {
       "slug": "hostinger-deploy",
       "name": "hostinger-deploy",
-      "description": "Full workflow for creating, updating, and deploying static websites on Hostinger via GitHub. Covers repo setup, local folder structure in agentsHQ, GitHub push, and Hostinger Git integration.",
+      "description": "\"THE production deploy path for all websites. Use for every live/production website deployment — always the right choice when a site needs to go live. Vercel is for previews only; Hostinger is where real sites live. Full workflow: repo setup, local folder in agentsHQ, GitHub push, Hostinger Git auto-deploy. Triggers on \\\"hostinger\\\", \\\"deploy to hostinger\\\", \\\"hostinger deploy\\\", \\\"publish to hostinger\\\", \\\"live deploy\\\", \\\"go live\\\", \\\"push to production\\\".\"",
       "trigger_phrases": [
+        "/testing",
         "/preview",
         "/localhost",
-        "/og-image",
-        "/chrome",
-        "/tmp",
-        "/agents",
-        "/output",
-        "/websites",
-        "/github",
-        "/bokar83",
-        "/main",
-        "/index"
+        "/name",
+        "/signal",
+        "/mobile",
+        "/foo",
+        "/prefix-",
+        "/prefix",
+        "/finance",
+        "/take-home-pay-calculator-california",
+        "/take-home-pay-calculator"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 4717
+      "size_bytes": 9202
     },
     {
       "slug": "hunter_skill",
-      "name": "hunter_skill",
-      "description": "(no frontmatter)",
-      "size_bytes": 822
+      "name": "hunter-skill",
+      "description": "Automates discovery, logging, and reporting of high-intent Utah leads for Catalyst Works Consulting. Triggers on \"hunter\", \"run hunter\", \"prospect Utah\", \"daily prospecting\", \"find contacts\", \"hunter leads\".",
+      "trigger_phrases": [
+        "/email",
+        "/sw_t1",
+        "/day",
+        "/mo",
+        "/api",
+        "/v2",
+        "/account",
+        "/api_search",
+        "/search",
+        "/topup_leads",
+        "/email_enrichment",
+        "/enrichment_tool"
+      ],
+      "files": [
+        "SKILL.md",
+        "daily_leads.py",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 5471
     },
     {
       "slug": "hyperframes",
       "name": "hyperframes",
-      "description": "(no frontmatter)",
-      "size_bytes": 4641
+      "description": "Create video compositions, animations, title cards, overlays, captions, voiceovers, audio-reactive visuals, and scene transitions in HyperFrames HTML. Use when asked to build any HTML-based video content, add captions or subtitles synced to audio, generate text-to-speech narration, create audio-reactive animation (beat sync, glow, pulse driven by music), add animated text highlighting (marker sweeps, hand-drawn circles, burst lines, scribble, sketchout), or add transitions between scenes (crossf",
+      "trigger_phrases": [
+        "/visual-styles",
+        "/house-style",
+        "/invisible",
+        "/div",
+        "/compositions",
+        "/audio",
+        "/outro",
+        "/renderer",
+        "/studio-cards-test",
+        "/style",
+        "/cdn",
+        "/npm"
+      ],
+      "files": [
+        "SKILL.md",
+        "patterns.md",
+        "routing-eval.jsonl",
+        "skill.py"
+      ],
+      "size_bytes": 27756
     },
     {
       "slug": "hyperframes-cli",
       "name": "hyperframes-cli",
-      "description": "HyperFrames CLI tool — hyperframes init, lint, preview, render, transcribe, tts, doctor, browser, info, upgrade, compositions, docs, benchmark. Use when scaffolding a project, linting or validating compositions, previewing in the studio, rendering to video, transcribing audio, generating TTS, or troubleshooting the HyperFrames environment.",
+      "description": "HyperFrames CLI tool — hyperframes init, lint, preview, render, transcribe, tts, doctor, browser, info, upgrade, compositions, docs, benchmark. Use when scaffolding a project, linting or validating compositions, previewing in the studio, rendering to video, transcribing audio, generating TTS, or troubleshooting the HyperFrames environment. Triggers on \"hyperframes init\", \"hyperframes render\", \"hyperframes preview\", \"hyperframes lint\", \"hyperframes tts\", \"scaffold a composition project\", \"render ",
       "trigger_phrases": [
         "/agents",
         "/my-project",
         "/name_timestamp"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 5034
+      "size_bytes": 5284
     },
     {
       "slug": "hyperframes-registry",
       "name": "hyperframes-registry",
-      "description": "Install and wire registry blocks and components into HyperFrames compositions. Use when running hyperframes add, installing a block or component, wiring an installed item into index.html, or working with hyperframes.json. Covers the add command, install locations, block sub-composition wiring, component snippet merging, and registry discovery.",
+      "description": "Install and wire registry blocks and components into HyperFrames compositions. Use when running hyperframes add, installing a block or component, wiring an installed item into index.html, or working with hyperframes.json. Covers the add command, install locations, block sub-composition wiring, component snippet merging, and registry discovery. Triggers on \"hyperframes add\", \"install registry block\", \"wire registry component\", \"hyperframes registry\", \"install a block\", \"wire a block\", \"add a comp",
       "trigger_phrases": [
         "/headless",
         "/components",
@@ -421,9 +788,10 @@
         "/wiring-blocks"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 4382
+      "size_bytes": 4584
     },
     {
       "slug": "image-generator",
@@ -444,63 +812,193 @@
         "/prompt-page-template"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
       "size_bytes": 12634
+    },
+    {
+      "slug": "inbound_lead",
+      "name": "inbound-lead",
+      "description": "Inbound lead routine for researching, drafting, logging, and notifying on new prospect opportunities. Triggers on \"inbound lead\", \"new lead came in\", \"research this prospect\", \"log this inbound\", \"new inquiry\".",
+      "trigger_phrases": [],
+      "files": [
+        "SKILL.md",
+        "__init__.py",
+        "drafter.py",
+        "idempotency.py",
+        "logger.py",
+        "researcher.py",
+        "routing-eval.jsonl",
+        "runner.py",
+        "schema.py",
+        "telegram_notify.py"
+      ],
+      "size_bytes": 346
+    },
+    {
+      "slug": "karpathy",
+      "name": "karpathy",
+      "description": "Apply the four Karpathy coding principles (from AGENT_SOP.md) as a structured audit of code that was just written, proposed, or reviewed. Use on-demand via /karpathy or as a gate before shipping. Outputs a scored pass/fail per principle with specific line-level callouts. Triggers on \"karpathy\", \"karpathy audit\", \"four principles\", \"audit this code\", \"/karpathy\".",
+      "trigger_phrases": [],
+      "files": [
+        "SKILL.md",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 4263
     },
     {
       "slug": "kie_media",
       "name": "kie_media",
       "description": "Generates images and videos via the Kai (kie.ai) API. Routes each request to the top-ranked model for the task (text-to-image, image-to-image, text-to-video, image-to-video), retries once on the top model, escalates to ranks 2 and 3 on failure, downloads the output to local cache, uploads to Google Drive under 05_Asset_Library/, and logs metadata to Supabase media_generations with a link back to the Content Board. Trigger on any \"create image\", \"create video\", \"generate image\", \"generate video\",",
       "trigger_phrases": [
-        "/kie_media",
-        "/jobs",
-        "/create",
-        "/veo",
-        "/generate",
-        "/runway",
-        "/gpt4o-image",
-        "/record",
-        "/reference",
-        "/cross-vendor-fallback-pattern",
+        "/storytelling",
         "/media",
-        "/images"
+        "/music",
+        "/hailuo",
+        "/kling",
+        "/image",
+        "/video",
+        "/nano-banana-pro-image-to-image",
+        "/api",
+        "/v1",
+        "/gpt4o-image",
+        "/generate"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 6135
+      "size_bytes": 10350
+    },
+    {
+      "slug": "library",
+      "name": "library",
+      "description": "Index for shared internal skill library assets — lists reusable capability packs (cole-templates, agentshq-dispatch) under skills/library/. Use when looking for canonical content templates, cross-skill dispatch logic, or shared references that multiple skills consume. Triggers on \"skill library\", \"shared library\", \"library assets\", \"cole templates\", \"dispatch\", \"list library\", \"what's in the library\".",
+      "trigger_phrases": [
+        "/length"
+      ],
+      "files": [
+        "SKILL.md",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 1992
     },
     {
       "slug": "local_crm",
-      "name": "local_crm",
-      "description": "(no frontmatter)",
-      "size_bytes": 588
+      "name": "local-crm",
+      "description": "Agent-driven pipeline management for tracking Catalyst Growth Engine leads in a local PostgreSQL CRM. Triggers on \"local crm\", \"update pipeline\", \"add lead to CRM\", \"CRM record\", \"pipeline status\".",
+      "trigger_phrases": [],
+      "files": [
+        "SKILL.md",
+        "crm_tool.py",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 842
+    },
+    {
+      "slug": "memory",
+      "name": "memory",
+      "description": "Memory helpers and references for retrieving and preserving agent operating context. Two layers: (1) flat-file auto-memory in ~/.claude/projects/.../memory/ for curated signal; (2) MemPalace semantic search over verbatim conversation history. Triggers on \"memory lookup\", \"save this to memory\", \"what do you remember\", \"recall what we decided\", \"check your memory\", \"remember this\", \"/memory\".",
+      "trigger_phrases": [
+        "/projects",
+        "/d--",
+        "/memory",
+        "/agents",
+        "/sandbox",
+        "/palace-agentshq",
+        "/venv-mempalace",
+        "/room",
+        "/mempalace"
+      ],
+      "files": [
+        "SKILL.md",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 2134
     },
     {
       "slug": "mermaid_diagrammer",
       "name": "mermaid_diagrammer",
-      "description": "Generates PNG, SVG, or PDF diagrams from Mermaid syntax using local Mermaid-CLI.",
+      "description": "Generates PNG, SVG, or PDF diagrams from Mermaid syntax using local Mermaid-CLI. Triggers on \"mermaid\", \"generate diagram\", \"mermaid diagram\", \"draw this as a diagram\", \"create flowchart\".",
       "trigger_phrases": [
-        "/mermaid-cli"
+        "/mermaid-cli",
+        "/entities",
+        "/arch-diagram"
       ],
       "files": [
         "SKILL.md",
+        "routing-eval.jsonl",
         "skill.py"
       ],
-      "size_bytes": 673
+      "size_bytes": 1456
+    },
+    {
+      "slug": "notebooklm",
+      "name": "notebooklm",
+      "description": "Query, manage, and automate Google NotebookLM from your AI agent. Add sources, generate slide decks with your brand colors, run research, and keep auth alive automatically.",
+      "trigger_phrases": [
+        "/github",
+        "/teng-lin",
+        "/notebooklm-py",
+        "/nlm",
+        "/agents",
+        "/python",
+        "/skills",
+        "/notebooklm",
+        "/scripts",
+        "/storage_state",
+        "/api",
+        "/repos"
+      ],
+      "files": [
+        ".gitignore",
+        "INSTALL_PROMPT.md",
+        "README.md",
+        "SKILL.md"
+      ],
+      "size_bytes": 11652
     },
     {
       "slug": "notion_cli",
-      "name": "notion_cli",
-      "description": "(no frontmatter)",
-      "size_bytes": 1324
+      "name": "notion-cli",
+      "description": "Project-specific CLI for direct interaction with Notion databases in agentsHQ. Triggers on \"notion cli\", \"query notion\", \"notion database\", \"update notion record\", \"notion lookup\".",
+      "trigger_phrases": [
+        "/notion_cli"
+      ],
+      "files": [
+        "SKILL.md",
+        "notion_cli.py",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 1592
+    },
+    {
+      "slug": "notion_skill",
+      "name": "notion-skill",
+      "description": "Notion API tool. Agent-internal only. notion_tool.query_database/search_databases/create_page/create_idea_page imported by tools.py and handlers_commands.py. DO NOT archive.",
+      "trigger_phrases": [
+        "/tools",
+        "/handlers_commands"
+      ],
+      "files": [
+        "SKILL.md",
+        "notion_tool.py",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 467
     },
     {
       "slug": "notion_stylist",
-      "name": "notion_stylist",
-      "description": "(no frontmatter)",
-      "size_bytes": 1302
+      "name": "notion-stylist",
+      "description": "Applies premium Catalyst Works visual styling to Notion pages and databases. Triggers on \"notion stylist\", \"style this notion page\", \"notion branding\", \"format notion\", \"notion design\".",
+      "trigger_phrases": [],
+      "files": [
+        "SKILL.md",
+        "notion_stylist.py",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 1555
     },
     {
       "slug": "nsync",
@@ -518,17 +1016,18 @@
         "/info",
         "/exclude",
         "/humanatwork-site",
-        "/bokar83"
+        "/setup_local_agents"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 6501
+      "size_bytes": 6654
     },
     {
       "slug": "opencli_skill",
       "name": "opencli-rs",
-      "description": "Use opencli-rs CLI to interact with social/content websites (HackerNews, DevTo, Lobsters, StackOverflow, Steam, Linux-do, Arxiv, Wikipedia, Apple-Podcasts, Xiaoyuzhou, BBC, Hugging Face, SinaFinance, Google, V2EX, Bloomberg, Twitter/X, Bilibili, Reddit, Zhihu, Xiaohongshu, Xueqiu, Weibo, Douban, WeRead, YouTube, Medium, Substack, SinaBlog, BOSS直聘, Jike, Facebook, Instagram, TikTok, Yollomi, Yahoo-Finance, Barchart, LinkedIn, Reuters, SMZDM, Ctrip, Coupang, Grok, Jimeng, Chaoxing, Weixin, Doubao,",
+      "description": "|. Triggers on \"opencli\", \"browse linkedin\", \"fetch from reddit\", \"search hackernews\", \"scrape this site with cli\".",
       "trigger_phrases": [
         "/raw",
         "/nashsu",
@@ -545,20 +1044,71 @@
       ],
       "files": [
         "README.md",
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 31137
+      "size_bytes": 31251
     },
     {
       "slug": "openspace_skill",
-      "name": "openspace_skill",
-      "description": "(no frontmatter)",
-      "size_bytes": 937
+      "name": "openspace-skill",
+      "description": "Autonomous performance optimization and skill repair engine for self-evolving Catalyst Works agents. Triggers on \"openspace\", \"evolve skill\", \"repair skill\", \"optimize agent performance\", \"fix broken skill\", \"self-improve\".",
+      "trigger_phrases": [
+        "/logic"
+      ],
+      "files": [
+        "SKILL.md",
+        "openspace_tool.py",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 1234
+    },
+    {
+      "slug": "outreach",
+      "name": "outreach",
+      "description": "Core outreach engine for SW + CW pipelines. Agent-internal only -- not Boubacar-invoked. sequence_engine.py runs 4/5-touch email sequences imported by morning_runner, engine.py, and send_scheduler. outreach_tool.py and email_templates.py are production code.",
+      "trigger_phrases": [
+        "/engine",
+        "/var",
+        "/log",
+        "/signal_works_morning"
+      ],
+      "files": [
+        "SKILL.md",
+        "email_templates.py",
+        "outreach_tool.py",
+        "routing-eval.jsonl",
+        "sequence_engine.py"
+      ],
+      "size_bytes": 2553
+    },
+    {
+      "slug": "rca",
+      "name": "rca",
+      "description": "Use when a production system is broken, behaving unexpectedly, or an incident needs investigation. Triggers on: gate agent failures, studio pipeline errors, SW outreach bugs, webchat routing bugs, cost spikes, container crashes, silent failures.",
+      "trigger_phrases": [
+        "/rca",
+        "/var",
+        "/log",
+        "/gate-agent",
+        "/handler",
+        "/app",
+        "/orchestrator",
+        "/root",
+        "/agents",
+        "/handoff",
+        "/skills",
+        "/drive"
+      ],
+      "files": [
+        "SKILL.md"
+      ],
+      "size_bytes": 8001
     },
     {
       "slug": "react-best-practices",
       "name": "vercel-react-best-practices",
-      "description": "React and Next.js performance optimization guidelines from Vercel Engineering. This skill should be used when writing, reviewing, or refactoring React/Next.js code to ensure optimal performance patterns. Triggers on tasks involving React components, Next.js pages, data fetching, bundle optimization, or performance improvements.",
+      "description": "React and Next.js performance optimization guidelines from Vercel Engineering. This skill should be used when writing, reviewing, or refactoring React/Next.js code to ensure optimal performance patterns. Triggers on tasks involving React components, Next.js pages, data fetching, bundle optimization, or performance improvements. Triggers on \"react best practices\", \"nextjs performance\", \"optimize react\", \"next.js patterns\", \"react review\".",
       "trigger_phrases": [
         "/dynamic",
         "/logging",
@@ -574,28 +1124,36 @@
         "AGENTS.md",
         "README.md",
         "SKILL.md",
-        "metadata.json"
+        "metadata.json",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 7277
+      "size_bytes": 7389
     },
     {
       "slug": "remoat",
       "name": "remoat",
-      "description": "(no frontmatter)",
-      "size_bytes": 507
+      "description": "Automates the connection between the Antigravity IDE and Telegram bot through the Remoat bridge. Triggers on \"remoat\", \"antigravity bridge\", \"connect IDE to Telegram\", \"remoat ignite\", \"wire Antigravity\".",
+      "trigger_phrases": [],
+      "files": [
+        "SKILL.md",
+        "ignite.ps1",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 765
     },
     {
       "slug": "remote-access-auditor",
       "name": "remote-access-auditor",
-      "description": "Performs a full unauthorized remote access audit on a Windows machine using Desktop Commander. Use this skill whenever the user asks to: scan for remote access tools, check if anyone is accessing their computer, run a security scan, audit running services, check for suspicious software, or verify whether their PC is clean. Also trigger automatically when a scheduled security check is requested. The skill checks active network connections, running processes, installed software, and known remote a",
+      "description": ">. Triggers on \"remote access audit\", \"scan for remote tools\", \"security scan my PC\", \"check if someone is accessing my computer\".",
       "trigger_phrases": [
         "/process",
         "/port"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 7405
+      "size_bytes": 7534
     },
     {
       "slug": "roadmap",
@@ -608,19 +1166,45 @@
         "/atlas-m1-buttons"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 6640
+      "size_bytes": 6925
     },
     {
       "slug": "sankofa",
       "name": "sankofa",
-      "description": "Use when the user invokes /sankofa or asks to run the Sankofa Council on content, a decision, a deliverable, or a strategy. Five independent voices stress-test the thing in context — no validation, only pressure.",
-      "trigger_phrases": [],
-      "files": [
-        "SKILL.md"
+      "description": "Use when the user invokes /sankofa or asks to run the Sankofa Council on content, a decision, a deliverable, or a strategy. Five independent voices stress-test the thing in context — no validation, only pressure. Triggers on \"/sankofa\", \"sankofa council\", \"stress-test this\", \"pressure-test this\", \"run council on\", \"five voices\", \"council review\", \"stress test this decision\", \"pressure test this proposal\", \"I need five perspectives\".",
+      "trigger_phrases": [
+        "/firing"
       ],
-      "size_bytes": 3016
+      "files": [
+        "SKILL.md",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 5806
+    },
+    {
+      "slug": "scene-segmenter",
+      "name": "scene-segmenter",
+      "description": "Breaks a script into N scene beats at 200 words/minute and emits one paired image-prompt and video-prompt per beat. Front-half of the Studio M3.5 channel cloner pipeline. Trigger on \"segment script\", \"scene split\", \"beat segmentation\", \"script to scenes\", \"image and video prompts from script\".",
+      "trigger_phrases": [
+        "/motion",
+        "/scene-segmenter",
+        "/segment",
+        "/to",
+        "/script",
+        "/style-dna",
+        "/scenes",
+        "/roadmap",
+        "/studio"
+      ],
+      "files": [
+        "SKILL.md",
+        "routing-eval.jsonl",
+        "segment.py"
+      ],
+      "size_bytes": 3410
     },
     {
       "slug": "seo-strategy",
@@ -641,14 +1225,45 @@
         "/title"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 116197
+      "size_bytes": 124178
+    },
+    {
+      "slug": "serper_skill",
+      "name": "serper-skill",
+      "description": "Serper-backed prospecting and search tooling for lead discovery workflows. Triggers on \"serper\", \"search leads\", \"serper search\", \"prospect search\", \"find prospects with serper\".",
+      "trigger_phrases": [],
+      "files": [
+        "SKILL.md",
+        "hunter_tool.py",
+        "prospecting_tool.py",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 300
+    },
+    {
+      "slug": "signal-works-pitch-reel",
+      "name": "signal-works-pitch-reel",
+      "description": "Generates a Signal Works pitch reel video from website demo screenshots. Auto-generates niche-specific copywriting, builds a HyperFrames composition, renders the MP4, uploads to Google Drive, and logs to the Notion Content Board. Trigger when user provides a screenshots folder path and a niche name. Niches supported: roofer, pediatric dentist, hvac (extend as needed). Triggers on \"signal works pitch reel\", \"pitch reel\", \"generate pitch video\", \"SW pitch reel\", \"build pitch reel\".",
+      "trigger_phrases": [
+        "/agents",
+        "/output",
+        "/websites",
+        "/signal-works-demo-",
+        "/pitch-reel"
+      ],
+      "files": [
+        "SKILL.md",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 9768
     },
     {
       "slug": "skool-harvester",
       "name": "skool-harvester",
-      "description": "Harvests Skool community lessons — text, attachments (n8n JSONs, agent template zips, PDFs), screenshots, and metadata — into workspace/skool-harvest/<community>/. Uses a saved Playwright session at ~/.claude/playwright-state/skool.json so no re-login is needed. Trigger on \"harvest skool\", \"scrape skool\", \"pull skool lesson\", \"/skool-harvester\", or when given a skool.com classroom or lesson URL.",
+      "description": "Harvests Skool community lessons , text, attachments (n8n JSONs, agent template zips, PDFs), screenshots, and metadata , into workspace/skool-harvest/<community>/. Uses a saved Playwright session at ~/.claude/playwright-state/skool.json so no re-login is needed. Trigger on \"harvest skool\", \"scrape skool\", \"pull skool lesson\", \"/skool-harvester\", or when given a skool.com classroom or lesson URL.",
       "trigger_phrases": [
         "/skool-harvester",
         "/classroom",
@@ -664,62 +1279,150 @@
         "/reference"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 8488
+      "size_bytes": 9052
     },
     {
       "slug": "slides",
-      "name": "ckm:slides",
-      "description": "Create strategic HTML presentations with Chart.js, design tokens, responsive layouts, copywriting formulas, and contextual slide strategies.",
+      "name": "slides",
+      "description": "Create strategic HTML presentations with Chart.js, design tokens, responsive layouts, copywriting formulas, and contextual slide strategies. Triggers on 'slides', 'create slides', 'build a presentation', 'HTML deck', 'presentation', 'slide deck', 'pitch deck'.",
       "trigger_phrases": [
         "/args",
         "/create",
         "/layout-patterns",
         "/html-template",
         "/copywriting-formulas",
-        "/slide-strategies"
+        "/slide-strategies",
+        "/design-audit",
+        "/design-audits"
       ],
       "files": [
         "SKILL.md"
       ],
-      "size_bytes": 1208
+      "size_bytes": 2308
+    },
+    {
+      "slug": "superpowers",
+      "name": "superpowers",
+      "description": "Superpowers methodology and workflow skill collection used by local coding agents.",
+      "trigger_phrases": [],
+      "files": [
+        ".gitattributes",
+        ".gitignore",
+        "CHANGELOG.md",
+        "CODE_OF_CONDUCT.md",
+        "GEMINI.md",
+        "LICENSE",
+        "README.md",
+        "RELEASE-NOTES.md",
+        "SKILL.md",
+        "gemini-extension.json",
+        "package.json"
+      ],
+      "size_bytes": 207
+    },
+    {
+      "slug": "tab-shutdown",
+      "name": "tab-shutdown",
+      "description": "Closes a Claude Code session cleanly. Writes all discoveries, decisions, and lessons to memory and skills, updates any affected skills, writes a handoff doc to docs/handoff/, and posts the next-session prompt in chat. Trigger on \"tab shutdown\", \"close this tab\", \"end session\", \"wrap up\", \"shut it down\", or \"/tab-shutdown\".",
+      "trigger_phrases": [
+        "/kie_media",
+        "/handoff",
+        "/active-context",
+        "/reviews",
+        "/absorb-followups",
+        "/roadmap",
+        "/decided",
+        "/deferred",
+        "/agents",
+        "/update",
+        "/query",
+        "/design"
+      ],
+      "files": [
+        "SKILL.md",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 15557
     },
     {
       "slug": "transcribe",
       "name": "transcribe",
-      "description": "(no frontmatter)",
-      "size_bytes": 4356
+      "description": "Transcribes audio files, video files, folders, and YouTube URLs using the OpenAI Whisper API with optional Google Drive and NotebookLM routing. Triggers on \"transcribe\", \"get transcript\", \"speech to text\", \"transcribe this audio\", \"transcribe this video\".",
+      "trigger_phrases": [
+        "/transcribe",
+        "/video",
+        "/www",
+        "/watch"
+      ],
+      "files": [
+        "SKILL.md",
+        "routing-eval.jsonl",
+        "transcribe.py"
+      ],
+      "size_bytes": 4656
+    },
+    {
+      "slug": "transcript-style-dna",
+      "name": "transcript-style-dna",
+      "description": "Reverse-engineers a voice fingerprint from N reference texts (transcripts, LinkedIn posts, website copy, About pages) and outputs a JSON style profile plus one personalized opener line. Internal infrastructure for cold outreach personalization (Signal Works) and Catalyst Works pre-discovery prep. NOT a sold product. Trigger on \"style dna\", \"voice fingerprint\", \"personalize this opener\", \"prep for [client] discovery\", \"fingerprint this prospect\".",
+      "trigger_phrases": [
+        "/phrases",
+        "/engagements",
+        "/voice-brief",
+        "/to",
+        "/text1",
+        "/text2",
+        "/text3",
+        "/style-dna",
+        "/transcript-style-dna",
+        "/email_builder",
+        "/project_channel_style_dna_audit"
+      ],
+      "files": [
+        "SKILL.md",
+        "extract.py",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 5587
     },
     {
       "slug": "ui-styling",
-      "name": "ckm:ui-styling",
-      "description": "Create beautiful, accessible user interfaces with shadcn/ui components (built on Radix UI + Tailwind), Tailwind CSS utility-first styling, and canvas-based visual designs. Use when building user interfaces, implementing design systems, creating responsive layouts, adding accessible components (dialogs, dropdowns, forms, tables), customizing themes and colors, implementing dark mode, generating visual designs and posters, or establishing consistent styling patterns across applications.",
+      "name": "ui-styling",
+      "description": "Create beautiful, accessible user interfaces with shadcn/ui components (built on Radix UI + Tailwind), Tailwind CSS utility-first styling, and canvas-based visual designs. Use when building user interfaces, implementing design systems, creating responsive layouts, adding accessible components (dialogs, dropdowns, forms, tables), customizing themes and colors, implementing dark mode, generating visual designs and posters, or establishing consistent styling patterns across applications. Triggers o",
       "trigger_phrases": [
+        "/styleguides",
+        "/studio",
         "/ui",
+        "/llms-",
+        "/refresh-shadcn-cache",
+        "/shadcn-blocks",
         "/llms",
         "/tailwindcss",
         "/docs",
         "/components",
         "/button",
-        "/card",
-        "/div",
-        "/vite",
-        "/index",
-        "/shadcn-components",
-        "/shadcn-theming"
+        "/card"
       ],
       "files": [
         "LICENSE.txt",
-        "SKILL.md"
+        "SKILL.md",
+        "craft-tokens.css",
+        "craft-tokens.ts",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 10373
+      "size_bytes": 11475
     },
     {
       "slug": "ui-ux-pro-max",
       "name": "ui-ux-pro-max",
       "description": "\"UI/UX design intelligence for web and mobile. Includes 50+ styles, 161 color palettes, 57 font pairings, 161 product types, 99 UX guidelines, and 25 chart types across 10 stacks (React, Next.js, Vue, Svelte, SwiftUI, React Native, Flutter, Tailwind, shadcn/ui, and HTML/CSS). Actions: plan, build, create, design, implement, review, fix, improve, optimize, enhance, refactor, and check UI/UX code. Projects: website, landing page, dashboard, admin panel, e-commerce, SaaS, portfolio, blog, and mobil",
       "trigger_phrases": [
+        "/styleguides",
+        "/font",
+        "/studio",
         "/height",
         "/text",
         "/disable",
@@ -728,17 +1431,13 @@
         "/back",
         "/tap",
         "/highlight",
-        "/sizes",
-        "/optional",
-        "/feature",
-        "/defer"
+        "/sizes"
       ],
       "files": [
         "SKILL.md",
-        "data",
-        "scripts"
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 45434
+      "size_bytes": 46665
     },
     {
       "slug": "vercel-cli-with-tokens",
@@ -764,11 +1463,11 @@
     {
       "slug": "vercel-launch",
       "name": "vercel-launch",
-      "description": "Full app launch workflow for Boubacar's projects. Use when user says \"deploy my app\", \"launch my app\", or \"push <name> to Vercel\". Creates the app folder, GitHub repo, git history, Vercel link, and deploys. App name becomes <name>-app. ALWAYS deploy as preview by default. Only deploy to production when user explicitly says \"go live\" or \"to production\".",
+      "description": "Vercel preview deploy for Boubacar's apps — for mobile testing and sharing preview links with clients ONLY. NOT for production. All live/production deployments go to Hostinger (use hostinger-deploy skill). Use when user says \"deploy my app to Vercel\", \"get me a preview link\", \"share this with a client\", or \"test on mobile\". App name becomes <name>-app. ALWAYS preview only — never production. Triggers on \"deploy to vercel\", \"vercel preview\", \"get a preview link\", \"share with client via vercel\", \"",
       "trigger_phrases": [
+        "/live",
         "/apps",
         "/push",
-        "/production",
         "/skills",
         "/vercel-launch",
         "/scripts",
@@ -780,14 +1479,15 @@
         "/attire-inspo-app"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 3188
+      "size_bytes": 4438
     },
     {
       "slug": "web-design-guidelines",
       "name": "web-design-guidelines",
-      "description": "Review UI code for Web Interface Guidelines compliance. Use when asked to \"review my UI\", \"check accessibility\", \"audit design\", \"review UX\", or \"check my site against best practices\".",
+      "description": "Review UI code for Web Interface Guidelines compliance. Use when asked to \"review my UI\", \"check accessibility\", \"audit design\", \"review UX\", or \"check my site against best practices\". Triggers on \"review my ui\", \"check accessibility\", \"audit design\", \"review ux\", \"check my site against best practices\".",
       "trigger_phrases": [
         "/pattern",
         "/raw",
@@ -797,34 +1497,78 @@
         "/command"
       ],
       "files": [
+        "SKILL.md",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 1390
+    },
+    {
+      "slug": "webapp-testing",
+      "name": "webapp-testing",
+      "description": "Toolkit for interacting with and testing local web applications using Playwright. Use when verifying frontend functionality, debugging UI behavior, capturing browser screenshots, viewing browser logs, or QA-testing any locally running web build. Triggers on \"test the frontend\", \"check if X works in the browser\", \"take a screenshot of\", \"verify the page\", \"test this build\", \"automate this UI\", or when a site has just been built and needs a smoke test before deploy.",
+      "trigger_phrases": [
+        "/with_server",
+        "/localhost",
+        "/tmp",
+        "/inspect"
+      ],
+      "files": [
         "SKILL.md"
       ],
-      "size_bytes": 1270
+      "size_bytes": 3197
     },
     {
       "slug": "website-intelligence",
       "name": "website-intelligence",
       "description": "Research-driven competitive intelligence engine for websites. Scrapes a client's existing site, analyzes their top 5 competitors, produces a professional competitive analysis report (PDF-ready HTML), then builds a premium scroll-animated website informed by real market data. Uses Firecrawl MCP for scraping. Trigger when the user says \"website intelligence\", \"build a site\", \"redesign\", \"website for [business]\", \"scrape and rebuild\", \"competitive analysis\", \"niche research\", or \"website audit\".",
       "trigger_phrases": [
+        "/assets",
+        "/media",
+        "/auditdeploy",
+        "/full",
+        "/v2",
+        "/signature",
+        "/agents",
+        "/projects",
+        "/elevate-built-oregon",
+        "/audit-one-pager",
         "/firecrawl",
-        "/map",
-        "/companies",
-        "/nav",
-        "/sample-brand-snapshot",
-        "/industry",
-        "/process-overview",
-        "/asset",
-        "/light"
+        "/map"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 13607
+      "size_bytes": 34427
+    },
+    {
+      "slug": "website-teardown",
+      "name": "website-teardown",
+      "description": "Two-mode pipeline that audits a prospect website. COLD mode = lean outbound-email teardown (Phase 0 auto-filter + 3-leak markdown + paste-ready cold email). WARM mode = full 6-phase pipeline with HTML internal-viability + client-facing report + before/after mockup. Triggers on \"website-teardown\", \"teardown this site\", \"cold teardown\", \"warm teardown\", \"run a teardown\", \"should we pursue this lead\", or /website-teardown URL.",
+      "trigger_phrases": [
+        "/website-teardown",
+        "/site",
+        "/after",
+        "/carousel",
+        "/closed-business",
+        "/teardowns",
+        "/phase0_filter",
+        "/element",
+        "/app",
+        "/secrets",
+        "/gws-oauth-credentials-cw",
+        "/gmail"
+      ],
+      "files": [
+        "SKILL.md",
+        "routing-eval.jsonl"
+      ],
+      "size_bytes": 18148
     },
     {
       "slug": "website-to-hyperframes",
       "name": "website-to-hyperframes",
-      "description": "Capture a website and create a HyperFrames video from it. Use when: (1) a user provides a URL and wants a video, (2) someone says \"capture this site\", \"turn this into a video\", \"make a promo from my site\", (3) the user wants a social ad, product tour, or any video based on an existing website, (4) the user shares a link and asks for any kind of video content. Even if the user just pastes a URL — this is the skill to use.",
+      "description": "Capture a website and create a HyperFrames video from it. Use when a user provides a URL and wants a video, wants a social ad or product tour from a website, or pastes a link and asks for video content. Triggers on \"website to hyperframes\", \"turn this url into a video\", \"capture this site as video\", \"make a promo from my site\", \"build a video from this website\", \"url to video\", \"site to video\", \"webpage to video\", \"turn this page into a promo\".",
       "trigger_phrases": [
         "/step-1-capture",
         "/step-2-design",
@@ -837,9 +1581,10 @@
         "/techniques"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 6237
+      "size_bytes": 6254
     },
     {
       "slug": "youtube-10k-lens",
@@ -847,15 +1592,34 @@
       "description": "Use when given a YouTube URL and you need a transcript, summary, and analysis through Boubacar's $10K/day framework. Triggers when user shares a YouTube link and says \"summarize\", \"transcript\", \"10k lens\", \"is this worth watching\", or \"what does this mean for my business\". Minimum output is the transcript. Full output adds summary + 10K/day verdict.",
       "trigger_phrases": [
         "/day",
-        "/agenda"
+        "/capital",
+        "/complexity",
+        "/agenda",
+        "/time"
       ],
       "files": [
-        "SKILL.md"
+        "SKILL.md",
+        "routing-eval.jsonl"
       ],
-      "size_bytes": 4546
+      "size_bytes": 6415
     }
   ],
   "orchestrator_modules": [
+    {
+      "file": "agent_config.py",
+      "purpose": "agent_config.py - DB-driven runtime configuration (local Postgres). Provides a two-layer config lookup: 1. agent_config table in local Postgres (live overrides, no restart needed) 2. Environment variable fallback 3. Hardcoded default Usage: from agent_config import get_config, set_config model = get_config(\"CHAT_MODEL\", default=\"anthropic/claude-haiku-4.5\") set_config(\"CHAT_MODEL\", \"anthropic/claude-sonnet-4-5\") All writes go to Postgres only. The env var layer is read-only fallback. Container r",
+      "public_functions": [
+        "ensure_table",
+        "get_config",
+        "set_config",
+        "delete_config",
+        "list_config"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 146
+    },
     {
       "file": "agents.py",
       "purpose": "agents.py — Agent Definitions ============================== All specialist agents for the agentsHQ system. LLM SELECTION PHILOSOPHY: - All models go through OpenRouter (one key, all providers) - Uses CrewAI's native LLM class with openai/ provider prefix to force OpenRouter routing regardless of model name - select_llm() dynamically picks best model per agent role + task complexity - To add new models: add to MODEL_REGISTRY and update select_llm() Adding a new agent: 1. Define a build_[name]_ag",
@@ -889,11 +1653,11 @@
       "public_classes": [],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 1050
+      "lines": 1164
     },
     {
       "file": "app.py",
-      "purpose": "app.py - FastAPI entrypoint for the agentsHQ orchestrator. This is the modular replacement for orchestrator.py. Routes are ported verbatim (behavior-wise) from orchestrator.py. State dicts live in state.py so the monolith and this app share them during cutover. Startup hooks (in order): 1. install_litellm_callback() , token ledger registration 2. start_scheduler() , daily cron + heartbeat wakes 3. telegram_polling_loop() , background task Auth is fail-closed: if ORCHESTRATOR_API_KEY is unset and",
+      "purpose": "app.py - FastAPI entrypoint for the agentsHQ orchestrator. Startup hooks (in order): 1. install_litellm_callback() , token ledger registration 2. start_scheduler() , daily cron + heartbeat wakes 3. telegram_polling_loop() , background task Auth is fail-closed: if ORCHESTRATOR_API_KEY is unset and DEBUG_NO_AUTH is not \"true\", every gated endpoint returns 500 on misconfig.",
       "public_functions": [
         "verify_api_key",
         "verify_chat_token",
@@ -903,6 +1667,7 @@
         "telegram_webhook",
         "receive_health_report",
         "chat_token",
+        "dream_register_window",
         "run_task",
         "run_task_sync",
         "run_team",
@@ -917,12 +1682,13 @@
         "search_memory",
         "get_history",
         "upload_file",
-        "sync_session"
+        "sync_session",
+        "atlas_state"
       ],
       "public_classes": [],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 780
+      "lines": 1249
     },
     {
       "file": "approval_queue.py",
@@ -934,6 +1700,7 @@
         "find_by_telegram_msg_id",
         "find_latest_pending",
         "list_pending",
+        "list_recent",
         "count_pending",
         "approve",
         "reject",
@@ -945,7 +1712,60 @@
       ],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 293
+      "lines": 346
+    },
+    {
+      "file": "async_poll.py",
+      "purpose": "async_poll.py -- Shared Kie AI async job polling utility. Replaces the flat sleep loop in kie_media._poll_task with exponential backoff, configurable endpoints, and a high-res mode flag. Used by: - kie_media.py (Veo3, image, video tasks via /jobs/recordInfo) - sora_watermark_remover (same endpoint, different model) - audio_remix via Suno V5 (/generate/record-info) - Any future Kie model that follows the createTask -> poll pattern Sankofa Council note (2026-04-27): build as shared primitive from ",
+      "public_functions": [
+        "poll_until_done",
+        "submit_and_poll",
+        "high_res_params"
+      ],
+      "public_classes": [
+        "PollTimeout",
+        "PollFailed"
+      ],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 142
+    },
+    {
+      "file": "atlas_dashboard.py",
+      "purpose": "atlas_dashboard.py -- Pure data fetchers for the Atlas M8 dashboard. One function per card. Returns plain dicts ready for json.dumps(). No FastAPI imports. No side effects. All I/O is read-only except action helpers (added later) which are at the bottom of this file.",
+      "public_functions": [
+        "get_state",
+        "get_queue",
+        "get_content",
+        "get_spend",
+        "get_cost_ledger",
+        "add_cost_ledger_entry",
+        "get_heartbeats",
+        "get_errors",
+        "get_hero",
+        "get_ideas",
+        "get_agents",
+        "get_crm_board",
+        "set_lead_status",
+        "get_cost_report",
+        "flip_milestone",
+        "get_roadmap_metrics"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 1322
+    },
+    {
+      "file": "auto_publisher.py",
+      "purpose": "auto_publisher.py - Atlas M7b. Autonomous publish tick. Heartbeat callback that closes Atlas L3 (Publish loop). Every 5 minutes: 1. Query Notion Content Board for records where: Status = Queued AND Scheduled Date <= today AND Platform in (LinkedIn, X) 2. For each record, in order: a. Flip Status to Publishing in Notion BEFORE the API call. This is the idempotency safeguard: if we crash between POST and the postSubmissionId write, the next tick sees Status=Publishing (not Queued) and skips, preve",
+      "public_functions": [
+        "auto_publisher_tick"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 771
     },
     {
       "file": "autonomy_guard.py",
@@ -954,13 +1774,81 @@
         "get_guard"
       ],
       "public_classes": [
+        "ContractNotSatisfiedError",
         "GuardDecision",
         "SpendSnapshot",
         "AutonomyGuard"
       ],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 278
+      "lines": 400
+    },
+    {
+      "file": "beehiiv.py",
+      "purpose": "beehiiv.py - Newsletter delivery integration. Primary path: Listmonk (self-hosted, full send API). Fallback path: Beehiiv draft creation (Enterprise send API not available on current plan). Listmonk API: http://listmonk:9000/api Beehiiv API: https://api.beehiiv.com/v2",
+      "public_functions": [
+        "send_via_listmonk",
+        "create_draft"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 190
+    },
+    {
+      "file": "blotato_publisher.py",
+      "purpose": "blotato_publisher.py - Atlas M7b. Verified-against-Blotato-API publisher. Wraps the Blotato REST API for posting to LinkedIn + X (and any future platform Blotato supports). Built on the API contract verified end-to-end on 2026-04-25 during the M7a smoke test (LinkedIn 5 sec submit-to-live, X 9 sec, both verbatim). Used by orchestrator/auto_publisher.py to fire scheduled posts. Platform-agnostic by design so Studio M4 can reuse the same publisher for YouTube + IG + TikTok + Threads + Facebook + P",
+      "public_functions": [
+        "get_publisher",
+        "list_accounts"
+      ],
+      "public_classes": [
+        "PublishResult",
+        "BlotatoPublisher"
+      ],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 413
+    },
+    {
+      "file": "chairman_crew.py",
+      "purpose": "chairman_crew.py - M5 L5 Learning Loop. Weekly oversight crew (Monday 06:00 MT). Reads approval_queue outcomes for griot proposals, identifies rejection patterns and scoring drift, proposes mutations to SCORING_WEIGHTS via approval_queue, and applies approved mutations to agent_config. Mutation targets (all read/written via agent_config key GRIOT_<UPPER>): - total_score_weight, next_arc_bonus, topic_overlap_penalty, recent_arc_phase_penalty, RECENCY_WINDOW_DAYS, ARC_PHASE_WINDOW_DAYS Safety: - N",
+      "public_functions": [
+        "fetch_outcomes",
+        "analyse_patterns",
+        "propose_mutations",
+        "enqueue_proposals",
+        "apply_mutation",
+        "chairman_weekly_tick"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 426
+    },
+    {
+      "file": "concierge_crew.py",
+      "purpose": "concierge_crew.py - M4 LLM-powered error triage. Reads /var/log/error_monitor.log on VPS, groups errors by normalized signature, proposes fixes via Claude Haiku, enqueues to approval_queue.",
+      "public_functions": [
+        "fetch_recent_errors",
+        "group_by_signature",
+        "propose_fix",
+        "enqueue_proposals",
+        "run_concierge_sweep"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 282
+    },
+    {
+      "file": "conftest.py",
+      "purpose": "",
+      "public_functions": [],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 9
     },
     {
       "file": "constants.py",
@@ -969,7 +1857,7 @@
       "public_classes": [],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 32
+      "lines": 45
     },
     {
       "file": "content_board_reorder.py",
@@ -990,6 +1878,46 @@
       "tool_classes": [],
       "tool_bundles": [],
       "lines": 341
+    },
+    {
+      "file": "content_connection_crew.py",
+      "purpose": "content_connection_crew.py - Atlas M9d-C: Content Connection Finder Reads last 30 days of content board, calls LLM to surface non-obvious thematic connections, writes Connection Insight records to content board. VPS cron: Monday 07:00 MT (13:00 UTC) 0 13 * * 1 root cd /root/agentsHQ && docker exec orc-crewai python3 orchestrator/content_connection_crew.py >> /var/log/content_connection.log 2>&1 Success criterion: Boubacar acts on 1 suggestion within 7 days of first run.",
+      "public_functions": [
+        "fetch_recent_content",
+        "build_connection_prompt",
+        "parse_connections",
+        "write_connections_to_notion",
+        "run"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 245
+    },
+    {
+      "file": "content_multiplier_crew.py",
+      "purpose": "",
+      "public_functions": [
+        "estimate_tokens",
+        "classify_lens",
+        "ingest_source",
+        "build_piece_plans",
+        "ctq_reject_reason",
+        "multiply_source",
+        "multiply_from_page_id",
+        "multiplier_tick",
+        "main"
+      ],
+      "public_classes": [
+        "SourceDoc",
+        "PiecePlan",
+        "GeneratedPiece",
+        "CostCapExceeded",
+        "CostGuard"
+      ],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 1103
     },
     {
       "file": "council.py",
@@ -1016,6 +1944,8 @@
         "build_research_crew",
         "build_consulting_crew",
         "build_social_crew",
+        "build_content_draft_crew",
+        "build_newsletter_crew",
         "build_linkedin_x_crew",
         "build_code_crew",
         "build_writing_crew",
@@ -1023,6 +1953,7 @@
         "build_agent_creator_crew",
         "build_forge_kpi_crew",
         "build_media_crew",
+        "build_video_crew",
         "build_unknown_crew",
         "run_parallel_team",
         "build_team_synthesis_crew",
@@ -1032,30 +1963,44 @@
         "build_news_brief_crew",
         "build_notion_overhaul_crew",
         "build_gws_crew",
-        "build_notion_capture_crew",
-        "build_notion_tasks_crew",
-        "build_crm_query_crew",
-        "build_crm_outreach_crew"
+        "build_notion_capture_crew"
       ],
       "public_classes": [],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 2885
+      "lines": 3550
     },
     {
       "file": "db.py",
       "purpose": "db.py — Database connection utilities for agentsHQ =================================================== Supabase is the primary CRM database. Local Postgres is the fallback -- used only when Supabase is unreachable. A background sync job moves any local fallback data to Supabase when it recovers. Rule: Local Postgres leads table should always be empty. If it has rows, Supabase was unreachable and a sync is needed.",
       "public_functions": [
+        "ensure_chat_artifacts_table",
+        "save_chat_artifact",
+        "get_chat_artifact",
+        "ensure_content_approvals_table",
+        "ensure_video_jobs_table",
         "get_crm_connection",
         "get_local_connection",
         "get_crm_connection_with_fallback",
-        "sync_supabase_to_notion",
-        "sync_fallback_to_supabase"
+        "sync_fallback_to_supabase",
+        "upsert_signal_works_lead",
+        "ensure_email_jobs_table",
+        "ensure_session_summaries_table",
+        "save_session_summary",
+        "get_latest_session_summary",
+        "fetch_pending_email_jobs",
+        "mark_email_job_sent",
+        "mark_email_job_failed",
+        "insert_email_job",
+        "get_leads_for_drafting",
+        "mark_email_drafted",
+        "ensure_leads_columns",
+        "get_resend_queue"
       ],
       "public_classes": [],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 332
+      "lines": 718
     },
     {
       "file": "design_context.py",
@@ -1069,6 +2014,37 @@
       "lines": 147
     },
     {
+      "file": "dream_handler.py",
+      "purpose": "dream_handler.py - Telegram-integrated memory consolidation (Dreams loop). Flow: 1. scripts/dream.py runs locally, scans memory, sends proposal to Telegram with ✅ Approve / ❌ Reject inline buttons + chat_id written to PENDING file 2. Button tap → handle_dream_callback() in handlers_approvals.handle_callback_query 3. _apply_decision() implements or discards the proposal PENDING file (dream-output/.pending): stores chat_id so the VPS can apply the decision even after a container restart. No in-mem",
+      "public_functions": [
+        "has_pending_proposal",
+        "run_dream_async",
+        "handle_dream_reply",
+        "handle_dream_callback"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 206
+    },
+    {
+      "file": "drive_publish.py",
+      "purpose": "drive_publish.py — Publish PDFs (and other files) to Google Drive with public-link permission. Use for any file that ships in an outgoing email or external-facing message. Upload + permission grant happen in one call so we never email a Drive URL that recipients cannot open. Public API: publish_public_file(local_path, drive_folder_id, filename, mime_type) -> {id, url} Uploads a new file to the given folder, then grants anyone-with-link reader. update_public_file(file_id, local_path, mime_type) -",
+      "public_functions": [
+        "ensure_public",
+        "publish_public_file",
+        "update_public_file",
+        "audit_email_template_pdfs",
+        "audit_studio_pipeline_videos"
+      ],
+      "public_classes": [
+        "DrivePublishError"
+      ],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 322
+    },
+    {
       "file": "engine.py",
       "purpose": "",
       "public_functions": [
@@ -1078,7 +2054,7 @@
       "public_classes": [],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 350
+      "lines": 352
     },
     {
       "file": "episodic_memory.py",
@@ -1117,15 +2093,28 @@
       "lines": 169
     },
     {
-      "file": "griot.py",
-      "purpose": "griot.py - Phase 3 L0.5 autonomous content pilot. Heartbeat wake callback that runs every weekday morning (07:00 America/Denver). Deterministic picker (zero LLM calls at this level). Reads the Notion Content Board, filters to Ready drafts that are not yet scheduled, scores each against recency + arc coverage, enqueues the top candidate to approval_queue. L0.5 design decision: propose candidates, not drafts. The actual leGriot copy work only runs after Boubacar approves the candidate (Phase 3.5).",
+      "file": "gate_agent.py",
+      "purpose": "gate_agent.py - Echo M2.5: The Gate Sole arbiter of all writes to shared state: GitHub, VPS, main branch. Runs as a 60s heartbeat tick registered in scheduler.py. Responsibilities (exhaustive): - Detect feature branches ahead of main (git fetch every tick) - Check file overlap between queued branches (conflict detection) - Run tests on each branch before merging - LLM code review for high-risk files (orchestrator/, deploy scripts) - Auto-merge clean branches to main, push to GitHub - Deploy to V",
       "public_functions": [
-        "griot_morning_tick"
+        "gate_tick"
       ],
       "public_classes": [],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 445
+      "lines": 666
+    },
+    {
+      "file": "griot.py",
+      "purpose": "griot.py - Phase 3 L0.5 autonomous content pilot. Heartbeat wake callback that runs every weekday morning (07:00 America/Denver). Deterministic picker (zero LLM calls at this level). Reads the Notion Content Board, filters to Ready drafts that are not yet scheduled, scores each against recency + arc coverage, enqueues the top candidate to approval_queue. L0.5 design decision: propose candidates, not drafts. The actual leGriot copy work only runs after Boubacar approves the candidate (Phase 3.5).",
+      "public_functions": [
+        "griot_morning_tick",
+        "griot_propose_on_demand",
+        "record_content_approval"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 835
     },
     {
       "file": "griot_scheduler.py",
@@ -1136,11 +2125,37 @@
       "public_classes": [],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 425
+      "lines": 432
+    },
+    {
+      "file": "griot_signal_brief.py",
+      "purpose": "griot_signal_brief.py -- LéGroit weekly theme detection + Signal Brief. Fires every Monday at 09:00 MT. Reads the last 7 days of: - Telegram messages stored in chat_artifacts (user-side messages only) - Content Board Story entries created in the last 7 days - task_outcomes crew logs (what Boubacar asked about repeatedly) Passes to Claude Haiku for theme extraction. Returns top 3 recurring themes with one draft post per theme. Sends to Boubacar via Telegram. This is the intelligence upgrade: LéGr",
+      "public_functions": [
+        "griot_signal_brief_tick"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 186
+    },
+    {
+      "file": "halo_tracer.py",
+      "purpose": "halo_tracer.py — CrewAI -> HALO-compatible OTel JSONL trace writer. Subscribes to CrewAI's event bus and writes one JSONL span per event to a local file in the inference.net OTel format that HALO Engine reads. Activation: set HALO_TRACING_ENABLED=true in .env. Output path: HALO_TRACES_PATH (default: /app/data/halo_traces.jsonl). The file is append-only. To start a fresh diagnostic pass, delete it or move it aside before re-running the harness. Parallel container runs each write to the same file ",
+      "public_functions": [
+        "get_tracer",
+        "maybe_install_halo_tracer"
+      ],
+      "public_classes": [
+        "HaloTracer",
+        "HaloTracerListener"
+      ],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 585
     },
     {
       "file": "handlers.py",
-      "purpose": "handlers.py - Telegram update orchestrator + polling loop. Thin dispatcher. All the real work lives in: - handlers_approvals.py (callback_query, reply approvals, feedback windows) - handlers_commands.py (15 slash commands) - handlers_doc.py (doc-routing emoji handlers) - handlers_chat.py (run_chat + praise/critique) - worker.py (_run_background_job) Dispatch order in process_telegram_update MUST match orchestrator.py:1346-2345 exactly. Reordering any of steps 1-9 risks regressing the PR #10/#11/",
+      "purpose": "handlers.py - Telegram update orchestrator + polling loop. Thin dispatcher. All the real work lives in: - handlers_approvals.py (callback_query, reply approvals, feedback windows) - handlers_commands.py (15 slash commands) - handlers_doc.py (doc-routing emoji handlers) - handlers_chat.py (run_chat + praise/critique) - worker.py (_run_background_job) Dispatch order in process_telegram_update is load-bearing. Reordering any of steps 1-9 risks regressing the PR #10/#11/#13 feedback-window precedenc",
       "public_functions": [
         "process_telegram_update",
         "telegram_polling_loop"
@@ -1148,7 +2163,7 @@
       "public_classes": [],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 287
+      "lines": 300
     },
     {
       "file": "handlers_approvals.py",
@@ -1159,37 +2174,44 @@
         "handle_pending_feedback_tag",
         "handle_approval_reply",
         "handle_naked_approval",
-        "handle_publish_reply"
+        "handle_publish_reply",
+        "handle_newsletter_editorial_reply"
       ],
       "public_classes": [],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 367
+      "lines": 1117
     },
     {
       "file": "handlers_chat.py",
-      "purpose": "handlers_chat.py - Rich chat + praise/critique helpers. Owns: - run_chat(message, session_key) - Simpsons-persona direct chat with 4 tools (query_system, retrieve_output_file, save_memory, forward_to_crew), conversation-history loading from Postgres, and session-memory injection. - _is_praise / _is_feedback_on_prior_job - word-list + emoji detectors. - handle_feedback - end-to-end praise/critique pairing against the last completed job, gated by MEMORY_LEARNING_ENABLED. Word lists, emoji sets, an",
+      "purpose": "handlers_chat.py - Rich chat + praise/critique helpers. Owns: - run_chat(message, session_key) - command-center chat with 4 tools (query_system, retrieve_output_file, save_memory, forward_to_crew), conversation-history loading from Postgres, and session-memory injection. - _is_praise / _is_feedback_on_prior_job - word-list + emoji detectors. - handle_feedback - end-to-end praise/critique pairing against the last completed job, gated by MEMORY_LEARNING_ENABLED. - run_chat_with_buttons - single-se",
       "public_functions": [
         "handle_feedback",
-        "run_chat"
+        "run_chat",
+        "run_chat_with_buttons",
+        "run_atlas_chat"
       ],
       "public_classes": [],
       "tool_classes": [],
       "tool_bundles": [
         "_TOOLS"
       ],
-      "lines": 433
+      "lines": 1083
     },
     {
       "file": "handlers_commands.py",
-      "purpose": "handlers_commands.py - Slash command dispatch for Telegram. One function per command, grouped by era: - Original ops commands (pre-autonomy): /cost, /projects, /status, /lessons, /purge-lesson, /scan-drive, /switch - Phase 0 autonomy rails: /autonomy_status, /pause_autonomy, /resume_autonomy, /spend - Phase 1 approval queue: /queue, /approve, /reject, /outcomes - Phase 2 heartbeat: /heartbeat_status, /trigger_heartbeat dispatch_command(text, chat_id) is the single entry point called from handler",
+      "purpose": "handlers_commands.py - Slash command dispatch for Telegram. One function per command, grouped by era: - Original ops commands (pre-autonomy): /cost, /projects, /status, /lessons, /purge-lesson, /scan-drive, /switch - Phase 0 autonomy rails: /autonomy_status, /pause_autonomy, /resume_autonomy - Phase 1 approval queue: /queue, /approve, /reject, /outcomes - Phase 2 heartbeat: /heartbeat_status, /trigger_heartbeat dispatch_command(text, chat_id) is the single entry point called from handlers.proces",
       "public_functions": [
+        "parse_task_add",
+        "handle_task_add",
         "dispatch_command"
       ],
-      "public_classes": [],
+      "public_classes": [
+        "TaskAddParse"
+      ],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 562
+      "lines": 1462
     },
     {
       "file": "handlers_doc.py",
@@ -1203,6 +2225,33 @@
       "lines": 405
     },
     {
+      "file": "harvest_reviewer.py",
+      "purpose": "harvest_reviewer.py - Two-agent (Mapper + Decision) reviewer for harvested Skool lessons. Reads: - workspace/skool-harvest/<community>/_review_plan.json (from harvest_triage) - workspace/skool-harvest/<community>/<lesson_id>/* (harvested artifacts) - docs/agentsHQ_inventory.json (from inventory_snapshot) For each lesson with triage_label == \"deep\": 1. Mapper agent: produces a structured map of overlap, new capability, tools, and required translations to our stack. 2. Decision rule: rule-based fi",
+      "public_functions": [
+        "review_lesson",
+        "run_council_on_batch",
+        "review_batch",
+        "main"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 587
+    },
+    {
+      "file": "harvest_triage.py",
+      "purpose": "harvest_triage.py - Pure-heuristic filter over a community's harvested lessons. Reads workspace/skool-harvest/<community>/_index.json plus each harvested lesson directory and labels every entry as one of: - \"deep\" : send to the deep reviewer (full LLM pass) - \"skip\" : auto-skip; matches admin/affiliate/welcome noise - \"reference\" : keep in record but do not propose adoption (videos with no downloads and no R-prefix; might be worth reading) No LLM calls. The point is to cut review cost ~10x by re",
+      "public_functions": [
+        "triage_lesson",
+        "build_review_plan",
+        "main"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 298
+    },
+    {
       "file": "health.py",
       "purpose": "",
       "public_functions": [],
@@ -1212,6 +2261,19 @@
       "tool_classes": [],
       "tool_bundles": [],
       "lines": 32
+    },
+    {
+      "file": "health_sweep.py",
+      "purpose": "health_sweep.py - Daily automated API health sweep. Probes every public-facing endpoint with edge-case inputs (pending job, missing job, null fields, empty strings) and asserts that every response is valid JSON with an expected status code. Any probe that returns a non-JSON body, a 5xx, or a Pydantic validation error fires a Telegram alert so the bug is caught before Boubacar sees it. Fires every day at 08:00 MT via heartbeat.register_wake(). Read-only: no Notion writes, no crew invocations, no ",
+      "public_functions": [
+        "run_health_sweep",
+        "read_sweep_state",
+        "health_sweep_tick"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 346
     },
     {
       "file": "heartbeat.py",
@@ -1228,7 +2290,54 @@
       ],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 338
+      "lines": 361
+    },
+    {
+      "file": "hermes_worker.py",
+      "purpose": "hermes_worker.py - M24: Autonomous self-healing execution. Triggered when a concierge-fix proposal is approved. Claims a minion task, isolates work in a git worktree, invokes LLM to draft a fix, validates with pytest, and pushes a [READY] branch for the Gate to merge.",
+      "public_functions": [
+        "is_path_safe",
+        "checkout_sandbox_branch",
+        "commit_and_push_fix",
+        "hermes_fix_handler"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 329
+    },
+    {
+      "file": "hyperframe_boost_agent.py",
+      "purpose": "",
+      "public_functions": [
+        "send_message"
+      ],
+      "public_classes": [
+        "HyperframeBoostAgent"
+      ],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 276
+    },
+    {
+      "file": "hyperframe_boost_cron.py",
+      "purpose": "",
+      "public_functions": [],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 16
+    },
+    {
+      "file": "hyperframe_brief_generator.py",
+      "purpose": "",
+      "public_functions": [],
+      "public_classes": [
+        "HyperframeBriefGenerator"
+      ],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 132
     },
     {
       "file": "kie_media.py",
@@ -1236,15 +2345,46 @@
       "public_functions": [
         "generate_image",
         "generate_video",
+        "generate_promo_video",
         "list_models",
-        "check_credits"
+        "check_credits",
+        "sora_watermark_remover",
+        "audio_remix"
       ],
       "public_classes": [
         "KieMediaError"
       ],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 568
+      "lines": 848
+    },
+    {
+      "file": "llm_helpers.py",
+      "purpose": "llm_helpers.py - Shared LLM client factory and completion helper. All OpenRouter / OpenAI-compatible calls in agentsHQ should go through this module so the client config, model env vars, and default headers live in exactly one place. Usage (recommended, DB-driven): from llm_helpers import call_llm result = call_llm(messages, model=None, model_key=\"ATLAS_CHAT_MODEL\") Usage (deliberate cost pinning, e.g. validator/classifier roles): from llm_helpers import call_llm result = call_llm(messages, mode",
+      "public_functions": [
+        "get_openrouter_client",
+        "call_llm"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 205
+    },
+    {
+      "file": "logger.py",
+      "purpose": "logger.py — Immutable out-of-band audit trail ============================================== Opens a dedicated connection pool under the `audit_logger` Postgres role, which holds INSERT-only privileges on the `immutable_audit.agent_audit_trail` table. No agent running as `audit_logger` can UPDATE or DELETE audit rows. Public API ---------- from logger import audit audit( agent_id=\"spawner\", action=\"agent_spawn\", target=\"feat/atlas-m23-agent-spawning\", payload={\"child_agent\": \"gate_agent\", \"depth",
+      "public_functions": [
+        "audit",
+        "audit_spawn",
+        "audit_self_heal",
+        "audit_gate",
+        "audit_file_edit",
+        "audit_task"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 398
     },
     {
       "file": "memory.py",
@@ -1270,7 +2410,120 @@
       "public_classes": [],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 764
+      "lines": 767
+    },
+    {
+      "file": "memory_distillation_crew.py",
+      "purpose": "memory_distillation_crew.py - Atlas M9d-B: Memory Distillation Engine Reads all flat-file memory/*.md files, calls LLM to surface the 5 highest-leverage facts not already obvious from the MEMORY.md index, writes result to the memory_distillation Postgres table (UNIQUE on date). Designed to run via VPS cron: 1st of each month at 06:00 Mountain 0 12 1 * * root cd /root/agentsHQ && docker exec orc-crewai python3 orchestrator/memory_distillation_crew.py >> /var/log/memory_distillation.log 2>&1 Succe",
+      "public_functions": [
+        "read_memory_from_db",
+        "read_all_memory_files",
+        "build_distillation_prompt",
+        "save_to_postgres",
+        "run"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 194
+    },
+    {
+      "file": "memory_models.py",
+      "purpose": "memory_models.py - Write contract for the agentsHQ memory table. Every write path imports one of these models and calls to_db_row() to get the dict for the Postgres INSERT. Invalid data raises ValidationError before hitting the DB. 8 categories, each with its own required fields and defaults: agent_lesson — what the system learned (boost 1.5) project_state — roadmap codename state (boost 1.0) lead_record — SW T1-T5 prospect (boost 1.0) client_record — CW engagement (boost 1.0) idea — captured id",
+      "public_functions": [],
+      "public_classes": [
+        "AgentLesson",
+        "ProjectState",
+        "LeadRecord",
+        "ClientRecord",
+        "Idea",
+        "HardRule",
+        "Asset",
+        "SessionLog"
+      ],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 260
+    },
+    {
+      "file": "memory_qmd.py",
+      "purpose": "memory_qmd.py -- Local semantic search via QMD (github.com/tobi/qmd). Additive to memory.py (Qdrant). Use when Qdrant is unavailable or for local-only searches over agent logs and session notes.",
+      "public_functions": [
+        "qmd_available",
+        "qmd_search",
+        "index_document",
+        "qmd_search_with_fallback"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 122
+    },
+    {
+      "file": "memory_store.py",
+      "purpose": "memory_store.py - Read/write interface for the agentsHQ memory table. All write paths call write(model) where model is one of the 8 types from memory_models.py. All query paths call query_text() or query_filter(). Connection pattern matches council.py: direct psycopg2 connect via env vars. All functions are non-fatal on DB failure — they log and return None/[].",
+      "public_functions": [
+        "write",
+        "query_text",
+        "query_filter",
+        "load_hard_rules"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 192
+    },
+    {
+      "file": "model_review_agent.py",
+      "purpose": "model_review_agent.py -- Weekly leGriot model quality review. Fires every Sunday at 08:00 MT (13:00 UTC) via heartbeat scheduler. What it does: 1. Loads the leGriot quality rubric from docs/reference/legriot-quality-rubric.md at runtime (not from training data). 2. Pulls 3 seed posts from the Notion Content Board (Status=Queued or Posted, last 14 days). 3. Runs each seed idea through leGriot social/moderate prompt for each model in MODEL_REVIEW_CANDIDATES. 4. Scores each output against the 5 rub",
+      "public_functions": [
+        "model_review_tick"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 376
+    },
+    {
+      "file": "newsletter_anchor_tick.py",
+      "purpose": "Monday 12:00 MT newsletter drafting tick.",
+      "public_functions": [
+        "send_message",
+        "send_message_with_buttons",
+        "build_newsletter_crew",
+        "start_task",
+        "complete_task",
+        "newsletter_anchor_tick",
+        "main"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 211
+    },
+    {
+      "file": "newsletter_editorial_input.py",
+      "purpose": "newsletter_editorial_input.py - Postgres CRUD for the weekly editorial reply. The Sunday 18:00 MT prompt asks Boubacar one question. Any free-text reply between Sun 18:00 and Mon 06:00 in the operator chat is captured here, keyed by the upcoming Monday's date. Last write wins. Mon 06:00 anchor selection reads this; if a row exists, the reply text becomes the newsletter user request.",
+      "public_functions": [
+        "upsert_reply",
+        "get_reply_for_week"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 66
+    },
+    {
+      "file": "newsletter_editorial_prompt.py",
+      "purpose": "newsletter_editorial_prompt.py - Sunday 18:00 MT heartbeat callback. Sends one Telegram message asking Boubacar what he noticed this week worth a newsletter. Sunday-only gate. The reply is captured by handlers_approvals.handle_newsletter_editorial_reply between Sun 18:00 and Mon 06:00 and stored in newsletter_editorial_input for that Monday's date.",
+      "public_functions": [
+        "send_message",
+        "newsletter_editorial_prompt_tick"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 57
     },
     {
       "file": "niche_research.py",
@@ -1307,53 +2560,78 @@
       "public_classes": [],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 913
+      "lines": 918
     },
     {
-      "file": "orchestrator.py",
-      "purpose": "=============================================================== agentsHQ ORCHESTRATOR v2.0 =============================================================== Owner: Boubacar Barry — Catalyst Works Consulting System: agentsHQ — Self-hosted multi-agent intelligence This is the main FastAPI service. It receives tasks from: - Telegram (primary channel) - Direct HTTP POST (from Cursor, Claude Code, any tool) - n8n workflows (automated triggers) Architecture: 1. Request arrives at /run 2. Router classifi",
+      "file": "notion_state_poller.py",
+      "purpose": "Notion State Poller. Heartbeat-driven 5-minute tick. Queries Notion Tasks DB for rows changed in last 6 minutes, diffs against cached state, writes one changelog line per detected change. Single writer of docs/audits/changelog.md. Spec: docs/superpowers/specs/2026-05-02-task-poller-and-add-design.md",
       "public_functions": [
-        "verify_api_key",
-        "startup_event",
-        "run_chat",
-        "run_orchestrator",
-        "run_team_orchestrator",
-        "process_telegram_update",
-        "telegram_polling_loop",
-        "telegram_webhook",
-        "status",
-        "health",
-        "receive_health_report",
-        "run_task",
-        "run_task_sync",
-        "run_team",
-        "http_autonomy_approve",
-        "classify_only",
-        "capabilities",
-        "list_outputs",
-        "get_output",
-        "search_memory",
-        "get_history",
-        "run_task_async",
-        "get_job_status",
-        "inbound_lead_webhook",
-        "chat_token"
+        "load_cache",
+        "save_cache",
+        "extract_tracked_props",
+        "diff_row",
+        "format_changelog_line",
+        "append_changelog",
+        "query_recently_changed",
+        "query_all_active",
+        "main",
+        "tick"
       ],
-      "public_classes": [
-        "TaskRequest",
-        "TaskResponse",
-        "TeamTaskRequest",
-        "StatusResponse",
-        "AsyncTaskResponse",
-        "JobStatusResponse",
-        "HealthReportRequest",
-        "AutonomyApproveBody",
-        "SyncSessionRequest",
-        "ChatTokenRequest"
-      ],
+      "public_classes": [],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 3200
+      "lines": 453
+    },
+    {
+      "file": "notion_sync_crew.py",
+      "purpose": "notion_sync_crew.py - Atlas M9d Step 3: Nightly Notion sync Pulls modified pages from Notion databases and UPSERTs them into the memory table so /query can find them. Designed to run via VPS cron: 02:00 daily 0 2 * * * root cd /root/agentsHQ && docker exec orc-crewai python3 orchestrator/notion_sync_crew.py >> /var/log/notion_sync.log 2>&1 Databases synced: IDEAS_DB_ID → category=idea rows NOTION_TASK_DB_ID → category=project_state rows (active tasks only)",
+      "public_functions": [
+        "sync_ideas",
+        "sync_tasks",
+        "run"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 157
+    },
+    {
+      "file": "prompt_loader.py",
+      "purpose": "prompt_loader.py - Load agent system prompts from disk at runtime. Lookup order for agent_name \"chat\": 1. /app/agents/chat/SYSTEM.md (container path, editable without rebuild) 2. AGENTS_DIR env var / {agent_name} / SYSTEM.md (override path) 3. fallback string passed by the caller This lets Boubacar edit an agent's persona by editing a file on VPS and reloading -- no code change, no container rebuild, no restart. Usage: from prompt_loader import load_system_prompt prompt = load_system_prompt(\"cha",
+      "public_functions": [
+        "get_system_md_path",
+        "load_system_prompt",
+        "reload_prompt"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 83
+    },
+    {
+      "file": "provider_health.py",
+      "purpose": "provider_health.py - Circuit breaker state for LLM providers. One row per provider in the provider_health table. Only 'openrouter' in v1. All writes are to the local Postgres instance (same as agent_config). States: healthy - provider is responding normally tripped - 3+ failures in 5 minutes; LLM calls are paused + Telegram alert sent",
+      "public_functions": [
+        "ensure_table",
+        "get_status",
+        "record_failure",
+        "record_recovery"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 172
+    },
+    {
+      "file": "provider_probe.py",
+      "purpose": "provider_probe.py - 5-minute health probe for the active LLM provider. Registered as a heartbeat wake in app.py. On each fire: - If tripped: run a 1-token test call. Success = record_recovery + Telegram. - If healthy: run the same test call. Failure = record_failure (same circuit breaker). - Always: fetch OpenRouter credit balance, check for spend spike. Spike alert: if balance drops > SPIKE_THRESHOLD_USD in a single probe window, fires a Telegram alert. Uses two module-level floats -- no new ta",
+      "public_functions": [
+        "run_probe"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 119
     },
     {
       "file": "publish_brief.py",
@@ -1364,7 +2642,7 @@
       "public_classes": [],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 262
+      "lines": 282
     },
     {
       "file": "research_engine.py",
@@ -1375,11 +2653,11 @@
       "public_classes": [],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 226
+      "lines": 230
     },
     {
       "file": "router.py",
-      "purpose": "router.py — Task Classification Engine ======================================= Maps incoming user requests to the correct crew type. Used by orchestrator.py to determine which crew to assemble.",
+      "purpose": "router.py — Task Classification Engine ======================================= Maps incoming user requests to the correct crew type. Used by engine.run_orchestrator to determine which crew to assemble.",
       "public_functions": [
         "classify_task",
         "get_crew_type",
@@ -1393,7 +2671,7 @@
       "public_classes": [],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 608
+      "lines": 688
     },
     {
       "file": "saver.py",
@@ -1401,12 +2679,13 @@
       "public_functions": [
         "get_drive_subfolder",
         "save_to_github",
-        "save_to_drive"
+        "save_to_drive",
+        "save_to_notion_content_board"
       ],
       "public_classes": [],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 162
+      "lines": 238
     },
     {
       "file": "scheduler.py",
@@ -1417,7 +2696,7 @@
       "public_classes": [],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 1064
+      "lines": 1360
     },
     {
       "file": "schemas.py",
@@ -1437,7 +2716,7 @@
       ],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 77
+      "lines": 79
     },
     {
       "file": "scrub_titles.py",
@@ -1449,13 +2728,280 @@
       "lines": 30
     },
     {
+      "file": "session_compressor.py",
+      "purpose": "session_compressor.py - Cross-session memory compressor (Atlas M9c). Fires every 30 minutes via heartbeat. Finds sessions that went quiet 30-90 minutes ago and have not yet been summarized. Calls Haiku to produce a 3-5 bullet summary and writes it to session_summaries. On the next message, run_chat and run_atlas_chat silently inject the summary into the system prompt. Raw turns in agent_conversation_history are never deleted.",
+      "public_functions": [
+        "find_sessions_to_compress",
+        "compress_session",
+        "compressor_tick"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 144
+    },
+    {
+      "file": "session_store.py",
+      "purpose": "session_store.py - Agent session persistence (local Postgres). Provides upsert/touch/get operations on the agent_sessions table so session state survives container restarts. All functions use get_local_connection() per the hard rule: local Postgres only (not Supabase) for operational agentsHQ data.",
+      "public_functions": [
+        "ensure_table",
+        "upsert_session",
+        "touch_session",
+        "get_session",
+        "list_active_sessions"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 162
+    },
+    {
+      "file": "social_analytics.py",
+      "purpose": "social_analytics.py — Social Media Engagement Analytics Tracking Pipeline ======================================================================== This module pulls live engagement metrics (views, likes, comments, reposts) for posts on LinkedIn and X (Twitter) using headless Playwright. It then: 1. Writes the metrics back to the Notion Content Board. 2. Saves a timestamped record to Postgres for historical trend tracking. 3. Sends a premium Telegram summary to Boubacar. Can be run on-demand or s",
+      "public_functions": [
+        "load_env",
+        "ensure_db_schema",
+        "send_telegram_summary",
+        "parse_count_from_label",
+        "scrape_x_metrics",
+        "scrape_linkedin_metrics",
+        "pull_social_analytics_async",
+        "run_pull_social_analytics"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 435
+    },
+    {
+      "file": "spend_snapshot.py",
+      "purpose": "spend_snapshot.py - Daily provider spend snapshot. Fires once per day at 23:55 MT via heartbeat. Pulls live figures from OpenRouter's auth/key + credits endpoints and upserts one row per day into provider_billing. This gives us true historical spend so the dashboard can compare this week vs last week, this month vs last month, YTD. Table schema (created on first run if missing): provider_billing( id SERIAL PRIMARY KEY, provider TEXT NOT NULL, -- 'openrouter' day DATE NOT NULL, -- MT date usd_tod",
+      "public_functions": [
+        "take_snapshot",
+        "get_historical",
+        "take_kie_snapshot",
+        "get_kie_historical",
+        "spend_snapshot_tick"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 300
+    },
+    {
+      "file": "startup_check.py",
+      "purpose": "startup_check.py - Hard-fail guard for required env vars. Called once at server startup (inside the @app.on_event(\"startup\") handler). Exits the process with code 1 before any request is served if a required var is absent or empty. CHAT_MODEL and ATLAS_CHAT_MODEL are NOT in REQUIRED_VARS. They have code-level defaults in llm_helpers (`os.environ.get(KEY) or _DEFAULT_MODEL`). The post-import check below verifies that the resolved model slugs are non-empty after default-coalescing, catching the fa",
+      "public_functions": [
+        "assert_required_env_vars"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 57
+    },
+    {
       "file": "state.py",
-      "purpose": "state.py - In-memory system state trackers. Shared dicts and locks that span handler modules. Kept here so both the live monolith (orchestrator.py) and the modular shadow (app.py + handlers*) can import the same object during the cutover. After the entrypoint flip, the monolith will still import from this module, so state survives the transition within a single process. A container restart clears all of these - that is intentional.",
+      "purpose": "state.py - In-memory system state trackers. Shared dicts and locks that span handler modules. A container restart clears all of these - that is intentional.",
       "public_functions": [],
       "public_classes": [],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 83
+      "lines": 86
+    },
+    {
+      "file": "story_prompt_tick.py",
+      "purpose": "story_prompt_tick.py -- LéGroit storytelling prompt engine. Fires on two triggers: 1. Scheduled: Tuesday and Thursday at 08:00 MT (morning, before the day gets loud). 2. Sparse queue: any heartbeat tick where Story-tagged Idea count < STORY_QUEUE_MIN. Picks a random prompt from STORY_PROMPTS, sends via Telegram. Never sends the same prompt twice in a row (tracks last_sent in memory). Respects STORY_PROMPTS_ENABLED env var kill-switch.",
+      "public_functions": [
+        "story_prompt_scheduled_tick",
+        "story_prompt_sparse_tick"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 170
+    },
+    {
+      "file": "studio_analytics_scraper.py",
+      "purpose": "studio_analytics_scraper.py - Studio M5-lite. Scrape public view counts from posted Studio Pipeline URLs and write them back to Notion. Intended for low-volume daily heartbeat use.",
+      "public_functions": [
+        "studio_analytics_tick"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 106
+    },
+    {
+      "file": "studio_blotato_publisher.py",
+      "purpose": "studio_blotato_publisher.py - Studio M4. Heartbeat tick that publishes Studio Pipeline DB records to their scheduled platform via the Blotato API. Runs daily at 09:00 MT. Logic: 1. Query Notion Studio Pipeline DB for records where: Status = scheduled AND Scheduled Date = today 2. For each record, in order: a. Resolve channel + platform → Blotato account ID from env. b. Flip Status = publishing BEFORE the API call (idempotency guard: a crash between POST and postSubmissionId write leaves the reco",
+      "public_functions": [
+        "studio_blotato_publisher_tick"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 496
+    },
+    {
+      "file": "studio_brand_config.py",
+      "purpose": "studio_brand_config.py — Dynamic brand config loader for Studio M3. Resolution order: 1. Notion Studio Brand Config DB (live, M2 fills this) 2. configs/brand_config.<channel_id>.json (per-channel file, M2 fills placeholders) 3. configs/brand_config.placeholder.json (dev fallback, always works) When M2 ships: Boubacar fills the Notion Brand Config DB or updates the per-channel JSON files. Pipeline picks up new values on next tick — zero code changes.",
+      "public_functions": [
+        "load_brand_config",
+        "is_brand_ready"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 164
+    },
+    {
+      "file": "studio_composer.py",
+      "purpose": "studio_composer.py - Studio M3: Compose video from scenes + audio using ffmpeg. Replaces hyperframes entirely. Pipeline: 1. Each scene image gets a Ken Burns motion effect (zoom/pan, varied per scene) 2. Scenes are concatenated with crossfade transitions 3. Narration audio overlaid 4. Word-level SRT subtitle file generated for multilingual captioning 5. Output: project dict with paths for render_publisher No Chrome, no headless browser, no video audio bleed.",
+      "public_functions": [
+        "compose"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 168
+    },
+    {
+      "file": "studio_production_crew.py",
+      "purpose": "studio_production_crew.py — Studio M3: End-to-end production orchestrator. Entry points: run_production(notion_id) — produce one qa-passed candidate studio_production_tick() — scan Pipeline DB, run all qa-passed candidates CLI: python -m orchestrator.studio_production_crew --test python -m orchestrator.studio_production_crew --notion-id <id> Pipeline: 1. Fetch candidate from Notion Pipeline DB 2. Load brand_config for channel 3. Generate script (Sonnet) 4. Run QA (10 checks) 5. Generate voice (E",
+      "public_functions": [
+        "run_production",
+        "studio_production_tick"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 386
+    },
+    {
+      "file": "studio_qa_crew.py",
+      "purpose": "studio_qa_crew.py - Studio M1 Engine. Quality Review Crew. 8 checks that run on every drafted Studio asset BEFORE it goes to render or publish. Failures route to Telegram with a summary; passes flip the Pipeline DB record to Status=qa-passed. Why 8 checks not 1: Studio publishes faceless content under brand names that are NOT Boubacar's. Bad output ships under brand names that have no backstop. The 8 checks catch the failure modes that matter: 1. Spellcheck/grammar pass (Sonnet via existing voic",
+      "public_functions": [
+        "check_spellcheck_grammar",
+        "check_banned_phrases",
+        "check_length_target",
+        "check_hook_present",
+        "check_source_citation",
+        "check_cta_present",
+        "check_personal_rules",
+        "check_brand_voice",
+        "check_retention_loops",
+        "check_ai_origin_safe",
+        "check_four_part_formula",
+        "run_qa",
+        "run_qa_on_record"
+      ],
+      "public_classes": [
+        "QACheckResult",
+        "QAReport"
+      ],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 609
+    },
+    {
+      "file": "studio_render_publisher.py",
+      "purpose": "studio_render_publisher.py - Studio M3: Render + Drive upload + Notion update. Renders 3 formats using pure ffmpeg (no hyperframes, no Chrome): long_form 1920x1080 → Ken Burns images + narration + SRT captions shorts 1080x1920 → vertical crop/reframe of same scenes square 1080x1080 → square crop After render: - Upload each MP4 to Drive - Update Notion Pipeline DB record: Asset_URL + Status=scheduled - Send Telegram + email notification",
+      "public_functions": [
+        "render_and_publish"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 665
+    },
+    {
+      "file": "studio_scene_builder.py",
+      "purpose": "studio_scene_builder.py — Studio M3: Break script into timed scenes. Takes script.full_text + voice timestamps → list of Scene objects, each with narration text, image prompt, video prompt, and timing. Visual prompts are enforced against brand.visual_style and brand.regional_motif_tags to prevent cultural mismatch (Sankofa risk). Scene density scales with target_duration_sec: 30 words/scene (shorts), 100 (medium), 200 (long).",
+      "public_functions": [
+        "build_scenes"
+      ],
+      "public_classes": [
+        "Scene"
+      ],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 212
+    },
+    {
+      "file": "studio_script_generator.py",
+      "purpose": "studio_script_generator.py — Studio M3: Script generation from Pipeline DB candidate. Input: candidate dict (hook, twist, niche, title, channel_id) brand_config dict (loaded via studio_brand_config.load_brand_config) Output: script dict (title, full_text, scenes_hint, word_count, estimated_duration_sec) Enforces: - Hook in first 30 words - Retention loop trigger (curiosity/cliffhanger) every ~200 words - CTA in final paragraph - Pronunciation-safe (SSML phonetic tags injected for ElevenLabs) - N",
+      "public_functions": [
+        "generate_script"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 341
+    },
+    {
+      "file": "studio_story_bridge.py",
+      "purpose": "studio_story_bridge.py -- Bridge between Content Board Story entries and Studio Pipeline DB. Runs on a heartbeat tick (every 6h). Reads Content Board records where: Content Type = Story Status = Idea For each, creates one Pipeline DB record per Studio channel the story maps to (1stGen, UTB, AIC) based on a lightweight LLM channel-fit classification. Marks the Content Board record with Source Note update so it is not re-seeded. Idempotent: checks for existing Pipeline DB record with matching sour",
+      "public_functions": [
+        "studio_story_bridge_tick"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 245
+    },
+    {
+      "file": "studio_trend_scout.py",
+      "purpose": "studio_trend_scout.py - Content Intelligence Scout (Phase 1). Daily heartbeat (Mon-Sat) that scans niches for relevant content picks: - 3 Studio niches (UTB/1stGen/AIC) via YouTube Data API v3 -- DAILY - 6 Catalyst Works niches via Serper news search -- Mon/Wed/Fri only - Sunday: skip everything (Sabbath) Each pick goes through a single Haiku classifier call (fit 1-5, medium, first line, unique angle). Low-fit picks (<=2) are dropped silently. Passing picks are written to Notion (Content Board f",
+      "public_functions": [
+        "scout_niche",
+        "get_reply_for_week",
+        "studio_trend_scout_tick"
+      ],
+      "public_classes": [
+        "TrendCandidate"
+      ],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 985
+    },
+    {
+      "file": "studio_visual_generator.py",
+      "purpose": "studio_visual_generator.py — Studio M3: Visual asset generation per scene. M3.4 Mixed Motion: Scene 0 (Hook) and Scene 5 (Climax) get real Kai image-to-video clips. Scenes 1-4 and 6 remain Ken Burns stills. Graceful fallback to Ken Burns on any video API failure.",
+      "public_functions": [
+        "generate_visuals"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 268
+    },
+    {
+      "file": "studio_voice_generator.py",
+      "purpose": "studio_voice_generator.py — Studio M3: TTS voice generation. Primary: ElevenLabs v1/text-to-speech/{voice_id}/with-timestamps Fallback: Kai TTS via kie_media (future: add kie_tts task_type when wired) Returns: { \"audio_path\": str, # local path to MP3 \"drive_url\": str, # Drive URL after upload \"drive_file_id\": str, \"duration_sec\": float, \"timestamps\": list[WordTimestamp], # word-level for caption sync \"provider\": str, # \"elevenlabs\" | \"kie_tts\" }",
+      "public_functions": [
+        "generate_voice"
+      ],
+      "public_classes": [
+        "WordTimestamp"
+      ],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 350
+    },
+    {
+      "file": "test_content_connection.py",
+      "purpose": "Tests for content_connection_crew.py — Atlas M9d-C",
+      "public_functions": [
+        "test_fetch_recent_content_returns_list",
+        "test_fetch_filters_non_published",
+        "test_build_connection_prompt_requires_non_obvious",
+        "test_parse_connections_returns_list",
+        "test_write_connections_to_notion_creates_records"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 73
     },
     {
       "file": "tools.py",
@@ -1484,11 +3030,11 @@
         "GWSCalendarDeleteTool",
         "GWSGmailCreateDraftTool",
         "GWSGmailSearchTool",
+        "GWSGmailSendHTMLMeTool",
         "GWSDriveSearchTool",
         "GWSDriveListRecentTool",
         "GWSDriveCreateFileTool",
-        "SaveOutputTool",
-        "QueryMemoryTool"
+        "SaveOutputTool"
       ],
       "tool_classes": [
         "LaunchVercelAppTool",
@@ -1511,6 +3057,7 @@
         "GWSCalendarDeleteTool",
         "GWSGmailCreateDraftTool",
         "GWSGmailSearchTool",
+        "GWSGmailSendHTMLMeTool",
         "GWSDriveSearchTool",
         "GWSDriveListRecentTool",
         "GWSDriveCreateFileTool",
@@ -1518,10 +3065,12 @@
         "QueryMemoryTool",
         "SaveLearningTool",
         "VoicePolisherTool",
+        "ValidateOutputTool",
         "EscalateTool",
         "ProposeNewAgentTool",
         "CLIHubSearchTool",
         "UtahProspectingTool",
+        "ApolloLeadHarvestTool",
         "CRMRevealEmailTool",
         "CRMAddLeadTool",
         "CRMLogInteractionTool",
@@ -1541,8 +3090,19 @@
         "QueryAudienceEngineTool",
         "KieGenerateImageTool",
         "KieGenerateVideoTool",
+        "KieGeneratePromoVideoTool",
+        "KieSoraWatermarkRemoveTool",
+        "KieAudioRemixTool",
+        "KieEnqueueVideoJobTool",
         "KieListModelsTool",
-        "KieCheckCreditsTool"
+        "KieCheckCreditsTool",
+        "BlotatoListAccountsTool",
+        "BlotatoPublishTool",
+        "BlotatoGetStatusTool",
+        "SpawnJobTool",
+        "BeehiivCreateDraftTool",
+        "StudioTrendScoutTool",
+        "StudioQARunTool"
       ],
       "tool_bundles": [
         "NOTION_STYLING_TOOLS",
@@ -1555,7 +3115,10 @@
         "RESEARCH_TOOLS",
         "MEMORY_TOOLS",
         "SCRAPING_TOOLS",
+        "PUBLISHER_TOOLS",
+        "STUDIO_TOOLS",
         "MEDIA_TOOLS",
+        "VALIDATION_TOOLS",
         "WRITING_TOOLS",
         "CODE_TOOLS",
         "ORCHESTRATION_TOOLS",
@@ -1563,7 +3126,32 @@
         "OUTREACH_TOOLS",
         "HYPERFRAMES_TOOLS"
       ],
-      "lines": 1872
+      "lines": 2499
+    },
+    {
+      "file": "unified_queue.py",
+      "purpose": "unified_queue.py -- Echo M3: single display + routing layer for all pending approvals. Two backing stores: approval_queue (Postgres table) -- content proposals, outreach drafts, concierge fixes. tasks (Postgres table, kind='commit-proposal') -- async commit proposals from Echo M1. Public API: list_all_pending() -> list[dict] merged, sorted by created_at desc list_all_recent(hours) -> list[dict] merged, all statuses, last N hours approve_any(id_str, note) -> dict routes to correct store by id for",
+      "public_functions": [
+        "list_all_pending",
+        "list_all_recent",
+        "approve_any",
+        "reject_any"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 133
+    },
+    {
+      "file": "upscale.py",
+      "purpose": "fal.ai video upscale submission helpers.",
+      "public_functions": [
+        "submit_upscale_job"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 69
     },
     {
       "file": "usage_logger.py",
@@ -1588,7 +3176,7 @@
       "public_classes": [],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 181
+      "lines": 201
     },
     {
       "file": "video_analyze.py",
@@ -1604,13 +3192,65 @@
       "lines": 424
     },
     {
+      "file": "video_crew.py",
+      "purpose": "Unified video generation dispatcher, all job types: batch, ugc, cameo, narrative, ads, watermark_remove.",
+      "public_functions": [
+        "enqueue_video_job",
+        "run_video_tick"
+      ],
+      "public_classes": [
+        "VideoJobDispatcher"
+      ],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 417
+    },
+    {
+      "file": "video_crew_agents.py",
+      "purpose": "Dedicated agents for the Unified Video Crew.",
+      "public_functions": [
+        "build_video_director_agent"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 24
+    },
+    {
+      "file": "webhooks.py",
+      "purpose": "Webhook endpoints for asynchronous media callbacks.",
+      "public_functions": [
+        "fal_upscale_webhook"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 76
+    },
+    {
+      "file": "weekly_synthesis_crew.py",
+      "purpose": "weekly_synthesis_crew.py - Atlas M9d-A: Weekly Synthesis Reads last N memory files + roadmap log entries, calls LLM to synthesize a weekly retrospective, writes result as a new Notion page in the Retrospectives database (FORGE_RETROSPECTIVES_DB env var). Designed to run via VPS cron: Sunday 20:00 Mountain 0 20 * * 0 root cd /root/agentsHQ && set -a && . .env && set +a && python3 orchestrator/weekly_synthesis_crew.py >> /var/log/weekly_synthesis.log 2>&1 Success criterion: Boubacar reads the page",
+      "public_functions": [
+        "read_memory_from_db",
+        "read_memory_files",
+        "read_roadmap_logs",
+        "build_synthesis_prompt",
+        "save_to_postgres",
+        "run"
+      ],
+      "public_classes": [],
+      "tool_classes": [],
+      "tool_bundles": [],
+      "lines": 218
+    },
+    {
       "file": "worker.py",
       "purpose": "worker.py - Background job execution. _run_background_job is called out-of-band (thread pool or background task) to: 1. Register the job in the job queue. 2. Start a progress-ping watchdog. 3. Run the orchestrator (crew dispatch). 4. Save output to GitHub + Drive for save-required task types. 5. Deliver the result to Telegram. 6. Record _last_completed_job so later praise/critique can pair with it. 7. Compound email follow-up if classification asked for one. 8. Hunter report email for hunter_tas",
       "public_functions": [],
       "public_classes": [],
       "tool_classes": [],
       "tool_bundles": [],
-      "lines": 232
+      "lines": 245
     }
   ],
   "env_keys": [
@@ -1619,9 +3259,32 @@
     "ANTHROPIC_THEPOPEBOT_API_KEY",
     "APIFY_API_TOKEN",
     "APOLLO_API_KEY",
-    "BLOTATO_ACCOUNT_IDS",
+    "BEEHIIV_API_KEY",
+    "BEEHIIV_PUBLICATION_ID",
+    "BING_SEARCH_API_KEY",
+    "BLOTATO_1STGEN_INSTAGRAM_ACCOUNT_ID",
+    "BLOTATO_1STGEN_TIKTOK_ACCOUNT_ID",
+    "BLOTATO_1STGEN_X_ACCOUNT_ID",
     "BLOTATO_API_KEY",
+    "BLOTATO_BAOBAB_INSTAGRAM_ACCOUNT_ID",
+    "BLOTATO_BAOBAB_TIKTOK_ACCOUNT_ID",
+    "BLOTATO_BAOBAB_X_ACCOUNT_ID",
+    "BLOTATO_CATALYST_INSTAGRAM_ACCOUNT_ID",
+    "BLOTATO_CATALYST_TIKTOK_ACCOUNT_ID",
+    "BLOTATO_LINKEDIN_ACCOUNT_ID",
+    "BLOTATO_LINKEDIN_PAGE_ID",
+    "BLOTATO_X_ACCOUNT_ID",
+    "BLOTATO_YT_BAOBAB_ACCOUNT_ID",
+    "BLOTATO_YT_CATALYST_ACCOUNT_ID",
+    "CALENDLY_CLIENT_ID",
+    "CALENDLY_CLIENT_SECRET",
+    "CALENDLY_PERSONAL_ACCESS_TOKEN",
+    "CALENDLY_WEBHOOK_SIGNING_KEY",
+    "CC_TELEGRAM_BOT_TOKEN",
+    "CC_TELEGRAM_CHAT_ID",
     "CHAT_UI_PIN",
+    "CONSOLE_VERBOSE",
+    "ELEVENLABS_API_KEY",
     "FIRECRAWL_API_KEY",
     "FORGE_CONTENT_DB",
     "FORGE_KPI_BLOCK_IDS",
@@ -1630,6 +3293,7 @@
     "FORGE_REVENUE_DB",
     "FORGE_TASKS_DB",
     "GENERIC_TIMEZONE",
+    "GITHUB_PAT_TOKEN",
     "GITHUB_REPO",
     "GITHUB_TOKEN",
     "GITHUB_USERNAME",
@@ -1638,22 +3302,40 @@
     "GOOGLE_OAUTH_CREDENTIALS_JSON",
     "GOOGLE_OAUTH_CREDENTIALS_JSON_CW",
     "GUMROAD_DEFAULT_PRODUCT_LINK",
+    "HCK_SUPABASE_ANON",
+    "HCK_SUPABASE_DB",
+    "HCK_SUPABASE_DIRECT_CONNECTION_STRING",
+    "HCK_SUPABASE_HOST",
+    "HCK_SUPABASE_PASSWORD_B64",
+    "HCK_SUPABASE_PORT",
+    "HCK_SUPABASE_PROJECT_ID",
+    "HCK_SUPABASE_SERVICE_KEY",
+    "HCK_SUPABASE_USER",
     "HEALTH_REPORT_TOKEN",
+    "HELLOSIGN_API_KEY",
+    "HOTELCLUBDEKIPE_PROJECT_URL",
     "HUNTER_API_KEY",
     "IDEAS_DB_ID",
     "KIE_AI_API_KEY",
+    "LISTMONK_PW",
+    "LISTMONK_USERNAME",
     "N8N_ENCRYPTION_KEY",
     "NEXT_PUBLIC_ADSENSE_PUBLISHER_ID",
     "NOTION_CRM_LEADS_DB_ID",
     "NOTION_DATABASE_ID",
     "NOTION_FORGE_PIPELINE_DB_ID",
+    "NOTION_HARVESTED_RECS_DATA_SOURCE_ID",
+    "NOTION_HARVESTED_RECS_DB_ID",
     "NOTION_MEDIA_INDEX_DB_ID",
     "NOTION_OUTPUTS_DB_ID",
     "NOTION_SECRET",
+    "NOTION_STUDIO_BRAND_CONFIG_DB_ID",
+    "NOTION_STUDIO_PIPELINE_DB_ID",
     "OPENAI_API_KEY",
     "OPENROUTER_API_KEY",
     "ORCHESTRATOR_API_KEY",
     "ORCHESTRATOR_TELEGRAM_BOT_TOKEN",
+    "PERPLEXITY_API_KEY",
     "PERSONAL_WHATSAPP",
     "POSTGRES_PASSWORD",
     "PRACTICE_SESSIONS_DB_ID",
@@ -1662,12 +3344,26 @@
     "REMOAT_TELEGRAM_BOT_TOKEN",
     "REMOAT_TELEGRAM_CHAT_ID",
     "REPORT_EMAIL",
+    "SERPAPI_KEY",
     "SERPER_API_KEY",
+    "SIGNAL_WORKS_CALENDLY",
+    "SIGNAL_WORKS_CALENDLY_AUDIT",
+    "SIGNAL_WORKS_DEMO_DENTAL",
+    "SIGNAL_WORKS_DEMO_ROOFING",
+    "SIGNAL_WORKS_LOOM_DENTAL",
+    "SIGNAL_WORKS_LOOM_ROOFING",
+    "SIGNAL_WORKS_SENDER",
     "SKRAPP_API_KEY",
     "SMTP_PASS",
     "SMTP_USER",
+    "STRIPE_LINK_MONTHLY_497",
+    "STRIPE_LINK_MONTHLY_797",
+    "STRIPE_LINK_MONTHLY_997",
     "STRIPE_PUBLISHABLE_KEY",
     "STRIPE_SECRET_KEY",
+    "STRIPE_SETUP_1000",
+    "STRIPE_SETUP_2500",
+    "STRIPE_SETUP_500",
     "STRIPE_WEBHOOK_SECRET",
     "SUPABASE_DB",
     "SUPABASE_HOST",
@@ -1681,28 +3377,33 @@
     "TELEGRAM_CHAT_ID",
     "USE_METACLAW",
     "VERCEL_TOKEN",
+    "VIDEO_CREW_ENABLED",
     "VPS_IP",
     "WAVESPEED_API_KEY",
-    "WHATSAPP_PHONE",
-    "WORKSPACE_BASE_DIR"
+    "WORKSPACE_BASE_DIR",
+    "YOUTUBE_API_KEY",
+    "YOUTUBE_API_KEY_2"
   ],
   "requirements": [
-    "crewai[tools]>=0.80.0",
-    "crewai-tools>=0.17.0",
+    "crewai[tools]==1.14.4",
+    "crewai-tools==1.14.4",
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.30.0",
     "httpx>=0.27.0",
     "pydantic[email]>=2.8.0",
-    "openai>=1.40.0",
-    "litellm>=1.0.0",
-    "anthropic>=0.40.0",
-    "qdrant-client>=1.10.0",
+    "openai==2.34.0",
+    "litellm==1.83.0",
+    "anthropic==0.98.1",
+    "notion-client>=2.2.1",
+    "qdrant-client==1.17.1",
     "psycopg2-binary>=2.9.9",
     "mcp>=1.0.0",
     "firecrawl-py>=4.21.0",
     "curl_cffi>=0.7.0",
     "playwright>=1.49.0",
     "patchright>=1.49.0",
+    "beautifulsoup4>=4.12.0",
+    "youtube-transcript-api>=0.6.2",
     "python-dotenv>=1.0.1",
     "tenacity>=8.3.0",
     "pytz>=2024.1",
