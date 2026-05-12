@@ -1,3 +1,3 @@
-{"intent": "help me with design tokens", "expected": "ckm:design-system"}
-{"intent": "I need to design system", "expected": "ckm:design-system"}
-{"intent": "can you component specs for this", "expected": "ckm:design-system"}
+{"intent": "help me with design tokens", "expected": "design-system"}
+{"intent": "I need to design system", "expected": "design-system"}
+{"intent": "can you component specs for this", "expected": "design-system"}
