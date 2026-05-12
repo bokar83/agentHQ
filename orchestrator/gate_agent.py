@@ -226,7 +226,7 @@ def _branches_ahead_of_main() -> list[str]:
             continue
         if any(branch.startswith(p) for p in SKIP_PREFIXES):
             continue
-        if not any(branch.startswith(p) for p in ("feature/", "feat/", "fix/", "docs/", "chore/", "refactor/", "test/")):
+        if not any(branch.startswith(p) for p in ("feature/", "feat/", "fix/", "docs/", "chore/", "refactor/", "test/", "compass/")):
             continue
         branches.append(branch)
     return branches
