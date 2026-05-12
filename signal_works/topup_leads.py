@@ -207,10 +207,23 @@ def topup(minimum: int = DAILY_MINIMUM, dry_run: bool = False) -> int:
     """
     # Raise Hunter per-process cap to 400 unless caller pinned a lower value.
     # Honors any explicit lower override (e.g. tests set "9").
-    env_cap = os.environ.get("HUNTER_MAX_SEARCHES_PER_DAY")
-    if not env_cap or int(env_cap) < HUNTER_CAP_DAILY:
+    # Bad config (non-integer string) must NOT crash the harvest step — log a
+    # warning and treat as unset. Codex review P1 2026-05-12.
+    env_cap_raw = os.environ.get("HUNTER_MAX_SEARCHES_PER_DAY")
+    env_cap_int: int | None = None
+    if env_cap_raw:
+        try:
+            env_cap_int = int(env_cap_raw)
+        except ValueError:
+            logger.warning(
+                "topup: HUNTER_MAX_SEARCHES_PER_DAY=%r is not an integer; "
+                "falling back to HUNTER_CAP_DAILY=%d",
+                env_cap_raw, HUNTER_CAP_DAILY,
+            )
+            env_cap_int = None
+    if env_cap_int is None or env_cap_int < HUNTER_CAP_DAILY:
         # Only raise; never lower a stricter caller-set value (tests rely on this).
-        if not env_cap:
+        if env_cap_int is None:
             os.environ["HUNTER_MAX_SEARCHES_PER_DAY"] = str(HUNTER_CAP_DAILY)
 
     reset_daily_counter()
