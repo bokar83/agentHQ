@@ -5,12 +5,16 @@ Hunter.io domain-search wrapper. Primary fallback for SW email
 resolution when Firecrawl scrape fails or Apollo has no record.
 
 Cost protection:
-  - Daily cap: 200 calls per process lifetime (HUNTER_MAX_SEARCHES_PER_DAY env override)
+  - Daily cap: 400 calls per process lifetime (HUNTER_MAX_SEARCHES_PER_DAY env override)
   - Caller catches HunterCapReached to short-circuit and fire Telegram alert
   - 429 (rate limit) returns None gracefully, no crash
-  - Was 5/run -- raised 2026-05-05 because it killed the only working SW
+  - Was 5/run -- raised 2026-05-05 to 200 because it killed the only working SW
     fallback path. Apollo people DB has near-zero coverage of trades-SMBs,
     so Hunter is the actual workhorse, not the last resort.
+  - Raised again 2026-05-12 from 200 -> 400 after harvest hit the cap at
+    13:18 UTC mid-run. Hunter Starter is 2000/mo (~67/day average) but we
+    front-load harvest, so 400/day per-process is the right ceiling. At
+    400 sustained, ~3600/month realistic burn -- still well within Starter.
 """
 import logging
 import os
@@ -38,7 +42,7 @@ class HunterCapReached(Exception):
 
 
 def _max_calls() -> int:
-    return int(os.environ.get("HUNTER_MAX_SEARCHES_PER_DAY", "200"))
+    return int(os.environ.get("HUNTER_MAX_SEARCHES_PER_DAY", "400"))
 
 
 def reset_daily_counter() -> None:
