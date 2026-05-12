@@ -141,21 +141,36 @@ def verify_api_key(
     raise HTTPException(status_code=401, detail="Invalid or missing auth. Use X-Api-Key or Authorization: Bearer <token>.")
 
 
-def verify_chat_token(authorization: Optional[str] = Header(None)):
+def verify_chat_token(
+    authorization: Optional[str] = Header(None),
+    token: Optional[str] = Query(None)
+):
     """Dependency: accepts either the raw API key OR a valid browser JWT."""
     import jwt as pyjwt
 
-    if not authorization:
-        raise HTTPException(status_code=401, detail="Missing Authorization header.")
-
     api_key = os.environ.get("ORCHESTRATOR_API_KEY", "")
+    
+    if not authorization and token:
+        if token == api_key:
+            return True
+        try:
+            pyjwt.decode(token, api_key, algorithms=["HS256"])
+            return True
+        except pyjwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="Session expired.")
+        except pyjwt.InvalidTokenError:
+            raise HTTPException(status_code=401, detail="Invalid token.")
+
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Missing Authorization header or token param.")
+
     if authorization == api_key or authorization == f"Bearer {api_key}":
         return True
 
     if authorization.startswith("Bearer "):
-        token = authorization[7:]
+        bearer_token = authorization[7:]
         try:
-            pyjwt.decode(token, api_key, algorithms=["HS256"])
+            pyjwt.decode(bearer_token, api_key, algorithms=["HS256"])
             return True
         except pyjwt.ExpiredSignatureError:
             raise HTTPException(status_code=401, detail="Session expired. Refresh the page to get a new token.")
@@ -1154,6 +1169,59 @@ async def atlas_brief_skip(_auth=Depends(verify_chat_token)):
             "Reply 'posted' or 'skip' in Telegram to act on a post."
         ),
     )
+
+# ══════════════════════════════════════════════════════════════
+# M19: SSE Intent Streaming (Block 3)
+# ══════════════════════════════════════════════════════════════
+
+from fastapi.responses import StreamingResponse
+import asyncio
+
+@app.get("/atlas/feed")
+async def atlas_feed(request: Request, _auth=Depends(verify_chat_token)):
+    async def event_publisher():
+        from orchestrator.autonomy_guard import get_guard
+        import queue
+        guard = get_guard()
+        q = guard.subscribe_feed()
+        try:
+            ping_counter = 0
+            while True:
+                if await request.is_disconnected():
+                    break
+                try:
+                    while True:
+                        msg = q.get_nowait()
+                        yield f"event: {msg['event']}\ndata: {json.dumps(msg['data'])}\n\n"
+                except queue.Empty:
+                    pass
+                
+                ping_counter += 1
+                if ping_counter >= 30:
+                    yield "event: ping\ndata: {}\n\n"
+                    ping_counter = 0
+                await asyncio.sleep(0.5)
+        finally:
+            guard.unsubscribe_feed(q)
+    return StreamingResponse(event_publisher(), media_type="text/event-stream")
+
+
+@app.post("/atlas/intent/{intent_id}/approve")
+async def atlas_intent_approve(intent_id: str, _auth=Depends(verify_chat_token)):
+    from orchestrator.autonomy_guard import get_guard
+    resolved = get_guard().resolve_intent(intent_id, approved=True)
+    if not resolved:
+        raise HTTPException(status_code=404, detail="Intent not found or already resolved")
+    return JSONResponse({"ok": True, "status": "approved"})
+
+
+@app.post("/atlas/intent/{intent_id}/reject")
+async def atlas_intent_reject(intent_id: str, _auth=Depends(verify_chat_token)):
+    from orchestrator.autonomy_guard import get_guard
+    resolved = get_guard().resolve_intent(intent_id, approved=False)
+    if not resolved:
+        raise HTTPException(status_code=404, detail="Intent not found or already resolved")
+    return JSONResponse({"ok": True, "status": "rejected"})
 
 
 # ══════════════════════════════════════════════════════════════
