@@ -9,17 +9,22 @@ Sequence:
   3. Signal Works sequence -- T1-T4 drafts (manual review, SW pipeline)
   4. Catalyst Works topup -- harvest via Apollo.io (credit-efficient ICP scoring)
   5. Catalyst Works sequence -- T1-T4 auto-send (CW pipeline)
+  5b. CW recycle -- re-touch yesterday's CW queue if Step 5 below CW_THRESHOLD
 
 Total: up to 20 touches per day across both pipelines.
 CW emails auto-send. SW emails land in Drafts for review.
 
 Logs to: logs/signal_works_morning.log
 On any unhandled exception or zero-draft run, fires a Telegram alert.
+On early exit (systemd timeout, crash before main_body completes), atexit fires
+a partial-state Telegram alert so we never silently die mid-pipeline.
 """
+import atexit
 import logging
 import os
 import socket
 import sys
+import threading
 import traceback
 import urllib.parse
 import urllib.request
@@ -28,6 +33,29 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+
+# ── Run state (module-level for atexit visibility) ────────────────
+# Updated as the runner progresses. atexit reads this to fire a partial-state
+# Telegram alert if the process exits before _main_body returns cleanly.
+_RUN_STATE = {
+    "started": False,
+    "completed": False,
+    "step": "init",
+    "bounce_nulled": 0,
+    "sw_leads": 0,
+    "sw_drafted": 0,
+    "cw_leads": 0,
+    "cw_drafted": 0,
+    "voice_personalized": 0,
+    "cw_recycled": 0,
+}
+
+# Step 2 internal wall-clock cap. Default 60min; override via env.
+_SW_TOPUP_TIMEOUT_SEC = int(os.environ.get("SW_TOPUP_TIMEOUT_SEC", "3600"))
+
+# Health-check thresholds. Also drive the Step 5b CW recycle floor.
+SW_THRESHOLD = 30
+CW_THRESHOLD = 10
 
 
 def _telegram_alert(msg: str) -> None:
@@ -46,6 +74,39 @@ def _telegram_alert(msg: str) -> None:
         urllib.request.urlopen(req, timeout=15).read()
     except Exception:
         pass
+
+
+def _partial_state_atexit() -> None:
+    """
+    Fire Telegram alert with partial state if process exits before _main_body
+    completes. Covers systemd SIGTERM/timeout kills + crashes that escape the
+    exception handler. Never raises.
+
+    Skips if:
+      - runner never started (init failure or another runner already holds claim)
+      - runner completed cleanly (regular health-check + 0-draft alerts handle it)
+    """
+    try:
+        if not _RUN_STATE.get("started"):
+            return
+        if _RUN_STATE.get("completed"):
+            return
+        msg = (
+            "agentsHQ morning runner EXITED EARLY at step="
+            f"{_RUN_STATE.get('step')}.\n"
+            f"  bounce_nulled:        {_RUN_STATE.get('bounce_nulled')}\n"
+            f"  sw_leads:             {_RUN_STATE.get('sw_leads')}\n"
+            f"  sw_drafted:           {_RUN_STATE.get('sw_drafted')}\n"
+            f"  cw_leads:             {_RUN_STATE.get('cw_leads')}\n"
+            f"  voice_personalized:   {_RUN_STATE.get('voice_personalized')}\n"
+            f"  cw_drafted:           {_RUN_STATE.get('cw_drafted')}\n"
+            f"  cw_recycled:          {_RUN_STATE.get('cw_recycled')}\n"
+            "Check /var/log/signal_works_morning.log."
+        )
+        _telegram_alert(msg)
+    except Exception:
+        pass
+
 
 LOG_DIR = Path(__file__).resolve().parents[1] / "logs"
 LOG_DIR.mkdir(exist_ok=True)
@@ -68,6 +129,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "orchestrator"))
 def main():
     from skills.coordination import claim, complete
 
+    # Register partial-state atexit BEFORE claim so a claim-side crash still alerts.
+    # Idempotent: never fires unless _RUN_STATE["started"] flips True.
+    atexit.register(_partial_state_atexit)
+
     holder = f"{socket.gethostname()}/pid={os.getpid()}"
     task = claim(resource="task:morning-runner", holder=holder, ttl_seconds=1800)
     if task is None:
@@ -78,6 +143,7 @@ def main():
         return 0
 
     try:
+        _RUN_STATE["started"] = True
         return _main_body()
     finally:
         complete(task["id"])
@@ -99,6 +165,7 @@ def _main_body():
     sw_leads = 0
     sw_drafted = 0
     cw_drafted = 0
+    cw_recycled = 0
 
     # Weekday gate: harvest every day, but only send Mon-Fri.
     # Saturday=5, Sunday=6. Uses local time of the runner (orc-crewai container).
@@ -108,6 +175,7 @@ def _main_body():
         logger.info("Weekend detected (" + day_name + "). Will harvest leads but SKIP email send steps.")
 
     # ── Step 1: Bounce scan ───────────────────────────────────────
+    _RUN_STATE["step"] = "bounce_scan"
     logger.info("STEP 1: Bounce scan (boubacar@catalystworks.consulting, last 2 days)...")
     try:
         from signal_works.bounce_scanner import run as bounce_scan
@@ -117,25 +185,65 @@ def _main_body():
     except Exception as e:
         logger.error(f"  Bounce scan failed: {e}")
         log_step("bounce_scan", reason=f"error: {type(e).__name__}")
+    _RUN_STATE["bounce_nulled"] = bounce_nulled
 
     # ── Step 2: Signal Works -- harvest leads ─────────────────────
-    logger.info("STEP 2: Signal Works lead harvest (target: 35 email leads)...")
+    # Wall-clock cap: topup() is opaque and historically has hung (Serper rate
+    # limits, Firecrawl backoff). Run it in a daemon thread and join with a
+    # bounded wait so Step 3-5 always get a chance to execute. If we time out,
+    # log_step records skipped+reason and we read DB truth for whatever leads
+    # the thread already saved.
+    _RUN_STATE["step"] = "sw_harvest"
+    logger.info(
+        f"STEP 2: Signal Works lead harvest (target: 35 email leads, "
+        f"wall-clock cap: {_SW_TOPUP_TIMEOUT_SEC}s)..."
+    )
+    _topup_error = {"err": None}
+
+    def _run_topup():
+        try:
+            from signal_works.topup_leads import topup
+            topup(minimum=35)
+        except Exception as e:  # captured -- thread cannot raise into caller
+            _topup_error["err"] = e
+
+    topup_thread = threading.Thread(target=_run_topup, name="sw-topup", daemon=True)
+    topup_thread.start()
+    topup_thread.join(timeout=_SW_TOPUP_TIMEOUT_SEC)
     try:
-        from signal_works.topup_leads import topup
         from signal_works.harvest_until_target import _count_today_sw_with_email
-        topup(minimum=35)
+        sw_leads = _count_today_sw_with_email()
+    except Exception as e:
+        logger.error(f"  Could not read SW lead count: {e}")
+        sw_leads = 0
+
+    if topup_thread.is_alive():
+        logger.warning(
+            f"  Step 2 wall-clock cap hit at {_SW_TOPUP_TIMEOUT_SEC}s. "
+            f"topup() still running in background daemon thread; will be killed on process exit. "
+            f"DB shows {sw_leads} SW email leads so far. Continuing to Step 3."
+        )
+        log_step(
+            "sw_harvest", attempted=35, succeeded=sw_leads,
+            skipped=max(0, 35 - sw_leads),
+            reason=f"wall_clock_timeout_{_SW_TOPUP_TIMEOUT_SEC}s",
+        )
+    elif _topup_error["err"] is not None:
+        e = _topup_error["err"]
+        logger.error(f"  Signal Works topup failed: {e}")
+        log_step("sw_harvest", attempted=35, succeeded=sw_leads,
+                 reason=f"error: {type(e).__name__}")
+    else:
         # DB truth, not topup() return value. The return value counts
         # UPDATE-on-match as a fresh save, masking re-discovery of the same
         # 250 Provo/Vegas leads day after day. Read fresh-inserted-with-email
         # straight from the leads table for an honest metric.
-        sw_leads = _count_today_sw_with_email()
         logger.info(f"  Done. {sw_leads} SW email leads created today (DB truth).")
         log_step("sw_harvest", attempted=35, succeeded=sw_leads)
-    except Exception as e:
-        logger.error(f"  Signal Works topup failed: {e}")
-        log_step("sw_harvest", attempted=35, reason=f"error: {type(e).__name__}")
+    _RUN_STATE["sw_leads"] = sw_leads
 
     # ── Step 3: Signal Works -- 4-touch sequence (draft, manual review) ──
+    _RUN_STATE["step"] = "sw_sequence"
     if is_weekend:
         logger.info("STEP 3: SKIPPED on weekend (no SW sends Sat/Sun).")
         log_step("sw_sequence", reason="weekend_skip")
@@ -151,8 +259,10 @@ def _main_body():
         except Exception as e:
             logger.error(f"  Signal Works sequence failed: {e}")
             log_step("sw_sequence", attempted=35, reason=f"error: {type(e).__name__}")
+    _RUN_STATE["sw_drafted"] = sw_drafted
 
     # ── Step 4: Catalyst Works -- Apollo lead topup ───────────────
+    _RUN_STATE["step"] = "cw_harvest"
     logger.info("STEP 4: Catalyst Works lead topup via Apollo (target: 20 leads, full US)...")
     cw_leads = 0
     try:
@@ -169,8 +279,10 @@ def _main_body():
     except Exception as e:
         logger.error(f"  CW Apollo topup failed: {e}")
         log_step("cw_harvest", attempted=20, reason=f"error: {type(e).__name__}")
+    _RUN_STATE["cw_leads"] = cw_leads
 
     # ── Step 4.5: CW voice personalization (transcript-style-dna) ─
+    _RUN_STATE["step"] = "cw_voice_personalize"
     voice_personalized = 0
     logger.info("STEP 4.5: Voice-personalize today's CW leads (transcript-style-dna)...")
     try:
@@ -185,8 +297,10 @@ def _main_body():
         # with template-only opens.
         logger.error(f"  Voice personalization failed (non-fatal): {e}")
         log_step("cw_voice_personalize", attempted=15, reason=f"error: {type(e).__name__}")
+    _RUN_STATE["voice_personalized"] = voice_personalized
 
     # ── Step 5: Catalyst Works -- 4-touch sequence (auto-send) ───
+    _RUN_STATE["step"] = "cw_sequence"
     if is_weekend:
         logger.info("STEP 5: SKIPPED on weekend (no CW sends Sat/Sun).")
         log_step("cw_sequence", reason="weekend_skip")
@@ -203,13 +317,32 @@ def _main_body():
             logger.error(f"  CW sequence failed: {e}")
             log_step("cw_sequence", attempted=15, reason=f"error: {type(e).__name__}")
 
-    # Step 5b removed 2026-05-11: per-touch caps in sequence_engine handle cascade
-    # naturally. Old gap-fill burned SW T2 cap whenever CW T1 pool was empty
-    # (root cause of 50-email ceiling). Hunter/Apollo lead harvest is the real
-    # fix for low CW T1 counts.
+        # ── Step 5b: Recycle yesterday's CW queue if below floor ──
+        # If CW T1 lead pool was thin today and the sequence drafted fewer than
+        # CW_THRESHOLD, top up by re-touching recently-contacted CW leads. Honors
+        # the existing CW auto-send rule (AUTO_SEND_CW env). Pure additive, never
+        # blocks. Never raises.
+        if cw_drafted < CW_THRESHOLD:
+            _RUN_STATE["step"] = "cw_recycle"
+            shortfall = CW_THRESHOLD - cw_drafted
+            logger.info(
+                f"STEP 5b: CW drafted {cw_drafted}/{CW_THRESHOLD}. "
+                f"Recycling yesterday's CW queue to top up shortfall of {shortfall}..."
+            )
+            try:
+                from signal_works.recycle_cw import recycle_yesterdays_cw
+                cw_recycled = recycle_yesterdays_cw(min_floor=shortfall)
+                logger.info(f"  Recycle attempted on {cw_recycled} prior CW touches.")
+                log_step("cw_recycle", attempted=shortfall, succeeded=cw_recycled)
+            except Exception as e:
+                logger.error(f"  CW recycle failed (non-fatal): {e}")
+                log_step("cw_recycle", attempted=shortfall,
+                         reason=f"error: {type(e).__name__}")
+    _RUN_STATE["cw_drafted"] = cw_drafted
+    _RUN_STATE["cw_recycled"] = cw_recycled
 
     # ── Summary ───────────────────────────────────────────────────
-    total = sw_drafted + cw_drafted
+    total = sw_drafted + cw_drafted + cw_recycled
     logger.info("=" * 60)
     logger.info(f"Run complete:")
     logger.info(f"  Bounces cleared:        {bounce_nulled}")
@@ -217,6 +350,7 @@ def _main_body():
     logger.info(f"  SW drafts created:      {sw_drafted}")
     logger.info(f"  CW leads personalized:  {voice_personalized}")
     logger.info(f"  CW outreach drafts:     {cw_drafted}")
+    logger.info(f"  CW recycled (5b):       {cw_recycled}")
     logger.info(f"  TOTAL drafts in inbox:  {total}")
     if total > 0:
         logger.info("  Check boubacar@catalystworks.consulting Drafts -- ready to send.")
@@ -240,6 +374,7 @@ def _main_body():
                 "date": datetime.now().strftime("%Y-%m-%d"),
                 "sw_drafted": sw_drafted,
                 "cw_drafted": cw_drafted,
+                "cw_recycled": cw_recycled,
                 "total": total,
                 "sw_leads": sw_leads,
                 "bounce_nulled": bounce_nulled,
@@ -276,8 +411,7 @@ def _main_body():
     # Alert when below threshold even if total > 0. Prevents silent
     # under-performance going unnoticed until the daily report email.
     # Thresholds aligned with daily targets: SW=35, CW=15.
-    SW_THRESHOLD = 30
-    CW_THRESHOLD = 10
+    # Constants live at module level (also drives Step 5b recycle floor).
     health_warnings = []
     if not is_weekend:
         if sw_drafted < SW_THRESHOLD:
@@ -290,6 +424,10 @@ def _main_body():
         _telegram_alert(msg)
         logger.warning(f"Harvest health check: {'; '.join(health_warnings)}")
 
+    # Mark clean completion. atexit handler reads this and skips the partial-state
+    # alert when set.
+    _RUN_STATE["step"] = "complete"
+    _RUN_STATE["completed"] = True
     return 0 if total > 0 else 1
 
 
