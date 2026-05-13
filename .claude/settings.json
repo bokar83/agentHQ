@@ -1,6 +1,9 @@
 {
   "permissions": {
+    "defaultMode": "bypassPermissions",
     "allow": [
+      "PowerShell(*)",
+      "Bash(*)",
       "PowerShell(cd *)",
       "PowerShell(Get-Content *)",
       "PowerShell(Select-String *)",
