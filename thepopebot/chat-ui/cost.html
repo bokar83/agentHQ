@@ -97,18 +97,7 @@
 </head>
 <body>
 
-<div id="pin-screen">
-  <div style="text-align:center">
-    <img src="/atlas/compass.svg" alt="Atlas" width="48" height="48" />
-    <div class="pin-title">Atlas <span style="color:var(--brass)">Spend Report</span></div>
-    <div class="pin-subtitle">Catalyst Works Consulting</div>
-  </div>
-  <form id="pin-form">
-    <input id="pin-input" type="password" placeholder="PIN" autocomplete="off" />
-    <button id="pin-submit" type="submit">Connect</button>
-    <p id="pin-error" role="alert"></p>
-  </form>
-</div>
+<div id="pin-screen" style="display:none"></div>
 
 <div id="report">
   <div id="topbar">
@@ -121,6 +110,7 @@
       <nav class="tnav">
         <a href="/atlas" class="nl">Dashboard</a>
         <a href="/atlas/roadmap" class="nl">Roadmap</a>
+        <a href="/atlas/lighthouse" class="nl">Lighthouse</a>
         <a href="/atlas/cost" class="nl here">Spend</a>
       </nav>
     </div>
@@ -197,37 +187,17 @@ const TOKEN_TTL_MS = 4 * 60 * 60 * 1000;
 let _token = null;
 
 // ── Auth ─────────────────────────────────────────────────────────
+// Sub-page: never shows its own PIN. Redirects to /atlas if no token.
 (function boot() {
   const t = sessionStorage.getItem(TOKEN_KEY);
   const ts = sessionStorage.getItem(TOKEN_TS_KEY);
   if (t && ts && Date.now() - parseInt(ts, 10) < TOKEN_TTL_MS) {
     _token = t;
     showReport(30);
+    return;
   }
-  document.getElementById('pin-form').addEventListener('submit', onPin);
+  window.location.href = '/atlas';
 })();
-
-async function onPin(e) {
-  e.preventDefault();
-  const pin = document.getElementById('pin-input').value.trim();
-  const btn = document.getElementById('pin-submit');
-  const err = document.getElementById('pin-error');
-  if (!pin) return;
-  btn.disabled = true; btn.textContent = 'Connecting...'; err.textContent = '';
-  try {
-    const res = await fetch(ORC_BASE + '/chat-token', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin }),
-    });
-    const data = await res.json();
-    if (!res.ok) { err.textContent = data.detail || 'Failed.'; return; }
-    _token = data.token;
-    sessionStorage.setItem(TOKEN_KEY, _token);
-    sessionStorage.setItem(TOKEN_TS_KEY, String(Date.now()));
-    showReport(30);
-  } catch { err.textContent = 'Network error.'; }
-  finally { btn.disabled = false; btn.textContent = 'Connect'; }
-}
 
 async function apiFetch(path) {
   const r = await fetch(ORC_BASE + path, { headers: { Authorization: 'Bearer ' + _token } });

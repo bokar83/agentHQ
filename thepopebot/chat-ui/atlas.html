@@ -1,156 +1,181 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Atlas M8 — Mission Control</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="/atlas.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atlas Mission Control</title>
+  <link rel="icon" type="image/svg+xml" href="/atlas/compass.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/atlas/atlas.css?v=20260503d" />
 </head>
-<body class="t4">
+<body>
 
-  <!-- PIN GATE MODAL (mirrors /chat gate) -->
-  <div id="pin-gate" class="pin-gate">
-    <div class="pin-box">
-      <h2>Authorization Required</h2>
-      <p>Enter your PIN to access Atlas</p>
-      <input type="password" id="pin-input" placeholder="PIN" autofocus />
-      <button id="pin-submit">Authenticate</button>
-      <div id="pin-error" class="error-msg"></div>
+<!-- PIN SCREEN -->
+<div id="pin-screen">
+  <div class="pin-brand">
+    <div class="brand-mark">
+      <img src="/atlas/compass.svg" alt="Atlas" width="56" height="56" />
     </div>
+    <div class="pin-title">Atlas Mission Control</div>
+    <div class="pin-subtitle">Catalyst Works Consulting</div>
   </div>
+  <form id="pin-form">
+    <input id="pin-input" type="password" placeholder="Enter PIN" autocomplete="off" />
+    <button id="pin-submit" type="submit">Connect</button>
+    <p id="pin-error" role="alert"></p>
+  </form>
+</div>
 
-  <div id="app" style="display: none;">
-    <!-- TOPBAR -->
-    <header class="topbar">
-      <div class="brand">
-        <div class="brand-mark">A</div>
-        <div class="brand-text">
-          <h1>Atlas <span class="accent-word">Mission Control</span></h1>
-          <div class="sub-line">SYSTEM OPERATION HUB</div>
-        </div>
-      </div>
-      <div class="meta">
-        <div class="badge" id="badge-system-status">
-          <div class="led" id="led-system"></div>
-          <span id="txt-system">SYSTEM: OPERATIONAL</span>
-        </div>
-      </div>
-    </header>
+<!-- DASHBOARD -->
+<div id="dashboard" hidden>
 
-    <!-- HERO ROLLUP -->
-    <section class="hero" id="hero-strip">
-      <div class="stat">
-        <div class="lbl">Total 7D Spend</div>
-        <div class="val" id="hero-spend-val">...<span class="small">USD</span></div>
-        <div class="meta" id="hero-spend-meta">Pacing normally</div>
+  <!-- Topbar -->
+  <header id="topbar">
+    <div class="topbar-left">
+      <img src="/atlas/compass.svg" alt="Atlas" class="topbar-compass" width="28" height="28" />
+      <h1>Atlas <span class="accent-word">Mission Control</span></h1>
+    </div>
+    <div class="topbar-right">
+      <nav style="display:flex;gap:6px">
+        <a href="/atlas" style="color:var(--terracotta);border-color:rgba(255,107,53,.35);font-size:12px;text-decoration:none;font-family:var(--font-mono);padding:6px 13px;border:1px solid;border-radius:6px;white-space:nowrap">Dashboard</a>
+        <a href="/atlas/roadmap" style="color:var(--ink-dim);border-color:transparent;font-size:12px;text-decoration:none;font-family:var(--font-mono);padding:6px 13px;border:1px solid;border-radius:6px;white-space:nowrap">Roadmap</a>
+        <a href="/atlas/lighthouse" style="color:var(--ink-dim);border-color:transparent;font-size:12px;text-decoration:none;font-family:var(--font-mono);padding:6px 13px;border:1px solid;border-radius:6px;white-space:nowrap">Lighthouse</a>
+        <a href="/atlas/cost" style="color:var(--ink-dim);border-color:transparent;font-size:12px;text-decoration:none;font-family:var(--font-mono);padding:6px 13px;border:1px solid;border-radius:6px;white-space:nowrap">Spend</a>
+      </nav>
+      <span id="sync-badge" class="badge badge-dim">Syncing...</span>
+      <span id="health-badge" class="badge badge-dim">--</span>
+    </div>
+    <div class="topbar-runner"></div>
+  </header>
+
+  <!-- Hero strip -->
+  <section id="hero-strip">
+    <div class="hero-tile" id="hero-status">
+      <div class="hero-label">System Status</div>
+      <div class="hero-value" id="hero-status-val">--</div>
+    </div>
+    <div class="hero-tile" id="hero-last-action">
+      <div class="hero-label">Last Autonomous Action</div>
+      <div class="hero-value small" id="hero-last-action-val">--</div>
+    </div>
+    <div class="hero-tile" id="hero-next-fire">
+      <div class="hero-label">Next Scheduled Fire</div>
+      <div class="hero-value" id="hero-next-fire-val">--</div>
+    </div>
+    <div class="hero-tile" id="hero-spend">
+      <div class="hero-label">Spend Pacing</div>
+      <div class="hero-value" id="hero-spend-val">--</div>
+    </div>
+    <div class="hero-tile" id="hero-health">
+      <div class="hero-label">Last Health Check</div>
+      <div class="hero-value" id="hero-health-val">--</div>
+      <div class="hero-sub" id="hero-health-ts"></div>
+    </div>
+    <div class="hero-tile hero-quote" id="hero-quote">
+      <div class="hero-label">Daily Quote</div>
+      <div id="quote-text" class="quote-text"></div>
+      <div id="quote-author" class="quote-author"></div>
+    </div>
+  </section>
+
+  <!-- Main grid -->
+  <main id="main-grid">
+
+    <!-- Left: cards -->
+    <div id="cards-col">
+
+      <section class="card" data-card="state" data-color="brass">
+        <div class="card-header">
+          <h2>agentsHQ <span class="accent-word">State</span></h2>
+        </div>
+        <div class="card-body" id="card-state-body">Loading...</div>
+        <div class="card-actions" id="card-state-actions"></div>
+      </section>
+
+      <section class="card" data-card="queue" data-color="lapis">
+        <div class="card-header">
+          <h2>Approval <span class="accent-word">Queue</span></h2>
+        </div>
+        <div class="card-body" id="card-queue-body">Loading...</div>
+      </section>
+
+      <section class="card" data-card="content" data-color="verdigris">
+        <div class="card-header">
+          <h2>Content <span class="accent-word">Board</span></h2>
+        </div>
+        <div class="card-body" id="card-content-body">Loading...</div>
+        <div class="card-actions" id="card-content-actions"></div>
+      </section>
+
+      <section class="card" data-card="spend" data-color="terracotta">
+        <div class="card-header">
+          <h2>Spend <span class="accent-word">Pacing</span></h2>
+        </div>
+        <div class="card-body" id="card-spend-body">Loading...</div>
+      </section>
+
+      <section class="card" data-card="ideas" data-color="brass">
+        <div class="card-header">
+          <h2>Top <span class="accent-word">Ideas</span></h2>
+        </div>
+        <div class="card-body" id="card-ideas-body">Loading...</div>
+      </section>
+
+      <section class="card" data-card="heartbeats" data-color="bronze">
+        <div class="card-header">
+          <h2>Heart<span class="accent-word">beats</span></h2>
+        </div>
+        <div class="card-body" id="card-heartbeats-body">Loading...</div>
+      </section>
+
+      <section class="card" data-card="errors" data-color="rose">
+        <div class="card-header">
+          <h2>Error <span class="accent-word">Monitor</span></h2>
+        </div>
+        <div class="card-body" id="card-errors-body">Loading...</div>
+      </section>
+
+      <section class="card card-crm" data-card="crm" data-color="lapis">
+        <div class="card-header">
+          <h2>CRM <span class="accent-word">Pipeline</span></h2>
+          <span id="crm-total-badge" class="badge badge-dim"></span>
+        </div>
+        <div id="crm-board">Loading...</div>
+      </section>
+
+    </div>
+
+    <!-- Right: native chat card (M9b) -->
+    <section class="card chat-card" data-card="chat" data-color="terracotta">
+      <div class="card-header">
+        <h2>Atlas <span class="accent-word">Chat</span></h2>
+        <span id="chat-queue-badge" class="badge badge-dim" style="display:none"></span>
       </div>
-      <div class="stat s2">
-        <div class="lbl">Last Auto Action</div>
-        <div class="val"><span class="big-word" id="hero-action-type">...</span></div>
-        <div class="meta"><span class="traffic"></span><span id="hero-action-time">Loading...</span></div>
-      </div>
-      <div class="stat s3">
-        <div class="lbl">Next Fire</div>
-        <div class="val" id="hero-fire-val">...</div>
-        <div class="meta" id="hero-fire-meta">Loading...</div>
-      </div>
-      <div class="stat s4">
-        <div class="lbl">Active Crews</div>
-        <div class="val" id="hero-crews-val">...</div>
-        <div class="meta">Guards in place</div>
+      <div id="chat-panel">
+        <div id="chat-messages" role="log" aria-live="polite"></div>
+        <div id="chat-artifact-wrap" style="display:none">
+          <iframe id="chat-artifact-frame" title="Artifact preview" sandbox="allow-scripts"></iframe>
+        </div>
+        <div id="chat-attachment-strip" aria-live="polite"></div>
+        <div id="chat-input-row">
+          <button id="chat-attach" type="button" aria-label="Attach files" title="Attach files (or paste an image)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+            </svg>
+          </button>
+          <input id="chat-file-input" type="file" multiple accept="image/*,application/pdf,.txt,.md,.csv,.json,.log,.py,.js,.ts,.tsx,.jsx,.html,.css,.yml,.yaml,.toml,.sh,.sql" hidden />
+          <textarea id="chat-input" rows="2" placeholder="Ask Atlas anything... (paste images, or click 📎 to attach files)" aria-label="Chat message"></textarea>
+          <button id="chat-send" type="button">Send</button>
+        </div>
       </div>
     </section>
 
-    <!-- GRID -->
-    <main class="grid">
-      <!-- Card 1: Atlas State -->
-      <div class="card" id="card-state">
-        <header>
-          <span class="num">01</span>
-          <h2>Atlas <span class="accent">State</span></h2>
-        </header>
-        <div class="body" id="state-body">
-          <div class="loading">Loading state...</div>
-        </div>
-      </div>
+  </main>
+</div>
 
-      <!-- Card 2: Approval Queue & Intent Stream -->
-      <div class="card griot" id="card-queue">
-        <header>
-          <span class="num">02</span>
-          <h2>Action <span class="accent">Stream</span></h2>
-        </header>
-        <div class="body">
-          <div id="intent-feed" style="margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px;">
-            <!-- SSE intents will appear here -->
-          </div>
-          <div class="divider" style="border-top: 1px solid var(--ink-2); margin-bottom: 16px; opacity: 0.5;"></div>
-          <div id="queue-body">
-            <div class="loading">Loading queue...</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Card 3: Content Board -->
-      <div class="card content" id="card-content">
-        <header>
-          <span class="num">03</span>
-          <h2>Content <span class="accent">Board</span></h2>
-        </header>
-        <div class="body" id="content-body">
-          <div class="loading">Loading content...</div>
-        </div>
-      </div>
-
-      <!-- Card 4: Spend -->
-      <div class="card spend" id="card-spend">
-        <header>
-          <span class="num">04</span>
-          <h2>Spend <span class="accent">Monitor</span></h2>
-        </header>
-        <div class="body" id="spend-body">
-          <div class="loading">Loading spend...</div>
-        </div>
-      </div>
-
-      <!-- Card 5: Heartbeats -->
-      <div class="card heartbeats" id="card-heartbeats">
-        <header>
-          <span class="num">05</span>
-          <h2>Wakes <span class="accent">& Pulses</span></h2>
-        </header>
-        <div class="body" id="heartbeats-body">
-          <div class="loading">Loading heartbeats...</div>
-        </div>
-      </div>
-
-      <!-- Card 6: Errors -->
-      <div class="card errors" id="card-errors">
-        <header>
-          <span class="num">06</span>
-          <h2>Error <span class="accent">Log</span></h2>
-        </header>
-        <div class="body" id="errors-body">
-          <div class="loading">Loading errors...</div>
-        </div>
-      </div>
-
-      <!-- Card 7: Chat Embed -->
-      <div class="card chat" id="card-chat">
-        <header>
-          <span class="num">07</span>
-          <h2>Orchestrator <span class="accent">Chat</span></h2>
-        </header>
-        <div class="chat-frame">
-          <iframe id="chat-iframe" src="" loading="lazy" style="width:100%; height:100%; border:none;"></iframe>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <script src="/atlas.js"></script>
+<script src="/atlas/atlas.js?v=20260503d"></script>
+<script src="/atlas/atlas-chat.js?v=20260503d"></script>
 </body>
 </html>

@@ -171,6 +171,7 @@ tr.hide{display:none}
   <nav class="tnav">
     <a href="/atlas" class="nl">Dashboard</a>
     <a href="/atlas/roadmap" class="nl here">Roadmap</a>
+    <a href="/atlas/lighthouse" class="nl">Lighthouse</a>
     <a href="/atlas/cost" class="nl">Spend</a>
   </nav>
 </header>
@@ -534,8 +535,19 @@ tr.hide{display:none}
 
 <script>
 const TOKEN_KEY = 'atlas_token';
+const TOKEN_TS_KEY = 'atlas_token_ts';
+const TOKEN_TTL_MS = 4 * 60 * 60 * 1000;
 let liveMetrics = {};
 let currentFilter = 'all';
+
+// Sub-page: never shows its own PIN. Redirects to /atlas if no token.
+(function authGuard() {
+  const t = sessionStorage.getItem(TOKEN_KEY);
+  const ts = sessionStorage.getItem(TOKEN_TS_KEY);
+  if (!t || !ts || Date.now() - parseInt(ts, 10) >= TOKEN_TTL_MS) {
+    window.location.href = '/atlas';
+  }
+})();
 
 // ── Auth token (same as atlas.js) ─────────────────────────────────────────────
 function getToken() {
