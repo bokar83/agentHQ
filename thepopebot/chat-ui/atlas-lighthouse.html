@@ -11,10 +11,18 @@
 <style>
   .lh-wrap { padding: 24px 40px 80px; max-width: 1280px; margin: 0 auto; }
   .lh-section { margin-top: 36px; }
-  .lh-section-head { display: flex; align-items: baseline; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+  details.lh-section > summary { list-style: none; cursor: pointer; }
+  details.lh-section > summary::-webkit-details-marker { display: none; }
+  .lh-section-head { display: flex; align-items: baseline; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--line); margin-bottom: 0; }
+  details.lh-section[open] > summary.lh-section-head { margin-bottom: 20px; }
   .lh-section-head .num { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--c1); letter-spacing: 0.12em; padding: 4px 10px; background: var(--num-bg-1); border: 1px solid var(--num-line-1); border-radius: 3px; }
   .lh-section-head h2 { font-family: "Fraunces", serif; font-size: 26px; color: var(--bone); margin: 0; font-weight: 600; }
   .lh-section-head .legend { margin-left: auto; font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--ink-3); letter-spacing: 0.05em; }
+  .lh-chevron { margin-left: auto; font-family: "IBM Plex Mono", monospace; font-size: 14px; color: var(--ink-3); transition: transform 0.2s ease; }
+  details.lh-section[open] > summary .lh-chevron { transform: rotate(90deg); color: var(--c1); }
+  .lh-section-head.has-legend .lh-chevron { margin-left: 14px; }
+  summary.lh-section-head:hover .num { background: var(--num-line-1); }
+  summary.lh-section-head:hover h2 { color: var(--c1); }
   .lh-hero { padding: 32px 0 24px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
   .lh-hero .eyebrow { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--c1); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 8px; }
   .lh-hero h1 { font-family: "Fraunces", serif; font-size: 48px; color: var(--bone); margin: 0; font-weight: 600; letter-spacing: -0.02em; line-height: 1.05; }
@@ -99,26 +107,21 @@
 <body class="t4">
 
   <div id="app">
-    <header class="topbar">
-      <div class="brand">
-        <div class="brand-mark">L</div>
-        <div class="brand-text">
-          <h1>Lighthouse <span class="accent-word">Lead Strategy</span></h1>
-          <div class="sub-line">12-WEEK REVENUE SPRINT · 2026-05-12 → 2026-08-04</div>
-        </div>
+    <header id="topbar">
+      <div class="topbar-left">
+        <img src="/atlas/compass.svg" alt="Atlas" class="topbar-compass" width="28" height="28" />
+        <h1>Lighthouse <span class="accent-word">Lead Strategy</span></h1>
       </div>
-      <nav class="topbar-nav" style="display:flex;gap:6px">
-        <a href="/atlas" style="color:var(--ink-2);border-color:transparent;font-size:12px;text-decoration:none;font-family:'IBM Plex Mono',monospace;padding:6px 13px;border:1px solid;border-radius:6px;white-space:nowrap">Dashboard</a>
-        <a href="/atlas/roadmap" style="color:var(--ink-2);border-color:transparent;font-size:12px;text-decoration:none;font-family:'IBM Plex Mono',monospace;padding:6px 13px;border:1px solid;border-radius:6px;white-space:nowrap">Roadmap</a>
-        <a href="/atlas/lighthouse" style="color:var(--c1);border-color:var(--c1-halo);font-size:12px;text-decoration:none;font-family:'IBM Plex Mono',monospace;padding:6px 13px;border:1px solid;border-radius:6px;white-space:nowrap">Lighthouse</a>
-        <a href="/atlas/cost" style="color:var(--ink-2);border-color:transparent;font-size:12px;text-decoration:none;font-family:'IBM Plex Mono',monospace;padding:6px 13px;border:1px solid;border-radius:6px;white-space:nowrap">Spend</a>
-      </nav>
-      <div class="meta">
-        <div class="badge">
-          <div class="led" style="background:var(--c1);box-shadow:0 0 0 2px var(--c1-halo),0 0 12px var(--c1-halo);"></div>
-          <span>v8 · DRAFT</span>
-        </div>
+      <div class="topbar-right">
+        <nav style="display:flex;gap:6px">
+          <a href="/atlas" style="color:var(--ink-dim);border-color:transparent;font-size:12px;text-decoration:none;font-family:var(--font-mono);padding:6px 13px;border:1px solid;border-radius:6px;white-space:nowrap">Dashboard</a>
+          <a href="/atlas/cost" style="color:var(--ink-dim);border-color:transparent;font-size:12px;text-decoration:none;font-family:var(--font-mono);padding:6px 13px;border:1px solid;border-radius:6px;white-space:nowrap">Spend</a>
+          <a href="/atlas/roadmap" style="color:var(--ink-dim);border-color:transparent;font-size:12px;text-decoration:none;font-family:var(--font-mono);padding:6px 13px;border:1px solid;border-radius:6px;white-space:nowrap">Roadmap</a>
+          <a href="/atlas/lighthouse" style="color:var(--terracotta);border-color:rgba(255,107,53,.35);font-size:12px;text-decoration:none;font-family:var(--font-mono);padding:6px 13px;border:1px solid;border-radius:6px;white-space:nowrap">Lighthouse</a>
+        </nav>
+        <span class="badge badge-dim" style="font-size:11px">v8</span>
       </div>
+      <div class="topbar-runner"></div>
     </header>
 
     <div class="lh-wrap">
@@ -168,8 +171,8 @@
         </div>
       </div>
 
-      <section class="lh-section">
-        <div class="lh-section-head"><span class="num">A</span><h2>Day 0 — Tuesday, May 12 (today)</h2></div>
+      <details class="lh-section">
+        <summary class="lh-section-head"><span class="num">A</span><h2>Day 0 — Tuesday, May 12 (today)</h2><span class="lh-chevron">▸</span></summary>
         <div class="lh-day0">
           <h3>Today's micro-yes ladder</h3>
           <p>Day 0 = setup-and-foundation. <strong>Win-state: Brandon text sent.</strong> Everything else is in reach but optional.</p>
@@ -181,10 +184,10 @@
           </ul>
           <div class="punch">Single non-negotiable today: <strong>Brandon text sent.</strong></div>
         </div>
-      </section>
+      </details>
 
-      <section class="lh-section">
-        <div class="lh-section-head"><span class="num">B</span><h2>The 12-week plan</h2></div>
+      <details class="lh-section">
+        <summary class="lh-section-head"><span class="num">B</span><h2>The 12-week plan</h2><span class="lh-chevron">▸</span></summary>
         <table class="lh-table">
           <thead><tr><th style="width:80px">Week</th><th>Goal</th><th>Daily M-F</th><th>Expected outcome</th><th>Score gate</th></tr></thead>
           <tbody>
@@ -198,10 +201,10 @@
             <tr><td><strong>W12</strong><span class="small">7/28-8/2</span></td><td>Close + plan v2</td><td>Wrap. Write next-cycle strategy.</td><td>3 clients (1 each SW+GW+CW)</td><td>3 of 3 brands</td></tr>
           </tbody>
         </table>
-      </section>
+      </details>
 
-      <section class="lh-section">
-        <div class="lh-section-head"><span class="num">C</span><h2>Daily rhythm — Wednesday</h2></div>
+      <details class="lh-section">
+        <summary class="lh-section-head"><span class="num">C</span><h2>Daily rhythm — Wednesday</h2><span class="lh-chevron">▸</span></summary>
         <table class="lh-table">
           <thead><tr><th style="width:130px">Time MDT</th><th>Action</th><th>Win-state</th></tr></thead>
           <tbody>
@@ -217,10 +220,10 @@
           </tbody>
         </table>
         <div class="lh-callout good"><strong>Saturday 10:00 MDT.</strong> 30-min review. M4 Triad Lock + M5 Scorecard. Score &lt; 3 → next week locks to warm-only.</div>
-      </section>
+      </details>
 
-      <section class="lh-section">
-        <div class="lh-section-head"><span class="num">D</span><h2>Channels in priority order</h2></div>
+      <details class="lh-section">
+        <summary class="lh-section-head"><span class="num">D</span><h2>Channels in priority order</h2><span class="lh-chevron">▸</span></summary>
 
         <div class="lh-channel">
           <h3><span class="badge">Active W1-3</span> Channel 1 · Daily Fast-Feedback Sprint</h3>
@@ -252,10 +255,10 @@
           <h3><span class="badge">Locked — W8+</span> Channel 6 · Reddit (r/sweatystartup + r/HVAC + r/Substack)</h3>
           <p><strong>Gated:</strong> 60-90 day comment-only burn before mention.</p>
         </div>
-      </section>
+      </details>
 
-      <section class="lh-section">
-        <div class="lh-section-head"><span class="num">E</span><h2>Three-brand lead flow</h2></div>
+      <details class="lh-section">
+        <summary class="lh-section-head"><span class="num">E</span><h2>Three-brand lead flow</h2><span class="lh-chevron">▸</span></summary>
         <table class="lh-table">
           <thead><tr><th>Brand</th><th>Front door Tier 1</th><th>Front door Tier 2 (W4+)</th><th>Entry price</th></tr></thead>
           <tbody>
@@ -265,10 +268,10 @@
           </tbody>
         </table>
         <div class="lh-callout good"><strong>Utah-local positioning is the unfair advantage.</strong> South Jordan is trade-density turf.</div>
-      </section>
+      </details>
 
-      <section class="lh-section">
-        <div class="lh-section-head"><span class="num">F</span><h2>Outbound templates</h2><span class="legend">register-tuned · Council-patched</span></div>
+      <details class="lh-section">
+        <summary class="lh-section-head has-legend"><span class="num">F</span><h2>Outbound templates</h2><span class="legend">register-tuned · Council-patched</span><span class="lh-chevron">▸</span></summary>
         <p style="color:var(--ink-2); font-size:14px;">Practice name NOT mentioned in outbound. Each variant ends with Thursday check-in close.</p>
 
         <h3 style="color:var(--bone); font-family:'Fraunces',serif; font-size:18pt; margin:24px 0 8px;">Brandon · accountability invite (sent Day 0)</h3>
@@ -339,10 +342,10 @@ What you'd get: I pull up your LinkedIn, find the single biggest thing blocking 
 Free, doubles as a chance for you to give feedback on the deliverable since you're already inside the work. No pressure, no pitch. Reply with a day and I'll get yours out.
 
 I'll check back Thursday to hear if the rewrite felt accurate.</div>
-      </section>
+      </details>
 
-      <section class="lh-section">
-        <div class="lh-section-head"><span class="num">G</span><h2>The 8 failure modes + prevention</h2></div>
+      <details class="lh-section">
+        <summary class="lh-section-head"><span class="num">G</span><h2>The 8 failure modes + prevention</h2><span class="lh-chevron">▸</span></summary>
         <table class="lh-table">
           <thead><tr><th style="width:40px">#</th><th>Failure mode</th><th>Prevention</th><th>Trigger</th></tr></thead>
           <tbody>
@@ -356,20 +359,20 @@ I'll check back Thursday to hear if the rewrite felt accurate.</div>
             <tr><td>8</td><td><strong>Sender Reputation Cliff</strong></td><td><strong>M8:</strong> List Hygiene + Classifier Fix.</td><td>Before any new send</td></tr>
           </tbody>
         </table>
-      </section>
+      </details>
 
-      <section class="lh-section">
-        <div class="lh-section-head"><span class="num">H</span><h2>Ground truth</h2><span class="legend">Gmail + Supabase + orc-postgres · 2026-05-12</span></div>
+      <details class="lh-section">
+        <summary class="lh-section-head has-legend"><span class="num">H</span><h2>Ground truth</h2><span class="legend">Gmail + Supabase + orc-postgres · 2026-05-12</span><span class="lh-chevron">▸</span></summary>
         <div class="lh-metrics">
           <div class="lh-metric"><div class="label">Sent all-time (cold)</div><div class="num">500</div><div class="note">CW + SW share one Gmail OAuth.</div></div>
           <div class="lh-metric"><div class="label">Replies (real humans)</div><div class="num bad">0</div><div class="note">3 in ledger were mailer-daemon bounces.</div></div>
           <div class="lh-metric"><div class="label">Delivery failure rate</div><div class="num bad">9.4%</div><div class="note">47 of 500. Above Gmail throttle.</div></div>
           <div class="lh-metric"><div class="label">Leads in Supabase</div><div class="num">2,963</div><div class="note">291 sent, 2,524 untouched.</div></div>
         </div>
-      </section>
+      </details>
 
-      <section class="lh-section">
-        <div class="lh-section-head"><span class="num">I</span><h2>Accountability partner — Brandon</h2></div>
+      <details class="lh-section">
+        <summary class="lh-section-head"><span class="num">I</span><h2>Accountability partner — Brandon</h2><span class="lh-chevron">▸</span></summary>
         <p style="color:var(--ink);"><strong style="color:var(--bone);">Selected:</strong> Brandon. Recently met. Makes commercials and videos.</p>
         <h3 style="color:var(--bone); font-family:'Fraunces',serif; margin-top:24px;">Morning ping — daily 10:05 MDT M-F</h3>
         <div class="lh-template">Day [N].
@@ -380,19 +383,19 @@ Delivering today: [audit for NAME by 5 PM / nothing queued].</div>
         <div class="lh-template">Day [N] close.
 [DELIVERED audit to NAME / NO YES TODAY / FIRST WIN 🚀 — NAME replied yes]</div>
         <p style="color:var(--ink); margin-top:16px;"><strong style="color:var(--bone);">Brandon's role:</strong> reply within the hour to morning ping. <strong style="color:var(--c1);">Silence does NOT work</strong> — that's the load-bearing piece.</p>
-      </section>
+      </details>
 
-      <section class="lh-section">
-        <div class="lh-section-head"><span class="num">J</span><h2>The single 90-day decision</h2></div>
+      <details class="lh-section">
+        <summary class="lh-section-head"><span class="num">J</span><h2>The single 90-day decision</h2><span class="lh-chevron">▸</span></summary>
         <div class="lh-goalpost">
           <div class="label">The goalpost</div>
           <div class="number">Land 3 paying clients across SW + GW + CW combined by 2026-08-04. At least 1 in each brand.</div>
           <div class="footer">12 weeks. One number. Three brands. Mid-cycle review 2026-06-23.</div>
         </div>
-      </section>
+      </details>
 
       <div class="lh-sig">
-        <span class="stamp">v8 · DRAFT FOR REVIEW</span>
+        <span class="stamp">v8</span>
         <span>Catalyst Works · 2026-05-12 · Boubacar · South Jordan, UT · <code class="lh-code">boubacar@catalystworks.consulting</code></span>
       </div>
 
