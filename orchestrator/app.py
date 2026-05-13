@@ -84,6 +84,7 @@ app = FastAPI(
 
 _CORS_ALLOWED = [
     "https://agentshq.boubacarbarry.com",
+    "https://catalystworks.consulting",
     "http://localhost:3000",
     "http://localhost:5173",
     "http://localhost:8000",
@@ -844,6 +845,103 @@ async def inbound_lead_webhook(request: Request, background_tasks: BackgroundTas
 
     background_tasks.add_task(_run_inbound, body)
     return {"status": "accepted", "message": "Inbound lead queued."}
+
+
+# ══════════════════════════════════════════════════════════════
+# Constraints AI capture (catalystworks.consulting diagnostic demo)
+# ══════════════════════════════════════════════════════════════
+
+@app.post("/constraints-capture")
+async def constraints_capture(request: Request, background_tasks: BackgroundTasks):
+    """Catalyst Works diagnostic demo capture form endpoint.
+
+    Reachable from the public web at
+    https://agentshq.boubacarbarry.com/api/orc/constraints-capture
+    (Traefik strips the /api/orc prefix; FastAPI sees /constraints-capture).
+
+    Front-end POST body (CORS origin: https://catalystworks.consulting):
+        {
+          "email": "<captured email>",
+          "pain": "<what they typed into the demo>",
+          "result": {"constraint": "...", "signals": [...], "action": "..."},
+          "idempotency_key": "<UUIDv4 from crypto.randomUUID()>",
+          "source": "site_demo_capture"
+        }
+
+    Behavior:
+      1. Validate email + idempotency_key shape.
+      2. Insert one row into Supabase diagnostic_captures (durable artifact,
+         best-effort — caller does NOT see DB failure).
+      3. Queue background task: INSERT into leads with
+         sequence_pipeline='constraints_ai', sequence_touch=0, and the
+         demo context in pain_text/response_constraint/response_action.
+         Unique on capture_idempotency_key — duplicate submit is a silent
+         no-op (the unique violation is caught and treated as success).
+      4. Return 200 {ok: true} so the front-end shows the success state.
+
+    Why this exists: 2026-05-12 — site demo capture form has been silently
+    broken since 2026-05-11 (frontend POSTed to a non-existent n8n
+    webhook). This route replaces the n8n /capture sub-route. See
+    docs/integrations/constraints_ai_capture_followup_2026-05-12.md.
+
+    Off-by-default for first 24h. Set CONSTRAINTS_CAPTURE_ENABLED=1 to
+    accept submissions. While off, returns 503 with hint.
+    """
+    if os.environ.get("CONSTRAINTS_CAPTURE_ENABLED", "0") != "1":
+        return {"ok": False, "error": "capture temporarily disabled"}
+
+    try:
+        body = await request.json()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON body: {e}")
+
+    email = (body.get("email") or "").strip()
+    idem = (body.get("idempotency_key") or "").strip()
+    pain = (body.get("pain") or "").strip()[:1500]
+    result = body.get("result") or {}
+    source = (body.get("source") or "site_demo_capture").strip()
+
+    # Minimal validation — heavy lifting at DB layer
+    import re as _re
+    if not _re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", email):
+        raise HTTPException(status_code=400, detail="invalid email")
+    if not _re.match(r"^[0-9a-fA-F-]{32,40}$", idem):
+        raise HTTPException(status_code=400, detail="invalid idempotency_key")
+    if len(email) > 254:
+        raise HTTPException(status_code=400, detail="email too long")
+
+    response_constraint = (result.get("constraint") or "").strip()[:600]
+    response_action = (result.get("action") or "").strip()[:600]
+
+    logger.info(
+        f"constraints-capture received: email={email} idem={idem[:8]}... "
+        f"source={source}"
+    )
+
+    def _persist(payload: dict):
+        try:
+            from skills.constraints_ai_capture.runner import (
+                persist_constraints_capture,
+            )
+            persist_constraints_capture(payload)
+        except Exception as exc:
+            logger.error(f"constraints-capture persist failed: {exc}")
+
+    background_tasks.add_task(
+        _persist,
+        {
+            "email": email,
+            "idempotency_key": idem,
+            "pain_text": pain,
+            "response_constraint": response_constraint,
+            "response_action": response_action,
+            "source": source,
+            "user_agent": request.headers.get("user-agent", "")[:300],
+            "geo_country": request.headers.get("cf-ipcountry", ""),
+        },
+    )
+
+    return {"ok": True, "message": "captured"}
 
 
 # ══════════════════════════════════════════════════════════════
