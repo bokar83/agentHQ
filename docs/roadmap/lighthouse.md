@@ -1,0 +1,183 @@
+# Lighthouse — 12-Week Revenue Sprint
+
+**Codename:** lighthouse
+**Status:** ACTIVE
+**Lifespan:** 2026-05-12 → 2026-08-04 (12 weeks)
+**Owner:** Boubacar Barry
+**One-line:** master revenue roadmap. ONE channel for W1-3 (Daily Fast-Feedback Sprint), Brandon as accountability partner, 3 paying clients across SW + GW + CW by 2026-08-04.
+
+## Why Lighthouse exists
+
+Until Lighthouse closes (3 paying clients by 2026-08-04), it is the **only** active strategic roadmap. All other roadmaps (harvest, ghost, atlas, compass, studio) feed INTO this one. They are sub-systems. Lighthouse is the parent.
+
+**Why this name:** strategy is what guides you when fog hits. Lighthouse fires on a fixed cycle (10:00 MDT sprint, Sat review, Thursday check-in). It signals from a fixed point on land (South Jordan, UT). Sankofa fit: lighthouse hosts, doesn't hunt.
+
+## Done definition
+
+Land 3 paying clients across SW + GW + CW combined by 2026-08-04. At least 1 in each brand.
+
+12 weeks. One number. Three brands. If 0/3 at mid-cycle 2026-06-23 review → re-council, full rewrite. If 1/3 → continue. If 2-3/3 → scale what works.
+
+## Status Snapshot (2026-05-12)
+
+- Day 0 Action 1 (Brandon accountability invite) sent ~20:30 MDT. Awaiting reply.
+- Strategy doc v8 served at localhost:8801 + emailed digest (msg id `19e1f1454a5bb2e5`)
+- Atlas sub-page built at `thepopebot/chat-ui/atlas-lighthouse.html` (deploy pending)
+- Tracker at `data/inbound-signal-log.md` scaffolded
+- Calendar wire-up pending — Google Calendar MCP next
+- Brand: Catalyst Works = public. agentsHQ = internal tool, never in outbound.
+
+## Live deliverables
+
+- **Master strategy HTML (v8):** `docs/strategy/lead-strategy-2026-05-12.html`
+- **Atlas sub-page:** `thepopebot/chat-ui/atlas-lighthouse.html` → `agentshq.boubacarbarry.com/atlas/lighthouse`
+- **Sankofa Council premortem:** `outputs/council/2026-05-12-20-20-24.html`
+- **Sankofa Council template review:** `outputs/council/2026-05-12-22-32-40.html`
+- **Email-events ledger:** `migrations/009_email_events.sql` (branch `feat/email-events-canonical-ledger` [READY])
+- **Daily tracker:** `data/inbound-signal-log.md`
+- **Memory:** `project_lead_strategy_2026-05-12.md`
+
+## The 8 prevention mechanics (M1-M8)
+
+| ID | What | Trigger | Targets |
+|---|---|---|---|
+| **M1** | Daily Fast-Feedback Sprint | M-F 10:00 MDT | Feedback Blackout |
+| **M2** | First Win Ceremony — Telegram 🚀 on first REAL reply | Once, auto | No First Win |
+| **M3** | Guilt-Free Reset Trigger | Daily 10:30 if M1 missed | Shame Spiral |
+| **M4** | Weekly Priority Triad Lock — 3 lanes max | Sat 10:00 MDT | Cognitive Overload |
+| **M5** | Conversion Scorecard | Sat 10:30 MDT | Automation as Enabler |
+| **M6** | Auto-Close Script — T+24h value, T+72h ask | Post-session | Avoidance of Closure |
+| **M7** | Idea Vault Lock | Anytime | Shiny-Drift |
+| **M8** | List Hygiene Gate + Reply Classifier Fix | Before any cold send | Sender Reputation Cliff |
+
+## Milestones
+
+### L0 — Day 0 (Tuesday 2026-05-12) — IN PROGRESS
+
+- ✅ Brandon accountability invite text sent
+- [ ] Warm Utah contact list (10 names)
+- [ ] Pre-slot 5 outbound messages for Wed-Fri
+- [ ] Google Calendar wire-up
+
+### L1 — Week 1: Reply Velocity (5/13-5/17)
+
+**Daily M-F:** 10:00 sprint (V1/V2) + 10:05 Brandon morning ping + 17:30 EOD ledger if landed + 21:00 log+pre-slot.
+**Expected:** ≥3 replies + ≥1 audit delivered. **Gate:** ≥4 of 5 days.
+
+### L2 — Week 2: Open the Funnel (5/19-5/24)
+
+Mix V3 (dormant) + V4 (referral-fresh). **Expected:** ≥5 audits delivered, ≥1 "tell me more". **Gate:** ≥4 of 5 days.
+
+### L3 — Week 3: First Conversion (5/26-5/31)
+
+Convert 1 "tell me more" → paid Signal Session offer. **Expected:** ≥1 paid Signal Session booked OR ≥10 audits delivered. **Gate:** ≥4 of 5 days.
+
+### L4 — Weeks 4-6: Expand (6/2-6/21)
+
+Gated on L1-L3 hitting ≥10 audits + ≥1 paid call. Add: LinkedIn discipline (Logan 5x/wk) + paid Signal Session $250 Wed afternoons. **Expected:** 2 sessions completed + 1 client landed.
+
+### L5 — Week 7: Mid-Cycle Council (6/23-6/28)
+
+Mandatory inflection. Pull data. Re-run Sankofa Council. Decide scale/pivot/rewrite.
+
+### L6 — Weeks 8-11: Scale (6/30-7/26)
+
+Gated on first paying client. Bring back ONE bigger play: Hive 2.0 OR Reddit deepening OR cold-mode Utah outbound. **Expected:** ≥2 more clients.
+
+### L7 — Week 12: Close (7/28-8/2)
+
+Wrap engagements. Write `docs/strategy/lead-strategy-2026-08-04.html` for next cycle.
+
+## Accountability partner — Brandon
+
+**Status:** Invite text sent 2026-05-12 ~20:30 MDT. Awaiting reply.
+
+**Mechanic:** daily 10:05 MDT M-F morning ping (4 lines) + optional 17:30 MDT EOD ledger when something landed. 4-week commitment, then evaluate.
+
+**Brandon's role:** reply within the hour to morning ping. "Got it" works. Silence does NOT work.
+
+**Reciprocity (deferred to Monday 2026-05-19):** V5 LinkedIn audit offer to Brandon. Don't crowd partnership ask with service offer this week.
+
+## Descoped Items
+
+- Public audit of named/identifiable people (values violation; only private audits, Tier 1/2/3 escalation if any public)
+- Naming Catalyst Works or agentsHQ in outbound (the work speaks)
+- Free Signal Sessions as default (paid $250 trial replaces)
+- Cold email volume (warm-only W1-3)
+- 8 parallel lanes (Sankofa premortem killed this v3 approach)
+- Facebook anywhere
+- Loom anywhere
+- Coffee meetings as default
+- New ideas / new roadmaps (Idea Vault locks until 3 paying clients)
+
+## Idea Vault (locked until 3 paying clients)
+
+- *(none yet)*
+
+## Cross-references
+
+- Master strategy: `docs/strategy/lead-strategy-2026-05-12.html`
+- Sankofa premortem: `outputs/council/2026-05-12-20-20-24.html`
+- Sankofa template review: `outputs/council/2026-05-12-22-32-40.html`
+- harvest.md H1j SHIPPED
+- Memory: `project_lead_strategy_2026-05-12.md`, `feedback_agent_time_perception_broken.md`
+- Tracker: `data/inbound-signal-log.md`
+
+## Session Log
+
+### 2026-05-12 — Lighthouse created + Day 0 Action 1 done + multi-commit push to remote
+
+**Shipped (commits on `fix/constraints-capture-agentshq-route` branch, all [READY] for Gate):**
+
+- `bfb37cc feat(lighthouse)`: master revenue sprint roadmap + Atlas sub-page nav + v8 strategy
+  - `docs/roadmap/lighthouse.md` (new master roadmap)
+  - `docs/roadmap/README.md` (lighthouse codename row added)
+  - `docs/strategy/lead-strategy-2026-05-12.html` (v8 polished Fraunces/Inter design)
+  - `thepopebot/chat-ui/atlas.html` (Lighthouse nav link)
+- `680371a feat(lighthouse)`: Atlas sub-page + nav styles for `/atlas/lighthouse`
+  - `thepopebot/chat-ui/atlas-lighthouse.html` (new sub-page, 400 lines, full strategy rendered in Atlas T4 theme)
+- `9b6b91f feat(lighthouse)`: inbound-signal-log tracker for daily Lighthouse cycle
+  - `data/inbound-signal-log.md` (force-added past `data/` gitignore per memory rule)
+
+All 3 commits pushed to `origin/fix/constraints-capture-agentshq-route` with `[READY]` tag. Gate cron at `*/5 * * * *` will auto-merge if checks pass.
+
+**Strategy v8 highlights:**
+- Strategy HTML written + served localhost:8801 + emailed digest (msg id `19e1f1454a5bb2e5`)
+- Sankofa Council ran 2x: premortem on plan v3 + template review on V1-V5
+- Email-events ledger shipped on `feat/email-events-canonical-ledger` branch [READY]
+- 4 ground-truth corrections: 500 sends not 100+, 0 real replies, 9.4% delivery failure, two-DB drift
+
+**Day 0 Action 1:** Brandon accountability invite text sent ~20:30 MDT. Awaiting reply.
+
+**Decisions locked this session:**
+- Project name = Lighthouse
+- Catalyst Works = public brand. agentsHQ = internal tool, never in outbound.
+- $250 paid Signal Session trial (not free; Council mandate)
+- Brandon V5 audit ask deferred to Monday 2026-05-19 (don't crowd partnership ask)
+- Public audit of named people = BANNED (values violation). Tier 1/2/3 escalation only.
+- No coffee meetings as default (Utah/LDS context, Brandon + Boubacar don't drink coffee)
+- 10:00 MDT all timings (not 09:00 — too early for texts per Boubacar)
+- .md tracking W1-W3 (`data/inbound-signal-log.md`), escalate to Postgres W4+ if cycle continues
+- 10-min-before reminders (09:50) on calendar before 10:00 sprint
+- Deep work blocks 60-90 min standard, max 2 hr (Boubacar preference, locked)
+- Tracking infrastructure decision: NO new Postgres table needed today. inbound-signal-log.md + existing Supabase lead_interactions + new email_events ledger (orc-postgres) are sufficient. Escalate to dedicated lighthouse_events table only in W4 if cycle continues.
+
+**Atomic-chain enforcement work (parallel ship):**
+- Spawned subagent to promote `feedback_atomic_powershell_commit.md` to HARD RULE block in CLAUDE.md + AGENT_SOP.md (memory rule existed 1+ month, was being ignored by sessions)
+- Tier 2 (PreToolUse hook) + Tier 3 (VSCode config root-cause) = research only, deferred
+- Gate is OUT OF SCOPE for atomic-chain enforcement. Gate operates on GitHub state, can't see local revert window. Confirmed.
+
+**What other agents need to know going forward:**
+- ALL future Lighthouse edits = atomic write+stage+commit chain in PowerShell. Pattern in CLAUDE.md after Tier 1 ship.
+- Lighthouse roadmap (`docs/roadmap/lighthouse.md`) is the master. All other roadmaps (harvest, ghost, atlas, compass, studio) feed in. Until 2026-08-04 OR 3 paying clients, this is the only top-level roadmap.
+- Daily tracker at `data/inbound-signal-log.md` is append-only. Never edit past entries.
+- Brandon morning ping (10:05 MDT) + optional EOD ping (17:30 MDT) live in iMessage. NOT logged to the .md tracker.
+- Strategy doc canonical at `docs/strategy/lead-strategy-2026-05-12.html`. Atlas sub-page at `/atlas/lighthouse` is the human-facing render.
+- Brand split: Catalyst Works = public, agentsHQ = internal tool. NEVER mention agentsHQ in outbound copy.
+
+**Pending overnight / Wed morning:**
+- Brandon reply
+- Day 0 Actions 2-4 (warm list, sprint pre-slots, calendar alarms)
+- Google Calendar MCP wire-up for M1-M8 mechanics + recurring 10:00 sprint + 09:50 reminders
+- VPS deploy of Atlas sub-page (git pull on VPS — code volume-mounted, nginx serves new file automatically; needs `location /atlas/lighthouse` rewrite added to nginx config)
+- atomic-chain-fix subagent ships HARD RULE block to CLAUDE.md (in progress)

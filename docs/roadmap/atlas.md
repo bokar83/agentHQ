@@ -3127,3 +3127,44 @@ The background scheduling engine is now fully instrumented with high-craft traci
 - A9d-A Deep Memory Garden — target 2026-05-18
 - A3 Reconciliation Polling — gate lifts 2026-05-11 (7-day tap data)
 - A25 Event Bus — gates on A23+A24 stable 30 days → 2026-06-10
+
+### 2026-05-12 (late): M8 ROLLBACK + M8.1 SCOPED — Atlas dashboard recovery
+
+**What broke:**
+- `155ee4a feat(atlas): complete M8 dashboard integration` (2026-05-12 14:58) rewrote `thepopebot/chat-ui/atlas.{html,css,js}` to wire SSE intent stream + AutonomyGuard. Deleted 1064-line T4 Catalyst Console CSS and 999-line atlas.js card rendering. Replaced with 257/285 line skeleton that was incomplete on the UI side.
+- Lighthouse infrastructure (`bfb37cc`, `680371a`, `9b6b91f`, `dc745c0`) shipped only on `fix/constraints-capture-agentshq-route` branch — never merged to main. `docs/roadmap/lighthouse.md` + `atlas-lighthouse.html` missing from main.
+- Sub-pages (cost, lighthouse) each had standalone PIN gates → double-PIN friction. Cost page still had 6-char limit hard-coded.
+
+**What shipped:**
+- `fix/atlas-recovery-nav-styling` branch (commit `7a06ce7`, `[READY]`):
+  - Restored atlas.{html,css,js} to `2e2138f` (pre-M8 rich version, 180/1064/999 lines).
+  - CSS compat shim appended to atlas.css: maps M8-style vars (`--c1`, `--bone`, `--bg-main`, etc.) onto pre-M8 T4 tokens. Lets `atlas-lighthouse.html` render against rich CSS without rewrite.
+  - Pulled `docs/roadmap/lighthouse.md` (from `dc745c0`, 183 lines) + `atlas-lighthouse.html` (from `680371a`, 400 lines) onto main worktree.
+  - Lighthouse nav link added to atlas.html + cost.html + roadmap.html (unified 4-link bar: Dashboard / Roadmap / Lighthouse / Spend).
+  - nginx route `location = /atlas/lighthouse → /atlas-lighthouse.html` added.
+  - Removed standalone PIN gates from cost.html + atlas-lighthouse.html. Added `authGuard()` that redirects to `/atlas` when no `atlas_token` in sessionStorage. Same guard added to roadmap.html.
+  - PIN now lives only at `/atlas`, no `maxlength`, server reads `CHAT_UI_PIN` env (no length cap).
+- Browser-verified via Playwright + nginx-mock locally: all 4 pages render, nav present, auth-guard redirects on missing token.
+- Diff: +2873 / -733 across 8 files.
+
+**M8.1 SCOPED — additive Action Stream card on rich shell:**
+- M8 server-side endpoints survive untouched in `orchestrator/app.py`:
+  - `@app.get("/atlas/feed")` SSE stream (lines 1280-1308)
+  - `@app.post("/atlas/intent/{intent_id}/approve|reject")` (lines 1309-1318)
+  - AutonomyGuard hooks operational.
+- Work to do: add ONE new card to `atlas.html` card grid (~9th card), subscribe to `/atlas/feed` SSE, render intent cards with approve/reject buttons that POST to the intent endpoints.
+- Estimated scope: ~150 LOC JS + ~30 LOC HTML/CSS. Single file pair. Zero shell-rewrite. Strictly additive.
+- Pre-condition: `7a06ce7` merged to main and deployed to Hostinger.
+- Owner: Boubacar / next coding agent.
+- Target: 2026-05-15.
+- Success criterion: when a CrewAI crew calls `intent.request()`, an "Action Required" card appears live on `/atlas` within 2s and clicking Approve/Reject fires the API call and the card vanishes.
+
+**Process lesson (memory rule pending):**
+- Surgical fix branches (pin-fix, auth-endpoint, enter-key) must `git rebase origin/main` before merging — branched-off-stale-base merges can silently overwrite concurrent additions without raising a conflict (because the branched-off base doesn't have the addition yet, so the merge sees deletion-of-nothing). Today's incident: pin-fix branched off pre-Lighthouse, fast-forward-merged, dropped Lighthouse nav.
+- "Aesthetic fix" tickets must never delete > 100 lines of CSS / JS without an explicit re-confirmation step. M8's 2243-line deletion bypassed this because it was framed as a feature add, not aesthetic.
+- Sub-pages assume parent auth — never duplicate PIN gates per page.
+
+**Next:**
+- M8.1 ship after `7a06ce7` lands on Hostinger.
+- A9d-A Deep Memory Garden — target 2026-05-18 (unchanged).
+- A3 Reconciliation Polling — gate lifts 2026-05-11.
