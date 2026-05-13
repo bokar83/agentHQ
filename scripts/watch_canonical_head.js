@@ -320,6 +320,26 @@ function handleMarker(marker, name) {
 }
 
 function main() {
+  // Singleton lock. Multiple watchers caused dupe alerts on 2026-05-13
+  // (3 stacked processes each fired the same flip; 4 alerts for 3 events).
+  // PID-file check with stale-PID recovery via process.kill(pid, 0).
+  // Requires Node >=12 for signal-0 semantics on Windows.
+  const PID_FILE = path.join(GIT_DIR, 'watch_canonical_head.pid');
+  if (fs.existsSync(PID_FILE)) {
+    const stalePid = parseInt(fs.readFileSync(PID_FILE, 'utf8').trim(), 10);
+    try {
+      process.kill(stalePid, 0);
+      process.stderr.write(`[watcher] another instance running (PID ${stalePid}). Exiting.\n`);
+      process.exit(0);
+    } catch (e) {
+      process.stderr.write(`[watcher] stale PID file (PID ${stalePid} gone). Taking over.\n`);
+    }
+  }
+  fs.writeFileSync(PID_FILE, String(process.pid));
+  process.on('exit', () => { try { fs.unlinkSync(PID_FILE); } catch (e) {} });
+  process.on('SIGINT', () => process.exit(0));
+  process.on('SIGTERM', () => process.exit(0));
+
   process.stderr.write(`[watcher] starting on ${CANONICAL_ROOT}\n`);
   watchFile('canonical', HEAD_FILE);
 
