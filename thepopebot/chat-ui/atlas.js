@@ -21,7 +21,7 @@ document.getElementById("pin-submit").addEventListener("click", async () => {
   if (!pin) return;
   
   try {
-    const res = await fetch("/chat/auth", {
+    const res = await fetch("/api/orc/chat-token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ pin })
