@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // Auth Flow
 document.getElementById("pin-submit").addEventListener("click", async () => {
   const pin = document.getElementById("pin-input").value;
-  if (pin.length !== 6) return;
+  if (!pin) return;
   
   try {
     const res = await fetch("/chat/auth", {
