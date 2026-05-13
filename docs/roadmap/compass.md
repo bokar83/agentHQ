@@ -596,3 +596,23 @@ Branch `fix/session-collision-detection-watcher` merged to main as `c709837` via
 - Wire `↩ Undo` button alternative payload prefix if `canon_restore:` reuse turns out fragile (current design intentionally reuses the same prefix; documented in handoff doc).
 
 **VPS verification at session close:** 4/4 files match committed git blob byte-for-byte (md5 of git-stored blob == md5 of VPS file). Container restarted; live Python `import orchestrator.handlers_approvals` grep-confirmed `canon_restore` present in `/app/orchestrator/handlers_approvals.py` (volume-mounted from `/root/agentsHQ/...`).
+
+### 2026-05-13 (post-ship): Gate cron → systemd timer migration SHIPPED
+
+Followup item promoted same session. The tactical `GATE_FORCE_RUN=1` cron patch from earlier was reversed; replaced with proper systemd units so the INVOCATION_ID guard at `orchestrator/gate_agent.py:673` is satisfied naturally (systemd injects INVOCATION_ID; cron does not).
+
+**What shipped (VPS infra, no repo commit since units live in `/etc/systemd/system/`):**
+- `/etc/systemd/system/gate-agent.service` — `Type=oneshot`, `EnvironmentFile=/root/agentsHQ/.env` (token), `Environment=` lines for `GATE_DATA_DIR`, `REPO_ROOT`, `OWNER_TELEGRAM_CHAT_ID`. Logs to `/var/log/gate-agent.log` via `StandardOutput=append:`.
+- `/etc/systemd/system/gate-agent.timer` — `OnBootSec=2min`, `OnUnitActiveSec=5min`, `Persistent=true`. Enabled in `timers.target`.
+- `/etc/cron.d/gate-agent` renamed to `/etc/cron.d/gate-agent.DISABLED-2026-05-13` (kept as fallback).
+- `/etc/cron.d/gate-agent.bak.2026-05-12` retained (pre-`GATE_FORCE_RUN` patch backup).
+
+**Verification:**
+- Manual `systemctl start gate-agent.service` → exit 0, no "refusing to run" message, telegram config picked up correctly.
+- First auto-fire at 06:20:19 UTC (verified via `ExecMainStartTimestamp`), exit at 06:20:25 UTC. Status: `code=exited, status=0/SUCCESS`.
+- Timer state: `active (waiting)`, next trigger pinned at +5min intervals.
+- Log shows fresh `gate: tick start` entries spaced exactly 5min apart, no cron-side ticks (cron file disabled).
+
+**Why this matters:** The `GATE_FORCE_RUN=1` cron patch shipped earlier as a tactical unblock; it reopened the laptop-runaway failure mode that `82ed7d9` was designed to prevent (any laptop session with that env var could run gate). systemd timer satisfies the guard naturally and `GATE_FORCE_RUN` returns to being the legitimate emergency hatch. Restored brief req 5 to its original intent.
+
+**Followup (deferred):** `audit_logger reconnect failed: No module named 'psycopg2'` in service logs. Audit trail running degraded. Either install psycopg2 on host or run gate inside container with the existing Python deps. Separate session.
