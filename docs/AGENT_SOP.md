@@ -115,6 +115,8 @@ Diagnostic problem-solver. Eight lenses, equally weighted: Theory of Constraints
 
 - **Never run `git filter-repo` while live remote branches exist.** If a secret lands in a commit: (a) rotate the token immediately, (b) use GitHub's secret bypass URL to push, (c) add the token pattern to `scripts/check_vendor_tokens.py`. History rewrite while branches are live forces mass SHA divergence across all active work — 2026-05-10 filter-repo run with 23 live branches caused mass SHA divergence, 2000+ spurious gate alerts, 4-hour rebase session. Only run filter-repo during a full branch freeze (all agents stopped, all non-main branches merged or deleted). *Why: 2026-05-10 root cause analysis.*
 
+- **No editing in the canonical agentsHQ working tree (2026-05-12).** `D:/Ai_Sandbox/agentsHQ` is shared across every concurrent session. Editing here while another session also edits here flips HEAD mid-work and destroys in-flight changes (5 incidents in 90 min on 2026-05-12). Every editing session creates a worktree first: `git worktree add D:/tmp/wt-<id> -b fix/<branch> origin/main`. Enforcement: `~/.claude/hooks/check_cwd_canonical.js` PreToolUse hook (Layer B) refuses any Edit/Write/Bash whose target path or `cd`/`git -C` argument is canonical-root. `scripts/watch_canonical_head.js` daemon (Layer A) posts Telegram alert on any canonical HEAD flip. Inline Bash bypass: `CLAUDE_ALLOW_CANONICAL_WRITE=1 <cmd>`. Source of truth: `scripts/check_cwd_canonical.js` (install to `~/.claude/hooks/`). *Why: docs/handoff/2026-05-12-session-collision-rca.md.*
+
 ## Folder Governance
 
 Every folder in agentsHQ has a purpose. If it does not, it is a candidate for archive.
