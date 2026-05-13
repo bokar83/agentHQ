@@ -90,6 +90,114 @@
   .lh-goalpost .footer { font-size: 13px; color: var(--ink-2); margin-top: 16px; line-height: 1.5; }
   .lh-sig { margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line); font-size: 12px; color: var(--ink-3); font-family: "IBM Plex Mono", monospace; display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
   .lh-sig .stamp { display: inline-block; border: 2px solid var(--c1); color: var(--c1); padding: 5px 12px; border-radius: 3px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; transform: rotate(-2deg); font-weight: 600; }
+  /* Mobile hamburger + drawer (active only at <= 720px). Desktop unchanged. */
+  .atlas-hamburger { display: none; }
+  .atlas-drawer-overlay { display: none; }
+  .atlas-drawer { display: none; }
+  @media (max-width: 720px) {
+    .topbar-right > nav { display: none !important; }
+    .atlas-hamburger {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--line, rgba(255,255,255,0.12));
+      border-radius: 6px;
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      cursor: pointer;
+      color: var(--bone, #f4eee0);
+      flex-shrink: 0;
+    }
+    .atlas-hamburger:hover,
+    .atlas-hamburger[aria-expanded="true"] {
+      color: var(--c1, #FF6B35);
+      border-color: rgba(255, 107, 53, 0.35);
+    }
+    .atlas-hamburger svg { width: 20px; height: 20px; }
+    .atlas-drawer-overlay {
+      display: block;
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 9, 12, 0.6);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 200ms ease;
+      z-index: 200;
+    }
+    .atlas-drawer-overlay.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .atlas-drawer {
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: min(86vw, 320px);
+      background: var(--card-bg, #10131A);
+      border-left: 1px solid var(--line, rgba(255,255,255,0.12));
+      z-index: 201;
+      transform: translateX(100%);
+      transition: transform 200ms ease;
+      overflow-y: auto;
+      padding: 16px 18px 24px;
+      gap: 8px;
+    }
+    .atlas-drawer.is-open { transform: translateX(0); }
+    .atlas-drawer-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--line, rgba(255,255,255,0.1));
+    }
+    .atlas-drawer-title {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--ink-3, #76705F);
+      text-transform: uppercase;
+    }
+    .atlas-drawer-close {
+      background: transparent;
+      border: 1px solid var(--line, rgba(255,255,255,0.12));
+      border-radius: 6px;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      cursor: pointer;
+      color: var(--ink-3, #B9B09A);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .atlas-drawer-close:hover { color: var(--c1, #FF6B35); border-color: rgba(255, 107, 53, 0.35); }
+    .atlas-drawer-close svg { width: 16px; height: 16px; }
+    .atlas-drawer a {
+      display: block;
+      color: var(--ink-2, #B9B09A);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 14px;
+      text-decoration: none;
+      padding: 12px 14px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+    }
+    .atlas-drawer a.is-active {
+      color: var(--c1, #FF6B35);
+      border-color: rgba(255, 107, 53, 0.35);
+    }
+    .atlas-drawer a:hover { color: var(--c1, #FF6B35); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .atlas-drawer,
+    .atlas-drawer-overlay { transition: none; }
+  }
 </style>
 <script>
   // Sub-page: never shows its own PIN. Redirects to /atlas if no token.
@@ -120,9 +228,34 @@
           <a href="/atlas/lighthouse" style="color:var(--terracotta);border-color:rgba(255,107,53,.35);font-size:12px;text-decoration:none;font-family:var(--font-mono);padding:6px 13px;border:1px solid;border-radius:6px;white-space:nowrap">Lighthouse</a>
         </nav>
         <span class="badge badge-dim" style="font-size:11px">v8</span>
+        <button id="atlas-hamburger" class="atlas-hamburger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="atlas-drawer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
       </div>
       <div class="topbar-runner"></div>
     </header>
+
+    <!-- Mobile nav drawer (visible only at <= 720px) -->
+    <div id="atlas-drawer-overlay" class="atlas-drawer-overlay" aria-hidden="true"></div>
+    <aside id="atlas-drawer" class="atlas-drawer" role="dialog" aria-modal="true" aria-label="Site navigation" aria-hidden="true">
+      <div class="atlas-drawer-head">
+        <span class="atlas-drawer-title">Atlas</span>
+        <button id="atlas-drawer-close" class="atlas-drawer-close" type="button" aria-label="Close menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <a href="/atlas">Dashboard</a>
+      <a href="/atlas/cost">Spend</a>
+      <a href="/atlas/roadmap">Roadmap</a>
+      <a href="/atlas/lighthouse" class="is-active">Lighthouse</a>
+    </aside>
 
     <div class="lh-wrap">
 
@@ -402,5 +535,54 @@ Delivering today: [audit for NAME by 5 PM / nothing queued].</div>
     </div>
   </div>
 
+<script>
+  // Mobile nav drawer toggle (vanilla, no framework)
+  (function () {
+    var inited = false;
+    function init() {
+      if (inited) return;
+      var btn = document.getElementById('atlas-hamburger');
+      var drawer = document.getElementById('atlas-drawer');
+      var overlay = document.getElementById('atlas-drawer-overlay');
+      var closeBtn = document.getElementById('atlas-drawer-close');
+      if (!btn || !drawer || !overlay) return;
+      inited = true;
+      function open() {
+        drawer.classList.add('is-open');
+        overlay.classList.add('is-open');
+        btn.setAttribute('aria-expanded', 'true');
+        drawer.setAttribute('aria-hidden', 'false');
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+      }
+      function close() {
+        drawer.classList.remove('is-open');
+        overlay.classList.remove('is-open');
+        btn.setAttribute('aria-expanded', 'false');
+        drawer.setAttribute('aria-hidden', 'true');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+      }
+      btn.addEventListener('click', function () {
+        if (drawer.classList.contains('is-open')) { close(); } else { open(); }
+      });
+      overlay.addEventListener('click', close);
+      if (closeBtn) closeBtn.addEventListener('click', close);
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && drawer.classList.contains('is-open')) close();
+      });
+      var mql = window.matchMedia('(min-width: 721px)');
+      var onChange = function (e) { if (e.matches) close(); };
+      if (mql.addEventListener) { mql.addEventListener('change', onChange); }
+      else if (mql.addListener) { mql.addListener(onChange); }
+    }
+    // Script lives at end of <body>, so target elements already exist.
+    // Call init() directly; also listen for DOMContentLoaded as a belt-and-braces fallback.
+    init();
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    }
+  })();
+</script>
 </body>
 </html>
