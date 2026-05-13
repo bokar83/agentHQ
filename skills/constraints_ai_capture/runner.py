@@ -77,11 +77,19 @@ def _insert_lead(payload: dict) -> Optional[int]:
         from orchestrator.db import get_crm_connection_with_fallback
 
     conn, _ = get_crm_connection_with_fallback()
+    # leads.name is NOT NULL on Supabase. Capture form is email-only — no real
+    # name attached. Use email prefix as the placeholder. Most CRM UIs render
+    # exactly this when name is empty, so the operator-visible behaviour is
+    # unchanged. Reversible — a later touch (paid call, form follow-up) can
+    # overwrite name when a real one becomes known.
+    email = payload["email"]
+    name_placeholder = email.split("@", 1)[0] if "@" in email else email
     try:
         with conn.cursor() as cur:
             cur.execute(
                 """
                 INSERT INTO leads (
+                    name,
                     email,
                     source,
                     sequence_pipeline,
@@ -91,14 +99,15 @@ def _insert_lead(payload: dict) -> Optional[int]:
                     response_action,
                     capture_idempotency_key
                 )
-                VALUES (%s, %s, 'constraints_ai', 0, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, 'constraints_ai', 0, %s, %s, %s, %s)
                 ON CONFLICT (capture_idempotency_key)
                   WHERE capture_idempotency_key IS NOT NULL
                   DO NOTHING
                 RETURNING id
                 """,
                 (
-                    payload["email"],
+                    name_placeholder,
+                    email,
                     payload.get("source", "site_demo_capture"),
                     payload.get("pain_text", ""),
                     payload.get("response_constraint", ""),
