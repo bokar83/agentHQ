@@ -1172,3 +1172,33 @@ Phase 3 — YAML machine-readable tokens:
 **Next studio session:**
 - Inspect first 3 AIC drafts post-production-crew tick: do citation-friendly seeds produce credible scripts?
 - Watch-window pipeline health check at +7d (2026-05-18)
+
+---
+
+## Session log 2026-05-12 (PM) — Render publisher fix + duration-target overshoot opened
+
+**Issue #38 opened:** Generator overshoots `target_duration_sec=55` for AI Catalyst by ~30% (real durations 71-85s on 2 live re-renders). QA passes because longer duration moves scripts into a different bucket with higher word-count cap; channel target is silently being ignored.
+
+**Render publisher fix (Bug A in 2026-05-11 session log) validated end-to-end today** after two sub-bugs were caught by a separate RCA agent:
+- `f85c445` — `_ffmpeg_render` now accepts `project_dir` (was a NameError since `a556542` 2026-05-10 — every Studio render had been crashing for 2 days; alert template lied because it iterated hardcoded `long_form`/`square` slots not in `_PLATFORM_SPECS`, emitting "Video ready" with MISSING fields when the render had in fact failed)
+- `dc63036` — missing `Query` import in `orchestrator/app.py` surfaced when fix-deploy restarted the container (orchestrator crash-looped 5min until landed)
+
+**Word-count fix shipped earlier today:**
+- `bd5eb85` — `_truncate_to_cap` in `studio_script_generator.py` now has `_hard_slice_to_cap` fallback. Fix loads correctly. Couldn't reproduce the original 245>240 short-form failure because the regenerated scripts overshoot into longer-duration buckets (the duration-target issue above).
+
+**Live validations (post-deploy):**
+
+| Record | Title | Duration | Words | Render | Drive URL |
+|--------|-------|----------|-------|--------|-----------|
+| 35dbcf1a-...81e3 | AI That Builds Itself, What It Means for Your Job in 2028 | 85.17s | 266 | ✅ | 1YPoKjNNMz47ZgLxj5Z6yWmElTEV2tNbW |
+| 35dbcf1a-...8132 | I Lost My $120K Job to AI,Here's What I Did Next | 71.10s | 251 | ✅ | 10rc1WeYxKipqlFRLYiu_uJ1MnxR9yBhR |
+| 35dbcf1a-...81c8 | ChatGPT 5.5 Just Changed Your Job Market | — | — | (next auto tick) | — |
+
+**Other Studio infra notes from today:**
+- Kai `hailuo/2-3-image-to-video-pro` returning `File type not supported` consistently — falls back to seedance-2 which hit "Credits insufficient" on one batch. Pre-existing, separate concern.
+- `_notify_email` in render publisher still uses `gws gmail` CLI (rewrites From per memory rule `feedback_cw_send_canonical_path.md`) — pre-existing, parked.
+
+**Next studio session:**
+- Address Issue #38 — generator duration-target compliance. Two candidate fixes: (a) tighten LLM prompt to enforce target, (b) add post-generation scene/sentence truncation until script fits target duration bucket. Council recommend a-then-b if a alone insufficient.
+- Top up Kai credits if seedance fallback keeps hitting "Credits insufficient".
+- Reset `_notify_email` from `gws gmail` CLI to the canonical cw-OAuth-direct path per memory rule.
