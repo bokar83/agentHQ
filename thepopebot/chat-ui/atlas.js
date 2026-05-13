@@ -18,10 +18,10 @@ document.addEventListener("DOMContentLoaded", () => {
 // Auth Flow
 document.getElementById("pin-submit").addEventListener("click", async () => {
   const pin = document.getElementById("pin-input").value;
-  if (pin.length !== 6) return;
+  if (!pin) return;
   
   try {
-    const res = await fetch("/chat/auth", {
+    const res = await fetch("/api/orc/chat-token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ pin })
@@ -37,6 +37,12 @@ document.getElementById("pin-submit").addEventListener("click", async () => {
     }
   } catch (err) {
     document.getElementById("pin-error").innerText = "Server Error";
+  }
+});
+
+document.getElementById("pin-input").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    document.getElementById("pin-submit").click();
   }
 });
 
