@@ -1084,3 +1084,51 @@ Next: R1 closes when first Signal Works contract signs. Then R2 (SaaS audit) and
 Created alongside autonomy roadmap. Boubacar said revenue work runs in parallel to autonomy build but in separate sessions. This stub is a holding place.
 
 ---
+
+### 2026-05-12: Cold-outreach RCA + full pipeline rebuild (101 drafts validated end-to-end)
+
+Cold-outreach pipeline produced 13 SW T2 drafts + 0 CW today. Expected 50 NEW + T2-T4 follow-ups. Full 6-phase RCA opened — 8 contributing failures ranked. Two PRs shipped + merged + validated live:
+
+**PR #35** (`fix/sw-cw-orchestration-240min-recycle`):
+- `scripts/systemd/signal-works-morning.service` — `TimeoutStartSec` 120min → 240min (Step 2 SW topup was exhausting the 2hr budget alone, killing Steps 3-5)
+- `signal_works/morning_runner.py` — 45min internal wall-clock cap inside Step 2; atexit handler fires partial-state Telegram alert on SIGKILL/exception
+- `signal_works/recycle_cw.py` — NEW T-advance recycle layer. When CW Apollo dries (`cw_drafted < CW_THRESHOLD=10`), scans last-7-day CW sends, ages `last_contacted_at` on those leads to clear the next-touch gap cutoff, lets the existing `run_sequence("cw")` engine pick them up at T(N+1). No duplicated touch-progression logic.
+- `migrations/008_pipeline_metrics.sql` — canonical `pipeline_metrics` table schema matching the auto-create writer; adds `recycle BOOLEAN DEFAULT FALSE` column to `sw_email_log` with partial index for recycle analytics.
+
+**PR #36** (`fix/harvest-hunter-cap-apollo-fallback-prospeo-chain`):
+- `signal_works/hunter_client.py:41` — per-process Hunter cap 200 → 400 (env-overridable)
+- `signal_works/topup_leads.py` — Apollo → Hunter → Prospeo cascading fallback chain (5-layer `_resolve_email`); 45-min wall-clock cap; `apollo_name` plumbed into Prospeo so layer-4 reuses Apollo's person-discovery (1-credit direct enrich, no redundant search hop)
+- `signal_works/prospeo_client.py` — NEW harvest-path Prospeo wrapper (was only in `enrichment_tool`)
+- `tests/test_topup_leads_prospeo_fallback.py` — 9 tests covering cascade + cap + wall-clock
+
+**Follow-ups shipped after Codex review:**
+- Commit `0c1ba12` — try/except around `int(env_cap)` in `topup_leads.py` so bad `HUNTER_MAX_SEARCHES_PER_DAY` config logs warning + falls back to 400 instead of crashing the harvest step
+- PR #37 (`fix/prospeo-schema-invalid-datapoints`) — Prospeo `/enrich-person` requires a person identifier; old client sent company-only fields → 100% INVALID_DATAPOINTS. Fixed to send `first_name+last_name+company_website` when Apollo captured `owner_name`; falls back to `/search-person` filtered by company website + Founder/Owner seniority → `person_id` → `/enrich-person`. 19 new pytest cases pin the schema. Live curl validation confirmed.
+
+**Live verification** (manual `systemctl start signal-works-morning.service`):
+
+| Step | Result |
+|------|--------|
+| Bounces cleared | 1 |
+| SW leads harvested | 28 |
+| SW drafts created | 34 (T1=2, T2=32) |
+| CW outreach drafts | 67 (T1=15, T2=52) |
+| **TOTAL drafts** | **101** |
+| Runtime | 54 min |
+| Budget used | 23% of 240min |
+
+Health thresholds cleared (SW≥30, CW≥10). Recycle gate didn't fire (CW=67 >> threshold). Wall-clock cap fired at 25/35 in Step 2 and runner advanced cleanly — previously this kill-spot would have ended the run.
+
+**Council verdict on CW (delegated to separate Antigravity session for shipping):** stop CW auto-harvest entirely; CW target list = permission filter (warm referrals + SW audit completions + content engagement), not Apollo scrape. Instrument inbound signal metric (LinkedIn DMs + X mentions + SW→CW conversions). State manifest = next-week deliverable. HTML report at `/outputs/council/2026-05-12-18-37-24.html` (VPS).
+
+**Memory shipped:** `feedback_long_running_step_wall_clock_cap.md` — every long step caps own runtime below orchestrator timeout.
+
+**Known parked:**
+- Hunter Starter 100/2000 used — at 400/day cap, 5-day quota burn. Growth tier upgrade or partial-fallback days when CW pivot lands.
+- Apollo SMB coverage gap structural; CW pivot removes this constraint.
+- `_notify_email` in render publisher still uses `gws gmail` CLI (rewrites From) — pre-existing, separate work.
+
+**Cross-ref:**
+- Full RCA: `docs/handoff/2026-05-12-cold-outreach-rca.md`
+- Master day roll-up: `docs/handoff/2026-05-12-master.md`
+- Studio session log (same day, separate concern): `docs/roadmap/studio.md` 2026-05-12 PM entry
