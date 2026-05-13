@@ -851,9 +851,13 @@ async def inbound_lead_webhook(request: Request, background_tasks: BackgroundTas
 # Constraints AI capture (catalystworks.consulting diagnostic demo)
 # ══════════════════════════════════════════════════════════════
 
-@app.post("/api/constraints-capture")
+@app.post("/constraints-capture")
 async def constraints_capture(request: Request, background_tasks: BackgroundTasks):
     """Catalyst Works diagnostic demo capture form endpoint.
+
+    Reachable from the public web at
+    https://agentshq.boubacarbarry.com/api/orc/constraints-capture
+    (Traefik strips the /api/orc prefix; FastAPI sees /constraints-capture).
 
     Front-end POST body (CORS origin: https://catalystworks.consulting):
         {
