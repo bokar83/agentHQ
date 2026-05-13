@@ -112,7 +112,7 @@ Wrap engagements. Write `docs/strategy/lead-strategy-2026-08-04.html` for next c
 
 ## Idea Vault (locked until 3 paying clients)
 
-- *(none yet)*
+- **LinkedIn Page Analysis Tool** (added 2026-05-13). Productized multi-section LinkedIn profile audit, sibling to SW website-teardown. Scrapes profile (r.jina.ai or LinkedIn API), runs Headline + About + Featured + Experience + media + Recommendations + Activity audit, outputs HTML report with before/after mockup. 2-4 hour delivery vs 22-min for the 1-page audit. Pilot candidate: Brandon reciprocity 2026-05-19 IF W1 reply velocity is weak per Saturday M4 Triad Lock review. Productize for L4 Weeks 4-6 IF L1-L3 gate clears AND pilot validates demand. Anchor: Brandon profile observation 2026-05-13 (creative director with outstanding work that does not show on his profile).
 
 ## Cross-references
 
