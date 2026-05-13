@@ -38,7 +38,7 @@
 ### Week 1 (5/13 - 5/17) — Reply Velocity
 
 ```text
-(Day 1 sprint Wed 2026-05-13 10:00 MDT — first warm Utah contact send)
+[2026-05-13 ~09:50] SENT to Chad Burdette (V1 close-friend, text) — subject: "Need a favor" — LinkedIn audit offer, free, by 5 PM today. Thursday check-in 2026-05-14.
 ```
 
 ### Week 2 (5/19 - 5/24) — Open the Funnel
