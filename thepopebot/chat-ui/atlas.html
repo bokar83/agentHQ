@@ -9,6 +9,116 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/atlas/atlas.css?v=20260503d" />
+  <style>
+    /* Mobile hamburger + drawer (active only at <= 720px). Desktop unchanged. */
+    .atlas-hamburger { display: none; }
+    .atlas-drawer-overlay { display: none; }
+    .atlas-drawer { display: none; }
+    @media (max-width: 720px) {
+      .topbar-right > nav { display: none !important; }
+      .atlas-hamburger {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: 1px solid var(--hairline-md);
+        border-radius: 6px;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        cursor: pointer;
+        color: var(--ink);
+        flex-shrink: 0;
+      }
+      .atlas-hamburger:hover,
+      .atlas-hamburger[aria-expanded="true"] {
+        color: var(--terracotta);
+        border-color: rgba(255, 107, 53, 0.35);
+      }
+      .atlas-hamburger svg { width: 20px; height: 20px; }
+      .atlas-drawer-overlay {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(8, 9, 12, 0.6);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 200ms ease;
+        z-index: 200;
+      }
+      .atlas-drawer-overlay.is-open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .atlas-drawer {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: min(86vw, 320px);
+        background: var(--surface);
+        border-left: 1px solid var(--hairline-md);
+        z-index: 201;
+        transform: translateX(100%);
+        transition: transform 200ms ease;
+        overflow-y: auto;
+        padding: 16px 18px 24px;
+        gap: 8px;
+      }
+      .atlas-drawer.is-open { transform: translateX(0); }
+      .atlas-drawer-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--hairline);
+      }
+      .atlas-drawer-title {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        color: var(--ink-dim);
+        text-transform: uppercase;
+      }
+      .atlas-drawer-close {
+        background: transparent;
+        border: 1px solid var(--hairline-md);
+        border-radius: 6px;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        cursor: pointer;
+        color: var(--ink-dim);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .atlas-drawer-close:hover { color: var(--terracotta); border-color: rgba(255, 107, 53, 0.35); }
+      .atlas-drawer-close svg { width: 16px; height: 16px; }
+      .atlas-drawer a {
+        display: block;
+        color: var(--ink-dim);
+        font-family: var(--font-mono);
+        font-size: 14px;
+        text-decoration: none;
+        padding: 12px 14px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+      }
+      .atlas-drawer a.is-active {
+        color: var(--terracotta);
+        border-color: rgba(255, 107, 53, 0.35);
+      }
+      .atlas-drawer a:hover { color: var(--terracotta); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .atlas-drawer,
+      .atlas-drawer-overlay { transition: none; }
+    }
+  </style>
 </head>
 <body>
 
@@ -46,9 +156,34 @@
       </nav>
       <span id="sync-badge" class="badge badge-dim">Syncing...</span>
       <span id="health-badge" class="badge badge-dim">--</span>
+      <button id="atlas-hamburger" class="atlas-hamburger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="atlas-drawer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
     </div>
     <div class="topbar-runner"></div>
   </header>
+
+  <!-- Mobile nav drawer (visible only at <= 720px) -->
+  <div id="atlas-drawer-overlay" class="atlas-drawer-overlay" aria-hidden="true"></div>
+  <aside id="atlas-drawer" class="atlas-drawer" role="dialog" aria-modal="true" aria-label="Site navigation" aria-hidden="true">
+    <div class="atlas-drawer-head">
+      <span class="atlas-drawer-title">Atlas</span>
+      <button id="atlas-drawer-close" class="atlas-drawer-close" type="button" aria-label="Close menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <a href="/atlas" class="is-active">Dashboard</a>
+    <a href="/atlas/cost">Spend</a>
+    <a href="/atlas/roadmap">Roadmap</a>
+    <a href="/atlas/lighthouse">Lighthouse</a>
+  </aside>
 
   <!-- Hero strip -->
   <section id="hero-strip">
@@ -175,6 +310,56 @@
   </main>
 </div>
 
+<script>
+  // Mobile nav drawer toggle (vanilla, no framework)
+  (function () {
+    var inited = false;
+    function init() {
+      if (inited) return;
+      var btn = document.getElementById('atlas-hamburger');
+      var drawer = document.getElementById('atlas-drawer');
+      var overlay = document.getElementById('atlas-drawer-overlay');
+      var closeBtn = document.getElementById('atlas-drawer-close');
+      if (!btn || !drawer || !overlay) return;
+      inited = true;
+      function open() {
+        drawer.classList.add('is-open');
+        overlay.classList.add('is-open');
+        btn.setAttribute('aria-expanded', 'true');
+        drawer.setAttribute('aria-hidden', 'false');
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+      }
+      function close() {
+        drawer.classList.remove('is-open');
+        overlay.classList.remove('is-open');
+        btn.setAttribute('aria-expanded', 'false');
+        drawer.setAttribute('aria-hidden', 'true');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+      }
+      btn.addEventListener('click', function () {
+        if (drawer.classList.contains('is-open')) { close(); } else { open(); }
+      });
+      overlay.addEventListener('click', close);
+      if (closeBtn) closeBtn.addEventListener('click', close);
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && drawer.classList.contains('is-open')) close();
+      });
+      // Close drawer if viewport grows back to desktop
+      var mql = window.matchMedia('(min-width: 721px)');
+      var onChange = function (e) { if (e.matches) close(); };
+      if (mql.addEventListener) { mql.addEventListener('change', onChange); }
+      else if (mql.addListener) { mql.addListener(onChange); }
+    }
+    // Script lives at end of <body>, so target elements already exist.
+    // Call init() directly; also listen for DOMContentLoaded as a belt-and-braces fallback.
+    init();
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    }
+  })();
+</script>
 <script src="/atlas/atlas.js?v=20260503d"></script>
 <script src="/atlas/atlas-chat.js?v=20260503d"></script>
 </body>
