@@ -586,6 +586,48 @@ def handle_callback_query(update: dict) -> bool:
             except Exception:
                 pass
 
+    elif cb_data.startswith("canon_restore:") or cb_data.startswith("canon_dismiss:"):
+        # Canonical-tree HEAD-flip alert from scripts/watch_canonical_head.js.
+        # Action target is on Boubacar's Windows laptop, NOT VPS — orchestrator
+        # cannot run `git reset --hard` directly. Two-step: write a marker file
+        # AND echo the exact copy-paste command back to the chat so Boubacar
+        # can act immediately even if the laptop polling lags.
+        try:
+            import json as _json
+            import pathlib
+            from datetime import datetime, timezone
+            from notifier import answer_callback_query, send_message
+            action, sha = cb_data.split(":", 1)
+            decision = "restore" if action == "canon_restore" else "dismiss"
+            repo_root = pathlib.Path(os.environ.get("REPO_ROOT", "/app"))
+            marker_dir = pathlib.Path(os.environ.get("GATE_DATA_DIR", str(repo_root / "data"))) / "canon_restore"
+            marker_dir.mkdir(parents=True, exist_ok=True)
+            marker_name = f"{sha[:12]}.{decision}.json"
+            marker_path = marker_dir / marker_name
+            marker_path.write_text(_json.dumps({
+                "sha": sha,
+                "decision": decision,
+                "decided_by": cb_sender_id,
+                "ts": datetime.now(timezone.utc).isoformat(),
+            }, indent=2), encoding="utf-8")
+            if decision == "restore":
+                answer_callback_query(cb_id, f"Restore queued: {sha[:12]}")
+                send_message(
+                    cb_chat_id,
+                    "Canonical restore queued. Paste this on the laptop to act now (laptop watcher will also pick up the marker):\n\n"
+                    f"```\ncd \"D:/Ai_Sandbox/agentsHQ\"\ngit reset --hard {sha}\n```",
+                )
+            else:
+                answer_callback_query(cb_id, f"Dismissed: {sha[:12]}")
+                send_message(cb_chat_id, f"Canonical flip dismissed (marked intentional): `{sha[:12]}`")
+        except Exception as e:
+            logger.warning(f"callback_query canon_restore/dismiss handling error: {e}")
+            try:
+                from notifier import answer_callback_query
+                answer_callback_query(cb_id, f"Error: {e}")
+            except Exception:
+                pass
+
 
     elif cb_data.startswith("multiplier_approve_all:"):
         try:

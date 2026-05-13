@@ -195,6 +195,123 @@ function watchFile(label, file) {
   process.stderr.write(`[watcher] watching ${label}: ${file}\n`);
 }
 
+// Marker-consumer loop: orchestrator/handlers_approvals.py writes
+// canon_restore/canon_dismiss markers to VPS at /app/data/canon_restore/.
+// Watcher polls via SSH every 15s, executes the restore locally on the
+// laptop's canonical tree, deletes the marker, posts a follow-up
+// actionable confirmation (with ✅ done / ❌ undo buttons).
+const VPS_HOST = process.env.AGENTSHQ_VPS_HOST || 'root@72.60.209.109';
+const VPS_MARKER_DIR = '/root/agentsHQ/data/canon_restore';
+const MARKER_POLL_MS = 15000;
+const recentMarkers = new Set();
+
+function postFollowupAlert(text, oldSha, newSha) {
+  if (!env.token || !env.chat) return;
+  // After a restore, the action is done. Follow-up message still gets a
+  // single ❌ Undo button so Boubacar can rollback if the restore was
+  // wrong (sole compliant pattern with the actionable-only rule).
+  const undoCb = `canon_restore:${newSha.slice(0, 40)}`;
+  const dismissCb = `canon_dismiss:done`;
+  const payload = JSON.stringify({
+    chat_id: env.chat,
+    text,
+    parse_mode: 'Markdown',
+    disable_web_page_preview: true,
+    reply_markup: {
+      inline_keyboard: [[
+        { text: '↩ Undo (re-restore to old HEAD)', callback_data: undoCb },
+        { text: '✓ Acknowledge', callback_data: dismissCb },
+      ]],
+    },
+  });
+  const req = https.request({
+    hostname: 'api.telegram.org',
+    path: `/bot${env.token}/sendMessage`,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(payload),
+    },
+  });
+  req.on('error', err => process.stderr.write(`[watcher] follow-up telegram err: ${err.message}\n`));
+  req.write(payload);
+  req.end();
+}
+
+function sshExec(cmd) {
+  try {
+    return execFileSync('ssh', ['-o', 'ConnectTimeout=5', '-o', 'BatchMode=yes', VPS_HOST, cmd], {
+      encoding: 'utf8',
+      timeout: 10000,
+    });
+  } catch (e) {
+    return null;
+  }
+}
+
+function pollMarkers() {
+  // List markers, then fetch + delete each one we haven't already processed.
+  const listing = sshExec(`ls -1 ${VPS_MARKER_DIR}/ 2>/dev/null || true`);
+  if (!listing) return; // VPS unreachable or dir empty
+  const names = listing.split(/\r?\n/).filter(n => n.endsWith('.json'));
+  for (const name of names) {
+    if (recentMarkers.has(name)) continue;
+    recentMarkers.add(name);
+    const raw = sshExec(`cat ${VPS_MARKER_DIR}/${name} && rm ${VPS_MARKER_DIR}/${name}`);
+    if (!raw) continue;
+    let marker;
+    try { marker = JSON.parse(raw); } catch (e) {
+      process.stderr.write(`[watcher] bad marker JSON ${name}: ${e.message}\n`);
+      continue;
+    }
+    handleMarker(marker, name);
+  }
+  // Bound the in-memory dedup cache.
+  if (recentMarkers.size > 500) {
+    const arr = [...recentMarkers];
+    recentMarkers.clear();
+    for (const n of arr.slice(-100)) recentMarkers.add(n);
+  }
+}
+
+function handleMarker(marker, name) {
+  const { sha, decision } = marker;
+  if (decision === 'dismiss') {
+    process.stderr.write(`[watcher] marker dismiss ${sha.slice(0, 12)}\n`);
+    return;
+  }
+  if (decision !== 'restore') {
+    process.stderr.write(`[watcher] unknown decision in ${name}: ${decision}\n`);
+    return;
+  }
+  // Resolve current HEAD on canonical BEFORE restoring (so Undo can roll
+  // back to it). git reset --hard accepts a sha or ref.
+  const currentSha = gitCmd(['rev-parse', 'HEAD']);
+  process.stderr.write(`[watcher] restoring canonical from ${currentSha} -> ${sha}\n`);
+  const out = gitCmd(['reset', '--hard', sha]);
+  const newSha = gitCmd(['rev-parse', 'HEAD']);
+  // Update the in-memory baseline so the upcoming fs.watch fire from
+  // this very reset doesn't re-alert.
+  lastSeen.set(HEAD_FILE, { sha: 'ref: refs/heads/' + (gitCmd(['rev-parse', '--abbrev-ref', 'HEAD']) || 'HEAD'), ts: Date.now() });
+  postFollowupAlert(
+    [
+      '*RESTORE COMPLETE*',
+      '',
+      'Canonical HEAD reset to:',
+      `\`${sha.slice(0, 12)}\``,
+      '',
+      'Result:',
+      '```',
+      (out || '(no output)').slice(0, 500),
+      '```',
+      '',
+      `Now at: \`${newSha.slice(0, 12)}\``,
+    ].join('\n'),
+    sha,            // the sha we restored TO (acts as new HEAD for dedup)
+    currentSha,     // sha we WERE on before reset (used for Undo)
+  );
+}
+
 function main() {
   process.stderr.write(`[watcher] starting on ${CANONICAL_ROOT}\n`);
   watchFile('canonical', HEAD_FILE);
@@ -221,6 +338,11 @@ function main() {
       }
     } catch (e) { /* ignore */ }
   }, 60000);
+
+  // Marker poll loop — consumes canon_restore / canon_dismiss markers
+  // that the orchestrator writes when Boubacar taps a button.
+  setInterval(pollMarkers, MARKER_POLL_MS);
+  process.stderr.write(`[watcher] marker poll loop armed: ssh ${VPS_HOST} every ${MARKER_POLL_MS/1000}s\n`);
 }
 
 main();
