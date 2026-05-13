@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LinkedIn Audit · [PROSPECT_NAME]</title>
+<style>
+  :root {
+    --ink: #181410;
+    --ink-soft: #4a4036;
+    --ink-muted: #7a6e60;
+    --paper: #fcfaf4;
+    --paper-2: #f5f1e8;
+    --rule: #e6dfd0;
+    --accent: #b8420a;
+    --accent-soft: #d97a4a;
+    --green: #2f6a3f;
+    --red: #a02828;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 680px; margin: 0 auto; padding: 36px 28px 56px; }
+  .eyebrow {
+    font: 500 10.5pt/1 ui-monospace, "SFMono-Regular", Menlo, monospace;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+  }
+  h1 {
+    margin: 0 0 6px;
+    font: 600 26pt/1.15 Georgia, "Times New Roman", serif;
+    letter-spacing: -0.015em;
+  }
+  .meta {
+    font-size: 13pt;
+    color: var(--ink-muted);
+    margin-bottom: 28px;
+  }
+  h2 {
+    font: 600 14pt/1.25 -apple-system, sans-serif;
+    margin: 30px 0 10px;
+    color: var(--ink);
+  }
+  h2 .num {
+    color: var(--accent);
+    font-family: ui-monospace, monospace;
+    font-size: 11pt;
+    margin-right: 8px;
+  }
+  p { margin: 10px 0; }
+  .quote {
+    background: var(--paper-2);
+    border-left: 3px solid var(--accent);
+    padding: 14px 18px;
+    margin: 14px 0 18px;
+    font-size: 14.5px;
+    border-radius: 0 6px 6px 0;
+    color: var(--ink-soft);
+  }
+  .quote .label {
+    display: block;
+    font: 600 9.5pt/1 ui-monospace, monospace;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+  .rewrite {
+    background: #fbf3ec;
+    border: 1px solid #e8c8b1;
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin: 14px 0 18px;
+    font-size: 14.5px;
+    line-height: 1.55;
+  }
+  .rewrite .label {
+    display: block;
+    font: 600 9.5pt/1 ui-monospace, monospace;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+  .why {
+    font-size: 14.5px;
+    color: var(--ink-soft);
+  }
+  .sig {
+    margin-top: 36px;
+    padding-top: 18px;
+    border-top: 1px solid var(--rule);
+    font-size: 13.5px;
+    color: var(--ink-muted);
+  }
+  .sig strong { color: var(--ink); }
+  .footnote {
+    font-size: 12pt;
+    color: var(--ink-muted);
+    margin-top: 18px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">1-page LinkedIn audit · Catalyst Works</div>
+  <h1>[PROSPECT_NAME]</h1>
+  <div class="meta">[DATE_DELIVERED] · prepared by Boubacar</div>
+
+  <p>You said yes to a fast read on your profile. Here it is. One finding, one rewrite, one reason. No pitch.</p>
+
+  <h2><span class="num">01</span>What I looked at</h2>
+  <p>I read your headline, your latest post hook, and your About CTA. The single biggest thing keeping qualified inbound from landing is <strong>your [HOOK | HEADLINE | ABOUT_CTA]</strong>.</p>
+
+  <div class="quote">
+    <span class="label">Your current [HOOK | HEADLINE | ABOUT_CTA]</span>
+    [VERBATIM_CURRENT_TEXT]
+  </div>
+
+  <h2><span class="num">02</span>Why it's blocking replies</h2>
+  <p class="why">[ONE_SENTENCE_DIAGNOSIS, name the exact pattern. Example: "It opens with a frame everyone already agrees with, which gives the reader no reason to lean in. The first line should make them stop, not nod." Or: "It lists what you do, not why someone would call you. A headline that names a result earns the click. A headline that names a function gets skimmed." Avoid generic. Point at the specific words.]</p>
+
+  <h2><span class="num">03</span>The rewrite</h2>
+
+  <div class="rewrite">
+    <span class="label">Replace with</span>
+    [REWRITE_FINAL, one version, not three. Apply Cole hook format from the playbook. Keep [SLOTS] only where Boubacar genuinely doesn't have the data; otherwise commit. Use [PROSPECT_NAME]'s actual specifics.]
+  </div>
+
+  <h2><span class="num">04</span>Why this version works</h2>
+  <p class="why">[ONE_SENTENCE_REASONING tied to a principle, not a buzzword. Example: "It opens with a number and an outcome, which forces the reader to predict before they read. That's the hook job: pre-commit the brain." Or: "It names the buyer, the result, and the timeframe in one line. A headline that does three jobs at once beats one that does one." Cite the specific tactic, not a generic rule.]</p>
+
+  <h2><span class="num">05</span>What I didn't touch</h2>
+  <p class="why">Plenty of good signal on your profile already. The work was finding the one thing worth rewriting, not the ten. If you want a second pass on the other two slots (the [OTHER_TWO_OF: hook, headline, About CTA]), reply and I'll send those too. Same format, same hour.</p>
+
+  <p class="footnote">I'll check back Thursday to hear if the rewrite landed right. Not to pitch. If you want to keep the conversation going past that, you'll know where to find me.</p>
+
+  <div class="sig">
+    <strong>Boubacar</strong><br>
+    Catalyst Works Consulting<br>
+    <a href="https://catalystworks.consulting" style="color: var(--accent); text-decoration: none;">catalystworks.consulting</a>
+  </div>
+
+</div>
+</body>
+</html>
