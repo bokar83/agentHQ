@@ -27,7 +27,7 @@ Done = all five true at the same time.
 
 ## Status Snapshot
 
-*Last updated: 2026-05-12*
+*Last updated: 2026-05-13*
 
 - M0 SHIPPED 2026-05-02: `docs/GOVERNANCE.md` (64 lines) routing table + AGENT_SOP top-of-file annotation + this roadmap + folder-purpose pre-commit hook (the M0 enforcement piece).
 - M1 SHIPPED 2026-05-02: AGENTS.md compliance audit + backfill. 100% folder coverage (was 32%).
