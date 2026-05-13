@@ -754,7 +754,7 @@ def run_sequence(
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     parser = argparse.ArgumentParser(description="Run email sequence for a pipeline")
-    parser.add_argument("--pipeline", choices=["cw", "sw"], required=True)
+    parser.add_argument("--pipeline", choices=["cw", "sw", "studio", "constraints_ai"], required=True)
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
