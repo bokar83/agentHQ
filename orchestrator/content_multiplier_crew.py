@@ -1050,11 +1050,31 @@ def multiplier_tick() -> None:
             logger.info("content multiplier tick: no Multiply records.")
             return
 
-        page = rows[0]
-        page_id = page["id"]
-        source = _source_from_page(page)
-        qa_verdict = _plain_text_prop(page, "QA Verdict") or None
-        remix_notes = _remix_notes_from_page(page)
+        selected_page = None
+        source = None
+        for candidate in rows:
+            try:
+                source = _source_from_page(candidate)
+                selected_page = candidate
+                break
+            except ValueError as exc:
+                logger.warning(
+                    "content multiplier tick: skipping page %s (no source): %s",
+                    candidate.get("id"),
+                    exc,
+                )
+                continue
+
+        if selected_page is None:
+            logger.info(
+                "content multiplier tick: %d Multiply record(s) found but none had a usable source; nothing to do.",
+                len(rows),
+            )
+            return
+
+        page_id = selected_page["id"]
+        qa_verdict = _plain_text_prop(selected_page, "QA Verdict") or None
+        remix_notes = _remix_notes_from_page(selected_page)
         try:
             multiply_source(
                 source,
