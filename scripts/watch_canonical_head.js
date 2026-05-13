@@ -137,7 +137,14 @@ function recordChange(label, file) {
   if (!sha) return;
   const prev = lastSeen.get(file);
   const now = Date.now();
-  if (prev && prev.sha === sha && (now - prev.ts) < DEDUP_WINDOW_MS) return;
+  // Suppress no-op writes: git rewrites HEAD on every pull / commit /
+  // status / fetch even when content is unchanged (e.g. branch stays
+  // `ref: refs/heads/main`). fs.watch fires on every touch. If content
+  // is identical to last seen, this is NOT a flip — silent.
+  // Branch-flip / detached-checkout / force-update changes content,
+  // so those still trigger alerts. (Was: 2s dedup window only —
+  // misfired on every legitimate git op after the window elapsed.)
+  if (prev && prev.sha === sha) return;
   const oldSha = prev ? prev.sha : '(unknown)';
   lastSeen.set(file, { sha, ts: now });
   if (!prev) return; // first read = baseline, not a change
