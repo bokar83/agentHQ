@@ -99,9 +99,26 @@ The HTML template has 9 [SLOTS]. Fill them in this order:
 8. `[ONE_SENTENCE_REASONING]`, cite the principle, not the buzzword.
 9. `[OTHER_TWO_OF: ...]`, list the two buckets you didn't audit, lowercase comma-separated.
 
-## Strategic Bridge (do NOT edit)
+## When to introduce the $250 Signal Session (NOT in the audit)
 
-The template footnote names the $250 Signal Session as the explicit next step. Council mandate 2026-05-13: the audit is a sample of the method, not the conclusion. Do not strip or soften the Bridge. Do not remove the price. Do not change the trigger word ("Signal"). If you want to swap pricing or scheduling logic, that is a separate decision tracked in `docs/roadmap/lighthouse.md`, not an in-flight edit.
+User override of Council Pass 1, 2026-05-13 PM. The audit deliverable honors the V1 promise verbatim: "Free. No pitch, no calendar link." Pricing the Signal Session on the audit itself reads as bait-and-switch even when the audit is real value.
+
+The right moment to introduce the Signal Session is in the CONVERSATION that follows, not the deliverable.
+
+Decision tree:
+
+| Recipient signal | Move |
+|---|---|
+| Replies yes + audit landed + says "this was great" | Wait for Thursday check-in. Then: "Glad it landed. There is a longer version that covers all 7 sections if that is useful. $250, 90 min, recorded. Want me to send a calendar?" |
+| Replies yes + audit landed + asks a question about implementation | Answer the question. Then: "If you want me to walk through your whole profile this way, I do that as a Signal Session. $250, 90 min. Otherwise happy to keep talking like this for free." |
+| Replies yes + audit landed + silence | Thursday check-in: "Did the rewrite land right?" If they engage warmly there, escalate per row 1 or 2. If silence again, hold. Do NOT pitch unsolicited. |
+| Pass | Drop it. No pitch. Catch up another way at some point. |
+
+Voice rules for the Signal Session offer (when the moment is right):
+- One sentence. Price, time, format. No marketing.
+- Frame it as "the longer version", not "the upgrade" or "the premium tier".
+- Calendar link only after they say yes to the call, not as an opener.
+- If they hesitate on price, name the value not the rationale ("It is the same method applied across 7 sections instead of 1, with a before-after mockup."). No discount talk.
 
 ---
 
@@ -113,9 +130,9 @@ Run this every time. No exceptions.
 2. **Witness anchor present and specific?** The opening sentence must reference the recipient by name + a real observation. Generic openers fail. ("Pulled up your profile this morning..." is OK because it is honest; "I have been watching your great work for years" is NOT OK because it is generic-flattery.)
 3. **Specific everywhere?** Did you name the actual text from their profile, or did you write "your hook"? Names beat pronouns.
 4. **One rewrite, not three?** If you offered options, pick one and delete the rest. Conviction earns the second reply.
-5. **Strategic Bridge intact?** The footnote names the $250 Signal Session, the 7 sections, the "Signal" reply trigger, and "by Friday" scheduling. All 4 elements must be present. Council 2026-05-13.
+5. **No pitch in the footnote?** Ctrl-F the doc for "$250", "Signal Session", "calendar", "by Friday". All four must return zero matches. The V1 promise was "free, no pitch, no calendar link". Honor it. Signal Session is introduced in conversation post-check-in, NOT on the audit. See section above.
 
-Fail any of three = rewrite that section. Don't send.
+Fail any of five = rewrite that section. Don't send.
 
 ---
 
