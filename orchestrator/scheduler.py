@@ -477,6 +477,8 @@ _REPO_ROOT = _resolve_repo_root()
 _HANDOFF_DIR = os.path.join(_DOCS_DIR, "handoff")
 _ROADMAP_DIR = os.path.join(_DOCS_DIR, "roadmap")
 _ROADMAP_EXCLUDE = {"README.md", "future-enhancements.md"}
+_DATA_DIR = os.path.join(_REPO_ROOT, "data")
+_INBOUND_CACHE_PATH = os.path.join(_DATA_DIR, "inbound_signal_cache.json")
 _DIGEST_ROW_SUMMARY_CAP = 80
 
 
@@ -726,6 +728,200 @@ def _collect_open_ready_branches() -> list[dict]:
     return rows
 
 
+def _load_inbound_cache() -> dict:
+    """Load the inbound signal cache, returning {} on any error."""
+    try:
+        with open(_INBOUND_CACHE_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def _save_inbound_cache(data: dict) -> None:
+    """Persist inbound signal cache, silently on error."""
+    try:
+        os.makedirs(_DATA_DIR, exist_ok=True)
+        with open(_INBOUND_CACHE_PATH, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+    except Exception as _e:
+        logger.warning(f"DIGEST: inbound cache write failed: {_e}")
+
+
+def _collect_inbound_signal_linkedin() -> dict:
+    """Count unique unsolicited LinkedIn DMs last 7d via Gmail search.
+
+    Uses boubacar@catalystworks.consulting OAuth credentials (same account
+    as cold outreach) to search for LinkedIn notification emails. Returns
+    {'count': int, 'label': str, 'error': str|None}.
+    """
+    import json as _json
+    import httpx as _httpx
+    try:
+        creds_path = os.environ.get(
+            "GOOGLE_OAUTH_CREDENTIALS_JSON_CW",
+            os.path.join("/app/secrets", "gws-oauth-credentials-cw.json"),
+        )
+        with open(creds_path) as _f:
+            creds = _json.load(_f)
+        token_resp = _httpx.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "client_id": creds["client_id"],
+                "client_secret": creds["client_secret"],
+                "refresh_token": creds["refresh_token"],
+                "grant_type": "refresh_token",
+            },
+            timeout=15,
+        )
+        token_resp.raise_for_status()
+        access_token = token_resp.json()["access_token"]
+
+        result = _httpx.get(
+            "https://gmail.googleapis.com/gmail/v1/users/me/messages",
+            headers={"Authorization": f"Bearer {access_token}"},
+            params={
+                "q": "from:linkedin.com subject:\"sent you a message\" newer_than:7d",
+                "maxResults": 100,
+            },
+            timeout=20,
+        ).json()
+
+        messages = result.get("messages", [])
+        senders: set[str] = set()
+        for msg in messages:
+            detail = _httpx.get(
+                f"https://gmail.googleapis.com/gmail/v1/users/me/messages/{msg['id']}",
+                headers={"Authorization": f"Bearer {access_token}"},
+                params={"format": "metadata", "metadataHeaders": "From"},
+                timeout=15,
+            ).json()
+            for hdr in detail.get("payload", {}).get("headers", []):
+                if hdr.get("name", "").lower() == "from":
+                    senders.add(hdr["value"])
+                    break
+
+        return {"count": len(senders), "label": "LinkedIn DMs (unsolicited)", "error": None}
+    except Exception as _e:
+        logger.warning(f"DIGEST: linkedin collector failed: {_e}")
+        return {"count": 0, "label": "LinkedIn DMs (unsolicited)", "error": str(_e)}
+
+
+def _collect_inbound_signal_x() -> dict:
+    """Count real X/Twitter conversations mentioning @boubacarbarry last 7d.
+
+    Fetches via https://r.jina.ai/ reader with a 6h cache in
+    data/inbound_signal_cache.json. Filters out own retweets.
+    Returns {'count': int, 'label': str, 'error': str|None}.
+    """
+    import httpx as _httpx
+    import re as _re
+    from datetime import datetime as _dt, timezone as _tz
+
+    JINA_URL = "https://r.jina.ai/https://x.com/search?q=%40boubacarbarry&f=live"
+    CACHE_TTL_SECS = 6 * 3600
+
+    cache = _load_inbound_cache()
+    now_ts = _dt.now(_tz.utc).isoformat()
+
+    cached_at_str = cache.get("x_raw_at")
+    cached_raw = cache.get("x_raw", "")
+    use_cache = False
+    if cached_at_str and cached_raw:
+        try:
+            cached_at = _dt.fromisoformat(cached_at_str)
+            if cached_at.tzinfo is None:
+                cached_at = cached_at.replace(tzinfo=_tz.utc)
+            age = (_dt.now(_tz.utc) - cached_at).total_seconds()
+            use_cache = age < CACHE_TTL_SECS
+        except Exception:
+            pass
+
+    if use_cache:
+        raw = cached_raw
+    else:
+        try:
+            resp = _httpx.get(JINA_URL, timeout=30, follow_redirects=True)
+            resp.raise_for_status()
+            raw = resp.text
+            cache["x_raw_at"] = now_ts
+            cache["x_raw"] = raw[:8000]  # cap stored snippet
+            _save_inbound_cache(cache)
+        except Exception as _e:
+            logger.warning(f"DIGEST: x jina fetch failed: {_e}")
+            return {"count": 0, "label": "X mentions (real conversations)", "error": str(_e)}
+
+    # Count unique non-boubacarbarry authors who mention @boubacarbarry.
+    # Jina renders Twitter as lines like: "[@username](url)\ntweet text"
+    # We look for @boubacarbarry in each paragraph and skip own posts.
+    own_patterns = ("boubacarbarry", "boubacar barry", "bokar83")
+    mentions = 0
+    seen_authors: set[str] = set()
+    for block in _re.split(r"\n{2,}", raw):
+        block_lower = block.lower()
+        if "@boubacarbarry" not in block_lower:
+            continue
+        # Skip blocks where Boubacar is the author (RT or own post)
+        if any(p in block_lower[:120] for p in own_patterns):
+            continue
+        # Extract author handle from first [@handle] in the block
+        m = _re.search(r"\[@([^\]]+)\]", block)
+        author = m.group(1).lower() if m else f"block_{mentions}"
+        if author not in seen_authors:
+            seen_authors.add(author)
+            mentions += 1
+
+    return {"count": mentions, "label": "X mentions (real conversations)", "error": None}
+
+
+def _collect_inbound_signal_sw_cw() -> dict:
+    """Count SW leads promoted to CW pipeline last 7d via orc-postgres.
+
+    Queries sw_email_log for distinct emails where a reply was logged
+    (status='replied') and pipeline='sw' in the last 7 days, then checks
+    whether any of those emails appear with pipeline='cw' — indicating a
+    manual CW promotion after the SW reply.
+    Returns {'count': int, 'emails': list[str], 'label': str, 'error': str|None}.
+    """
+    try:
+        import psycopg2 as _psycopg2
+        conn = _psycopg2.connect(
+            host=os.environ.get("POSTGRES_HOST", "orc-postgres"),
+            database=os.environ.get("POSTGRES_DB", "postgres"),
+            user=os.environ.get("POSTGRES_USER", "postgres"),
+            password=os.environ.get("POSTGRES_PASSWORD", ""),
+            port=int(os.environ.get("POSTGRES_PORT", 5432)),
+        )
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT DISTINCT r.lead_email
+            FROM sw_email_log r
+            WHERE r.pipeline = 'sw'
+              AND r.status IN ('replied', 'reply')
+              AND r.created_at >= NOW() - INTERVAL '7 days'
+              AND EXISTS (
+                  SELECT 1 FROM sw_email_log c
+                  WHERE c.lead_email = r.lead_email
+                    AND c.pipeline = 'cw'
+              )
+            LIMIT 50
+            """
+        )
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        emails = [r[0] for r in rows if r and r[0]]
+        return {
+            "count": len(emails),
+            "emails": emails,
+            "label": "SW → CW conversions",
+            "error": None,
+        }
+    except Exception as _e:
+        logger.warning(f"DIGEST: sw_cw collector failed: {_e}")
+        return {"count": 0, "emails": [], "label": "SW → CW conversions", "error": str(_e)}
+
+
 def _render_digest_section(name: str, rows: list[dict]) -> list[str]:
     """Format one section as pipe-delimited inline rows. Blank owner = ⚠️."""
     header = f"{name} ({len(rows)})"
@@ -817,6 +1013,70 @@ def _run_morning_digest():
         if _debt > 0:
             lines.append("")
             lines.append(f"⚠️ Accountability debt: {_debt} rows missing owner — see above.")
+
+        # Section 5: weekly inbound signal — Mondays only
+        tz = pytz.timezone(TIMEZONE)
+        if datetime.now(tz).weekday() == 0:
+            try:
+                _li = _collect_inbound_signal_linkedin()
+                _x = _collect_inbound_signal_x()
+                _sw = _collect_inbound_signal_sw_cw()
+
+                # Load prev-week counts from cache; roll them forward after capture
+                _cache = _load_inbound_cache()
+                _week_ending = datetime.now(tz).strftime("%Y-%m-%d")
+                _prev_li = _cache.get("linkedin_count", 0)
+                _prev_x = _cache.get("x_count", 0)
+                _prev_sw = _cache.get("sw_cw_count", 0)
+                # Only treat cache as prev-week data if it was written on a different Monday
+                _cache_week = _cache.get("week_ending", "")
+                if _cache_week == _week_ending:
+                    # Same Monday re-run: keep stored prev values, not current totals
+                    _prev_li = _cache.get("prev_linkedin", _prev_li)
+                    _prev_x = _cache.get("prev_x", _prev_x)
+                    _prev_sw = _cache.get("prev_sw_cw", _prev_sw)
+                else:
+                    # New week: current cache values become prev
+                    _cache["prev_linkedin"] = _cache.get("linkedin_count", 0)
+                    _cache["prev_x"] = _cache.get("x_count", 0)
+                    _cache["prev_sw_cw"] = _cache.get("sw_cw_count", 0)
+
+                # Persist updated counts
+                _cache["linkedin_count"] = _li["count"]
+                _cache["x_count"] = _x["count"]
+                _cache["sw_cw_count"] = _sw["count"]
+                _cache["week_ending"] = _week_ending
+                _save_inbound_cache(_cache)
+
+                # Baselines: 5 DMs, 2 X mentions, 1 SW→CW conversion
+                _BASELINES = {"linkedin": 5, "x": 2, "sw_cw": 1}
+                _below = sum([
+                    1 if _li["count"] < _BASELINES["linkedin"] else 0,
+                    1 if _x["count"] < _BASELINES["x"] else 0,
+                    1 if _sw["count"] < _BASELINES["sw_cw"] else 0,
+                ])
+
+                lines.append("")
+                lines.append(f"📈 Inbound signal — week ending {_week_ending} (3)")
+                lines.append(
+                    f"- {_li['label']} | Boubacar | {_li['count']} this week "
+                    f"({_prev_li} last week)"
+                )
+                lines.append(
+                    f"- {_x['label']} | Boubacar | {_x['count']} this week "
+                    f"({_prev_x} last week)"
+                )
+                lines.append(
+                    f"- {_sw['label']} | Boubacar | {_sw['count']} this week "
+                    f"({_prev_sw} last week)"
+                )
+                if _below > 0:
+                    lines.append(
+                        f"⚠️ Inbound floor: {_below}/3 sources below baseline "
+                        f"(5 DMs + 2 mentions + 1 conversion)"
+                    )
+            except Exception as _e:
+                logger.warning(f"DIGEST: inbound signal section failed: {_e}")
 
         _send_telegram_alert("\n".join(lines))
     except Exception as e:
