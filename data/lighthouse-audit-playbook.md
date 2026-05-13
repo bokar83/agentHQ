@@ -82,26 +82,38 @@ If all 3 are strong, pick the one that's closest to "good but missing one thing"
 
 ## Filling in the Template
 
-The HTML template has 6 [SLOTS]. Fill them in this order:
+The HTML template has 9 [SLOTS]. Fill them in this order:
 
 1. `[PROSPECT_NAME]`, first name only. ("Chad", not "Chad Burdette".)
 2. `[DATE_DELIVERED]`, `Wednesday May 13, 2026` style.
-3. `[HOOK | HEADLINE | ABOUT_CTA]` (3 mentions), pick one, replace everywhere.
-4. `[VERBATIM_CURRENT_TEXT]`, paste their actual line word for word. No paraphrasing.
-5. `[ONE_SENTENCE_DIAGNOSIS]`, name the pattern. Avoid generic.
-6. `[REWRITE_FINAL]`, one version, committed. Use their real specifics (their company, their service, their numbers if known).
-7. `[ONE_SENTENCE_REASONING]`, cite the principle, not the buzzword.
-8. `[OTHER_TWO_OF: ...]`, list the two buckets you didn't audit, lowercase comma-separated.
+3. `[WITNESS_ANCHOR]`, one sentence of personal observation tied to this recipient. Examples:
+   - "I have been watching your work since [event/year] and one line kept stopping me."
+   - "Pulled up your profile this morning and one section stopped me cold."
+   - "Saw your post on [topic] last week. Then came back to your profile and noticed something."
+
+   30 seconds to write per recipient. Required. Council added this slot 2026-05-13 to convert the document from system output to human gesture.
+4. `[HOOK | HEADLINE | ABOUT_CTA]` (3 mentions), pick one, replace everywhere.
+5. `[VERBATIM_CURRENT_TEXT]`, paste their actual line word for word. No paraphrasing.
+6. `[ONE_SENTENCE_DIAGNOSIS]`, name the pattern. Avoid generic.
+7. `[REWRITE_FINAL]`, one version, committed. Use their real specifics (their company, their service, their numbers if known).
+8. `[ONE_SENTENCE_REASONING]`, cite the principle, not the buzzword.
+9. `[OTHER_TWO_OF: ...]`, list the two buckets you didn't audit, lowercase comma-separated.
+
+## Strategic Bridge (do NOT edit)
+
+The template footnote names the $250 Signal Session as the explicit next step. Council mandate 2026-05-13: the audit is a sample of the method, not the conclusion. Do not strip or soften the Bridge. Do not remove the price. Do not change the trigger word ("Signal"). If you want to swap pricing or scheduling logic, that is a separate decision tracked in `docs/roadmap/lighthouse.md`, not an in-flight edit.
 
 ---
 
-## CTQ Self-Check (3 items, 60 seconds before send)
+## CTQ Self-Check (5 items, 90 seconds before send)
 
 Run this every time. No exceptions.
 
 1. **Zero em-dashes?** Ctrl-F the doc. Both `-` and `-` must return zero matches.
-2. **Specific everywhere?** Did you name the actual text from their profile, or did you write "your hook"? Names beat pronouns.
-3. **One rewrite, not three?** If you offered options, pick one and delete the rest. Conviction earns the second reply.
+2. **Witness anchor present and specific?** The opening sentence must reference the recipient by name + a real observation. Generic openers fail. ("Pulled up your profile this morning..." is OK because it is honest; "I have been watching your great work for years" is NOT OK because it is generic-flattery.)
+3. **Specific everywhere?** Did you name the actual text from their profile, or did you write "your hook"? Names beat pronouns.
+4. **One rewrite, not three?** If you offered options, pick one and delete the rest. Conviction earns the second reply.
+5. **Strategic Bridge intact?** The footnote names the $250 Signal Session, the 7 sections, the "Signal" reply trigger, and "by Friday" scheduling. All 4 elements must be present. Council 2026-05-13.
 
 Fail any of three = rewrite that section. Don't send.
 
