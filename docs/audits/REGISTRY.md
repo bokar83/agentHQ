@@ -6,6 +6,53 @@ Append-only ledger of code/system audits. Most recent at top. Every audit MUST a
 
 ---
 
+## 2026-05-13 — Gate audit logger silent-fail fix (Solution B, host psycopg2 path)
+
+**Trigger**: Task 2 follow-up. First attempt (flip systemd ExecStart to `docker exec ... gate_agent.py`) failed twice (INVOCATION_ID guard, missing table assumed but actually present). Reverted clean.
+**Scope**: `orchestrator/gate_agent.py`, `orchestrator/logger.py`, `scripts/setup_immutable_audit.sql`, `/etc/systemd/system/gate-agent.service` on VPS, `orc-postgres.immutable_audit.agent_audit_trail`.
+**Method**: 3 rounds (Round 1 read code + verify ground truth, Round 2 Sankofa Council on 5 candidate solutions, Round 3 Karpathy audit + verify B's hidden assumptions). Converged at 95% surety on Round 3.
+
+### Headline findings (re-discovery from Round 1)
+- `immutable_audit.agent_audit_trail` table already exists in `orc-postgres` (was created by `scripts/setup_immutable_audit.sql` previously). No migration needed. Original Task 2 spec assumed table absent.
+- `audit_logger` Postgres role exists with INSERT-only privs via `immutable_audit.append_audit_event(...)` SECURITY DEFINER wrapper.
+- `gate_agent.py` already has a `GATE_FORCE_RUN=1` escape hatch on the INVOCATION_ID guard (line 673). The first failed attempt did not need to bypass anything.
+- `from logger import audit_gate` succeeds on host (psycopg2 imported lazily inside `_connect()`). The async worker thread fails silently on the actual connect because (a) host had no psycopg2, (b) `.env` sets `AUDIT_PG_HOST=postgres` which is a docker-network alias not resolvable from host.
+- Postgres exposes `127.0.0.1:5432` on the VPS host via docker port bind. pg_hba accepts host connections via scram-sha-256.
+- Last successful gate audit row landed 2026-05-10 (id=4, before the silent regression).
+
+### Why Solution B won over A, C, D, E
+
+| Sol | Surface area | Reversibility | Failure modes | Container coupling |
+|-----|-------------|--------------|---------------|---------------------|
+| A (docker exec gate) | systemd unit rewrite + container working-tree contamination risk (gate runs `git checkout main` + `git merge` + `git push`; container fs is partly baked-image, partly volume-mount; merge could write to baked-image working tree) | medium | container down → gate stops ticking | strong (gate inherits container lifecycle) |
+| B (apt python3-psycopg2 + Environment=AUDIT_PG_HOST=127.0.0.1) | 1 apt install + 6 lines in systemd unit | trivial (`apt remove` + `cp backup`) | minor host-vs-container version drift (2.9.9 vs 2.9.12, both stable 2.9.x) | none |
+| C (HTTP /internal/audit endpoint) | refactor `logger.py` + new endpoint in orchestrator + systemd | heavy | gate→HTTP→DB = 2 failure modes vs 1 | strong |
+| D (docker exec + INVOCATION_ID passthrough) | duplicates A; pointless since GATE_FORCE_RUN already in code | same as A | same as A | strong |
+| E (file queue + drain) | new drain process + queue file growth + hot-path disk I/O | three rollback points | drainer dies → queue fills disk | medium |
+
+### Ship
+
+1. `apt-get install -y python3-psycopg2` on VPS (installs python3-psycopg2 2.9.9 + libpq5).
+2. Append `Environment=AUDIT_PG_HOST=127.0.0.1` (with 5-line comment) to `/etc/systemd/system/gate-agent.service` after the existing Environment block. Backup at `/root/backups/2026-05-13/gate-agent.service.bak.preB`.
+3. `systemctl daemon-reload`.
+
+### Verification
+
+Direct end-to-end test under matching systemd env (AUDIT_PG_HOST=127.0.0.1 overlaid on `.env`):
+```
+audit_gate('gate_agent', 'approve', 'diagnostic/audit-end-to-end-test-2026-05-13', reason='Solution B verification')
+```
+Row landed at id=5, `agent_id=gate_agent`, `action=gate_approve`, status=ok, payload preserved. Time from enqueue to landing: under 4 seconds.
+
+### Pre-existing race documented, NOT fixed by this ship
+The audit worker is a daemon thread. Daemon threads die on main-process exit. Gate is `Type=oneshot`. If the queue has not drained at the moment `gate_tick()` returns, events are lost. Risk is small in practice (single-digit events per tick, worker starts in ms) but it is a latent issue worth its own fix later. Out of scope for this task because the same race existed when the system last worked.
+
+### Honest open questions
+- Should `AUDIT_PG_HOST` always be `127.0.0.1` from host context and `postgres` from container context, or should the connection logic try both? Current ship hardcodes per-context via systemd. Acceptable for now; revisit if a third caller emerges.
+- The `[Unit]` block has no `Requires=docker.service` or `After=orc-postgres health-check`. A boot-time race could see gate fire before postgres is up. Existing behavior; not regressed by this fix.
+
+---
+
 ## 2026-05-12 — Catalyst Works site audit + Constraints AI capture pipeline
 
 **Trigger**: Boubacar — full-stack audit of catalystworks.consulting + Constraints AI capture form validation + 3-email follow-up sequence + n8n vs VPS-only decision for the capture path.
