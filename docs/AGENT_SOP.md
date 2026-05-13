@@ -24,6 +24,29 @@ See `CLAUDE.md` for the full Python send template + the 2026-05-11 incident writ
 
 ---
 
+## 🚨 HARD RULE: ATOMIC EDIT CHAIN (read every session, no exceptions)
+
+**Why this rule exists:** 2026-05-12, Claude session burned 30 minutes when VSCode linter (or pre-commit stash cycle) silently reverted Edit/Write tool changes 3 times in one session. Memory rule `feedback_atomic_powershell_commit.md` existed for over a month documenting the fix, but the agent did not read it.
+
+**The rule:** When editing/writing files that matter (`docs/strategy/**`, `docs/roadmap/**`, `thepopebot/chat-ui/**`, any deliverable, CLAUDE.md / AGENTS.md / AGENT_SOP), NEVER do Edit/Write, wait, separate `git add`, separate `git commit`. Always chain write+stage+commit atomically in a single PowerShell call:
+
+```powershell
+git -C "d:/Ai_Sandbox/agentsHQ" add path/to/file1 path/to/file2
+git -C "d:/Ai_Sandbox/agentsHQ" commit -m @'
+commit message here
+'@
+```
+
+(Write the file with the Write tool, then IMMEDIATELY chain `git add` + `git commit` in one PowerShell call. No other tool calls between them.)
+
+**Why atomic:** Pre-commit hook stashes unstaged files, runs checks, restores. Concurrent agents switching branches mid-session can capture your staged files into their commit. VSCode markdown linter or format-on-save can rewrite the file between the Edit and the commit. ANY of these silently reverts your work.
+
+**For commits NOT touching roadmaps:** set `$env:SKIP_SESSION_LOG = "1"` before the commit to skip the roadmap-log pre-commit hook.
+
+**See also:** `~/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/feedback_atomic_powershell_commit.md` for the 2026-05-11 escalation pattern (staged-file capture by concurrent agent).
+
+---
+
 ## Session Start
 
 1. Read `D:\Ai_Sandbox\agentsHQ\docs\memory\MEMORY.md` and every linked file.
