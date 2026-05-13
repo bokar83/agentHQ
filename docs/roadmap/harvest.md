@@ -789,6 +789,48 @@ Eight commits on `bokar83/catalystworks-site` main between `5c86a39` and `c641f3
 - **ai-data-audit dedup** (`3cb67a2`): page had two "Catalyst Works" brand bars stacked (unified nav + page's site-nav). Dropped the site-nav brand block, kept only the slim slot-counter as `.site-slot-bar` below the floating nav. Unified nav switched from orange (#FFA500) to v3-WOW amber (#E8A66B) for cross-page color coherence.
 - **Clean URL hrefs site-wide** (`36d539f` → `c641f3c`): 120 internal `<a href="*.html">` stripped to clean form (e.g. `governance.html` → `governance`) across all 15 pages, plus canonical / og:url / twitter:url meta on 10 pages. Search engines + social shares now index the clean URL as the single authoritative form.
 
+---
+
+### 2026-05-13 — Constraints AI capture wire repaired + 3-touch follow-up sequence wired
+
+**Trigger:** Audit of catalystworks.consulting discovered `/capture` POST returns 404 — `n8n.../catalystworks-constraints-ai/capture` webhook NOT registered. Frontend swallowed the error (`index.html:2222` "Still show success"). Every capture submission since 2026-05-11 deploy thrown away. `diagnostic_captures` row count = 0 because wire cut, not low traffic.
+
+**Decision after /council + /karpathy v2:** VPS-only fix. Route through agentsHQ FastAPI, not Cloudflare Worker (over-engineered for today). n8n diagnostic root endpoint stays (working). Code-as-truth instead of n8n UI-as-truth.
+
+**Shipped:**
+- `POST /constraints-capture` route in `orchestrator/app.py` (CORS adds `catalystworks.consulting`; off-by-default via `CONSTRAINTS_CAPTURE_ENABLED=1` env flag; now flipped on)
+- `skills/constraints_ai_capture/runner.py` — background task: Supabase `diagnostic_captures` + Supabase `leads` INSERT with `sequence_pipeline='constraints_ai'`, `sequence_touch=0`, `capture_idempotency_key` for dedup
+- `migrations/010_constraints_ai_captures.sql` (additive) — `pain_text`, `response_constraint`, `response_action`, `capture_idempotency_key`, `sequence_pipeline`, `sequence_touch`, `opt_out`, `gmb_opener` + unique partial index on capture_idempotency_key. Applied to Supabase via container psycopg2 (not orc-postgres — that was the wrong DB on first attempt; Supabase is the leads CRM)
+- Supabase schema relax: `leads.name` + `leads.company` NOT NULL constraints dropped. Capture form is structurally email-only; placeholder fabrication was hackier than constraint relax
+- `docker-compose.yml` env passthrough for `CONSTRAINTS_CAPTURE_ENABLED` + `AUTO_SEND_CONSTRAINTS_AI` (HIGH_RISK file, merged after Boubacar approve)
+- `templates/email/constraints_ai_t{1,2,3}.py` — 3-touch sequence at Day 0/2/4 (warm inbound cadence, faster than CW/SW because visitor self-identified)
+- `skills/outreach/sequence_engine.py` — `constraints_ai` pipeline registered; argparse `--pipeline` choices expanded
+- Satellite (`output/websites/catalystworks-site/`): `index.html` `CAPTURE_URL` → agentsHQ FastAPI; `crypto.randomUUID()` idempotency_key per submit; GA `capture_landed=yes/no` flag. Hostinger auto-pulled `8e29cb5..a4136ad` within ~2 min
+
+**Verification (live, 2026-05-13):**
+- POST returns `200 {"ok":true,"message":"captured"}` — confirmed 3 times with fresh UUIDs
+- Duplicate POST same idempotency_key: 200 + leads row count remains 1 (DB-layer dedup)
+- Lead row example: `id=3004, name='AUDIT_PROBE_v5_af99086d' (email-prefix placeholder), email=..., sequence_pipeline='constraints_ai', sequence_touch=0, pain_text + response_constraint + response_action all populated, capture_idempotency_key set`
+- All probe rows DELETED after verification
+
+**Known broken (next session):**
+- `_get_due_leads(pipeline='constraints_ai', touch=1)` at T1 selects unrelated SW leads because source-prefix filter doesn't exclude pipeline; needs explicit `sequence_pipeline = %s` filter at T1
+- `run_sequence()` loops touches 1-5 universally → KeyError on touch=4 for 3-touch pipeline. Fix: `for touch in sorted(_touch_days(pipeline).keys())` instead of hardcoded `range(1, 6)`
+- Cosmetic: `row[0]` after INSERT throws KeyError on RealDictCursor — logs misleading "lead insert failed: 0" AFTER row already saved successfully. Replace with `row.get("id")` or dict-safe access
+- `AUTO_SEND_CONSTRAINTS_AI=false` stays until first ~5 captures land + Boubacar reviews drafts
+
+**Session-collision enforcement (separate concern, shipped same day):**
+- `scripts/git-hooks/pre-checkout` queries Postgres `tasks` table; refuses checkout of claimed branches. Warn-only first 24h (`CW_PRECHECKOUT_ENFORCE=0` default)
+- `orchestrator/gate_agent.py` refuses run outside systemd (`INVOCATION_ID` guard). Enforces existing AGENTS.md:189 VPS-only rule
+- `scripts/check_concurrent_sessions.py` cron alert when 2+ live `data/active_sessions.json` entries
+- `~/.claude/skills/worktree-claim/` — single-command worktree+claim+manifest skill
+- Canonical-tree write guard installed by sister-session — blocks Edit/Write to `D:/Ai_Sandbox/agentsHQ`; forces worktree workflow
+
+**Cross-ref:**
+- Audit report: `docs/audits/cw-site-audit-2026-05-12.html`
+- Integration plan + decision: `docs/integrations/constraints_ai_capture_followup_2026-05-12.md`
+- Registry entry: `docs/audits/REGISTRY.md` (2026-05-12 — Catalyst Works site audit + Constraints AI capture pipeline)
+
 #### Polish round 2 — process memory recorded
 
 - New rule: **`.html` + same-name directory collision on Hostinger always 403s** (`feedback_directory_vs_html_collision_403.md`). When `signal.html` + `signal/` both exist, `/signal` 403s because Apache/LiteSpeed auto-trailing-slashes and `Options -Indexes` blocks listing. Fix template lives in the memory file. The `hostinger-deploy` skill SKILL.md now ships with an auto-audit shell loop that flags every such collision before deploy.
