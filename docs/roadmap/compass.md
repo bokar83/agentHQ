@@ -572,3 +572,27 @@ Of 8 added rules: 4 covered/noise (token-budget covered by context-budget-discip
 **Verification:** After prefix-fix merged, next gate cron tick detected `compass/c8-c9-memory-hygiene` and auto-merged to c0254db. Real 3-way merge (2 parents), no conflicts. 10 files / 1008 insertions / 1 deletion — exactly the C8/C9 + Phase A intended diff.
 
 **Followups (deferred):** `[gate_poll] git fetch failed` recurring 3× in last 100 log lines — transient or growing? worth grep-trend check next session.
+
+### 2026-05-13: Session-collision-prevention SHIPPED (Layer A + B + canon-restore loop)
+
+Branch `fix/session-collision-detection-watcher` merged to main as `c709837` via gate auto-merge after Boubacar approval (HIGH_RISK due to `orchestrator/` touch). 3 commits, 467 insertions across 5 new files + 3 edited.
+
+**What shipped:**
+- `scripts/watch_canonical_head.js` — Layer A fs.watch daemon. Detects HEAD flips on canonical `D:/Ai_Sandbox/agentsHQ/.git/HEAD`. Posts actionable Telegram alert with ✅ Restore / ❌ Dismiss inline buttons. Worktree HEAD flips silent (logged stderr only — they are normal). Marker-consumer SSH-poll loop on 15s consumes `data/canon_restore/<sha>.<decision>.json` from VPS, executes `git reset --hard` locally, posts follow-up with ↩ Undo button. End-to-end tested with dismiss marker: consumed + deleted in 15s, no side effects.
+- `scripts/check_cwd_canonical.js` — Layer B PreToolUse hook installed at `~/.claude/hooks/`. Refuses any Edit/Write/Bash whose target file_path or `cd`/`git -C` arg lands in canonical root proper. Emits copy-pasteable `git worktree add` remediation. Inline Bash bypass: `CLAUDE_ALLOW_CANONICAL_WRITE=1 <cmd>`. 8/8 verification probes pass. Mid-session settings.json reload empirically confirmed.
+- `orchestrator/handlers_approvals.py` — new `canon_restore:` / `canon_dismiss:` callback handler. Writes marker to `data/canon_restore/`, sends immediate copy-paste reply, watcher consumes asynchronously.
+- `CLAUDE.md` — new "Hard Rule: No work in the canonical agentsHQ tree" block under Concurrency Rule.
+- `docs/AGENT_SOP.md` — one-liner hard rule at end of Hard Rules.
+- Memory: `feedback_canonical_tree_no_editing.md` + `feedback_telegram_alerts_actionable_buttons_only.md`. MEMORY.md index updated.
+- Windows Task Scheduler `agentsHQ-HEAD-Watcher` registered for auto-start at logon.
+
+**Pre-ship process:** 3 rounds Sankofa Council (premortem mode) + 2 rounds Karpathy audit + 8/8 verification probes. Brief req 1/2/4 explicitly REJECTED across all rounds: flip pre-checkout enforce (Council: false confidence, git switch/IDE/libgit2 bypass), `core.hooksPath` (breaks Boubacar manual git), pre-commit auto-claim (Karpathy P2 fail). Confidence at ship: 97%.
+
+**Side discovery + tactical fix:** Gate cron had been DEAD since `82ed7d9` merged earlier — INVOCATION_ID guard rejected every cron tick because cron is not systemd. Patched `/etc/cron.d/gate-agent` to set `GATE_FORCE_RUN=1` (backup at `.bak.2026-05-13`). Re-opened the gate. All [READY] branches from today were stuck; gate caught up after manual tick.
+
+**Followups (deferred to separate session):**
+- Migrate `/etc/cron.d/gate-agent` → systemd timer so INVOCATION_ID is set naturally and `GATE_FORCE_RUN=1` becomes the emergency hatch instead of the daily driver. ~20 min.
+- MEMORY.md now 188/200 lines (over 180 soft cap). Trigger Compass C9 hygiene pass next month or sooner if 2 more entries land.
+- Wire `↩ Undo` button alternative payload prefix if `canon_restore:` reuse turns out fragile (current design intentionally reuses the same prefix; documented in handoff doc).
+
+**VPS verification at session close:** 4/4 files match committed git blob byte-for-byte (md5 of git-stored blob == md5 of VPS file). Container restarted; live Python `import orchestrator.handlers_approvals` grep-confirmed `canon_restore` present in `/app/orchestrator/handlers_approvals.py` (volume-mounted from `/root/agentsHQ/...`).
