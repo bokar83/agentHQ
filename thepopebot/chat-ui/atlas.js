@@ -40,6 +40,12 @@ document.getElementById("pin-submit").addEventListener("click", async () => {
   }
 });
 
+document.getElementById("pin-input").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    document.getElementById("pin-submit").click();
+  }
+});
+
 // App Initialization
 function initApp() {
   document.getElementById("app").style.display = "block";
