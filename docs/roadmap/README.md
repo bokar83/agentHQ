@@ -47,6 +47,7 @@ Every roadmap gets a one or two word lowercase codename. Codenames are claimed f
 | echo | active | open-ended | async partnership substrate: agent proposes commits and acks, human responds asynchronously, neither blocks on the other | [echo.md](echo.md) |
 | ghost | active | validation-track | Ghost Works (GW) ghostwriting SKU validation — 1 paid retainer by 2026-07-01 or park; merges into harvest as Tier 3 on G7=BUILD | [ghost.md](ghost.md) |
 | harvest | active | open-ended | Catalyst Works revenue pipeline (stub until first revenue session) | [harvest.md](harvest.md) |
+| lighthouse | active | 12-week sprint | **MASTER revenue sprint** 2026-05-12 → 2026-08-04. 3 paying clients (1 each SW+GW+CW). All other roadmaps feed in. | [lighthouse.md](lighthouse.md) |
 | studio | active | open-ended | faceless agency running multiple branded channels on agentsHQ as adjacent revenue to Catalyst Works | [studio.md](studio.md) |
 
 ## Ventures Registry
