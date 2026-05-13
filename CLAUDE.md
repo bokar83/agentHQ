@@ -171,6 +171,38 @@ If unsure which role: check whether Boubacar explicitly assigned Gate duty. If n
 
 **Never continuously check status after spawning agents — wait for results.**
 
+## Hard Rule: No work in the canonical agentsHQ tree (2026-05-12)
+
+`D:/Ai_Sandbox/agentsHQ` is the canonical working tree. It hosts shared
+state across every concurrent session. Multiple agents writing here
+flipped each other's HEAD ~5 times in 90 minutes on 2026-05-12, losing
+in-flight work. From now on every editing session MUST run in a worktree.
+
+**Enforcement (two layers, both installed locally — NOT VPS):**
+
+1. **Layer A — detection:** `scripts/watch_canonical_head.js` is a node
+   daemon that watches `.git/HEAD` for every worktree. On HEAD flip it
+   posts a Telegram alert with old SHA, new SHA, reflog, and worktree
+   list. Boubacar starts it once per workday:
+   `node scripts/watch_canonical_head.js &` (or a Windows scheduled task
+   at logon). Detects every collision regardless of how HEAD was changed.
+
+2. **Layer B — prevention:** `scripts/check_cwd_canonical.js` is a
+   PreToolUse hook (wired in `~/.claude/settings.json` line ~970)
+   matching `Edit|Write|MultiEdit|NotebookEdit|Bash`. It refuses any
+   tool whose target path or `cd`/`git -C` argument lands in the
+   canonical root proper. The block message carries a copy-pasteable
+   `git worktree add` remediation.
+
+**Emergency bypass (per Bash call only — env doesn't propagate across
+CC tool calls):** prefix command with `CLAUDE_ALLOW_CANONICAL_WRITE=1`.
+For file tools (Edit/Write), there is no inline bypass; create a
+worktree instead.
+
+**Source of truth:** repo `scripts/check_cwd_canonical.js`. Install to
+`~/.claude/hooks/check_cwd_canonical.js` (Boubacar's machine). See
+`docs/handoff/2026-05-12-session-collision-rca.md` for the full RCA.
+
 ## Context-Mode (installed 2026-05-08)
 
 Use `/ctx` before any multi-file exploration. Saves ~40% context vs manual reads. See `docs/AGENT_SOP.md` Context-Mode Rule for full routing table. MCP registered in `~/.claude/settings.json` mcpServers.
