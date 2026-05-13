@@ -147,6 +147,8 @@ Both shipped. Council HTML report at `/outputs/council/2026-05-13-17-53-06.html`
 
 **LOCKED 2026-05-13 PM** per Boubacar approval after mobile preview review. Template v2 (commit `ced966a`) + playbook v2 (commit `3ec5d68`) are the canonical W1-3 deliverable. Any future revision MUST re-run Sankofa Council + Karpathy before shipping. No silent edits.
 
+**REVISED 2026-05-13 PM (Council Pass 2: user override)** after Boubacar caught that the Strategic Bridge in the audit footnote violates the V1 promise ("Free. No pitch, no calendar link."). Pricing the 50 Signal Session on the audit itself reads as bait-and-switch even when the audit is real value. Reverted Edit 2: template footnote restored to v1 closer ("check back Thursday, not to pitch"). Edit 1 (witness anchor) kept. New playbook section "When to introduce the 50 Signal Session" added with decision tree for post-Thursday-check-in conversation. CTQ check #5 now enforces zero pitch in footnote. Commits: `66d309a` (template) + `e0b50c2` (playbook). Canonical revised state: template v3 + playbook v3. Lock holds against silent agent edits; explicit user override is a valid Council Pass 2 path.
+
 **Idea Vault opened:** LinkedIn Page Analysis Tool (sibling to SW website-teardown, 2-4 hour multi-section profile audit). Pilot candidate: Brandon reciprocity 2026-05-19 IF W1 reply velocity is weak per Saturday M4 Triad Lock. Productize for L4 Weeks 4-6 IF L1-L3 gate clears + pilot validates. Anchor: Brandon's profile observation today (creative director with outstanding work hidden by thin profile).
 
 **Pending Wednesday afternoon:**
