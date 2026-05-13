@@ -120,12 +120,22 @@ Silently run the local IDE skill link refresh before the final status checks:
 python scripts/setup_local_agents.py >/dev/null 2>&1 || true
 ```
 
+**Then sync submodule URLs on VPS (before submodule update). 2026-05-13 incident: VPS's `output/.git/config` was stuck on a stale URL (`attire-inspo-app.git`) while `.gitmodules` said `signal-works-demo-hvac.git`. `git pull` does NOT propagate `.gitmodules` URL changes to existing submodule `.git/config`. Result: `git submodule update` fails with "not our ref" even when the SHA is on the correct remote.**
+
+```bash
+ssh root@72.60.209.109 "cd /root/agentsHQ && git submodule sync --recursive && git submodule update --init --recursive"
+```
+
+`git submodule sync` rewrites each submodule's `.git/config` URL from `.gitmodules`. Cheap, idempotent. Always run on VPS after pulling main, before declaring sync.
+
 Re-run all three checks in parallel. Confirm:
 
 1. All three locations on the same commit hash
 2. Local `git status --short` is empty (no `M`, no `A`, no `??`)
 3. VPS `git status --short` is empty
 4. Every submodule (`output/`, `skills/community/`, plus any nested) is also empty when checked with `git -C <path> status --short`
+
+If a submodule update fails with `remote error: upload-pack: not our ref <SHA>`, FIRST GUESS is stale URL. Run `git submodule sync <path>` on that consumer before investigating the SHA itself.
 
 If anything still shows up, go back to Step 4. Do not report success until the Source Control panel is empty.
 
