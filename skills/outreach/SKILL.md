@@ -15,7 +15,9 @@ Production code module. Not a Boubacar-invoked skill. Contains:
 
 ## Key operational facts
 
-**Auto-send is OFF by default.** `sequence_engine.py` checks env vars `AUTO_SEND_CW`, `AUTO_SEND_SW`, `AUTO_SEND_STUDIO` (all default `"false"`). When false, emails go to Gmail Drafts folder, NOT sent. Log says "drafted" not "sent". Boubacar reviews + sends manually. To flip: set env var to `"true"` in `.env` + `docker-compose.yml` orchestrator environment block.
+**Auto-send is OFF by default.** `sequence_engine.py` checks env vars `AUTO_SEND_CW`, `AUTO_SEND_SW`, `AUTO_SEND_STUDIO`, `AUTO_SEND_CONSTRAINTS_AI` (all default `"false"`). When false, emails go to Gmail Drafts folder, NOT sent. Log says "drafted" not "sent". Boubacar reviews + sends manually. To flip: set env var to `"true"` in `.env` + `docker-compose.yml` orchestrator environment block.
+
+**Constraints AI pipeline (added 2026-05-13):** 3-touch warm-inbound sequence at Day 0/2/4. Triggered when site visitor submits email on catalystworks.consulting Constraints AI demo. POST hits `/constraints-capture` → Supabase `leads` row with `sequence_pipeline='constraints_ai', sequence_touch=0`. Templates: `templates/email/constraints_ai_t{1,2,3}.py`. Known bugs 2026-05-13: `_get_due_leads` T1 picks unrelated SW leads (needs pipeline filter); `run_sequence` loop hardcoded 1-5 → KeyError on touch 4 for 3-touch pipelines; cosmetic row[0] post-INSERT log error. See `reference_constraints_ai_capture_route.md`.
 
 **Morning runner fires via systemd**, not container heartbeat. Unit: `signal-works-morning.service`. Log: `/var/log/signal_works_morning.log` on VPS. Fires 07:00 MT daily. Check log there, not docker logs.
 
