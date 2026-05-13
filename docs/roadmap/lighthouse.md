@@ -145,6 +145,8 @@ Wrap engagements. Write `docs/strategy/lead-strategy-2026-08-04.html` for next c
 2. Strategic Bridge footnote replaces "check back Thursday, not to pitch" closer. Names the $250 Signal Session, 7-section deluxe option, "Signal" reply trigger, by-Friday scheduling. Frames audit as sample of method, not conclusion.
 Both shipped. Council HTML report at `/outputs/council/2026-05-13-17-53-06.html` on VPS.
 
+**LOCKED 2026-05-13 PM** per Boubacar approval after mobile preview review. Template v2 (commit `ced966a`) + playbook v2 (commit `3ec5d68`) are the canonical W1-3 deliverable. Any future revision MUST re-run Sankofa Council + Karpathy before shipping. No silent edits.
+
 **Idea Vault opened:** LinkedIn Page Analysis Tool (sibling to SW website-teardown, 2-4 hour multi-section profile audit). Pilot candidate: Brandon reciprocity 2026-05-19 IF W1 reply velocity is weak per Saturday M4 Triad Lock. Productize for L4 Weeks 4-6 IF L1-L3 gate clears + pilot validates. Anchor: Brandon's profile observation today (creative director with outstanding work hidden by thin profile).
 
 **Pending Wednesday afternoon:**
