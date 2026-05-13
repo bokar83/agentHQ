@@ -6,6 +6,38 @@ Append-only ledger of code/system audits. Most recent at top. Every audit MUST a
 
 ---
 
+## 2026-05-12 — Catalyst Works site audit + Constraints AI capture pipeline
+
+**Trigger**: Boubacar — full-stack audit of catalystworks.consulting + Constraints AI capture form validation + 3-email follow-up sequence + n8n vs VPS-only decision for the capture path.
+**Scope**: 16 HTML pages on live site + local satellite repo (`output/websites/catalystworks-site/`); `/capture` endpoint wire; `_worker.js` Cloudflare Worker source; `n8n.srv1040886.hstgr.cloud` workflows reachable from this machine.
+**Method**: live HEAD-probe of every sitemap URL + 4 user-named paths; static-crawl of 36 unique internal hrefs from 16 HTML files; read of `.htaccess`, `_worker.js`, `index.html` (capture block); live POST probes of both n8n endpoints (root + `/capture`) with fake email + pain input; external URL HEAD probes for 8 high-value citation links.
+**Output**:
+  - `docs/audits/cw-site-audit-2026-05-12.html` (audit report, Boubacar-facing)
+  - `docs/integrations/constraints_ai_capture_followup_2026-05-12.md` (n8n vs VPS-only decision + integration plan)
+  - `templates/email/constraints_ai_t1.py`, `t2.py`, `t3.py` (3-touch sequence, Day 0/2/4)
+  - `skills/outreach/sequence_engine.py` (`constraints_ai` pipeline registered)
+
+### Headline findings
+- Link integrity: PASS (36 hrefs, 0 broken — `.htaccess` clean-URL rewrite working).
+- SEO: PASS (12/12 pages have H1 + meta + canonical + viewport + theme-color). 6 pages have descriptions >200 chars (Google truncates ~160 — back-half hidden but legal). `for/hvac.html` title=81 chars (display cut-off ~60). All warnings, no fails.
+- JSON-LD: PASS (5 schemas on index — Organization, Service, Person, FAQPage, ProfessionalService).
+- External citations: PASS (Calendly, Beehiiv, signal subdomain, 4 research links — all 200).
+- **P0 finding: `/capture` endpoint silently broken.** Frontend POSTs to `https://n8n.../catalystworks-constraints-ai/capture` which returns 404 "webhook not registered". `index.html:2222` explicitly swallows the error and shows success. Every capture since 2026-05-11 deploy has been thrown away. `diagnostic_captures` row count = 0 not because traffic is zero but because the wire is cut.
+- Diagnostic root endpoint (`POST .../catalystworks-constraints-ai` without `/capture`) works correctly. Only the sub-route is missing.
+
+### Ship status
+- 3 email templates + sequence_engine wiring shipped in same branch (`fix/session-collision-git-layer-enforcement`)
+- Audit report HTML + n8n decision doc shipped in this commit
+- Live-site fix (deploy `_worker.js` Cloudflare Worker, cut over front-end, retire n8n from this pipeline) NOT shipped yet — design only, awaits Boubacar approval
+- Constraints AI pipeline stays draft-only (`AUTO_SEND_CONSTRAINTS_AI=false`) until Boubacar flips it explicitly
+
+### Decision: n8n vs VPS-only for capture follow-up
+- **Recommendation: VPS-only.** Deploy existing `_worker.js` (code already written, undeployed). Worker double-writes to Supabase `diagnostic_captures` + agentsHQ `/inbound-lead`. `/inbound-lead` triggers `run_inbound_lead` which seeds `leads` with `sequence_pipeline='constraints_ai'`. sequence_engine then runs the 3-email cadence already shipped.
+- One fewer SaaS (n8n), one less authentication surface, code-as-truth instead of n8n UI-as-truth, Cloudflare edge latency.
+- Open question deferred: does n8n stay in agentsHQ architecture at all? Out of scope here; needs its own Council session if Boubacar wants to retire it broader.
+
+---
+
 ## 2026-05-12 — Email Data Wiring Audit + Canonical Ledger Ship
 
 **Trigger**: Boubacar — "how many emails were sent across all 3 brands (CW, SW, GW) all-time" had no canonical answer. sw_email_log (164 rows, 2026-05-11+), email_jobs (2 rows unused), leads (0 rows), Notion (severed) — none authoritative. Strategy decisions were made on wrong numbers.
