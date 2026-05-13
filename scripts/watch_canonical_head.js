@@ -39,12 +39,11 @@ const DEDUP_WINDOW_MS = 2000;
 // Telegram config from .env in repo root if env var not set.
 function loadEnv() {
   const envPath = path.join(CANONICAL_ROOT, '.env');
-  if (process.env.TELEGRAM_BOT_TOKEN && process.env.OWNER_TELEGRAM_CHAT_ID) {
-    return {
-      token: process.env.TELEGRAM_BOT_TOKEN,
-      chat: process.env.OWNER_TELEGRAM_CHAT_ID,
-    };
-  }
+  const fromEnv = {
+    token: process.env.TELEGRAM_BOT_TOKEN || process.env.ORCHESTRATOR_TELEGRAM_BOT_TOKEN,
+    chat: process.env.OWNER_TELEGRAM_CHAT_ID || process.env.TELEGRAM_CHAT_ID,
+  };
+  if (fromEnv.token && fromEnv.chat) return fromEnv;
   try {
     const raw = fs.readFileSync(envPath, 'utf8');
     const cfg = {};
@@ -54,7 +53,7 @@ function loadEnv() {
     }
     return {
       token: cfg.TELEGRAM_BOT_TOKEN || cfg.ORCHESTRATOR_TELEGRAM_BOT_TOKEN,
-      chat: cfg.OWNER_TELEGRAM_CHAT_ID,
+      chat: cfg.OWNER_TELEGRAM_CHAT_ID || cfg.TELEGRAM_CHAT_ID,
     };
   } catch (e) {
     return { token: null, chat: null };
@@ -92,16 +91,29 @@ function worktreeList() {
   return out || '(worktree list unavailable)';
 }
 
-function postTelegram(text) {
+// Telegram alert rule (2026-05-12): NEVER fire a pure-info alert.
+// Every Telegram message MUST be actionable AND carry ✅/❌ inline
+// buttons so Boubacar can decide in one tap. callback_data ≤64 bytes.
+function postActionableAlert(text, oldSha, newSha) {
   if (!env.token || !env.chat) {
     process.stderr.write(`[watcher] no Telegram config — would post:\n${text}\n`);
     return;
   }
+  // callback_data carries the SHA-to-restore. SHA is 40 chars + prefix
+  // "rev:" = 44 chars, well under 64.
+  const restoreCb = `canon_restore:${(oldSha || '').slice(0, 40)}`;
+  const dismissCb = `canon_dismiss:${(newSha || '').slice(0, 40)}`;
   const payload = JSON.stringify({
     chat_id: env.chat,
     text,
     parse_mode: 'Markdown',
     disable_web_page_preview: true,
+    reply_markup: {
+      inline_keyboard: [[
+        { text: '✅ Restore', callback_data: restoreCb },
+        { text: '❌ Dismiss (intentional)', callback_data: dismissCb },
+      ]],
+    },
   });
   const req = https.request({
     hostname: 'api.telegram.org',
@@ -130,34 +142,47 @@ function recordChange(label, file) {
   lastSeen.set(file, { sha, ts: now });
   if (!prev) return; // first read = baseline, not a change
 
+  // Only canonical HEAD flips are actionable. Worktree HEAD flips are
+  // normal (every commit changes them); they are noise. Boubacar said
+  // 2026-05-12: no Telegram alert unless action is required.
+  if (label !== 'canonical') {
+    process.stderr.write(`[watcher] worktree HEAD flip (silent): ${label} ${oldSha} -> ${sha}\n`);
+    return;
+  }
+
+  process.stderr.write(`[watcher] CANONICAL HEAD flip: ${oldSha} -> ${sha}\n`);
+
+  // Resolve the actual SHA for the restore button. HEAD file holds
+  // either a sha (detached) or "ref: refs/heads/<branch>". For ref:
+  // form, we resolve via reflog tail.
+  let restoreSha = oldSha;
+  if (restoreSha.startsWith('ref:')) {
+    // The previous *commit* SHA is in reflog index 1.
+    const reflogOne = gitCmd(['reflog', '-1', '--format=%H', `HEAD@{1}`]);
+    if (reflogOne) restoreSha = reflogOne;
+  }
+
   const msg = [
-    '*HEAD FLIP DETECTED*',
-    `*Tree:* ${label}`,
-    `*File:* \`${file}\``,
+    '*CANONICAL HEAD FLIP — ACTION REQUIRED*',
+    '',
+    'Someone (or some session) just changed HEAD in the canonical',
+    'agentsHQ working tree. This usually means another session is',
+    'stepping on in-flight work.',
+    '',
     `*Old:* \`${oldSha}\``,
     `*New:* \`${sha}\``,
     `*Time:* ${new Date(now).toISOString()}`,
     '',
-    '*Recent reflog:*',
+    '*Reflog (last 3):*',
     '```',
     reflogTail(),
     '```',
     '',
-    '*Worktrees:*',
-    '```',
-    worktreeList(),
-    '```',
-    '',
-    '_Recover (paste in canonical):_',
-    '```',
-    `cd "${CANONICAL_ROOT}"`,
-    'git reflog -5  # pick the SHA before the flip',
-    'git reset --hard <sha>',
-    '```',
+    '✅ *Restore* = run `git reset --hard ' + restoreSha.slice(0, 12) + '` on canonical.',
+    '❌ *Dismiss* = it was intentional; do nothing.',
   ].join('\n');
 
-  postTelegram(msg);
-  process.stderr.write(`[watcher] HEAD flip on ${label} ${oldSha} -> ${sha}\n`);
+  postActionableAlert(msg, restoreSha, sha);
 }
 
 function watchFile(label, file) {
