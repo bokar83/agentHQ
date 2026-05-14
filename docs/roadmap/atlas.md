@@ -947,6 +947,29 @@ Roadmap items for MCP/plugin stack. Not immediate — document when/why so we do
 
 Append-only. Newest entry at the bottom. Each entry: date, what changed, what's next.
 
+### 2026-05-13 (evening) - X bookmarks ingestion capability gap (DEFERRED)
+
+**What happened:** Boubacar asked for a comprehensive read of his X bookmarks ("review everything in there, as far back as you can, gather all information, tools, strategies, ideas"). Spent ~45 min trying to attach to his existing logged-in Chrome session on Windows. Hit a hard 3-layer wall. Documented in memory: `feedback_x_bookmarks_scrape_blocked.md`.
+
+**Blockers (all 3 stack):**
+1. Chrome v148+ disables `--remote-debugging-port` when `--user-data-dir` equals the default Chrome path. Error: "DevTools remote debugging requires a non-default data directory."
+2. Playwright `launchPersistentContext` on the real Chrome UDD hits the same restriction.
+3. `Cookies` file in `Profile 5/Network/Cookies` is ACL-locked for read even after Chrome is killed. App-bound encryption + restricted DACL. EFS shows file as unencrypted, so it's not standard EFS - this is Chrome's app-bound layer added in v127.
+
+**Probed all browsers:** Chrome (5 profiles), Brave (Default), Edge (Default). None carry `auth_token` for x.com. Earlier window title "Home / X - Google Chrome" was NOT proof of an authenticated session - X serves that title to logged-out pages too.
+
+**Working path forward (Path 1 from memory file):** Playwright `launchPersistentContext` on a NON-default UDD path like `D:\tmp\playwright-x-profile`, using Playwright's bundled Chromium. First run: Boubacar logs into X manually. Cookies persist in that profile for all future runs. After first login, the bookmarks scraper at `D:\tmp\playwright-x\launch-and-scrape.js` can hit `/i/bookmarks` and infinite-scroll-extract.
+
+**Why deferred:** Boubacar said "you're stuck, save notes and add to roadmap to do later." Not a P0. The capability would feed Studio idea pipeline + Harvest research + CW thought leadership, but no immediate blocker today.
+
+**Milestone (when revisited):** A36 X-bookmarks ingestion.
+- Acceptance: one-time login into `D:/tmp/playwright-x-profile` -> scraper runs to completion -> JSONL of all bookmarks at `data/x-bookmarks/<date>.jsonl` -> at least 50 entries scraped without auth wall -> feed into `agentshq-absorb` triage loop (one verdict per bookmark, top-N kept).
+- Pre-condition: Boubacar willing to do the one-time login.
+- Target: when next free 30-min slot opens and a Studio/Harvest research sprint needs the data.
+- Cross-ref: `feedback_x_bookmarks_scrape_blocked.md` (don't re-investigate the blocked stack); `D:/tmp/playwright-x/launch-and-scrape.js` (scraper ready, just needs auth).
+
+**Next:** when Boubacar surfaces this again, go straight to Path 1. Do not re-test the blocked stack.
+
 ### 2026-04-23: Phase 0 shipped
 Safety rails (spend cap, kill switch, per-crew flags, dry-run, ledger split). PR #9 merged. autonomy_state.json now persisted on VPS via `./data:/app/data` mount. Tags: `savepoint-pre-autonomy-20260423`, `savepoint-phase-0-autonomy-shipped-20260423`.
 **Next:** Phase 1 (episodic memory + approval queue).
