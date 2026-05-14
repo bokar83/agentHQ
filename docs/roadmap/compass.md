@@ -616,3 +616,23 @@ Followup item promoted same session. The tactical `GATE_FORCE_RUN=1` cron patch 
 **Why this matters:** The `GATE_FORCE_RUN=1` cron patch shipped earlier as a tactical unblock; it reopened the laptop-runaway failure mode that `82ed7d9` was designed to prevent (any laptop session with that env var could run gate). systemd timer satisfies the guard naturally and `GATE_FORCE_RUN` returns to being the legitimate emergency hatch. Restored brief req 5 to its original intent.
 
 **Followup (deferred):** `audit_logger reconnect failed: No module named 'psycopg2'` in service logs. Audit trail running degraded. Either install psycopg2 on host or run gate inside container with the existing Python deps. Separate session.
+
+### 2026-05-13: Governance-relevant absorbs evaluated (khushboo CLAUDE.md + shann3 Hermes 4-layer + hoeem cluster + doublenickk saturation)
+
+Four governance-touching absorbs today. Three logged as REOPEN-conditioned (no code change today); one already mid-flight via Gate. Cross-reference: `docs/observations/creator-x-ai-cluster-2026-05-13.md` + `docs/reviews/absorb-log.md` 2026-05-13 entries.
+
+**Governance REOPEN conditions logged:**
+
+- **CLAUDE.md show-2-3-approaches-first rule** (khushboo 21-instructions). REOPEN if 2+ agentsHQ incidents land by 2026-06-13 where defaulting to multiple-approaches-first on STRATEGY questions (not code) would have prevented wrong-path implementation that `superpowers:brainstorming` + sankofa did not catch. The 21-instruction template solves a problem we already solved (brainstorming covers code; sankofa covers strategy); the missing slice is "did we even consider the alternatives" rigor on routine strategy turns where neither skill fires. Watch ongoing.
+- **MEMORY.md consolidation question** (shann3 + CyrilXBT). REOPEN when MEMORY.md crosses 250 lines AND critical rules begin dropping off the always-load zone. Distinct from auto-capture (rohitg00 absorb 2026-05-11). The fix at that point is a single INDEX onboarding doc, NOT 4-layer department-brain scaffolding. The shann3 / CyrilXBT proposals are solo-operator LARP at our current scale (1 operator, 0 employees, 6 active projects). Department brains are organizational interfaces; we have no organization yet.
+- **Cluster-voice CTQ guard** (hoeem cluster observation). Codified this session in `feedback_creator_x_ai_cluster_observation.md`. CTQ check for Boubacar-personal LinkedIn / X content should flag cluster-voice creep: AI tool + leverage pattern + monetization framing + paste-ready templates. Voice diff is the differentiator; lived-experience + witness anchor + earned authority + no-pitch wins by being the opposite.
+
+**Saturation rule status (in flight):** doublenickk absorb shipped `cc84358` on branch `absorb/doublenickk-saturation-rule` with `[READY]`. Adds a saturation rule to `skills/agentshq-absorb` Common Mistakes section + a Stack Patterns section to `skills/boubacar-skill-creator`. Pending Gate auto-merge. Both rules carry a 2026-06-13 decision gate to revert if they are not firing correctly (false-positive ARCHIVE on a real PROCEED would surface within 30 days of normal absorb traffic).
+
+**Why ARCHIVE not PROCEED on the three:** all three would expand governance surface area in advance of the incident the surface is supposed to handle. Compass principle: rules earn their slot by incident, not by hypothetical. The REOPEN conditions are the incident-counter; we are not bypassing them by codifying the rule today.
+
+**Cross-references:**
+- `docs/observations/creator-x-ai-cluster-2026-05-13.md`
+- `docs/reviews/absorb-log.md` 2026-05-13 entries
+- `feedback_creator_x_ai_cluster_observation.md` (memory)
+- `skills/agentshq-absorb/SKILL.md` (saturation rule, pending Gate via cc84358)

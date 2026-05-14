@@ -1174,3 +1174,26 @@ Health thresholds cleared (SW≥30, CW≥10). Recycle gate didn't fire (CW=67 >>
 - Full RCA: `docs/handoff/2026-05-12-cold-outreach-rca.md`
 - Master day roll-up: `docs/handoff/2026-05-12-master.md`
 - Studio session log (same day, separate concern): `docs/roadmap/studio.md` 2026-05-12 PM entry
+
+### 2026-05-13: CW positioning angles + solo-operator REOPEN conditions logged
+
+Three CW-positioning-relevant absorbs evaluated today (Garry Tan GStack + Forbes Tank 5Q + cluster observation from the 9-absorb creator-X-AI burst). Two solo-operator-growth REOPEN conditions logged from shann3 + CyrilXBT. No CW outreach code changes today; this is a memorialization entry so the angles do not get lost between sessions. Cross-reference: `docs/observations/creator-x-ai-cluster-2026-05-13.md` + `docs/reviews/absorb-followups.md`.
+
+**CW positioning angles logged:**
+
+- **"We implement, they tutorialize"** (cluster observation). The X creator-AI ecosystem converged today on tutorialize-the-stack content (high bookmark, low reply, listicle hooks, paste-ready templates). Whitespace they vacated: productized-AI-consulting where the deliverable is a running system, not a framework explanation. CW differentiator. Lean this into 1-2 cold-email templates, the SW audit close-out, and 1-2 LinkedIn posts. See `docs/observations/creator-x-ai-cluster-2026-05-13.md` for the full taxonomy.
+- **GStack vocabulary calibration** (Garry Tan, Expansionist follow-up not adopted at the time). Insert "orchestrator", "/review", "/cso" terms into 1-2 CW cold-email templates as linguistic first-mover positioning. TRIPWIRE: 3+ CW prospects use AI-as-orchestrator vocabulary unprompted in 60 days = green-light wider rollout. Same trigger doubles as a market-readiness signal for the SW audit GStack self-assessment below.
+- **SW audit GStack self-assessment** (Garry Tan, Expansionist). 5-question AI-operational-maturity audit (orchestrator readiness, agent inventory, review surface, CSO function, stack visibility) as an upsell line item for SW prospects. Same TRIPWIRE as above; ship only after vocabulary signal lands.
+
+**REOPEN conditions for solo-operator growth (shann3 + CyrilXBT):**
+
+- **CW 3rd retainer or 1st hire.** Triggers pre-call brief crew + per-client context isolation. The `data/brains/{cw,sw,studio,atlas}.md` scaffold MIGHT be justified at that point because the operator brain stops fitting in one head. Not before. Pre-3rd-retainer the scaffold is overhead with no payoff.
+- **Invoice volume 3+ open per month** (CyrilXBT). Triggers an invoice-reminder loop as a founder-time-reduction motion. Today we are at 0-1 open invoices monthly; manual follow-up takes 5 minutes; automation is negative ROI.
+
+**Why no immediate code:** all three positioning angles are content motions (CW templates + LinkedIn drafts), not orchestrator changes; they will land through normal cold-outreach iteration, not a milestone. The solo-operator REOPEN conditions are capacity-triggered; instrumenting them before the trigger is wasted ceremony.
+
+**Cross-references:**
+- `docs/observations/creator-x-ai-cluster-2026-05-13.md`
+- `docs/reviews/absorb-followups.md` (Garry Tan CW positioning post target 2026-05-20)
+- `feedback_creator_x_ai_cluster_observation.md` (memory)
+- Forbes Tank 5Q follow-up: `docs/reviews/absorb-followups.md` target 2026-05-20

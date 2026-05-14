@@ -3168,3 +3168,22 @@ The background scheduling engine is now fully instrumented with high-craft traci
 - M8.1 ship after `7a06ce7` lands on Hostinger.
 - A9d-A Deep Memory Garden — target 2026-05-18 (unchanged).
 - A3 Reconciliation Polling — gate lifts 2026-05-11.
+
+### 2026-05-13: Autonomy-relevant absorbs evaluated (aiedge_ /goal + hoeem NotebookLM + shann3 + CyrilXBT)
+
+Four absorbs touched the autonomy infra surface today. All ARCHIVE-AND-NOTE with watch conditions; no immediate Atlas milestone code change. Memorializing here so future sessions can REOPEN cleanly. Cross-reference: `docs/observations/creator-x-ai-cluster-2026-05-13.md` (cluster framing) + `docs/reviews/absorb-log.md` 2026-05-13 entries + `docs/reviews/absorb-followups.md`.
+
+**Autonomy patterns logged + watch conditions:**
+
+- **`/goal` command tripwire** (aiedge_). Earlier today; already in absorb-followups. Watch: when Anthropic ships `/goal` natively in claude-code CLI, evaluate exposing agentsHQ crews via a `/goal` facade so the heartbeat model is invocable from the CLI surface in addition to cron. No code today. The thinking improvement (no time cap + multi-pass + 95% gate) already absorbed into `feedback_strategic_review_prompt_pattern.md`.
+- **Notes-as-Sources compounding pattern** (hoeem). Pattern doc shipped at `docs/patterns/notes-as-sources-compounding.md`. General agent-memory pattern: agent notes become sources for next session, compounding context across runs. Maps to Atlas learning crews (A9d-A weekly_synthesis, A9d-B memory_distillation) and the Hermes write-loop. Decision gate 2026-06-13: archive to zzzArchive if zero invocations by that date.
+- **Bridge Summary pattern** (hoeem). When Atlas memory exceeds the Hermes context budget, the Bridge Summary pattern (multi-notebook orchestration, hand-off summaries between context windows) becomes the pre-flight step. Not needed today; logged for capacity-triggered REOPEN.
+- **Notion full-text search gate** (CyrilXBT + shann3 + hoeem, same root cause). SAME single trigger unlocks 4 deferred capabilities: A9d-archived queue-processor, project-auto-updater, daily-context-gen, queued-research-inbox. When Notion ships native full-text search across databases, all four become tractable on the same infra. Watch ongoing; no action until the trigger.
+
+**Why ARCHIVE not PROCEED:** none of the four absorbs produce a motion today that survives the do-the-simplest-thing-that-works gate. The Hermes write-loop and learning crews are the canonical Atlas spine; new memory primitives bolt on after, not before.
+
+**Cross-references:**
+- `docs/observations/creator-x-ai-cluster-2026-05-13.md` (cluster context)
+- `docs/patterns/notes-as-sources-compounding.md` (Notes-as-Sources)
+- `docs/reviews/absorb-log.md` 2026-05-13 entries
+- `feedback_creator_x_ai_cluster_observation.md` (memory)
