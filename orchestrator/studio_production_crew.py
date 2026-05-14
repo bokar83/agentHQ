@@ -156,14 +156,84 @@ def run_production(notion_id: str, *, dry_run: bool = False) -> dict[str, Any]:
     }
 
 
+_PULSE_STATE_PATH = "/app/workspace/studio_pipeline_pulse.json"
+_PULSE_SILENCE_WARN_SEC = 90 * 60      # alert after 90 min of zero candidates
+_PULSE_ALERT_REPEAT_COOLDOWN_SEC = 6 * 60 * 60  # don't repeat alert more than once per 6h
+
+
+def _load_pulse_state() -> dict:
+    try:
+        import json as _json
+        with open(_PULSE_STATE_PATH, "r") as f:
+            return _json.load(f)
+    except Exception:
+        return {}
+
+
+def _save_pulse_state(state: dict) -> None:
+    try:
+        import json as _json, os as _os
+        _os.makedirs(_os.path.dirname(_PULSE_STATE_PATH), exist_ok=True)
+        with open(_PULSE_STATE_PATH, "w") as f:
+            _json.dump(state, f)
+    except Exception as exc:
+        logger.warning("production_tick: cannot persist pulse state: %s", exc)
+
+
+def _alert_silence(silence_sec: int) -> None:
+    """Telegram alert with action buttons — actionable per
+    feedback_telegram_alerts_actionable_buttons_only.md."""
+    try:
+        import os as _os
+        from notifier import send_message_with_buttons
+        chat_id = _os.environ.get("TELEGRAM_CHAT_ID", "")
+        if not chat_id:
+            logger.warning("production_tick: TELEGRAM_CHAT_ID not set, cannot alert")
+            return
+        minutes = silence_sec // 60
+        text = (
+            f"Studio production_tick silent for {minutes} min.\n"
+            f"No qa-passed/Ready/scouted candidates picked up.\n"
+            f"Check Pipeline DB. trend_scout may have stalled, or all records "
+            f"are stuck in qa-failed."
+        )
+        buttons = [
+            [("Ack - investigating", "studio_pulse:ack"),
+             ("Snooze 6h", "studio_pulse:snooze")],
+        ]
+        send_message_with_buttons(chat_id, text, buttons)
+        logger.warning("production_tick: silence alert sent (%d min)", minutes)
+    except Exception as exc:
+        logger.error("production_tick: alert send failed: %s", exc)
+
+
 def studio_production_tick(*, dry_run: bool = False) -> list[dict]:
     """
     Heartbeat tick: find all Pipeline DB candidates with Status=qa-passed,
-    run production on each one at a time.
+    Ready, or scouted, run production on each one at a time.
     Called from scheduler.py (M3 heartbeat wiring, separate task).
+
+    Silence watchdog: if no candidates picked up for >90 min and no alert
+    fired in the last 6h, posts an actionable Telegram alert. Pulse state
+    persisted at /app/workspace/studio_pipeline_pulse.json.
     """
+    import time as _time
     candidates = _fetch_qa_passed_candidates()
     logger.info("production_tick: %d qa-passed candidates queued", len(candidates))
+
+    state = _load_pulse_state()
+    now = int(_time.time())
+    if candidates:
+        state["last_seen_with_candidates"] = now
+    else:
+        last_seen = state.get("last_seen_with_candidates", now)
+        last_alert = state.get("last_alert_sent", 0)
+        silence = now - last_seen
+        if silence >= _PULSE_SILENCE_WARN_SEC and (now - last_alert) >= _PULSE_ALERT_REPEAT_COOLDOWN_SEC:
+            _alert_silence(silence)
+            state["last_alert_sent"] = now
+    _save_pulse_state(state)
+
     results = []
     for candidate_id in candidates:
         try:
@@ -243,6 +313,12 @@ def _fetch_qa_passed_candidates() -> list[str]:
             json={"filter": {"or": [
                 {"property": "Status", "select": {"equals": "qa-passed"}},
                 {"property": "Status", "select": {"equals": "Ready"}},
+                # Scouted records are auto-advanced through QA inline.
+                # run_production updates Status to scheduled or qa-failed,
+                # so a record only re-enters this filter if a human (or a
+                # retry tool) flips it back. Without this, scouted records
+                # sit forever and trend_scout silently fills the backlog.
+                {"property": "Status", "select": {"equals": "scouted"}},
             ]}},
             timeout=10,
         )
