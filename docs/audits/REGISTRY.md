@@ -227,11 +227,13 @@ Awaiting Boubacar approval to proceed with Batch 1 (8 universal SKILL.md mirrors
 - Council premortem (Dead-Project mode): SHIP-WITH-CONDITIONS. Real privilege gap. Friction-bypass named as the 6-month failure mode -> mitigated by tripwire (condition #3 shipped). Conditions #1 (HIGH_RISK narrow split), #2 (24h email fallback), #4 (friction log) filed as separate Compass milestone.
 - Karpathy audit: PASS / PASS / PASS / WARN (P4 verification deferred to post-merge live test).
 
-### Karpathy P4 follow-through (post-merge verification, scheduled)
-- Push no-op feature branch touching only orchestrator/gate_agent.py
-- Confirm gate systemd timer emits Telegram approval card instead of auto-merging
-- Confirm /gate-reject drains cleanly
-- Log result back into this REGISTRY entry as VERIFIED-DATE
+### Karpathy P4 follow-through (VERIFIED 2026-05-14 21:47 UTC)
+- Pushed `test/gate-p4-verify-2026-05-14` (no-op comment edit on `orchestrator/gate_agent.py`, [READY] tag)
+- Gate tick result: `tick done. merged=[], failed=[], blocked=[], held_high_risk=['test/gate-p4-verify-2026-05-14']`
+- Gate did NOT auto-merge. HIGH_RISK approval flow confirmed under new logic.
+- Wrote reject marker `data/gate_approvals/test__gate-p4-verify-2026-05-14.reject.json` to test consume path
+- Next tick: `test/gate-p4-verify-2026-05-14 rejected via marker`, marker file consumed (file deleted), `held_high_risk=[]` (drained from set)
+- Both approval-card-fires AND /gate-reject consume paths verified. Closing this P4 WARN.
 
 ### Memory rule added
 - `feedback_gate_high_risk_strictly_dominates.md` (to be written next)
