@@ -125,6 +125,29 @@ Wrap engagements. Write `docs/strategy/lead-strategy-2026-08-04.html` for next c
 
 ## Session Log
 
+### 2026-05-14 (W1 Day 2 morning) - Nate V1 LinkedIn + Chad Thu check-in + PGA reschedule
+
+**Sprint operations (Day 2 morning):**
+- 10:00 V1 sent to Nate Tanner via LinkedIn (channel pivot from queued text)
+- 10:00 Thursday check-in to Chad Burdette via LinkedIn audit message + text bridge ("doesn't log in daily")
+- Brandon morning ping queued 10:05 MDT (user handles outbound)
+- `data/inbound-signal-log.md` +2 events. `data/lighthouse-warm-list.md` Nate flipped to sent.
+- Commit `f5d08a2` rebased on origin (which had `49102c59` autonomous studio firecrawl report) and pushed as `8c2c71f3`. VPS synced.
+
+**Scheduling shift:** PGA Kickstart Call rescheduled Thu 5/14 to Fri 5/15 (time TBD). Today freed for audit prep window if Nate replies yes. Fri 10:00 Chase V1 send may collide with PGA depending on call time. Reslot pending time confirmation. PGA prep doc filename has stale date suffix (`pga-call-extraction-questions-2026-05-14.md`); content still valid, rename optional.
+
+**Score:**
+
+| Day | Sent | Reply | Audit delivered |
+|---|---|---|---|
+| 1 Wed | 1 (Chad text) | 0 | 0 |
+| 2 Thu AM | 1 (Nate LinkedIn) + Chad Thu check-in | 0 (pending) | 0 |
+
+**Pending Thursday PM:**
+- 17:30 EOD ledger if Nate/Chad reply lands
+- 21:00 ritual: pre-slot Mon Chris V1 send + confirm/reslot Fri Chase against PGA time
+- If Nate replies yes by ~12:00 MDT, owe audit by 17:00 MDT
+
 ### 2026-05-13 (W1 Day 1) - Sprint executed, audit template shipped + Council-edited, Idea Vault opened
 
 **Sprint operations (Day 1):**
