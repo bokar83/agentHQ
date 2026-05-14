@@ -208,3 +208,35 @@ Awaiting Boubacar approval to proceed with Batch 1 (8 universal SKILL.md mirrors
 - This conversation (2026-05-11) — not saved as discrete handoff yet. If needed, write `docs/handoff/2026-05-11-adversarial-audit-session.md`
 
 ---
+
+## 2026-05-14 - Gate HIGH_RISK precedence audit (PR fix/high-risk-precedence)
+
+**Auditor:** Claude Code (this session)
+**Trigger:** Self-flagged during gate-archive-merge-resolver RCA - earlier PR (feat/gate-archive-merge-resolver) auto-merged despite touching orchestrator/gate_agent.py (HIGH_RISK_PREFIXES) because gate's check `_is_high_risk AND not _is_auto_approvable` short-circuited (orchestrator/ in AUTO_APPROVE_PREFIXES).
+**Severity:** privilege escalation - any agent able to edit orchestrator/anything.py could edit gate_agent.py without Telegram approval.
+
+### Findings
+- gate_agent.py:730 conditional `_is_high_risk(files) and not _is_auto_approvable(files)` allows any HIGH_RISK file to bypass approval if bundled only with auto-approvable paths.
+
+### Fixed
+- Dropped `and not _is_auto_approvable(files)` clause: HIGH_RISK now strictly dominates.
+- Added bypass-pattern tripwire (`_branch_diff_has_bypass_pattern`) catching BYPASS/SKIP/DISABLE-gate env-vars or constants. Hard-blocks branch + alerts once per tip_sha. Council premortem condition #3.
+- 7 new tests in tests/test_gate_agent.py (1 regression guard + 6 tripwire coverage). All green.
+
+### Validation (Sankofa Council + Karpathy)
+- Council premortem (Dead-Project mode): SHIP-WITH-CONDITIONS. Real privilege gap. Friction-bypass named as the 6-month failure mode -> mitigated by tripwire (condition #3 shipped). Conditions #1 (HIGH_RISK narrow split), #2 (24h email fallback), #4 (friction log) filed as separate Compass milestone.
+- Karpathy audit: PASS / PASS / PASS / WARN (P4 verification deferred to post-merge live test).
+
+### Karpathy P4 follow-through (post-merge verification, scheduled)
+- Push no-op feature branch touching only orchestrator/gate_agent.py
+- Confirm gate systemd timer emits Telegram approval card instead of auto-merging
+- Confirm /gate-reject drains cleanly
+- Log result back into this REGISTRY entry as VERIFIED-DATE
+
+### Memory rule added
+- `feedback_gate_high_risk_strictly_dominates.md` (to be written next)
+
+### Open follow-up
+- Compass milestone: narrow HIGH_RISK_PREFIXES into self-referential subset (gate_agent.py, scripts/gate_*, approval-marker code path) and operationally-critical subset (.env, docker-compose, governance) with different policies for each; add 24h email fallback approver; add approval-friction log under docs/audits/friction-log.md.
+
+---

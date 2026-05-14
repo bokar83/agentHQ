@@ -317,3 +317,140 @@ def test_protected_branches_excluded(monkeypatch):
                         MagicMock(return_value=[]))
     gate_agent.gate_tick()
     gate_agent._merge_branch.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# 2026-05-14 fix: HIGH_RISK strictly dominates AUTO_APPROVE
+# ---------------------------------------------------------------------------
+
+def test_high_risk_dominates_auto_approve(monkeypatch):
+    """PR touching ONLY orchestrator/gate_agent.py (HIGH_RISK + auto-approvable)
+    must trigger approval flow, not auto-merge. Regression guard for the
+    pre-2026-05-14 bug where `_is_high_risk AND not _is_auto_approvable`
+    short-circuited the approval check."""
+    monkeypatch.setattr(gate_agent, "_gate_enabled", MagicMock(return_value=True))
+    # Worktrees use .git as a file (not dir). Point REPO_DIR at the canonical
+    # tree where .git is a real directory so gate_tick's startup check passes.
+    monkeypatch.setattr(gate_agent, "REPO_DIR", Path("D:/Ai_Sandbox/agentsHQ"))
+    monkeypatch.setattr(gate_agent, "_branches_ahead_of_main",
+                        MagicMock(return_value=["feat/edit-gate-itself"]))
+    monkeypatch.setattr(gate_agent, "_branch_is_claimed", MagicMock(return_value=False))
+    monkeypatch.setattr(gate_agent, "_branch_is_ready", MagicMock(return_value=True))
+    monkeypatch.setattr(gate_agent, "_files_changed_vs_main",
+                        MagicMock(return_value=["orchestrator/gate_agent.py"]))
+    monkeypatch.setattr(gate_agent, "_branch_diff_has_token", MagicMock(return_value=False))
+    monkeypatch.setattr(gate_agent, "_branch_diff_has_bypass_pattern", MagicMock(return_value=False))
+    monkeypatch.setattr(gate_agent, "_check_approval", MagicMock(return_value="pending"))
+    monkeypatch.setattr(gate_agent, "_branch_tip_sha", MagicMock(return_value="abc123"))
+    monkeypatch.setattr(gate_agent, "_alerted_recently", MagicMock(return_value=False))
+    monkeypatch.setattr(gate_agent, "_mark_alerted", MagicMock())
+    monkeypatch.setattr(gate_agent, "_notify_gate_review", MagicMock())
+    monkeypatch.setattr(gate_agent, "_run_tests", MagicMock(return_value=(True, "skipped")))
+
+    gate_agent.gate_tick()
+
+    gate_agent._merge_branch.assert_not_called()
+    gate_agent._push_main.assert_not_called()
+    gate_agent._notify_gate_review.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# 2026-05-14 fix: bypass-pattern tripwire (Council premortem condition #3)
+# ---------------------------------------------------------------------------
+
+def test_bypass_pattern_detector_finds_env_var_bypass():
+    """Added line introducing CLAUDE_BYPASS_HIGH_RISK env-var is caught."""
+    fake_diff = (
+        "diff --git a/scripts/run.sh b/scripts/run.sh\n"
+        "+CLAUDE_BYPASS_HIGH_RISK=1\n"
+        "+echo 'merging'\n"
+    )
+    from unittest.mock import patch
+    with patch.object(gate_agent, "_git", return_value=(0, fake_diff, "")):
+        assert gate_agent._branch_diff_has_bypass_pattern("feat/sneaky") is True
+
+
+def test_bypass_pattern_detector_finds_skip_gate():
+    """Added SKIP_GATE_HIGH_RISK style env-var is caught."""
+    fake_diff = (
+        "diff --git a/.env b/.env\n"
+        "+SKIP_GATE_HIGH_RISK=true\n"
+    )
+    from unittest.mock import patch
+    with patch.object(gate_agent, "_git", return_value=(0, fake_diff, "")):
+        assert gate_agent._branch_diff_has_bypass_pattern("feat/skip") is True
+
+
+def test_bypass_pattern_detector_ignores_documented_references():
+    """Comment in source file mentioning the pattern with safe-words does not trip."""
+    fake_diff = (
+        "+++ b/orchestrator/something.py\n"
+        "+# EXAMPLE: BYPASS_GATE pattern is FORBIDDEN; see _BYPASS_PATTERN regex.\n"
+    )
+    from unittest.mock import patch
+    with patch.object(gate_agent, "_git", return_value=(0, fake_diff, "")):
+        assert gate_agent._branch_diff_has_bypass_pattern("feat/safe-comment") is False
+
+
+def test_bypass_pattern_detector_skips_test_files():
+    """Pattern in tests/ path does not trip (tests need fixtures)."""
+    fake_diff = (
+        "+++ b/tests/test_gate.py\n"
+        "+    fake_env = 'CLAUDE_BYPASS_HIGH_RISK=1'\n"
+    )
+    from unittest.mock import patch
+    with patch.object(gate_agent, "_git", return_value=(0, fake_diff, "")):
+        assert gate_agent._branch_diff_has_bypass_pattern("feat/test-fixture") is False
+
+
+def test_bypass_pattern_detector_ignores_clean_diff():
+    """Diff with no bypass pattern returns False."""
+    fake_diff = (
+        "diff --git a/src/foo.py b/src/foo.py\n"
+        "+def hello():\n"
+        "+    return 'world'\n"
+    )
+    from unittest.mock import patch
+    with patch.object(gate_agent, "_git", return_value=(0, fake_diff, "")):
+        assert gate_agent._branch_diff_has_bypass_pattern("feat/clean") is False
+
+
+def test_bypass_pattern_detector_only_inspects_added_lines():
+    """Pattern in a REMOVED line (starts with -) is NOT a hit; we are cleaning
+    up, not introducing it."""
+    fake_diff = (
+        "diff --git a/scripts/run.sh b/scripts/run.sh\n"
+        "-CLAUDE_BYPASS_HIGH_RISK=1\n"
+        "+CLAUDE_NO_BYPASS=1\n"
+    )
+    from unittest.mock import patch
+    with patch.object(gate_agent, "_git", return_value=(0, fake_diff, "")):
+        assert gate_agent._branch_diff_has_bypass_pattern("feat/removing-bypass") is False
+
+
+def test_bypass_pattern_branch_blocked_and_alerted(monkeypatch):
+    """Bypass-pattern hit -> branch blocked, urgent Telegram fires, merge skipped."""
+    monkeypatch.setattr(gate_agent, "_gate_enabled", MagicMock(return_value=True))
+    # Worktrees use .git as a file (not dir). Point REPO_DIR at the canonical
+    # tree where .git is a real directory so gate_tick's startup check passes.
+    monkeypatch.setattr(gate_agent, "REPO_DIR", Path("D:/Ai_Sandbox/agentsHQ"))
+    monkeypatch.setattr(gate_agent, "_branches_ahead_of_main",
+                        MagicMock(return_value=["feat/sneaky-bypass"]))
+    monkeypatch.setattr(gate_agent, "_branch_is_claimed", MagicMock(return_value=False))
+    monkeypatch.setattr(gate_agent, "_branch_is_ready", MagicMock(return_value=True))
+    monkeypatch.setattr(gate_agent, "_files_changed_vs_main",
+                        MagicMock(return_value=["scripts/something.sh"]))
+    monkeypatch.setattr(gate_agent, "_branch_diff_has_token", MagicMock(return_value=False))
+    monkeypatch.setattr(gate_agent, "_branch_diff_has_bypass_pattern", MagicMock(return_value=True))
+    monkeypatch.setattr(gate_agent, "_branch_tip_sha", MagicMock(return_value="deadbeef"))
+    monkeypatch.setattr(gate_agent, "_alerted_recently", MagicMock(return_value=False))
+    monkeypatch.setattr(gate_agent, "_mark_alerted", MagicMock())
+    monkeypatch.setattr(gate_agent, "_run_tests", MagicMock(return_value=(True, "skipped")))
+
+    gate_agent.gate_tick()
+
+    gate_agent._merge_branch.assert_not_called()
+    notify_calls = gate_agent._notify.call_args_list
+    assert any("BYPASS PATTERN" in str(args) for args, _ in notify_calls), (
+        f"expected GATE BYPASS PATTERN alert; got calls: {notify_calls}"
+    )

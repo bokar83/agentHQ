@@ -515,6 +515,27 @@ _TOKEN_PATTERN = _re.compile(
 )
 _TOKEN_SAFE = _re.compile(r'REDACTED|EXAMPLE|PLACEHOLDER', _re.I)
 
+# Tripwire: Council premortem 2026-05-14 named "frustration bypass" as the
+# failure mode after tightening HIGH_RISK approval (an agent adds
+# CLAUDE_BYPASS_HIGH_RISK=1 to the systemd unit to unblock a stuck merge).
+# This regex catches env-vars or code constants matching common bypass /
+# skip / disable patterns scoped to "gate" or "high_risk". Hits hard-block
+# the branch.
+_BYPASS_PATTERN = _re.compile(
+    r"(BYPASS[_A-Z0-9]*GATE"
+    r"|SKIP[_A-Z0-9]*GATE"
+    r"|GATE[_A-Z0-9]*BYPASS"
+    r"|GATE[_A-Z0-9]*SKIP"
+    r"|DISABLE[_A-Z0-9]*GATE"
+    r"|GATE[_A-Z0-9]*DISABLE"
+    r"|BYPASS[_A-Z0-9]*HIGH[_]?RISK"
+    r"|HIGH[_]?RISK[_A-Z0-9]*BYPASS)",
+    _re.IGNORECASE,
+)
+# Words that mark a match as a documented reference, not a real bypass.
+_BYPASS_SAFE = _re.compile(r"BYPASS_PATTERN|EXAMPLE|DOCUMENTED|FORBIDDEN", _re.I)
+
+
 def _branch_diff_has_token(branch: str) -> bool:
     """Return True if branch diff vs main contains an unredacted vendor token."""
     rc, diff, _ = _git(["diff", f"origin/{MAIN_BRANCH}...origin/{branch}"])
@@ -524,6 +545,31 @@ def _branch_diff_has_token(branch: str) -> bool:
         context = diff[max(0, m.start()-30):m.end()+30]
         if not _TOKEN_SAFE.search(context):
             logger.warning("gate: vendor token detected in %s diff", branch)
+            return True
+    return False
+
+
+def _branch_diff_has_bypass_pattern(branch: str) -> bool:
+    """Return True if branch diff adds a line matching BYPASS/SKIP/DISABLE-gate
+    pattern (env-var, constant, code). Only inspects added lines in
+    non-test files. Skips: tests/ paths (need fixtures), docs/ paths
+    (documentation), lines with safe-words (REDACTED, EXAMPLE, etc.)."""
+    rc, diff, _ = _git(["diff", f"origin/{MAIN_BRANCH}...origin/{branch}"])
+    if rc != 0:
+        return False
+    current_file = ""
+    for line in diff.splitlines():
+        if line.startswith("+++ "):
+            current_file = line[6:].strip() if len(line) > 6 else ""
+            continue
+        if not line.startswith("+") or line.startswith("+++"):
+            continue
+        if current_file.startswith(("tests/", "docs/")):
+            continue
+        if _BYPASS_SAFE.search(line):
+            continue
+        if _BYPASS_PATTERN.search(line):
+            logger.warning("gate: bypass pattern detected in %s (%s): %s", branch, current_file, line[:120])
             return True
     return False
 
@@ -601,12 +647,12 @@ def _load_dedup() -> dict:
     try:
         if DEDUP_PATH.exists():
             data = json.loads(DEDUP_PATH.read_text())
-            for cat in ("high_risk", "merge_fail", "conflict"):
+            for cat in ("high_risk", "merge_fail", "conflict", "bypass_pattern"):
                 data.setdefault(cat, {})
             return data
     except Exception as exc:
         logger.warning("gate: could not load dedup state: %s", exc)
-    return {"high_risk": {}, "merge_fail": {}, "conflict": {}}
+    return {"high_risk": {}, "merge_fail": {}, "conflict": {}, "bypass_pattern": {}}
 
 
 def _save_dedup(state: dict) -> None:
@@ -724,10 +770,37 @@ def gate_tick() -> None:
             blocked.add(branch)
             continue
 
+        # Bypass-pattern tripwire (Council premortem 2026-05-14 condition #3):
+        # detects branches that add env-vars or code matching BYPASS/SKIP/DISABLE
+        # gate patterns. Prevents the "frustration bypass" failure mode where
+        # a future agent edits gate_agent.py to add a CLAUDE_BYPASS_HIGH_RISK=1
+        # escape hatch. Hard-block; no override path; Telegram alerts once
+        # per tip_sha.
+        if _branch_diff_has_bypass_pattern(branch):
+            tip = _branch_tip_sha(branch)
+            if not _alerted_recently("bypass_pattern", branch, tip):
+                _notify(
+                    f"GATE BYPASS PATTERN: {branch} diff contains BYPASS/SKIP/DISABLE "
+                    f"gate-related code or env-var. Branch held. Strip the bypass and "
+                    f"re-push, or /gate-reject to drop.",
+                    urgent=True,
+                )
+                _mark_alerted("bypass_pattern", branch, tip)
+            blocked.add(branch)
+            audit_gate("gate_agent", "bypass_pattern_detected", branch, reason="bypass/skip gate pattern in diff")
+            continue
+
         # High-risk files need explicit approval. Check for marker file first
         # (written by /gate-approve or /gate-reject Telegram command). If no marker,
         # send instruction message and hold.
-        if _is_high_risk(files) and not _is_auto_approvable(files):
+        #
+        # 2026-05-14 fix: dropped `and not _is_auto_approvable(files)` clause.
+        # Previously a PR touching only orchestrator/gate_agent.py auto-merged
+        # because orchestrator/ is in AUTO_APPROVE_PREFIXES, _is_auto_approvable
+        # returned True, and the AND short-circuited the HIGH_RISK check.
+        # HIGH_RISK now strictly dominates AUTO_APPROVE. See Sankofa Council
+        # premortem + Karpathy audit in docs/handoff/2026-05-14-gate-merge-conflict-archive-rca.md.
+        if _is_high_risk(files):
             decision = _check_approval(branch)
             if decision == "reject":
                 _alerted_high_risk.discard(branch)
