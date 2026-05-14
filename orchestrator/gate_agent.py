@@ -1,3 +1,4 @@
+# P4 verification 2026-05-14 - no-op edit to test HIGH_RISK approval flow.
 """
 gate_agent.py - Echo M2.5: The Gate
 
