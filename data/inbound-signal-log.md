@@ -39,6 +39,7 @@
 
 ```text
 [2026-05-13 ~09:50] SENT to Chad Burdette (V1 close-friend, text) — subject: "Need a favor" — LinkedIn audit offer, free, by 5 PM today. Thursday check-in 2026-05-14.
+[2026-05-13 21:00] NOTE — Chad Burdette: no reply Day 1. Pre-slotted Nate Tanner (Thu) & Chase Weed (Fri) V1 messages + Chad Thursday check-in note into data/lighthouse-sprint-queue.md.
 ```
 
 ### Week 2 (5/19 - 5/24) — Open the Funnel
