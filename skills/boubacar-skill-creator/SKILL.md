@@ -361,6 +361,22 @@ Never fire more than one check-in per step. If multiple triggers fire at once, p
 
 ---
 
+## Stack Patterns
+
+Some skills are stacks: compound workflows where 3+ sequential prompts always run together under a single human invocation, output of one feeding the next. Treat the stack as a first-class primitive, not as a cluster of independent prompts.
+
+Examples already in the catalog (cite by path, do not extract a shared template):
+
+- `skills/aiedge_-goal/` /goal command: single human trigger, multi-phase decomposition
+- `skills/agentshq-absorb/SKILL.md` /absorb: Phase 0 leverage gate -> Phase 1 detect -> Phase 2 dossier -> Phase 3 placement -> Phase 4 Sankofa+Karpathy -> Phase 5 verdict, with sub-skill invocations chained
+- `skills/tab-shutdown/SKILL.md` /tab-shutdown: write-to-memory -> update-skills -> write-handoff -> post-next-session-prompt
+
+Decision rule for new skills: if the skill is doing 3+ sequential prompts that always run together, name it as a stack, surface a /trigger, and document the order in SKILL.md. Do not collapse the example stacks into a shared scaffold today; revisit only after a 4th stack appears.
+
+Source: doublenickk absorb 2026-05-13. Article framed 4 stacks (Decision Stack, Research Stack, Writing Stack, Monday Morning Stack). The individual prompts were archived (overlap with sankofa/ctq-social/boub_voice_mastery); the stack primitive is the captured insight.
+
+---
+
 ## Reference Files
 
 - `patterns/instincts.json` — learned behaviors
