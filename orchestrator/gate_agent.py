@@ -315,10 +315,16 @@ def _merge_branch(branch: str) -> tuple[bool, str]:
     data loss; every conflict file has main/branch/resolved snapshots on disk.
     """
     import datetime as _dt
-    from orchestrator.gate_resolvers import (
-        archive_conflict, archive_resolved, is_append_only_log,
-        resolve_append_only_log, resolve_branch_wins,
-    )
+    try:
+        from gate_resolvers import (
+            archive_conflict, archive_resolved, is_append_only_log,
+            resolve_append_only_log, resolve_branch_wins,
+        )
+    except ImportError:
+        from orchestrator.gate_resolvers import (
+            archive_conflict, archive_resolved, is_append_only_log,
+            resolve_append_only_log, resolve_branch_wins,
+        )
 
     rc_co, _, err_co = _git(["checkout", MAIN_BRANCH])
     if rc_co != 0:
