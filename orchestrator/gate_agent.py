@@ -297,18 +297,99 @@ def _run_tests(branch: str) -> tuple[bool, str]:
 
 
 def _merge_branch(branch: str) -> tuple[bool, str]:
-    """Merge branch into local main. Returns (success, error)."""
+    """Merge branch into local main with archive + tiered auto-resolution.
+
+    On conflict:
+      1. List conflicted files via git diff --name-only --diff-filter=U
+      2. For each file: archive main + branch versions to
+         zzzArchive/gate-merges/<isotime>-<branch>/ BEFORE any resolution
+      3. If any conflict file matches HIGH_RISK_PREFIXES -> abort + return
+         with combined stdout+stderr (git writes conflict markers to stdout)
+      4. Else apply resolver per file:
+            APPEND_ONLY_LOG_PATTERNS -> union resolver (keep both entries)
+            else                      -> branch-wins (theirs)
+      5. Snapshot resolved version to archive dir
+      6. Commit merge with note pointing to archive dir
+
+    Council 2026-05-14: archive-first design replaces auto-rebase. No silent
+    data loss; every conflict file has main/branch/resolved snapshots on disk.
+    """
+    import datetime as _dt
+    from orchestrator.gate_resolvers import (
+        archive_conflict, archive_resolved, is_append_only_log,
+        resolve_append_only_log, resolve_branch_wins,
+    )
+
     rc_co, _, err_co = _git(["checkout", MAIN_BRANCH])
     if rc_co != 0:
         return False, f"checkout main failed: {err_co}"
     rc_pull, _, err_pull = _git(["pull", "origin", MAIN_BRANCH])
     if rc_pull != 0:
         return False, f"pull main failed: {err_pull}"
-    rc, _, err = _git(["merge", f"origin/{branch}", "--no-ff",
-                        "-m", f"merge({branch}): gate auto-merge -- tests green, no conflicts"])
-    if rc != 0:
+
+    rc, out, err = _git([
+        "merge", f"origin/{branch}", "--no-ff",
+        "-m", f"merge({branch}): gate auto-merge -- tests green, no conflicts",
+    ])
+    if rc == 0:
+        return True, ""
+
+    # Conflict path. Git writes conflict markers to stdout; stderr may be empty.
+    combined_err = (err + "\n" + out).strip()
+    rc_files, files_out, _ = _git(["diff", "--name-only", "--diff-filter=U"])
+    conflicted = [f for f in files_out.splitlines() if f.strip()]
+    if not conflicted:
+        # Non-conflict failure (e.g. unrelated histories, hook block).
         _git(["merge", "--abort"])
-        return False, err
+        return False, combined_err or "merge failed (no conflict markers)"
+
+    # HIGH_RISK files never auto-resolve.
+    hr_hits = [f for f in conflicted if any(f.startswith(p) for p in HIGH_RISK_PREFIXES)]
+    if hr_hits:
+        _git(["merge", "--abort"])
+        return False, (
+            f"HIGH_RISK conflict on {hr_hits} (constitutional file). "
+            f"Manual rebase required. All conflict files: {conflicted}. "
+            f"Details: {combined_err[:300]}"
+        )
+
+    # Archive + resolve each conflict file.
+    isotime = _dt.datetime.utcnow().strftime("%Y-%m-%dT%H-%M-%S")
+    archive_dirs: list[Path] = []
+    try:
+        for f in conflicted:
+            archive_dir = archive_conflict(REPO_DIR, branch, f, isotime)
+            archive_dirs.append(archive_dir)
+            if is_append_only_log(f):
+                resolve_append_only_log(REPO_DIR / f)
+            else:
+                resolve_branch_wins(REPO_DIR, f)
+            archive_resolved(archive_dir, REPO_DIR, f)
+            rc_add, _, err_add = _git(["add", f])
+            if rc_add != 0:
+                _git(["merge", "--abort"])
+                return False, f"git add {f} failed after resolve: {err_add}"
+    except Exception as exc:
+        _git(["merge", "--abort"])
+        return False, f"resolver error on {branch}: {exc}"
+
+    archive_summary = ", ".join(str(d.relative_to(REPO_DIR)) for d in archive_dirs)
+    rc_co, _, err_co2 = _git([
+        "commit",
+        "-m",
+        (
+            f"merge({branch}): gate auto-resolve\n\n"
+            f"Conflicts resolved: {conflicted}\n"
+            f"Archives: {archive_summary}"
+        ),
+    ])
+    if rc_co != 0:
+        _git(["merge", "--abort"])
+        return False, f"commit after resolve failed: {err_co2}"
+    logger.info(
+        "gate: auto-resolved merge of %s conflicts=%s archives=%s",
+        branch, conflicted, archive_summary,
+    )
     return True, ""
 
 
@@ -498,6 +579,60 @@ def _write_gate_log(entry: dict) -> None:
         logger.warning("gate: could not write gate_log: %s", exc)
 
 
+# ---------------------------------------------------------------------------
+# Persistent alert dedup
+# ---------------------------------------------------------------------------
+# Module-level sets (_alerted_high_risk, _alerted_conflicts) are reset every
+# process start. Gate runs as a systemd timer on the VPS (fresh PID per tick),
+# so module-level state never dedupes across ticks. Persist to a JSON file
+# keyed on (category, key, tip_sha) so a re-alert only fires when the branch
+# tip moves.
+DEDUP_PATH = DATA_DIR / "gate_alerted.json"
+
+
+def _load_dedup() -> dict:
+    """Load persistent alert state. Returns empty buckets on first run."""
+    try:
+        if DEDUP_PATH.exists():
+            data = json.loads(DEDUP_PATH.read_text())
+            for cat in ("high_risk", "merge_fail", "conflict"):
+                data.setdefault(cat, {})
+            return data
+    except Exception as exc:
+        logger.warning("gate: could not load dedup state: %s", exc)
+    return {"high_risk": {}, "merge_fail": {}, "conflict": {}}
+
+
+def _save_dedup(state: dict) -> None:
+    try:
+        DEDUP_PATH.parent.mkdir(parents=True, exist_ok=True)
+        DEDUP_PATH.write_text(json.dumps(state, indent=2))
+    except Exception as exc:
+        logger.warning("gate: could not save dedup state: %s", exc)
+
+
+def _alerted_recently(category: str, key: str, tip_sha: str) -> bool:
+    """True iff we already alerted for this (category, key) at the current tip."""
+    return _load_dedup().get(category, {}).get(key) == tip_sha
+
+
+def _mark_alerted(category: str, key: str, tip_sha: str) -> None:
+    state = _load_dedup()
+    state.setdefault(category, {})[key] = tip_sha
+    _save_dedup(state)
+
+
+def _clear_alerted(category: str, key: str) -> None:
+    state = _load_dedup()
+    state.get(category, {}).pop(key, None)
+    _save_dedup(state)
+
+
+def _branch_tip_sha(branch: str) -> str:
+    rc, out, _ = _git(["rev-parse", f"origin/{branch}"])
+    return out if rc == 0 else ""
+
+
 def gate_tick() -> None:
     """Single gate heartbeat. Called every 60s by scheduler."""
     if not _gate_enabled():
@@ -553,8 +688,10 @@ def gate_tick() -> None:
             blocked.add(b1)
             blocked.add(b2)
             conflict_key = f"{b1}||{b2}||{f}"
-            if conflict_key not in _alerted_conflicts:
+            tip_key = _branch_tip_sha(b1) + "|" + _branch_tip_sha(b2)
+            if conflict_key not in _alerted_conflicts and not _alerted_recently("conflict", conflict_key, tip_key):
                 _alerted_conflicts.add(conflict_key)
+                _mark_alerted("conflict", conflict_key, tip_key)
                 _notify_conflict(b1, b2, f)
             logger.warning("gate: HIGH-RISK conflict -- %s vs %s on %s -- held for review", b1, b2, f)
         else:
@@ -588,15 +725,18 @@ def gate_tick() -> None:
             decision = _check_approval(branch)
             if decision == "reject":
                 _alerted_high_risk.discard(branch)
+                _clear_alerted("high_risk", branch)
                 _notify(f"Gate rejection processed: {branch} held without merge.")
                 audit_gate("gate_agent", "reject", branch, reason="explicit Telegram rejection")
                 continue
             if decision != "approve":
                 held_high_risk.append(branch)
-                if branch not in _alerted_high_risk:
+                tip = _branch_tip_sha(branch)
+                if branch not in _alerted_high_risk and not _alerted_recently("high_risk", branch, tip):
                     hr_files = [f for f in files if any(f.startswith(p) for p in HIGH_RISK_PREFIXES)]
                     _notify_gate_review(branch, hr_files)
                     _alerted_high_risk.add(branch)
+                    _mark_alerted("high_risk", branch, tip)
                     audit_gate("gate_agent", "proposal", branch, reason="high-risk files require approval", extra={"hr_files": hr_files})
                 continue
             # Approved — fall through to test + merge below
@@ -613,14 +753,24 @@ def gate_tick() -> None:
             )
             continue
 
-        # Merge
+        # Merge (now archives + auto-resolves non-core conflicts internally)
         ok, err = _merge_branch(branch)
         if not ok:
             failed.append((branch, err))
-            _notify(f"MERGE FAILED: {branch} -- {err[:200]}", urgent=True)
+            tip = _branch_tip_sha(branch)
+            if not _alerted_recently("merge_fail", branch, tip):
+                _notify(f"MERGE FAILED: {branch} -- {err[:300]}", urgent=True)
+                _mark_alerted("merge_fail", branch, tip)
+            else:
+                logger.info(
+                    "gate: %s merge still failing at tip %s -- alert suppressed (dedup)",
+                    branch, tip[:8],
+                )
             continue
 
         merged.append(branch)
+        _clear_alerted("merge_fail", branch)
+        _clear_alerted("high_risk", branch)
         audit_gate("gate_agent", "approve", branch, reason="tests passed, auto-merged")
 
     # Push main once if anything merged
