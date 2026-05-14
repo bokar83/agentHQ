@@ -1202,3 +1202,25 @@ Phase 3 — YAML machine-readable tokens:
 - Address Issue #38 — generator duration-target compliance. Two candidate fixes: (a) tighten LLM prompt to enforce target, (b) add post-generation scene/sentence truncation until script fits target duration bucket. Council recommend a-then-b if a alone insufficient.
 - Top up Kai credits if seedance fallback keeps hitting "Credits insufficient".
 - Reset `_notify_email` from `gws gmail` CLI to the canonical cw-OAuth-direct path per memory rule.
+
+### 2026-05-13: Creator-economy absorb cluster evaluated (5 absorbs, cohort tripwire armed)
+
+2026-05-13 session: 5 creator-economy absorbs evaluated (alexcooldev TikTok slideshows + hammertime podcast clips + Tabassum faceless YT + winkle faceless YT + Stijn AI UGC). Verdicts: 1 PROCEED with patterns (alexcooldev = 3 Hermes Agent patterns, target 2026-05-27), 1 PROCEED narrow (hammertime = 3 shorts micro-patterns into hyperframes + scene-segmenter, target 2026-06-13), 3 ARCHIVE (Tabassum + winkle + Stijn). Cross-reference: `docs/observations/creator-x-ai-cluster-2026-05-13.md` + `docs/reviews/absorb-log.md` 2026-05-13 entries + `docs/reviews/absorb-followups.md`.
+
+**Cohort Tripwire (expires 2026-06-13):**
+
+Next 5 absorbs in the faceless-creator-economy cohort (TikTok slideshow / faceless YT / podcast clip / digital leverage / AI-niche-money) auto-archive on sight UNLESS a NEW tool, MCP, crew, or publishing platform shows up that is absent from the Studio stack. The cluster has converged on a shared playbook (faceless + AI tools + multi-revenue + niche-focus + retention-optimized); seeing it a sixth time does not produce new motion. The auto-archive rule expires 2026-06-13 so we do not blind ourselves to a real shift past that date.
+
+**Future Lane Candidates (back-pocket, not active):**
+
+- **Channel 5 clip-aggregator brand** (from hammertime). Decision gate 2027-Q1, GATED on UTB + AIC + 1stGen all hitting M6 monetization first. Premature channel expansion before existing channels prove revenue is a known antipattern in our Studio playbook.
+- **UGC synthetic-host modality** (from Stijn). Decision gate: when SW closes 5+ pitch-reels AND a prospect explicitly asks for a synthetic-demo upgrade. MUST carry an on-screen "AI demo / for illustration" label per FTC 16 CFR 255.5. Without the disclosure motion baked in, the modality is a regulatory liability, not an upsell.
+- **Slideshow modality** (from alexcooldev, already in absorb-followups.md for Studio M5+). No separate milestone here; tracked via existing followup. Surfacing it in this entry for completeness of the cluster snapshot.
+
+**Why ARCHIVE on Tabassum + winkle + Stijn:** Tabassum and winkle are pure cohort-voice repeats (no Studio capability gap surfaced beyond what UTB/AIC/1stGen already cover). Stijn is novel (synthetic-host UGC) but the SW pitch-reel pipeline does not yet have a prospect explicitly asking for the upgrade; building the rail before the demand signal is backwards.
+
+**Cross-references:**
+- `docs/observations/creator-x-ai-cluster-2026-05-13.md` (canonical cluster taxonomy)
+- `docs/reviews/absorb-log.md` 2026-05-13 entries
+- `docs/reviews/absorb-followups.md` (alexcooldev 3 patterns target 2026-05-27, hammertime micro-patterns target 2026-06-13)
+- `feedback_creator_x_ai_cluster_observation.md` (memory)
