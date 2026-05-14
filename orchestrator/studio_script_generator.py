@@ -363,8 +363,11 @@ def _post_process(
     loop_interval: int = 200,
     max_spoken_words: int = 0,
 ) -> str:
-    # Strip em-dashes (house rule)
-    text = text.replace("—", ", ").replace(" -- ", ", ")
+    # Strip em-dashes (house rule). Cover all 4 variants QA's EM_DASH_PATTERN
+    # catches: em-dash (U+2014), en-dash (U+2013), " -- " (spaced), and
+    # word--word (no spaces around).
+    text = text.replace("—", ", ").replace("–", ", ").replace(" -- ", ", ")
+    text = re.sub(r"(?<=\w)--(?=\w)", ", ", text)
 
     # Collapse adjacent LLM-emitted retention markers BEFORE the injector
     # runs (so the injector sees a clean baseline) and AFTER for safety.
