@@ -12,8 +12,8 @@
 
 | # | Name | Tag | Template | Suggested send day | Status |
 |---|------|-----|----------|---------------------|--------|
-| 1 | Chad Burdette | close friend | V1 | Wed 5/13 | sent 2026-05-13 ~09:50 (V1, text) · Thursday check-in 2026-05-14 |
-| 2 | Nate Tanner | close friend | V1 | Thu 5/14 | open |
+| 1 | Chad Burdette | close friend | V1 | Wed 5/13 | sent 2026-05-13 ~09:50 (V1, text) · thursday check-in 2026-05-14 done (LinkedIn + text bridge) |
+| 2 | Nate Tanner | close friend | V1 | Thu 5/14 | sent 2026-05-14 10:00 (V1, LinkedIn) |
 | 3 | Chase Weed | close friend | V1 | Fri 5/15 | open |
 | 4 | Chris Whitaker | sister | V1 | Mon 5/19 | open |
 | 5 | Dan Jimenez | close friend + business owner | V1 or V2 | — | open |
