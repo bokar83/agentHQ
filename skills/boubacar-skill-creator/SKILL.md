@@ -367,7 +367,7 @@ Some skills are stacks: compound workflows where 3+ sequential prompts always ru
 
 Examples already in the catalog (cite by path, do not extract a shared template):
 
-- `skills/aiedge_-goal/` /goal command: single human trigger, multi-phase decomposition
+- `skills/3d-website-building/SKILL.md` /3d-website: chains 4 sub-skills under one trigger (website-intelligence -> image-generator -> 3d-animation-creator -> seo-strategy), each feeds the next
 - `skills/agentshq-absorb/SKILL.md` /absorb: Phase 0 leverage gate -> Phase 1 detect -> Phase 2 dossier -> Phase 3 placement -> Phase 4 Sankofa+Karpathy -> Phase 5 verdict, with sub-skill invocations chained
 - `skills/tab-shutdown/SKILL.md` /tab-shutdown: write-to-memory -> update-skills -> write-handoff -> post-next-session-prompt
 
