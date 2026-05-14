@@ -76,6 +76,8 @@ Convert 1 "tell me more" → paid Signal Session offer. **Expected:** ≥1 paid 
 
 Gated on L1-L3 hitting ≥10 audits + ≥1 paid call. Add: LinkedIn discipline (Logan 5x/wk) + paid Signal Session $250 Wed afternoons. **Expected:** 2 sessions completed + 1 client landed.
 
+**Candidate tactic (Brandon Lunch Reconnect):** 1 lunch/wk with friend or past associate, reconnect-first not sell. Surfaces "what you got going on" naturally, generates referrals downstream. Lag mechanic, not reply-velocity. Decide at Sat 5/16 M4 Triad Lock whether to start as W4+ ritual or hold to L5 mid-cycle review. Sourced from Brandon accountability reply 2026-05-14. Distinct from descoped "Coffee meetings as default" (lunches, not default, referral-mechanism not first-touch close).
+
 ### L5 — Week 7: Mid-Cycle Council (6/23-6/28)
 
 Mandatory inflection. Pull data. Re-run Sankofa Council. Decide scale/pivot/rewrite.
@@ -147,6 +149,8 @@ Wrap engagements. Write `docs/strategy/lead-strategy-2026-08-04.html` for next c
 - 17:30 EOD ledger if Nate/Chad reply lands
 - 21:00 ritual: pre-slot Mon Chris V1 send + confirm/reslot Fri Chase against PGA time
 - If Nate replies yes by ~12:00 MDT, owe audit by 17:00 MDT
+
+**Brandon accountability reply (2026-05-14):** "Something that has been useful for me is to schedule lunches with friends and associates to reconnect. Naturally people want to know what you've got going on. It's never a selling opportunity but it gets your skill into their network and usually results in some referrals down the road. Got it! Keep going brother." Captured as L4 candidate tactic (Brandon Lunch Reconnect, 1/wk, reconnect-first not sell). NOT added to W1-3 sprint mechanic (preserves 1-channel reply-velocity focus + Sankofa premortem killed 8-lane sprawl). Decision point: Sat 5/16 M4 Triad Lock alongside Brandon-pilot decision. Distinct from descoped "Coffee meetings as default" per L4 block note.
 
 ### 2026-05-13 (W1 Day 1) - Sprint executed, audit template shipped + Council-edited, Idea Vault opened
 
