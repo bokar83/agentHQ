@@ -434,6 +434,43 @@ Action required: Check 3 reviewed 2026-05-09: Read*/Edit*/Write* broad allows ar
 
 ## Session Log
 
+### 2026-05-14: Gate auto-merge spam loop RCA + 2 PRs (archive-first resolver + HIGH_RISK precedence)
+
+**Incident:** feat/nate-tanner-audit-2026-05-14 [READY] tip 57a64ca conflicted with main HEAD 255e9c3f on docs/roadmap/lighthouse.md Session Log. Gate's _merge_branch returned (False, "") because git writes conflict markers to stdout not stderr. Module-level dedup set reset every systemd-timer tick so the same content-free "MERGE FAILED: X --" Telegram alert re-fired every 60s. 6 spam alerts before Boubacar intervened.
+
+**Validation:** Sankofa Council premortem (Dead-Project mode) vetoed auto-rebase as a fix (silent data loss on non-overlapping anchor inserts). Karpathy audit on revised scope passed P1-P3, WARN on P4 (verification deferred). Boubacar override unlocked safer design: archive-everything makes auto-resolve safe.
+
+**SHIPPED PR 1 - feat/gate-archive-merge-resolver (commit 37c94237, auto-merged e9e46bd1, import fix 4cbf574a):**
+- New orchestrator/gate_resolvers.py: archive helpers + tiered deterministic resolvers
+- _merge_branch: on conflict, archive both stages to zzzArchive/gate-merges/<isotime>-<branch>/ BEFORE resolution; HIGH_RISK halts; append-only-logs get union resolver; everything else gets theirs-wins
+- Persistent dedup at DATA_DIR/gate_alerted.json keyed on (category, branch, tip_sha) - survives systemd-timer process restart
+- tests/test_gate_resolvers.py 12/12 green
+
+**SHIPPED PR 2 - fix/high-risk-precedence (commit 44460ee2, auto-merged 55c1201b):**
+- Pre-existing privilege gap discovered same session: PR 1 itself auto-merged without HIGH_RISK approval because _is_high_risk AND not _is_auto_approvable short-circuited (orchestrator/ in AUTO_APPROVE_PREFIXES)
+- Dropped "and not _is_auto_approvable(files)" clause. HIGH_RISK now strictly dominates.
+- Bypass-pattern tripwire (_BYPASS_PATTERN regex + _branch_diff_has_bypass_pattern helper): catches BYPASS/SKIP/DISABLE-gate env-vars or constants. Hard-blocks branch. Council premortem condition #3.
+- 7 new tests in tests/test_gate_agent.py. All green.
+
+**SHIPPED PR 3 - docs/p4-verified-2026-05-14 (commit 855bd930, auto-merged 28728304):**
+- Karpathy P4 verification: pushed test/gate-p4-verify-2026-05-14 (no-op gate_agent.py comment edit, [READY]). Gate result: held_high_risk=['test/gate-p4-verify-2026-05-14']. Did NOT auto-merge.
+- Wrote reject marker; next tick consumed it (rejected via marker, file deleted, held set drained).
+- Both approval-card-fires AND /gate-reject paths verified.
+- REGISTRY entry VERIFIED-stamped.
+
+**Deferred to separate Compass milestone (target 2026-05-21):**
+- Council condition #1: split HIGH_RISK_PREFIXES into self-referential subset vs operationally-critical
+- Council condition #2: 24h email fallback approver
+- Council condition #4: approval friction log at docs/audits/gate-friction-log.md + weekly review
+- Earlier RCA follow-up: per-session JSON aggregator for roadmap session logs (eliminates conflict surface entirely)
+
+**Pre-existing brokenness flagged (NOT fixed):**
+- 8 tests in tests/test_gate_agent.py reference renamed HIGH_RISK_PREFIXES paths. Karpathy P3 surgical: not bundled into today's PRs.
+
+**Memory:** feedback_gate_archive_merge_resolver.md, feedback_gate_high_risk_strictly_dominates.md
+**Handoff:** docs/handoff/2026-05-14-gate-merge-conflict-archive-rca.md
+**REGISTRY:** entry under 2026-05-14 - Gate HIGH_RISK precedence audit with VERIFIED stamp
+
 ### 2026-05-04: n8n-mcp absorb session: M6 security scan gate exercised in the wild
 
 First real-world use of the v1 security scan gate (shipped earlier this session). Ran against `czlonkowski/n8n-mcp`: checked package.json `prepare` script (husky: secretlint only, no shell-out), `.husky/pre-commit` (secretlint on staged files, no curl/wget), `src/telemetry/` (Supabase telemetry present but disclosed in PRIVACY.md, opt-out env var available, sanitizes credentials). Result: STATIC-CLEAN. Gate functioned as designed.
