@@ -54,19 +54,88 @@ def _detect_platform(url: str) -> str:
     return "unknown"
 
 
+# Accept-Language forces YouTube to serve view-count text in English
+# ("14 views"), avoiding locale variants like "14 tontonan" (Indonesian),
+# "14 vistas" (Spanish), "14 vues" (French) when the VPS resolves to a
+# non-US edge. Belt: parser is locale-tolerant either way.
+_HTTP_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0 Safari/537.36"
+    ),
+    "Accept-Language": "en-US,en;q=0.9",
+}
+
+
+def _parse_leading_int(text: str) -> int | None:
+    """Extract the leading integer from a view-count phrase, ignoring
+    trailing locale-specific words ("views", "tontonan", "vistas", etc.)
+    and thousands separators ("1,234" / "1.234" / "1 234")."""
+    if not text:
+        return None
+    # Grab the leading numeric run including , . and whitespace separators.
+    m = re.match(r"\s*([\d][\d,.  \s]*)", text)
+    if not m:
+        return None
+    digits = re.sub(r"[^\d]", "", m.group(1))
+    if not digits:
+        return None
+    return int(digits)
+
+
+def _parse_youtube_views(html: str) -> int | None:
+    """Extract YouTube view count from raw watch-page HTML.
+
+    Strategy (in order):
+      1. videoViewCountRenderer.viewCount.simpleText -- always populated
+         even for low-view videos (where originalViewCount is "0").
+      2. shortViewCount.simpleText -- compact form ("1.2K views").
+      3. originalViewCount -- numeric string, but YouTube returns "0"
+         for videos under some threshold, so it cannot be trusted alone.
+    """
+    # 1. Full simpleText: "14 views" / "14 tontonan" / "1,234 views"
+    m = re.search(
+        r'"videoViewCountRenderer"\s*:\s*\{[^{}]*?"viewCount"\s*:\s*\{\s*"simpleText"\s*:\s*"([^"]+)"',
+        html,
+    )
+    if m:
+        parsed = _parse_leading_int(m.group(1))
+        if parsed is not None:
+            return parsed
+
+    # 2. Short form -- only useful if it's purely numeric
+    m = re.search(
+        r'"shortViewCount"\s*:\s*\{\s*"simpleText"\s*:\s*"([^"]+)"',
+        html,
+    )
+    if m:
+        parsed = _parse_leading_int(m.group(1))
+        if parsed is not None:
+            return parsed
+
+    # 3. originalViewCount -- last resort, only trust if non-zero
+    m = re.search(r'"originalViewCount"\s*:\s*"(\d+)"', html)
+    if m:
+        val = int(m.group(1))
+        if val > 0:
+            return val
+    return None
+
+
 def _scrape_views(url: str, platform: str) -> int | None:
     if platform == "x":
         return None
-    response = httpx.get(url, follow_redirects=True, timeout=20.0)
+    response = httpx.get(
+        url, follow_redirects=True, timeout=20.0, headers=_HTTP_HEADERS
+    )
     response.raise_for_status()
     if platform == "tiktok":
         match = re.search(r'"playCount":(\d+)', response.text)
-    elif platform == "youtube":
-        # "originalViewCount" is locale-independent numeric string in ytInitialData
-        match = re.search(r'"originalViewCount":"(\d+)"', response.text)
-    else:
-        return None
-    return int(match.group(1)) if match else None
+        return int(match.group(1)) if match else None
+    if platform == "youtube":
+        return _parse_youtube_views(response.text)
+    return None
 
 
 def studio_analytics_tick() -> dict:
