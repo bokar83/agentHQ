@@ -245,10 +245,14 @@ def poll_once(bot_token: str, chat_id: str, dry_run: bool = False) -> list[str]:
             if not dry_run and bot_token and chat_id:
                 _notify(bot_token, chat_id, msg)
 
+        # 2026-05-14: Silenced per memory rule
+        # `feedback_telegram_alerts_actionable_buttons_only.md`. READY-detection
+        # is gate's normal operating loop; pure-info ping forbidden. Log line
+        # kept for /tmp/gate_poll.log audit; Telegram send removed.
+        # Boubacar only receives a Telegram when ACTION is required (high-risk
+        # approval, token detected, bypass-pattern hit, merge failure).
         msg = f"GATE: READY branch detected\nBranch: {branch}\nGate review starting in container."
         print(f"[gate_poll] {msg}")
-        if not dry_run and bot_token and chat_id:
-            _notify(bot_token, chat_id, msg)
 
         alerted[branch] = sha
 
