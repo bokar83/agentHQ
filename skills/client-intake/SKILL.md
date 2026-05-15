@@ -196,6 +196,7 @@ Tell them shorthand answers are fine: "1: yes, 2: see Slack thread, 3: no becaus
 ## Files
 
 - This skill: `skills/client-intake/SKILL.md`
+- Question bank by topic (Cole 8-category framework): `skills/client-intake/references/intake-questions-by-topic.md`
 - Output dir per client: `docs/clients/<slug>/brand.md`
 - Companion skill for ongoing work: `skills/engagement-ops/SKILL.md`
 - Boubacar's locked voice (do not touch): `skills/boub_voice_mastery/`
