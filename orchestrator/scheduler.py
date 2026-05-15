@@ -1363,6 +1363,23 @@ def start_scheduler():
     except Exception as e:
         logger.error(f"NEWSLETTER_ANCHOR: wake registration failed ({e}); continuing", exc_info=True)
 
+    # Absorb crew tick (Phase 1). Runs every 15 min. Drains pending rows from
+    # absorb_queue, fetches the artifact, runs analyst LLM with skills/agentshq-absorb
+    # SKILL.md as system prompt, writes verdict to docs/reviews/absorb-log.md.
+    # Big-surface PROCEEDs (new_skill/new_agent/satellite/replace_existing) push into
+    # approval_queue for Telegram ack. Crew name 'absorb' for kill-switch isolation.
+    try:
+        import heartbeat as _heartbeat
+        from absorb_crew import absorb_tick
+        _heartbeat.register_wake(
+            "absorb-crew",
+            crew_name="absorb",
+            callback=absorb_tick,
+            every="15m",
+        )
+    except Exception as e:
+        logger.error(f"ABSORB: wake registration failed ({e}); continuing without absorb", exc_info=True)
+
     # Echo M2.5: Gate Agent. Runs every 60s. Sole arbiter of all writes to
     # Gate runs on VPS HOST via /etc/cron.d/gate-agent (every 15 min daytime,
     # every 90 min overnight). The container has no .git dir so git fetch/merge
