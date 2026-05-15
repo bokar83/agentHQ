@@ -39,8 +39,17 @@ Blotato account IDs per channel × platform (set in .env):
   BLOTATO_TT_1STGEN_ACCOUNT_ID=...     (TikTok, First Gen Money)      ⏳ pending
 
 Pipeline DB ID: 34ebcf1a-3029-8140-a565-f7c26fe9de86
+
+Pattern 3 — explicit no-agent flag: this module is fully deterministic
+(httpx POST to Blotato + Notion property updates). It MUST NOT make
+LLM calls. The NO_AGENT constant below is a tripwire — if a future
+refactor adds an anthropic/openai import here, that's a regression.
+Verified 2026-05-14: zero Anthropic / openai / chat-completion calls.
 """
 from __future__ import annotations
+
+# Pattern 3: deterministic-stage marker. Do not wake an LLM from this module.
+NO_AGENT = True
 
 import argparse
 import logging

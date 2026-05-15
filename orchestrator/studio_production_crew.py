@@ -160,6 +160,45 @@ _PULSE_STATE_PATH = "/app/workspace/studio_pipeline_pulse.json"
 _PULSE_SILENCE_WARN_SEC = 90 * 60      # alert after 90 min of zero candidates
 _PULSE_ALERT_REPEAT_COOLDOWN_SEC = 6 * 60 * 60  # don't repeat alert more than once per 6h
 
+# Pre-check skip-gate state (Pattern 1: content-hash gate). When the set of
+# candidate Notion IDs and their statuses hash-match the previous tick AND
+# the previous tick succeeded, the whole crew wake is skipped (no LLM cost).
+# Path is intentionally under data/ which is gitignored — local-state-only.
+_SKIP_STATE_PATH = os.environ.get(
+    "STUDIO_SKIP_STATE_PATH",
+    "/app/data/studio_production_skip_state.json",
+)
+
+
+def _compute_input_hash(candidate_ids: list[str]) -> str:
+    """Hash the sorted candidate ID list. Stable across ticks when the queue
+    is unchanged. Does NOT fetch per-row props (cheap by design)."""
+    import hashlib
+    h = hashlib.sha256()
+    for cid in sorted(candidate_ids):
+        h.update(cid.encode("utf-8"))
+        h.update(b"\n")
+    return h.hexdigest()
+
+
+def _load_skip_state() -> dict:
+    try:
+        import json as _json
+        with open(_SKIP_STATE_PATH, "r") as f:
+            return _json.load(f)
+    except Exception:
+        return {}
+
+
+def _save_skip_state(state: dict) -> None:
+    try:
+        import json as _json, os as _os
+        _os.makedirs(_os.path.dirname(_SKIP_STATE_PATH), exist_ok=True)
+        with open(_SKIP_STATE_PATH, "w") as f:
+            _json.dump(state, f)
+    except Exception as exc:
+        logger.warning("production_tick: cannot persist skip state: %s", exc)
+
 
 def _load_pulse_state() -> dict:
     try:
@@ -220,6 +259,28 @@ def studio_production_tick(*, dry_run: bool = False) -> list[dict]:
     import time as _time
     candidates = _fetch_qa_passed_candidates()
     logger.info("production_tick: %d qa-passed candidates queued", len(candidates))
+
+    # Pattern 1: content-hash skip gate. Track candidate-set hash across ticks.
+    # When the set is non-empty (work to do), we always process. When the set
+    # IS empty AND its hash matches the prior tick, increment skip counter for
+    # telemetry. The silence-watchdog and pulse state below still run on every
+    # tick so silence detection is not suppressed by the skip-gate.
+    skip_state = _load_skip_state()
+    input_hash = _compute_input_hash(candidates)
+    prior_hash = skip_state.get("last_input_hash", "")
+    skip_count = int(skip_state.get("consecutive_skips", 0))
+    if not candidates and input_hash == prior_hash and prior_hash != "":
+        skip_state["consecutive_skips"] = skip_count + 1
+        skip_state["last_skip_at"] = int(_time.time())
+        logger.info(
+            "production_tick: hash-match empty queue (consecutive_skips=%d)",
+            skip_count + 1,
+        )
+    else:
+        # Hash changed OR non-empty queue: reset skip counter, record new hash.
+        skip_state["last_input_hash"] = input_hash
+        skip_state["consecutive_skips"] = 0
+    _save_skip_state(skip_state)
 
     state = _load_pulse_state()
     now = int(_time.time())
