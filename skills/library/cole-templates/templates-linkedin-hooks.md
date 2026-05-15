@@ -148,3 +148,19 @@ And then another $X,XXX to join [Next Level Event].
 Here are [X] takeaways of what I've learned so far:
 
 ---
+
+## Screenshot-Format Lens (added 2026-05-14)
+
+Source: Lieben LinkedIn playbook absorb (`docs/reviews/absorb-followups.md` 2026-05-13 Lieben row + `skills/ctq-social/references/linkedin-craft.md` Part 9 Step 4).
+
+When picking a template from this file, run the screenshot check:
+
+- The pivot sentence (the thesis line someone screenshots) must be on lines 1-3 of the post, not deeper.
+- If a template puts the hook on line 1 and the payoff on line 7, the iPhone Twitter-style crop loses the payoff.
+- The "see-more" fold on LinkedIn mobile sits at ~3 lines — anything that needs an expand-tap is dead in re-shares.
+
+Templates that pass the lens by default: short cold-opens, single-question hooks, contrarian one-liners that resolve in lines 2-3.
+
+Templates that need re-ordering: long setup hooks where the payoff arrives mid-post.
+
+Annotate any template you use heavily with `[SCREENSHOT-OK]` or `[NEEDS REORDER]` in this file as you ship live posts; quarterly review trims the not-screenshot-OK templates.

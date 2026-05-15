@@ -288,3 +288,86 @@ After any post with unusually high comments — note what question or vulnerabil
 After any post that fell flat — note what was missing (usually: no pivot sentence, no question CTA, opened on abstraction not scene).
 
 Target: quarterly update, or after any single post exceeds 200 reactions.
+
+---
+
+## Part 9: Solo-Operator Adaptation (Lieben 8-step, distilled)
+
+Source: Lieben LinkedIn playbook absorb 2026-05-13 (second absorb from same author; first was the OpenClaw 5-Phase Playbook that shipped earlier in this file). This part translates Lieben's team-distributed B2B-SaaS playbook to Boubacar's solo + owner-operator-services context. Six of eight Lieben steps survive translation; two are dropped.
+
+### Step 1 — Buyer-audience (DO swap)
+
+Lieben writes for GTM leaders at $50K+ ACV B2B-SaaS companies. Boubacar writes for owner-operators of $1M-$10M services businesses (Catalyst Works clients) + sub-$5M services operators considering a Signal Works rebuild.
+
+Concrete swap when drafting:
+- Lieben "VP of Sales" → CW post "owner who still does sales themselves"
+- Lieben "RevOps leader" → CW post "operator running ops from their phone"
+- Lieben "$50K ACV B2B SaaS" → CW post "$1M-$10M services business"
+
+Never write to a generic "founders" audience. Specificity is the moat.
+
+### Step 2 — Secondary distribution (DO swap)
+
+Lieben's playbook: operators one level below the VP screenshot good posts upward to the VP. The screenshot is the second-order traffic.
+
+Boubacar's swap: the secondary distributor for owner-operators is the office manager / general manager / spouse-as-business-partner / accountant / bookkeeper who reads LinkedIn, recognizes the operator's exact pain, and texts the owner the screenshot.
+
+When writing, ask: would a GM-or-spouse screenshot this and send it to the owner? If no, the post is missing the pain-recognition line.
+
+### Step 3 — Content audit (CONTAINED, not swap)
+
+Lieben builds his swipe file from B2B-SaaS thought leaders. Boubacar's swipe sources are different:
+- His own top 5 posts (already in Part 2)
+- Alex Hormozi (offer construction, lead-gen sequencing)
+- Greg Isenberg (positioning, niche-first community)
+- Eduardo Carrillo (operator voice, contrarian framing)
+- Utah-operator network (anyone who already sells to the ICP)
+
+Do not import Lieben's source list. Mismatch on audience.
+
+### Step 4 — Swipe file (DO contain, NOT new dir)
+
+Lieben recommends building a templated swipe file. Boubacar already has `skills/library/cole-templates/` with 102+ templates across 4 files (linkedin-hooks, x-hooks, short-form, long-form). The Lieben translation adds one lens, not one new directory:
+
+**Screenshot-Format Lens** — when picking a template from cole-templates, ask: does this template render legibly as a single Twitter-style screenshot on an iPhone? If a post's pivot sentence is on line 7 and the hook is on line 1, the screenshot crops the pivot out. Use templates that put the pivot in the first 3 lines.
+
+Annotated in `skills/library/cole-templates/templates-linkedin-hooks.md` as the "screenshot-format lens" note.
+
+### Step 5 — Content matrix (DO contain in this file)
+
+Lieben uses a content matrix tracking 5-7 recurring topics × 3-4 format types. Boubacar's Content Board has an "Arc Phase" property (narrative pacing) but no recurring-topic taxonomy. Adding this taxonomy to Notion schema is premature (no observed conflict yet); instead, log recurring-topic claims in this file:
+
+Recurring topics (CW LinkedIn axis):
+- Lead-gen mechanics (offers, sequences, ICP)
+- Operator psychology (delegation, accountability, scaling-self)
+- Systems vs ad-hoc work (deciding-once, written-in-code)
+- Faith + work integration (Boubacar-specific moat)
+- Owner-operator-of-color economy (Boubacar-specific lens)
+
+Each post should cite which topic it lands in (in draft notes, not in the post body). Cadence target: rotate so no single topic dominates 3+ consecutive posts.
+
+### Step 6 — Funnel-stage tagging (NEW gap, doc-spec only)
+
+Lieben tags every post TOFU / MOFU / BOFU. Boubacar's Content Board does not. Confirmed via grep on `skills/` + `orchestrator/` (no funnel-stage property exists).
+
+Surgical add: ship the spec as `docs/patterns/content-board-funnel-tagging.md` first, NOT a live Notion schema change. Schema change happens after 30+ CW or SW posts ship and conversion data justifies it. The spec is the audit trail; the Notion property is the Phase-2 wire-up.
+
+The patterns doc defines:
+- 3 values (TOFU / MOFU / BOFU) + what each means in Boubacar's CW + SW funnel
+- Scoped to CW and SW only (AIC content keeps existing video-narrative tagging, different funnel mechanics)
+- Tagging rule: every CW + SW post drafted in Content Board gets a funnel-stage in draft notes; mismatch in the queue (e.g., 8 TOFU + 0 BOFU) is a signal to rebalance
+
+### Steps 7 + 8 — DROP
+
+Step 7 (LinkedIn static visual templates / Figma equivalent) — drop. Studio brand_config + HyperFrames reel templates cover video; LinkedIn-static-post templates have no observed demand (zero posts shipped CW LinkedIn in 90 days). Revisit IF CW closes 3+ retainers AND LinkedIn drives any to discovery call.
+
+Step 8 (team incentivization) — drop. Solo operator, no team.
+
+### REOPEN conditions
+
+- Step 7 reopens if CW closes 3rd paid retainer AND LinkedIn drives discovery call attribution
+- Step 6 Notion schema (vs doc-spec) reopens if SW publishes 30+ posts via this file's rules AND TOFU/MOFU/BOFU drift shows in conversion data
+
+### LIGHTHOUSE LENS
+
+This is the parallel public-authority motion to W1-3 warm-outreach + audit-on-reply sprint. When audit-delivery starts ramping, post audit insights publicly with TOFU tag, building authority alongside outbound.
