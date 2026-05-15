@@ -375,22 +375,3 @@ className="rounded-lg"  /* Uses var(--radius) */
 5. **Accessibility**: Maintain sufficient color contrast (WCAG AA minimum)
 6. **Component Overrides**: Use `className` prop for one-off customization
 7. **Extract Patterns**: Create custom variants for repeated customizations
-
-## Theme generators
-
-When a build needs a branded theme (clone-builder, frontend-design, banner-design, any Signal Works site), generate the starting point rather than hand-tuning every token.
-
-**Primary: tweakcn** ([tweakcn.com](https://tweakcn.com))
-
-Tailwind v4 compatible theme editor for shadcn/ui. Paste a brand color, export CSS variables, drop into `globals.css`. Faster than hand-building tokens for every clone.
-
-Workflow:
-
-1. Pull primary color from the target site (use website-intelligence screenshots, or sample directly).
-2. Open tweakcn, paste color, export Tailwind v4 CSS variables.
-3. Drop into `globals.css`. Verify dark mode and on-brand feel before shipping.
-4. **Bar to clear:** primary, hover state, and dark mode all read as on-brand without manual tweaking. If output reads generic-AI or off-brand, fall back to hand-tuned tokens.
-
-tweakcn is a starting point, not the bar. The bar is the Volta standard from `frontend-design`. Always verify the output meets it.
-
-Borrowed from awesome-shadcn-ui curation (2026-05-02 absorb).

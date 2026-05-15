@@ -32,7 +32,6 @@ Unified design skill: brand, tokens, UI, logo, CIP, slides, banners, social phot
 | Brand identity, voice, assets | `brand` | External skill |
 | Tokens, specs, CSS vars | `design-system` | External skill |
 | shadcn/ui, Tailwind, code | `ui-styling` | External skill |
-| Structured business PDF (invoice, statement, SOW, report) | `ui-styling` (pdfx lane) | `skills/ui-styling/references/shadcn-pdf.md` |
 | Logo creation, AI generation | Logo (built-in) | `references/logo-design.md` |
 | CIP mockups, deliverables | CIP (built-in) | `references/cip-design.md` |
 | Presentations, pitch decks | Slides (built-in) | `references/slides.md` |
