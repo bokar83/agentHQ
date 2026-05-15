@@ -479,19 +479,31 @@ def _upload_render(
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _generate_x_caption(composition: dict, brand: dict, dry_run: bool) -> str:
-    """Generate a ≤240-char X-specific caption via LLM. Falls back to empty string."""
+    """Generate a ≤240-char X-specific caption via LLM. Falls back to empty string.
+
+    Pattern 2 — per-stage cost lock:
+    - max_tokens lowered 100 → 70 (240 chars ≈ 60 tokens, was loose)
+    - early-return if title AND hook are both empty (nothing to caption)
+    - prompt trimmed: removed redundant 'Output ONLY' since temperature is
+      already constrained by short max_tokens; no tools, no system message,
+      no inventory schema sent. The original prompt already had no tools
+      attached — there is no agent/tool-inventory bloat to strip here
+      (this is not a CrewAI agent), so the locking happens at max_tokens
+      + input-presence gating instead.
+    """
     if dry_run:
         return ""
     title = composition.get("title", "")
     hook = composition.get("hook", "")
+    # Pattern 2: skip the LLM call entirely if there's nothing to caption.
+    if not (title.strip() or hook.strip()):
+        logger.info("render_publisher: X caption skipped (no title or hook)")
+        return ""
     channel_name = brand.get("display_name", "")
     prompt = (
-        f"Write a punchy X (Twitter) caption for this short video. "
-        f"Max 240 characters including hashtags. No em-dashes. Direct, human, no fluff.\n\n"
-        f"Channel: {channel_name}\n"
-        f"Video title: {title}\n"
-        f"Hook: {hook}\n\n"
-        f"Output ONLY the caption text, nothing else."
+        f"Punchy X caption for this short video. ≤240 chars incl. hashtags. "
+        f"No em-dashes. Direct, human, no fluff. Output caption only.\n\n"
+        f"Channel: {channel_name}\nTitle: {title}\nHook: {hook}"
     )
     try:
         import httpx as _httpx
@@ -503,7 +515,7 @@ def _generate_x_caption(composition: dict, brand: dict, dry_run: bool) -> str:
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
             json={
                 "model": "anthropic/claude-haiku-4-5",
-                "max_tokens": 100,
+                "max_tokens": 70,  # Pattern 2: 240 chars ≈ 60 tokens; tightened from 100
                 "messages": [{"role": "user", "content": prompt}],
             },
             timeout=20,
