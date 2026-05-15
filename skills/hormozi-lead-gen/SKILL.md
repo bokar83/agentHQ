@@ -231,6 +231,33 @@ Build with the **Hook-Retain-Reward** content unit:
 
 ---
 
+### 4.5 List Sources Beyond Apollo
+
+**Diagnostic first (highest-leverage move):** If a sequence is hitting <1% reply rate, the list is the problem, not the copy. Diagnostic check happens BEFORE rewriting hooks. Operators reflexively rewrite the email when reply rates are flat; that almost always defers the real fix. Validate the list against ICP fit (Section 3, Step 1) before touching subject lines or body copy.
+
+Apollo is the default and remains the workhorse for B2B services prospecting. These four alternatives extend reach into ICPs Apollo handles poorly (e-commerce, creator-adjacent, dormant warm).
+
+**(a) Storeleads.app.** A search index of roughly 4M e-commerce stores filterable by revenue band, tech stack (Shopify / WooCommerce / Magento), product category, and location. Cost band: paid SaaS, mid-tier. Platform-fit: e-commerce only; useless for B2B services. Strongest use-case for CW or SW: zero today (neither brand sells into e-com operators); park for the future Studio-adjacent ICP if a commerce-store offer ever ships. Keep on the radar, do not buy yet.
+
+**(b) Prospect AI.** LinkedIn-follower-verified emails priced at roughly USD 10-20 per 1,000 contacts. The originating @scaling_shields thread claims 3-5x Apollo reply rates; treat that as anecdote, not a benchmark we publish. Platform-fit: B2B services (CW core ICP) and B2B SaaS. Strongest use-case: a head-to-head 100-email Apollo vs Prospect AI test on the same CW T1 template, sealed-list, same-week send. If Prospect AI lands above CW's current reply-rate floor by a margin that survives statistical scrutiny, scale; if not, stay on Apollo.
+
+**(c) Tweet Scraper Chrome extension.** Scrapes Twitter/X follower bios into a list of handles plus inferred emails where bio surfaces them. Cost band: free or low-cost. Platform-fit: creator-audience and creator-adjacent ICPs only; not for ops-heavy B2B services. Strongest use-case: none today for CW (wrong ICP). Possible Studio-adjacent angle if a creator-economy offer ever ships. Park.
+
+**(d) Calendly past-bookers re-engagement.** The highest-leverage entry of the four because the Calendly MCP is already wired in agentsHQ (memory ref: `reference_calendly_urls.md`). Re-engages prospects who booked but never closed. The @scaling_shields thread cites 8% reply rate and 3 closes from 20 booked; treat both as anecdote, not benchmark. Platform-fit: any brand running Calendly (CW, SW). Strongest use-case for CW: prospects who booked a Signal Session and ghosted, or booked SaaS Audit intro and went silent post-call. These are warm, not cold; the activation order rule (warm before cold) applies, which means this is the FIRST list to work, ahead of any new cold source.
+
+**Calendly re-engage runbook (4 to 6 steps):**
+
+1. Pull past Calendly invitees via Calendly MCP (`meetings-list_event_invitees` per host event-type URI; resolve host via `users-get_current_user` first).
+2. Filter for not-closed. Cross-reference against the CRM (Supabase canonical per `feedback_supabase_is_leads_canonical.md`) to drop invitees who already converted.
+3. Draft a "new launch" framed re-engage email. Frame the change since their last booking (new diagnostic, new offer tier, new case-result number); never "circling back".
+4. Send via the canonical cw OAuth Gmail send-path per CLAUDE.md (cw OAuth + direct Gmail API; NOT gws CLI; NOT Gmail MCP `create_draft`).
+5. Verify the From-header on each send per memory rule `feedback_cw_send_canonical_path.md`; assert `From` ends with `boubacar@catalystworks.consulting`.
+6. Log to `docs/reviews/absorb-log.md` whether the re-engage batch went out, batch size, and reply count after 7 days.
+
+**Verified-stats rule:** Every reply-rate claim above (3-5x Apollo, 8%, 3 from 20) is anecdotal, sourced from the @scaling_shields thread. Per memory rule `feedback_verified_stats_only.md`, any number we publish in CW outreach copy, SW audits, or client-facing material must trace back to a primary source URL, not this thread and not any social-media absorb. Internal experimentation can use these as hypotheses; published copy cannot cite them as facts.
+
+---
+
 ## Section 5: Lead Magnet Creation (7 steps)
 
 **Definition:** A complete solution to a narrow problem that, once solved, reveals another problem your core offer solves. (The "salty pretzel" - free pretzel makes them thirsty for the paid drink.)
