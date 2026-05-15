@@ -55,31 +55,6 @@ User gave you a root URL and wants the whole site audited. Crawl, audit each pag
 
 **To crawl:** run `python scripts/design-audit/fetch_url.py <root-url> --crawl --limit 5`. Default limit is 5 pages. The fetcher discovers internal links from the root, fetches each, returns JSON with all file paths. Then audit each one and produce a site-wide summary at `workspace/design-audits/<host>-site-audit.md`.
 
-### Mode 4: Design CI extraction (memoire-backed)
-
-User wants design-system drift surfaced in addition to the rubric — token inconsistency, Tailwind class drift, spacing/color anomalies across pages. Layered on top of any of Modes 1–3.
-
-```
-/design-audit https://catalystworks.consulting --tokens
-/design-audit https://catalystworks.consulting --crawl --tokens
-```
-
-**To run:** invoke `memoire` ([github.com/sarveshsea/m-moire](https://github.com/sarveshsea/m-moire)) on the same target.
-
-```
-npx m-moire diagnose <url>
-```
-
-Capture the token-drift report and append to the standard output as **Section 6: Design System Drift** (Tailwind tokens, color drift, spacing inconsistencies).
-
-**Bar to clear:** memoire must catch at least one issue the standard 5-dimension rubric does not catch on the same target. If overlap is total, drop Section 6 from the report and log "memoire redundant on this artifact" — don't pad the audit.
-
-If memoire errors, returns empty, or its CLI verb has changed: skip Section 6, run the standard rubric, log the failure mode in the audit footer. Don't block the audit on one tool.
-
-Posture remains: documents only, never fixes. memoire's "plan safe UI fixes" output goes into the issue list, not into the artifact.
-
-Borrowed from awesome-shadcn-ui curation (2026-05-02 absorb).
-
 ---
 
 ## When to use
