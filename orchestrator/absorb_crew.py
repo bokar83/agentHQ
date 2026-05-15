@@ -29,11 +29,11 @@ logger = logging.getLogger("agentsHQ.absorb_crew")
 
 ABSORB_LOG_PATH = os.environ.get(
     "ABSORB_LOG_PATH",
-    "/app/docs/reviews/absorb-log.md",
+    "/app/data/absorb-log.md",
 )
 ABSORB_FOLLOWUPS_PATH = os.environ.get(
     "ABSORB_FOLLOWUPS_PATH",
-    "/app/docs/reviews/absorb-followups.md",
+    "/app/data/absorb-followups.md",
 )
 SKILL_PATH = os.environ.get(
     "ABSORB_SKILL_PATH",
