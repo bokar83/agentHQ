@@ -1224,3 +1224,37 @@ Next 5 absorbs in the faceless-creator-economy cohort (TikTok slideshow / facele
 - `docs/reviews/absorb-log.md` 2026-05-13 entries
 - `docs/reviews/absorb-followups.md` (alexcooldev 3 patterns target 2026-05-27, hammertime micro-patterns target 2026-06-13)
 - `feedback_creator_x_ai_cluster_observation.md` (memory)
+
+## Session log 2026-05-14 (PM) — pipeline-spine RCA: 4 dash variants + scouted filter + silence alert
+
+**Triggered by:** Boubacar asked "how is studio doing this week?" Answered with surface metrics (5 posts shipped Mon-Thu, qa-failed=13 across all 3 channels, scheduled queue empty, views ~0). User responded: "do a full /rca if needed, use /council and /karpathy."
+
+**RCA findings (full doc: `docs/handoff/2026-05-14-studio-pipeline-spine-rca.md`):** three coupled defects.
+
+1. `studio_script_generator._post_process` stripped only em-dash (U+2014) and " -- " (spaced). The QA regex `studio_qa_crew.EM_DASH_PATTERN` ALSO catches en-dash (U+2013) and `word--word` (no-space). LLM occasionally emitted those variants. They survived sanitize, QA rejected, records flipped to qa-failed indefinitely.
+2. `studio_production_crew._fetch_qa_passed_candidates` filter excluded `Status=scouted`. trend_scout creates records at scouted. Nothing automatically advanced scouted → Ready/qa-passed. Production_tick reported `0 qa-passed candidates queued` for 22+ hours straight.
+3. No silence watchdog. 22h of zero candidates produced no Telegram alert.
+
+**Council premortem (Sankofa) verdict:** initial Option E (output-strip patch) was governance theater — "patching debris while the spine is broken." Killed Option E in favor of fixing all 3 defects.
+
+**Karpathy audit verdict:** initial diff duplicated existing `_post_process` strip (already covered em-dash + spaced double-hyphen). Forced re-investigation of EM_DASH_PATTERN coverage. Discovered en-dash + word--word gap. Corrected to single-site fix at `_post_process` line 367 with regression test paired against the same pattern set the QA check uses.
+
+**Shipped (commit `7de2192f`, gate-merged via `d3651e7`):**
+- `orchestrator/studio_script_generator.py:367` extended to strip 4 dash variants.
+- `orchestrator/studio_production_crew.py:_fetch_qa_passed_candidates` filter extended with `scouted` (one-pass invariant: run_production updates Status to scheduled or qa-failed, so a scouted record processes exactly once unless flipped back).
+- `orchestrator/studio_production_crew.py:studio_production_tick` persists pulse state to `/app/workspace/studio_pipeline_pulse.json`. Telegram alert (action-required buttons) fires if 0 candidates >90 min and no alert in last 6h.
+- `orchestrator/tests/test_studio_script_generator_emdash.py` regression test (5 cases, all PASS).
+
+**Operational recovery:** bulk-reset 13 qa-failed → Ready. Triggered production_tick manually. 16 records (13 reset + 3 newly-scouted today via filter change) flowed end-to-end through script + QA + voice + scenes + render + Drive upload. ~2.5 min per record.
+
+**Final state (after run):** qa-failed=0 (was 13). scheduled=29 (was 13, +16). Ready=0. scouted=0. published=21 (unchanged; blotato fans out at next 09:00 UTC tick).
+
+**Watchdog fired** at 01:25 UTC with "production_tick: silence alert sent (90 min)" after queue drained — true positive for "queue legitimately empty." Followup: distinguish "empty queue" from "broken pickup."
+
+**Engagement scraper bug surfaced + shipped same session (separate fix):** VPS scraper read YouTube views in Indonesian locale ("X tontonan") instead of English. Real views per post were 14-57; Notion stored 0. Subagent shipped fix on `fix/engagement-scraper-locale` branch (22/22 regression tests, [READY] commit `b93e5e4c`).
+
+**Memory updates:**
+- `feedback_qa_check_paired_sanitizer.md` (new) — regex check pattern set MUST equal sanitizer pattern set, or asymmetry documented + regression test.
+- `feedback_studio_pipeline_spine_dependencies.md` (new) — spine wiring (scouted in filter + silence alert + scheduled→blotato fan-out) is load-bearing.
+
+**Next session:** validate engagement-scraper fix, wire `studio_pulse:snooze` and `studio_pulse:ack` callback handlers (subagent in flight), monitor blotato fan-out at 09:00 UTC.

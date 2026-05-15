@@ -264,3 +264,11 @@ Both shipped. Council HTML report at `/outputs/council/2026-05-13-17-53-06.html`
 - Day 0 Actions 2-4 (warm list, sprint pre-slots, calendar alarms)
 - Google Calendar MCP wire-up
 - Atlas sub-page deploy to VPS
+
+### 2026-05-14 (W1 Day 2 PM) — Studio pipeline-spine RCA (sub-roadmap, not W1 deliverable)
+
+Side track from W1 Day 2 evening: Boubacar asked Studio status. RCA exposed 3 coupled defects (em-dash sanitizer asymmetry, missing scouted→Ready filter, no silence watchdog). Pipeline silently broken for 22+ hours. Fix shipped via `fix/studio-emdash-spine` (gate-merged `d3651e7`). Engagement scraper bug surfaced + shipped same session (`fix/engagement-scraper-locale`, 22/22 tests). Bulk-reset cleared 13 qa-failed records. 29 records now scheduled, awaiting next blotato fan-out at 09:00 UTC. Full RCA: `docs/handoff/2026-05-14-studio-pipeline-spine-rca.md`. Studio session log appended at `docs/roadmap/studio.md`.
+
+Lighthouse-relevant note only: Studio is a sub-system feeding Lighthouse later (channels are revenue stub); this fix did NOT change W1 score (W1 = SW + GW + CW reply velocity, not Studio publish count).
+
+**W1 Day 2 close confirmed by Sankofa subagent:** No formal Thursday demo writeup required. W1 close is Saturday 2026-05-16 10:30 MDT (M5 Conversion Scorecard). Day 2 evening close already committed at `fedc16b8`.
