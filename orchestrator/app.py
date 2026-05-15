@@ -370,6 +370,17 @@ async def startup_event():
     asyncio.create_task(telegram_polling_loop())
     logger.info("Telegram Polling Loop scheduled.")
 
+    # Absorb multi-bot relay (Phase 2.5). Polls every Boubacar-owned Telegram
+    # bot listed in ABSORB_RELAY_TOKENS (default CC + REMOAT, excludes
+    # ORCHESTRATOR which is owned by the main polling loop above). URL-forward
+    # only; everything else is ignored on these channels.
+    try:
+        from absorb_telegram_relay import start_absorb_relays
+        asyncio.create_task(start_absorb_relays())
+        logger.info("Absorb Telegram Relay scheduled.")
+    except Exception as e:
+        logger.error(f"Absorb relay startup failed (non-fatal): {e}", exc_info=True)
+
 
 # ══════════════════════════════════════════════════════════════
 # Public routes (no auth)
