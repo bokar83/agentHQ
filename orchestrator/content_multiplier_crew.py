@@ -1010,26 +1010,53 @@ def _remix_notes_from_page(page: dict[str, Any]) -> dict[str, Any] | None:
     return {"fixable_strips": fixable, "concept_to_keep": concept, "remix_hint": hint}
 
 
-def multiply_from_page_id(page_id: str) -> dict[str, Any]:
+def multiply_from_page_id(page_id: str) -> dict[str, Any] | None:
     """Fetch a Notion Content Board page, extract its source URL + QA fields, and multiply.
 
     Used by scout_approve immediate-fire and /multiply <notion_page_id>.
     Mirrors the extraction path inside multiplier_tick() so the poller and
-    on-demand triggers behave identically. On success, sets Status -> Idea.
+    on-demand triggers behave identically.
+
+    Outcomes:
+      success: Status -> Idea, returns multiply_source result dict
+      failure: Status -> Idea (out of Multiply queue), returns None, error
+               logged. The row leaves the cron retry loop; Boubacar can
+               re-promote with a different source if needed.
+
+    2026-05-15: added try/except wrapping multiply_source. YouTube IP blocks
+    (youtube_transcript_api.RequestBlocked) on VPS Hostinger IP were
+    crashing the thread BEFORE Status flipped, leaving rows stuck in
+    Multiply queue forever. Result: every cron tick re-fired the same
+    transcript fetch and re-raised the same traceback. Error-monitor alert
+    fired at 5 tracebacks in 15 min.
     """
     notion = _notion_client()
     page = notion.get_page(page_id)
     source = _source_from_page(page)
     qa_verdict = _plain_text_prop(page, "QA Verdict") or None
     remix_notes = _remix_notes_from_page(page)
-    result = multiply_source(
-        source,
-        source_type="auto",
-        source_trend_notion_id=page_id,
-        mode="auto",
-        qa_verdict=qa_verdict,
-        remix_notes=remix_notes,
-    )
+    try:
+        result = multiply_source(
+            source,
+            source_type="auto",
+            source_trend_notion_id=page_id,
+            mode="auto",
+            qa_verdict=qa_verdict,
+            remix_notes=remix_notes,
+        )
+    except Exception as exc:
+        logger.exception(
+            "multiply_from_page_id failed for page=%s source=%s: %s",
+            page_id, source, exc,
+        )
+        try:
+            notion.update_page(page_id, properties={"Status": {"select": {"name": "Idea"}}})
+        except Exception as flip_exc:
+            logger.warning(
+                "multiply_from_page_id: status flip to Idea also failed for page=%s: %s",
+                page_id, flip_exc,
+            )
+        return None
     notion.update_page(page_id, properties={"Status": {"select": {"name": "Idea"}}})
     return result
 
