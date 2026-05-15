@@ -1380,6 +1380,22 @@ def start_scheduler():
     except Exception as e:
         logger.error(f"ABSORB: wake registration failed ({e}); continuing without absorb", exc_info=True)
 
+    # Absorb scout dispatcher (Phase 2). Runs every 30 min. Iterates the
+    # registered source adapters (Reddit RSS, GitHub trending, HN search),
+    # enqueues new candidates to absorb_queue via absorb_inbound.enqueue().
+    # Internally gates on Sabbath (no Sun) + daytime window. Same kill switch.
+    try:
+        import heartbeat as _heartbeat
+        from scout_dispatcher import scout_tick
+        _heartbeat.register_wake(
+            "absorb-scout",
+            crew_name="absorb",
+            callback=scout_tick,
+            every="30m",
+        )
+    except Exception as e:
+        logger.error(f"ABSORB_SCOUT: wake registration failed ({e}); continuing without scout", exc_info=True)
+
     # Echo M2.5: Gate Agent. Runs every 60s. Sole arbiter of all writes to
     # Gate runs on VPS HOST via /etc/cron.d/gate-agent (every 15 min daytime,
     # every 90 min overnight). The container has no .git dir so git fetch/merge

@@ -17,6 +17,7 @@ allowed_updates includes callback_query.
 import asyncio
 import logging
 import os
+import re
 import time
 import uuid
 
@@ -70,6 +71,55 @@ def _classify_obvious_chat(msg: str) -> bool:
     """
     m = msg.strip().lower().rstrip("!.,?")
     return m in {"hi", "hey", "hello", "thanks", "thank you", "morning", "good morning", "good evening"}
+
+
+_ABSORB_URL_RE = re.compile(r"https?://\S+")
+
+
+def handle_absorb_url_forward(text: str, chat_id: str, sender_id: str) -> bool:
+    """Phase 2 absorb URL-forward handler.
+
+    Fires when the message body starts with (or is) a bare http(s):// URL.
+    Strips a trailing punctuation tail, enqueues to absorb_queue via
+    absorb_inbound.enqueue(), and replies with the queue id + 'verdict via
+    Telegram when ready'.
+
+    Returns True if it consumed the message, False otherwise.
+    """
+    if not text:
+        return False
+    stripped = text.strip()
+    if not stripped.lower().startswith(("http://", "https://")):
+        return False
+    m = _ABSORB_URL_RE.match(stripped)
+    if not m:
+        return False
+    url = m.group(0).rstrip(").,;:'\"")
+
+    try:
+        from absorb_inbound import enqueue, find_duplicate
+        from notifier import send_message as _send
+    except Exception as e:
+        logger.error(f"handle_absorb_url_forward: import failed: {e}")
+        return False
+
+    try:
+        prior = find_duplicate(url)
+        if prior is not None:
+            _send(chat_id, f"Already absorbed (prior absorb_queue #{prior}). Skipping.")
+            return True
+        row_id = enqueue(url, "telegram", submitted_by=str(sender_id))
+    except Exception as e:
+        logger.error(f"handle_absorb_url_forward: enqueue failed: {e}")
+        try:
+            from notifier import send_message as _send
+            _send(chat_id, f"Enqueue failed: {e}")
+        except Exception:
+            pass
+        return True
+
+    _send(chat_id, f"Queued for absorb_crew #{row_id}. Verdict in this chat when ready (next 15m tick).")
+    return True
 
 
 # ══════════════════════════════════════════════════════════════
@@ -167,6 +217,12 @@ async def process_telegram_update(update: dict) -> None:
 
     # 7. Slash commands (15: original 6 + /switch + Phase 0/1/2 9)
     if dispatch_command(text, chat_id):
+        return
+
+    # 7.5 Absorb URL-forward (Phase 2). When the first token is an http(s)://
+    # URL, treat the message as an absorb candidate: enqueue to absorb_queue
+    # and let absorb_crew.absorb_tick process it on the next 15m wake.
+    if handle_absorb_url_forward(text, chat_id, sender_id):
         return
 
     # 8. Praise / critique (noop when MEMORY_LEARNING_ENABLED != "true")
