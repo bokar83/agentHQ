@@ -3210,3 +3210,11 @@ Four absorbs touched the autonomy infra surface today. All ARCHIVE-AND-NOTE with
 - `docs/patterns/notes-as-sources-compounding.md` (Notes-as-Sources)
 - `docs/reviews/absorb-log.md` 2026-05-13 entries
 - `feedback_creator_x_ai_cluster_observation.md` (memory)
+
+### 2026-05-15 — Atlas state refresh (post Studio-spine RCA + 6 gate merges)
+
+**Recently shipped (auto-merged via gate):**
+- A8.1 frontend Action Stream card prereq met: `7a06ce7` landed on Hostinger.
+- Studio sub-pipeline self-heals via `fix/studio-emdash-spine` (scouted->Ready filter, dash sanitizer, silence watchdog) + `fix/engagement-scraper-locale` + `fix/studio-pulse-callbacks`.
+
+**Next:** A8.1 Action Stream card live-test on Hostinger Atlas page (verify intent.request() -> card-in-2s + approve/reject API loop). A9d-A Weekly Synthesis crew Sunday 2026-05-18 first fire. A3 Reconciliation Polling — gate lifted 2026-05-11, build window open.

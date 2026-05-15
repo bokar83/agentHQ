@@ -599,6 +599,20 @@ def _collect_roadmap_next_actions() -> list[dict]:
                 break
         owner = _normalize_owner(owner_raw) if owner_raw else None
         summary = ""
+        # Special-case: roadmaps explicitly marked deferred (homelab pattern)
+        # surface their trigger condition instead of a next-action.
+        status_val = ""
+        earliest_reopen = ""
+        for line in body.splitlines()[:30]:
+            if line.startswith("**Status:**"):
+                status_val = line.split("**Status:**", 1)[1].strip().lower()
+            elif line.startswith("**Earliest reopen:**"):
+                earliest_reopen = line.split("**Earliest reopen:**", 1)[1].strip()
+        if "deferred" in status_val or "parked" in status_val:
+            if earliest_reopen:
+                summary = f"[DEFERRED] earliest reopen {earliest_reopen}"
+            else:
+                summary = f"[DEFERRED] {status_val[:80]}"
         # Strategy: roadmaps log progress chronologically. The most recent
         # **Next:** / **Next session:** / **Next studio session:** line in the
         # file is the authoritative next-action. Scan from bottom up.
@@ -665,6 +679,22 @@ def _collect_roadmap_next_actions() -> list[dict]:
                         cleaned = cleaned.split(" ", 1)[1] if " " in cleaned else cleaned
                     summary = cleaned
                     break
+        if not summary:
+            # Final fallback: scan latest session-log entry for "Pending"
+            # bullets. Catches lighthouse-style logs that use **Pending ...:**
+            # as the next-action surface instead of **Next:**.
+            pending_markers = ("**Pending", "**Up next", "**Tomorrow", "**Tonight")
+            for i in range(len(body_lines) - 1, -1, -1):
+                line = body_lines[i].strip()
+                if any(line.startswith(m) for m in pending_markers):
+                    # Take first bullet beneath this marker.
+                    for follow in body_lines[i + 1 : i + 12]:
+                        fs = follow.strip()
+                        if fs.startswith("- ") or fs.startswith("* "):
+                            summary = fs[2:].strip()
+                            break
+                    if summary:
+                        break
         if not summary:
             summary = "No next-actions section found"
         rows.append({
