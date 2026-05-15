@@ -135,6 +135,82 @@ Signals a reframe is coming. Generates scroll-stop curiosity. Grounds abstract c
 
 ---
 
+### Hook 6: Statistic (a specific number that recontextualizes)
+Learned from Bryan Ng (X absorb 2026-05-14). Opens with a specific number that re-anchors how the reader sees a familiar topic.
+
+**Template:**
+> "[Specific number, not rounded]. That is [what the number actually represents in human terms]."
+
+**Boubacar-voice opener example:**
+> "73% of HR leaders told us their AI rollout was on track. Six months later, 41% had quietly paused it. Most of them never updated the slide."
+
+**When to use:** Systems argument posts, post-mortem reflections, anywhere a contrarian claim needs receipts before the pivot.
+
+**Voice guard:** Never lead with the source. Lead with the number, then the human translation. The pivot sentence still has to do the work.
+
+---
+
+### Hook 7: Challenge (a confrontation aimed at the reader's belief)
+Learned from Bryan Ng (X absorb 2026-05-14). Confronts a belief the reader is likely holding right now.
+
+**Template:**
+> "If you still think [comfortable belief], this post is going to bother you."
+> "[Direct address]. You are protecting the thing that is costing you the most."
+
+**Boubacar-voice opener example:**
+> "If you are still measuring transformation by how many tools you have rolled out, you are measuring accumulation. Not change."
+
+**When to use:** When the systems argument is already strong enough to survive friction. Pair with a vulnerability beat in paragraph 2 so it does not read as lecture.
+
+**Voice guard:** Challenge the belief, not the person. The reader has to feel called up, not called out.
+
+---
+
+### Hook 8: Quotation (someone else's line that earns the open)
+Learned from Bryan Ng (X absorb 2026-05-14). Opens with a quote, then immediately makes it the reader's problem.
+
+**Template:**
+> "'[Short quote that does the heavy lifting].' [Name or role of the speaker, briefly]. I have not stopped thinking about that line since."
+
+**Boubacar-voice opener example:**
+> "'We are experts at accumulation and allergic to elimination.' I wrote that line about HR. I keep finding it inside my own systems too."
+
+**When to use:** Reflective posts. Posts where you want to credit a peer, a client, a book, or your own past self without making the post about them.
+
+**Voice guard:** The quote sets the stage. The pivot still has to be Boubacar's. Never end on the quote alone, that gives the post away.
+
+---
+
+### Hook 9: Metaphor (a comparison that re-frames the topic in one image)
+Learned from Bryan Ng (X absorb 2026-05-14). Opens by replacing the abstract topic with a concrete image the reader cannot un-see.
+
+**Template:**
+> "[Topic] is like [concrete, physical image]. [One line that locks the metaphor to the argument]."
+
+**Boubacar-voice opener example:**
+> "Most AI rollouts are like adding furniture to a room nobody has cleaned in five years. The room does not feel new. It feels heavier."
+
+**When to use:** Systems posts where the abstract argument is hard to picture. Faith posts where the metaphor is the bridge between personal and universal.
+
+**Voice guard:** One metaphor per post. Mixed metaphors collapse the image. The metaphor has to land before the pivot, then disappear.
+
+---
+
+### Hook 10: Proof (the receipt, a screenshot, a result, a named outcome)
+Learned from Bryan Ng (X absorb 2026-05-14). Opens with a concrete proof point that the rest of the post then unpacks.
+
+**Template:**
+> "[Specific, observable outcome with a number or a name]. Here is what actually happened underneath."
+
+**Boubacar-voice opener example:**
+> "One leader I work with cut three dashboards, two trainings, and a weekly form. Engagement went up the next quarter. Nobody asked for any of it back."
+
+**When to use:** Case-study posts, before-and-after posts, anywhere readers need a receipt before they trust the argument. Strong for the Subtraction series.
+
+**Voice guard:** Never invent the proof. If the receipt is not real, switch to a different hook. The reader can feel a manufactured number.
+
+---
+
 ## Part 3: Format Rules
 
 ### Line breaks
