@@ -259,7 +259,7 @@ Caveman plugin installed via `irm .../install.ps1 | iex`. Reduces output tokens 
 
 **Do not manually edit hook files** in `~/.claude/hooks/caveman-*.js` - they are owned by the caveman plugin. Update via `irm .../install.ps1 | iex --force`.
 
-## Hermes Agent Write Boundaries (Compass M6 — 2026-05-10)
+## Hermes Agent Write Boundaries (Compass M6 — 2026-05-10, M7 expansion 2026-05-15)
 
 Hermes is the self-healing agent that will receive write access after this lockdown passes Gate review. The boundaries below are constitutional — they cannot be overridden by Hermes prompts, task descriptions, or tool calls. Any Hermes action outside the ALLOWED list is a security incident.
 
@@ -272,6 +272,10 @@ Hermes is the self-healing agent that will receive write access after this lockd
 | `docs/audits/` | Audit reports written by governance agents |
 | `data/changelog.md` | Task completion ledger |
 | `docs/roadmap/*.md` | Session-log entries (append only, no header rewrite) |
+| `skills/ctq-social/references/*.md`, `skills/ctq-social/patterns/*.md` | M7 absorb auto-wire — content + pattern files only, no SKILL.md |
+| `skills/client-intake/references/*.md`, `skills/client-intake/patterns/*.md` | M7 absorb auto-wire — content + pattern files only, no SKILL.md |
+| `skills/library/references/*.md`, `skills/library/patterns/*.md` | M7 absorb auto-wire — content + pattern files only, no SKILL.md |
+| `skills/boubacar-prompts/references/*.md`, `skills/boubacar-prompts/patterns/*.md` | M7 absorb auto-wire — content + pattern files only, no SKILL.md |
 
 ### FORBIDDEN writes (hard block — no exceptions)
 
@@ -296,8 +300,22 @@ Hermes is the self-healing agent that will receive write access after this lockd
 
 No Hermes prompt, system message, or tool call may use `"*"` as a path glob in any write, edit, or delete operation. All file operations must use explicit absolute or repo-relative paths from the ALLOWED list above.
 
+### M7 absorb auto-wire scope (added 2026-05-15)
+
+The 4 per-skill allowlist rows above exist to unlock the `absorb_auto_wire` crew that drains small-tier PROCEED verdicts from `absorb_queue` and ships them as feature branches without per-item human time. Scope is intentionally narrow:
+
+- **Per-skill allowlist, NOT blanket `skills/**`.** Four skills opted in: ctq-social, client-intake, library, boubacar-prompts. Adding a fifth requires a CLAUDE.md edit + Gate review.
+- **Markdown only.** `references/*.md` and `patterns/*.md` ship now. `data/*.json` is deferred to a Phase 5 review once Phase 4 logs 30+ shipped auto-wires + zero incidents.
+- **SKILL.md frontmatter still FORBIDDEN.** The skill activation surface (frontmatter `description`, body prompt, trigger phrases, tool allowlist) cannot be touched by Hermes. Auto-wire only appends content to data files the skill reads at run time.
+- **Rate limit: 3 auto-wires per day.** Beyond 3 in a 24h window, `absorb_auto_wire` parks the candidate in `absorb_queue` with status `parked_rate_limit` for Boubacar review. Counter resets at 00:00 America/Denver. Enforcement lives both in the crew (`orchestrator/absorb_auto_wire.py`) and in the pre-commit boundary script.
+- **Gate stays the single human checkpoint.** Per-PR Telegram approval gate intentionally NOT added on top of Gate review; the existing Karpathy pre-commit + Gate diff review is the gate for these auto-wires.
+
+### FORBIDDEN paths reinforced after M7 (additive, not replacing)
+
+The M7 expansion deliberately does NOT add any of the following to ALLOWED: `SKILL.md` files in any skill directory, `*.py` files in any skill directory, `skills/<skill>/scripts/`, `skills/<skill>/evals/`, JSON files anywhere in `skills/` (deferred to Phase 5), or new top-level skill directories. The wildcard-`"*"` ban from the previous section is unchanged.
+
 ### Enforcement
 
 - Gate agent verifies Hermes branch diffs against this boundary list before merging.
-- Pre-commit hook `scripts/check_hermes_write_boundary.py` (Compass M7) will automate this check.
+- Pre-commit hook `scripts/check_hermes_write_boundary.py` (Compass M7) automates this check (shipped 2026-05-15 alongside this expansion).
 - Violations → branch rejected, incident logged to `docs/audits/`, Boubacar notified via Telegram.
