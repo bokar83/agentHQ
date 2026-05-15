@@ -9,6 +9,7 @@ description: Proven cold email templates for Catalyst Works Consulting. Two vari
 
 ## Strategy Notes
 
+- **List sources beyond Apollo:** see `skills/hormozi-lead-gen/SKILL.md` Section 4 -- 4 alternative sources + the <1% reply diagnostic.
 - **Reply-first model:** Optimize for the micro-commitment (a reply), not the booking. Calendly goes in the follow-up, never the cold email.
 - **Sector vs size bracket:** Use the sector version whenever LinkedIn gives you 60 seconds of context. Use the size version when moving fast or business type is ambiguous.
 - **Research payoff:** Personalizing the bracket (sector vs generic) can 2x-3x reply rates. The bracket is not decoration.
