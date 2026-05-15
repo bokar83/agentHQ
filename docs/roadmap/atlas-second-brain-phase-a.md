@@ -286,3 +286,7 @@ Absorb of Ziwen's "Codex Knowledge Vault" pattern (X post, 2026-05-11). Full ref
 See conversation 2026-05-12 (this session) for full council + reframe trace.
 
 Companion content: 5-post "Digital Hoarder" arc shipping 5/12-5/18. Post 5 = build reveal teaser, gated on Phase A operational status.
+
+---
+
+**Next:** Build `web-session-harvester` skill (skool + x-bookmarks + yt-watch-later adapters) + VPS cron + hoarder-rate metric. Target ship 2026-05-25. Gates Post 5 build-reveal publish 2026-05-18.
