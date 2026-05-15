@@ -1,0 +1,13 @@
+repos:
+  - repo: local
+    hooks:
+      - id: hermes-write-boundary
+        name: Hermes write-boundary enforcement
+        entry: python scripts/check_hermes_write_boundary.py
+        language: system
+        stages: [commit]
+        pass_filenames: false
+        always_run: true
+        description: >-
+          Gates Hermes-authored commits against the ALLOWED + FORBIDDEN
+          tables in CLAUDE.md (Compass M6 + M7). No-op for humans.
