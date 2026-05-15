@@ -317,6 +317,26 @@ Re-evaluate, or use prior verdict?
 
 If the user picks prior, stop. Otherwise continue.
 
+## Phase 1.5: Batch + Cluster modes
+
+When Boubacar sends more than one artifact in a single message, route as follows BEFORE Phase 2:
+
+### Batch mode (parallel-independent items)
+
+Trigger: 2+ URLs/repos/links pasted with no stated topical relationship.
+
+Behavior: spawn N background subagents in a SINGLE response (`Agent` tool, `run_in_background: true`), one per artifact. Each subagent runs Phases 2-5 independently and returns its own verdict block. Main thread aggregates verdicts after all complete, optionally surfaces cross-cutting follow-ups.
+
+Per concurrency rule: never serially spawn — one message, N parallel tool calls.
+
+### Cluster mode (same-topic items)
+
+Trigger: 2+ artifacts on the same subject (e.g. five different planning-skill repos, three articles on the same framework). Boubacar usually flags this explicitly ("these are all on X").
+
+Behavior: ONE subagent holds all artifacts in context, returns a single synthesized verdict comparing them. Output: per-artifact mini-dossier + cross-artifact comparison table + ONE combined PROCEED / ARCHIVE-AND-NOTE for the cluster. Reject placeholder duplicates; if any artifact wholesale supersedes the others, declare it the cluster winner.
+
+When ambiguous between batch and cluster: default cluster if artifacts share a noun in the user prompt; default batch otherwise.
+
 ## Phase 2: Deep artifact analysis
 
 Read everything that defines what the artifact is and what it does. No shortcuts.
@@ -388,12 +408,36 @@ Default toward extension, not new skill. Run all six checks in order; the first 
 4. **Capability gap check.** Real gap none of the 74 skills cover, AND step 1 returned no? Propose **new skill skills/Y**.
 5. **Below-skill check.** Just a tool/script that an existing skill should call? Propose **new tool**, lives in the consuming skill's directory.
 6. **Satellite check.** Has its own URL, customer, or revenue stream per AGENTS.md? Propose **satellite repo**, referenced from agentsHQ but lives in its own GitHub repo.
+7. **Wholesale-better check.** Does the artifact materially outperform an existing skill on the SAME capability (better algorithm, better DX, better safety model, better cost), not just a feature add? Propose **replace existing skills/X**. Triggers mandatory Karpathy audit, mandatory Sankofa (no fast-path), and a documented migration plan in the verdict's "Placement reasoning" details (current skill stays in place until the replacement ships + passes a parity test).
 
 Output: chosen placement + named runner-up + one-line reason for runner-up rejection.
 
 ## Phase 4: Sankofa and Karpathy on the proposal
 
 Run both, in sequence, on the placement decision (not on the artifact's internals). Per `feedback_audits_before_implementation.md`.
+
+### Council mandatory vs optional (threshold)
+
+Sankofa + Karpathy are MANDATORY when the chosen placement is one of:
+
+- `new skill skills/Y`
+- `new agent`
+- `satellite repo`
+- `replace existing skills/X`
+
+Council is OPTIONAL (fast-path PROCEED allowed) when placement is:
+
+- `enhance skills/X` (additive, in-scope)
+- `extend skills/X` (when surface change is small + reversible)
+- `new tool` (single helper, single consumer)
+
+If council is skipped, the verdict footer MUST state: `Fast-pathed. Justification: <one line>`. Skipping council on a mandatory-tier placement = incomplete verdict.
+
+### Premortem mode toggle
+
+Trigger: Boubacar appends `--premortem` to the invocation, OR the placement is `new agent` / `satellite repo` / `replace existing`, OR the artifact touches send-email / push-to-main / VPS deploy / billing surfaces.
+
+When triggered, invoke Sankofa via the `council` skill with `premortem this` appended to the framing. Council retroactively imagines the absorb failed 6 months from now and works backward to the cause. Capture the top-3 failure modes + a tripwire metric per mode. Append them to the verdict's "Placement reasoning" details. Failing to attach tripwires on a premortem-triggered absorb = incomplete verdict.
 
 ### Sankofa Council on the placement
 
@@ -461,7 +505,7 @@ Why (3 lines max):
 - <reason 2>
 - <reason 3>
 
-Placement: <enhance skills/X | extend skills/X | new skill skills/Y | new tool | new agent | satellite repo | archive>
+Placement: <enhance skills/X | extend skills/X | new skill skills/Y | new tool | new agent | satellite repo | replace existing skills/X | archive>
 Runner-up: <other option>. Rejected because <one line>.
 
 Next action: <one specific concrete next step>
@@ -496,6 +540,7 @@ Below that, four collapsed `<details>` sections: **What it is** (Phase 2 dossier
 - **new tool** = a script, helper, or reference doc that an existing skill calls. Lives in the consuming skill's directory (`skills/<skill>/scripts/foo.py` or `skills/<skill>/references/foo.md`).
 - **new agent** = orchestrator-side CrewAI agent definition. Reserved for runtime autonomy capabilities, not Claude Code workflow capabilities.
 - **satellite repo** = product with its own URL/customer/revenue. Lives in its own GitHub repo per AGENTS.md "Platform With Satellites" rule.
+- **replace existing skills/X** = artifact wholesale outperforms an existing skill on the same capability. Build the replacement in a separate path (e.g. `skills/X-v2/`), keep `skills/X/` live until the replacement passes a documented parity test, then atomic-swap and archive the old one to `zzzArchive/skills/X-<date>/`. Mandatory: Karpathy audit + Sankofa premortem + migration plan in the verdict.
 
 ## Common mistakes
 
