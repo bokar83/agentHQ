@@ -778,6 +778,54 @@ def _evict_expired_confirms() -> None:
         _confirm_store.pop(k, None)
 
 
+_ATLAS_CHAT_URL_RE = __import__("re").compile(r"https?://\S+")
+
+
+def _maybe_absorb_url_from_chat(messages: list, session_key: str) -> Optional[dict]:
+    """If the latest user message is a bare http(s):// URL (optionally with
+    a short note), short-circuit the chat: enqueue to absorb_queue and return
+    a canned reply. Returns None if the message is not a single URL, so the
+    normal chat flow continues.
+    """
+    if not messages:
+        return None
+    last = messages[-1]
+    if last.get("role") != "user":
+        return None
+    content = last.get("content")
+    if isinstance(content, list):
+        text_parts = [b.get("text", "") for b in content if isinstance(b, dict) and b.get("type") == "text"]
+        text = " ".join(text_parts).strip()
+    elif isinstance(content, str):
+        text = content.strip()
+    else:
+        return None
+    if not text or not text.lower().startswith(("http://", "https://")):
+        return None
+    m = _ATLAS_CHAT_URL_RE.match(text)
+    if not m:
+        return None
+    if m.end() < len(text) and len(text) - m.end() > 80:
+        return None
+    url = m.group(0).rstrip(").,;:'\"")
+    try:
+        from absorb_inbound import enqueue, find_duplicate
+    except Exception as e:
+        logger.warning(f"atlas_chat absorb: import failed ({e}); falling through to chat")
+        return None
+    try:
+        prior = find_duplicate(url)
+        if prior is not None:
+            reply = f"Already absorbed (prior absorb_queue #{prior}). Skipping."
+        else:
+            row_id = enqueue(url, "webchat", submitted_by=f"webchat:{session_key}")
+            reply = f"Queued for absorb_crew #{row_id}. Verdict via Telegram when ready (within ~15m)."
+    except Exception as e:
+        logger.error(f"atlas_chat absorb enqueue failed: {e}", exc_info=True)
+        return None
+    return {"reply": reply, "actions": [], "artifact": None, "job_id": None}
+
+
 def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> dict:
     """
     Atlas web chat handler. Loads 100 turns from Postgres (same as run_chat),
@@ -787,6 +835,10 @@ def run_atlas_chat(messages: list, session_key: str, channel: str = "web") -> di
     Returns M9 schema: {"reply": "...", "actions": [...], "artifact": {...}, "job_id": "..."}
     """
     from llm_helpers import CHAT_TEMPERATURE, CHAT_SANDBOX
+
+    _absorb = _maybe_absorb_url_from_chat(messages, session_key)
+    if _absorb is not None:
+        return _absorb
 
     _evict_expired_confirms()
 
