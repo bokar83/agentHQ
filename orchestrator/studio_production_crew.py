@@ -228,10 +228,21 @@ def studio_production_tick(*, dry_run: bool = False) -> list[dict]:
     else:
         last_seen = state.get("last_seen_with_candidates", now)
         last_alert = state.get("last_alert_sent", 0)
+        snoozed_until = state.get("snoozed_until", 0)
         silence = now - last_seen
-        if silence >= _PULSE_SILENCE_WARN_SEC and (now - last_alert) >= _PULSE_ALERT_REPEAT_COOLDOWN_SEC:
+        snoozed = now < snoozed_until
+        if (
+            silence >= _PULSE_SILENCE_WARN_SEC
+            and (now - last_alert) >= _PULSE_ALERT_REPEAT_COOLDOWN_SEC
+            and not snoozed
+        ):
             _alert_silence(silence)
             state["last_alert_sent"] = now
+        elif snoozed:
+            logger.info(
+                "production_tick: silence=%ds but snoozed for %ds more",
+                silence, snoozed_until - now,
+            )
     _save_pulse_state(state)
 
     results = []

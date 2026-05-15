@@ -586,6 +586,66 @@ def handle_callback_query(update: dict) -> bool:
             except Exception:
                 pass
 
+    elif cb_data.startswith("studio_pulse:"):
+        # Studio pipeline silence-watchdog buttons posted by
+        # studio_production_crew._alert_silence. State file is the same
+        # JSON that watchdog reads each tick.
+        #   ack     -> clear last_alert_sent (re-armed for next 0-candidates tick)
+        #   snooze  -> set snoozed_until = now + 6h (watchdog skips alert)
+        try:
+            import json as _json
+            import time as _time
+            import pathlib
+            import requests as _requests
+            from notifier import answer_callback_query, TELEGRAM_API_BASE
+            action = cb_data.split(":", 1)[1]
+            pulse_path = pathlib.Path(
+                os.environ.get("STUDIO_PULSE_STATE_PATH", "/app/workspace/studio_pipeline_pulse.json")
+            )
+            try:
+                state = _json.loads(pulse_path.read_text())
+            except Exception:
+                state = {}
+            now = int(_time.time())
+            if action == "ack":
+                state["last_alert_sent"] = 0
+                toast = "Acknowledged"
+                edit_text = "Studio pipeline silence: acknowledged. Watchdog re-armed."
+            elif action == "snooze":
+                state["snoozed_until"] = now + 6 * 60 * 60
+                toast = "Snoozed 6h"
+                edit_text = "Studio pipeline silence: snoozed 6h. Watchdog will not alert until then."
+            else:
+                answer_callback_query(cb_id, f"Unknown studio_pulse action: {action}")
+                return True
+            pulse_path.parent.mkdir(parents=True, exist_ok=True)
+            pulse_path.write_text(_json.dumps(state))
+            answer_callback_query(cb_id, toast)
+            # Edit the original alert message in place so the buttons disappear
+            # and the chat shows what happened. Best-effort: swallow failures
+            # because the toast already confirmed the action.
+            try:
+                msg_id = cb.get("message", {}).get("message_id")
+                if msg_id and TELEGRAM_API_BASE:
+                    _requests.post(
+                        f"{TELEGRAM_API_BASE}/editMessageText",
+                        json={
+                            "chat_id": cb_chat_id,
+                            "message_id": msg_id,
+                            "text": edit_text,
+                        },
+                        timeout=10,
+                    )
+            except Exception as edit_exc:
+                logger.warning(f"callback_query studio_pulse editMessageText failed: {edit_exc}")
+        except Exception as e:
+            logger.warning(f"callback_query studio_pulse handling error: {e}")
+            try:
+                from notifier import answer_callback_query
+                answer_callback_query(cb_id, f"Error: {e}")
+            except Exception:
+                pass
+
     elif cb_data.startswith("canon_restore:") or cb_data.startswith("canon_dismiss:"):
         # Canonical-tree HEAD-flip alert from scripts/watch_canonical_head.js.
         # Action target is on Boubacar's Windows laptop, NOT VPS — orchestrator
