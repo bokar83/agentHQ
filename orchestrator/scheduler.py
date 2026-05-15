@@ -1380,6 +1380,23 @@ def start_scheduler():
     except Exception as e:
         logger.error(f"ABSORB: wake registration failed ({e}); continuing without absorb", exc_info=True)
 
+    # Absorb daily digest (Phase 3). Fires once at 07:00 America/Denver.
+    # Internally skips Sunday (sabbath). Summarizes prior 24h absorb_queue
+    # activity to Telegram (PROCEED breakdown, scout source PROCEED rates,
+    # failed rows, pending backlog). Big-surface PROCEEDs were already alerted
+    # via approval_queue at the time; the digest restates them only as counts.
+    try:
+        import heartbeat as _heartbeat
+        from absorb_digest import digest_tick
+        _heartbeat.register_wake(
+            "absorb-digest",
+            crew_name="absorb",
+            callback=digest_tick,
+            at="07:00",
+        )
+    except Exception as e:
+        logger.error(f"ABSORB_DIGEST: wake registration failed ({e}); continuing without digest", exc_info=True)
+
     # Echo M2.5: Gate Agent. Runs every 60s. Sole arbiter of all writes to
     # Gate runs on VPS HOST via /etc/cron.d/gate-agent (every 15 min daytime,
     # every 90 min overnight). The container has no .git dir so git fetch/merge
