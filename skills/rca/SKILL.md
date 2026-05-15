@@ -5,6 +5,8 @@ description: Use when a production system is broken, behaving unexpectedly, or a
 
 **HARD GATE: NO EDITS before root cause is confirmed in writing. Not one line. Not one docker cp. Nothing.**
 
+**THIRD-ATTEMPT RULE (added 2026-05-13):** If this RCA targets a surface where 2 prior fixes already shipped + failed (read the relevant `docs/handoff/*-rca.md` files first), do NOT proceed past Phase 2 without invoking Sankofa Council in `premortem` mode against the proposed fix. Two failures on the same surface means the architecture is wrong, not the implementation. Council kills 95% of attempt-3 false starts. The session-collision RCA on 2026-05-13 (Layer A + B shipped after rejecting the brief's req 1/2/4) is the canonical case.
+
 ---
 
 ## PHASE 0 -- TRIAGE
@@ -188,3 +190,12 @@ Push to remote FIRST, then `git pull` on VPS. If you `docker cp` before pushing,
 
 ### Publisher tick ran before fix deployed
 If a heartbeat tick fires between "records reset to scheduled" and "fix deployed", records flip to `publish-failed` again. After deploying a fix, always check `docker logs orc-crewai | grep 'STUDIO PUBLISHER.*tick done'` to confirm the fix-era tick ran before declaring success.
+
+### Stale failure-reason fields mislead diagnosis
+Operational stores (Notion `QA notes`, Postgres `error_text`, Drive metadata, etc.) record the failure reason as it was at write-time. When the underlying code path was changed afterward, the stale reason points at the wrong root cause. **Before patching based on a stored failure reason, run a `dry_run` of the current code on the same input and verify the failure mode reproduces.** If the dry-run passes where the stale field said FAIL, the records may be drift-stale, not buggy — reset Status and let the current pipeline re-process. (2026-05-14 studio RCA: 11 of 13 qa-failed records said `source_citation` from a pre-fix code era; current code skips citation for shorts. Only 2 records had a real current bug.)
+
+### dry_run paths often bypass production logic
+Many `generate_X(..., dry_run=True)` paths return stubs that skip the real pipeline (LLM call, post-process, normalization). Hitting the stub path while debugging produces a FALSE failure signal that points at the wrong layer. **Before patching based on a dry_run result, READ the dry_run branch in the source and confirm it actually exercises the code under suspicion.** (2026-05-14: studio_script_generator dry_run returned `[STUB SCRIPT] {title}` bypassing _post_process; appeared to confirm em-dash leak in the body when actual leak was in a different code path entirely.)
+
+### Asymmetric check + sanitizer pair = silent rejection loop
+When a QA check uses a regex pattern (e.g. `EM_DASH_PATTERN`, banned-phrase patterns) and the producing module's sanitizer covers a SUBSET of that pattern set, anything in the gap (variant the check rejects but sanitizer misses) silently flips records to qa-failed indefinitely. Compounded if there's no automated qa-failed retry. **For every check pattern, grep producer modules for matching sanitizer; pattern set must equal or be documented as deliberately asymmetric. Add regression test asserting sanitizer kills every input the check rejects.** See `feedback_qa_check_paired_sanitizer.md`.
