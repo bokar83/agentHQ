@@ -7,6 +7,24 @@ description: Use when evaluating any GitHub repo, live URL, MCP server, n8n work
 
 Codify Boubacar's manual workflow for evaluating any artifact (GitHub repo, live URL, MCP server, n8n workflow, PDF, raw doc, or local skill) against agentsHQ. Output: structured one-pager verdict + placement + leverage type + follow-up handoff. Default placement bias: enhance an existing skill, not build a new one.
 
+## Mode selection (read this first, every invocation)
+
+Since 2026-05-14 the skill runs in one of two modes:
+
+- **AGENT MODE (default).** When Boubacar pastes a URL into a Claude Code session and the skill fires, enqueue the URL to `absorb_queue` on the VPS and return immediately. The `absorb_crew` heartbeat tick (`orchestrator/absorb_crew.py::absorb_tick`, registered in `orchestrator/scheduler.py`, fires every 15 min) drains the queue, runs Phases 0-5 against the artifact, writes the verdict to `docs/reviews/absorb-log.md`, and (on big-surface PROCEED only) pushes an alert into `approval_queue` for Telegram ack. The Claude Code session is free immediately — no inline Phase 0-5 work.
+
+  Enqueue path from Claude Code:
+
+  ```bash
+  ssh root@72.60.209.109 "docker exec orc-crewai python -m orchestrator.absorb_inbound enqueue '<URL>' --source cc --by '<session-id-or-name>'"
+  ```
+
+  Telegram-forward inbound is wired separately (Phase 2). Scout sources (X bookmarks, Reddit RSS, GitHub trending, HN) land in Phase 2 also.
+
+- **MANUAL MODE (fallback).** When the user explicitly says "run it inline", "agent is down, do this here", or VPS/Postgres is unreachable, fall back to the original inline workflow defined in Phases 0-5 below. Same exact verdict block format. Append directly to `docs/reviews/absorb-log.md` from the Claude Code session.
+
+When in doubt: AGENT MODE. The verdict is more thorough on the VPS (analyst LLM has the full SKILL.md as a system prompt and zero turn-budget pressure). Manual mode is for when the agent path is broken.
+
 ## Self-Audit Mode
 
 Run this when the user says "audit my config", "scan our own setup", "check agentsHQ for secrets", or at any Compass-scheduled monthly interval. Turns the Security Scan Gate inward against agentsHQ's own Claude Code configuration — not an external artifact being absorbed.
