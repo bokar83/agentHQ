@@ -1380,6 +1380,25 @@ def start_scheduler():
     except Exception as e:
         logger.error(f"ABSORB: wake registration failed ({e}); continuing without absorb", exc_info=True)
 
+    # Absorb scout dispatcher (Phase 2). Runs every 30 min. Iterates the
+    # registered source adapters (Reddit RSS, GitHub trending, HN search),
+    # enqueues new candidates to absorb_queue via absorb_inbound.enqueue().
+    # Internally gates on Sabbath rule (no Sun) + daytime window. Same kill switch.
+    # NOTE: restored 2026-05-14 after gate auto-resolve dropped it during the
+    # Phase 3 merge. Keep this block between absorb-crew and absorb-digest so
+    # future merge resolves preserve all three wakes.
+    try:
+        import heartbeat as _heartbeat
+        from scout_dispatcher import scout_tick
+        _heartbeat.register_wake(
+            "absorb-scout",
+            crew_name="absorb",
+            callback=scout_tick,
+            every="30m",
+        )
+    except Exception as e:
+        logger.error(f"ABSORB_SCOUT: wake registration failed ({e}); continuing without scout", exc_info=True)
+
     # Absorb daily digest (Phase 3). Fires once at 07:00 America/Denver.
     # Internally skips Sunday (sabbath). Summarizes prior 24h absorb_queue
     # activity to Telegram (PROCEED breakdown, scout source PROCEED rates,
