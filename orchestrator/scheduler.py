@@ -1416,6 +1416,22 @@ def start_scheduler():
     except Exception as e:
         logger.error(f"ABSORB_DIGEST: wake registration failed ({e}); continuing without digest", exc_info=True)
 
+    # Absorb auto-wire crew (Phase 4). Drains small-tier PROCEED verdicts
+    # from absorb_queue every 30 min and ships them as feature branches
+    # via Hermes write-boundary scope. Gated on per-skill allowlist (4
+    # opted-in skills) + 3/day rate limit + Sabbath/daytime hours.
+    try:
+        import heartbeat as _heartbeat
+        from absorb_auto_wire import auto_wire_tick
+        _heartbeat.register_wake(
+            "absorb-auto-wire",
+            crew_name="absorb",
+            callback=auto_wire_tick,
+            every="30m",
+        )
+    except Exception as e:
+        logger.error(f"ABSORB_AUTO_WIRE: wake registration failed ({e}); continuing without auto-wire", exc_info=True)
+
     # Echo M2.5: Gate Agent. Runs every 60s. Sole arbiter of all writes to
     # Gate runs on VPS HOST via /etc/cron.d/gate-agent (every 15 min daytime,
     # every 90 min overnight). The container has no .git dir so git fetch/merge
