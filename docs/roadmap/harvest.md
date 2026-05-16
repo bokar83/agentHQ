@@ -1197,3 +1197,46 @@ Three CW-positioning-relevant absorbs evaluated today (Garry Tan GStack + Forbes
 - `docs/reviews/absorb-followups.md` (Garry Tan CW positioning post target 2026-05-20)
 - `feedback_creator_x_ai_cluster_observation.md` (memory)
 - Forbes Tank 5Q follow-up: `docs/reviews/absorb-followups.md` target 2026-05-20
+
+---
+
+## Session log 2026-05-16 — Digital Products Catalog launch (humanatwork.ai)
+
+**Why this exists:** Boubacar's strategic call 2026-05-16 to repackage agentsHQ's 75-skill stack into 50-100 digital products at $25-$300+ on humanatwork.ai. Cash flow keeps him entrepreneurial (avoid corporate-job distraction). Each SKU = lead magnet routing to CW + SW + 1stGen pipelines. SPEED model: ship-then-adjust, never plan-and-optimize before ship.
+
+**Shipped today:**
+
+- **Start AI Within 24 Hours flagship** — T1 ($19 early bird / $29 regular) HTML at `docs/products/start-ai-24h/index.html`. 8 modules. Carries Boubacar voice fingerprint (Conakry transistor radio + Salt Lake kitchen table + tile + carpet + ex-HR + 14yr + agentsHQ + 4 brands).
+- **Landing page** at `docs/products/start-ai-24h/landing.html` (v1) + `landing-v2.html` (Conakry-clay palette + Fraunces italic + asymmetric editorial grid + radio-dial motif; 20/20 self-audit by design agent).
+- **T2 Paste Pack** ($79) at `docs/products/start-ai-24h/t2-paste-pack.html` — 28 paste-ready prompts + Claude Project template + Custom Instructions + MCP bootstrap + daily ritual + troubleshooting.
+- **/shop catalog index** at `docs/products/shop/index.html` — 4 live SKUs + 6 coming this week + 6 coming this month.
+- **3 absorb outputs** at `docs/absorbs/` (nostalgia/Gen-X + digital-products + Notion purchased-prompts inventory).
+- **Gmail STOP 30-day backfill audit** — 1 missed reply (Jordan Harbertson catalina.capital), SQL ready post-migration-012.
+- **Council research** at `docs/decisions/council-sales-conversion-skill-2026-05-16.md` — 5-voice audit (Hormozi + Brunson + Miller + DelDuca + Boubacar) on landing, 36/50 score, 3 ship-today fixes applied.
+- **Landing v2 research + copy outputs** at `docs/decisions/landing-research-best-in-class-2026-05-16.md` + `landing-copy-rewrite-2026-05-16.md` — 12 verified URLs + 92/100 CTQ copy score.
+- **Nostalgia Engine ARCHIVE verdict** at `docs/decisions/nostalgia-engine-archive-verdict-2026-05-16.md` — competing build by another agent rejected; lesson captured to memory.
+
+**H-DP milestones (NEW):**
+
+- **H-DP-001 Catalog 1.0 launch** — 10 SKUs shipped by 2026-05-23 (Start AI 24h flagship + T2 + T3 + T4 + 6 weekend SKUs). Status: 4/10 live (T1/T2/T3/T4 of flagship), 6 in draft.
+- **H-DP-002 Sales platforms wired** — Lemon Squeezy (T1/T2/T3, MoR for VAT/sales tax) + Gumroad (T1 discovery) + Stripe + Hostinger landing pages. Substack paid tier deferred to week 3+ once 50 subs warrant.
+- **H-DP-003 Marketing distribution** — Blotato fans LinkedIn + X + YouTube + Instagram + TikTok. Threads + Pinterest Business deferred to v1.5.
+- **H-DP-004 Hostinger token-gate + LS webhook** — per-buyer private URL via PHP token gate, LS webhook issues token on purchase. Pending.
+- **H-DP-005 Hormozi funnel mechanics** — trust-flip mechanic (Stripe authorize-without-capture, 7-day hold) replaces 14-day refund. T2 order-bump at checkout. T3/T4 NOT on landing (post-purchase only).
+- **H-DP-006 Sales-conversion-vet skill** — standalone skill at `skills/sales-conversion-vet/` (spec ready at `docs/decisions/council-sales-conversion-skill-2026-05-16.md`). Repackages as 3-SKU ladder ($29 / $79 / $499).
+- **H-BOOK-001 Books pipeline** — 5 candidate titles per `feedback_boubacar_books_to_write.md` (Conakry-to-Code memoir + AI for HR + Boring Business + AI + agentsHQ Playbook + 1stGen Money + AI). KDP + Substack serialization + ElevenLabs audiobook.
+
+**Conversion-mechanic innovation:** trust-flip — Stripe authorize-without-capture for 7 days. Buyer pays, hold sits on card, charge posts only if buyer does not opt out. "I do not run a refund. I do not want $19 from a person who did not get $200 of value back." Hormozi-style trust play, no refund overhead.
+
+**Voice rules locked across all SKUs:** 7 fingerprint markers + 4-question pre-publish gate per `feedback_digital_asset_voice_boubacar_fingerprint`. Tier check per `feedback_voice_creep_tiered_by_proximity` (T1+T2 strict, T3+T4 principles only). Never-resell-verbatim per `feedback_purchased_packs_never_resell_verbatim` (5 compliance gates for 25 Notion-purchased packs inventoried).
+
+**Open from this session:**
+
+- Render gate review (Boubacar opens flagship + landing-v2 + T2 on laptop + mobile)
+- 6 weekend SKUs (cold-email pack $49, SEO optimizer $25, frontend pack $49, lead-magnet workbook $39, website-teardown audit $35, CTQ gate $25)
+- Hostinger token-gate PHP + LS webhook
+- Build-in-public X + LinkedIn announce thread
+- skills/sales-conversion-vet/ build
+
+**Memory locked (16 new + 3 updates):** ship-then-adjust + voice fingerprint + multi-moat + voice-tier + faceless-governance + Djama + AI Starter Kit + digital-products lead-magnet loop + YT algo monitor + books + nostalgia + channel stack + never-resell + render verification + HTML-first delivery + agent-build-must-load-brand-context-first.
+

@@ -1258,3 +1258,37 @@ Next 5 absorbs in the faceless-creator-economy cohort (TikTok slideshow / facele
 - `feedback_studio_pipeline_spine_dependencies.md` (new) — spine wiring (scouted in filter + silence alert + scheduled→blotato fan-out) is load-bearing.
 
 **Next session:** validate engagement-scraper fix, wire `studio_pulse:snooze` and `studio_pulse:ack` callback handlers (subagent in flight), monitor blotato fan-out at 09:00 UTC.
+
+---
+
+## Session log 2026-05-16 — 10-channel program revisions + new agents queued
+
+**Why this exists:** Boubacar's same-day revisions to voice rules + persona names + autonomous-agent scope for the 10-channel faceless program. Triggered by digital-products catalog launch + nostalgia/Gen-X absorb + council deep-review of layoff-wave-2026 lens.
+
+**Voice rules REVISED:**
+
+- Old: flat voice-creep tripwire (15% drift threshold + 1-month Studio dark pause) across all 10 channels.
+- New (per `feedback_voice_creep_tiered_by_proximity`): T1 (persona-core LinkedIn/X/newsletter/podcast) + T2 (persona-adjacent CW/SW/1stGen w/ name+face) = strict Boubacar voice. T3 (brand-linked-faceless: Boring Business + AI / AI For HR / Soft Landing / Knowledge Worker Toolkit) = medium, channel voice allowed. T4 (brand-distant-faceless: AIC-FR-Africa / Mande-folk / Lofi-African / 1stGen-FR / AI-tools-African-SMB / One Hour Income) = principles only.
+- Faceless principle floor (T3+T4) per `feedback_faceless_channels_principles_only_governance`: no drugs / no alcohol / nothing illegal / good clean language / no fabricated stats / no em-dashes / "1stGen" not "FGM" / Guinea+Conakry never Senegal/Dakar / no Loom / no personal-account auto-publish.
+
+**Persona named:**
+
+- AIC-FR-Africa channel host = **Djama** (Pulaar word for "people"). T4 community-collective voice, not a synthetic individual. Pattern for future T4 persona names: mother-tongue word that signals heritage + community. See `feedback_djama_persona_aic_fr_africa`.
+
+**S-milestones NEW:**
+
+- **S-YT-MON YouTube Algorithm Monitor Agent** — weekly+ scan of YT algo signals + propose pivot / pause / spawn-new candidates. Floor cadence weekly. Agent proposes own cadence at first run. Output: 1-2 page decision doc per cycle to `docs/observations/yt-algo-monitor/<week>.md`. Boubacar approves until trained, then autonomous. See `feedback_youtube_algorithm_monitor_agent_required`.
+- **S-AUTOCH Fully-Automated Channel Handle Ownership Agent** — phased autonomy: P0 manual (Boubacar + VA on channels 1-3) → P1 agent proposes + Boubacar decides (channels 4+) → P2 Boubacar audits monthly + agent decides → P3 fully autonomous spawn/pause per YT-MON signals. Skill candidate at `skills/channel-bootstrap/`. See `feedback_fully_automated_channel_handle_ownership`.
+
+**Timing-anxiety dropped on layoff-wave lens (`reference_layoff_wave_2026_strategic_lens` revised):** "I'm not too worried about the layoff wave hitting on a specific timeline. There are always people looking for information so layoffs will never end." Channels are evergreen + algo-pivot-ready, not single-window plays. Kill condition revised: 12 months in NO channel hit Studio M5 monetization floor + total Boubacar time-cost > 5hr/wk = pivot to evergreen niches.
+
+**10-channel program scope revisions (per `reference_layoff_wave_2026_strategic_lens`):**
+
+- HR + Ops BOTH (revised from either-or). Faceless + LLM-driven, no dilution risk.
+- Soft Landing accelerated to Wave 1 (was Wave 2). Career transition + severance + COBRA + freelance pivot. Feeds 1stGen + Reminisce+Replan SKU.
+- Boring Business + AI: top 3 trades pending research-driven pick (HVAC + roofing + flooring leading per Boubacar's tile + carpet-cleaning moats).
+
+**Nostalgia Engine archive verdict:** Subagent built a "Nostalgia Engine" web app from today's nostalgia/Gen-X absorb (1,280-line HTML at bokar83/agentHQ@ffebc03). Voice fingerprint 0/7. Brand integration 0/10. Placeholder JS post-template randomizer (no LLM). Competed with humanatwork.ai launch. Verdict ARCHIVE. Memory rule locked: `feedback_agent_build_must_load_brand_context_first` — any subagent build from a strategic-lens absorb MUST load brand context (voice fingerprint + SKU plan + multi-moat + tier rules + reference asset) BEFORE writing UI. 3+ NOs on Build-vs-SKU test = ARCHIVE. Nostalgia angle re-routed into Reminisce + Replan workbook ($47 SKU in `/shop` coming early June).
+
+**Next session:** validate engagement-scraper fix from prior session, wire `studio_pulse:snooze` and `studio_pulse:ack` callback handlers (subagent in flight), monitor blotato fan-out at 09:00 UTC, build S-YT-MON agent skeleton.
+

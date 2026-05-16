@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Start AI Within 24 Hours - From Overwhelmed To Operating</title>
+<meta name="description" content="A 24-hour playbook for going from zero AI use to 5 working daily workflows. Built by an operator who actually uses this stack every day.">
+<style>
+  :root {
+    --ink: #0d0d0d;
+    --paper: #fafaf7;
+    --accent: #c2410c;
+    --accent-soft: #fed7aa;
+    --accent-bright: #ea580c;
+    --rule: #d4d4d0;
+    --muted: #5f5f5a;
+    --sand: #ecebe5;
+    --success: #15803d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--paper); color: var(--ink); font-family: "Charter", "Iowan Old Style", "Georgia", serif; font-size: 18px; line-height: 1.6; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+  h1, h2, h3, h4, .sans { font-family: "Inter", "Helvetica Neue", "Arial", sans-serif; }
+  h1 { font-size: 56px; line-height: 1.05; letter-spacing: -0.025em; font-weight: 800; }
+  h2 { font-size: 36px; line-height: 1.15; letter-spacing: -0.015em; font-weight: 700; margin: 64px 0 24px; }
+  h3 { font-size: 24px; font-weight: 700; margin: 32px 0 12px; }
+  h4 { font-size: 18px; font-weight: 700; margin: 24px 0 8px; }
+  p { margin-bottom: 16px; }
+  ul, ol { margin: 0 0 16px; padding-left: 24px; }
+  li { margin-bottom: 8px; }
+  a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+  a:hover { color: var(--accent-bright); }
+
+  /* ========== TOP BANNER ========== */
+  .top-banner { background: var(--ink); color: var(--paper); text-align: center; padding: 10px 16px; font-family: "Inter", sans-serif; font-size: 14px; }
+  .top-banner strong { color: var(--accent-soft); }
+
+  /* ========== HERO ========== */
+  .hero { padding: 80px 0 60px; background: linear-gradient(135deg, var(--paper) 0%, var(--sand) 100%); }
+  .hero .eyebrow { font-family: "Inter", sans-serif; font-size: 13px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 20px; }
+  .hero h1 { margin-bottom: 24px; }
+  .hero .sub { font-size: 22px; color: var(--muted); font-family: "Inter", sans-serif; font-weight: 400; line-height: 1.4; max-width: 600px; margin-bottom: 32px; }
+  .hero .author { font-family: "Inter", sans-serif; font-size: 14px; color: var(--muted); margin-bottom: 40px; }
+  .hero .author strong { color: var(--ink); }
+
+  /* ========== BUY BOX ========== */
+  .buy-box { background: white; border: 3px solid var(--ink); border-radius: 8px; padding: 32px; margin: 32px 0; }
+  .buy-box .price-row { display: flex; align-items: baseline; gap: 16px; margin-bottom: 20px; font-family: "Inter", sans-serif; }
+  .buy-box .price { font-size: 56px; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; }
+  .buy-box .price-was { font-size: 22px; color: var(--muted); text-decoration: line-through; }
+  .buy-box .price-tag { background: var(--accent); color: white; padding: 4px 12px; border-radius: 4px; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; }
+  .buy-box .product-name { font-family: "Inter", sans-serif; font-weight: 700; font-size: 18px; margin-bottom: 12px; }
+  .buy-box ul { font-family: "Inter", sans-serif; font-size: 15px; margin-bottom: 24px; }
+  .buy-box ul li:before { content: "+ "; color: var(--accent); font-weight: 700; }
+  .buy-box ul li { list-style: none; padding-left: 4px; }
+  .buy-button { display: block; width: 100%; background: var(--accent); color: white; text-align: center; padding: 18px 24px; font-family: "Inter", sans-serif; font-weight: 700; font-size: 18px; border: none; border-radius: 4px; text-decoration: none; cursor: pointer; letter-spacing: 0.02em; }
+  .buy-button:hover { background: var(--accent-bright); color: white; }
+  .buy-meta { font-family: "Inter", sans-serif; font-size: 13px; color: var(--muted); text-align: center; margin-top: 16px; }
+  .buy-meta strong { color: var(--success); }
+
+  /* ========== SOCIAL PROOF STRIP ========== */
+  .proof-strip { background: var(--ink); color: var(--paper); padding: 40px 0; text-align: center; font-family: "Inter", sans-serif; }
+  .proof-strip .stat { font-size: 36px; font-weight: 800; color: var(--accent-soft); letter-spacing: -0.02em; }
+  .proof-strip .label { font-size: 14px; color: rgba(250,250,247,0.7); margin-top: 4px; }
+  .proof-strip .row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; max-width: 720px; margin: 0 auto; }
+
+  /* ========== PAIN ========== */
+  .pain { padding: 60px 0; }
+  .pain-card { background: white; border-left: 4px solid var(--accent); padding: 20px 24px; margin: 16px 0; border-radius: 0 4px 4px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+  .pain-card h4 { margin-top: 0; color: var(--ink); }
+  .pain-card p { margin-bottom: 0; color: var(--muted); }
+
+  /* ========== WHAT YOU GET ========== */
+  .features { background: var(--sand); padding: 60px 0; }
+  .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 32px; }
+  .feature { background: white; padding: 24px; border-radius: 6px; }
+  .feature .num { font-family: "Inter", sans-serif; font-size: 14px; font-weight: 700; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .feature h4 { margin: 0 0 8px; font-size: 17px; }
+  .feature p { font-size: 15px; color: var(--muted); margin-bottom: 0; }
+
+  /* ========== BONUS STACK ========== */
+  .bonus-stack { padding: 60px 0; }
+  .bonus-list { background: white; border: 2px solid var(--rule); border-radius: 6px; padding: 32px; }
+  .bonus-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px dashed var(--rule); font-family: "Inter", sans-serif; }
+  .bonus-row:last-child { border-bottom: none; }
+  .bonus-row .bonus-name { flex: 1; font-weight: 600; }
+  .bonus-row .bonus-value { color: var(--muted); font-size: 14px; }
+  .bonus-row .bonus-value strong { color: var(--ink); }
+  .bonus-total { background: var(--accent); color: white; padding: 16px 24px; margin-top: 16px; border-radius: 4px; display: flex; justify-content: space-between; font-family: "Inter", sans-serif; font-weight: 700; }
+  .bonus-total .total-label { font-size: 16px; }
+  .bonus-total .total-amount { font-size: 22px; letter-spacing: -0.01em; }
+
+  /* ========== GUARANTEE ========== */
+  .guarantee { background: var(--ink); color: var(--paper); padding: 60px 0; text-align: center; }
+  .guarantee-seal { width: 88px; height: 88px; background: var(--accent); color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-family: "Inter", sans-serif; font-weight: 800; font-size: 14px; line-height: 1.2; text-align: center; margin-bottom: 16px; }
+  .guarantee h2 { color: var(--paper); margin: 16px 0; }
+  .guarantee p { max-width: 560px; margin: 0 auto 16px; color: rgba(250,250,247,0.8); font-size: 17px; }
+
+  /* ========== UPSELL TIERS ========== */
+  .upsells { padding: 60px 0; }
+  .tier-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 32px; font-family: "Inter", sans-serif; }
+  .tier { background: white; border: 2px solid var(--rule); border-radius: 6px; padding: 24px; }
+  .tier.featured { border-color: var(--accent); position: relative; }
+  .tier.featured:before { content: "Best value gap"; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--accent); color: white; padding: 4px 12px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; border-radius: 3px; }
+  .tier .tier-name { font-size: 13px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; font-weight: 700; }
+  .tier h3 { font-size: 20px; margin: 0 0 12px; }
+  .tier .tier-price { font-size: 32px; font-weight: 800; color: var(--ink); margin-bottom: 12px; letter-spacing: -0.02em; }
+  .tier ul { font-size: 14px; padding-left: 20px; margin-bottom: 20px; }
+  .tier .tier-cta { display: block; text-align: center; padding: 12px 16px; background: var(--ink); color: white; font-weight: 600; border-radius: 3px; font-size: 14px; }
+  .tier.featured .tier-cta { background: var(--accent); }
+  .tier .tier-cta:hover { background: var(--accent-bright); color: white; }
+
+  /* ========== AUTHOR ========== */
+  .author-section { background: var(--sand); padding: 60px 0; }
+  .author-card { background: white; padding: 32px; border-radius: 8px; }
+  .author-card h3 { margin-top: 0; }
+
+  /* ========== FAQ ========== */
+  .faq { padding: 60px 0; }
+  .faq-item { padding: 20px 0; border-bottom: 1px solid var(--rule); }
+  .faq-item:first-child { border-top: 1px solid var(--rule); }
+  .faq-item h4 { font-size: 18px; margin: 0 0 8px; }
+  .faq-item p { margin: 0; color: var(--muted); }
+
+  /* ========== FOOTER ========== */
+  footer { background: var(--ink); color: rgba(250,250,247,0.7); padding: 40px 0; font-family: "Inter", sans-serif; font-size: 14px; text-align: center; }
+  footer a { color: var(--accent-soft); }
+
+  blockquote { border-left: 4px solid var(--accent); padding: 16px 20px; background: var(--sand); margin: 24px 0; font-style: italic; color: var(--muted); }
+
+  @media (max-width: 720px) {
+    h1 { font-size: 40px; }
+    h2 { font-size: 28px; }
+    .feature-grid, .tier-grid, .proof-strip .row { grid-template-columns: 1fr; }
+    .buy-box .price { font-size: 44px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ========== TOP BANNER (Hormozi scarcity) ========== -->
+<div class="top-banner">
+  <strong>Early-bird pricing through May 23.</strong> Then $29. Currently <strong>$19</strong>.
+</div>
+
+<!-- ========== HERO ========== -->
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow">A Human at Work Starter Kit</div>
+    <h1>Start using AI within 24 hours. Without overwhelm.</h1>
+    <p class="sub" style="font-size: 18px; font-weight: 600; color: var(--ink); margin-bottom: 12px;">Built by an operator running three brands on this stack. Not a course-seller.</p>
+    <p class="sub">A step-by-step playbook for going from zero account to five working daily workflows in a single day. No 12-week course. No 1,000-prompt swipe file. The shortest path from "I know I need to start" to "I am actually using it."</p>
+    <p class="author"><strong>Boubacar.</strong> Builder of agentsHQ. Ex-corporate HR. Conakry to code.</p>
+
+    <div class="buy-box">
+      <div class="price-row">
+        <span class="price">$19</span>
+        <span class="price-was">$29</span>
+        <span class="price-tag">Early bird</span>
+      </div>
+      <p class="product-name">Start AI Within 24 Hours - The Overwhelmed Person's Starter Kit</p>
+      <ul>
+        <li>30+ page PDF + private HTML access</li>
+        <li>1-page printable cheatsheet</li>
+        <li>24-hour milestone checklist</li>
+        <li>Role-specific workflows for HR, Ops, Sales, Writers, Trades</li>
+        <li>14-day refund. No questions.</li>
+      </ul>
+      <a class="buy-button" href="https://humanatwork.ai/start-ai/buy">Get instant access ($19)</a>
+      <p class="buy-meta">Lifetime access. Free updates. Single offer (rebuild pending).</p>
+      <p style="font-family: 'Inter', sans-serif; font-size: 13px; color: var(--muted); text-align: center; margin-top: 8px; padding-top: 12px; border-top: 1px dashed var(--rule);">
+        <strong style="color: var(--accent);">+$29 add-on:</strong> 28 paste-ready prompts ships with your guide. Tick the box at checkout.
+      </p>
+    </div>
+
+    <div style="background: var(--sand); padding: 24px; border-left: 4px solid var(--ink); margin: 32px 0; font-family: 'Inter', sans-serif;">
+      <p style="margin: 0; font-size: 17px; line-height: 1.5; color: var(--ink);"><strong>The cost of waiting is not zero.</strong> The version of you that does not start today is the version your AI-fluent peer overtakes by Q3. It is the next promotion. The next contract. The next role you assumed was yours. Start today.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========== SOCIAL PROOF STRIP ========== -->
+<section class="proof-strip">
+  <div class="wrap">
+    <div class="row">
+      <div>
+        <div class="stat">75+</div>
+        <div class="label">AI skills built into agentsHQ</div>
+      </div>
+      <div>
+        <div class="stat">14yr</div>
+        <div class="label">Corporate HR career</div>
+      </div>
+      <div>
+        <div class="stat">4</div>
+        <div class="label">Brands currently operated</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== PAIN ========== -->
+<section class="pain">
+  <div class="wrap">
+    <h2>The problem is not your effort.</h2>
+    <p>Look. I have been you. Two years ago I sat at my kitchen table in Salt Lake City, three browser tabs open, two YouTube tutorials half-watched, one ChatGPT chat from four months ago I never went back to. My wife walked past, asked how the AI thing was going. I said "great." I closed the laptop. I knew I was lying.</p>
+
+    <p>You have already tried. You have read articles. You have watched videos. You have set up ChatGPT, asked it to write a poem, decided AI was not for you, and closed the tab. Six months later you still feel behind. None of this is your fault. The path everyone hands you is broken.</p>
+
+    <div class="pain-card">
+      <h4>"Everyone says start with prompts. I read 1,000 prompts. None apply to my actual work."</h4>
+      <p>The swipe-file approach is what makes most people quit. Five prompts you write yourself beat a thousand someone else wrote for a fictional buyer persona.</p>
+    </div>
+    <div class="pain-card">
+      <h4>"I do not know if I should use Claude, ChatGPT, Gemini, or something else."</h4>
+      <p>The tool choice is a 60-second decision. The implementation is what matters. Pick one, use it for two weeks, then evaluate switching. Never two at once on day one.</p>
+    </div>
+    <div class="pain-card">
+      <h4>"I get distracted by all the new tools every week."</h4>
+      <p>The shiny-tool problem is real. The fix is not more tools, it is finishing one workflow before evaluating the next. This guide locks you in for 24 hours.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========== WHAT YOU GET ========== -->
+<section class="features">
+  <div class="wrap">
+    <h2>What is inside.</h2>
+    <p>The guide is built around eight modules you complete in 24 hours, with the assumption that you have a normal job and 2-4 hours of focused time over a couple of evenings.</p>
+
+    <div class="feature-grid">
+      <div class="feature">
+        <div class="num">Module 01</div>
+        <h4>Why 24 Hours</h4>
+        <p>The mindset shift that gets you using the tool today instead of "starting next week."</p>
+      </div>
+      <div class="feature">
+        <div class="num">Module 02</div>
+        <h4>Account Setup</h4>
+        <p>The 60-second decision tree for which AI to pick. Account creation, privacy settings, and your first real prompt before the first hour is up.</p>
+      </div>
+      <div class="feature">
+        <div class="num">Module 03</div>
+        <h4>5 Universal Workflows</h4>
+        <p>Email drafting, meeting prep, doc summary, decision pressure-test, first-draft anything. Each in 15 minutes or less.</p>
+      </div>
+      <div class="feature">
+        <div class="num">Module 04</div>
+        <h4>Projects + Custom Instructions + MCP</h4>
+        <p>The deep customization that 90% of new users never get to. We get you there on day one.</p>
+      </div>
+      <div class="feature">
+        <div class="num">Module 05</div>
+        <h4>Role-Specific Setups</h4>
+        <p>Pre-configured workflows for HR, Ops, Sales, Writing, and Trade Business operators. Pick yours and skip the others.</p>
+      </div>
+      <div class="feature">
+        <div class="num">Module 06</div>
+        <h4>The Shutdown Ritual</h4>
+        <p>How to make the habit stick after the 24 hours end. The 30-day plan that takes you from beginner to top 1% of practical AI users in your role.</p>
+      </div>
+      <div class="feature">
+        <div class="num">Module 07</div>
+        <h4>Privacy + Safety</h4>
+        <p>What never to paste. How to spot hallucinations. What AI is bad at. The 5-minute risk audit you do once and trust forever.</p>
+      </div>
+      <div class="feature">
+        <div class="num">Module 08</div>
+        <h4>Next Steps</h4>
+        <p>Where to go after the 24 hours. The upgrade path. How to get help if you stall.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== BONUS STACK ========== -->
+<section class="bonus-stack">
+  <div class="wrap">
+    <h2>What you get for $19 (intro 100) / $29 (after).</h2>
+
+    <div class="bonus-list">
+      <div class="bonus-row">
+        <span class="bonus-name">The 30+ page guide (HTML + PDF)</span>
+        <span class="bonus-value">Value: <strong>$49</strong></span>
+      </div>
+      <div class="bonus-row">
+        <span class="bonus-name">1-page printable cheatsheet</span>
+        <span class="bonus-value">Value: <strong>$15</strong></span>
+      </div>
+      <div class="bonus-row">
+        <span class="bonus-name">24-hour milestone checklist</span>
+        <span class="bonus-value">Value: <strong>$15</strong></span>
+      </div>
+      <div class="bonus-row">
+        <span class="bonus-name">Role-specific workflow pages (5 roles)</span>
+        <span class="bonus-value">Value: <strong>$25</strong></span>
+      </div>
+      <div class="bonus-row">
+        <span class="bonus-name">Privacy + safety audit checklist</span>
+        <span class="bonus-value">Value: <strong>$15</strong></span>
+      </div>
+      <div class="bonus-row">
+        <span class="bonus-name">14-day refund (no surveys, no friction)</span>
+        <span class="bonus-value">Value: <strong>Priceless</strong></span>
+      </div>
+      <div class="bonus-row">
+        <span class="bonus-name">Lifetime updates (Claude/ChatGPT shifts handled)</span>
+        <span class="bonus-value">Value: <strong>$60/yr</strong></span>
+      </div>
+      <div class="bonus-row">
+        <span class="bonus-name">Direct email to support@humanatwork.ai</span>
+        <span class="bonus-value">Value: <strong>$40</strong></span>
+      </div>
+      <div class="bonus-total">
+        <span class="total-label">Total stacked value</span>
+        <span class="total-amount">$219</span>
+      </div>
+    </div>
+
+    <blockquote>You pay $19 today (intro 100) or $29 (after the first 100). You get the entire stack. If it does not work for you, you ask for a refund within 14 days and I send it back. No emails about "what could we have done better." No friction. Just back to your card.</blockquote>
+  </div>
+</section>
+
+<!-- ========== GUARANTEE ========== -->
+<section class="guarantee">
+  <div class="wrap">
+    <div class="guarantee-seal">14<br>DAY</div>
+    <h2>If it does not work, you get every dollar back.</h2>
+    <p>Open the guide. Read it. Try it. If 24 hours from now you do not have five working AI workflows in your life, send a one-line email and I refund you. No survey. No "help us understand why." You decide. Until day 14.</p>
+    <p>You take zero risk. I take it all.</p>
+  </div>
+</section>
+
+<!-- ========== UPSELL TIERS ========== -->
+<section class="upsells">
+  <div class="wrap">
+    <h2>If you want more help.</h2>
+    <p>The $19 / $29 guide is the foundation. Below are the levels for people who want me to do more of the work with them or for them.</p>
+
+    <div class="tier-grid">
+      <div class="tier">
+        <div class="tier-name">Tier 2 - Copy/paste</div>
+        <h3>+ The Paste Pack</h3>
+        <div class="tier-price">$79</div>
+        <ul>
+          <li>Everything in the guide</li>
+          <li>28 ready-to-paste prompts</li>
+          <li>Claude Project system prompt template</li>
+          <li>ChatGPT custom-instructions template</li>
+          <li>MCP bootstrap (5 servers)</li>
+          <li>Daily startup ritual + troubleshooting</li>
+          <li>Safety scan included</li>
+        </ul>
+        <a class="tier-cta" href="https://humanatwork.ai/start-ai/t2">Get T2 Paste Pack</a>
+      </div>
+      <div class="tier featured">
+        <div class="tier-name">Tier 3 - Hand-in-hand</div>
+        <h3>+ 60-min With Me</h3>
+        <div class="tier-price">$697</div>
+        <div style="font-family: 'Inter', sans-serif; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-top: -8px; margin-bottom: 12px;">Where most upgrade lives</div>
+        <ul>
+          <li>Everything in T1 + T2</li>
+          <li>60-minute screen-share with Boubacar</li>
+          <li>Live setup on your machine</li>
+          <li>Personalized 1-page snapshot post-call</li>
+          <li>30-day milestone tracker</li>
+          <li>Lifetime access to T1 + T2 updates</li>
+        </ul>
+        <a class="tier-cta" href="https://humanatwork.ai/start-ai/hand-in-hand">Book T3 Hand-in-Hand</a>
+      </div>
+      <div class="tier">
+        <div class="tier-name">Tier 4 - Done for you</div>
+        <h3>+ Full Setup By Boubacar</h3>
+        <div class="tier-price">$3,997</div>
+        <ul>
+          <li>I configure everything for you</li>
+          <li>1 MCP integration of your choice</li>
+          <li>5 prompts customized to your role</li>
+          <li>30-day written plan</li>
+          <li>7-day delivery from intake</li>
+          <li>30-day Slack support window</li>
+        </ul>
+        <a class="tier-cta" href="https://humanatwork.ai/start-ai/done-for-you">Request T4 Done-For-You</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== AUTHOR ========== -->
+<section class="author-section">
+  <div class="wrap">
+    <h2>Who I am. Why I built this.</h2>
+
+    <div class="author-card">
+      <h3>Boubacar</h3>
+      <p>Quick test. The truest sentence I can write about myself in one shot: I was born in Conakry, Guinea, I remember being six lying on the cement floor while my father pressed a transistor radio to his ear listening to BBC Africa crackle through static, I spent 14 years in corporate HR, I installed tile with my brother-in-law for a year and a half when I was broke, I sold carpet cleaning door-to-door in Salt Lake City to pay for community college, I failed at three businesses before this one worked, I built a 75-skill AI system because someone had to and it might as well be me.</p>
+
+      <p>I have been overwhelmed by AI. I have helped HR directors, freelance designers, small business owners, trade-shop owners, and one cousin who runs a salon in Conakry actually use it. Every one of them needed something exactly like this guide and could not find it. So I wrote it. I am not a guru. I am an operator who got unstuck and is showing you the door.</p>
+
+      <p>If you finish this guide and use AI for real work tomorrow, my job is done. If you want me to do more, I am one upgrade away.</p>
+
+      <ul style="margin-top: 16px;">
+        <li><strong>Catalyst Works:</strong> AI consulting for mid-market companies</li>
+        <li><strong>Signal Works:</strong> Website + AI-visibility builds for service businesses</li>
+        <li><strong>1stGen Money:</strong> Financial guidance for first-generation US/EU diaspora</li>
+        <li><strong>agentsHQ:</strong> The multi-agent AI orchestrator I built that runs all three</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ========== FAQ ========== -->
+<section class="faq">
+  <div class="wrap">
+    <h2>Common questions.</h2>
+
+    <div class="faq-item">
+      <h4>Do I need to be technical?</h4>
+      <p>No. The guide assumes zero technical background. If you can sign up for an email account, you can complete this in 24 hours.</p>
+    </div>
+
+    <div class="faq-item">
+      <h4>What if I only have an hour a day?</h4>
+      <p>The guide breaks into 8 modules. Each is 15-60 minutes. You can complete it across 3-4 evenings if you cannot find 24 contiguous hours.</p>
+    </div>
+
+    <div class="faq-item">
+      <h4>Does it work for ChatGPT users (not Claude)?</h4>
+      <p>Yes. The structure is identical. The buttons are in slightly different places. I note the differences as we go.</p>
+    </div>
+
+    <div class="faq-item">
+      <h4>Will this be outdated in 6 months?</h4>
+      <p>The principles (how to think about AI workflow, how to write good prompts, how to set up Projects) are stable. The tool-specific buttons change. Updates are free for all buyers as the landscape shifts.</p>
+    </div>
+
+    <div class="faq-item">
+      <h4>What if my company has an AI policy?</h4>
+      <p>Section 07 covers privacy and policy compliance. If your company requires enterprise tools (Claude for Work, ChatGPT Enterprise), the guide works the same. Buttons in slightly different places.</p>
+    </div>
+
+    <div class="faq-item">
+      <h4>How do I get the file after I buy?</h4>
+      <p>Instant access. You will see the private link on the confirmation page. A copy is emailed to you. The HTML stays live for lifetime access. A PDF backup is in the bundle.</p>
+    </div>
+
+    <div class="faq-item">
+      <h4>What if I refund?</h4>
+      <p>Email support within 14 days. We refund in full. No questions. We never want money from someone who is not getting value.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========== FINAL CTA ========== -->
+<section class="hero" style="padding: 60px 0;">
+  <div class="wrap">
+    <h2 style="margin-top: 0;">One last thing.</h2>
+    <p>Six months ago you were going to start. You did not. Right now is the same decision. The version of you that finishes this guide is the version that everyone in your industry will be in 18 months. Get there first.</p>
+
+    <div class="buy-box">
+      <div class="price-row">
+        <span class="price">$19</span>
+        <span class="price-was">$29</span>
+        <span class="price-tag">Early bird</span>
+      </div>
+      <p class="product-name">Start AI Within 24 Hours</p>
+      <a class="buy-button" href="https://humanatwork.ai/start-ai/buy">Get instant access ($19)</a>
+      <p class="buy-meta"><strong>14-day refund.</strong> Lifetime access. Free updates.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========== FOOTER ========== -->
+<footer>
+  <div class="wrap">
+    <p>Human at Work - Built by <a href="https://humanatwork.ai">Boubacar</a> - 2026</p>
+    <p>Refund within 14 days: <a href="mailto:support@humanatwork.ai">support@humanatwork.ai</a></p>
+    <p style="margin-top: 16px; font-size: 13px;"><a href="https://humanatwork.ai/privacy">Privacy</a> &nbsp;|&nbsp; <a href="https://humanatwork.ai/terms">Terms</a> &nbsp;|&nbsp; <a href="https://humanatwork.ai/refund">Refund policy</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

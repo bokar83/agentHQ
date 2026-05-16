@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Start AI Within 24 Hours - by Boubacar</title>
+<meta name="description" content="A 24-hour playbook for going from zero AI use to five working daily workflows. Built by an operator running three brands on this stack. Not a course-seller.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400;1,9..144,600;1,9..144,800&family=Spectral:ital,wght@0,300;0,400;0,500;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #141210;
+    --ink-soft: #2A2620;
+    --paper: #F4EFE6;
+    --bone: #E6DDC8;
+    --brick: #A8341F;
+    --brick-deep: #8A2818;
+    --sage: #3E4A2E;
+    --muted: #6B655C;
+    --hairline: rgba(20, 18, 16, 0.12);
+    --hairline-strong: rgba(20, 18, 16, 0.32);
+    --grid-line: rgba(20, 18, 16, 0.06);
+
+    --serif: "Fraunces", "Iowan Old Style", "Georgia", serif;
+    --body: "Spectral", "Iowan Old Style", "Georgia", serif;
+    --mono: "JetBrains Mono", "Menlo", monospace;
+
+    --rev-1: cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 19px;
+    line-height: 1.65;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  /* paper grain texture (subtle, no library) */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.45;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='4'/><feColorMatrix values='0 0 0 0 0.08, 0 0 0 0 0.07, 0 0 0 0 0.06, 0 0 0 0.05 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+  }
+
+  main, section, header, footer, nav { position: relative; z-index: 1; }
+
+  a { color: inherit; text-decoration: none; }
+  a.linkish { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; text-decoration-color: var(--hairline-strong); transition: text-decoration-color 200ms var(--rev-1), color 200ms var(--rev-1); }
+  a.linkish:hover { color: var(--brick); text-decoration-color: var(--brick); }
+
+  ::selection { background: var(--brick); color: var(--paper); }
+
+  /* ============ TYPE ============ */
+  .display {
+    font-family: var(--serif);
+    font-weight: 400;
+    letter-spacing: -0.025em;
+    line-height: 0.94;
+    font-style: italic;
+    font-variation-settings: "opsz" 144;
+  }
+  .display em { font-style: normal; }
+  h2.section-head {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(36px, 5.5vw, 64px);
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    font-variation-settings: "opsz" 100;
+  }
+  h3 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 24px;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    font-weight: 500;
+    color: var(--brick);
+  }
+  .label-mono {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  p.lede {
+    font-family: var(--serif);
+    font-size: clamp(20px, 2.2vw, 26px);
+    line-height: 1.45;
+    font-weight: 300;
+    letter-spacing: -0.005em;
+    color: var(--ink-soft);
+  }
+  p.body { max-width: 60ch; }
+  .tnum { font-variant-numeric: tabular-nums; }
+
+  /* ============ LAYOUT ============ */
+  .container { width: min(1240px, calc(100% - 48px)); margin: 0 auto; }
+  .grid-12 { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; }
+
+  /* hairline divider */
+  .hairline { border-top: 1px solid var(--hairline); height: 1px; }
+  .hairline-strong { border-top: 1px solid var(--ink); height: 1px; }
+
+  /* ============ TOP BAR ============ */
+  .topbar {
+    border-bottom: 1px solid var(--hairline);
+    padding: 14px 0;
+    background: var(--paper);
+  }
+  .topbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+  }
+  .wordmark {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-style: italic;
+    font-size: 20px;
+    letter-spacing: -0.01em;
+  }
+  .wordmark .dot { color: var(--brick); }
+  .topbar-meta { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); display: flex; gap: 24px; }
+  .topbar-meta .pulse { color: var(--brick); display: inline-flex; align-items: center; gap: 6px; }
+  .topbar-meta .pulse::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--brick);
+    box-shadow: 0 0 0 0 rgba(168, 52, 31, 0.55);
+    animation: pulse 2.4s var(--rev-1) infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(168, 52, 31, 0.55); }
+    70% { box-shadow: 0 0 0 9px rgba(168, 52, 31, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(168, 52, 31, 0); }
+  }
+  @media (max-width: 720px) { .topbar-meta { display: none; } }
+
+  /* ============ HERO ============ */
+  .hero {
+    padding: 80px 0 100px;
+    position: relative;
+    border-bottom: 1px solid var(--hairline);
+    overflow: hidden;
+  }
+  .hero .container { position: relative; }
+  .hero-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 36px; gap: 24px; flex-wrap: wrap; }
+  .hero-meta-left, .hero-meta-right { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .hero-meta-right { text-align: right; }
+  .hero-meta-left strong, .hero-meta-right strong { color: var(--ink); font-weight: 500; }
+
+  h1.hero-title {
+    font-size: clamp(56px, 11vw, 144px);
+    margin-bottom: 32px;
+    max-width: 14ch;
+  }
+  h1.hero-title .accent { color: var(--brick); font-style: italic; }
+  h1.hero-title .strike { display: inline-block; position: relative; }
+  h1.hero-title .strike::after {
+    content: "";
+    position: absolute;
+    left: -2%; right: -2%;
+    top: 56%;
+    height: 6px;
+    background: var(--brick);
+    transform: skewY(-2deg);
+    opacity: 0.85;
+  }
+
+  .hero-row {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 80px;
+    align-items: end;
+    margin-top: 40px;
+  }
+  @media (max-width: 900px) { .hero-row { grid-template-columns: 1fr; gap: 40px; } }
+
+  .hero-lede { max-width: 38ch; }
+  .hero-lede em { font-style: italic; color: var(--brick); }
+
+  .credit-block { border-left: 1px solid var(--ink); padding-left: 20px; max-width: 320px; }
+  .credit-block .name {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 22px;
+    font-weight: 400;
+    margin-bottom: 4px;
+  }
+  .credit-block .bio {
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.6;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+  .credit-block .bio strong { color: var(--ink); font-weight: 500; }
+
+  /* radio dial SVG motif - the Conakry transistor moment */
+  .radio-motif {
+    position: absolute;
+    right: -120px;
+    top: -40px;
+    width: 480px;
+    height: 480px;
+    opacity: 0.18;
+    pointer-events: none;
+    color: var(--ink);
+  }
+  @media (max-width: 1100px) { .radio-motif { opacity: 0.08; width: 360px; height: 360px; right: -160px; } }
+  @media (max-width: 720px) { .radio-motif { display: none; } }
+
+  /* ============ BUY CARD ============ */
+  .buy-card-wrap { margin-top: 64px; }
+  .buy-card {
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    padding: 32px 36px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 32px;
+    align-items: center;
+    position: relative;
+  }
+  .buy-card::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border: 1px solid var(--ink);
+    transform: translate(6px, 6px);
+    pointer-events: none;
+    background: transparent;
+    z-index: -1;
+  }
+  .buy-price { display: flex; align-items: baseline; gap: 12px; }
+  .buy-price .amt {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 72px;
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+  .buy-price .was {
+    font-family: var(--serif);
+    font-size: 22px;
+    color: var(--muted);
+    text-decoration: line-through;
+    text-decoration-color: var(--brick);
+    text-decoration-thickness: 2px;
+  }
+  .buy-info .product-line {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 19px;
+    margin-bottom: 6px;
+    letter-spacing: -0.005em;
+  }
+  .buy-info .product-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .buy-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--ink);
+    color: var(--paper);
+    padding: 18px 28px;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: background 200ms var(--rev-1), transform 200ms var(--rev-1);
+    border: 1px solid var(--ink);
+  }
+  .buy-cta:hover { background: var(--brick); border-color: var(--brick); transform: translateY(-1px); }
+  .buy-cta .arrow { transition: transform 200ms var(--rev-1); }
+  .buy-cta:hover .arrow { transform: translateX(4px); }
+
+  @media (max-width: 820px) {
+    .buy-card { grid-template-columns: 1fr; gap: 20px; padding: 28px; }
+    .buy-cta { justify-content: center; }
+  }
+
+  /* order bump row (torn-paper checkbox) */
+  .order-bump {
+    margin-top: 14px;
+    padding: 18px 22px;
+    background: var(--bone);
+    border: 1px dashed var(--hairline-strong);
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    cursor: pointer;
+    transition: background 200ms var(--rev-1), border-color 200ms var(--rev-1);
+  }
+  .order-bump:hover { background: var(--paper); border-color: var(--ink); }
+  .order-bump input { margin-top: 4px; accent-color: var(--brick); width: 18px; height: 18px; flex-shrink: 0; }
+  .order-bump .bump-text {
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  .order-bump .bump-text strong { font-family: var(--serif); font-weight: 600; font-style: italic; }
+  .order-bump .bump-text .price-add { font-family: var(--mono); font-size: 13px; letter-spacing: 0.06em; color: var(--brick); font-weight: 600; margin-left: 4px; }
+
+  /* ============ SECTION SCAFFOLDING ============ */
+  section.chapter { padding: 120px 0; border-bottom: 1px solid var(--hairline); position: relative; }
+  section.chapter:last-of-type { border-bottom: 0; }
+
+  .chapter-header {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 40px;
+    margin-bottom: 60px;
+    align-items: start;
+  }
+  .chapter-num {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 96px;
+    line-height: 0.9;
+    color: var(--brick);
+    font-style: italic;
+    letter-spacing: -0.04em;
+    font-variation-settings: "opsz" 144;
+  }
+  .chapter-header .head-content { padding-top: 8px; }
+  .chapter-header .eyebrow { margin-bottom: 12px; display: block; }
+
+  @media (max-width: 720px) {
+    .chapter-header { grid-template-columns: 1fr; gap: 16px; margin-bottom: 40px; }
+    .chapter-num { font-size: 64px; }
+    section.chapter { padding: 80px 0; }
+  }
+
+  /* ============ THE BEFORE ============ */
+  .before-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: start;
+  }
+  @media (max-width: 900px) { .before-grid { grid-template-columns: 1fr; gap: 40px; } }
+  .before-grid p { font-size: 21px; line-height: 1.55; margin-bottom: 24px; }
+  .before-grid .pull {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(28px, 3.5vw, 44px);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    border-left: 3px solid var(--brick);
+    padding-left: 28px;
+    margin-top: 24px;
+    color: var(--ink);
+  }
+  .before-grid .pull cite {
+    display: block;
+    margin-top: 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-style: normal;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ============ MODULES ============ */
+  .modules-list { display: grid; gap: 0; }
+  .module-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 1.2fr;
+    gap: 40px;
+    padding: 32px 0;
+    border-top: 1px solid var(--hairline);
+    align-items: baseline;
+    transition: padding 300ms var(--rev-1);
+  }
+  .module-row:last-child { border-bottom: 1px solid var(--hairline); }
+  .module-row:hover { padding-left: 12px; }
+  .module-row .mod-num {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 48px;
+    color: var(--ink);
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    transition: color 200ms var(--rev-1);
+  }
+  .module-row:hover .mod-num { color: var(--brick); }
+  .module-row .mod-name {
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+  .module-row .mod-desc {
+    color: var(--muted);
+    font-size: 17px;
+    line-height: 1.55;
+  }
+  .module-row .mod-name em { color: var(--brick); font-style: italic; font-weight: 400; }
+
+  @media (max-width: 820px) {
+    .module-row { grid-template-columns: 56px 1fr; gap: 16px; padding: 24px 0; }
+    .module-row .mod-num { font-size: 32px; }
+    .module-row .mod-name { font-size: 20px; }
+    .module-row .mod-desc { grid-column: 2; font-size: 15px; }
+  }
+
+  /* ============ STACK ============ */
+  .stack-section { background: var(--bone); border-bottom: 1px solid var(--hairline); }
+  .stack-table {
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    margin-top: 24px;
+  }
+  .stack-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--hairline);
+    align-items: center;
+    font-family: var(--body);
+    font-size: 17px;
+  }
+  .stack-row:last-child { border-bottom: 0; }
+  .stack-row .stack-name { font-weight: 500; }
+  .stack-row .stack-name small { display: block; color: var(--muted); font-size: 13px; font-weight: 400; margin-top: 2px; font-family: var(--mono); letter-spacing: 0.04em; }
+  .stack-row .stack-val {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+  }
+  .stack-row.total {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 28px;
+  }
+  .stack-row.total .stack-name {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .stack-row.total .stack-val {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 40px;
+    color: var(--paper);
+  }
+
+  /* ============ AUTHOR ============ */
+  .author-grid {
+    display: grid;
+    grid-template-columns: 0.8fr 1.2fr;
+    gap: 80px;
+    align-items: start;
+  }
+  @media (max-width: 900px) { .author-grid { grid-template-columns: 1fr; gap: 40px; } }
+  .author-photo {
+    aspect-ratio: 4 / 5;
+    background: var(--bone);
+    border: 1px solid var(--ink);
+    position: relative;
+    overflow: hidden;
+  }
+  /* PHOTO HERE: black-and-white portrait of Boubacar, 3/4 angle, looking off-camera, warm window light, Salt Lake kitchen table or office, NOT smiling-at-camera stock pose */
+  .author-photo-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 24px;
+    gap: 16px;
+  }
+  .author-photo-placeholder svg { width: 56px; height: 56px; opacity: 0.4; }
+  .author-photo .caption {
+    position: absolute;
+    bottom: 12px; left: 16px; right: 16px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .author-body p { font-size: 19px; line-height: 1.65; margin-bottom: 20px; }
+  .author-body p:first-child::first-letter {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-style: italic;
+    font-size: 80px;
+    float: left;
+    line-height: 0.85;
+    margin: 6px 12px 0 -2px;
+    color: var(--brick);
+  }
+
+  .moat-list {
+    margin-top: 32px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 32px;
+  }
+  .moat-list li {
+    list-style: none;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    line-height: 1.5;
+    padding-left: 20px;
+    position: relative;
+    color: var(--ink);
+  }
+  .moat-list li::before {
+    content: "—";
+    position: absolute;
+    left: 0;
+    color: var(--brick);
+    font-weight: 600;
+  }
+
+  /* ============ FAQ ============ */
+  .faq-list { max-width: 760px; margin: 0 auto; }
+  .faq-item {
+    border-top: 1px solid var(--hairline);
+    padding: 28px 0;
+  }
+  .faq-item:last-child { border-bottom: 1px solid var(--hairline); }
+  .faq-item .q {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .faq-item .q .q-num {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    color: var(--brick);
+    font-weight: 600;
+    margin-top: 4px;
+    flex-shrink: 0;
+  }
+  .faq-item .a { color: var(--muted); font-size: 17px; line-height: 1.6; padding-left: 32px; }
+
+  /* ============ FINAL CTA ============ */
+  .final-cta {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 140px 0;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+  }
+  .final-cta::before {
+    content: "";
+    position: absolute;
+    top: -50%; right: -10%;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(168, 52, 31, 0.18), transparent 60%);
+    pointer-events: none;
+  }
+  .final-cta .container { position: relative; }
+  .final-cta h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-style: italic;
+    font-size: clamp(48px, 8vw, 112px);
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    color: var(--paper);
+    margin-bottom: 32px;
+    max-width: 14ch;
+  }
+  .final-cta h2 em { color: #E68A6E; font-style: normal; }
+  .final-cta p { font-size: 21px; line-height: 1.55; color: rgba(244, 239, 230, 0.75); max-width: 56ch; margin-bottom: 48px; }
+  .final-cta .buy-card {
+    background: transparent;
+    border-color: var(--paper);
+    color: var(--paper);
+  }
+  .final-cta .buy-card::before { border-color: rgba(244, 239, 230, 0.4); }
+  .final-cta .buy-cta {
+    background: var(--paper);
+    color: var(--ink);
+    border-color: var(--paper);
+  }
+  .final-cta .buy-cta:hover { background: #E68A6E; border-color: #E68A6E; color: var(--ink); }
+  .final-cta .buy-price .was { color: rgba(244, 239, 230, 0.5); }
+  .final-cta .product-sub { color: rgba(244, 239, 230, 0.5); }
+
+  /* ============ FOOTER ============ */
+  footer {
+    background: var(--paper);
+    padding: 48px 0;
+    border-top: 1px solid var(--hairline);
+  }
+  footer .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 24px;
+  }
+  footer .wordmark { font-size: 18px; }
+  footer .foot-links {
+    display: flex;
+    gap: 32px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  footer .foot-links a:hover { color: var(--brick); }
+
+  /* ============ MOTION + REVEAL ============ */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 800ms var(--rev-1), transform 800ms var(--rev-1);
+    transition-delay: var(--delay, 0ms);
+  }
+  .reveal.in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+    .topbar-meta .pulse::before { animation: none; }
+    html { scroll-behavior: auto; }
+  }
+
+  /* ============ PRINT ============ */
+  @media print {
+    body { background: white; color: black; font-size: 12pt; }
+    body::before { display: none; }
+    .topbar, .topbar-meta, .final-cta::before, .radio-motif, .order-bump { display: none; }
+    section.chapter { padding: 24pt 0; page-break-inside: avoid; }
+    .hero { padding: 24pt 0; }
+    .final-cta { background: white; color: black; padding: 24pt 0; }
+    .final-cta h2, .final-cta p { color: black; }
+    .buy-cta { background: black !important; color: white !important; padding: 8pt 14pt; }
+    .buy-card::before { display: none; }
+    a { color: black; text-decoration: underline; }
+    .chapter-num { color: black; }
+    h1.hero-title .accent, h1.hero-title .strike::after { color: black; }
+    h1.hero-title .strike::after { background: black; }
+    .reveal { opacity: 1 !important; transform: none !important; }
+    .author-photo { border: 1pt solid black; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============== TOP BAR ============== -->
+<header class="topbar">
+  <div class="container">
+    <div class="wordmark">Human at Work<span class="dot">.</span></div>
+    <div class="topbar-meta">
+      <span class="pulse">Live - Early-bird $19</span>
+      <span>SKU 001 / Boubacar</span>
+    </div>
+  </div>
+</header>
+
+<!-- ============== HERO ============== -->
+<section class="hero">
+  <!-- Radio dial motif - the Conakry transistor moment, sketched -->
+  <svg class="radio-motif" viewBox="0 0 480 480" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <circle cx="240" cy="240" r="220" stroke="currentColor" stroke-width="1.2"/>
+    <circle cx="240" cy="240" r="180" stroke="currentColor" stroke-width="0.8"/>
+    <circle cx="240" cy="240" r="140" stroke="currentColor" stroke-width="0.8"/>
+    <circle cx="240" cy="240" r="40" stroke="currentColor" stroke-width="1.2" fill="currentColor" fill-opacity="0.06"/>
+    <circle cx="240" cy="240" r="8" fill="currentColor"/>
+    <!-- tick marks around outer ring -->
+    <g stroke="currentColor" stroke-width="1">
+      <line x1="240" y1="20" x2="240" y2="40"/>
+      <line x1="460" y1="240" x2="440" y2="240"/>
+      <line x1="240" y1="460" x2="240" y2="440"/>
+      <line x1="20" y1="240" x2="40" y2="240"/>
+      <line x1="395.9" y1="84.1" x2="381.8" y2="98.2"/>
+      <line x1="395.9" y1="395.9" x2="381.8" y2="381.8"/>
+      <line x1="84.1" y1="395.9" x2="98.2" y2="381.8"/>
+      <line x1="84.1" y1="84.1" x2="98.2" y2="98.2"/>
+    </g>
+    <!-- needle -->
+    <line x1="240" y1="240" x2="370" y2="160" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    <!-- frequency hash marks -->
+    <g stroke="currentColor" stroke-width="0.8">
+      <line x1="80" y1="240" x2="92" y2="240"/>
+      <line x1="100" y1="218" x2="110" y2="222"/>
+      <line x1="120" y1="200" x2="128" y2="208"/>
+    </g>
+  </svg>
+
+  <div class="container">
+    <div class="hero-header">
+      <div class="hero-meta-left">
+        <strong>SKU 001</strong> &nbsp;/&nbsp; Start AI Within 24 Hours
+      </div>
+      <div class="hero-meta-right">
+        Salt Lake City <strong>+</strong> Conakry &nbsp;/&nbsp; <strong>2026</strong>
+      </div>
+    </div>
+
+    <h1 class="hero-title display reveal">
+      Start AI in <span class="accent">24</span> hours.<br>
+      <span class="strike">Without</span> overwhelm.
+    </h1>
+
+    <div class="hero-row reveal" style="--delay: 100ms">
+      <p class="lede hero-lede">
+        A step-by-step playbook for going from zero account to <em>five working daily workflows</em> in a single day. No 12-week course. No 1,000-prompt swipe file. The shortest path from "I know I need to start" to "I am actually using it."
+      </p>
+
+      <div class="credit-block">
+        <div class="name">Boubacar.</div>
+        <div class="bio">
+          <strong>Builder of agentsHQ.</strong><br>
+          Ex-corporate HR (14 years).<br>
+          Three brands. Operator first.<br>
+          Conakry to code.
+        </div>
+      </div>
+    </div>
+
+    <div class="buy-card-wrap reveal" style="--delay: 200ms">
+      <div class="buy-card">
+        <div class="buy-price">
+          <span class="amt">$19</span>
+          <span class="was">$29</span>
+        </div>
+        <div class="buy-info">
+          <div class="product-line">The Overwhelmed Person's Starter Kit</div>
+          <div class="product-sub">Early-bird window / Then $29</div>
+        </div>
+        <a class="buy-cta" href="https://humanatwork.ai/start-ai/buy">
+          <span>Get instant access</span>
+          <span class="arrow">&rarr;</span>
+        </a>
+      </div>
+
+      <label class="order-bump" for="bump">
+        <input type="checkbox" id="bump">
+        <span class="bump-text">
+          Add <strong>the Paste Pack</strong>: 28 ready-to-paste prompts, a Claude Project template, custom-instructions snippet, and an MCP bootstrap script. Drop-in files for the workflows in the guide.
+          <span class="price-add">+ $29</span>
+        </span>
+      </label>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============== CHAPTER 01 - THE BEFORE ============== -->
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">01</div>
+      <div class="head-content">
+        <span class="eyebrow">A kitchen-table problem</span>
+        <h2 class="section-head">The problem is not your effort.</h2>
+      </div>
+    </div>
+
+    <div class="before-grid reveal">
+      <div>
+        <p>Two years ago I sat at my kitchen table in Salt Lake City, three browser tabs open, two YouTube tutorials half-watched, one ChatGPT chat from four months ago I never went back to. My wife walked past, asked how the AI thing was going. I said "great." I closed the laptop. I knew I was lying.</p>
+
+        <p>You have already tried. You have read articles. You have watched videos. You have set up ChatGPT, asked it to write a poem, decided AI was not for you, and closed the tab. Six months later you still feel behind. None of this is your fault. The path everyone hands you is broken.</p>
+
+        <p>The default path: install everything, read 47 prompt frameworks, watch 12 tutorials, then maybe start. By hour 6 you are exhausted and you have not used the tool for one real thing. This guide is the opposite shape. You pick one tool, set it up in the next 60 minutes, run your first useful prompt by lunch, and have five workflows running by tomorrow night.</p>
+      </div>
+
+      <div>
+        <blockquote class="pull">
+          The version of you that does not start today is the version your AI-fluent peer overtakes by Q3. The next promotion. The next contract. The next role you assumed was yours.
+          <cite>The cost of waiting</cite>
+        </blockquote>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== CHAPTER 02 - WHAT IS INSIDE ============== -->
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">02</div>
+      <div class="head-content">
+        <span class="eyebrow">Eight modules / 24 hours</span>
+        <h2 class="section-head">What is inside the kit.</h2>
+      </div>
+    </div>
+
+    <div class="modules-list reveal">
+      <div class="module-row">
+        <div class="mod-num">01</div>
+        <div class="mod-name">Why <em>twenty-four</em> hours</div>
+        <div class="mod-desc">The mindset shift that gets you using the tool today, not "starting next week." Three operating principles in 8 minutes.</div>
+      </div>
+      <div class="module-row">
+        <div class="mod-num">02</div>
+        <div class="mod-name">Account setup, first real prompt</div>
+        <div class="mod-desc">The 60-second decision tree for which AI to pick. Privacy settings nobody tells you about. Your first useful prompt before the first hour is up.</div>
+      </div>
+      <div class="module-row">
+        <div class="mod-num">03</div>
+        <div class="mod-name">Five <em>universal</em> workflows</div>
+        <div class="mod-desc">Email drafting, meeting prep, doc summary, decision pressure-test, first-draft anything. Each in 15 minutes or less. Three will stick. Two will not. That is normal.</div>
+      </div>
+      <div class="module-row">
+        <div class="mod-num">04</div>
+        <div class="mod-name">Projects, custom instructions, MCP</div>
+        <div class="mod-desc">The deep customization 90% of new users never reach. We get you there on day one. Skip-able if you are overwhelmed (sections 02 + 03 are 80% of the value).</div>
+      </div>
+      <div class="module-row">
+        <div class="mod-num">05</div>
+        <div class="mod-name">Role-specific setups</div>
+        <div class="mod-desc">Pre-configured workflows for HR people, ops operators, sales, writers, and trade-shop owners (HVAC, roofing, flooring, salons). Pick yours, skip the others.</div>
+      </div>
+      <div class="module-row">
+        <div class="mod-num">06</div>
+        <div class="mod-name">The <em>shutdown</em> ritual</div>
+        <div class="mod-desc">How to make the habit stick after the 24 hours end. The 30-day plan that takes you from beginner to top 1% of practical AI users in your role.</div>
+      </div>
+      <div class="module-row">
+        <div class="mod-num">07</div>
+        <div class="mod-name">Privacy, safety, what to avoid</div>
+        <div class="mod-desc">What never to paste. How to spot hallucinations. What AI is bad at. The 5-minute risk audit you do once and trust forever.</div>
+      </div>
+      <div class="module-row">
+        <div class="mod-num">08</div>
+        <div class="mod-name">Next steps + where to get help</div>
+        <div class="mod-desc">Where to go after the 24 hours. The upgrade path. How to get unstuck if you stall on a specific workflow.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== CHAPTER 03 - THE STACK ============== -->
+<section class="chapter stack-section">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">03</div>
+      <div class="head-content">
+        <span class="eyebrow">What is in the box</span>
+        <h2 class="section-head">The kit, line by line.</h2>
+      </div>
+    </div>
+
+    <div class="reveal">
+      <p class="body" style="max-width: 56ch; margin-bottom: 16px; color: var(--muted);">Everything below ships in one bundle. HTML for reading, PDF for printing, markdown for editing. Lifetime access. Free updates as Claude and ChatGPT shift.</p>
+
+      <div class="stack-table">
+        <div class="stack-row">
+          <div class="stack-name">The 30+ page guide<small>HTML + PDF + .md</small></div>
+          <div class="stack-val">$49</div>
+        </div>
+        <div class="stack-row">
+          <div class="stack-name">1-page printable cheatsheet<small>Tape to your monitor</small></div>
+          <div class="stack-val">$15</div>
+        </div>
+        <div class="stack-row">
+          <div class="stack-name">24-hour milestone checklist<small>Tick boxes, ship the day</small></div>
+          <div class="stack-val">$15</div>
+        </div>
+        <div class="stack-row">
+          <div class="stack-name">Role-specific workflow pages<small>HR, Ops, Sales, Writing, Trades</small></div>
+          <div class="stack-val">$25</div>
+        </div>
+        <div class="stack-row">
+          <div class="stack-name">Privacy + safety audit checklist<small>5 minutes, trust forever</small></div>
+          <div class="stack-val">$15</div>
+        </div>
+        <div class="stack-row">
+          <div class="stack-name">Lifetime updates<small>Claude/ChatGPT shifts handled</small></div>
+          <div class="stack-val">$60/yr</div>
+        </div>
+        <div class="stack-row">
+          <div class="stack-name">Direct email line<small>support@humanatwork.ai</small></div>
+          <div class="stack-val">$40</div>
+        </div>
+        <div class="stack-row total">
+          <div class="stack-name">Total stacked value</div>
+          <div class="stack-val">$219</div>
+        </div>
+      </div>
+
+      <p style="font-family: var(--serif); font-style: italic; font-size: 22px; margin-top: 32px; max-width: 52ch; line-height: 1.4;">
+        You pay <strong style="font-weight: 600; color: var(--brick); font-style: normal;">$19</strong> in the early-bird window. <strong style="font-weight: 600; color: var(--brick); font-style: normal;">$29</strong> after. The full kit either way.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============== CHAPTER 04 - AUTHOR ============== -->
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">04</div>
+      <div class="head-content">
+        <span class="eyebrow">Who wrote this</span>
+        <h2 class="section-head">An operator. Not a guru.</h2>
+      </div>
+    </div>
+
+    <div class="author-grid reveal">
+      <div class="author-photo">
+        <!-- PHOTO HERE: black-and-white 4:5 portrait of Boubacar, 3/4 angle, looking off-camera (not at lens), warm window light from left, Salt Lake kitchen table or office desk visible behind, NOT corporate headshot, NOT smiling-at-camera stock pose. Should feel like a magazine profile photo, not a LinkedIn avatar. -->
+        <div class="author-photo-placeholder">
+          <svg viewBox="0 0 56 56" fill="none">
+            <circle cx="28" cy="22" r="10" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M8 52c0-11 9-20 20-20s20 9 20 20" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+          <div>PHOTO HERE<br>Boubacar / 4:5 / B&amp;W / off-camera</div>
+        </div>
+        <div class="caption">Salt Lake City, 2026</div>
+      </div>
+
+      <div class="author-body">
+        <p>I was born in Conakry, Guinea. I remember being six, lying on the cement floor while my father pressed a transistor radio to his ear, BBC Africa crackling through static. He was listening for news. He was also listening for the person he had been before he became the man holding three jobs to feed seven kids. That image is the first thing I think about when someone tells me they "do not have time" to learn AI. My father did not have time either. He listened anyway. He made it work anyway. So can you.</p>
+
+        <p>I spent 14 years in corporate HR. I installed tile with my brother-in-law for a year and a half when I was broke. I sold carpet cleaning door-to-door in Salt Lake City to pay for community college. I failed at three businesses before this one worked. I now run Catalyst Works, Signal Works, and 1stGen Money. I built agentsHQ, a 75-skill multi-agent AI system that powers all three brands every day.</p>
+
+        <p>I wrote this guide because every overwhelmed-by-AI person I talked to in the last year needed exactly this and could not find it. Most AI guides are written by people who have never used the tools for real work. I use them every hour of every workday. I cannot pretend that does not show. Take what helps. Skip what does not.</p>
+
+        <ul class="moat-list">
+          <li>Catalyst Works <br><span style="color: var(--muted)">AI consulting</span></li>
+          <li>Signal Works <br><span style="color: var(--muted)">Website + AI-visibility builds</span></li>
+          <li>1stGen Money <br><span style="color: var(--muted)">Diaspora financial guidance</span></li>
+          <li>agentsHQ <br><span style="color: var(--muted)">75-skill orchestrator</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== CHAPTER 05 - FAQ ============== -->
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">05</div>
+      <div class="head-content">
+        <span class="eyebrow">Six honest questions</span>
+        <h2 class="section-head">Before you buy.</h2>
+      </div>
+    </div>
+
+    <div class="faq-list reveal">
+      <div class="faq-item">
+        <div class="q"><span class="q-num">Q1</span>Do I need to be technical?</div>
+        <div class="a">No. The guide assumes zero technical background. If you can sign up for an email account, you can finish it in 24 hours. Nothing to install on your machine beyond a browser tab.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="q"><span class="q-num">Q2</span>What if I only have one hour a day?</div>
+        <div class="a">The kit breaks into 8 modules, each 15-60 minutes. You can complete it across 3-4 evenings if you cannot find 24 contiguous hours. The 30-day plan in module 06 starts from whatever pace you actually have.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="q"><span class="q-num">Q3</span>Does it work for ChatGPT users, not just Claude?</div>
+        <div class="a">Yes. The structure is identical. The buttons are in slightly different places. I note the differences as we go. Use the tool you already have an account for, not the one you "should" be using.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="q"><span class="q-num">Q4</span>Will this be outdated in six months?</div>
+        <div class="a">The principles (how to think about AI workflow, how to write prompts, how to set up Projects) are stable. The tool-specific buttons change. Updates are free for all buyers as the landscape shifts. I ship a revision every time Claude or ChatGPT does a major release.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="q"><span class="q-num">Q5</span>What if my company has an AI policy?</div>
+        <div class="a">Module 07 covers privacy and policy compliance. If your company requires enterprise tools (Claude for Work, ChatGPT Enterprise), the guide works the same. Buttons in slightly different places, same shape.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="q"><span class="q-num">Q6</span>How do I get the file after I buy?</div>
+        <div class="a">Instant access. Private link on the confirmation page. A copy emails to you. The HTML stays live for lifetime access. A PDF backup ships in the bundle for offline reading or printing.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== FINAL CTA ============== -->
+<section class="final-cta">
+  <div class="container">
+    <h2 class="reveal">Six months ago you were <em>going to start</em>.</h2>
+    <p class="reveal" style="--delay: 100ms">You did not. Right now is the same decision. The version of you that finishes this kit is the version every peer in your industry will be in eighteen months. Get there first.</p>
+
+    <div class="buy-card-wrap reveal" style="--delay: 200ms">
+      <div class="buy-card">
+        <div class="buy-price">
+          <span class="amt">$19</span>
+          <span class="was">$29</span>
+        </div>
+        <div class="buy-info">
+          <div class="product-line">Start AI Within 24 Hours</div>
+          <div class="product-sub">Early-bird / Lifetime access / Free updates</div>
+        </div>
+        <a class="buy-cta" href="https://humanatwork.ai/start-ai/buy">
+          <span>Get the kit</span>
+          <span class="arrow">&rarr;</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== FOOTER ============== -->
+<footer>
+  <div class="container">
+    <div class="wordmark">Human at Work<span class="dot">.</span></div>
+    <div class="foot-links">
+      <a href="https://humanatwork.ai">humanatwork.ai</a>
+      <a href="https://humanatwork.ai/privacy">Privacy</a>
+      <a href="https://humanatwork.ai/terms">Terms</a>
+      <a href="mailto:support@humanatwork.ai">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Scroll-reveal (respects prefers-reduced-motion via CSS override)
+  (function() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.querySelectorAll('.reveal').forEach(el => el.classList.add('in'));
+      return;
+    }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  })();
+</script>
+
+</body>
+</html>

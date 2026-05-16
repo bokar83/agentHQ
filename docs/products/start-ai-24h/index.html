@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Start AI Within 24 Hours - The Overwhelmed Person's Starter Kit</title>
+<style>
+  :root {
+    --ink: #0d0d0d;
+    --paper: #fafaf7;
+    --accent: #c2410c;
+    --accent-soft: #fed7aa;
+    --rule: #d4d4d0;
+    --muted: #5f5f5a;
+    --sand: #ecebe5;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: "Charter", "Iowan Old Style", "Georgia", serif; font-size: 17px; line-height: 1.6; }
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 56px 48px;
+    background: var(--paper);
+    page-break-after: always;
+  }
+  .page:last-child { page-break-after: auto; }
+  h1, h2, h3, h4 { font-family: "Inter", "Helvetica Neue", "Arial", sans-serif; font-weight: 700; line-height: 1.2; }
+  h1 { font-size: 48px; letter-spacing: -0.02em; margin: 0 0 16px; }
+  h2 { font-size: 30px; letter-spacing: -0.01em; margin: 48px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--ink); }
+  h3 { font-size: 22px; margin: 32px 0 12px; color: var(--accent); }
+  h4 { font-size: 18px; margin: 24px 0 8px; }
+  p { margin: 0 0 16px; }
+  ul, ol { margin: 0 0 16px; padding-left: 24px; }
+  li { margin-bottom: 6px; }
+  strong { font-weight: 700; }
+  code { font-family: "JetBrains Mono", "Menlo", monospace; font-size: 14px; background: var(--sand); padding: 2px 6px; border-radius: 3px; }
+  blockquote { margin: 24px 0; padding: 16px 20px; border-left: 4px solid var(--accent); background: var(--sand); font-style: italic; color: var(--muted); }
+
+  .cover {
+    min-height: 900px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: linear-gradient(135deg, var(--paper) 0%, var(--sand) 100%);
+  }
+  .cover .eyebrow { font-family: "Inter", sans-serif; font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 24px; }
+  .cover h1 { font-size: 64px; margin-bottom: 24px; }
+  .cover .sub { font-size: 22px; color: var(--muted); font-family: "Inter", sans-serif; font-weight: 400; line-height: 1.4; max-width: 500px; }
+  .cover .byline { font-family: "Inter", sans-serif; font-size: 14px; color: var(--muted); margin-top: auto; }
+  .cover .byline strong { color: var(--ink); display: block; font-size: 16px; margin-bottom: 4px; }
+  .cover .badge { display: inline-block; padding: 4px 12px; background: var(--ink); color: var(--paper); font-family: "Inter", sans-serif; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; border-radius: 2px; margin-top: 12px; }
+
+  .toc { font-family: "Inter", sans-serif; }
+  .toc-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed var(--rule); }
+  .toc-row .num { font-weight: 700; color: var(--accent); width: 50px; }
+  .toc-row .title { flex: 1; }
+  .toc-row .pages { color: var(--muted); }
+
+  .promise {
+    background: var(--accent);
+    color: var(--paper);
+    padding: 32px;
+    border-radius: 4px;
+    margin: 32px 0;
+    font-family: "Inter", sans-serif;
+  }
+  .promise h3 { color: var(--paper); margin: 0 0 12px; }
+  .promise p { margin: 0; font-size: 18px; line-height: 1.5; }
+
+  .step {
+    background: var(--sand);
+    padding: 20px 24px;
+    border-radius: 4px;
+    margin: 16px 0;
+    border-left: 4px solid var(--accent);
+  }
+  .step-label { font-family: "Inter", sans-serif; font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 8px; }
+  .step h4 { margin-top: 0; }
+
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-family: "Inter", sans-serif; font-size: 14px; }
+  th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--rule); }
+  th { font-weight: 700; background: var(--sand); }
+
+  .cta-box {
+    border: 2px solid var(--ink);
+    padding: 32px;
+    margin: 32px 0;
+    background: var(--paper);
+    font-family: "Inter", sans-serif;
+  }
+  .cta-box h3 { color: var(--ink); margin-top: 0; }
+  .cta-link { display: inline-block; background: var(--ink); color: var(--paper); padding: 12px 24px; border-radius: 3px; text-decoration: none; font-weight: 600; margin: 4px 8px 4px 0; }
+  .cta-link.alt { background: var(--paper); color: var(--ink); border: 2px solid var(--ink); }
+
+  .footer-meta { font-family: "Inter", sans-serif; font-size: 12px; color: var(--muted); text-align: center; padding-top: 32px; border-top: 1px solid var(--rule); margin-top: 48px; }
+
+  @media print {
+    body { font-size: 13pt; }
+    .page { padding: 0.6in 0.7in; max-width: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ========== COVER ========== -->
+<section class="page cover">
+  <div>
+    <div class="eyebrow">A Human at Work Starter Kit</div>
+    <h1>Start AI Within 24 Hours</h1>
+    <p class="sub">The overwhelmed person's playbook. From zero account to five useful workflows. Built by an operator who actually uses this stack every day.</p>
+    <span class="badge">Version 1.0 - 2026</span>
+  </div>
+  <div class="byline">
+    <strong>Boubacar</strong>
+    Builder of agentsHQ. Ex-corporate HR. Multi-brand operator. Conakry to code.
+  </div>
+</section>
+
+<!-- ========== PROMISE ========== -->
+<section class="page">
+  <h2>The Promise</h2>
+  <div class="promise">
+    <h3>If you follow this guide, you will go from zero AI usage to five working daily workflows in 24 hours. If you do not, send us a note within 14 days and we refund you in full.</h3>
+  </div>
+
+  <p>Look. I have been you. Two years ago I sat at my kitchen table in Salt Lake City, three browser tabs open, two YouTube tutorials half-watched, one ChatGPT chat from four months ago that I never went back to. My wife walked past and asked how the AI thing was going. I said "great" and closed the laptop. I knew I was lying. You probably know the feeling.</p>
+
+  <p>The problem is not your effort. The problem is the path everyone hands you: install everything, read 47 prompt frameworks, watch 12 YouTube tutorials, then maybe start. By hour 6 you are exhausted and you have not used the tool for one real thing.</p>
+
+  <p>This guide is the opposite. You pick one tool, set it up in the next 60 minutes, run your first useful prompt by lunch, and have five workflows running by tomorrow night. No 12-week course. No theory. No 1,000-prompt swipe file you will never open.</p>
+
+  <p>I wrote this. Not an AI. Not a ghostwriter. A guy who spent 14 years in corporate HR, installed tile for a year with his brother-in-law, sold carpet cleaning door to door in Salt Lake, failed at three businesses, and finally built a working AI company by being stubborn enough to use it every day until it stuck. Three brands run on this exact playbook now. So can you.</p>
+
+  <blockquote>The version of you that finishes this guide is the version that everyone in your industry will be in 18 months. Get there first.</blockquote>
+
+  <h3>Who this is for</h3>
+  <ul>
+    <li>Mid-career professionals who feel behind on AI</li>
+    <li>Small business operators who tried ChatGPT once and bounced</li>
+    <li>Anyone preparing for AI changes in their role and wanting a head start</li>
+    <li>People who have read about AI but not yet used it for real work</li>
+  </ul>
+
+  <h3>Who this is not for</h3>
+  <ul>
+    <li>Developers building production AI features (different stack)</li>
+    <li>People looking for theory or AI history</li>
+    <li>Anyone wanting a 1,000-prompt swipe file (this is opposite of that)</li>
+  </ul>
+</section>
+
+<!-- ========== TOC ========== -->
+<section class="page">
+  <h2>Table of Contents</h2>
+  <div class="toc">
+    <div class="toc-row"><span class="num">01</span><span class="title">Why 24 Hours: The Mindset Shift</span><span class="pages">04</span></div>
+    <div class="toc-row"><span class="num">02</span><span class="title">Hour 0 to 1: Pick Your Tool + Set Up Your Account</span><span class="pages">06</span></div>
+    <div class="toc-row"><span class="num">03</span><span class="title">Hour 1 to 3: Your First Five Useful Workflows</span><span class="pages">10</span></div>
+    <div class="toc-row"><span class="num">04</span><span class="title">Hour 3 to 8: Project Setup, Custom Instructions, MCP Basics</span><span class="pages">16</span></div>
+    <div class="toc-row"><span class="num">05</span><span class="title">Hour 8 to 16: Five Workflows For Your Role</span><span class="pages">22</span></div>
+    <div class="toc-row"><span class="num">06</span><span class="title">Hour 16 to 24: Stop and Ship</span><span class="pages">28</span></div>
+    <div class="toc-row"><span class="num">07</span><span class="title">Privacy, Safety, What To Avoid</span><span class="pages">32</span></div>
+    <div class="toc-row"><span class="num">08</span><span class="title">Next Steps + How To Get More Help</span><span class="pages">34</span></div>
+  </div>
+</section>
+
+<!-- ========== SECTION 1 ========== -->
+<section class="page">
+  <h2>01. Why 24 Hours: The Mindset Shift</h2>
+
+  <p>The reason most people stall on AI is not skill. It is the implicit belief that you have to learn it all before you start. That belief is the cost. Every day you wait, your competitors who started learning by doing pull further ahead.</p>
+
+  <p>Three operating principles before you start.</p>
+
+  <h3>Principle 1: Use the tool for real work today, not toy work tomorrow</h3>
+  <p>Most tutorials have you write a poem or summarize Wikipedia. That teaches you nothing. Your first 30 minutes with the tool should be on the thing you were going to do today anyway: a draft email, a meeting prep, a one-page memo. The tool earns its place in your workflow by saving you the next 30 minutes, not by impressing you.</p>
+
+  <h3>Principle 2: Pick one tool. Master before you switch</h3>
+  <p>You will be tempted to set up ChatGPT and Claude and Gemini and three plugins on day one. Do not. Pick one (we will help in section 02). Use it daily for two weeks. Then evaluate switching. People who set up all three on day one use none of them on day 30.</p>
+
+  <h3>Principle 3: Output beats input</h3>
+  <p>You will read a 1,000-prompt swipe file and copy zero into your work. You will instead write 5 prompts of your own based on what you actually do, and use those 5 a hundred times. The first 5 are the leverage point. The other 995 are noise.</p>
+
+  <blockquote>You do not need to be an AI expert. You need to be a person who used AI today to do something useful. That bar is much lower than the internet has led you to believe.</blockquote>
+</section>
+
+<!-- ========== SECTION 2 ========== -->
+<section class="page">
+  <h2>02. Hour 0 to 1: Pick Your Tool + Set Up Your Account</h2>
+
+  <h3>The decision tree (under 60 seconds)</h3>
+  <table>
+    <thead><tr><th>If you mostly...</th><th>Pick this</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Write emails + documents + memos</td><td>Claude (claude.ai)</td><td>Best long-form writer, handles 200k tokens, lets you build "Projects"</td></tr>
+      <tr><td>Brainstorm + chat + use plugins + voice</td><td>ChatGPT (chat.openai.com)</td><td>Largest plugin ecosystem, voice mode, image gen built in</td></tr>
+      <tr><td>Code + analyze data + technical work</td><td>Claude (claude.ai)</td><td>Best at code reasoning, artifacts feature for live previews</td></tr>
+      <tr><td>You are not sure</td><td>Claude</td><td>Default for most knowledge-worker workflows in 2026</td></tr>
+    </tbody>
+  </table>
+
+  <p>This guide will use Claude as the primary example. If you pick ChatGPT, the structure is the same; the buttons are in slightly different places.</p>
+
+  <div class="step">
+    <div class="step-label">Step 1 of 4</div>
+    <h4>Create the account</h4>
+    <p>Go to <code>claude.ai</code>. Sign up with your email or with Google. Verify your email.</p>
+    <p><strong>Pick the paid tier ($20/month).</strong> The free tier limits how much you can use the model in a day and locks you out of "Projects." For 24-hour onboarding you want the paid tier. If you decide AI is not for you after 30 days, cancel. You are out $20.</p>
+  </div>
+
+  <div class="step">
+    <div class="step-label">Step 2 of 4</div>
+    <h4>Turn off training (privacy default)</h4>
+    <p>Settings -> Privacy -> "Help improve Claude" toggle to OFF. This means your conversations are NOT used to train future models. Default ON in some plans. Always check.</p>
+  </div>
+
+  <div class="step">
+    <div class="step-label">Step 3 of 4</div>
+    <h4>Set your name + role</h4>
+    <p>Settings -> Profile. Add your real first name and a one-sentence description of what you do. The model uses this for context. Example: "Boubacar. I run a consulting firm helping small businesses adopt AI tools."</p>
+  </div>
+
+  <div class="step">
+    <div class="step-label">Step 4 of 4</div>
+    <h4>Run your first prompt before you close this tab</h4>
+    <p>Start a new chat. Paste this exact prompt:</p>
+    <blockquote>"I am about to spend 24 hours learning to use you for my actual work. I am [your role, e.g. an HR director / a freelance designer / a small business owner doing flooring installation]. What are the three highest-leverage workflows I should set up first, given my role? Answer in three bullets, then ask me one clarifying question."</blockquote>
+    <p>Read the answer. Reply to the clarifying question. You have just used AI for real work. Section 03 builds on this.</p>
+  </div>
+</section>
+
+<!-- ========== SECTION 3 ========== -->
+<section class="page">
+  <h2>03. Hour 1 to 3: Your First Five Useful Workflows</h2>
+
+  <p>These five are universal across roles. Run each one once today. Three will stick. Two will not. That is normal.</p>
+
+  <h3>Workflow 1: Email drafting (10 minutes)</h3>
+  <p>You have an email you need to write today. Open Claude. Paste:</p>
+  <blockquote>"Draft a reply to this email. Tone: [professional / friendly / firm]. Goal: [what you want them to do]. Keep under 120 words. End with a clear next step. Email below: [paste]."</blockquote>
+  <p>Edit the output. Send. You have just saved 15 minutes.</p>
+
+  <h3>Workflow 2: Meeting prep (15 minutes)</h3>
+  <p>For your next meeting, paste:</p>
+  <blockquote>"I have a meeting with [name + role] tomorrow. Goal of meeting: [what you want]. What I know: [3-5 bullets]. Generate (a) three questions I should ask, (b) two risks I should anticipate, (c) one specific ask I should make. Format as bullets."</blockquote>
+
+  <h3>Workflow 3: Long document summary (5 minutes)</h3>
+  <p>Paste a long doc or transcript:</p>
+  <blockquote>"Summarize this in 5 bullets. Also surface the one thing the writer is NOT saying but seems implied. Then tell me what action this means for me as [your role]."</blockquote>
+
+  <h3>Workflow 4: Decision pressure-test (20 minutes)</h3>
+  <p>For a decision you are weighing:</p>
+  <blockquote>"I am considering [decision]. Argue for it in 3 bullets. Then argue against it in 3 bullets. Then tell me what additional information would tip the decision, and how to get it cheaply."</blockquote>
+
+  <h3>Workflow 5: First-draft anything (variable)</h3>
+  <p>Whatever you are about to write from scratch (memo, proposal, plan, blog post):</p>
+  <blockquote>"I need to write [type of doc] for [audience]. Goal: [outcome]. Length: [pages or word count]. Tone: [tone]. Generate a first draft. After the draft, tell me the 3 sections I should rewrite myself because they need my voice or judgment."</blockquote>
+
+  <div class="cta-box">
+    <h3>Stuck on this section?</h3>
+    <p>If you have done these five and they did not click, book a free 15-minute call. I will get you unstuck.</p>
+    <a class="cta-link" href="https://humanatwork.ai/start-ai/unstick">Book 15-min unstick call</a>
+  </div>
+</section>
+
+<!-- ========== SECTION 4 (placeholder structure for v1.0) ========== -->
+<section class="page">
+  <h2>04. Hour 3 to 8: Project Setup, Custom Instructions, MCP Basics</h2>
+  <p>Claude Projects let you save context (files, instructions, knowledge) so every chat inside the Project starts smart. Use one Project per real-world domain (one for work emails, one for a specific client, one for a personal hobby).</p>
+
+  <h3>Build your first Project (30 minutes)</h3>
+  <ol>
+    <li>Click "Projects" in the Claude sidebar. New Project.</li>
+    <li>Name it after a real-world domain (e.g., "HR work" or "[Client name] account").</li>
+    <li>Add 3 to 5 files to "Project knowledge" (PDFs, .docx, .txt, .md). These could be a styleguide, last year's planning doc, your resume, anything the AI should remember.</li>
+    <li>Write a system prompt (Project Instructions field). Use this template:</li>
+  </ol>
+
+  <blockquote>"You are helping [your name] with [domain]. Tone: [tone]. Context: [3-5 sentences of background]. When responding: (a) match my voice from the docs in knowledge, (b) flag when you are uncertain, (c) propose next steps after every answer."</blockquote>
+
+  <h3>Custom Instructions (one-time, 10 minutes)</h3>
+  <p>Settings -> Custom Instructions. These apply across all chats. Set yours once with:</p>
+  <blockquote>"Default tone: clear, direct, no filler. Never start with sycophancy ('Great question!'). When uncertain, say so. When I make a request, do the thing first and explain second. Match my voice when shown samples."</blockquote>
+
+  <h3>MCP basics (15 minutes — optional but powerful)</h3>
+  <p>MCP (Model Context Protocol) lets Claude connect to tools you already use (Notion, Gmail, Calendly, Drive). For 24-hour onboarding pick ONE that touches your daily work.</p>
+  <table>
+    <thead><tr><th>If you use...</th><th>Add MCP for...</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Notion daily</td><td>Notion MCP</td><td>Ask Claude to read/write your Notion docs directly</td></tr>
+      <tr><td>Gmail for everything</td><td>Gmail MCP</td><td>Triage inbox, draft replies in your voice</td></tr>
+      <tr><td>Calendly for booking</td><td>Calendly MCP</td><td>Auto-prep for upcoming meetings</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Skip MCP entirely if you are overwhelmed.</strong> Sections 02 and 03 alone are 80% of the value. MCP is the bonus layer.</p>
+</section>
+
+<!-- ========== SECTION 5 ========== -->
+<section class="page">
+  <h2>05. Hour 8 to 16: Five Workflows For Your Role</h2>
+
+  <p>Pick the row that matches your role. Each row is a Project you build, with 3 pre-loaded prompts and 1 knowledge artifact suggestion.</p>
+
+  <h3>If you are in HR / People Ops</h3>
+  <ul>
+    <li><strong>Project name:</strong> "HR work"</li>
+    <li><strong>Knowledge to load:</strong> your company's HR handbook + 2 sample severance letters + 5 of your past HR memos</li>
+    <li><strong>Prompts to save:</strong> "Draft a difficult-conversation prep doc for [situation]" + "Review this severance letter for completeness" + "Summarize this resume in 3 bullets a hiring manager will actually read"</li>
+  </ul>
+
+  <h3>If you are in Operations / Small business</h3>
+  <ul>
+    <li><strong>Project name:</strong> "Ops + processes"</li>
+    <li><strong>Knowledge to load:</strong> your SOP doc + 2 customer complaint emails + last month's KPI report</li>
+    <li><strong>Prompts to save:</strong> "Find the 3 biggest gaps in this SOP" + "Draft a customer reply for this complaint" + "Pull the 3 anomalies in this KPI report"</li>
+  </ul>
+
+  <h3>If you are in Sales / Business development</h3>
+  <ul>
+    <li><strong>Project name:</strong> "Sales"</li>
+    <li><strong>Knowledge to load:</strong> 5 of your best past cold emails + your sales script + your top 3 case studies</li>
+    <li><strong>Prompts to save:</strong> "Write a cold email to [prospect] referencing [thing about them]" + "Score this lead from 1-10 based on these criteria" + "Prep me for this discovery call"</li>
+  </ul>
+
+  <h3>If you are a Writer / Marketer / Content</h3>
+  <ul>
+    <li><strong>Project name:</strong> "Writing"</li>
+    <li><strong>Knowledge to load:</strong> 5 of your best past posts + your style guide + the writer you sound like (paste 3 of their posts)</li>
+    <li><strong>Prompts to save:</strong> "Draft a LinkedIn post on [topic] in my voice" + "Rewrite this paragraph in my voice" + "Generate 10 hook variants for this post"</li>
+  </ul>
+
+  <h3>If you are a Trade business owner (HVAC / roofing / flooring / etc)</h3>
+  <ul>
+    <li><strong>Project name:</strong> "Shop ops"</li>
+    <li><strong>Knowledge to load:</strong> your service pricing sheet + your top 5 customer-reply scripts + your warranty policy</li>
+    <li><strong>Prompts to save:</strong> "Draft a quote reply for [situation]" + "Write a Facebook Marketplace listing for this used equipment" + "Reply to this customer 1-star review in a professional way"</li>
+  </ul>
+</section>
+
+<!-- ========== SECTION 6 ========== -->
+<section class="page">
+  <h2>06. Hour 16 to 24: Stop and Ship</h2>
+
+  <p>By now you have a Claude account, a Project with knowledge loaded, custom instructions set, and 5-10 prompts saved. The last 8 hours are about USING what you built, not building more.</p>
+
+  <h3>The 24-hour shutdown ritual</h3>
+  <ol>
+    <li><strong>Last hour 1:</strong> Pick one task from your real work today. Use Claude to do 80% of it. Ship it.</li>
+    <li><strong>Last hour 2:</strong> Save the prompt that worked into your Project as a saved prompt. Name it for future-you.</li>
+    <li><strong>Last hour 3:</strong> Tell someone you set this up. (LinkedIn post, text a friend, a Slack to a coworker.) The act of stating it cements the habit.</li>
+  </ol>
+
+  <h3>The 30-day plan (one line per day)</h3>
+  <p>Goal: use AI for ONE task every workday for the next 30 days. Track in a single text note. After 30 days, the habit is yours.</p>
+
+  <h3>What to do when you get stuck</h3>
+  <ul>
+    <li>If the answer is wrong: tell Claude "this is wrong, here is why: ___" and ask for a correction. The conversation IS the workflow.</li>
+    <li>If you do not know how to phrase a prompt: ask Claude "How should I phrase a prompt to get [outcome]?" Yes, you can use it on itself.</li>
+    <li>If you are confused about which feature to use: book a 15-minute call (link below). I will get you unstuck.</li>
+  </ul>
+
+  <blockquote>The version of you that finishes hour 24 has used AI for real work eight times. That is more than 90% of your peers. Compound this for 30 days and you are in the top 1% of practical AI users in your role.</blockquote>
+</section>
+
+<!-- ========== SECTION 7 ========== -->
+<section class="page">
+  <h2>07. Privacy, Safety, What To Avoid</h2>
+
+  <h3>What NOT to paste into Claude (or any AI)</h3>
+  <ul>
+    <li>Customer credit card numbers, social security numbers, full bank account numbers</li>
+    <li>Internal documents marked confidential without permission</li>
+    <li>Protected health information (HIPAA covered) without your org's AI-use policy clearance</li>
+    <li>Code or contracts you did not write and do not have rights to share</li>
+    <li>Personal information about minors</li>
+  </ul>
+
+  <h3>Privacy settings to double-check</h3>
+  <ol>
+    <li>Settings -> Privacy -> "Help improve Claude" = OFF</li>
+    <li>If your employer has an AI-use policy, read it before using Claude for work. Some employers require Claude for Work (Enterprise) instead of personal accounts.</li>
+    <li>Anything you would not paste into Gmail, do not paste into Claude.</li>
+  </ol>
+
+  <h3>What "hallucination" means and how to catch it</h3>
+  <p>AI will sometimes confidently state false things. This is called hallucination. Three ways to catch it:</p>
+  <ol>
+    <li>For facts (dates, numbers, names): verify in a second source. Always.</li>
+    <li>For citations (URLs, paper titles): click the link or search the title. AI invents these regularly.</li>
+    <li>For your domain (where you are the expert): trust your gut. If something feels off, it usually is.</li>
+  </ol>
+
+  <h3>What AI is bad at (right now)</h3>
+  <ul>
+    <li>Anything time-sensitive: it does not know what happened today</li>
+    <li>Math at scale (use a spreadsheet)</li>
+    <li>Counting (it cannot reliably count words in a long doc)</li>
+    <li>Knowing your specific company, family, or life unless you tell it</li>
+    <li>Replacing judgment on people decisions</li>
+  </ul>
+</section>
+
+<!-- ========== SECTION 8 + CTA ========== -->
+<section class="page">
+  <h2>08. Next Steps + How To Get More Help</h2>
+
+  <h3>If you finished the 24 hours and it worked</h3>
+  <p>Congratulations. You are now an AI user. The next 30 days are about depth, not breadth. Use what you set up. Resist setting up more tools. In 30 days, then evaluate.</p>
+
+  <h3>If you want the copy-paste pack (T2)</h3>
+  <p>I built 28 paste-ready prompts, a Claude Project system prompt template, custom instructions, an MCP bootstrap script, and a daily startup ritual into a companion pack. If sections 03 and 05 gave you ideas but you want the actual files to drop into your stack, the T2 pack covers it.</p>
+  <div class="cta-box">
+    <h3>Get the T2 Copy-Paste Pack ($79)</h3>
+    <p>T1 + scripts folder + 28 paste-ready prompts + Claude Project file + virus-scan note. Ships as HTML + PDF + .md files.</p>
+    <a class="cta-link" href="https://humanatwork.ai/start-ai/t2">Add the T2 pack</a>
+  </div>
+
+  <h3>If you want me to set this up WITH you (T3)</h3>
+  <p>One 60-minute screen-share. I get on a call with you and we configure your account, your Project, your knowledge, and your first three workflows live. You walk away with a working setup you understand.</p>
+  <div class="cta-box">
+    <h3>Hand-In-Hand Setup ($697)</h3>
+    <p>60-min screen-share + personalized 1-page setup snapshot + 30-day milestone tracker.</p>
+    <a class="cta-link" href="https://humanatwork.ai/start-ai/hand-in-hand">Book hand-in-hand setup</a>
+  </div>
+
+  <h3>If you want me to just do it for you (T4)</h3>
+  <p>I configure everything for you, then hand it over. 7-day delivery from intake.</p>
+  <div class="cta-box">
+    <h3>Done-For-You Setup ($3,997)</h3>
+    <p>Full stack setup + 1 MCP integration + 5 personalized prompts + 30-day plan + 30-day support window.</p>
+    <a class="cta-link" href="https://humanatwork.ai/start-ai/done-for-you">Request done-for-you</a>
+  </div>
+
+  <h3>If you want the newsletter (free)</h3>
+  <p>I send one email a week with one specific AI workflow I just shipped, written for operators. No fluff. Unsubscribe any time.</p>
+  <a class="cta-link alt" href="https://1stgenmoney.substack.com">Subscribe to 1stGen Money</a>
+
+  <h3>About me</h3>
+  <p>Boubacar. I was born in Conakry, Guinea. I remember being six years old, lying on the cement floor while my father pressed a transistor radio to his ear, BBC Africa crackling through static. I thought he was listening for news. He was. He was also listening for the person he had been before he became the man holding three jobs to feed seven kids. That image is the first thing I think about when someone tells me they "do not have time" to learn AI. My father did not have time either. He listened anyway. He made it work anyway. So can you.</p>
+
+  <p>I spent 14 years in corporate HR. I installed tile with my brother-in-law for a year and a half when I was broke. I sold carpet cleaning door-to-door in Salt Lake City to pay for community college. I failed at three businesses before this one worked. I now run Catalyst Works (AI consulting), Signal Works (website builds for service businesses), and 1stGen Money (financial advice for first-generation immigrants and diaspora professionals). I built agentsHQ, a 75-skill multi-agent AI system that powers all three.</p>
+
+  <p>I wrote this because every overwhelmed-by-AI person I talked to in the last year needed exactly this and could not find it. Most AI guides are written by people who have never used the tools for real work. I use them every hour of every workday. I cannot pretend that does not show. Take what helps. Skip what does not.</p>
+
+  <div class="footer-meta">
+    Start AI Within 24 Hours - Version 1.0 - Human at Work - 2026<br>
+    Refund within 14 days: support@humanatwork.ai
+  </div>
+</section>
+
+</body>
+</html>
