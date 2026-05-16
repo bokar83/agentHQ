@@ -18,10 +18,10 @@ SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # Sat 10:00 MDT - L-R4 Triad Lock
-0 16 * * 6 root docker exec orc-crewai python /app/scripts/ritual_cron_dispatch.py lr4_triad_lock >> /var/log/lighthouse-rituals.log 2>&1
+0 16 * * 6 root docker exec orc-crewai python /app/orchestrator/scripts/ritual_cron_dispatch.py lr4_triad_lock >> /var/log/lighthouse-rituals.log 2>&1
 
 # Sat 10:30 MDT - L-R5 Conversion Scorecard
-30 16 * * 6 root docker exec orc-crewai python /app/scripts/ritual_cron_dispatch.py lr5_conversion_scorecard >> /var/log/lighthouse-rituals.log 2>&1
+30 16 * * 6 root docker exec orc-crewai python /app/orchestrator/scripts/ritual_cron_dispatch.py lr5_conversion_scorecard >> /var/log/lighthouse-rituals.log 2>&1
 EOF
 
 chmod 644 "$CRON_FILE"
@@ -30,4 +30,4 @@ chmod 644 "$LOG"
 
 echo "Lighthouse ritual cron installed: $CRON_FILE"
 echo "Logs: tail -f $LOG"
-echo "Manual test: docker exec orc-crewai python /app/scripts/ritual_cron_dispatch.py lr4_triad_lock"
+echo "Manual test: docker exec orc-crewai python /app/orchestrator/scripts/ritual_cron_dispatch.py lr4_triad_lock"
