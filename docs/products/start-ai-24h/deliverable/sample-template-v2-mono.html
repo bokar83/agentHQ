@@ -16,16 +16,20 @@
   }
   @page {
     size: Letter;
-    margin: 0.85in 0.9in 1in 0.9in;
+    margin: 0.7in 0.85in 0.85in 0.85in;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; orphans: 3; widows: 3; }
   html, body {
     background: var(--bg);
     color: var(--ink);
     font-family: "JetBrains Mono", monospace;
-    font-size: 10.5pt;
+    font-size: 10pt;
     line-height: 1.6;
+    orphans: 3; widows: 3;
   }
+  h1, h2, h3, h4 { page-break-after: avoid; break-after: avoid; }
+  p, li { orphans: 3; widows: 3; }
+  .force-break { page-break-before: always; break-before: page; }
 
   /* COVER */
   .cover {
@@ -146,8 +150,10 @@
   }
 
   /* PAGES */
-  .pg { page: body; page-break-after: always; min-height: 9in; }
-  .pg:last-child { page-break-after: auto; }
+  .pg { break-after: auto; }
+  .step, .sched .row, .ws .field, .cta, .pull, .prompt {
+    page-break-inside: avoid; break-inside: avoid;
+  }
 
   .pg .tag {
     font-family: "JetBrains Mono", monospace;
@@ -435,7 +441,7 @@
   </div>
 
   <div class="index">01.</div>
-  <h1>Start AI<br>in 24 hours.</h1>
+  <h1>Start AI<br>in&nbsp;24&nbsp;hours.</h1>
   <p class="sub">A field manual for getting five working AI workflows live by tomorrow morning. No course. No tool-shopping. One LLM tab.</p>
 
   <div class="stat-grid">
@@ -454,7 +460,7 @@
 <!-- PAGE 2 -->
 <div class="pg">
   <div class="tag">FILE / 02 · THE 24-HOUR SCHEDULE</div>
-  <h1>Block it. One day, real moves.</h1>
+  <h1>Block it. One day, real&nbsp;moves.</h1>
   <p class="lead">Timing structure assumes you start tonight at 8pm. Adjust to your day. The only rule: don't spread it across a week.</p>
 
   <div class="sched">
@@ -470,9 +476,9 @@
 </div>
 
 <!-- PAGE 3 -->
-<div class="pg">
+<div class="pg force-break">
   <div class="tag">FILE / 03 · WORKFLOW 1 / EMAIL TRIAGE</div>
-  <h1>4 minutes. Not 2 hours.</h1>
+  <h1>4 minutes. Not 2&nbsp;hours.</h1>
 
   <div class="step" data-n="STEP 01 OF 03">
     <h3>Snapshot your inbox</h3>
@@ -508,9 +514,9 @@ Inbox:
 </div>
 
 <!-- PAGE 4 -->
-<div class="pg">
+<div class="pg force-break">
   <div class="tag">FILE / 07 · MONDAY MORNING WORKSHEET</div>
-  <h1>Fill in before 9:00 AM Monday.</h1>
+  <h1>Fill in before 9:00&nbsp;AM&nbsp;Monday.</h1>
   <p class="lead">Print it. Or fill on a tablet. The act of writing locks in the decision.</p>
 
   <div class="ws">
