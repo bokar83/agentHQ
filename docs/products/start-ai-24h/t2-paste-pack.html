@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Start AI Within 24 Hours - The Paste Pack (T2)</title>
+<style>
+  :root {
+    --ink: #0d0d0d;
+    --paper: #fafaf7;
+    --accent: #c2410c;
+    --accent-soft: #fed7aa;
+    --rule: #d4d4d0;
+    --muted: #5f5f5a;
+    --sand: #ecebe5;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: "Charter", "Iowan Old Style", "Georgia", serif; font-size: 17px; line-height: 1.6; }
+  .page { max-width: 720px; margin: 0 auto; padding: 56px 48px; background: var(--paper); page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+  h1, h2, h3, h4 { font-family: "Inter", "Helvetica Neue", "Arial", sans-serif; font-weight: 700; line-height: 1.2; }
+  h1 { font-size: 48px; letter-spacing: -0.02em; margin: 0 0 16px; }
+  h2 { font-size: 30px; margin: 48px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--ink); }
+  h3 { font-size: 22px; margin: 32px 0 12px; color: var(--accent); }
+  h4 { font-size: 18px; margin: 24px 0 8px; }
+  p { margin: 0 0 16px; }
+  ul, ol { margin: 0 0 16px; padding-left: 24px; }
+  li { margin-bottom: 6px; }
+  strong { font-weight: 700; }
+  code { font-family: "JetBrains Mono", "Menlo", monospace; font-size: 13px; background: var(--sand); padding: 2px 6px; border-radius: 3px; }
+  pre { background: var(--sand); padding: 16px 20px; border-radius: 4px; border-left: 4px solid var(--accent); overflow-x: auto; font-family: "JetBrains Mono", "Menlo", monospace; font-size: 13px; line-height: 1.5; margin: 12px 0; white-space: pre-wrap; }
+  blockquote { margin: 24px 0; padding: 16px 20px; border-left: 4px solid var(--accent); background: var(--sand); font-style: italic; color: var(--muted); }
+  .cover { min-height: 900px; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(135deg, var(--paper) 0%, var(--sand) 100%); }
+  .cover .eyebrow { font-family: "Inter", sans-serif; font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 24px; }
+  .cover h1 { font-size: 56px; margin-bottom: 24px; }
+  .cover .sub { font-size: 22px; color: var(--muted); font-family: "Inter", sans-serif; font-weight: 400; line-height: 1.4; max-width: 500px; }
+  .cover .byline { font-family: "Inter", sans-serif; font-size: 14px; color: var(--muted); margin-top: auto; }
+  .cover .byline strong { color: var(--ink); display: block; font-size: 16px; margin-bottom: 4px; }
+  .cover .badge { display: inline-block; padding: 4px 12px; background: var(--ink); color: var(--paper); font-family: "Inter", sans-serif; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; border-radius: 2px; margin-top: 12px; }
+  .prompt-card { background: var(--sand); padding: 20px 24px; border-radius: 4px; margin: 16px 0; border-left: 4px solid var(--accent); }
+  .prompt-label { font-family: "Inter", sans-serif; font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 8px; }
+  .prompt-card h4 { margin-top: 0; }
+  .prompt-card p { font-family: "Charter", serif; font-style: italic; }
+  .safety-note { background: #fef3c7; border: 2px solid #f59e0b; padding: 20px 24px; border-radius: 4px; margin: 24px 0; font-family: "Inter", sans-serif; font-size: 14px; }
+  .safety-note strong { color: #92400e; }
+  .cta-box { border: 2px solid var(--ink); padding: 32px; margin: 32px 0; background: var(--paper); font-family: "Inter", sans-serif; }
+  .cta-box h3 { color: var(--ink); margin-top: 0; }
+  .cta-link { display: inline-block; background: var(--ink); color: var(--paper); padding: 12px 24px; border-radius: 3px; text-decoration: none; font-weight: 600; margin: 4px 8px 4px 0; }
+  .footer-meta { font-family: "Inter", sans-serif; font-size: 12px; color: var(--muted); text-align: center; padding-top: 32px; border-top: 1px solid var(--rule); margin-top: 48px; }
+  @media print { body { font-size: 13pt; } .page { padding: 0.6in 0.7in; max-width: none; } }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<section class="page cover">
+  <div>
+    <div class="eyebrow">A Human at Work Starter Kit - Tier 2</div>
+    <h1>The Paste Pack</h1>
+    <p class="sub">28 paste-ready prompts, 1 Claude Project system file, 1 Custom Instructions template, and a 5-server MCP bootstrap. Companion to the 24-Hour Guide. For people who want to drop the scripts into their stack today.</p>
+    <span class="badge">Version 1.0 - 2026</span>
+  </div>
+  <div class="byline">
+    <strong>Boubacar</strong>
+    Human at Work - humanatwork.ai
+  </div>
+</section>
+
+<!-- HOW TO USE -->
+<section class="page">
+  <h2>How to use this pack</h2>
+  <p>You bought the T2 pack because you wanted the actual files. Here they are. Three things to know before you start.</p>
+
+  <h3>1. Paste-only. Nothing executes.</h3>
+  <p>Every artifact in this pack is plain text (.md and .txt format). There are no scripts that run on your machine. There is no code that needs installing. You copy text from this guide and paste it into Claude, ChatGPT, or your editor of choice. That is the entire workflow.</p>
+
+  <div class="safety-note">
+    <p><strong>Safety statement.</strong> Every text file in this bundle was scanned with Microsoft Defender + VirusTotal on 2026-05-16. Scan report is included in the bundle as <code>safety/scan-report.png</code>. These are paste-only text files. They cannot carry malware in the traditional sense, but apply normal hygiene: run your own AV scan before use, and never paste sensitive data (SSNs, credit cards, confidential docs) into any AI.</p>
+  </div>
+
+  <h3>2. Order to follow</h3>
+  <ol>
+    <li>Read the T1 guide first (Start AI Within 24 Hours) if you have not.</li>
+    <li>Set up your Claude Project using the system prompt template (page 4).</li>
+    <li>Set Custom Instructions once using the template (page 5).</li>
+    <li>Save the 28 prompts to your Project Knowledge.</li>
+    <li>Optionally add an MCP server (page 6).</li>
+    <li>Start using prompts on real work.</li>
+  </ol>
+
+  <h3>3. Voice + adaptation</h3>
+  <p>The prompts are written in my voice (direct, no filler). Adapt them to yours. The brackets <code>[like this]</code> are placeholders. Fill them in with your specifics. Do not paste the brackets.</p>
+</section>
+
+<!-- CLAUDE PROJECT TEMPLATE -->
+<section class="page">
+  <h2>Claude Project: System Prompt Template</h2>
+  <p>Paste this into the "Project Instructions" field when you create a new Claude Project. Edit the bracketed parts for your domain.</p>
+
+  <pre>You are helping [your name] with [domain — e.g., "HR work for a mid-market healthcare company"].
+
+Context:
+- I am [your role + 1-line background]
+- Tone preference: [direct / warm / formal — pick one]
+- I have uploaded [N] documents to Project Knowledge. Treat them as the source of truth when relevant.
+
+When responding:
+1. Match the voice of the documents in Project Knowledge when writing in my name
+2. Be direct. Skip sycophancy ("Great question!", "I'd be happy to help!"). Just answer.
+3. If you are uncertain, say so explicitly with "I am not confident about X because Y"
+4. End every substantive answer with 1-3 proposed next steps I could take
+5. When I ask you to do something, do the thing FIRST, then explain second
+6. Never invent facts. If you do not know, say "I do not know" or "I would need to verify"
+
+What I am working on right now: [1-line note, update this as projects shift]</pre>
+</section>
+
+<!-- CUSTOM INSTRUCTIONS -->
+<section class="page">
+  <h2>Custom Instructions (set once, applies everywhere)</h2>
+  <p>Settings -> Custom Instructions in Claude (or "Custom GPT" instructions in ChatGPT). Set these once. They apply to ALL chats.</p>
+
+  <pre>Default tone: clear, direct, no filler.
+
+Never:
+- Start with "Great question!" / "I'd be happy to help!" / "Certainly!"
+- Use the words "leverage", "synergy", or "delve"
+- Add em-dashes; use commas, colons, or parentheses instead
+- Hedge unnecessarily ("perhaps", "it might be", "you could consider")
+
+Always:
+- Do the thing first, explain second
+- Flag uncertainty when you have it
+- Propose 1-3 specific next steps after substantive answers
+- When I give you a draft to improve, return only the improved version unless I ask for the explanation
+
+When I send you a long document or transcript:
+- Start with a 3-bullet summary
+- Then surface the 1 thing the writer is NOT saying but seems implied
+- Then propose 1 action this means for me</pre>
+
+  <p>Save. Every new chat starts smarter.</p>
+</section>
+
+<!-- MCP BOOTSTRAP -->
+<section class="page">
+  <h2>MCP Bootstrap: 5 servers worth setting up</h2>
+  <p>MCP (Model Context Protocol) lets Claude reach into your other tools. These five cover the most common cases. Pick ONE if you are starting; add more as you go.</p>
+
+  <h3>If you live in Notion</h3>
+  <pre>claude mcp add notion --url "https://mcp.notion.com/sse"</pre>
+  <p>Lets Claude read and write your Notion pages directly. Best ROI for knowledge workers who use Notion as a second brain.</p>
+
+  <h3>If Gmail is your day</h3>
+  <pre>claude mcp add gmail --url "https://gmail-mcp.example.com"</pre>
+  <p>Triage inbox, draft replies in your voice, schedule follow-ups. (Note: requires Gmail MCP from your chosen provider — see Claude's MCP directory.)</p>
+
+  <h3>If Calendly runs your meetings</h3>
+  <pre>claude mcp add calendly --url "https://calendly-mcp.example.com"</pre>
+  <p>Auto-prep for upcoming meetings using the calendar context.</p>
+
+  <h3>If Google Drive holds your docs</h3>
+  <pre>claude mcp add drive --url "https://drive-mcp.example.com"</pre>
+  <p>Read/write across your Drive folders without copy-pasting docs into chat.</p>
+
+  <h3>If Slack is your team chat</h3>
+  <pre>claude mcp add slack --url "https://slack-mcp.example.com"</pre>
+  <p>Draft Slack messages, pull thread context, brainstorm in DMs without leaving Claude.</p>
+
+  <div class="safety-note">
+    <p><strong>MCP authorization note.</strong> Each MCP server asks for OAuth scopes when you connect. Read the scopes. Grant read-only first. Only add write scopes once you trust the workflow.</p>
+  </div>
+</section>
+
+<!-- PROMPTS: EMAIL (5) -->
+<section class="page">
+  <h2>Email prompts (5)</h2>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 1 of 28 - Reply to a difficult email</div>
+    <h4>Difficult-email diplomatic reply</h4>
+    <p>"Draft a reply to this email. The sender is [frustrated / asking for something I cannot give / pushing for a decision I am not ready for]. Tone: respectful, firm, no over-explaining. Goal: [acknowledge them + state my position + propose a next step]. Keep under 120 words. Email below:<br><br>[paste the email]"</p>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 2</div>
+    <h4>Cold email opener (sales / partnership)</h4>
+    <p>"Write a 4-sentence cold email to [name + role at company]. I am reaching out because [specific reason — saw their post / their company is doing X / mutual connection]. My goal is [book a 15-min call / get feedback / propose collaboration]. Tone: peer-to-peer, not pitchy. Include a specific reason I am writing to THEM, not just their role. End with a low-friction CTA."</p>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 3</div>
+    <h4>Internal update email</h4>
+    <p>"Draft an email to my [team / manager / stakeholder]. Topic: [project name update]. They need to know: [3-5 bullets of current state + risks + next milestones]. Tone: matter-of-fact, no over-selling. Length: under 200 words. End with what I need from them (if anything)."</p>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 4</div>
+    <h4>Follow-up after silence</h4>
+    <p>"I emailed [name] [N] weeks ago about [topic] and have not heard back. Draft a short follow-up. Acknowledge the silence without guilt-tripping. Briefly restate the value to them. Make it easy to say yes OR no. Keep under 80 words."</p>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 5</div>
+    <h4>Saying no professionally</h4>
+    <p>"I need to say no to [request]. Reason I am saying no: [reason]. Draft a reply that is gracious, firm, and does not invite re-negotiation. Offer an alternative if it costs me nothing (referral, future timing, smaller scope). Keep under 100 words."</p>
+  </div>
+</section>
+
+<!-- PROMPTS: WRITING (5) -->
+<section class="page">
+  <h2>Writing prompts (5)</h2>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 6</div>
+    <h4>First-draft anything</h4>
+    <p>"I need to write [type of doc] for [audience]. Goal of doc: [outcome]. Length: [word count]. Tone: [tone]. Key points to cover: [3-5 bullets]. Generate a first draft. After the draft, list 3 sections I should rewrite myself because they need my voice or judgment."</p>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 7</div>
+    <h4>Make my writing tighter</h4>
+    <p>"Edit this paragraph. Cut filler. Tighten phrasing. Keep my voice. Do not add new content. Return only the improved version. Original below:<br><br>[paste paragraph]"</p>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 8</div>
+    <h4>Hook generator</h4>
+    <p>"I am writing a [LinkedIn post / X thread / newsletter] about [topic]. Generate 10 hook variants for the opening line. Vary the angle: question, contrarian, stat, story, observation. Rank them by likelihood of making someone keep reading."</p>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 9</div>
+    <h4>Translate jargon to plain language</h4>
+    <p>"Take this paragraph and rewrite it for a [smart non-expert / executive who skims / 14-year-old]. Keep the substance. Lose the jargon. If a term is irreplaceable, keep it but define it in parens on first use:<br><br>[paste paragraph]"</p>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 10</div>
+    <h4>Match someone else's voice</h4>
+    <p>"Below are 3 examples of [writer's name] writing. Analyze the voice: sentence length, structural moves, signature phrases, what they avoid. Then rewrite this paragraph in their voice without losing the substance:<br><br>[3 samples]<br><br>[paragraph to rewrite]"</p>
+  </div>
+</section>
+
+<!-- PROMPTS: MEETINGS (4) -->
+<section class="page">
+  <h2>Meeting prompts (4)</h2>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 11</div>
+    <h4>Meeting prep</h4>
+    <p>"I have a meeting with [name + role + company] in [timeframe]. Goal of meeting: [what I want by end]. What I know about them: [3-5 bullets — their background, what they posted recently, what their company does]. Generate: (a) 3 questions I should ask, (b) 2 risks I should anticipate, (c) 1 specific ask I should make."</p>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 12</div>
+    <h4>Meeting recap email</h4>
+    <p>"I just had a meeting with [name]. We discussed [topics]. We agreed to [decisions]. Action items: [list]. Draft a recap email that documents the decisions, restates action items with owners + dates, and proposes a next check-in. Tone: matter-of-fact. Under 200 words."</p>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 13</div>
+    <h4>1-on-1 agenda</h4>
+    <p>"Draft a 30-min 1-on-1 agenda for my [direct report / manager]. They are working on [project / facing challenge]. I want to cover: progress, blockers, growth area, 1 personal check-in. Make it feel conversational not interrogative. List 8 questions I could ask, ranked by likelihood of surfacing what is really going on."</p>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 14</div>
+    <h4>Difficult-conversation prep</h4>
+    <p>"I need to have a hard conversation with [name] about [issue]. Their likely reaction: [defensive / dismissive / emotional]. Help me prepare: (1) my opening sentence, (2) the 1 fact I should anchor on, (3) what I will say if they push back, (4) the outcome I want by end, (5) the outcome I will NOT accept."</p>
+  </div>
+</section>
+
+<!-- PROMPTS: RESEARCH (4) -->
+<section class="page">
+  <h2>Research + analysis prompts (4)</h2>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 15</div>
+    <h4>Long document summary</h4>
+    <p>"Summarize this in 5 bullets. Then surface the 1 thing the writer is NOT saying but seems implied. Then tell me what action this means for me as [your role]:<br><br>[paste doc]"</p>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 16</div>
+    <h4>Compare two options</h4>
+    <p>"I am deciding between [option A] and [option B] for [decision context]. Compare them across: cost, time, reversibility, downside risk, upside ceiling. End with: which one I should pick if I am [time-constrained / risk-averse / chasing upside]."</p>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 17</div>
+    <h4>Decision pressure-test</h4>
+    <p>"I am considering [decision]. Argue for it in 3 bullets. Then argue against it in 3 bullets. Then tell me what additional information would tip the decision, and how to get that information cheaply."</p>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 18</div>
+    <h4>Stress-test my plan</h4>
+    <p>"Here is my plan to [goal]. Stress-test it. Find the 3 weakest assumptions. For each, tell me how to test the assumption cheaply before I commit fully. Plan below:<br><br>[paste plan]"</p>
+  </div>
+</section>
+
+<!-- PROMPTS: SALES (4) -->
+<section class="page">
+  <h2>Sales + outreach prompts (4)</h2>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 19</div>
+    <h4>Personalized cold email</h4>
+    <p>"Write a 4-sentence cold email to [prospect name + role]. Specific reason for outreach: [their recent post / their company milestone / mutual connection]. My value prop: [1-line]. CTA: [book 15-min call / get their take]. Tone: peer-to-peer. Include a specific reason it is THEM I am writing to."</p>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 20</div>
+    <h4>Discovery-call prep</h4>
+    <p>"I have a discovery call with [prospect]. Their company does [X]. Their role is [Y]. What I want to learn: their problem, their budget, their decision process, their timeline. Generate 12 questions ranked by how much they reveal vs. how much they cost in trust. Mark the 3 I should always ask."</p>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 21</div>
+    <h4>Objection handler</h4>
+    <p>"A prospect just said: '[objection]'. Help me reply. The reply should: (1) acknowledge their concern without agreeing, (2) reframe what they actually need, (3) close with a question that moves the deal forward. Keep under 60 words."</p>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 22</div>
+    <h4>Proposal generator</h4>
+    <p>"Draft a 1-page proposal for [client]. They asked for [scope]. My deliverable: [what I will produce]. Timeline: [N weeks]. Price: $[X]. Include: scope of work, timeline, payment terms, 1 line on what is out of scope. Tone: professional, no fluff. Format as numbered sections."</p>
+  </div>
+</section>
+
+<!-- PROMPTS: HIRING + HR (3) -->
+<section class="page">
+  <h2>Hiring + HR prompts (3)</h2>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 23</div>
+    <h4>Resume summary</h4>
+    <p>"Summarize this resume in 3 bullets a hiring manager will actually read. Focus on: (1) what they shipped, (2) where they grew, (3) any flag worth probing. Skip credentials and titles unless they are unusual. Resume:<br><br>[paste]"</p>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 24</div>
+    <h4>Interview question bank</h4>
+    <p>"Generate 10 interview questions for a [role title] candidate. We are looking for someone who can [3 specific capabilities]. The questions should: surface real work experience (not theory), be hard to game, and reveal how they think under pressure. Mix behavioral, technical, and judgment questions."</p>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 25</div>
+    <h4>Severance / exit conversation prep</h4>
+    <p>"I need to deliver a [layoff / termination / role-change] conversation to [name]. Their tenure: [N years]. Reason: [reason — verified, defensible]. Help me prepare: (1) the opening sentence, (2) the 1-page summary of what we are offering (severance, references, transition support), (3) what I say if they get emotional, (4) the 3 things I will NOT say."</p>
+  </div>
+</section>
+
+<!-- PROMPTS: OPS (3) -->
+<section class="page">
+  <h2>Operations prompts (3)</h2>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 26</div>
+    <h4>SOP gap finder</h4>
+    <p>"Here is an SOP doc for [process]. Find the 3 biggest gaps a new hire would stumble on. Suggest specific additions or examples. SOP below:<br><br>[paste]"</p>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 27</div>
+    <h4>Customer complaint reply</h4>
+    <p>"A customer just wrote: '[complaint]'. Draft a reply that: (1) acknowledges their frustration without admitting fault, (2) states what we will do next, (3) sets a specific deadline, (4) ends professionally. Keep under 120 words. Tone: warm but not over-apologetic."</p>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-label">Prompt 28</div>
+    <h4>KPI anomaly check</h4>
+    <p>"Here is a KPI report. Identify the 3 anomalies (numbers that look off versus trend or expectation). For each, propose 2 possible explanations + the cheapest test to figure out which is true. Report below:<br><br>[paste report]"</p>
+  </div>
+</section>
+
+<!-- DAILY STARTUP RITUAL -->
+<section class="page">
+  <h2>Daily startup ritual (10 minutes)</h2>
+
+  <p>Once setup is done, the discipline is daily usage. Here is a ritual that takes 10 minutes at the start of each workday and locks the habit in.</p>
+
+  <h3>Minute 0-2: Open Claude. Set today's intention.</h3>
+  <pre>"Today my top priority is [1 outcome]. The 3 main tasks: [list]. What is the 1 question I should answer FIRST before starting any of them?"</pre>
+
+  <h3>Minute 2-5: Process one piece of input</h3>
+  <p>Pick the longest email or doc in your inbox. Paste it. Use Prompt 15 (Long document summary). Decide your action. Reply or delete.</p>
+
+  <h3>Minute 5-8: Draft tomorrow's hardest thing</h3>
+  <p>Whatever task you are dreading tomorrow, ask Claude to start the draft now. You will not finish it, but starting today makes finishing tomorrow easier.</p>
+
+  <h3>Minute 8-10: Shut down ritual</h3>
+  <p>End every Claude session with: "What did I learn or notice today that I want to remember tomorrow?" Save the answer in a daily note. Compounding starts here.</p>
+</section>
+
+<!-- TROUBLESHOOTING -->
+<section class="page">
+  <h2>Troubleshooting (10 common issues)</h2>
+
+  <h3>1. "The output is wrong."</h3>
+  <p>Reply with: "This is wrong because [specific reason]. Here is what the correct version should look like: [your version]. Now generate 3 alternatives that match the correct version."</p>
+
+  <h3>2. "The output is too long."</h3>
+  <p>Reply: "Cut by 50%. Keep only what is essential. Remove all hedging."</p>
+
+  <h3>3. "The output sounds like AI."</h3>
+  <p>Reply: "Rewrite without: leverage, synergy, delve, em-dashes, sycophancy openers, 3-bullet lists. Sound like a human emailing a peer."</p>
+
+  <h3>4. "It keeps hallucinating facts."</h3>
+  <p>Add to Custom Instructions: "Never state a stat, citation, or URL without verification. If unverified, say: 'I cannot confirm this without checking.'"</p>
+
+  <h3>5. "It is too sycophantic."</h3>
+  <p>Set this in Custom Instructions: "Never start a response with 'Great question!' or 'I'd be happy to help!'. Skip to the answer."</p>
+
+  <h3>6. "It refuses to do something normal."</h3>
+  <p>Try: "Frame this for me as: [your context — e.g., 'a manager writing a performance review']. The intent is [your goal]." Most refusals come from missing context.</p>
+
+  <h3>7. "Claude says my Project files are too big."</h3>
+  <p>Split into chunks under 100k chars. Or remove old files. Most users overload Project Knowledge.</p>
+
+  <h3>8. "MCP keeps disconnecting."</h3>
+  <p>Restart Claude desktop. If still broken, the MCP server may be down — check its status page.</p>
+
+  <h3>9. "I forget to use it."</h3>
+  <p>Block 10 minutes in your calendar at 9:00 AM titled "AI ritual". The discipline beats the desire.</p>
+
+  <h3>10. "It costs too much."</h3>
+  <p>$20/mo. The first time you save 30 minutes drafting an email, it pays for itself. Track your time saved for 1 week before judging.</p>
+</section>
+
+<!-- CTA + WHAT NEXT -->
+<section class="page">
+  <h2>What is next</h2>
+
+  <p>You have everything you need to operate. Real productivity is in the doing now, not in more setup.</p>
+
+  <h3>If you want me involved (T3)</h3>
+  <p>A 60-minute screen-share where I set up YOUR machine with YOU. I see your stack, your workflows, your constraints. We configure live. You walk away with a personalized snapshot.</p>
+
+  <div class="cta-box">
+    <h3>Hand-In-Hand Setup ($697)</h3>
+    <a class="cta-link" href="https://humanatwork.ai/start-ai/hand-in-hand">Book the call</a>
+  </div>
+
+  <h3>If you want me to do it (T4)</h3>
+  <p>I configure everything for you. Hand it over. 7-day delivery. 30-day Slack support.</p>
+
+  <div class="cta-box">
+    <h3>Done-For-You Setup ($3,997)</h3>
+    <a class="cta-link" href="https://humanatwork.ai/start-ai/done-for-you">Request done-for-you</a>
+  </div>
+
+  <h3>Free weekly newsletter</h3>
+  <p>One specific AI workflow per week. The actual prompt I used. The actual result. Operator-to-operator.</p>
+  <a class="cta-link" style="background: var(--paper); color: var(--ink); border: 2px solid var(--ink);" href="https://humanatwork.ai/subscribe">Subscribe (free)</a>
+
+  <div class="footer-meta">
+    The Paste Pack - T2 - Version 1.0 - Human at Work - 2026<br>
+    Refund within 7 days: support@humanatwork.ai<br>
+    Safety scan: VirusTotal + Defender, 2026-05-16
+  </div>
+</section>
+
+</body>
+</html>
