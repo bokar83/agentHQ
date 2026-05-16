@@ -4,309 +4,370 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Catalog - Human at Work</title>
-<meta name="description" content="Operator-tested digital products from Boubacar - AI starter kits, prompt packs, audit playbooks, and more.">
+<meta name="description" content="Operator-tested digital products from Boubacar. AI starter kits, prompt packs, audit playbooks, job-hunt tools, trade-business AI kits, premium done-for-you.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,600&family=Spectral:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --ink: #0d0d0d;
-    --paper: #fafaf7;
-    --accent: #c2410c;
-    --accent-soft: #fed7aa;
-    --accent-bright: #ea580c;
-    --rule: #d4d4d0;
-    --muted: #5f5f5a;
-    --sand: #ecebe5;
-    --green: #15803d;
-    --amber: #b45309;
+    --paper: #F4EFE6;
+    --ink: #161513;
+    --brick: #A8341F;
+    --sage: #3E4A2E;
+    --bone: #ECE5D6;
+    --muted: #6B655C;
+    --hairline: #D8D1C1;
+    --serif: "Fraunces", "Iowan Old Style", Georgia, serif;
+    --body: "Spectral", Georgia, serif;
+    --mono: "JetBrains Mono", "SF Mono", monospace;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
-  body { background: var(--paper); color: var(--ink); font-family: "Charter", "Iowan Old Style", "Georgia", serif; font-size: 18px; line-height: 1.6; }
-  .wrap { max-width: 980px; margin: 0 auto; padding: 0 24px; }
-  h1, h2, h3, h4, .sans { font-family: "Inter", "Helvetica Neue", "Arial", sans-serif; }
-  h1 { font-size: 56px; line-height: 1.05; letter-spacing: -0.025em; font-weight: 800; }
-  h2 { font-size: 32px; line-height: 1.15; letter-spacing: -0.015em; font-weight: 700; margin: 56px 0 16px; }
-  h3 { font-size: 20px; font-weight: 700; margin: 0 0 8px; }
-  p { margin-bottom: 12px; }
-  a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
-  a:hover { color: var(--accent-bright); }
+  body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.6; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; letter-spacing: -0.01em; }
+  a { color: var(--ink); text-decoration: none; }
+  a:hover { color: var(--brick); }
 
-  /* HERO */
-  .hero { padding: 80px 0 40px; background: linear-gradient(135deg, var(--paper) 0%, var(--sand) 100%); }
-  .hero .eyebrow { font-family: "Inter", sans-serif; font-size: 13px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 20px; }
-  .hero .sub { font-size: 20px; color: var(--muted); font-family: "Inter", sans-serif; font-weight: 400; line-height: 1.4; max-width: 640px; margin-top: 24px; }
-  .hero .voice { background: var(--sand); padding: 24px; border-left: 4px solid var(--ink); margin-top: 32px; font-family: "Inter", sans-serif; }
-  .hero .voice p { margin: 0; font-size: 17px; line-height: 1.5; }
+  .topbar { position: sticky; top: 0; z-index: 100; background: rgba(244, 239, 230, 0.95); backdrop-filter: blur(8px); border-bottom: 1px solid var(--hairline); }
+  .topbar-inner { display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; max-width: 1080px; margin: 0 auto; }
+  .topbar a.brand { font-family: var(--serif); font-weight: 600; font-size: 17px; }
+  .topbar nav { display: flex; gap: 24px; }
+  .topbar nav a { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
 
-  /* SECTION HEADER */
-  .section-head { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
-  .badge { display: inline-block; padding: 3px 10px; border-radius: 3px; font-family: "Inter", sans-serif; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; }
-  .badge.live { background: var(--green); color: white; }
-  .badge.soon { background: var(--amber); color: white; }
-  .badge.queued { background: var(--muted); color: white; }
+  .hero { padding: 80px 0 56px; }
+  .hero .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--brick); margin-bottom: 16px; }
+  .hero h1 { font-size: clamp(40px, 7vw, 80px); line-height: 1.02; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 24px; }
+  .hero h1 em { font-style: italic; color: var(--brick); }
+  .hero .lede { font-family: var(--body); font-size: 20px; max-width: 640px; color: var(--ink); margin-bottom: 32px; }
+  .hero .voice { background: var(--bone); padding: 24px 28px; border-left: 3px solid var(--brick); max-width: 720px; margin-top: 32px; font-family: var(--body); font-size: 17px; color: var(--ink); }
 
-  /* PRODUCT GRID */
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; }
-  .card { background: white; border: 2px solid var(--rule); border-radius: 6px; padding: 28px; transition: border-color 150ms ease; }
-  .card.live { border-color: var(--accent-soft); }
-  .card.live:hover { border-color: var(--accent); }
-  .card.soon { background: var(--sand); border-color: var(--rule); }
-  .card .card-head { display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; }
-  .card .card-price { font-family: "Inter", sans-serif; font-size: 24px; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; }
-  .card .card-price-was { font-size: 14px; color: var(--muted); text-decoration: line-through; margin-left: 6px; }
-  .card .card-desc { font-family: "Inter", sans-serif; font-size: 15px; color: var(--muted); margin-bottom: 16px; }
-  .card .card-meta { font-family: "Inter", sans-serif; font-size: 13px; color: var(--muted); margin-bottom: 16px; }
-  .card .card-meta strong { color: var(--ink); }
-  .card .card-cta { display: inline-block; padding: 10px 20px; background: var(--accent); color: white; font-family: "Inter", sans-serif; font-weight: 600; font-size: 14px; border-radius: 3px; text-decoration: none; }
-  .card .card-cta:hover { background: var(--accent-bright); color: white; }
-  .card .card-cta.muted { background: var(--rule); color: var(--muted); cursor: not-allowed; pointer-events: none; }
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin: 64px 0 24px; padding-bottom: 16px; border-bottom: 1px solid var(--hairline); }
+  .section-head h2 { font-size: 32px; }
+  .section-head .meta { font-family: var(--mono); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
 
-  /* NEWSLETTER */
-  .newsletter { background: var(--ink); color: var(--paper); padding: 56px 0; text-align: center; margin-top: 64px; }
-  .newsletter h2 { color: var(--paper); margin: 0 0 12px; }
-  .newsletter p { color: rgba(250,250,247,0.8); max-width: 540px; margin: 0 auto 24px; }
-  .newsletter input { padding: 14px 16px; font-size: 16px; width: 320px; border: none; border-radius: 4px; font-family: "Inter", sans-serif; margin-right: 8px; }
-  .newsletter button { padding: 14px 28px; background: var(--accent); color: white; border: none; border-radius: 4px; font-family: "Inter", sans-serif; font-weight: 700; font-size: 16px; cursor: pointer; }
-  .newsletter button:hover { background: var(--accent-bright); }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  @media (max-width: 880px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
 
-  /* FOOTER */
-  footer { background: var(--ink); color: rgba(250,250,247,0.6); padding: 32px 0; font-family: "Inter", sans-serif; font-size: 14px; text-align: center; border-top: 1px solid rgba(255,255,255,0.08); }
-  footer a { color: var(--accent-soft); }
+  .card { background: white; border: 1px solid var(--hairline); border-radius: 4px; padding: 24px; display: flex; flex-direction: column; transition: border-color 200ms ease, transform 200ms ease; }
+  .card:hover { border-color: var(--ink); transform: translateY(-2px); }
+  .card-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .card-tag.brick { color: var(--brick); }
+  .card h3 { font-size: 19px; line-height: 1.2; margin-bottom: 10px; }
+  .card-desc { font-family: var(--body); font-size: 14px; color: var(--muted); line-height: 1.5; margin-bottom: 16px; flex: 1; }
+  .card-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--hairline); }
+  .card-price { font-family: var(--mono); font-weight: 500; font-size: 16px; color: var(--ink); }
+  .card-price .strike { color: var(--muted); text-decoration: line-through; font-size: 13px; margin-right: 6px; }
+  .card-link { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--brick); }
 
-  @media (max-width: 720px) {
-    h1 { font-size: 38px; }
-    h2 { font-size: 26px; }
-    .grid { grid-template-columns: 1fr; }
-    .newsletter input { width: 100%; margin: 0 0 12px; }
-  }
+  .newsletter { background: var(--ink); color: var(--paper); padding: 64px 0; margin-top: 96px; text-align: center; }
+  .newsletter h2 { color: var(--paper); font-size: 36px; margin-bottom: 12px; }
+  .newsletter p { color: rgba(244,239,230,0.7); max-width: 520px; margin: 0 auto 28px; }
+  .newsletter form { display: inline-flex; gap: 8px; max-width: 480px; flex-wrap: wrap; justify-content: center; }
+  .newsletter input { padding: 13px 16px; font-size: 15px; width: 280px; border: 1px solid rgba(244,239,230,0.3); background: transparent; color: var(--paper); font-family: var(--body); border-radius: 3px; }
+  .newsletter button { padding: 13px 24px; background: var(--brick); color: var(--paper); border: 0; font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; border-radius: 3px; }
+  .newsletter button:hover { background: #8c2b18; }
+
+  footer { background: var(--ink); color: rgba(244,239,230,0.6); padding: 32px 0; font-family: var(--mono); font-size: 12px; letter-spacing: 0.05em; text-align: center; border-top: 1px solid rgba(244,239,230,0.1); }
+  footer a { color: rgba(244,239,230,0.85); text-decoration: underline; text-underline-offset: 3px; }
 </style>
 </head>
 <body>
 
-<!-- HERO -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="/">Human at Work</a>
+    <nav>
+      <a href="#humanatwork">Career + AI</a>
+      <a href="#catalystworks">Operator</a>
+      <a href="#signalworks">Trades + Sites</a>
+      <a href="#bundles">Bundles</a>
+    </nav>
+  </div>
+</header>
+
 <section class="hero">
   <div class="wrap">
-    <div class="eyebrow">Human at Work - The Catalog</div>
-    <h1>Operator-tested. Not theory.</h1>
-    <p class="sub">Every product in this catalog is built from a workflow I run inside one of my three companies. If it does not work for me, it does not ship here.</p>
+    <div class="eyebrow">The Catalog &middot; 30 SKUs</div>
+    <h1>Operator-tested. <em>Not theory.</em></h1>
+    <p class="lede">Every product here is built from a workflow I run inside one of three companies. If it does not work for me, it does not ship.</p>
 
     <div class="voice">
-      <p><strong>Why this catalog exists.</strong> I spent two years building agentsHQ in the open. 75 skills, 4 brands, a working multi-agent system. Friends kept asking for the pieces. I kept saying "let me write that up." This is me actually writing it up. The catalog is small. It will grow fast. Each item costs less than what I would charge you to do it for you.</p>
+      <p><strong>Why this catalog exists.</strong> I built agentsHQ in the open over two years. 75 skills. Three brands. Friends kept asking for the pieces. I kept saying "let me write that up." Six months of "next weekend" later, I ran out of excuses. The shop is the result.</p>
     </div>
   </div>
 </section>
 
-<!-- LIVE NOW -->
-<section class="wrap">
+<!-- =================== humanatwork.ai cluster (career + AI for work) =================== -->
+<section class="wrap" id="humanatwork">
   <div class="section-head">
-    <h2>Live now</h2>
-    <span class="badge live">Ships today</span>
+    <h2>Career + AI for Work</h2>
+    <span class="meta">humanatwork.ai &middot; 12 SKUs</span>
   </div>
-
   <div class="grid">
-    <div class="card live">
-      <div class="card-head">
-        <h3>Start AI Within 24 Hours</h3>
-        <div class="card-price">$19<span class="card-price-was">$29</span></div>
-      </div>
-      <p class="card-desc">The flagship. From zero account to 5 working daily workflows in 24 hours. Built for overwhelmed mid-career pros.</p>
-      <p class="card-meta">Format: <strong>30+ page HTML + PDF backup</strong> &middot; Early bird through May 23 &middot; No refund (digital download)</p>
-      <a class="card-cta" href="https://humanatwork.ai/start-ai">View page</a>
-    </div>
 
-    <div class="card live">
-      <div class="card-head">
-        <h3>+ The Paste Pack (T2)</h3>
-        <div class="card-price">$79</div>
-      </div>
-      <p class="card-desc">T1 + 28 paste-ready prompts + Claude Project + Custom Instructions + MCP bootstrap + daily ritual + troubleshooting.</p>
-      <p class="card-meta">Format: <strong>HTML + PDF + 30+ paste-ready files</strong> &middot; Safety: <strong>scanned + paste-only</strong></p>
-      <a class="card-cta" href="https://humanatwork.ai/start-ai/t2">View page</a>
-    </div>
+    <a class="card" href="/start-ai-24h/">
+      <div class="card-tag brick">Flagship &middot; T1</div>
+      <h3>Start AI Within 24 Hours</h3>
+      <p class="card-desc">From never-used-AI to 5 real workflows running your actual workday. By tomorrow night. For the overwhelmed, the laid-off, the pivoting.</p>
+      <div class="card-bottom"><span class="card-price">$27</span><span class="card-link">View &rarr;</span></div>
+    </a>
 
-    <div class="card live">
-      <div class="card-head">
-        <h3>Hand-In-Hand Setup (T3)</h3>
-        <div class="card-price">$697</div>
-      </div>
+    <a class="card" href="/start-ai-24h/t2-paste-pack">
+      <div class="card-tag">T2 &middot; Paste Pack</div>
+      <h3>+ The Paste Pack</h3>
+      <p class="card-desc">28 paste-ready prompts (ROLE / GOAL / CONTEXT structure), Custom Instructions block, MCP bootstrap, daily startup ritual. Works on Claude / ChatGPT / Gemini / Grok / Perplexity.</p>
+      <div class="card-bottom"><span class="card-price">$79</span><span class="card-link">View &rarr;</span></div>
+    </a>
+
+    <a class="card" href="/resume-surgeon/">
+      <div class="card-tag">Job hunt</div>
+      <h3>AI Resume Surgeon</h3>
+      <p class="card-desc">ATS-rewrite prompt kit + recruiter-readable template. From the perspective of someone who read 50K+ resumes from the other side of the table.</p>
+      <div class="card-bottom"><span class="card-price">$29</span><span class="card-link">View &rarr;</span></div>
+    </a>
+
+    <a class="card" href="/interview-prep/">
+      <div class="card-tag">Job hunt</div>
+      <h3>AI Interview Prep</h3>
+      <p class="card-desc">10 likely questions per role + recruiter-rubric scoring + 3 risks to anticipate. Built from 14 years running interview loops.</p>
+      <div class="card-bottom"><span class="card-price">$39</span><span class="card-link">View &rarr;</span></div>
+    </a>
+
+    <a class="card" href="/salary-negotiation/">
+      <div class="card-tag">Job hunt</div>
+      <h3>AI Salary Negotiation</h3>
+      <p class="card-desc">Counter-offer scripts + email templates + the math + the things you never say. Ex-HR exec view of the conversation from both sides.</p>
+      <div class="card-bottom"><span class="card-price">$29</span><span class="card-link">View &rarr;</span></div>
+    </a>
+
+    <a class="card" href="/layoff-survival/">
+      <div class="card-tag brick">Layoff</div>
+      <h3>Layoff Survival Playbook</h3>
+      <p class="card-desc">45-day pivot framework. Severance math, COBRA, healthcare gap, freelance pivot, AI-augmented job hunt. For the person 90 days into severance.</p>
+      <div class="card-bottom"><span class="card-price">$79</span><span class="card-link">View &rarr;</span></div>
+    </a>
+
+    <a class="card" href="/career-os-notion/">
+      <div class="card-tag">Notion</div>
+      <h3>Career OS Notion Template</h3>
+      <p class="card-desc">Job-hunt OS: resume + LinkedIn + interview tracker + AI prompt library + application pipeline + salary research all in one Notion workspace.</p>
+      <div class="card-bottom"><span class="card-price">$69</span><span class="card-link">View &rarr;</span></div>
+    </a>
+
+    <a class="card" href="/first-gen-playbook/">
+      <div class="card-tag">Demographic moat</div>
+      <h3>First-Gen Professional Playbook</h3>
+      <p class="card-desc">Navigate corporate America without inherited network. Read unspoken rules. Position immigrant background as asset, not tax. From Conakry to corporate HR.</p>
+      <div class="card-bottom"><span class="card-price">$49</span><span class="card-link">View &rarr;</span></div>
+    </a>
+
+    <a class="card" href="/solo-operator-bundle/">
+      <div class="card-tag brick">Bundle &middot; Save $47</div>
+      <h3>Solo Operator Starter Bundle</h3>
+      <p class="card-desc">Start AI + Resume Surgeon + Interview Prep + Cold Email Pack. $144 of SKUs at $97. Built for the laid-off operator who needs all 4 now.</p>
+      <div class="card-bottom"><span class="card-price"><span class="strike">$144</span>$97</span><span class="card-link">View &rarr;</span></div>
+    </a>
+
+    <a class="card" href="/resume-dfy/">
+      <div class="card-tag">DFY</div>
+      <h3>AI Resume DFY</h3>
+      <p class="card-desc">I rewrite your resume + LinkedIn headline + 1 cover letter in 72 hours. Higher-touch than the Surgeon kit. For senior pros who want it done.</p>
+      <div class="card-bottom"><span class="card-price">$297</span><span class="card-link">View &rarr;</span></div>
+    </a>
+
+    <a class="card" href="/linkedin-profile-audit/">
+      <div class="card-tag">DFY</div>
+      <h3>LinkedIn Profile Audit DFY</h3>
+      <p class="card-desc">5-day done-for-you. I rewrite headline, tagline, about, featured, experience. Return edited PDF + 30-min call. For senior career inbound.</p>
+      <div class="card-bottom"><span class="card-price">$497</span><span class="card-link">View &rarr;</span></div>
+    </a>
+
+    <a class="card" href="https://calendly.com/boubacarbarry/ai-readiness-call-human-at-work">
+      <div class="card-tag">DFY &middot; Service</div>
+      <h3>Start AI Done-For-You</h3>
+      <p class="card-desc">I configure your AI stack end-to-end. Claude / ChatGPT Project + Custom Instructions + 5 paste-ready prompts + 1 MCP integration + 30-day plan. 7-day delivery.</p>
+      <div class="card-bottom"><span class="card-price">$3,997</span><span class="card-link">Book &rarr;</span></div>
+    </a>
+  </div>
+</section>
+
+<!-- =================== catalystworks.consulting cluster =================== -->
+<section class="wrap" id="catalystworks">
+  <div class="section-head">
+    <h2>Operator Playbooks</h2>
+    <span class="meta">catalystworks.consulting &middot; 9 SKUs</span>
+  </div>
+  <div class="grid">
+
+    <a class="card" href="/ctq-quality-gate/">
+      <div class="card-tag">Skill</div>
+      <h3>Pre-Publish Quality Gate</h3>
+      <p class="card-desc">62-word banned list + 5-dimension score rubric + 4/day cap rule. The CTQ check I run before every LinkedIn post. From skills/ctq-social.</p>
+      <div class="card-bottom"><span class="card-price">$25</span><span class="card-link">View &rarr;</span></div>
+    </a>
+
+    <a class="card" href="/audit-pattern-catalog/">
+      <div class="card-tag">Outreach</div>
+      <h3>Audit Pattern Catalog</h3>
+      <p class="card-desc">3 cold-email variants (Chad-cold / Nate-peer / Chad-friend) + selection rubric + 11 anti-patterns + reply-data CSV. 1,200 sends tested.</p>
+      <div class="card-bottom"><span class="card-price">$29</span><span class="card-link">View &rarr;</span></div>
+    </a>
+
+    <a class="card" href="/content-multiplier/">
+      <div class="card-tag">Content</div>
+      <h3>1 Idea Into 7 Posts</h3>
+      <p class="card-desc">Turn 1 idea into LinkedIn + X thread + 3 Reels + newsletter + Substack post. Voice-loading + 1-into-N workflow.</p>
+      <div class="card-bottom"><span class="card-price">$39</span><span class="card-link">View &rarr;</span></div>
+    </a>
+
+    <a class="card" href="/cold-email-pack/">
+      <div class="card-tag">Outreach</div>
+      <h3>Reply-First Cold Email Pack</h3>
+      <p class="card-desc">T1 / T2 / T3 templates across 10 sectors. Battle-tested. 1,200 sent / 47 replies / 11 calls / 4 clients in 90 days.</p>
+      <div class="card-bottom"><span class="card-price">$49</span><span class="card-link">View &rarr;</span></div>
+    </a>
+
+    <a class="card" href="/cw-pipeline/">
+      <div class="card-tag">Playbook</div>
+      <h3>The CW Pipeline</h3>
+      <p class="card-desc">Zero to first audit. ICP, cold outreach, lead magnet, discovery, delivery, pricing. The pipeline I ran for Catalyst Works.</p>
+      <div class="card-bottom"><span class="card-price">$59</span><span class="card-link">View &rarr;</span></div>
+    </a>
+
+    <a class="card" href="/failed-business-postmortem/">
+      <div class="card-tag brick">Unique moat</div>
+      <h3>Failed-Business Postmortem Library</h3>
+      <p class="card-desc">200 pages. 40 teardowns (3 mine + 37 interviewed). 11 patterns + recovery playbooks. Anti-survivorship-bias. Nobody else publishes losses.</p>
+      <div class="card-bottom"><span class="card-price">$99</span><span class="card-link">View &rarr;</span></div>
+    </a>
+
+    <a class="card" href="/how-we-built-agentshq/">
+      <div class="card-tag brick">Premium</div>
+      <h3>How We Built agentsHQ</h3>
+      <p class="card-desc">120-page operator playbook. 75-skill architecture, governance, audit registry, Karpathy principles, worktree discipline, Gate. Rare-air content.</p>
+      <div class="card-bottom"><span class="card-price">$297</span><span class="card-link">View &rarr;</span></div>
+    </a>
+
+    <a class="card" href="/ai-department-of-one/">
+      <div class="card-tag">Premium</div>
+      <h3>AI Department of One</h3>
+      <p class="card-desc">Implementation kit + 60-min Calendly. SOP + decision tree + 12 paste-prompts + LLM comparison + 1-year roadmap. For solo founder running ops + content + sales.</p>
+      <div class="card-bottom"><span class="card-price">$497</span><span class="card-link">View &rarr;</span></div>
+    </a>
+
+    <a class="card" href="/ai-audit-smb-dfy/">
+      <div class="card-tag">DFY</div>
+      <h3>AI Audit for SMB DFY</h3>
+      <p class="card-desc">5-day done-for-you. 12 stakeholder interviews + 5 process maps + 30-day implementation deck. For $1M-$10M founders.</p>
+      <div class="card-bottom"><span class="card-price">$2,997</span><span class="card-link">Book &rarr;</span></div>
+    </a>
+  </div>
+</section>
+
+<!-- =================== signalworks / geolisted cluster =================== -->
+<section class="wrap" id="signalworks">
+  <div class="section-head">
+    <h2>Trades + Service-Biz Sites</h2>
+    <span class="meta">signalworks.consulting &middot; geolisted.co &middot; 4 SKUs</span>
+  </div>
+  <div class="grid">
+
+    <a class="card" href="/website-teardown-audit/">
+      <div class="card-tag">Skill</div>
+      <h3>Audit Any Prospect Website in 30 min</h3>
+      <p class="card-desc">6-phase teardown checklist. Phase-0 disqualifier. Critical-issues report + cold-email-ready output. For freelancers + agencies.</p>
+      <div class="card-bottom"><span class="card-price">$35</span><span class="card-link">View &rarr;</span></div>
+    </a>
+
+    <a class="card" href="/trade-business-ai/">
+      <div class="card-tag">Trades</div>
+      <h3>Trade Business + AI</h3>
+      <p class="card-desc">HVAC / Roofing / Flooring / Plumbing / Electrical. 7 workflows: lead intake AI, Google reviews AI replies, quote generation, customer follow-up. From a former tile installer.</p>
+      <div class="card-bottom"><span class="card-price">$49</span><span class="card-link">View &rarr;</span></div>
+    </a>
+
+    <a class="card" href="/trade-phone-assistant-dfy/">
+      <div class="card-tag">DFY</div>
+      <h3>Trade AI Phone-Assistant Setup DFY</h3>
+      <p class="card-desc">5-day done-for-you AI receptionist + missed-call text-back + appointment booking. Script tuning + 30-day support. For trade owners.</p>
+      <div class="card-bottom"><span class="card-price">$797</span><span class="card-link">Book &rarr;</span></div>
+    </a>
+
+    <a class="card" href="/trade-seo-dfy/">
+      <div class="card-tag">DFY</div>
+      <h3>Trade SEO + AI Site DFY</h3>
+      <p class="card-desc">10-day done-for-you AI-visible trade site. Built for HVAC, plumber, roofer, electrician. SW pipeline + geolisted.co backed.</p>
+      <div class="card-bottom"><span class="card-price">$1,497</span><span class="card-link">Book &rarr;</span></div>
+    </a>
+  </div>
+</section>
+
+<!-- =================== bundles + memoirs + subscription =================== -->
+<section class="wrap" id="bundles">
+  <div class="section-head">
+    <h2>Bundles + Memoir + Subscription</h2>
+    <span class="meta">cross-brand &middot; 5 SKUs</span>
+  </div>
+  <div class="grid">
+
+    <a class="card" href="https://humanatwork.ai">
+      <div class="card-tag brick">Free</div>
+      <h3>Free AI Exposure Score</h3>
+      <p class="card-desc">2-minute assessment. 3 things you will know that most workers never find out. Role-specific risk + 3 defense moves + early severance signals.</p>
+      <div class="card-bottom"><span class="card-price">$0</span><span class="card-link">Start &rarr;</span></div>
+    </a>
+
+    <a class="card" href="/hr-career-memoir/">
+      <div class="card-tag">Memoir</div>
+      <h3>HR Career to AI Builder</h3>
+      <p class="card-desc">15-year pivot memoir. 60 pages + 3-exits playbook. Why HR people are best-positioned for AI work. Practical mid-career pivot map.</p>
+      <div class="card-bottom"><span class="card-price">$147</span><span class="card-link">View &rarr;</span></div>
+    </a>
+
+    <a class="card" href="/catalyst-operator-bundle/">
+      <div class="card-tag brick">Bundle &middot; Save $105</div>
+      <h3>Catalyst AI Operator Bundle</h3>
+      <p class="card-desc">CW Pipeline + Audit Pattern Catalog + How We Built agentsHQ + AI Department of One. $902 of SKUs at $797. For serious solo consultants.</p>
+      <div class="card-bottom"><span class="card-price"><span class="strike">$902</span>$797</span><span class="card-link">View &rarr;</span></div>
+    </a>
+
+    <a class="card" href="https://calendly.com/boubacarbarry/ai-readiness-call-human-at-work">
+      <div class="card-tag">Premium &middot; 1-on-1</div>
+      <h3>Start AI Hand-In-Hand</h3>
       <p class="card-desc">60-min screen-share with me. Live setup on your machine. Personalized 1-page snapshot post-call. 30-day milestone tracker.</p>
-      <p class="card-meta">Format: <strong>1:1 call + post-call PDF</strong> &middot; Booking: <strong>Calendly</strong></p>
-      <a class="card-cta" href="https://calendly.com/boubacarbarry/ai-readiness-call-human-at-work">Book a call</a>
-    </div>
+      <div class="card-bottom"><span class="card-price">$1,497</span><span class="card-link">Book &rarr;</span></div>
+    </a>
 
-    <div class="card live">
-      <div class="card-head">
-        <h3>Done-For-You Setup (T4)</h3>
-        <div class="card-price">$3,997</div>
-      </div>
-      <p class="card-desc">I configure your stack. You get the keys. 7-day delivery from intake. 30-day Slack support window.</p>
-      <p class="card-meta">Format: <strong>Boubacar does the work</strong> &middot; Scope-locked SOW &middot; SLA</p>
-      <a class="card-cta" href="https://humanatwork.ai/start-ai/done-for-you">Request DFY</a>
-    </div>
+    <a class="card" href="https://1stgenmoney.substack.com">
+      <div class="card-tag">Subscription</div>
+      <h3>From-the-HR-Chair</h3>
+      <p class="card-desc">One email a week. Workplace AI from inside the room. Written for ops managers, HR leaders, knowledge workers navigating the transition.</p>
+      <div class="card-bottom"><span class="card-price">$8/mo</span><span class="card-link">Subscribe &rarr;</span></div>
+    </a>
   </div>
 </section>
 
-<!-- COMING THIS WEEK -->
-<section class="wrap">
-  <div class="section-head">
-    <h2>Coming this week</h2>
-    <span class="badge soon">In draft</span>
-  </div>
-
-  <div class="grid">
-    <div class="card soon">
-      <div class="card-head">
-        <h3>Reply-First Cold Email Pack</h3>
-        <div class="card-price">$49</div>
-      </div>
-      <p class="card-desc">10 sectors. 3 tiers per sector. Battle-tested in Catalyst Works outreach. The exact templates I send.</p>
-      <p class="card-meta">Drops: <strong>This week</strong></p>
-      <span class="card-cta muted">Notify me</span>
-    </div>
-
-    <div class="card soon">
-      <div class="card-head">
-        <h3>Audit Any Prospect's Website in 30min</h3>
-        <div class="card-price">$35</div>
-      </div>
-      <p class="card-desc">The 6-phase teardown I use to qualify Signal Works leads. Phase-0 disqualifier built in.</p>
-      <p class="card-meta">Drops: <strong>This week</strong></p>
-      <span class="card-cta muted">Notify me</span>
-    </div>
-
-    <div class="card soon">
-      <div class="card-head">
-        <h3>Single-Article SEO Optimizer</h3>
-        <div class="card-price">$25</div>
-      </div>
-      <p class="card-desc">1-page checklist for any article. The on-page rubric I run before shipping. No fluff.</p>
-      <p class="card-meta">Drops: <strong>This week</strong></p>
-      <span class="card-cta muted">Notify me</span>
-    </div>
-
-    <div class="card soon">
-      <div class="card-head">
-        <h3>Premium Frontend Without the AI Aesthetic</h3>
-        <div class="card-price">$49</div>
-      </div>
-      <p class="card-desc">Banned-skeleton list + 50 real style references + 161 palettes. Stop shipping vibe-code that screams AI.</p>
-      <p class="card-meta">Drops: <strong>This week</strong></p>
-      <span class="card-cta muted">Notify me</span>
-    </div>
-
-    <div class="card soon">
-      <div class="card-head">
-        <h3>Lead Magnet Snipe Workbook</h3>
-        <div class="card-price">$39</div>
-      </div>
-      <p class="card-desc">Offer + hook + magnet selection in one sitting. Hormozi-adapted for solo founders, voice-tuned for operators.</p>
-      <p class="card-meta">Drops: <strong>This week</strong></p>
-      <span class="card-cta muted">Notify me</span>
-    </div>
-
-    <div class="card soon">
-      <div class="card-head">
-        <h3>Pre-Publish Quality Gate</h3>
-        <div class="card-price">$25</div>
-      </div>
-      <p class="card-desc">Banned-words list + 5-dimension score rubric + 4/day cap rule. The pre-publish gate I run on every LinkedIn post.</p>
-      <p class="card-meta">Drops: <strong>This week</strong></p>
-      <span class="card-cta muted">Notify me</span>
-    </div>
-  </div>
-</section>
-
-<!-- COMING THIS MONTH -->
-<section class="wrap">
-  <div class="section-head">
-    <h2>Coming this month</h2>
-    <span class="badge queued">Queued</span>
-  </div>
-
-  <div class="grid">
-    <div class="card soon">
-      <div class="card-head">
-        <h3>Convert-Or-Refund Rubric</h3>
-        <div class="card-price">$29</div>
-      </div>
-      <p class="card-desc">Score any landing page in 30 minutes. 5-voice scoring (Hormozi + Brunson + Miller + DelDuca + operator).</p>
-      <p class="card-meta">Drops: <strong>Late May</strong></p>
-      <span class="card-cta muted">Notify me</span>
-    </div>
-
-    <div class="card soon">
-      <div class="card-head">
-        <h3>Reminisce + Replan (Gen X Reset)</h3>
-        <div class="card-price">$47</div>
-      </div>
-      <p class="card-desc">7-day workbook for Gen X. Childhood memory + trait audit + 90-day forward move. Audio companion included.</p>
-      <p class="card-meta">Drops: <strong>Early June</strong></p>
-      <span class="card-cta muted">Notify me</span>
-    </div>
-
-    <div class="card soon">
-      <div class="card-head">
-        <h3>L'IA en 24 Heures (FR)</h3>
-        <div class="card-price">$29</div>
-      </div>
-      <p class="card-desc">Start AI Within 24 Hours, French edition. For francophone newcomers in EU + Quebec + Francophone Africa.</p>
-      <p class="card-meta">Drops: <strong>Early June</strong></p>
-      <span class="card-cta muted">Notify me</span>
-    </div>
-
-    <div class="card soon">
-      <div class="card-head">
-        <h3>AI Tools for African SMB Operators</h3>
-        <div class="card-price">$39</div>
-      </div>
-      <p class="card-desc">Claude + n8n + WhatsApp Business stack for under $50/mo. Built for African small business owners specifically.</p>
-      <p class="card-meta">Drops: <strong>Mid June</strong></p>
-      <span class="card-cta muted">Notify me</span>
-    </div>
-
-    <div class="card soon">
-      <div class="card-head">
-        <h3>How We Built agentsHQ (Operator Playbook)</h3>
-        <div class="card-price">$197</div>
-      </div>
-      <p class="card-desc">The 75-skill multi-agent system, decomposed. Governance + audit registry + decision logs. For builders.</p>
-      <p class="card-meta">Drops: <strong>June</strong></p>
-      <span class="card-cta muted">Notify me</span>
-    </div>
-
-    <div class="card soon">
-      <div class="card-head">
-        <h3>1 Idea Into 7 Posts: The Multiplier</h3>
-        <div class="card-price">$39</div>
-      </div>
-      <p class="card-desc">Turn 1 idea into LinkedIn + X thread + 3 Reels + newsletter + Substack post. Loading pattern included.</p>
-      <p class="card-meta">Drops: <strong>Late June</strong></p>
-      <span class="card-cta muted">Notify me</span>
-    </div>
-  </div>
-</section>
-
-<!-- NEWSLETTER -->
 <section class="newsletter">
   <div class="wrap">
-    <h2>One email a week.</h2>
-    <p>One specific AI workflow I shipped. The actual prompt. The actual result. Operator-to-operator. No fluff. Unsubscribe any time.</p>
+    <h2>The weekly signal.</h2>
+    <p>One specific AI workflow per week. Written from inside the room. Operator to operator. No fluff. Unsubscribe any time.</p>
     <form action="https://humanatwork.ai/subscribe" method="post">
       <input type="email" name="email" placeholder="you@example.com" required>
-      <button type="submit">Subscribe (free)</button>
+      <button type="submit">Subscribe</button>
     </form>
   </div>
 </section>
 
-<!-- FOOTER -->
 <footer>
   <div class="wrap">
-    <p>Human at Work &middot; Built by <a href="https://humanatwork.ai">Boubacar</a> &middot; 2026</p>
+    <p>Human at Work &middot; Built by <a href="https://humanatwork.ai">Boubacar</a></p>
     <p style="margin-top: 8px;">Questions or stuck? <a href="mailto:signal@humanatwork.ai">signal@humanatwork.ai</a> &middot; One human reads it.</p>
-    <p style="margin-top: 16px; font-size: 13px;">
+    <p style="margin-top: 16px; font-size: 11px;">
       <a href="https://humanatwork.ai/about">About</a> &middot;
       <a href="https://humanatwork.ai/privacy">Privacy</a> &middot;
-      <a href="https://humanatwork.ai/terms">Terms</a> &middot;
-      <a href="https://humanatwork.ai/no-refund">No-refund policy</a>
+      <a href="https://humanatwork.ai/terms">Terms</a>
     </p>
   </div>
 </footer>

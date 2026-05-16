@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Resume Surgeon - by Boubacar</title>
+<meta name="description" content="An ATS-rewrite prompt kit plus a recruiter-readable resume template. Built by an ex-HR exec who read 50,000+ resumes from the inside of the funnel.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400;1,9..144,600;1,9..144,800&family=Spectral:ital,wght@0,300;0,400;0,500;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #161513; --ink-soft: #2A2620; --paper: #F4EFE6; --bone: #E6DDC8;
+    --brick: #A8341F; --brick-deep: #8A2818; --sage: #3E4A2E;
+    --muted: #6B655C; --hairline: rgba(20, 18, 16, 0.12);
+    --hairline-strong: rgba(20, 18, 16, 0.32);
+    --serif: "Fraunces", "Iowan Old Style", "Georgia", serif;
+    --body: "Spectral", "Iowan Old Style", "Georgia", serif;
+    --mono: "JetBrains Mono", "Menlo", monospace;
+    --rev-1: cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--paper); color: var(--ink); font-family: var(--body);
+    font-size: 19px; line-height: 1.65; font-weight: 400;
+    -webkit-font-smoothing: antialiased; overflow-x: hidden;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    opacity: 0.45; mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='4'/><feColorMatrix values='0 0 0 0 0.08, 0 0 0 0 0.07, 0 0 0 0 0.06, 0 0 0 0.05 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+  }
+  main, section, header, footer, nav { position: relative; z-index: 1; }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--brick); color: var(--paper); }
+  .display {
+    font-family: var(--serif); font-weight: 400; letter-spacing: -0.025em;
+    line-height: 0.94; font-style: italic; font-variation-settings: "opsz" 144;
+  }
+  h2.section-head {
+    font-family: var(--serif); font-weight: 400;
+    font-size: clamp(36px, 5.5vw, 64px); line-height: 1.02;
+    letter-spacing: -0.02em; font-variation-settings: "opsz" 100;
+  }
+  h3 {
+    font-family: var(--serif); font-weight: 600; font-size: 24px;
+    line-height: 1.25; letter-spacing: -0.01em;
+  }
+  .eyebrow {
+    font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.22em; font-weight: 500; color: var(--brick);
+  }
+  p.lede {
+    font-family: var(--serif); font-size: clamp(20px, 2.2vw, 26px);
+    line-height: 1.45; font-weight: 300; letter-spacing: -0.005em;
+    color: var(--ink-soft);
+  }
+  p.body { max-width: 60ch; }
+  .container { width: min(1240px, calc(100% - 48px)); margin: 0 auto; }
+  .topbar {
+    border-bottom: 1px solid var(--hairline); padding: 14px 0; background: var(--paper);
+  }
+  .topbar .container {
+    display: flex; justify-content: space-between; align-items: center; gap: 24px;
+  }
+  .wordmark {
+    font-family: var(--serif); font-weight: 600; font-style: italic;
+    font-size: 20px; letter-spacing: -0.01em;
+  }
+  .wordmark .dot { color: var(--brick); }
+  .topbar-meta {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--muted); display: flex; gap: 24px;
+  }
+  @media (max-width: 720px) { .topbar-meta { display: none; } }
+  .hero {
+    padding: 80px 0 100px; position: relative;
+    border-bottom: 1px solid var(--hairline); overflow: hidden;
+  }
+  .hero-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 36px; gap: 24px; flex-wrap: wrap;
+  }
+  .hero-meta-left, .hero-meta-right {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .hero-meta-right { text-align: right; }
+  .hero-meta-left strong, .hero-meta-right strong { color: var(--ink); font-weight: 500; }
+  h1.hero-title {
+    font-size: clamp(56px, 11vw, 132px); margin-bottom: 32px; max-width: 14ch;
+  }
+  h1.hero-title .accent { color: var(--brick); font-style: italic; }
+  .hero-row {
+    display: grid; grid-template-columns: 1.3fr 1fr; gap: 80px;
+    align-items: end; margin-top: 40px;
+  }
+  @media (max-width: 900px) { .hero-row { grid-template-columns: 1fr; gap: 40px; } }
+  .hero-lede { max-width: 38ch; }
+  .hero-lede em { font-style: italic; color: var(--brick); }
+  .buy-card-wrap { margin-top: 64px; }
+  .buy-card {
+    border: 1px solid var(--ink); background: var(--paper);
+    padding: 32px 36px; display: grid;
+    grid-template-columns: auto 1fr auto; gap: 32px;
+    align-items: center; position: relative;
+  }
+  .buy-card::before {
+    content: ""; position: absolute; inset: -1px; border: 1px solid var(--ink);
+    transform: translate(6px, 6px); pointer-events: none; background: transparent; z-index: -1;
+  }
+  .buy-price { display: flex; align-items: baseline; gap: 12px; }
+  .buy-price .amt {
+    font-family: var(--serif); font-weight: 600; font-size: 64px;
+    line-height: 0.9; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;
+  }
+  .buy-info .product-line {
+    font-family: var(--serif); font-weight: 600; font-size: 19px;
+    margin-bottom: 6px; letter-spacing: -0.005em;
+  }
+  .buy-info .product-sub {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .buy-cta {
+    display: inline-flex; align-items: center; gap: 12px;
+    background: var(--ink); color: var(--paper); padding: 18px 28px;
+    font-family: var(--mono); font-size: 13px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase; white-space: nowrap;
+    transition: background 200ms var(--rev-1), transform 200ms var(--rev-1);
+    border: 1px solid var(--ink);
+  }
+  .buy-cta:hover { background: var(--brick); border-color: var(--brick); transform: translateY(-1px); }
+  .buy-cta .arrow { transition: transform 200ms var(--rev-1); }
+  .buy-cta:hover .arrow { transform: translateX(4px); }
+  @media (max-width: 820px) {
+    .buy-card { grid-template-columns: 1fr; gap: 20px; padding: 28px; }
+    .buy-cta { justify-content: center; }
+  }
+  section.chapter {
+    padding: 120px 0; border-bottom: 1px solid var(--hairline); position: relative;
+  }
+  section.chapter:last-of-type { border-bottom: 0; }
+  .chapter-header {
+    display: grid; grid-template-columns: 180px 1fr; gap: 40px;
+    margin-bottom: 60px; align-items: start;
+  }
+  .chapter-num {
+    font-family: var(--serif); font-weight: 300; font-size: 96px;
+    line-height: 0.9; color: var(--brick); font-style: italic;
+    letter-spacing: -0.04em; font-variation-settings: "opsz" 144;
+  }
+  .chapter-header .head-content { padding-top: 8px; }
+  .chapter-header .eyebrow { margin-bottom: 12px; display: block; }
+  @media (max-width: 720px) {
+    .chapter-header { grid-template-columns: 1fr; gap: 16px; margin-bottom: 40px; }
+    .chapter-num { font-size: 64px; }
+    section.chapter { padding: 80px 0; }
+  }
+  .pain-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start;
+  }
+  @media (max-width: 900px) { .pain-grid { grid-template-columns: 1fr; gap: 40px; } }
+  .pain-grid p { font-size: 21px; line-height: 1.55; margin-bottom: 24px; }
+  .pain-grid .pull {
+    font-family: var(--serif); font-style: italic; font-weight: 400;
+    font-size: clamp(28px, 3.5vw, 40px); line-height: 1.15;
+    letter-spacing: -0.015em; border-left: 3px solid var(--brick);
+    padding-left: 28px; margin-top: 24px; color: var(--ink);
+  }
+  .pain-grid .pull cite {
+    display: block; margin-top: 16px; font-family: var(--mono);
+    font-size: 11px; font-style: normal; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .deliv-list { display: grid; gap: 0; }
+  .deliv-row {
+    display: grid; grid-template-columns: 80px 1fr 1.2fr; gap: 40px;
+    padding: 32px 0; border-top: 1px solid var(--hairline);
+    align-items: baseline; transition: padding 300ms var(--rev-1);
+  }
+  .deliv-row:last-child { border-bottom: 1px solid var(--hairline); }
+  .deliv-row:hover { padding-left: 12px; }
+  .deliv-row .d-num {
+    font-family: var(--serif); font-weight: 300; font-size: 48px;
+    color: var(--ink); letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums; transition: color 200ms var(--rev-1);
+  }
+  .deliv-row:hover .d-num { color: var(--brick); }
+  .deliv-row .d-name {
+    font-family: var(--serif); font-size: 26px; font-weight: 600;
+    letter-spacing: -0.01em; line-height: 1.2;
+  }
+  .deliv-row .d-name em { color: var(--brick); font-style: italic; font-weight: 400; }
+  .deliv-row .d-desc { color: var(--muted); font-size: 17px; line-height: 1.55; }
+  @media (max-width: 820px) {
+    .deliv-row { grid-template-columns: 56px 1fr; gap: 16px; padding: 24px 0; }
+    .deliv-row .d-num { font-size: 32px; }
+    .deliv-row .d-name { font-size: 20px; }
+    .deliv-row .d-desc { grid-column: 2; font-size: 15px; }
+  }
+  .author-block { max-width: 64ch; }
+  .author-block p { font-size: 19px; line-height: 1.65; margin-bottom: 20px; }
+  .author-block p:first-child::first-letter {
+    font-family: var(--serif); font-weight: 600; font-style: italic;
+    font-size: 80px; float: left; line-height: 0.85;
+    margin: 6px 12px 0 -2px; color: var(--brick);
+  }
+  .faq-list { max-width: 760px; margin: 0 auto; }
+  .faq-item { border-top: 1px solid var(--hairline); padding: 28px 0; }
+  .faq-item:last-child { border-bottom: 1px solid var(--hairline); }
+  .faq-item .q {
+    font-family: var(--serif); font-size: 22px; font-weight: 600;
+    letter-spacing: -0.01em; margin-bottom: 10px;
+    display: flex; align-items: flex-start; gap: 16px;
+  }
+  .faq-item .q .q-num {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.18em;
+    color: var(--brick); font-weight: 600; margin-top: 4px; flex-shrink: 0;
+  }
+  .faq-item .a { color: var(--muted); font-size: 17px; line-height: 1.6; padding-left: 32px; }
+  .final-cta {
+    background: var(--ink); color: var(--paper); padding: 140px 0;
+    text-align: left; position: relative; overflow: hidden;
+  }
+  .final-cta::before {
+    content: ""; position: absolute; top: -50%; right: -10%;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(168, 52, 31, 0.18), transparent 60%);
+    pointer-events: none;
+  }
+  .final-cta h2 {
+    font-family: var(--serif); font-weight: 400; font-style: italic;
+    font-size: clamp(48px, 8vw, 96px); line-height: 0.96;
+    letter-spacing: -0.025em; color: var(--paper); margin-bottom: 32px; max-width: 14ch;
+  }
+  .final-cta h2 em { color: #E68A6E; font-style: normal; }
+  .final-cta p { font-size: 21px; line-height: 1.55; color: rgba(244, 239, 230, 0.75); max-width: 56ch; margin-bottom: 48px; }
+  .final-cta .buy-card { background: transparent; border-color: var(--paper); color: var(--paper); }
+  .final-cta .buy-card::before { border-color: rgba(244, 239, 230, 0.4); }
+  .final-cta .buy-cta { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+  .final-cta .buy-cta:hover { background: #E68A6E; border-color: #E68A6E; color: var(--ink); }
+  footer {
+    background: var(--paper); padding: 48px 0; border-top: 1px solid var(--hairline);
+  }
+  footer .container {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 24px;
+  }
+  footer .wordmark { font-size: 18px; }
+  footer .foot-links {
+    display: flex; gap: 32px; font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted);
+  }
+  footer .foot-links a:hover { color: var(--brick); }
+  .reveal {
+    opacity: 0; transform: translateY(24px);
+    transition: opacity 800ms var(--rev-1), transform 800ms var(--rev-1);
+    transition-delay: var(--delay, 0ms);
+  }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="container">
+    <div class="wordmark">Human at Work<span class="dot">.</span></div>
+    <div class="topbar-meta">
+      <span>SKU / Resume Surgeon</span>
+      <span>$29</span>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-header">
+      <div class="hero-meta-left"><strong>AI Resume Surgeon</strong> &nbsp;/&nbsp; ATS rewrite kit</div>
+      <div class="hero-meta-right"><strong>By an ex-HR exec who read the resumes</strong></div>
+    </div>
+
+    <h1 class="hero-title display reveal">
+      Your resume is <span class="accent">invisible</span>.<br>
+      Here is the fix.
+    </h1>
+
+    <div class="hero-row reveal" style="--delay: 100ms">
+      <p class="lede hero-lede">
+        For the laid-off, pivoting, mid-career professional who keeps applying and never hearing back. An <em>ATS-rewrite prompt kit</em> plus a recruiter-readable resume template, built from the recruiter side of the funnel.
+      </p>
+    </div>
+
+    <div class="buy-card-wrap reveal" style="--delay: 200ms">
+      <div class="buy-card">
+        <div class="buy-price">
+          <span class="amt">$29</span>
+        </div>
+        <div class="buy-info">
+          <div class="product-line">AI Resume Surgeon</div>
+          <div class="product-sub">Instant download / Lifetime access</div>
+        </div>
+        <a class="buy-cta" href="https://humanatwork.ai/buy/resume-surgeon">
+          <span>Get the kit</span>
+          <span class="arrow">&rarr;</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">01</div>
+      <div class="head-content">
+        <span class="eyebrow">The pain nobody names</span>
+        <h2 class="section-head">You are not bad. You are not visible.</h2>
+      </div>
+    </div>
+
+    <div class="pain-grid reveal">
+      <div>
+        <p>You submitted 47 applications last month. You heard back from 2. You are not crazy. The problem is not your career. The problem is that 90% of your applications are getting filtered by software before a human ever looks at them, and the human who eventually does look spends 6 seconds on it. Most resume advice on the internet is written by people who have never sat on the recruiter side. I have. 14 years. I read more than 50,000 resumes from inside that funnel. The patterns are not subtle. The fixes are not hard. But you have to know what the funnel is actually looking at, and the people who run it do not tell you.</p>
+      </div>
+      <div>
+        <blockquote class="pull">
+          Most resumes fail the first 6 seconds. Not because they are bad. Because they answer the wrong question.
+          <cite>From the recruiter side</cite>
+        </blockquote>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">02</div>
+      <div class="head-content">
+        <span class="eyebrow">What you get</span>
+        <h2 class="section-head">Six concrete pieces.</h2>
+      </div>
+    </div>
+
+    <div class="deliv-list reveal">
+      <div class="deliv-row">
+        <div class="d-num">01</div>
+        <div class="d-name">The <em>ATS-readable</em> resume template</div>
+        <div class="d-desc">A clean Word and Google Docs file. No tables, no columns, no graphics that confuse the parser. The exact format that gets through to a human pair of eyes.</div>
+      </div>
+      <div class="deliv-row">
+        <div class="d-num">02</div>
+        <div class="d-name">The rewrite prompt pack</div>
+        <div class="d-desc">12 prompts you paste into your AI. Paste in your old resume + the job description, get back a rewrite that lands on the recruiter's screen with the right keywords surfaced and the wrong ones gone.</div>
+      </div>
+      <div class="deliv-row">
+        <div class="d-num">03</div>
+        <div class="d-name">The 6-second test</div>
+        <div class="d-desc">A printable checklist a recruiter would run on your draft. If your resume fails any of the 9 checks, it fails the real funnel. Fix before you send.</div>
+      </div>
+      <div class="deliv-row">
+        <div class="d-num">04</div>
+        <div class="d-name">Keyword extraction prompts</div>
+        <div class="d-desc">Paste any job description in. The AI returns the 12 ranked keywords the ATS is scoring on. You weave those into your resume on purpose, not by accident.</div>
+      </div>
+      <div class="deliv-row">
+        <div class="d-num">05</div>
+        <div class="d-name">The career-pivot rewrite framework</div>
+        <div class="d-desc">If you are switching industries or going from IC to manager (or manager back to IC), how to reframe 10 years of experience without lying. Three before-after examples included.</div>
+      </div>
+      <div class="deliv-row">
+        <div class="d-num">06</div>
+        <div class="d-name">LLM-agnostic instructions</div>
+        <div class="d-desc">Works with ChatGPT, Claude, Gemini, Grok, Perplexity. Use whichever account you already have open. Notes on where the buttons differ are baked in.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">03</div>
+      <div class="head-content">
+        <span class="eyebrow">Who wrote this</span>
+        <h2 class="section-head">An operator wrote this. Not a guru.</h2>
+      </div>
+    </div>
+
+    <div class="author-block reveal">
+      <p><strong>Boubacar.</strong> Built agentsHQ, 14yr corporate HR, three companies.</p>
+      <p>I sat on the recruiter side of the table for over a decade. I know what makes a resume get pulled out of the stack and what makes it stay in. This kit packs the patterns I watched work, paired with AI prompts that let you apply them in 30 minutes instead of a weekend.</p>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">04</div>
+      <div class="head-content">
+        <span class="eyebrow">Four honest questions</span>
+        <h2 class="section-head">Before you buy.</h2>
+      </div>
+    </div>
+
+    <div class="faq-list reveal">
+      <div class="faq-item">
+        <div class="q"><span class="q-num">Q1</span>Do I need to be technical to run this?</div>
+        <div class="a">No. If you can paste text into a chat box, you can use this. The prompts are pre-written. You paste your old resume + the job description, the AI returns a rewrite. That is the whole loop.</div>
+      </div>
+      <div class="faq-item">
+        <div class="q"><span class="q-num">Q2</span>How long does the rewrite actually take?</div>
+        <div class="a">30 to 45 minutes for the first rewrite if you follow the kit in order. After that, 10 minutes per new job application. You build the muscle once and reuse it forever.</div>
+      </div>
+      <div class="faq-item">
+        <div class="q"><span class="q-num">Q3</span>Which AI do I need?</div>
+        <div class="a">Any of the major ones. ChatGPT, Claude, Gemini, Grok, Perplexity. Free or paid tier both work. The kit notes where the buttons differ if you are not on the most common one.</div>
+      </div>
+      <div class="faq-item">
+        <div class="q"><span class="q-num">Q4</span>What is the refund policy?</div>
+        <div class="a">No refund. Digital download. If not worth $29 do not buy.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="container">
+    <h2 class="reveal">Stop sending resumes <em>nobody reads</em>.</h2>
+    <p class="reveal" style="--delay: 100ms">Every week you keep using the broken resume is another week of silent rejections. The fix is one paste away.</p>
+
+    <div class="buy-card-wrap reveal" style="--delay: 200ms">
+      <div class="buy-card">
+        <div class="buy-price">
+          <span class="amt">$29</span>
+        </div>
+        <div class="buy-info">
+          <div class="product-line">AI Resume Surgeon</div>
+          <div class="product-sub">Instant download / Lifetime access</div>
+        </div>
+        <a class="buy-cta" href="https://humanatwork.ai/buy/resume-surgeon">
+          <span>Get the kit</span>
+          <span class="arrow">&rarr;</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="wordmark">Human at Work<span class="dot">.</span></div>
+    <div class="foot-links">
+      <a href="https://humanatwork.ai">humanatwork.ai</a>
+      <a href="mailto:signal@humanatwork.ai">signal@humanatwork.ai</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.querySelectorAll('.reveal').forEach(el => el.classList.add('in'));
+      return;
+    }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  })();
+</script>
+</body>
+</html>

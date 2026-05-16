@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>First-Gen Professional Playbook - by Boubacar</title>
+<meta name="description" content="How to navigate corporate America without the inherited network. The unspoken rules, the asking-without-tax move, and how to make 1stGen background an asset. By Boubacar, Conakry-to-corporate-HR.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400;1,9..144,600;1,9..144,800&family=Spectral:ital,wght@0,300;0,400;0,500;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --ink: #161513; --ink-soft: #2A2620; --paper: #F4EFE6; --bone: #E6DDC8; --brick: #A8341F; --brick-deep: #8A2818; --sage: #3E4A2E; --muted: #6B655C; --hairline: rgba(20, 18, 16, 0.12); --hairline-strong: rgba(20, 18, 16, 0.32); --serif: "Fraunces", "Iowan Old Style", "Georgia", serif; --body: "Spectral", "Iowan Old Style", "Georgia", serif; --mono: "JetBrains Mono", "Menlo", monospace; --rev-1: cubic-bezier(0.2, 0.7, 0.2, 1); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 19px; line-height: 1.65; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.45; mix-blend-mode: multiply; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='4'/><feColorMatrix values='0 0 0 0 0.08, 0 0 0 0 0.07, 0 0 0 0 0.06, 0 0 0 0.05 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>"); }
+  main, section, header, footer, nav { position: relative; z-index: 1; }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--brick); color: var(--paper); }
+  .display { font-family: var(--serif); font-weight: 400; letter-spacing: -0.025em; line-height: 0.94; font-style: italic; font-variation-settings: "opsz" 144; }
+  h2.section-head { font-family: var(--serif); font-weight: 400; font-size: clamp(36px, 5.5vw, 64px); line-height: 1.02; letter-spacing: -0.02em; font-variation-settings: "opsz" 100; }
+  .eyebrow { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.22em; font-weight: 500; color: var(--brick); }
+  p.lede { font-family: var(--serif); font-size: clamp(20px, 2.2vw, 26px); line-height: 1.45; font-weight: 300; color: var(--ink-soft); }
+  .container { width: min(1240px, calc(100% - 48px)); margin: 0 auto; }
+  .topbar { border-bottom: 1px solid var(--hairline); padding: 14px 0; background: var(--paper); }
+  .topbar .container { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+  .wordmark { font-family: var(--serif); font-weight: 600; font-style: italic; font-size: 20px; letter-spacing: -0.01em; }
+  .wordmark .dot { color: var(--brick); }
+  .topbar-meta { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); display: flex; gap: 24px; }
+  @media (max-width: 720px) { .topbar-meta { display: none; } }
+  .hero { padding: 80px 0 100px; position: relative; border-bottom: 1px solid var(--hairline); overflow: hidden; }
+  .hero-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 36px; gap: 24px; flex-wrap: wrap; }
+  .hero-meta-left, .hero-meta-right { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .hero-meta-right { text-align: right; }
+  .hero-meta-left strong, .hero-meta-right strong { color: var(--ink); font-weight: 500; }
+  h1.hero-title { font-size: clamp(56px, 11vw, 124px); margin-bottom: 32px; max-width: 14ch; }
+  h1.hero-title .accent { color: var(--brick); font-style: italic; }
+  .hero-row { display: grid; grid-template-columns: 1.3fr 1fr; gap: 80px; align-items: end; margin-top: 40px; }
+  @media (max-width: 900px) { .hero-row { grid-template-columns: 1fr; gap: 40px; } }
+  .hero-lede { max-width: 38ch; }
+  .hero-lede em { font-style: italic; color: var(--brick); }
+  .buy-card-wrap { margin-top: 64px; }
+  .buy-card { border: 1px solid var(--ink); background: var(--paper); padding: 32px 36px; display: grid; grid-template-columns: auto 1fr auto; gap: 32px; align-items: center; position: relative; }
+  .buy-card::before { content: ""; position: absolute; inset: -1px; border: 1px solid var(--ink); transform: translate(6px, 6px); pointer-events: none; background: transparent; z-index: -1; }
+  .buy-price { display: flex; align-items: baseline; gap: 12px; }
+  .buy-price .amt { font-family: var(--serif); font-weight: 600; font-size: 64px; line-height: 0.9; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+  .buy-info .product-line { font-family: var(--serif); font-weight: 600; font-size: 19px; margin-bottom: 6px; }
+  .buy-info .product-sub { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .buy-cta { display: inline-flex; align-items: center; gap: 12px; background: var(--ink); color: var(--paper); padding: 18px 28px; font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; white-space: nowrap; transition: background 200ms var(--rev-1), transform 200ms var(--rev-1); border: 1px solid var(--ink); }
+  .buy-cta:hover { background: var(--brick); border-color: var(--brick); transform: translateY(-1px); }
+  .buy-cta .arrow { transition: transform 200ms var(--rev-1); }
+  .buy-cta:hover .arrow { transform: translateX(4px); }
+  @media (max-width: 820px) { .buy-card { grid-template-columns: 1fr; gap: 20px; padding: 28px; } .buy-cta { justify-content: center; } }
+  section.chapter { padding: 120px 0; border-bottom: 1px solid var(--hairline); position: relative; }
+  section.chapter:last-of-type { border-bottom: 0; }
+  .chapter-header { display: grid; grid-template-columns: 180px 1fr; gap: 40px; margin-bottom: 60px; align-items: start; }
+  .chapter-num { font-family: var(--serif); font-weight: 300; font-size: 96px; line-height: 0.9; color: var(--brick); font-style: italic; letter-spacing: -0.04em; font-variation-settings: "opsz" 144; }
+  .chapter-header .head-content { padding-top: 8px; }
+  .chapter-header .eyebrow { margin-bottom: 12px; display: block; }
+  @media (max-width: 720px) { .chapter-header { grid-template-columns: 1fr; gap: 16px; margin-bottom: 40px; } .chapter-num { font-size: 64px; } section.chapter { padding: 80px 0; } }
+  .pain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+  @media (max-width: 900px) { .pain-grid { grid-template-columns: 1fr; gap: 40px; } }
+  .pain-grid p { font-size: 21px; line-height: 1.55; margin-bottom: 24px; }
+  .pain-grid .pull { font-family: var(--serif); font-style: italic; font-weight: 400; font-size: clamp(28px, 3.5vw, 40px); line-height: 1.15; letter-spacing: -0.015em; border-left: 3px solid var(--brick); padding-left: 28px; margin-top: 24px; color: var(--ink); }
+  .pain-grid .pull cite { display: block; margin-top: 16px; font-family: var(--mono); font-size: 11px; font-style: normal; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .deliv-list { display: grid; gap: 0; }
+  .deliv-row { display: grid; grid-template-columns: 80px 1fr 1.2fr; gap: 40px; padding: 32px 0; border-top: 1px solid var(--hairline); align-items: baseline; transition: padding 300ms var(--rev-1); }
+  .deliv-row:last-child { border-bottom: 1px solid var(--hairline); }
+  .deliv-row:hover { padding-left: 12px; }
+  .deliv-row .d-num { font-family: var(--serif); font-weight: 300; font-size: 48px; color: var(--ink); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; transition: color 200ms var(--rev-1); }
+  .deliv-row:hover .d-num { color: var(--brick); }
+  .deliv-row .d-name { font-family: var(--serif); font-size: 26px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; }
+  .deliv-row .d-name em { color: var(--brick); font-style: italic; font-weight: 400; }
+  .deliv-row .d-desc { color: var(--muted); font-size: 17px; line-height: 1.55; }
+  @media (max-width: 820px) { .deliv-row { grid-template-columns: 56px 1fr; gap: 16px; padding: 24px 0; } .deliv-row .d-num { font-size: 32px; } .deliv-row .d-name { font-size: 20px; } .deliv-row .d-desc { grid-column: 2; font-size: 15px; } }
+  .author-block { max-width: 64ch; }
+  .author-block p { font-size: 19px; line-height: 1.65; margin-bottom: 20px; }
+  .author-block p:first-child::first-letter { font-family: var(--serif); font-weight: 600; font-style: italic; font-size: 80px; float: left; line-height: 0.85; margin: 6px 12px 0 -2px; color: var(--brick); }
+  .faq-list { max-width: 760px; margin: 0 auto; }
+  .faq-item { border-top: 1px solid var(--hairline); padding: 28px 0; }
+  .faq-item:last-child { border-bottom: 1px solid var(--hairline); }
+  .faq-item .q { font-family: var(--serif); font-size: 22px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 16px; }
+  .faq-item .q .q-num { font-family: var(--mono); font-size: 12px; letter-spacing: 0.18em; color: var(--brick); font-weight: 600; margin-top: 4px; flex-shrink: 0; }
+  .faq-item .a { color: var(--muted); font-size: 17px; line-height: 1.6; padding-left: 32px; }
+  .final-cta { background: var(--ink); color: var(--paper); padding: 140px 0; text-align: left; position: relative; overflow: hidden; }
+  .final-cta::before { content: ""; position: absolute; top: -50%; right: -10%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(168, 52, 31, 0.18), transparent 60%); pointer-events: none; }
+  .final-cta h2 { font-family: var(--serif); font-weight: 400; font-style: italic; font-size: clamp(48px, 8vw, 96px); line-height: 0.96; letter-spacing: -0.025em; color: var(--paper); margin-bottom: 32px; max-width: 14ch; }
+  .final-cta h2 em { color: #E68A6E; font-style: normal; }
+  .final-cta p { font-size: 21px; line-height: 1.55; color: rgba(244, 239, 230, 0.75); max-width: 56ch; margin-bottom: 48px; }
+  .final-cta .buy-card { background: transparent; border-color: var(--paper); color: var(--paper); }
+  .final-cta .buy-card::before { border-color: rgba(244, 239, 230, 0.4); }
+  .final-cta .buy-cta { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+  .final-cta .buy-cta:hover { background: #E68A6E; border-color: #E68A6E; color: var(--ink); }
+  footer { background: var(--paper); padding: 48px 0; border-top: 1px solid var(--hairline); }
+  footer .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 24px; }
+  footer .wordmark { font-size: 18px; }
+  footer .foot-links { display: flex; gap: 32px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  footer .foot-links a:hover { color: var(--brick); }
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 800ms var(--rev-1), transform 800ms var(--rev-1); transition-delay: var(--delay, 0ms); }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1 !important; transform: none !important; transition: none !important; } html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="container">
+    <div class="wordmark">Human at Work<span class="dot">.</span></div>
+    <div class="topbar-meta"><span>SKU / 1stGen Playbook</span><span>$49</span></div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-header">
+      <div class="hero-meta-left"><strong>First-Gen Professional Playbook</strong> &nbsp;/&nbsp; Corporate without the inherited network</div>
+      <div class="hero-meta-right"><strong>Conakry to corporate</strong></div>
+    </div>
+
+    <h1 class="hero-title display reveal">
+      The unspoken rules<br>nobody <span class="accent">told</span> you.
+    </h1>
+
+    <div class="hero-row reveal" style="--delay: 100ms">
+      <p class="lede hero-lede">
+        For 1stGen US and EU diaspora knowledge workers. The peers who grew up here got the rules at the dinner table. You did not. This is <em>the playbook for navigating corporate America</em> without the inherited network. How to read the rooms, how to ask without the tax, how to position your background as the asset it is.
+      </p>
+    </div>
+
+    <div class="buy-card-wrap reveal" style="--delay: 200ms">
+      <div class="buy-card">
+        <div class="buy-price"><span class="amt">$49</span></div>
+        <div class="buy-info">
+          <div class="product-line">First-Gen Professional Playbook</div>
+          <div class="product-sub">Instant download / 1stGen Money + Human at Work</div>
+        </div>
+        <a class="buy-cta" href="https://humanatwork.ai/buy/first-gen-playbook">
+          <span>Get the playbook</span><span class="arrow">&rarr;</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">01</div>
+      <div class="head-content">
+        <span class="eyebrow">The rule everyone else got</span>
+        <h2 class="section-head">Your peers learned this at the dinner table.</h2>
+      </div>
+    </div>
+
+    <div class="pain-grid reveal">
+      <div>
+        <p>Cyber cafe, Conakry, 1998. The keyboard had 4 keys missing and the modem took 90 seconds to load Hotmail. The price for an hour was the cost of a meal. The kids I sat next to in that cafe later showed up in the same corporate buildings as the kids whose parents worked in those buildings. Same desks. Different operating manuals.</p>
+        <p>The peer who grew up here learned the unspoken rules at age 14. How meetings actually work. When to push back and when to nod. How to ask for help without it costing you status. How to position a side project so it reads as initiative, not as distraction. None of it is on the public internet. All of it shapes who gets promoted in year 3. This playbook is the manual we should have been handed at the gate.</p>
+      </div>
+      <div>
+        <blockquote class="pull">
+          The cost of not knowing the rule is two promotion cycles. The cost of asking the wrong way is a reputation that follows you for five years.
+          <cite>From 14 years inside</cite>
+        </blockquote>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">02</div>
+      <div class="head-content">
+        <span class="eyebrow">What you get</span>
+        <h2 class="section-head">Six concrete pieces.</h2>
+      </div>
+    </div>
+
+    <div class="deliv-list reveal">
+      <div class="deliv-row">
+        <div class="d-num">01</div>
+        <div class="d-name">The 12 <em>unspoken rules</em></div>
+        <div class="d-desc">The ones every native-born peer absorbed by osmosis. From meeting etiquette to email cadence to the way feedback actually works in performance review season. Each rule plus 1 paragraph on why and 1 paragraph on the move.</div>
+      </div>
+      <div class="deliv-row">
+        <div class="d-num">02</div>
+        <div class="d-name">How to ask without the tax</div>
+        <div class="d-desc">Asking for help, asking for a raise, asking for a referral. The script formats that get a yes instead of a reputational hit. Four templates with annotation on what each line does.</div>
+      </div>
+      <div class="deliv-row">
+        <div class="d-num">03</div>
+        <div class="d-name">The asset reframe</div>
+        <div class="d-desc">How to position your immigrant or first-gen background as the multiplier it is, not the liability you have been quietly worried about. Where to surface it. Where not to. What to say. What never.</div>
+      </div>
+      <div class="deliv-row">
+        <div class="d-num">04</div>
+        <div class="d-name">The 90-day onboarding map</div>
+        <div class="d-desc">If you are starting a new role, the 90-day plan for building the network you did not inherit. Whom to meet in week 1, week 4, week 12. What to ask, what to remember, what to write down.</div>
+      </div>
+      <div class="deliv-row">
+        <div class="d-num">05</div>
+        <div class="d-name">The promotion campaign brief</div>
+        <div class="d-desc">Promotion does not happen because you worked hard. It happens because a story got told. The brief for telling that story, in writing, before review season, in a way that does not feel like self-promotion.</div>
+      </div>
+      <div class="deliv-row">
+        <div class="d-num">06</div>
+        <div class="d-name">1stGen Money integration</div>
+        <div class="d-desc">The salary you negotiate this year becomes the equity you build for the next generation. Three concrete moves that link the playbook to the 1stGen Money frame for compounding what you earn.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">03</div>
+      <div class="head-content">
+        <span class="eyebrow">Who wrote this</span>
+        <h2 class="section-head">An operator wrote this. Not a guru.</h2>
+      </div>
+    </div>
+
+    <div class="author-block reveal">
+      <p><strong>Boubacar.</strong> Built agentsHQ, 14yr corporate HR, three companies.</p>
+      <p>I grew up in Conakry. Pulaar is my mother tongue. I worked door-to-door before I worked corporate. Then I spent 14 years on the inside of the funnel I was trying to navigate from the outside. This playbook is the document I wish someone had handed me at 22.</p>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">04</div>
+      <div class="head-content">
+        <span class="eyebrow">Four honest questions</span>
+        <h2 class="section-head">Before you buy.</h2>
+      </div>
+    </div>
+
+    <div class="faq-list reveal">
+      <div class="faq-item">
+        <div class="q"><span class="q-num">Q1</span>Is this only for African-diaspora professionals?</div>
+        <div class="a">No. The frame is built from a West-African-to-American arc but the rules apply to any 1stGen knowledge worker. Latin American, South Asian, East Asian, Eastern European, North African. The patterns repeat. The specifics differ. The playbook flags where.</div>
+      </div>
+      <div class="faq-item">
+        <div class="q"><span class="q-num">Q2</span>How long to read?</div>
+        <div class="a">90 minutes for a first read. The playbook is built to be re-read at promotion time, at role change, at offer negotiation. The same 12 rules surface differently at different career stages.</div>
+      </div>
+      <div class="faq-item">
+        <div class="q"><span class="q-num">Q3</span>Is this an AI product?</div>
+        <div class="a">No AI dependency. The playbook is text. You read it. You apply it. No prompts to paste, no tools to set up. The 1stGen Money integration section references where AI can compound the moves, but the core playbook stands alone.</div>
+      </div>
+      <div class="faq-item">
+        <div class="q"><span class="q-num">Q4</span>What is the refund policy?</div>
+        <div class="a">No refund. Digital download. If not worth $49 do not buy.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="container">
+    <h2 class="reveal">Stop guessing at the <em>unwritten rules</em>.</h2>
+    <p class="reveal" style="--delay: 100ms">The next 5 years of your career compound on the rules you learn in the next 90 minutes of reading. The playbook is the closest thing to the dinner-table education the rest of them got.</p>
+
+    <div class="buy-card-wrap reveal" style="--delay: 200ms">
+      <div class="buy-card">
+        <div class="buy-price"><span class="amt">$49</span></div>
+        <div class="buy-info">
+          <div class="product-line">First-Gen Professional Playbook</div>
+          <div class="product-sub">Instant download / Lifetime access</div>
+        </div>
+        <a class="buy-cta" href="https://humanatwork.ai/buy/first-gen-playbook">
+          <span>Get the playbook</span><span class="arrow">&rarr;</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="wordmark">Human at Work<span class="dot">.</span></div>
+    <div class="foot-links">
+      <a href="https://humanatwork.ai">humanatwork.ai</a>
+      <a href="mailto:signal@humanatwork.ai">signal@humanatwork.ai</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { document.querySelectorAll('.reveal').forEach(el => el.classList.add('in')); return; }
+    const io = new IntersectionObserver((entries) => { entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('in'); io.unobserve(entry.target); } }); }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  })();
+</script>
+</body>
+</html>

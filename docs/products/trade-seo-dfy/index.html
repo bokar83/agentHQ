@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trade SEO + AI Site DFY - by Boubacar</title>
+<meta name="description" content="Done-for-you AI-visible website for trade shops. HVAC, plumber, roofer, electrician. Ranks on Google. Found by AI search. Built by the team running geolisted.co.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400;1,9..144,600;1,9..144,800&family=Spectral:ital,wght@0,300;0,400;0,500;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --ink: #141210; --ink-soft: #2A2620; --paper: #F4EFE6; --bone: #E6DDC8; --brick: #A8341F; --brick-deep: #8A2818; --muted: #6B655C; --hairline: rgba(20, 18, 16, 0.12); --hairline-strong: rgba(20, 18, 16, 0.32); --serif: "Fraunces", "Iowan Old Style", "Georgia", serif; --body: "Spectral", "Iowan Old Style", "Georgia", serif; --mono: "JetBrains Mono", "Menlo", monospace; --rev-1: cubic-bezier(0.2, 0.7, 0.2, 1); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 19px; line-height: 1.65; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.45; mix-blend-mode: multiply; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='4'/><feColorMatrix values='0 0 0 0 0.08, 0 0 0 0 0.07, 0 0 0 0 0.06, 0 0 0 0.05 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>"); }
+  main, section, header, footer { position: relative; z-index: 1; }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--brick); color: var(--paper); }
+  .display { font-family: var(--serif); font-weight: 400; letter-spacing: -0.025em; line-height: 0.94; font-style: italic; }
+  h2.section-head { font-family: var(--serif); font-weight: 400; font-size: clamp(36px, 5.5vw, 64px); line-height: 1.02; letter-spacing: -0.02em; }
+  .eyebrow { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.22em; font-weight: 500; color: var(--brick); }
+  p.lede { font-family: var(--serif); font-size: clamp(20px, 2.2vw, 26px); line-height: 1.45; font-weight: 300; color: var(--ink-soft); }
+  .container { width: min(1240px, calc(100% - 48px)); margin: 0 auto; }
+  .topbar { border-bottom: 1px solid var(--hairline); padding: 14px 0; background: var(--paper); }
+  .topbar .container { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+  .wordmark { font-family: var(--serif); font-weight: 600; font-style: italic; font-size: 20px; }
+  .wordmark .dot { color: var(--brick); }
+  .topbar-meta { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); display: flex; gap: 24px; }
+  .topbar-meta .pulse { color: var(--brick); display: inline-flex; align-items: center; gap: 6px; }
+  .topbar-meta .pulse::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--brick); box-shadow: 0 0 0 0 rgba(168, 52, 31, 0.55); animation: pulse 2.4s var(--rev-1) infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(168, 52, 31, 0.55); } 70% { box-shadow: 0 0 0 9px rgba(168, 52, 31, 0); } 100% { box-shadow: 0 0 0 0 rgba(168, 52, 31, 0); } }
+  @media (max-width: 720px) { .topbar-meta { display: none; } }
+  .hero { padding: 80px 0 100px; border-bottom: 1px solid var(--hairline); overflow: hidden; }
+  .hero-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 36px; gap: 24px; flex-wrap: wrap; }
+  .hero-meta-left, .hero-meta-right { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .hero-meta-right { text-align: right; }
+  .hero-meta-left strong, .hero-meta-right strong { color: var(--ink); font-weight: 500; }
+  h1.hero-title { font-size: clamp(56px, 11vw, 144px); margin-bottom: 32px; max-width: 14ch; }
+  h1.hero-title .accent { color: var(--brick); font-style: italic; }
+  .hero-row { display: grid; grid-template-columns: 1.3fr 1fr; gap: 80px; align-items: end; margin-top: 40px; }
+  @media (max-width: 900px) { .hero-row { grid-template-columns: 1fr; gap: 40px; } }
+  .hero-lede { max-width: 38ch; }
+  .hero-lede em { font-style: italic; color: var(--brick); }
+  .buy-card-wrap { margin-top: 64px; }
+  .buy-card { border: 1px solid var(--ink); background: var(--paper); padding: 32px 36px; display: grid; grid-template-columns: auto 1fr auto; gap: 32px; align-items: center; position: relative; }
+  .buy-card::before { content: ""; position: absolute; inset: -1px; border: 1px solid var(--ink); transform: translate(6px, 6px); pointer-events: none; z-index: -1; }
+  .buy-price { display: flex; align-items: baseline; gap: 12px; }
+  .buy-price .amt { font-family: var(--serif); font-weight: 600; font-size: 72px; line-height: 0.9; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+  .buy-price .was { font-family: var(--serif); font-size: 22px; color: var(--muted); text-decoration: line-through; text-decoration-color: var(--brick); text-decoration-thickness: 2px; }
+  .buy-info .product-line { font-family: var(--serif); font-weight: 600; font-size: 19px; margin-bottom: 6px; }
+  .buy-info .product-sub { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .buy-cta { display: inline-flex; align-items: center; gap: 12px; background: var(--ink); color: var(--paper); padding: 18px 28px; font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; white-space: nowrap; border: 1px solid var(--ink); transition: background 200ms var(--rev-1), transform 200ms var(--rev-1); }
+  .buy-cta:hover { background: var(--brick); border-color: var(--brick); transform: translateY(-1px); }
+  .buy-cta .arrow { transition: transform 200ms var(--rev-1); }
+  .buy-cta:hover .arrow { transform: translateX(4px); }
+  @media (max-width: 820px) { .buy-card { grid-template-columns: 1fr; gap: 20px; padding: 28px; } .buy-cta { justify-content: center; } }
+  section.chapter { padding: 120px 0; border-bottom: 1px solid var(--hairline); }
+  section.chapter:last-of-type { border-bottom: 0; }
+  .chapter-header { display: grid; grid-template-columns: 180px 1fr; gap: 40px; margin-bottom: 60px; align-items: start; }
+  .chapter-num { font-family: var(--serif); font-weight: 300; font-size: 96px; line-height: 0.9; color: var(--brick); font-style: italic; letter-spacing: -0.04em; }
+  .chapter-header .head-content { padding-top: 8px; }
+  .chapter-header .eyebrow { margin-bottom: 12px; display: block; }
+  @media (max-width: 720px) { .chapter-header { grid-template-columns: 1fr; gap: 16px; margin-bottom: 40px; } .chapter-num { font-size: 64px; } section.chapter { padding: 80px 0; } }
+  .before-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+  @media (max-width: 900px) { .before-grid { grid-template-columns: 1fr; gap: 40px; } }
+  .before-grid p { font-size: 21px; line-height: 1.55; margin-bottom: 24px; }
+  .before-grid .pull { font-family: var(--serif); font-style: italic; font-size: clamp(28px, 3.5vw, 44px); line-height: 1.15; letter-spacing: -0.015em; border-left: 3px solid var(--brick); padding-left: 28px; margin-top: 24px; }
+  .before-grid .pull cite { display: block; margin-top: 16px; font-family: var(--mono); font-size: 11px; font-style: normal; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .modules-list { display: grid; gap: 0; }
+  .module-row { display: grid; grid-template-columns: 80px 1fr 1.2fr; gap: 40px; padding: 32px 0; border-top: 1px solid var(--hairline); align-items: baseline; transition: padding 300ms var(--rev-1); }
+  .module-row:last-child { border-bottom: 1px solid var(--hairline); }
+  .module-row:hover { padding-left: 12px; }
+  .module-row .mod-num { font-family: var(--serif); font-weight: 300; font-size: 48px; color: var(--ink); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; transition: color 200ms var(--rev-1); }
+  .module-row:hover .mod-num { color: var(--brick); }
+  .module-row .mod-name { font-family: var(--serif); font-size: 26px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; }
+  .module-row .mod-desc { color: var(--muted); font-size: 17px; line-height: 1.55; }
+  .module-row .mod-name em { color: var(--brick); font-style: italic; font-weight: 400; }
+  @media (max-width: 820px) { .module-row { grid-template-columns: 56px 1fr; gap: 16px; padding: 24px 0; } .module-row .mod-num { font-size: 32px; } .module-row .mod-name { font-size: 20px; } .module-row .mod-desc { grid-column: 2; font-size: 15px; } }
+  .stack-section { background: var(--bone); border-bottom: 1px solid var(--hairline); }
+  .stack-table { background: var(--paper); border: 1px solid var(--ink); margin-top: 24px; }
+  .stack-row { display: grid; grid-template-columns: 1fr auto; gap: 24px; padding: 20px 28px; border-bottom: 1px solid var(--hairline); align-items: center; font-size: 17px; }
+  .stack-row:last-child { border-bottom: 0; }
+  .stack-row .stack-name { font-weight: 500; }
+  .stack-row .stack-name small { display: block; color: var(--muted); font-size: 13px; font-weight: 400; margin-top: 2px; font-family: var(--mono); letter-spacing: 0.04em; }
+  .stack-row .stack-val { font-family: var(--serif); font-weight: 600; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .stack-row.total { background: var(--ink); color: var(--paper); padding: 28px; }
+  .stack-row.total .stack-name { font-family: var(--mono); font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; }
+  .stack-row.total .stack-val { font-family: var(--serif); font-style: italic; font-size: 40px; color: var(--paper); }
+  .faq-list { max-width: 760px; margin: 0 auto; }
+  .faq-item { border-top: 1px solid var(--hairline); padding: 28px 0; }
+  .faq-item:last-child { border-bottom: 1px solid var(--hairline); }
+  .faq-item .q { font-family: var(--serif); font-size: 22px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 16px; }
+  .faq-item .q .q-num { font-family: var(--mono); font-size: 12px; letter-spacing: 0.18em; color: var(--brick); font-weight: 600; margin-top: 4px; flex-shrink: 0; }
+  .faq-item .a { color: var(--muted); font-size: 17px; line-height: 1.6; padding-left: 32px; }
+  .final-cta { background: var(--ink); color: var(--paper); padding: 140px 0; position: relative; overflow: hidden; }
+  .final-cta::before { content: ""; position: absolute; top: -50%; right: -10%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(168, 52, 31, 0.18), transparent 60%); pointer-events: none; }
+  .final-cta .container { position: relative; }
+  .final-cta h2 { font-family: var(--serif); font-weight: 400; font-style: italic; font-size: clamp(48px, 8vw, 112px); line-height: 0.96; letter-spacing: -0.025em; color: var(--paper); margin-bottom: 32px; max-width: 14ch; }
+  .final-cta h2 em { color: #E68A6E; font-style: normal; }
+  .final-cta p { font-size: 21px; line-height: 1.55; color: rgba(244, 239, 230, 0.75); max-width: 56ch; margin-bottom: 48px; }
+  .final-cta .buy-card { background: transparent; border-color: var(--paper); color: var(--paper); }
+  .final-cta .buy-card::before { border-color: rgba(244, 239, 230, 0.4); }
+  .final-cta .buy-cta { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+  .final-cta .buy-cta:hover { background: #E68A6E; border-color: #E68A6E; }
+  .final-cta .buy-price .was { color: rgba(244, 239, 230, 0.5); }
+  .final-cta .product-sub { color: rgba(244, 239, 230, 0.5); }
+  footer { background: var(--paper); padding: 48px 0; border-top: 1px solid var(--hairline); }
+  footer .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 24px; }
+  footer .wordmark { font-size: 18px; }
+  footer .foot-links { display: flex; gap: 32px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  footer .foot-links a:hover { color: var(--brick); }
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 800ms var(--rev-1), transform 800ms var(--rev-1); transition-delay: var(--delay, 0ms); }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1 !important; transform: none !important; transition: none !important; } .topbar-meta .pulse::before { animation: none; } html { scroll-behavior: auto; } }
+  .dfy-badge { display: inline-block; background: var(--brick); color: var(--paper); padding: 6px 14px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 24px; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="container">
+    <div class="wordmark">Signal Works<span class="dot">.</span></div>
+    <div class="topbar-meta">
+      <span class="pulse">DFY / $1,497</span>
+      <span>Trade SEO + AI Site</span>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-header">
+      <div class="hero-meta-left"><strong>Trade DFY 001</strong> &nbsp;/&nbsp; Done in 10 business days</div>
+      <div class="hero-meta-right"><strong>You don't lift a finger</strong></div>
+    </div>
+
+    <span class="dfy-badge">Done for you</span>
+    <h1 class="hero-title display reveal">
+      A website that wins on <span class="accent">Google</span>.<br>
+      And on AI search.
+    </h1>
+
+    <div class="hero-row reveal" style="--delay: 100ms">
+      <p class="lede hero-lede">
+        Built specifically for HVAC, plumbing, roofing, and electrical shops. Ranks on Google. <em>Cited by ChatGPT, Claude, and Perplexity</em> when prospects ask "best [trade] near me." We build it. You approve. You own it.
+      </p>
+    </div>
+
+    <div class="buy-card-wrap reveal" style="--delay: 200ms">
+      <div class="buy-card">
+        <div class="buy-price"><span class="amt">$1,497</span><span class="was">$2,997</span></div>
+        <div class="buy-info">
+          <div class="product-line">Trade SEO + AI Site DFY</div>
+          <div class="product-sub">10 business days / You own everything</div>
+        </div>
+        <a class="buy-cta" href="https://signalworks.consulting/buy/trade-seo-dfy">
+          <span>Start the build</span><span class="arrow">&rarr;</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">01</div>
+      <div class="head-content">
+        <span class="eyebrow">The honest before-picture</span>
+        <h2 class="section-head">Your current site loses to your competitor's at 3 AM.</h2>
+      </div>
+    </div>
+
+    <div class="before-grid reveal">
+      <div>
+        <p>Right now, a homeowner with a leak is googling at 3 AM. They are asking ChatGPT "best plumber in [your town]." Your website does not show up. Not because you aren't good. Because your site was built for 2018 SEO, not 2026 AI search.</p>
+        <p>The trade shops winning this year built the site once, and AI search engines now cite them as authority. Every new homeowner search funnels back. Their phones ring. Yours does not.</p>
+        <p>The fix is structural. Not "SEO content." A site built so Google AND ChatGPT both quote it as the answer.</p>
+      </div>
+      <div>
+        <blockquote class="pull">
+          AI search is the new Yellow Pages. The shops indexed now will own the next decade. The ones that wait will buy paid ads forever to compensate.
+          <cite>The cost of waiting</cite>
+        </blockquote>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">02</div>
+      <div class="head-content">
+        <span class="eyebrow">What we build for you</span>
+        <h2 class="section-head">10 business days. End to end.</h2>
+      </div>
+    </div>
+
+    <div class="modules-list reveal">
+      <div class="module-row"><div class="mod-num">01</div><div class="mod-name">Brand + voice <em>intake</em></div><div class="mod-desc">60-minute call. We capture your voice, your shop's actual story, your service area, and the jobs you actually want (not the ones you tolerate). Recorded so the copy sounds like you, not like a content mill.</div></div>
+      <div class="module-row"><div class="mod-num">02</div><div class="mod-name">Service-page architecture</div><div class="mod-desc">One page per service per service area. Hand-written copy. Schema markup. Structured so AI search can quote you directly. This is the structural moat.</div></div>
+      <div class="module-row"><div class="mod-num">03</div><div class="mod-name">Trust stack</div><div class="mod-desc">Reviews, before/after photos, licensing, insurance, certifications. Pulled from your existing sources. Laid out so a stranger trusts you in 8 seconds.</div></div>
+      <div class="module-row"><div class="mod-num">04</div><div class="mod-name">AI-visible <em>FAQ</em> pages</div><div class="mod-desc">The 40 questions your customers actually ask. Each one answered in the exact shape AI search engines lift and quote. This is what gets you cited.</div></div>
+      <div class="module-row"><div class="mod-num">05</div><div class="mod-name">Lead capture, every page</div><div class="mod-desc">Above-fold quote form. Click-to-call. Missed-call text-back wired (you provide the SMS account). No "Contact Us" page nobody visits.</div></div>
+      <div class="module-row"><div class="mod-num">06</div><div class="mod-name">Local pages built right</div><div class="mod-desc">Every town you serve gets its own page, written about that town, with that town's actual job examples. Not "ctrl-F and replace city name." Real local copy.</div></div>
+      <div class="module-row"><div class="mod-num">07</div><div class="mod-name">Hosting, deploy, handoff</div><div class="mod-desc">We deploy to your domain. You own the code. You own the content. We hand you everything in writing. Optional ongoing care plan is offered, never required.</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter stack-section">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">03</div>
+      <div class="head-content">
+        <span class="eyebrow">What you get</span>
+        <h2 class="section-head">The build, line by line.</h2>
+      </div>
+    </div>
+
+    <div class="reveal">
+      <p style="max-width: 56ch; margin-bottom: 16px; color: var(--muted);">Everything below ships in one DFY package. You wake up on day 11 with a live site you own.</p>
+
+      <div class="stack-table">
+        <div class="stack-row"><div class="stack-name">Brand + voice intake call<small>Recorded, transcribed, used</small></div><div class="stack-val">$300</div></div>
+        <div class="stack-row"><div class="stack-name">Home page + about page<small>Hand-written, in your voice</small></div><div class="stack-val">$450</div></div>
+        <div class="stack-row"><div class="stack-name">Up to 8 service pages<small>One per service offering</small></div><div class="stack-val">$1,200</div></div>
+        <div class="stack-row"><div class="stack-name">Up to 5 local pages<small>One per town you serve</small></div><div class="stack-val">$750</div></div>
+        <div class="stack-row"><div class="stack-name">40-question AI-visible FAQ<small>This is the structural moat</small></div><div class="stack-val">$600</div></div>
+        <div class="stack-row"><div class="stack-name">Schema markup, sitemap, technical SEO<small>The boring part that ranks</small></div><div class="stack-val">$400</div></div>
+        <div class="stack-row"><div class="stack-name">Deploy + domain handoff<small>You own the code, the content, the domain</small></div><div class="stack-val">$250</div></div>
+        <div class="stack-row"><div class="stack-name">90-day post-launch support<small>Two rounds of tweaks included</small></div><div class="stack-val">$500</div></div>
+        <div class="stack-row total"><div class="stack-name">Total build value</div><div class="stack-val">$4,450</div></div>
+      </div>
+
+      <p style="font-family: var(--serif); font-style: italic; font-size: 22px; margin-top: 32px; max-width: 52ch; line-height: 1.4;">
+        You pay <strong style="font-weight: 600; color: var(--brick); font-style: normal;">$1,497</strong>. Half up front. Half at handoff.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">04</div>
+      <div class="head-content">
+        <span class="eyebrow">Who builds it</span>
+        <h2 class="section-head">Signal Works. By Boubacar.</h2>
+      </div>
+    </div>
+
+    <div class="reveal" style="max-width: 64ch;">
+      <p><strong>Boubacar.</strong> I run Signal Works (the trade-site arm of Catalyst Works) and geolisted.co. We already have working trade pages running for active shops. The architecture is battle-tested.</p>
+      <p>I installed tile and flooring for over a year. I sold carpet cleaning door-to-door before that. I know the trade-shop mindset because I lived it. The website I build for you reads like a shop owner wrote it, because the operator behind the copy used to be one.</p>
+      <p>14 years in corporate before that. Builds agentsHQ, the multi-agent system that powers Signal Works. The result: a DFY trade site at custom-build quality, at half the typical agency cost.</p>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">05</div>
+      <div class="head-content">
+        <span class="eyebrow">Honest questions</span>
+        <h2 class="section-head">Before you wire money.</h2>
+      </div>
+    </div>
+
+    <div class="faq-list reveal">
+      <div class="faq-item"><div class="q"><span class="q-num">Q1</span>How fast is the build?</div><div class="a">10 business days from intake call to live site. We've shipped it faster (5-7 days for shops with all assets ready) and we've shipped it slower (15 days when the owner is on a roof and can't review). 10 is the honest middle.</div></div>
+      <div class="faq-item"><div class="q"><span class="q-num">Q2</span>Do I own the site?</div><div class="a">Yes. You own the code, the content, the domain, and the analytics. We hand off everything in writing. You can fire us on day 11 and never speak to us again. Nothing is locked.</div></div>
+      <div class="faq-item"><div class="q"><span class="q-num">Q3</span>What if I already have a site?</div><div class="a">We replace it cleanly. We capture the URLs that already rank, redirect them properly, and keep the SEO equity you've already built. If your current site has zero traffic, the redirect plan is shorter. Either way, no broken links.</div></div>
+      <div class="faq-item"><div class="q"><span class="q-num">Q4</span>How do I know the AI search part actually works?</div><div class="a">Test it after launch. Ask ChatGPT, Claude, Perplexity, and Google AI Mode: "best [your trade] in [your town]." Sites built right get cited within 30-60 days. We don't promise rank #1 (anyone who does is lying). We promise the structural work is done so AI search has a reason to cite you.</div></div>
+      <div class="faq-item"><div class="q"><span class="q-num">Q5</span>What about ongoing maintenance?</div><div class="a">Optional. $97/month gets you monthly content additions and reply-to-review automation. Most shops self-maintain after launch and only call us when they want to add a new service or a new town. You decide.</div></div>
+      <div class="faq-item"><div class="q"><span class="q-num">Q6</span>What if my trade is not on your list?</div><div class="a">If you're in the trades and you serve homeowners, we can build it. Painters, garage door, landscaping, fencing, pool service, septic, locksmith. The architecture is the same. The copy adjusts. Ask before you wire.</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="container">
+    <h2 class="reveal">In ten days you have <em>a site that wins</em>.</h2>
+    <p class="reveal" style="--delay: 100ms">Built once. Cited by AI search engines for years. The shops who get this done in 2026 will spend the next decade collecting leads the late shops will buy from Angi at $40 a pop.</p>
+
+    <div class="buy-card-wrap reveal" style="--delay: 200ms">
+      <div class="buy-card">
+        <div class="buy-price"><span class="amt">$1,497</span><span class="was">$2,997</span></div>
+        <div class="buy-info">
+          <div class="product-line">Trade SEO + AI Site DFY</div>
+          <div class="product-sub">10 days / You own everything / 90-day support</div>
+        </div>
+        <a class="buy-cta" href="https://signalworks.consulting/buy/trade-seo-dfy">
+          <span>Start the build</span><span class="arrow">&rarr;</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="wordmark">Signal Works<span class="dot">.</span></div>
+    <div class="foot-links">
+      <a href="https://signalworks.consulting">signalworks.consulting</a>
+      <a href="https://geolisted.co">geolisted.co</a>
+      <a href="https://signalworks.consulting/privacy">Privacy</a>
+      <a href="mailto:signal@catalystworks.consulting">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll('.reveal').forEach(el => el.classList.add('in'));
+    return;
+  }
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) { entry.target.classList.add('in'); io.unobserve(entry.target); }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Department of One - by Boubacar</title>
+<meta name="description" content="The implementation kit for the solo founder running ops, content, and sales on AI. SOP, decision tree, 12 paste-prompts, and a 60-min call with the operator who built agentsHQ.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400;1,9..144,600;1,9..144,800&family=Spectral:ital,wght@0,300;0,400;0,500;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #141210;
+    --ink-soft: #2A2620;
+    --paper: #F4EFE6;
+    --bone: #E6DDC8;
+    --brick: #A8341F;
+    --brick-deep: #8A2818;
+    --sage: #3E4A2E;
+    --muted: #6B655C;
+    --hairline: rgba(20, 18, 16, 0.12);
+    --hairline-strong: rgba(20, 18, 16, 0.32);
+    --serif: "Fraunces", "Iowan Old Style", "Georgia", serif;
+    --body: "Spectral", "Iowan Old Style", "Georgia", serif;
+    --mono: "JetBrains Mono", "Menlo", monospace;
+    --rev-1: cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--paper); color: var(--ink); font-family: var(--body);
+    font-size: 19px; line-height: 1.65; -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    opacity: 0.45; mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='4'/><feColorMatrix values='0 0 0 0 0.08, 0 0 0 0 0.07, 0 0 0 0 0.06, 0 0 0 0.05 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+  }
+  main, section, header, footer { position: relative; z-index: 1; }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--brick); color: var(--paper); }
+  .display { font-family: var(--serif); font-weight: 400; letter-spacing: -0.025em; line-height: 0.94; font-style: italic; font-variation-settings: "opsz" 144; }
+  .display em { font-style: normal; }
+  h2.section-head { font-family: var(--serif); font-weight: 400; font-size: clamp(36px, 5.5vw, 64px); line-height: 1.02; letter-spacing: -0.02em; }
+  h3 { font-family: var(--serif); font-weight: 600; font-size: 24px; line-height: 1.25; letter-spacing: -0.01em; }
+  .eyebrow { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.22em; font-weight: 500; color: var(--brick); }
+  p.lede { font-family: var(--serif); font-size: clamp(20px, 2.2vw, 26px); line-height: 1.45; font-weight: 300; color: var(--ink-soft); }
+  .container { width: min(1240px, calc(100% - 48px)); margin: 0 auto; }
+  .topbar { border-bottom: 1px solid var(--hairline); padding: 14px 0; background: var(--paper); }
+  .topbar .container { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+  .wordmark { font-family: var(--serif); font-weight: 600; font-style: italic; font-size: 20px; }
+  .wordmark .dot { color: var(--brick); }
+  .topbar-meta { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); display: flex; gap: 24px; }
+  .topbar-meta .pulse { color: var(--brick); display: inline-flex; align-items: center; gap: 6px; }
+  .topbar-meta .pulse::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--brick); box-shadow: 0 0 0 0 rgba(168,52,31,0.55); animation: pulse 2.4s var(--rev-1) infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(168,52,31,0.55); } 70% { box-shadow: 0 0 0 9px rgba(168,52,31,0); } 100% { box-shadow: 0 0 0 0 rgba(168,52,31,0); } }
+  @media (max-width: 720px) { .topbar-meta { display: none; } }
+
+  .hero { padding: 80px 0 100px; border-bottom: 1px solid var(--hairline); overflow: hidden; }
+  .hero-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 36px; gap: 24px; flex-wrap: wrap; }
+  .hero-meta-left, .hero-meta-right { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .hero-meta-right { text-align: right; }
+  .hero-meta-left strong, .hero-meta-right strong { color: var(--ink); font-weight: 500; }
+  h1.hero-title { font-size: clamp(56px, 11vw, 132px); margin-bottom: 32px; max-width: 14ch; }
+  h1.hero-title .accent { color: var(--brick); font-style: italic; }
+  .hero-row { display: grid; grid-template-columns: 1.3fr 1fr; gap: 80px; align-items: end; margin-top: 40px; }
+  @media (max-width: 900px) { .hero-row { grid-template-columns: 1fr; gap: 40px; } }
+  .hero-lede { max-width: 42ch; }
+  .hero-lede em { font-style: italic; color: var(--brick); }
+  .credit-block { border-left: 1px solid var(--ink); padding-left: 20px; max-width: 320px; }
+  .credit-block .name { font-family: var(--serif); font-style: italic; font-size: 22px; margin-bottom: 4px; }
+  .credit-block .bio { font-family: var(--mono); font-size: 12px; line-height: 1.6; letter-spacing: 0.06em; color: var(--muted); }
+  .credit-block .bio strong { color: var(--ink); font-weight: 500; }
+
+  .buy-card-wrap { margin-top: 64px; }
+  .buy-card { border: 1px solid var(--ink); background: var(--paper); padding: 32px 36px; display: grid; grid-template-columns: auto 1fr auto; gap: 32px; align-items: center; position: relative; }
+  .buy-card::before { content: ""; position: absolute; inset: -1px; border: 1px solid var(--ink); transform: translate(6px, 6px); pointer-events: none; z-index: -1; }
+  .buy-price { display: flex; align-items: baseline; gap: 12px; }
+  .buy-price .amt { font-family: var(--serif); font-weight: 600; font-size: 64px; line-height: 0.9; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+  .buy-info .product-line { font-family: var(--serif); font-weight: 600; font-size: 19px; margin-bottom: 6px; }
+  .buy-info .product-sub { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .buy-cta { display: inline-flex; align-items: center; gap: 12px; background: var(--ink); color: var(--paper); padding: 18px 28px; font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; white-space: nowrap; transition: background 200ms var(--rev-1), transform 200ms var(--rev-1); border: 1px solid var(--ink); }
+  .buy-cta:hover { background: var(--brick); border-color: var(--brick); transform: translateY(-1px); }
+  .buy-cta .arrow { transition: transform 200ms var(--rev-1); }
+  .buy-cta:hover .arrow { transform: translateX(4px); }
+  @media (max-width: 820px) { .buy-card { grid-template-columns: 1fr; gap: 20px; padding: 28px; } .buy-cta { justify-content: center; } }
+
+  section.chapter { padding: 120px 0; border-bottom: 1px solid var(--hairline); }
+  .chapter-header { display: grid; grid-template-columns: 180px 1fr; gap: 40px; margin-bottom: 60px; align-items: start; }
+  .chapter-num { font-family: var(--serif); font-weight: 300; font-size: 96px; line-height: 0.9; color: var(--brick); font-style: italic; letter-spacing: -0.04em; }
+  .chapter-header .head-content { padding-top: 8px; }
+  .chapter-header .eyebrow { margin-bottom: 12px; display: block; }
+  @media (max-width: 720px) { .chapter-header { grid-template-columns: 1fr; gap: 16px; margin-bottom: 40px; } .chapter-num { font-size: 64px; } section.chapter { padding: 80px 0; } }
+
+  .before-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+  @media (max-width: 900px) { .before-grid { grid-template-columns: 1fr; gap: 40px; } }
+  .before-grid p { font-size: 21px; line-height: 1.55; margin-bottom: 24px; }
+  .before-grid .pull { font-family: var(--serif); font-style: italic; font-size: clamp(28px, 3.5vw, 40px); line-height: 1.15; letter-spacing: -0.015em; border-left: 3px solid var(--brick); padding-left: 28px; margin-top: 24px; }
+  .before-grid .pull cite { display: block; margin-top: 16px; font-family: var(--mono); font-size: 11px; font-style: normal; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+
+  .modules-list { display: grid; gap: 0; }
+  .module-row { display: grid; grid-template-columns: 80px 1fr 1.2fr; gap: 40px; padding: 32px 0; border-top: 1px solid var(--hairline); align-items: baseline; transition: padding 300ms var(--rev-1); }
+  .module-row:last-child { border-bottom: 1px solid var(--hairline); }
+  .module-row:hover { padding-left: 12px; }
+  .module-row .mod-num { font-family: var(--serif); font-weight: 300; font-size: 48px; color: var(--ink); letter-spacing: -0.03em; }
+  .module-row:hover .mod-num { color: var(--brick); }
+  .module-row .mod-name { font-family: var(--serif); font-size: 24px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; }
+  .module-row .mod-name em { color: var(--brick); font-style: italic; font-weight: 400; }
+  .module-row .mod-desc { color: var(--muted); font-size: 16px; line-height: 1.55; }
+  @media (max-width: 820px) { .module-row { grid-template-columns: 56px 1fr; gap: 16px; padding: 24px 0; } .module-row .mod-num { font-size: 32px; } .module-row .mod-name { font-size: 19px; } .module-row .mod-desc { grid-column: 2; font-size: 15px; } }
+
+  .faq-list { max-width: 760px; margin: 0 auto; }
+  .faq-item { border-top: 1px solid var(--hairline); padding: 28px 0; }
+  .faq-item:last-child { border-bottom: 1px solid var(--hairline); }
+  .faq-item .q { font-family: var(--serif); font-size: 22px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 16px; }
+  .faq-item .q .q-num { font-family: var(--mono); font-size: 12px; letter-spacing: 0.18em; color: var(--brick); font-weight: 600; margin-top: 4px; flex-shrink: 0; }
+  .faq-item .a { color: var(--muted); font-size: 17px; line-height: 1.6; padding-left: 32px; }
+
+  .final-cta { background: var(--ink); color: var(--paper); padding: 140px 0; position: relative; overflow: hidden; }
+  .final-cta::before { content: ""; position: absolute; top: -50%; right: -10%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(168, 52, 31, 0.18), transparent 60%); pointer-events: none; }
+  .final-cta .container { position: relative; }
+  .final-cta h2 { font-family: var(--serif); font-weight: 400; font-style: italic; font-size: clamp(48px, 8vw, 104px); line-height: 0.96; letter-spacing: -0.025em; color: var(--paper); margin-bottom: 32px; max-width: 14ch; }
+  .final-cta h2 em { color: #E68A6E; font-style: normal; }
+  .final-cta p { font-size: 21px; line-height: 1.55; color: rgba(244, 239, 230, 0.75); max-width: 56ch; margin-bottom: 48px; }
+  .final-cta .buy-card { background: transparent; border-color: var(--paper); color: var(--paper); }
+  .final-cta .buy-card::before { border-color: rgba(244, 239, 230, 0.4); }
+  .final-cta .buy-cta { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+  .final-cta .buy-cta:hover { background: #E68A6E; border-color: #E68A6E; }
+
+  footer { background: var(--paper); padding: 48px 0; border-top: 1px solid var(--hairline); }
+  footer .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 24px; }
+  footer .wordmark { font-size: 18px; }
+  footer .foot-links { display: flex; gap: 32px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  footer .foot-links a:hover { color: var(--brick); }
+
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 800ms var(--rev-1), transform 800ms var(--rev-1); transition-delay: var(--delay, 0ms); }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1 !important; transform: none !important; } .topbar-meta .pulse::before { animation: none; } }
+
+  .call-card { background: var(--bone); border: 1px solid var(--ink); padding: 32px 36px; margin-top: 32px; }
+  .call-card .label-mono { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--brick); font-weight: 600; margin-bottom: 12px; display: block; }
+  .call-card h3 { margin-bottom: 12px; }
+  .call-card p { font-size: 17px; color: var(--ink-soft); margin-bottom: 16px; max-width: 60ch; }
+  .call-card a.linkish { font-family: var(--mono); font-size: 13px; letter-spacing: 0.12em; color: var(--brick); text-transform: uppercase; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="container">
+    <div class="wordmark">Catalyst Works<span class="dot">.</span></div>
+    <div class="topbar-meta">
+      <span class="pulse">Live - $497 implementation kit</span>
+      <span>SKU 002 / Boubacar</span>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-header">
+      <div class="hero-meta-left"><strong>SKU 002</strong> &nbsp;/&nbsp; AI Department of One</div>
+      <div class="hero-meta-right"><strong>For the solo founder doing all of it</strong></div>
+    </div>
+
+    <h1 class="hero-title display reveal">
+      You are the <span class="accent">entire</span> department. Now act like one.
+    </h1>
+
+    <div class="hero-row reveal" style="--delay: 100ms">
+      <p class="lede hero-lede">
+        The implementation kit for the solo founder running <em>ops, content, and sales</em> on AI. SOP, decision tree, 12 paste-prompts, model comparison, and a 1-year roadmap. Plus a 60-minute call with the operator who built agentsHQ.
+      </p>
+      <div class="credit-block">
+        <div class="name">Boubacar</div>
+        <div class="bio">Solo operator across <strong>Catalyst Works</strong>, <strong>Signal Works</strong>, and <strong>1stGen Money</strong>. Built agentsHQ to run all three.</div>
+      </div>
+    </div>
+
+    <div class="buy-card-wrap reveal" style="--delay: 200ms">
+      <div class="buy-card">
+        <div class="buy-price"><span class="amt">$497</span></div>
+        <div class="buy-info">
+          <div class="product-line">AI Department of One</div>
+          <div class="product-sub">Kit + 60-min call / Lifetime updates</div>
+        </div>
+        <a class="buy-cta" href="https://catalystworks.consulting/buy/ai-department-of-one">
+          <span>Buy the kit</span><span class="arrow">&rarr;</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">01</div>
+      <div class="head-content">
+        <span class="eyebrow">Where solo founders stall</span>
+        <h2 class="section-head">You do not need a team. You need a system.</h2>
+      </div>
+    </div>
+
+    <div class="before-grid reveal">
+      <div>
+        <p>You are running ops, content, and sales by yourself. You opened 14 SaaS tabs this week. You have ChatGPT, Claude, Gemini, Notion AI, a Zapier account, and three half-built automations. You still feel behind. None of this is your fault. The path that gets handed to solo founders is broken.</p>
+
+        <p>The fix is not another tool. It is a working set of routines: which model gets which job, what context lives where, what gets automated vs what stays manual, and the one decision tree that ends the daily "what should I use for this?" loop.</p>
+
+        <p>I built agentsHQ to run Catalyst Works, Signal Works, and 1stGen Money out of one operator brain. That same shape, compressed to what one founder actually needs, is what is inside this kit.</p>
+      </div>
+      <div>
+        <blockquote class="pull">
+          The bottleneck stopped being capacity the day you understood prompts. The bottleneck now is taste, routing, and what NOT to automate. That is what this kit is.
+          <cite>The real solo-founder constraint</cite>
+        </blockquote>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">02</div>
+      <div class="head-content">
+        <span class="eyebrow">What ships in the kit</span>
+        <h2 class="section-head">Six pieces. Every one used.</h2>
+      </div>
+    </div>
+
+    <div class="modules-list reveal">
+      <div class="module-row">
+        <div class="mod-num">01</div>
+        <div class="mod-name">The <em>solo-founder SOP</em></div>
+        <div class="mod-desc">The exact operating rhythm I run weekly across three brands. Morning routine, weekly reset, monthly review. 18-page document, not theory.</div>
+      </div>
+      <div class="module-row">
+        <div class="mod-num">02</div>
+        <div class="mod-name">The model decision tree</div>
+        <div class="mod-desc">Which AI for which job. Claude vs ChatGPT vs Gemini, plus what each is genuinely bad at. Updated every quarter as models shift.</div>
+      </div>
+      <div class="module-row">
+        <div class="mod-num">03</div>
+        <div class="mod-name">12 paste-prompts</div>
+        <div class="mod-desc">The exact prompts I use for sales outreach, content review, decision pressure-test, content scoring, hiring screen, and 7 more. Copy. Paste. Run.</div>
+      </div>
+      <div class="module-row">
+        <div class="mod-num">04</div>
+        <div class="mod-name">The model comparison sheet</div>
+        <div class="mod-desc">Side-by-side: what Claude wins, what GPT wins, what Gemini wins, what Grok and Perplexity are for. With the dates I last tested each.</div>
+      </div>
+      <div class="module-row">
+        <div class="mod-num">05</div>
+        <div class="mod-name">The 1-year roadmap</div>
+        <div class="mod-desc">Quarterly waypoints. Q1 = setup + workflows. Q2 = light automation. Q3 = first agent. Q4 = decide what to outsource to AI vs to a human.</div>
+      </div>
+      <div class="module-row">
+        <div class="mod-num">06</div>
+        <div class="mod-name">60-minute <em>Calendly call</em></div>
+        <div class="mod-desc">One direct working session with me. Bring your current stack, your bottleneck, your top 3 daily tasks. We map your version of this on a shared screen.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">03</div>
+      <div class="head-content">
+        <span class="eyebrow">Who this is for</span>
+        <h2 class="section-head">If you are the entire department, this is built for you.</h2>
+      </div>
+    </div>
+
+    <div class="reveal" style="max-width: 64ch;">
+      <p style="font-size: 19px; margin-bottom: 24px;">Solo founder. Zero to $500K revenue. You handle ops, content, and sales. You already use AI but it feels scattered. You want one operating system, not another tool.</p>
+      <p style="font-size: 19px; margin-bottom: 24px;">Not built for: agency owners with 5+ employees (different bottleneck), people who have not used Claude or ChatGPT yet (start with the $19 kit first), or buyers looking for a passive course.</p>
+      <p style="font-size: 19px;">If your weekly review keeps surfacing the same answer ("I need to systematize my AI use"), this is the kit. The call alone runs $400 if you book me directly.</p>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">04</div>
+      <div class="head-content">
+        <span class="eyebrow">Who built it</span>
+        <h2 class="section-head">An operator who actually runs this stack.</h2>
+      </div>
+    </div>
+
+    <div class="reveal" style="max-width: 64ch;">
+      <p style="margin-bottom: 18px;"><strong>Boubacar.</strong> Built agentsHQ, a 75-skill multi-agent system I use to run three brands by myself. Catalyst Works (AI consulting). Signal Works (faceless audits). 1stGen Money (financial education for first-gen immigrant kids).</p>
+      <p style="margin-bottom: 18px;">Before that: 14 years in corporate HR, the kind where you sit across from a person whose role just got eliminated. I know what "knowledge worker overwhelmed by AI" actually means. I was that person three years ago.</p>
+      <p>I do not sell courses. I sell what I use. This is the kit version of the operating system I run every workday.</p>
+    </div>
+
+    <div class="call-card reveal">
+      <span class="label-mono">The 60-minute call</span>
+      <h3>One working session, directly with Boubacar.</h3>
+      <p>Bring your stack, your bottleneck, and your top 3 daily tasks. We map your version on a shared screen. Recording is yours. Calendly link delivered at purchase.</p>
+      <a class="linkish" href="https://calendly.com/boubacarbarry/ai-readiness-call-human-at-work">calendly.com/boubacarbarry/ai-readiness-call-human-at-work &rarr;</a>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">05</div>
+      <div class="head-content">
+        <span class="eyebrow">Six honest questions</span>
+        <h2 class="section-head">Before you buy.</h2>
+      </div>
+    </div>
+
+    <div class="faq-list reveal">
+      <div class="faq-item">
+        <div class="q"><span class="q-num">Q1</span>Will this work if I use ChatGPT, not Claude?</div>
+        <div class="a">Yes. The decision tree compares all major models. The 12 paste-prompts work on Claude, ChatGPT, and Gemini with light adaptation notes included. I do not push one model. I push the right one for the job.</div>
+      </div>
+      <div class="faq-item">
+        <div class="q"><span class="q-num">Q2</span>I am not technical. Does that matter?</div>
+        <div class="a">No. The kit assumes you already use one AI tool. No code. No API. Custom instructions and Projects (or equivalents on other models) are the deepest you go. The 60-minute call is where the technical lifting happens, if any.</div>
+      </div>
+      <div class="faq-item">
+        <div class="q"><span class="q-num">Q3</span>What if my business is not a SaaS or agency?</div>
+        <div class="a">The kit ships role variants for content creators, consultants, course operators, e-commerce solo operators, and service businesses. The SOP shape is the same. The paste-prompts are the same. The roadmap adapts.</div>
+      </div>
+      <div class="faq-item">
+        <div class="q"><span class="q-num">Q4</span>How is this different from a course?</div>
+        <div class="a">A course teaches you. A kit gives you the artifact. You do not watch hours of video. You read 18 pages, copy 12 prompts, and book the call. The whole thing is done in a weekend.</div>
+      </div>
+      <div class="faq-item">
+        <div class="q"><span class="q-num">Q5</span>When does the 60-minute call happen?</div>
+        <div class="a">After purchase you get a private Calendly link. Book within 30 days. Recording is yours. If you do not book, that is on you. The kit alone is worth more than $497 to a serious solo operator.</div>
+      </div>
+      <div class="faq-item">
+        <div class="q"><span class="q-num">Q6</span>What if my AI tools change next year?</div>
+        <div class="a">Free updates as the major models ship. I revise the decision tree and comparison sheet every time a major LLM releases. You get the new version. Lifetime access.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="container">
+    <h2 class="reveal">The operating system, in one weekend.</h2>
+    <p class="reveal" style="--delay: 100ms">Six pieces. One call. Built by the operator running three brands on this exact stack. The kit alone pays for itself the first week you stop guessing which model to use for which job.</p>
+
+    <div class="buy-card-wrap reveal" style="--delay: 200ms">
+      <div class="buy-card">
+        <div class="buy-price"><span class="amt">$497</span></div>
+        <div class="buy-info">
+          <div class="product-line">AI Department of One</div>
+          <div class="product-sub">Kit + 60-min Calendly call / Lifetime updates</div>
+        </div>
+        <a class="buy-cta" href="https://catalystworks.consulting/buy/ai-department-of-one">
+          <span>Buy the kit</span><span class="arrow">&rarr;</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="wordmark">Catalyst Works<span class="dot">.</span></div>
+    <div class="foot-links">
+      <a href="https://catalystworks.consulting">catalystworks.consulting</a>
+      <a href="https://catalystworks.consulting/privacy">Privacy</a>
+      <a href="https://catalystworks.consulting/terms">Terms</a>
+      <a href="mailto:boubacar@catalystworks.consulting">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.querySelectorAll('.reveal').forEach(el => el.classList.add('in'));
+      return;
+    }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) { entry.target.classList.add('in'); io.unobserve(entry.target); }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  })();
+</script>
+
+</body>
+</html>

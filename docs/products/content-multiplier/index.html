@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1 Idea Into 7 Posts (Multiplier) - by Boubacar</title>
+<meta name="description" content="Turn one idea into a LinkedIn post, an X thread, three Reels, a newsletter, and a Substack post. Voice-loaded. Operator-tested. From the agentsHQ content_multiplier skill.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400;1,9..144,600;1,9..144,800&family=Spectral:ital,wght@0,300;0,400;0,500;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --ink: #141210; --ink-soft: #2A2620; --paper: #F4EFE6; --bone: #E6DDC8; --brick: #A8341F; --muted: #6B655C; --hairline: rgba(20, 18, 16, 0.12); --hairline-strong: rgba(20, 18, 16, 0.32); --serif: "Fraunces", "Iowan Old Style", "Georgia", serif; --body: "Spectral", "Iowan Old Style", "Georgia", serif; --mono: "JetBrains Mono", "Menlo", monospace; --rev-1: cubic-bezier(0.2, 0.7, 0.2, 1); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 19px; line-height: 1.65; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.45; mix-blend-mode: multiply; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='4'/><feColorMatrix values='0 0 0 0 0.08, 0 0 0 0 0.07, 0 0 0 0 0.06, 0 0 0 0.05 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>"); }
+  main, section, header, footer { position: relative; z-index: 1; }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--brick); color: var(--paper); }
+  .display { font-family: var(--serif); font-weight: 400; letter-spacing: -0.025em; line-height: 0.94; font-style: italic; }
+  h2.section-head { font-family: var(--serif); font-weight: 400; font-size: clamp(36px, 5.5vw, 64px); line-height: 1.02; letter-spacing: -0.02em; }
+  .eyebrow { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.22em; font-weight: 500; color: var(--brick); }
+  p.lede { font-family: var(--serif); font-size: clamp(20px, 2.2vw, 26px); line-height: 1.45; font-weight: 300; color: var(--ink-soft); }
+  .container { width: min(1240px, calc(100% - 48px)); margin: 0 auto; }
+  .topbar { border-bottom: 1px solid var(--hairline); padding: 14px 0; background: var(--paper); }
+  .topbar .container { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+  .wordmark { font-family: var(--serif); font-weight: 600; font-style: italic; font-size: 20px; }
+  .wordmark .dot { color: var(--brick); }
+  .topbar-meta { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); display: flex; gap: 24px; }
+  .topbar-meta .pulse { color: var(--brick); display: inline-flex; align-items: center; gap: 6px; }
+  .topbar-meta .pulse::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--brick); box-shadow: 0 0 0 0 rgba(168, 52, 31, 0.55); animation: pulse 2.4s var(--rev-1) infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(168, 52, 31, 0.55); } 70% { box-shadow: 0 0 0 9px rgba(168, 52, 31, 0); } 100% { box-shadow: 0 0 0 0 rgba(168, 52, 31, 0); } }
+  @media (max-width: 720px) { .topbar-meta { display: none; } }
+  .hero { padding: 80px 0 100px; border-bottom: 1px solid var(--hairline); overflow: hidden; }
+  .hero-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 36px; gap: 24px; flex-wrap: wrap; }
+  .hero-meta-left, .hero-meta-right { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .hero-meta-right { text-align: right; }
+  .hero-meta-left strong, .hero-meta-right strong { color: var(--ink); font-weight: 500; }
+  h1.hero-title { font-size: clamp(56px, 11vw, 144px); margin-bottom: 32px; max-width: 14ch; }
+  h1.hero-title .accent { color: var(--brick); font-style: italic; }
+  .hero-row { display: grid; grid-template-columns: 1.3fr 1fr; gap: 80px; align-items: end; margin-top: 40px; }
+  @media (max-width: 900px) { .hero-row { grid-template-columns: 1fr; gap: 40px; } }
+  .hero-lede { max-width: 38ch; }
+  .hero-lede em { font-style: italic; color: var(--brick); }
+  .buy-card-wrap { margin-top: 64px; }
+  .buy-card { border: 1px solid var(--ink); background: var(--paper); padding: 32px 36px; display: grid; grid-template-columns: auto 1fr auto; gap: 32px; align-items: center; position: relative; }
+  .buy-card::before { content: ""; position: absolute; inset: -1px; border: 1px solid var(--ink); transform: translate(6px, 6px); pointer-events: none; z-index: -1; }
+  .buy-price { display: flex; align-items: baseline; gap: 12px; }
+  .buy-price .amt { font-family: var(--serif); font-weight: 600; font-size: 72px; line-height: 0.9; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+  .buy-price .was { font-family: var(--serif); font-size: 22px; color: var(--muted); text-decoration: line-through; text-decoration-color: var(--brick); text-decoration-thickness: 2px; }
+  .buy-info .product-line { font-family: var(--serif); font-weight: 600; font-size: 19px; margin-bottom: 6px; }
+  .buy-info .product-sub { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .buy-cta { display: inline-flex; align-items: center; gap: 12px; background: var(--ink); color: var(--paper); padding: 18px 28px; font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; white-space: nowrap; border: 1px solid var(--ink); transition: background 200ms var(--rev-1), transform 200ms var(--rev-1); }
+  .buy-cta:hover { background: var(--brick); border-color: var(--brick); transform: translateY(-1px); }
+  .buy-cta .arrow { transition: transform 200ms var(--rev-1); }
+  .buy-cta:hover .arrow { transform: translateX(4px); }
+  @media (max-width: 820px) { .buy-card { grid-template-columns: 1fr; gap: 20px; padding: 28px; } .buy-cta { justify-content: center; } }
+  section.chapter { padding: 120px 0; border-bottom: 1px solid var(--hairline); }
+  section.chapter:last-of-type { border-bottom: 0; }
+  .chapter-header { display: grid; grid-template-columns: 180px 1fr; gap: 40px; margin-bottom: 60px; align-items: start; }
+  .chapter-num { font-family: var(--serif); font-weight: 300; font-size: 96px; line-height: 0.9; color: var(--brick); font-style: italic; letter-spacing: -0.04em; }
+  .chapter-header .head-content { padding-top: 8px; }
+  .chapter-header .eyebrow { margin-bottom: 12px; display: block; }
+  @media (max-width: 720px) { .chapter-header { grid-template-columns: 1fr; gap: 16px; margin-bottom: 40px; } .chapter-num { font-size: 64px; } section.chapter { padding: 80px 0; } }
+  .before-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+  @media (max-width: 900px) { .before-grid { grid-template-columns: 1fr; gap: 40px; } }
+  .before-grid p { font-size: 21px; line-height: 1.55; margin-bottom: 24px; }
+  .before-grid .pull { font-family: var(--serif); font-style: italic; font-size: clamp(28px, 3.5vw, 44px); line-height: 1.15; letter-spacing: -0.015em; border-left: 3px solid var(--brick); padding-left: 28px; margin-top: 24px; }
+  .before-grid .pull cite { display: block; margin-top: 16px; font-family: var(--mono); font-size: 11px; font-style: normal; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .modules-list { display: grid; gap: 0; }
+  .module-row { display: grid; grid-template-columns: 80px 1fr 1.2fr; gap: 40px; padding: 32px 0; border-top: 1px solid var(--hairline); align-items: baseline; transition: padding 300ms var(--rev-1); }
+  .module-row:last-child { border-bottom: 1px solid var(--hairline); }
+  .module-row:hover { padding-left: 12px; }
+  .module-row .mod-num { font-family: var(--serif); font-weight: 300; font-size: 48px; color: var(--ink); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; transition: color 200ms var(--rev-1); }
+  .module-row:hover .mod-num { color: var(--brick); }
+  .module-row .mod-name { font-family: var(--serif); font-size: 26px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; }
+  .module-row .mod-desc { color: var(--muted); font-size: 17px; line-height: 1.55; }
+  .module-row .mod-name em { color: var(--brick); font-style: italic; font-weight: 400; }
+  @media (max-width: 820px) { .module-row { grid-template-columns: 56px 1fr; gap: 16px; padding: 24px 0; } .module-row .mod-num { font-size: 32px; } .module-row .mod-name { font-size: 20px; } .module-row .mod-desc { grid-column: 2; font-size: 15px; } }
+  .stack-section { background: var(--bone); border-bottom: 1px solid var(--hairline); }
+  .stack-table { background: var(--paper); border: 1px solid var(--ink); margin-top: 24px; }
+  .stack-row { display: grid; grid-template-columns: 1fr auto; gap: 24px; padding: 20px 28px; border-bottom: 1px solid var(--hairline); align-items: center; font-size: 17px; }
+  .stack-row:last-child { border-bottom: 0; }
+  .stack-row .stack-name { font-weight: 500; }
+  .stack-row .stack-name small { display: block; color: var(--muted); font-size: 13px; font-weight: 400; margin-top: 2px; font-family: var(--mono); letter-spacing: 0.04em; }
+  .stack-row .stack-val { font-family: var(--serif); font-weight: 600; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .stack-row.total { background: var(--ink); color: var(--paper); padding: 28px; }
+  .stack-row.total .stack-name { font-family: var(--mono); font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; }
+  .stack-row.total .stack-val { font-family: var(--serif); font-style: italic; font-size: 40px; color: var(--paper); }
+  .faq-list { max-width: 760px; margin: 0 auto; }
+  .faq-item { border-top: 1px solid var(--hairline); padding: 28px 0; }
+  .faq-item:last-child { border-bottom: 1px solid var(--hairline); }
+  .faq-item .q { font-family: var(--serif); font-size: 22px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 16px; }
+  .faq-item .q .q-num { font-family: var(--mono); font-size: 12px; letter-spacing: 0.18em; color: var(--brick); font-weight: 600; margin-top: 4px; flex-shrink: 0; }
+  .faq-item .a { color: var(--muted); font-size: 17px; line-height: 1.6; padding-left: 32px; }
+  .final-cta { background: var(--ink); color: var(--paper); padding: 140px 0; position: relative; overflow: hidden; }
+  .final-cta::before { content: ""; position: absolute; top: -50%; right: -10%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(168, 52, 31, 0.18), transparent 60%); pointer-events: none; }
+  .final-cta .container { position: relative; }
+  .final-cta h2 { font-family: var(--serif); font-weight: 400; font-style: italic; font-size: clamp(48px, 8vw, 112px); line-height: 0.96; letter-spacing: -0.025em; color: var(--paper); margin-bottom: 32px; max-width: 14ch; }
+  .final-cta h2 em { color: #E68A6E; font-style: normal; }
+  .final-cta p { font-size: 21px; line-height: 1.55; color: rgba(244, 239, 230, 0.75); max-width: 56ch; margin-bottom: 48px; }
+  .final-cta .buy-card { background: transparent; border-color: var(--paper); color: var(--paper); }
+  .final-cta .buy-card::before { border-color: rgba(244, 239, 230, 0.4); }
+  .final-cta .buy-cta { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+  .final-cta .buy-cta:hover { background: #E68A6E; border-color: #E68A6E; }
+  .final-cta .buy-price .was { color: rgba(244, 239, 230, 0.5); }
+  .final-cta .product-sub { color: rgba(244, 239, 230, 0.5); }
+  footer { background: var(--paper); padding: 48px 0; border-top: 1px solid var(--hairline); }
+  footer .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 24px; }
+  footer .wordmark { font-size: 18px; }
+  footer .foot-links { display: flex; gap: 32px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  footer .foot-links a:hover { color: var(--brick); }
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 800ms var(--rev-1), transform 800ms var(--rev-1); transition-delay: var(--delay, 0ms); }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1 !important; transform: none !important; transition: none !important; } .topbar-meta .pulse::before { animation: none; } html { scroll-behavior: auto; } }
+  .seven-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-top: 28px; background: var(--ink); padding: 2px; }
+  .seven-grid div { background: var(--paper); padding: 18px 12px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); text-align: center; line-height: 1.4; }
+  .seven-grid div strong { display: block; color: var(--brick); font-size: 14px; margin-bottom: 4px; }
+  @media (max-width: 720px) { .seven-grid { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="container">
+    <div class="wordmark">Catalyst Works<span class="dot">.</span></div>
+    <div class="topbar-meta">
+      <span class="pulse">Live - $39</span>
+      <span>The Multiplier</span>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-header">
+      <div class="hero-meta-left"><strong>SKU 005</strong> &nbsp;/&nbsp; 1 idea -> 7 posts</div>
+      <div class="hero-meta-right"><strong>Voice-loaded / Operator-tested</strong></div>
+    </div>
+
+    <h1 class="hero-title display reveal">
+      One idea. <span class="accent">Seven</span> posts.<br>
+      Twenty minutes.
+    </h1>
+
+    <div class="hero-row reveal" style="--delay: 100ms">
+      <p class="lede hero-lede">
+        Stop posting from the same idea twice a week and watching it die in obscurity. Drop one thought, get back a LinkedIn post, an X thread, three Reel hooks, a newsletter, and a Substack post. <em>All in your voice. None of them look like AI wrote them.</em>
+      </p>
+    </div>
+
+    <div class="seven-grid reveal" style="--delay: 150ms">
+      <div><strong>01</strong>LinkedIn</div>
+      <div><strong>02</strong>X thread</div>
+      <div><strong>03</strong>Reel 1</div>
+      <div><strong>04</strong>Reel 2</div>
+      <div><strong>05</strong>Reel 3</div>
+      <div><strong>06</strong>Newsletter</div>
+      <div><strong>07</strong>Substack</div>
+    </div>
+
+    <div class="buy-card-wrap reveal" style="--delay: 200ms">
+      <div class="buy-card">
+        <div class="buy-price"><span class="amt">$39</span><span class="was">$59</span></div>
+        <div class="buy-info">
+          <div class="product-line">1 Idea Into 7 Posts (Multiplier)</div>
+          <div class="product-sub">Voice loading + 1-into-7 workflow / Lifetime</div>
+        </div>
+        <a class="buy-cta" href="https://catalystworks.consulting/buy/content-multiplier">
+          <span>Get the multiplier</span><span class="arrow">&rarr;</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">01</div>
+      <div class="head-content">
+        <span class="eyebrow">The honest before-picture</span>
+        <h2 class="section-head">You're inconsistent. Not because you're lazy.</h2>
+      </div>
+    </div>
+
+    <div class="before-grid reveal">
+      <div>
+        <p>You have ideas. Plenty of them. The problem is the leap from idea to seven assets across seven platforms is a wall. Every Sunday you tell yourself you'll batch a week of content. Sunday becomes Tuesday. Tuesday becomes "next week."</p>
+        <p>You also tried AI. ChatGPT spat out content that sounded like ChatGPT. You posted it once, watched it land flat, and decided AI couldn't write in your voice. That's also not quite right. AI can write in your voice when it's loaded properly. Most people skip the loading step.</p>
+        <p>The multiplier is the workflow: one idea, voice loaded once, seven assets back in twenty minutes. You edit. You post. The week is done by Monday lunch.</p>
+      </div>
+      <div>
+        <blockquote class="pull">
+          The compounding return on consistent posting is not linear. It is exponential. Year one looks like nothing. Year two looks like a career change.
+          <cite>Why the multiplier matters</cite>
+        </blockquote>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">02</div>
+      <div class="head-content">
+        <span class="eyebrow">What's inside</span>
+        <h2 class="section-head">Six modules. One voice. Seven outputs.</h2>
+      </div>
+    </div>
+
+    <div class="modules-list reveal">
+      <div class="module-row"><div class="mod-num">01</div><div class="mod-name">Voice <em>loading</em></div><div class="mod-desc">The 20-minute one-time setup that captures how you actually write. Past posts, voice notes, your "off-platform" sentences. Once loaded, every output sounds like you.</div></div>
+      <div class="module-row"><div class="mod-num">02</div><div class="mod-name">Idea capture sheet</div><div class="mod-desc">Where good ideas come from (boring answer: noticing). The 3-question filter that separates a content-able idea from a passing thought. Print and pin to your wall.</div></div>
+      <div class="module-row"><div class="mod-num">03</div><div class="mod-name">The <em>multiplier</em> prompt</div><div class="mod-desc">The single prompt that turns one idea into seven platform-native outputs. Pre-loaded with platform-specific length, tone, and hook conventions. Drop the idea in, get the assets back.</div></div>
+      <div class="module-row"><div class="mod-num">04</div><div class="mod-name">Editing pass library</div><div class="mod-desc">10 specific edits that take AI-feeling output and make it sound human. Comma placement. Sentence rhythm breaks. "Earned aside" insertion. Five minutes per asset.</div></div>
+      <div class="module-row"><div class="mod-num">05</div><div class="mod-name">Platform-native <em>hooks</em></div><div class="mod-desc">7 platforms, 12 hook patterns each. The opening line that buys you the next 30 seconds of attention. Tested against actual platform algorithms in 2025-2026.</div></div>
+      <div class="module-row"><div class="mod-num">06</div><div class="mod-name">Posting cadence + recovery</div><div class="mod-desc">When to post, when not to, what to do when life eats your week. The maintenance schedule that doesn't break when reality interrupts.</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter stack-section">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">03</div>
+      <div class="head-content">
+        <span class="eyebrow">What's in the box</span>
+        <h2 class="section-head">The kit, line by line.</h2>
+      </div>
+    </div>
+
+    <div class="reveal">
+      <p style="max-width: 56ch; margin-bottom: 16px; color: var(--muted);">Everything ships in one bundle. Drop-in prompts. Voice-loading templates. The platform hook library. Lifetime access.</p>
+
+      <div class="stack-table">
+        <div class="stack-row"><div class="stack-name">Voice-loading workflow<small>20-min one-time setup</small></div><div class="stack-val">$45</div></div>
+        <div class="stack-row"><div class="stack-name">The multiplier prompt<small>1 idea -> 7 platform outputs</small></div><div class="stack-val">$55</div></div>
+        <div class="stack-row"><div class="stack-name">7-platform hook library<small>84 tested opener patterns</small></div><div class="stack-val">$45</div></div>
+        <div class="stack-row"><div class="stack-name">10-edit human-pass checklist<small>Removes AI-feel in 5 min/asset</small></div><div class="stack-val">$25</div></div>
+        <div class="stack-row"><div class="stack-name">Idea capture sheet<small>Print and pin</small></div><div class="stack-val">$15</div></div>
+        <div class="stack-row"><div class="stack-name">Posting cadence + recovery<small>What to do when life eats your week</small></div><div class="stack-val">$25</div></div>
+        <div class="stack-row"><div class="stack-name">Lifetime updates<small>Platforms shift, this updates</small></div><div class="stack-val">$40</div></div>
+        <div class="stack-row total"><div class="stack-name">Total stacked value</div><div class="stack-val">$250</div></div>
+      </div>
+
+      <p style="font-family: var(--serif); font-style: italic; font-size: 22px; margin-top: 32px; max-width: 52ch; line-height: 1.4;">
+        You pay <strong style="font-weight: 600; color: var(--brick); font-style: normal;">$39</strong>. Use it once and you have your week's content done.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">04</div>
+      <div class="head-content">
+        <span class="eyebrow">Who wrote this</span>
+        <h2 class="section-head">An operator wrote this. Not a content guru.</h2>
+      </div>
+    </div>
+
+    <div class="reveal" style="max-width: 64ch;">
+      <p><strong>Boubacar.</strong> I built agentsHQ, a multi-agent AI orchestration system. Inside it is a skill called content_multiplier. The skill ran my own content for months before I extracted the workflow into this kit.</p>
+      <p>14 years in corporate HR before I built any of this. I learned to write because writing was the way out of meetings. Three brands later (Catalyst Works, Signal Works, 1stGen Money), the multiplier is how one operator outputs across seven channels without going broke or insane.</p>
+      <p>The kit is the workflow stripped down to what fits in one folder. No tool lock-in. Works with ChatGPT, Claude, Gemini, Perplexity. Pick the AI you already use.</p>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">05</div>
+      <div class="head-content">
+        <span class="eyebrow">Honest questions</span>
+        <h2 class="section-head">Before you buy.</h2>
+      </div>
+    </div>
+
+    <div class="faq-list reveal">
+      <div class="faq-item"><div class="q"><span class="q-num">Q1</span>Will it actually sound like me?</div><div class="a">Yes, if you do the voice-loading step. It takes 20 minutes once. You paste 5-10 of your past posts and a short profile. The AI reflects voice back in every output after that. Skip the voice loading and yes, it'll sound like AI.</div></div>
+      <div class="faq-item"><div class="q"><span class="q-num">Q2</span>Which AI do I need?</div><div class="a">Any modern chat AI. ChatGPT Plus, Claude Pro, Gemini Advanced, Grok. Paid tier, $20/month. The prompts work across all of them. We note where models differ (Claude is better for voice; ChatGPT is better for hooks; both work).</div></div>
+      <div class="faq-item"><div class="q"><span class="q-num">Q3</span>Do I need to post to all 7 platforms?</div><div class="a">No. Pick 3 to start. The kit shows you which 3 fit your business. The other 4 sit ready when you're ready to scale up. Most solo operators post to LinkedIn + X + one newsletter for the first 6 months and add platforms as they have bandwidth.</div></div>
+      <div class="faq-item"><div class="q"><span class="q-num">Q4</span>What about TikTok and Threads?</div><div class="a">Reel hooks work on TikTok and Threads with no changes. The kit references LinkedIn, X, Instagram Reels, YouTube Shorts, Substack, plus your newsletter. The hook library covers TikTok and Threads too. The workflow doesn't change.</div></div>
+      <div class="faq-item"><div class="q"><span class="q-num">Q5</span>How long until I see results?</div><div class="a">Posting consistency: week 1. Quality lift on individual posts: week 2-3. Audience growth: 3-6 months for first signal, 12 months for compounding. The kit makes the consistency possible. The platform algorithms do the rest.</div></div>
+      <div class="faq-item"><div class="q"><span class="q-num">Q6</span>I already use AI for content. Why this?</div><div class="a">If your AI output already sounds like you, you don't need this. If your output sounds like ChatGPT (and you can tell when you read it back), the voice-loading step alone is worth the price. The multiplier prompt cuts your hours-per-week by 80%.</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="container">
+    <h2 class="reveal">Twenty minutes a week. <em>Seven assets out</em>.</h2>
+    <p class="reveal" style="--delay: 100ms">The operator behind three brands runs all their content this way. The multiplier is the unlock that turns "I should post more" into "this week's done by Monday."</p>
+
+    <div class="buy-card-wrap reveal" style="--delay: 200ms">
+      <div class="buy-card">
+        <div class="buy-price"><span class="amt">$39</span><span class="was">$59</span></div>
+        <div class="buy-info">
+          <div class="product-line">1 Idea Into 7 Posts (Multiplier)</div>
+          <div class="product-sub">Lifetime access / Voice loading / Platform updates</div>
+        </div>
+        <a class="buy-cta" href="https://catalystworks.consulting/buy/content-multiplier">
+          <span>Get the multiplier</span><span class="arrow">&rarr;</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="wordmark">Catalyst Works<span class="dot">.</span></div>
+    <div class="foot-links">
+      <a href="https://catalystworks.consulting">catalystworks.consulting</a>
+      <a href="https://catalystworks.consulting/privacy">Privacy</a>
+      <a href="https://catalystworks.consulting/terms">Terms</a>
+      <a href="mailto:boubacar@catalystworks.consulting">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll('.reveal').forEach(el => el.classList.add('in'));
+    return;
+  }
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) { entry.target.classList.add('in'); io.unobserve(entry.target); }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+})();
+</script>
+</body>
+</html>
