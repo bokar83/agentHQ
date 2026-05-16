@@ -321,6 +321,42 @@ Lighthouse-relevant note only: Studio is a sub-system feeding Lighthouse later (
     - **10c. Sequenced:** warm-only W1-W3 (per current plan), trigger dual-track W4 if no paid call by L3 gate. Compromise — same cap on parallel work, but adds optionality.
     Lean: **10c** if L3 looks weak by Day 12 (2026-05-24). Premature 10b in W1-W2 = scope creep. But waiting until L5 (6/23) to add direct-buyer = too late to recover sprint.
 
+---
+
+**L-R4 LOCKED (2026-05-16, 3-lane lock + 5 quick-resolves):**
+
+*Quick-resolves (not lane-worthy, decisions logged):*
+1. Brandon Monday reciprocity: **lean audit** (Idea Vault Page Tool pilot held to W4+ pending L3 gate clear)
+2. Brandon Lunch Reconnect: **hold to L5 mid-cycle (6/23)** (W1-3 single-channel discipline preserved)
+3. Day 2 momentum signal: **valid, track to W2 close** (Day 4 strategic-reframe quality confirmed leading indicator)
+7. Pre-announce cw pivot in V1 body: **NO** (audit IS the pivot, no body-copy announcement)
+8. Referral-thesis reframe: **LOCKED** (warm leads = referral sources first; W1 reply-velocity gate softened; W2-3 success = referral conversations initiated; audit quality bar raised)
+
+*Lane 1 — Channel + bridge mechanic (items 4+5+6 bundled):*
+- Default channel: **LinkedIn DM first → personal email bridge** (`bokar83@gmail.com`)
+- Bridge timing: **24hr** for LinkedIn-active, **48hr** for cold-zone friends (per-recipient classifier)
+- Bridge wording locked: `Hey, sent you a quick note Friday - might have buried it in your inbox/LinkedIn. Same offer if you saw it.`
+- Artifacts updated: `data/lighthouse-warm-list.md` channel-matrix + bridge columns; `data/lighthouse-audit-playbook.md` § Bridge Mechanic added before Thursday Check-In
+
+*Lane 2 — Shareable audit format (item 9 locked before W2 sends Mon 5/19):*
+- Pick **9b companion deck** (lower friction than 9a two-layer, higher signal than 9c verbal-only)
+- Format: 1-page "what I do" companion, forwardable, anonymized example
+- Draft window: this weekend (Sat-Sun)
+- Lock target: Sun 5/17 PM, in time for Mon 5/19 Chris V1 + W2 V3 batch
+
+*Lane 3 — Dual-track sequencing (item 10 revised gate by 5/24):*
+- Pick **10c sequenced** (single-track W1-W3, conditional dual-track W4 fork)
+- Revised gate (replaces original "paid-call" threshold = too aggressive for warm-only sample):
+  - By **2026-05-24 (Sat L-R4 W2 close)**
+  - If **<2 referrals named with intro made** AND **<3 audit yes-confirmations on rewrite quality**
+  - Fire dual-track W4: build direct-buyer prep in W3 (5/26-5/31), launch parallel Mon 6/2
+- Direct-buyer track candidates: CW cold outbound to SMB founders OR SW audit-to-paid funnel (pick at trigger fire)
+- Why revised: friends rarely book paid Signal Sessions within 2 weeks. Paid-call threshold guarantees gate fires regardless of thesis health. Referral-intro + audit-quality = honest signal on warm-referral thesis on its own terms.
+
+**Machine-readable decision record:** `data/lighthouse-decisions.md`
+
+---
+
 **L-R5 agenda (10:30 MDT, Conversion Scorecard):**
 - W1 numbers: 3 V1 sent (Chad text, Nate LinkedIn, Chase email-personal), 1 audit delivered (Nate), 1 ack-defer (Nate), 0 confirmed yes-replies on rewrite quality, 0 paid calls
 - Gate check: W1 expected ≥3 replies + ≥1 audit. Audit YES (Nate). Replies UNDER (Nate ack = 1, Chad silent, Chase too-early). 
