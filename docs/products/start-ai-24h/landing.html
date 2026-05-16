@@ -102,7 +102,7 @@
   .tier-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 32px; font-family: "Inter", sans-serif; }
   .tier { background: white; border: 2px solid var(--rule); border-radius: 6px; padding: 24px; }
   .tier.featured { border-color: var(--accent); position: relative; }
-  .tier.featured:before { content: "Most picked"; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--accent); color: white; padding: 4px 12px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; border-radius: 3px; }
+  .tier.featured:before { content: "Best value gap"; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--accent); color: white; padding: 4px 12px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; border-radius: 3px; }
   .tier .tier-name { font-size: 13px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; font-weight: 700; }
   .tier h3 { font-size: 20px; margin: 0 0 12px; }
   .tier .tier-price { font-size: 32px; font-weight: 800; color: var(--ink); margin-bottom: 12px; letter-spacing: -0.02em; }
@@ -141,7 +141,7 @@
 
 <!-- ========== TOP BANNER (Hormozi scarcity) ========== -->
 <div class="top-banner">
-  <strong>Intro pricing</strong> for the first 100 buyers. Then $29. Currently <strong>$19</strong>.
+  <strong>Early-bird pricing through May 23.</strong> Then $29. Currently <strong>$19</strong>.
 </div>
 
 <!-- ========== HERO ========== -->
@@ -149,14 +149,15 @@
   <div class="wrap">
     <div class="eyebrow">A Human at Work Starter Kit</div>
     <h1>Start using AI within 24 hours. Without overwhelm.</h1>
+    <p class="sub" style="font-size: 18px; font-weight: 600; color: var(--ink); margin-bottom: 12px;">Built by an operator running three brands on this stack. Not a course-seller.</p>
     <p class="sub">A step-by-step playbook for going from zero account to five working daily workflows in a single day. No 12-week course. No 1,000-prompt swipe file. The shortest path from "I know I need to start" to "I am actually using it."</p>
-    <p class="author"><strong>Boubacar.</strong> Builder of agentsHQ. Ex-corporate HR. Multi-brand operator. Conakry to code.</p>
+    <p class="author"><strong>Boubacar.</strong> Builder of agentsHQ. Ex-corporate HR. Conakry to code.</p>
 
     <div class="buy-box">
       <div class="price-row">
         <span class="price">$19</span>
         <span class="price-was">$29</span>
-        <span class="price-tag">Intro 100</span>
+        <span class="price-tag">Early bird</span>
       </div>
       <p class="product-name">Start AI Within 24 Hours - The Overwhelmed Person's Starter Kit</p>
       <ul>
@@ -168,6 +169,13 @@
       </ul>
       <a class="buy-button" href="https://humanatwork.ai/start-ai/buy">Get instant access ($19)</a>
       <p class="buy-meta"><strong>14-day refund window.</strong> Lifetime access. Free updates.</p>
+      <p style="font-family: 'Inter', sans-serif; font-size: 13px; color: var(--muted); text-align: center; margin-top: 8px; padding-top: 12px; border-top: 1px dashed var(--rule);">
+        <strong style="color: var(--accent);">+$29 add-on:</strong> 28 paste-ready prompts ships with your guide. Tick the box at checkout.
+      </p>
+    </div>
+
+    <div style="background: var(--sand); padding: 24px; border-left: 4px solid var(--ink); margin: 32px 0; font-family: 'Inter', sans-serif;">
+      <p style="margin: 0; font-size: 17px; line-height: 1.5; color: var(--ink);"><strong>The cost of waiting is not zero.</strong> The version of you that does not start today is the version your AI-fluent peer overtakes by Q3. It is the next promotion. The next contract. The next role you assumed was yours. Start today.</p>
     </div>
   </div>
 </section>
@@ -293,12 +301,20 @@
         <span class="bonus-value">Value: <strong>$15</strong></span>
       </div>
       <div class="bonus-row">
-        <span class="bonus-name">14-day refund guarantee</span>
+        <span class="bonus-name">14-day refund (no surveys, no friction)</span>
         <span class="bonus-value">Value: <strong>Priceless</strong></span>
+      </div>
+      <div class="bonus-row">
+        <span class="bonus-name">Lifetime updates (Claude/ChatGPT shifts handled)</span>
+        <span class="bonus-value">Value: <strong>$60/yr</strong></span>
+      </div>
+      <div class="bonus-row">
+        <span class="bonus-name">Direct email to support@humanatwork.ai</span>
+        <span class="bonus-value">Value: <strong>$40</strong></span>
       </div>
       <div class="bonus-total">
         <span class="total-label">Total stacked value</span>
-        <span class="total-amount">$119</span>
+        <span class="total-amount">$219</span>
       </div>
     </div>
 
@@ -326,14 +342,14 @@
       <div class="tier">
         <div class="tier-name">Tier 2 - Copy/paste</div>
         <h3>+ The Paste Pack</h3>
-        <div class="tier-price">$149</div>
+        <div class="tier-price">$79</div>
         <ul>
           <li>Everything in the guide</li>
           <li>28 ready-to-paste prompts</li>
           <li>Claude Project system prompt template</li>
           <li>ChatGPT custom-instructions template</li>
           <li>MCP bootstrap (5 servers)</li>
-          <li>Daily startup ritual</li>
+          <li>Daily startup ritual + troubleshooting</li>
           <li>Safety scan included</li>
         </ul>
         <a class="tier-cta" href="https://humanatwork.ai/start-ai/t2">Get T2 Paste Pack</a>
@@ -342,6 +358,7 @@
         <div class="tier-name">Tier 3 - Hand-in-hand</div>
         <h3>+ 60-min With Me</h3>
         <div class="tier-price">$697</div>
+        <div style="font-family: 'Inter', sans-serif; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-top: -8px; margin-bottom: 12px;">Where most upgrade lives</div>
         <ul>
           <li>Everything in T1 + T2</li>
           <li>60-minute screen-share with Boubacar</li>
@@ -445,7 +462,7 @@
       <div class="price-row">
         <span class="price">$19</span>
         <span class="price-was">$29</span>
-        <span class="price-tag">Intro 100</span>
+        <span class="price-tag">Early bird</span>
       </div>
       <p class="product-name">Start AI Within 24 Hours</p>
       <a class="buy-button" href="https://humanatwork.ai/start-ai/buy">Get instant access ($19)</a>
