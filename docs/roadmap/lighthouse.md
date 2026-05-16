@@ -37,18 +37,20 @@ Land 3 paying clients across SW + GW + CW combined by 2026-08-04. At least 1 in 
 - **Daily tracker:** `data/inbound-signal-log.md`
 - **Memory:** `project_lead_strategy_2026-05-12.md`
 
-## The 8 prevention mechanics (M1-M8)
+## The 8 prevention mechanics (L-R1 through L-R8)
+
+> **Naming convention:** Lighthouse Routine milestones use `L-R<n>` prefix. Lifecycle (weekly) milestones use `L<n>` (L0-L7). Future codenames mirror: Ghost = G-R<n> / G<n>, Atlas = A-R<n> / A<n>, etc.
 
 | ID | What | Trigger | Targets |
 |---|---|---|---|
-| **M1** | Daily Fast-Feedback Sprint | M-F 10:00 MDT | Feedback Blackout |
-| **M2** | First Win Ceremony — Telegram 🚀 on first REAL reply | Once, auto | No First Win |
-| **M3** | Guilt-Free Reset Trigger | Daily 10:30 if M1 missed | Shame Spiral |
-| **M4** | Weekly Priority Triad Lock — 3 lanes max | Sat 10:00 MDT | Cognitive Overload |
-| **M5** | Conversion Scorecard | Sat 10:30 MDT | Automation as Enabler |
-| **M6** | Auto-Close Script — T+24h value, T+72h ask | Post-session | Avoidance of Closure |
-| **M7** | Idea Vault Lock | Anytime | Shiny-Drift |
-| **M8** | List Hygiene Gate + Reply Classifier Fix | Before any cold send | Sender Reputation Cliff |
+| **L-R1** | Daily Fast-Feedback Sprint | M-F 10:00 MDT | Feedback Blackout |
+| **L-R2** | First Win Ceremony — Telegram 🚀 on first REAL reply | Once, auto | No First Win |
+| **L-R3** | Guilt-Free Reset Trigger | Daily 10:30 if L-R1 missed | Shame Spiral |
+| **L-R4** | Weekly Priority Triad Lock — 3 lanes max | Sat 10:00 MDT | Cognitive Overload |
+| **L-R5** | Conversion Scorecard | Sat 10:30 MDT | Automation as Enabler |
+| **L-R6** | Auto-Close Script — T+24h value, T+72h ask | Post-session | Avoidance of Closure |
+| **L-R7** | Idea Vault Lock | Anytime | Shiny-Drift |
+| **L-R8** | List Hygiene Gate + Reply Classifier Fix | Before any cold send | Sender Reputation Cliff |
 
 ## Milestones
 
@@ -76,7 +78,7 @@ Convert 1 "tell me more" → paid Signal Session offer. **Expected:** ≥1 paid 
 
 Gated on L1-L3 hitting ≥10 audits + ≥1 paid call. Add: LinkedIn discipline (Logan 5x/wk) + paid Signal Session $250 Wed afternoons. **Expected:** 2 sessions completed + 1 client landed.
 
-**Candidate tactic (Brandon Lunch Reconnect):** 1 lunch/wk with friend or past associate, reconnect-first not sell. Surfaces "what you got going on" naturally, generates referrals downstream. Lag mechanic, not reply-velocity. Decide at Sat 5/16 M4 Triad Lock whether to start as W4+ ritual or hold to L5 mid-cycle review. Sourced from Brandon accountability reply 2026-05-14. Distinct from descoped "Coffee meetings as default" (lunches, not default, referral-mechanism not first-touch close).
+**Candidate tactic (Brandon Lunch Reconnect):** 1 lunch/wk with friend or past associate, reconnect-first not sell. Surfaces "what you got going on" naturally, generates referrals downstream. Lag mechanic, not reply-velocity. Decide at Sat 5/16 L-R4 Triad Lock whether to start as W4+ ritual or hold to L5 mid-cycle review. Sourced from Brandon accountability reply 2026-05-14. Distinct from descoped "Coffee meetings as default" (lunches, not default, referral-mechanism not first-touch close).
 
 ### L5 — Week 7: Mid-Cycle Council (6/23-6/28)
 
@@ -114,7 +116,7 @@ Wrap engagements. Write `docs/strategy/lead-strategy-2026-08-04.html` for next c
 
 ## Idea Vault (locked until 3 paying clients)
 
-- **LinkedIn Page Analysis Tool** (added 2026-05-13). Productized multi-section LinkedIn profile audit, sibling to SW website-teardown. Scrapes profile (r.jina.ai or LinkedIn API), runs Headline + About + Featured + Experience + media + Recommendations + Activity audit, outputs HTML report with before/after mockup. 2-4 hour delivery vs 22-min for the 1-page audit. Pilot candidate: Brandon reciprocity 2026-05-19 IF W1 reply velocity is weak per Saturday M4 Triad Lock review. Productize for L4 Weeks 4-6 IF L1-L3 gate clears AND pilot validates demand. Anchor: Brandon profile observation 2026-05-13 (creative director with outstanding work that does not show on his profile).
+- **LinkedIn Page Analysis Tool** (added 2026-05-13). Productized multi-section LinkedIn profile audit, sibling to SW website-teardown. Scrapes profile (r.jina.ai or LinkedIn API), runs Headline + About + Featured + Experience + media + Recommendations + Activity audit, outputs HTML report with before/after mockup. 2-4 hour delivery vs 22-min for the 1-page audit. Pilot candidate: Brandon reciprocity 2026-05-19 IF W1 reply velocity is weak per Saturday L-R4 Triad Lock review. Productize for L4 Weeks 4-6 IF L1-L3 gate clears AND pilot validates demand. Anchor: Brandon profile observation 2026-05-13 (creative director with outstanding work that does not show on his profile).
 
 ## Cross-references
 
@@ -150,7 +152,7 @@ Wrap engagements. Write `docs/strategy/lead-strategy-2026-08-04.html` for next c
 - 21:00 ritual: pre-slot Mon Chris V1 send + confirm/reslot Fri Chase against PGA time
 - If Nate replies yes by ~12:00 MDT, owe audit by 17:00 MDT
 
-**Brandon accountability reply (2026-05-14):** "Something that has been useful for me is to schedule lunches with friends and associates to reconnect. Naturally people want to know what you've got going on. It's never a selling opportunity but it gets your skill into their network and usually results in some referrals down the road. Got it! Keep going brother." Captured as L4 candidate tactic (Brandon Lunch Reconnect, 1/wk, reconnect-first not sell). NOT added to W1-3 sprint mechanic (preserves 1-channel reply-velocity focus + Sankofa premortem killed 8-lane sprawl). Decision point: Sat 5/16 M4 Triad Lock alongside Brandon-pilot decision. Distinct from descoped "Coffee meetings as default" per L4 block note.
+**Brandon accountability reply (2026-05-14):** "Something that has been useful for me is to schedule lunches with friends and associates to reconnect. Naturally people want to know what you've got going on. It's never a selling opportunity but it gets your skill into their network and usually results in some referrals down the road. Got it! Keep going brother." Captured as L4 candidate tactic (Brandon Lunch Reconnect, 1/wk, reconnect-first not sell). NOT added to W1-3 sprint mechanic (preserves 1-channel reply-velocity focus + Sankofa premortem killed 8-lane sprawl). Decision point: Sat 5/16 L-R4 Triad Lock alongside Brandon-pilot decision. Distinct from descoped "Coffee meetings as default" per L4 block note.
 
 ---
 
@@ -179,7 +181,7 @@ Future audits map to one of these on send-decision. Per-recipient deviation logg
 - `feedback_audit_local_storage_stable_path.md` (mirror to `D:/Ai_Sandbox/agentsHQ-audits/`, NOT D:/tmp)
 - `feedback_audit_pattern_catalog.md` (the 3 variants above + decision rule)
 
-**Boubacar momentum signal (2026-05-14 ~14:11 MDT):** "I've never had this much momentum with the other plans we've had in the past. This feels better. Feels like we're going the right way." Logged as leading indicator that Lighthouse cadence + Sankofa rigor + per-recipient pattern discipline is the right shape. Track through W1 close (Sat 5/17 M4 Triad Lock) for first formal validation.
+**Boubacar momentum signal (2026-05-14 ~14:11 MDT):** "I've never had this much momentum with the other plans we've had in the past. This feels better. Feels like we're going the right way." Logged as leading indicator that Lighthouse cadence + Sankofa rigor + per-recipient pattern discipline is the right shape. Track through W1 close (Sat 5/17 L-R4 Triad Lock) for first formal validation.
 
 **Score Day 2 final:**
 
@@ -199,7 +201,7 @@ W1 gate (>=3 replies + >=1 audit delivered): **1 reply / 1 audit toward 3 / 1**.
 - Watch Nate inbox for reply
 - Watch Chad inbox for V1 reply (if yes: send drafted audit same day)
 - Brandon morning ping 10:05 MDT
-- Brandon Monday reciprocity decision held to Sat 5/16 M4 Triad Lock
+- Brandon Monday reciprocity decision held to Sat 5/16 L-R4 Triad Lock
 
 **Status snapshot: 2/12 weeks of Lighthouse complete. First audit shipped, ahead of SLA. Pattern catalog locked. Momentum positive.**
 
@@ -227,7 +229,7 @@ Both shipped. Council HTML report at `/outputs/council/2026-05-13-17-53-06.html`
 
 **REVISED 2026-05-13 PM (Council Pass 2: user override)** after Boubacar caught that the Strategic Bridge in the audit footnote violates the V1 promise ("Free. No pitch, no calendar link."). Pricing the 50 Signal Session on the audit itself reads as bait-and-switch even when the audit is real value. Reverted Edit 2: template footnote restored to v1 closer ("check back Thursday, not to pitch"). Edit 1 (witness anchor) kept. New playbook section "When to introduce the 50 Signal Session" added with decision tree for post-Thursday-check-in conversation. CTQ check #5 now enforces zero pitch in footnote. Commits: `66d309a` (template) + `e0b50c2` (playbook). Canonical revised state: template v3 + playbook v3. Lock holds against silent agent edits; explicit user override is a valid Council Pass 2 path.
 
-**Idea Vault opened:** LinkedIn Page Analysis Tool (sibling to SW website-teardown, 2-4 hour multi-section profile audit). Pilot candidate: Brandon reciprocity 2026-05-19 IF W1 reply velocity is weak per Saturday M4 Triad Lock. Productize for L4 Weeks 4-6 IF L1-L3 gate clears + pilot validates. Anchor: Brandon's profile observation today (creative director with outstanding work hidden by thin profile).
+**Idea Vault opened:** LinkedIn Page Analysis Tool (sibling to SW website-teardown, 2-4 hour multi-section profile audit). Pilot candidate: Brandon reciprocity 2026-05-19 IF W1 reply velocity is weak per Saturday L-R4 Triad Lock. Productize for L4 Weeks 4-6 IF L1-L3 gate clears + pilot validates. Anchor: Brandon's profile observation today (creative director with outstanding work hidden by thin profile).
 
 **Pending Wednesday afternoon:**
 - If Chad replies yes: deliver audit by 5 PM via canonical CW OAuth path
@@ -271,8 +273,58 @@ Side track from W1 Day 2 evening: Boubacar asked Studio status. RCA exposed 3 co
 
 Lighthouse-relevant note only: Studio is a sub-system feeding Lighthouse later (channels are revenue stub); this fix did NOT change W1 score (W1 = SW + GW + CW reply velocity, not Studio publish count).
 
-**W1 Day 2 close confirmed by Sankofa subagent:** No formal Thursday demo writeup required. W1 close is Saturday 2026-05-16 10:30 MDT (M5 Conversion Scorecard). Day 2 evening close already committed at `fedc16b8`.
+**W1 Day 2 close confirmed by Sankofa subagent:** No formal Thursday demo writeup required. W1 close is Saturday 2026-05-16 10:30 MDT (L-R5 Conversion Scorecard). Day 2 evening close already committed at `fedc16b8`.
 
-### 2026-05-15 (W1 Day 3) - in progress
+### 2026-05-15 (W1 Day 3) - closed
 
-**Next:** W1 Day 3 - 10:00 MDT Chris V1 send (pre-slotted), monitor Nate audit reply window, Chad held (no Gmail draft until explicit go), Brandon reciprocity prep for Mon 2026-05-19, prep Sat 2026-05-16 10:30 MDT M5 Conversion Scorecard template.
+**Sprint operations:**
+- ~10:00 MDT V1 sent to Chase Weed via **personal email** (`bokar83@gmail.com`), NOT text as pre-slotted. Channel deviation from sprint queue. Fired from Lagoon amusement park = first remote-location stress test of sprint mechanic.
+- ~10:05 MDT Brandon morning ping fired (queued from Lagoon, sent on traffic clearance). Brandon replied "Got it! Nice job" within minutes. Accountability mechanic holding.
+- Nate Tanner: no new event Day 3. Day 2 ~13:49 ack ("will reply next week, Dad's 70th") backfilled to signal log Day 3 morning.
+- Chad Burdette: no reply Day 3. Audit still parked on `feat/chad-burdette-audit-2026-05-14` tip `fb97e67`. No Gmail draft.
+- Branch `chore/day3-sprint-log-2026-05-15` commit `59f8a1ac` [READY] shipped Chase SENT + Nate NOTE backfill. Gate auto-merged.
+
+**Channel surprise:** Boubacar emailed Chase from personal address (`bokar83@gmail.com`), not from the cw OAuth path used for Nate's audit. Reasoning surfaced Sat 5/16 morning: warm leads should feel friendship not consulting funnel. Personal email From-line matches LinkedIn mental model + drops the cw-domain sales signal. Audit itself still ships from `boubacar@catalystworks.consulting` (the audit IS the pivot - no body-copy announcement of channel change needed).
+
+**Boubacar reframe (2026-05-16 AM, captured pre-L-R4):** warm leads = referral sources, not direct buyers. Reframes the W1 score gate. Reply velocity matters less than audit quality + relationship preservation. W2-3 success criterion shifts from "paid Signal Session conversion" to "warm leads initiating referral conversations." Sat L-R4 must wrestle with this.
+
+**Next:** Sat 2026-05-16 10:00 MDT L-R4 Triad Lock + 10:30 MDT L-R5 Conversion Scorecard. Decide channel default + bridge timing + referral-thesis implications. See § 2026-05-16 below for full agenda.
+
+### 2026-05-16 (W1 Day 4 - Saturday L-R4 Triad Lock + L-R5 Conversion Scorecard)
+
+**L-R4 agenda (10:00 MDT, 3-lane lock):**
+
+*Pre-existing items:*
+1. Brandon Monday reciprocity decision: lean audit vs LinkedIn Page Analysis Tool (Idea Vault pilot)
+2. Brandon Lunch Reconnect activation/hold: W4+ ritual or L5 mid-cycle review
+3. First validation of momentum signal logged Day 2 (`project_lighthouse_momentum_signal_2026-05-14.md`)
+
+*New items surfaced Day 3 / Sat morning:*
+4. **Channel default for warm leads.** Current evidence: Chad text=silent 3 days, Nate LinkedIn DM=90-min reply + audit ack, Chase email-personal=too early. Sample n=3, but LinkedIn DM is the only converter so far. Boubacar's lean: **LinkedIn DM first → personal email bridge 24-48hr later**. Decide: per-recipient channel matrix OR single default with 24hr bridge OR keep text/DM/email-personal split as-is. Goal = shortest path with least friction for sender + recipient.
+5. **Bridge timing rule.** 24hr (urgency) vs 48hr (warm friend cadence). Lean: 24hr for LinkedIn-active types, 48hr for friends in 6+ month cold-zone. Per-recipient, not blanket.
+6. **Bridge wording.** Tone, not clock, prevents pestering. Draft: *"Hey, sent you a quick note Friday - might have buried it in your inbox/LinkedIn. Same offer if you saw it."* Lock or revise.
+7. **Pre-announce cw pivot in V1 body? NO.** Decision flagged Sat morning. V1 fires from personal email; audit ships from `boubacar@catalystworks.consulting`. The audit IS the pivot. No body-copy announcement of channel change. Confirmed in L-R4.
+8. **Referral-thesis reframe.** Treat warm leads as referral sources first, direct buyers second. Implications:
+   - W1 reply velocity gate less critical than W1 audit quality
+   - W2-3 success = referrals initiated, not Signal Session conversions
+   - Audit must signal "this is the quality I produce" to anyone the recipient passes it to
+   - New tracking: add REFERRAL event type to signal log if a warm lead names someone
+   - Mid-cycle review at L5 should track referral conversation count, not just paid call count
+9. **Shareable-audit redesign.** Downstream of #8. Current audit format is Nate-specific and not forwardable. If referral thesis is real, audit needs to be SHAREABLE: a CEO friend Nate forwards it to should see "this is the kind of work this guy does" without exposing Nate's profile internals. Three options to decide between:
+   - **9a. Two-layer artifact:** Nate-specific page (private) + anonymized "audit sample" page (forwardable). Costs ~30 min extra per delivery.
+   - **9b. Companion deck:** keep current audit, ADD a 1-page "here's what I do" companion that's forwardable. Lower friction.
+   - **9c. Verbal-mention path:** accept referrals come via word-of-mouth not artifact forward; double down on follow-up conversations with each warm lead instead of redesigning audit. Cheapest, slowest.
+   Lean: **9b**. Adds shareability without disturbing the personal gesture. Decide today, lock format before W2 sends start Mon.
+10. **Dual-track sprint vs single-track.** Honest timing math: referrals take 4-12 weeks to land. If W1-W3 = warm-leads-only and they all convert via referral path, no cash hits until W6-W8 = half the sprint gone with zero revenue + zero fallback. Decide between:
+    - **10a. Single-track (current):** warm-referral only through L5 mid-cycle review. Risk: W6 arrives with no cash + no fallback prepared.
+    - **10b. Dual-track:** maintain warm-referral track + add direct-buyer track in parallel (CW cold outbound to SMB founders OR SW audit-to-paid funnel). One feeds referral learning + relationship, other feeds revenue. Adds 1 hour/day load.
+    - **10c. Sequenced:** warm-only W1-W3 (per current plan), trigger dual-track W4 if no paid call by L3 gate. Compromise — same cap on parallel work, but adds optionality.
+    Lean: **10c** if L3 looks weak by Day 12 (2026-05-24). Premature 10b in W1-W2 = scope creep. But waiting until L5 (6/23) to add direct-buyer = too late to recover sprint.
+
+**L-R5 agenda (10:30 MDT, Conversion Scorecard):**
+- W1 numbers: 3 V1 sent (Chad text, Nate LinkedIn, Chase email-personal), 1 audit delivered (Nate), 1 ack-defer (Nate), 0 confirmed yes-replies on rewrite quality, 0 paid calls
+- Gate check: W1 expected ≥3 replies + ≥1 audit. Audit YES (Nate). Replies UNDER (Nate ack = 1, Chad silent, Chase too-early). 
+- Score Day 4: depends on whether Chase replies Sat AM
+- If gate misses: trigger L1→L2 reset decision per playbook
+
+**Next:** L-R4 lock 3 lanes + capture decisions in `data/lighthouse-warm-list.md` (channel matrix) + `data/lighthouse-audit-playbook.md` (bridge mechanic). L-R5 score table closes W1. Open Monday 5/18 with Chris V1 + Brandon V5 lean-audit decision executed.

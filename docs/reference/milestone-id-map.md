@@ -10,6 +10,7 @@ Use this when referencing milestones in any context (Telegram, chat, code, docs)
 | C | Compass (governance) | C0, C2.5b |
 | S | Studio (content agency) | S1, S3.4 |
 | H | Harvest (revenue pipeline) | H1, H7, H-news |
+| L | Lighthouse (12-wk revenue sprint) | L0-L7 lifecycle, L-R1-L-R8 routines |
 
 ## Full current map
 
@@ -48,3 +49,25 @@ H2=SaaS Audit offer, H3=First CW Signal Session, H4=AI dept SKU,
 H5=Client portal, H6=Repeatable lead source, H7=transcript-style-dna test,
 H-auto=CW AI automation delivery, H-news=The Weekly Signal newsletter,
 H-sever=Notion CRM sever, H-brand=Brand guide audit + rebuild
+
+### Lighthouse (L)
+
+**Lifecycle (L0-L7) — weekly milestones:**
+L0=Day 0 (2026-05-12 setup), L1=W1 Reply Velocity (5/13-5/17),
+L2=W2 Open the Funnel (5/19-5/24), L3=W3 First Conversion (5/26-5/31),
+L4=W4-6 Expand (6/2-6/21), L5=W7 Mid-Cycle Council (6/23-6/28),
+L6=W8-11 Scale (6/30-7/26), L7=W12 Close (7/28-8/2)
+
+**Routines (L-R1 through L-R8) — recurring mechanisms:**
+L-R1=Daily Fast-Feedback Sprint (M-F 10:00 MDT),
+L-R2=First Win Ceremony (once, auto on first reply),
+L-R3=Guilt-Free Reset Trigger (daily 10:30 if L-R1 missed),
+L-R4=Weekly Priority Triad Lock (Sat 10:00 MDT, 3 lanes max),
+L-R5=Conversion Scorecard (Sat 10:30 MDT),
+L-R6=Auto-Close Script (T+24h value, T+72h ask),
+L-R7=Idea Vault Lock (anytime),
+L-R8=List Hygiene Gate + Reply Classifier Fix (before any cold send)
+
+**Rename history (2026-05-16):** Routine milestones previously used bare `M<n>` (M1-M8). Renamed to `L-R<n>` for codename-prefix consistency with other roadmaps. Pre-2026-05-16 handoffs + frozen artifacts under `docs/handoff/2026-05-1[2-4]-*.md` + `docs/strategy/lead-strategy-2026-05-12.html` retain old M-names (historical snapshots). Translation: `M1↔L-R1, M2↔L-R2, M3↔L-R3, M4↔L-R4, M5↔L-R5, M6↔L-R6, M7↔L-R7, M8↔L-R8`.
+
+**Sub-prefix convention (locked 2026-05-16):** `<codename>-R<n>` denotes ROUTINE milestones (vs lifecycle). Future codenames follow: Ghost = G-R<n> / G<n>, etc. Reasoning: at-a-glance routing without colliding with lifecycle milestones in same codename.
