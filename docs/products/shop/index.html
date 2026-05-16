@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Catalog - Human at Work</title>
+<meta name="description" content="Operator-tested digital products from Boubacar - AI starter kits, prompt packs, audit playbooks, and more.">
+<style>
+  :root {
+    --ink: #0d0d0d;
+    --paper: #fafaf7;
+    --accent: #c2410c;
+    --accent-soft: #fed7aa;
+    --accent-bright: #ea580c;
+    --rule: #d4d4d0;
+    --muted: #5f5f5a;
+    --sand: #ecebe5;
+    --green: #15803d;
+    --amber: #b45309;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--paper); color: var(--ink); font-family: "Charter", "Iowan Old Style", "Georgia", serif; font-size: 18px; line-height: 1.6; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 24px; }
+  h1, h2, h3, h4, .sans { font-family: "Inter", "Helvetica Neue", "Arial", sans-serif; }
+  h1 { font-size: 56px; line-height: 1.05; letter-spacing: -0.025em; font-weight: 800; }
+  h2 { font-size: 32px; line-height: 1.15; letter-spacing: -0.015em; font-weight: 700; margin: 56px 0 16px; }
+  h3 { font-size: 20px; font-weight: 700; margin: 0 0 8px; }
+  p { margin-bottom: 12px; }
+  a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+  a:hover { color: var(--accent-bright); }
+
+  /* HERO */
+  .hero { padding: 80px 0 40px; background: linear-gradient(135deg, var(--paper) 0%, var(--sand) 100%); }
+  .hero .eyebrow { font-family: "Inter", sans-serif; font-size: 13px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 20px; }
+  .hero .sub { font-size: 20px; color: var(--muted); font-family: "Inter", sans-serif; font-weight: 400; line-height: 1.4; max-width: 640px; margin-top: 24px; }
+  .hero .voice { background: var(--sand); padding: 24px; border-left: 4px solid var(--ink); margin-top: 32px; font-family: "Inter", sans-serif; }
+  .hero .voice p { margin: 0; font-size: 17px; line-height: 1.5; }
+
+  /* SECTION HEADER */
+  .section-head { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 3px; font-family: "Inter", sans-serif; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 700; }
+  .badge.live { background: var(--green); color: white; }
+  .badge.soon { background: var(--amber); color: white; }
+  .badge.queued { background: var(--muted); color: white; }
+
+  /* PRODUCT GRID */
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px; }
+  .card { background: white; border: 2px solid var(--rule); border-radius: 6px; padding: 28px; transition: border-color 150ms ease; }
+  .card.live { border-color: var(--accent-soft); }
+  .card.live:hover { border-color: var(--accent); }
+  .card.soon { background: var(--sand); border-color: var(--rule); }
+  .card .card-head { display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; }
+  .card .card-price { font-family: "Inter", sans-serif; font-size: 24px; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; }
+  .card .card-price-was { font-size: 14px; color: var(--muted); text-decoration: line-through; margin-left: 6px; }
+  .card .card-desc { font-family: "Inter", sans-serif; font-size: 15px; color: var(--muted); margin-bottom: 16px; }
+  .card .card-meta { font-family: "Inter", sans-serif; font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+  .card .card-meta strong { color: var(--ink); }
+  .card .card-cta { display: inline-block; padding: 10px 20px; background: var(--accent); color: white; font-family: "Inter", sans-serif; font-weight: 600; font-size: 14px; border-radius: 3px; text-decoration: none; }
+  .card .card-cta:hover { background: var(--accent-bright); color: white; }
+  .card .card-cta.muted { background: var(--rule); color: var(--muted); cursor: not-allowed; pointer-events: none; }
+
+  /* NEWSLETTER */
+  .newsletter { background: var(--ink); color: var(--paper); padding: 56px 0; text-align: center; margin-top: 64px; }
+  .newsletter h2 { color: var(--paper); margin: 0 0 12px; }
+  .newsletter p { color: rgba(250,250,247,0.8); max-width: 540px; margin: 0 auto 24px; }
+  .newsletter input { padding: 14px 16px; font-size: 16px; width: 320px; border: none; border-radius: 4px; font-family: "Inter", sans-serif; margin-right: 8px; }
+  .newsletter button { padding: 14px 28px; background: var(--accent); color: white; border: none; border-radius: 4px; font-family: "Inter", sans-serif; font-weight: 700; font-size: 16px; cursor: pointer; }
+  .newsletter button:hover { background: var(--accent-bright); }
+
+  /* FOOTER */
+  footer { background: var(--ink); color: rgba(250,250,247,0.6); padding: 32px 0; font-family: "Inter", sans-serif; font-size: 14px; text-align: center; border-top: 1px solid rgba(255,255,255,0.08); }
+  footer a { color: var(--accent-soft); }
+
+  @media (max-width: 720px) {
+    h1 { font-size: 38px; }
+    h2 { font-size: 26px; }
+    .grid { grid-template-columns: 1fr; }
+    .newsletter input { width: 100%; margin: 0 0 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Human at Work - The Catalog</div>
+    <h1>Operator-tested. Not theory.</h1>
+    <p class="sub">Every product in this catalog is built from a workflow I run inside one of my three companies. If it does not work for me, it does not ship here.</p>
+
+    <div class="voice">
+      <p><strong>Why this catalog exists.</strong> I spent two years building agentsHQ in the open. 75 skills, 4 brands, a working multi-agent system. Friends kept asking for the pieces. I kept saying "let me write that up." This is me actually writing it up. The catalog is small. It will grow fast. Each item costs less than what I would charge you to do it for you.</p>
+    </div>
+  </div>
+</section>
+
+<!-- LIVE NOW -->
+<section class="wrap">
+  <div class="section-head">
+    <h2>Live now</h2>
+    <span class="badge live">Ships today</span>
+  </div>
+
+  <div class="grid">
+    <div class="card live">
+      <div class="card-head">
+        <h3>Start AI Within 24 Hours</h3>
+        <div class="card-price">$19<span class="card-price-was">$29</span></div>
+      </div>
+      <p class="card-desc">The flagship. From zero account to 5 working daily workflows in 24 hours. Built for overwhelmed mid-career pros.</p>
+      <p class="card-meta">Format: <strong>30+ page HTML + PDF backup</strong> &middot; Refund: <strong>14 days</strong> &middot; Early bird through May 23</p>
+      <a class="card-cta" href="https://humanatwork.ai/start-ai">View page</a>
+    </div>
+
+    <div class="card live">
+      <div class="card-head">
+        <h3>+ The Paste Pack (T2)</h3>
+        <div class="card-price">$79</div>
+      </div>
+      <p class="card-desc">T1 + 28 paste-ready prompts + Claude Project + Custom Instructions + MCP bootstrap + daily ritual + troubleshooting.</p>
+      <p class="card-meta">Format: <strong>HTML + PDF + 30+ paste-ready files</strong> &middot; Safety: <strong>scanned + paste-only</strong></p>
+      <a class="card-cta" href="https://humanatwork.ai/start-ai/t2">View page</a>
+    </div>
+
+    <div class="card live">
+      <div class="card-head">
+        <h3>Hand-In-Hand Setup (T3)</h3>
+        <div class="card-price">$697</div>
+      </div>
+      <p class="card-desc">60-min screen-share with me. Live setup on your machine. Personalized 1-page snapshot post-call. 30-day milestone tracker.</p>
+      <p class="card-meta">Format: <strong>1:1 call + post-call PDF</strong> &middot; Booking: <strong>Calendly</strong></p>
+      <a class="card-cta" href="https://humanatwork.ai/start-ai/hand-in-hand">Book a call</a>
+    </div>
+
+    <div class="card live">
+      <div class="card-head">
+        <h3>Done-For-You Setup (T4)</h3>
+        <div class="card-price">$3,997</div>
+      </div>
+      <p class="card-desc">I configure your stack. You get the keys. 7-day delivery from intake. 30-day Slack support window.</p>
+      <p class="card-meta">Format: <strong>Boubacar does the work</strong> &middot; Scope-locked SOW &middot; SLA</p>
+      <a class="card-cta" href="https://humanatwork.ai/start-ai/done-for-you">Request DFY</a>
+    </div>
+  </div>
+</section>
+
+<!-- COMING THIS WEEK -->
+<section class="wrap">
+  <div class="section-head">
+    <h2>Coming this week</h2>
+    <span class="badge soon">In draft</span>
+  </div>
+
+  <div class="grid">
+    <div class="card soon">
+      <div class="card-head">
+        <h3>Reply-First Cold Email Pack</h3>
+        <div class="card-price">$49</div>
+      </div>
+      <p class="card-desc">10 sectors. 3 tiers per sector. Battle-tested in Catalyst Works outreach. The exact templates I send.</p>
+      <p class="card-meta">Drops: <strong>This week</strong></p>
+      <span class="card-cta muted">Notify me</span>
+    </div>
+
+    <div class="card soon">
+      <div class="card-head">
+        <h3>Audit Any Prospect's Website in 30min</h3>
+        <div class="card-price">$35</div>
+      </div>
+      <p class="card-desc">The 6-phase teardown I use to qualify Signal Works leads. Phase-0 disqualifier built in.</p>
+      <p class="card-meta">Drops: <strong>This week</strong></p>
+      <span class="card-cta muted">Notify me</span>
+    </div>
+
+    <div class="card soon">
+      <div class="card-head">
+        <h3>Single-Article SEO Optimizer</h3>
+        <div class="card-price">$25</div>
+      </div>
+      <p class="card-desc">1-page checklist for any article. The on-page rubric I run before shipping. No fluff.</p>
+      <p class="card-meta">Drops: <strong>This week</strong></p>
+      <span class="card-cta muted">Notify me</span>
+    </div>
+
+    <div class="card soon">
+      <div class="card-head">
+        <h3>Premium Frontend Without the AI Aesthetic</h3>
+        <div class="card-price">$49</div>
+      </div>
+      <p class="card-desc">Banned-skeleton list + 50 real style references + 161 palettes. Stop shipping vibe-code that screams AI.</p>
+      <p class="card-meta">Drops: <strong>This week</strong></p>
+      <span class="card-cta muted">Notify me</span>
+    </div>
+
+    <div class="card soon">
+      <div class="card-head">
+        <h3>Lead Magnet Snipe Workbook</h3>
+        <div class="card-price">$39</div>
+      </div>
+      <p class="card-desc">Offer + hook + magnet selection in one sitting. Hormozi-adapted for solo founders, voice-tuned for operators.</p>
+      <p class="card-meta">Drops: <strong>This week</strong></p>
+      <span class="card-cta muted">Notify me</span>
+    </div>
+
+    <div class="card soon">
+      <div class="card-head">
+        <h3>Pre-Publish Quality Gate</h3>
+        <div class="card-price">$25</div>
+      </div>
+      <p class="card-desc">Banned-words list + 5-dimension score rubric + 4/day cap rule. The pre-publish gate I run on every LinkedIn post.</p>
+      <p class="card-meta">Drops: <strong>This week</strong></p>
+      <span class="card-cta muted">Notify me</span>
+    </div>
+  </div>
+</section>
+
+<!-- COMING THIS MONTH -->
+<section class="wrap">
+  <div class="section-head">
+    <h2>Coming this month</h2>
+    <span class="badge queued">Queued</span>
+  </div>
+
+  <div class="grid">
+    <div class="card soon">
+      <div class="card-head">
+        <h3>Convert-Or-Refund Rubric</h3>
+        <div class="card-price">$29</div>
+      </div>
+      <p class="card-desc">Score any landing page in 30 minutes. 5-voice scoring (Hormozi + Brunson + Miller + DelDuca + operator).</p>
+      <p class="card-meta">Drops: <strong>Late May</strong></p>
+      <span class="card-cta muted">Notify me</span>
+    </div>
+
+    <div class="card soon">
+      <div class="card-head">
+        <h3>Reminisce + Replan (Gen X Reset)</h3>
+        <div class="card-price">$47</div>
+      </div>
+      <p class="card-desc">7-day workbook for Gen X. Childhood memory + trait audit + 90-day forward move. Audio companion included.</p>
+      <p class="card-meta">Drops: <strong>Early June</strong></p>
+      <span class="card-cta muted">Notify me</span>
+    </div>
+
+    <div class="card soon">
+      <div class="card-head">
+        <h3>L'IA en 24 Heures (FR)</h3>
+        <div class="card-price">$29</div>
+      </div>
+      <p class="card-desc">Start AI Within 24 Hours, French edition. For francophone newcomers in EU + Quebec + Francophone Africa.</p>
+      <p class="card-meta">Drops: <strong>Early June</strong></p>
+      <span class="card-cta muted">Notify me</span>
+    </div>
+
+    <div class="card soon">
+      <div class="card-head">
+        <h3>AI Tools for African SMB Operators</h3>
+        <div class="card-price">$39</div>
+      </div>
+      <p class="card-desc">Claude + n8n + WhatsApp Business stack for under $50/mo. Built for African small business owners specifically.</p>
+      <p class="card-meta">Drops: <strong>Mid June</strong></p>
+      <span class="card-cta muted">Notify me</span>
+    </div>
+
+    <div class="card soon">
+      <div class="card-head">
+        <h3>How We Built agentsHQ (Operator Playbook)</h3>
+        <div class="card-price">$197</div>
+      </div>
+      <p class="card-desc">The 75-skill multi-agent system, decomposed. Governance + audit registry + decision logs. For builders.</p>
+      <p class="card-meta">Drops: <strong>June</strong></p>
+      <span class="card-cta muted">Notify me</span>
+    </div>
+
+    <div class="card soon">
+      <div class="card-head">
+        <h3>1 Idea Into 7 Posts: The Multiplier</h3>
+        <div class="card-price">$39</div>
+      </div>
+      <p class="card-desc">Turn 1 idea into LinkedIn + X thread + 3 Reels + newsletter + Substack post. Loading pattern included.</p>
+      <p class="card-meta">Drops: <strong>Late June</strong></p>
+      <span class="card-cta muted">Notify me</span>
+    </div>
+  </div>
+</section>
+
+<!-- NEWSLETTER -->
+<section class="newsletter">
+  <div class="wrap">
+    <h2>One email a week.</h2>
+    <p>One specific AI workflow I shipped. The actual prompt. The actual result. Operator-to-operator. No fluff. Unsubscribe any time.</p>
+    <form action="https://humanatwork.ai/subscribe" method="post">
+      <input type="email" name="email" placeholder="you@example.com" required>
+      <button type="submit">Subscribe (free)</button>
+    </form>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <p>Human at Work &middot; Built by <a href="https://humanatwork.ai">Boubacar</a> &middot; 2026</p>
+    <p style="margin-top: 8px;">Refund within 14 days: <a href="mailto:support@humanatwork.ai">support@humanatwork.ai</a></p>
+    <p style="margin-top: 16px; font-size: 13px;">
+      <a href="https://humanatwork.ai/about">About</a> &middot;
+      <a href="https://humanatwork.ai/privacy">Privacy</a> &middot;
+      <a href="https://humanatwork.ai/terms">Terms</a> &middot;
+      <a href="https://humanatwork.ai/refund">Refund policy</a>
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
