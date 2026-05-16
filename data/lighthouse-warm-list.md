@@ -14,7 +14,7 @@
 |---|------|-----|----------|---------------------|--------|
 | 1 | Chad Burdette | close friend | V1 | Wed 5/13 | sent 2026-05-13 ~09:50 (V1, text) · thursday check-in 2026-05-14 done (LinkedIn + text bridge) |
 | 2 | Nate Tanner | close friend | V1 | Thu 5/14 | sent 2026-05-14 10:00 (V1, LinkedIn) · replied 2026-05-14 11:30 yes · audit delivered 2026-05-14 13:39 (3:21 early on 5 PM SLA) (msg 19e27fad4a12c892) |
-| 3 | Chase Weed | close friend | V1 | Fri 5/15 | sent 2026-05-15 ~10:00 (V1, text) - fired from Lagoon as remote-location stress test |
+| 3 | Chase Weed | close friend | V1 | Fri 5/15 | sent 2026-05-15 ~10:00 (V1, email-personal bokar83@gmail.com) - fired from Lagoon as remote-location stress test |
 | 4 | Chris Whitaker | sister | V1 | Mon 5/19 | open |
 | 5 | Dan Jimenez | close friend + business owner | V1 or V2 | — | open |
 

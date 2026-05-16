@@ -273,6 +273,46 @@ Lighthouse-relevant note only: Studio is a sub-system feeding Lighthouse later (
 
 **W1 Day 2 close confirmed by Sankofa subagent:** No formal Thursday demo writeup required. W1 close is Saturday 2026-05-16 10:30 MDT (M5 Conversion Scorecard). Day 2 evening close already committed at `fedc16b8`.
 
-### 2026-05-15 (W1 Day 3) - in progress
+### 2026-05-15 (W1 Day 3) - closed
 
-**Next:** W1 Day 3 - 10:00 MDT Chris V1 send (pre-slotted), monitor Nate audit reply window, Chad held (no Gmail draft until explicit go), Brandon reciprocity prep for Mon 2026-05-19, prep Sat 2026-05-16 10:30 MDT M5 Conversion Scorecard template.
+**Sprint operations:**
+- ~10:00 MDT V1 sent to Chase Weed via **personal email** (`bokar83@gmail.com`), NOT text as pre-slotted. Channel deviation from sprint queue. Fired from Lagoon amusement park = first remote-location stress test of sprint mechanic.
+- ~10:05 MDT Brandon morning ping fired (queued from Lagoon, sent on traffic clearance). Brandon replied "Got it! Nice job" within minutes. Accountability mechanic holding.
+- Nate Tanner: no new event Day 3. Day 2 ~13:49 ack ("will reply next week, Dad's 70th") backfilled to signal log Day 3 morning.
+- Chad Burdette: no reply Day 3. Audit still parked on `feat/chad-burdette-audit-2026-05-14` tip `fb97e67`. No Gmail draft.
+- Branch `chore/day3-sprint-log-2026-05-15` commit `59f8a1ac` [READY] shipped Chase SENT + Nate NOTE backfill. Gate auto-merged.
+
+**Channel surprise:** Boubacar emailed Chase from personal address (`bokar83@gmail.com`), not from the cw OAuth path used for Nate's audit. Reasoning surfaced Sat 5/16 morning: warm leads should feel friendship not consulting funnel. Personal email From-line matches LinkedIn mental model + drops the cw-domain sales signal. Audit itself still ships from `boubacar@catalystworks.consulting` (the audit IS the pivot - no body-copy announcement of channel change needed).
+
+**Boubacar reframe (2026-05-16 AM, captured pre-M4):** warm leads = referral sources, not direct buyers. Reframes the W1 score gate. Reply velocity matters less than audit quality + relationship preservation. W2-3 success criterion shifts from "paid Signal Session conversion" to "warm leads initiating referral conversations." Sat M4 must wrestle with this.
+
+**Next:** Sat 2026-05-16 10:00 MDT M4 Triad Lock + 10:30 MDT M5 Conversion Scorecard. Decide channel default + bridge timing + referral-thesis implications. See § 2026-05-16 below for full agenda.
+
+### 2026-05-16 (W1 Day 4 - Saturday M4 Triad Lock + M5 Conversion Scorecard)
+
+**M4 agenda (10:00 MDT, 3-lane lock):**
+
+*Pre-existing items:*
+1. Brandon Monday reciprocity decision: lean audit vs LinkedIn Page Analysis Tool (Idea Vault pilot)
+2. Brandon Lunch Reconnect activation/hold: W4+ ritual or L5 mid-cycle review
+3. First validation of momentum signal logged Day 2 (`project_lighthouse_momentum_signal_2026-05-14.md`)
+
+*New items surfaced Day 3 / Sat morning:*
+4. **Channel default for warm leads.** Current evidence: Chad text=silent 3 days, Nate LinkedIn DM=90-min reply + audit ack, Chase email-personal=too early. Sample n=3, but LinkedIn DM is the only converter so far. Boubacar's lean: **LinkedIn DM first → personal email bridge 24-48hr later**. Decide: per-recipient channel matrix OR single default with 24hr bridge OR keep text/DM/email-personal split as-is. Goal = shortest path with least friction for sender + recipient.
+5. **Bridge timing rule.** 24hr (urgency) vs 48hr (warm friend cadence). Lean: 24hr for LinkedIn-active types, 48hr for friends in 6+ month cold-zone. Per-recipient, not blanket.
+6. **Bridge wording.** Tone, not clock, prevents pestering. Draft: *"Hey, sent you a quick note Friday - might have buried it in your inbox/LinkedIn. Same offer if you saw it."* Lock or revise.
+7. **Pre-announce cw pivot in V1 body? NO.** Decision flagged Sat morning. V1 fires from personal email; audit ships from `boubacar@catalystworks.consulting`. The audit IS the pivot. No body-copy announcement of channel change. Confirmed in M4.
+8. **Referral-thesis reframe.** Treat warm leads as referral sources first, direct buyers second. Implications:
+   - W1 reply velocity gate less critical than W1 audit quality
+   - W2-3 success = referrals initiated, not Signal Session conversions
+   - Audit must signal "this is the quality I produce" to anyone the recipient passes it to
+   - New tracking: add REFERRAL event type to signal log if a warm lead names someone
+   - Mid-cycle review at L5 should track referral conversation count, not just paid call count
+
+**M5 agenda (10:30 MDT, Conversion Scorecard):**
+- W1 numbers: 3 V1 sent (Chad text, Nate LinkedIn, Chase email-personal), 1 audit delivered (Nate), 1 ack-defer (Nate), 0 confirmed yes-replies on rewrite quality, 0 paid calls
+- Gate check: W1 expected ≥3 replies + ≥1 audit. Audit YES (Nate). Replies UNDER (Nate ack = 1, Chad silent, Chase too-early). 
+- Score Day 4: depends on whether Chase replies Sat AM
+- If gate misses: trigger L1→L2 reset decision per playbook
+
+**Next:** M4 lock 3 lanes + capture decisions in `data/lighthouse-warm-list.md` (channel matrix) + `data/lighthouse-audit-playbook.md` (bridge mechanic). M5 score table closes W1. Open Monday 5/18 with Chris V1 + Brandon V5 lean-audit decision executed.
