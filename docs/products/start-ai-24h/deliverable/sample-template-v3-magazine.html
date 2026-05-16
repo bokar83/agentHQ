@@ -18,37 +18,33 @@
   }
   @page {
     size: Letter;
-    margin: 0.9in 0.95in 1.05in 0.95in;
-    orphans: 3;
-    widows: 3;
+    margin: 0.7in 0.85in 0.85in 0.85in;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; orphans: 3; widows: 3; }
   html, body {
     background: var(--paper);
     color: var(--ink);
     font-family: "Fraunces", "Source Serif Pro", Georgia, serif;
-    font-size: 11pt;
-    line-height: 1.62;
-    orphans: 3;
-    widows: 3;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    orphans: 3; widows: 3;
   }
   p, li { orphans: 3; widows: 3; }
-  h1, h2, h3, h4, h5 { page-break-after: avoid; break-after: avoid; }
+  h1, h2, h3, h4 { page-break-after: avoid; break-after: avoid; }
 
-  /* COVER */
+  /* COVER — single full page */
   .cover {
     page-break-after: always;
     break-after: page;
-    background: var(--paper);
     border-top: 3px solid var(--ink);
-    padding-top: 0.4in;
+    padding-top: 0.3in;
   }
   .cover .header {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    margin-bottom: 0.5in;
-    padding-bottom: 0.18in;
+    margin-bottom: 0.4in;
+    padding-bottom: 0.15in;
     border-bottom: 1px solid var(--hair);
   }
   .cover .wordmark {
@@ -62,55 +58,48 @@
   .cover .wordmark .dot { color: var(--brick); }
   .cover .issue {
     font-family: "JetBrains Mono", monospace;
-    font-size: 8.5pt;
+    font-size: 8pt;
     letter-spacing: 0.28em;
     color: var(--muted);
     text-transform: uppercase;
   }
-
-  .cover .kicker-block { margin-top: 0.3in; max-width: 5.8in; }
+  .cover .kicker-block { margin-top: 0.5in; max-width: 5.8in; }
   .cover .kicker {
     font-family: "JetBrains Mono", monospace;
     font-size: 9pt;
     letter-spacing: 0.3em;
     color: var(--brick);
     text-transform: uppercase;
-    margin-bottom: 0.32in;
+    margin-bottom: 0.3in;
   }
   .cover h1 {
     font-family: "Fraunces", serif;
     font-weight: 300;
-    font-size: 68pt;
-    line-height: 0.92;
+    font-size: 54pt;
+    line-height: 0.96;
     letter-spacing: -0.035em;
     color: var(--ink);
-    margin-bottom: 0.28in;
-    page-break-after: avoid;
+    margin-bottom: 0.2in;
   }
-  .cover h1 em {
-    font-style: italic;
-    font-weight: 500;
-    color: var(--brick);
-  }
+  .cover h1 em { font-style: italic; font-weight: 500; color: var(--brick); }
   .cover .deck {
     font-family: "Fraunces", serif;
     font-weight: 400;
     font-style: italic;
-    font-size: 16pt;
+    font-size: 15pt;
     line-height: 1.4;
     color: var(--ink-2);
     max-width: 5in;
-    margin-top: 0.18in;
+    margin-top: 0.15in;
   }
-
   .cover .dossier {
-    margin-top: 0.6in;
+    margin-top: 0.5in;
     border-top: 1px solid var(--ink);
-    padding-top: 0.22in;
+    padding-top: 0.2in;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 0.25in;
-    page-break-inside: avoid;
+    page-break-inside: avoid; break-inside: avoid;
   }
   .cover .dossier .col .l {
     font-family: "JetBrains Mono", monospace;
@@ -128,10 +117,9 @@
     letter-spacing: -0.01em;
   }
   .cover .dossier .col .v em { color: var(--brick); font-style: italic; }
-
   .cover .footer-strip {
-    margin-top: 0.5in;
-    padding-top: 0.18in;
+    margin-top: 0.4in;
+    padding-top: 0.15in;
     border-top: 1px solid var(--hair);
     display: flex;
     justify-content: space-between;
@@ -141,12 +129,11 @@
     letter-spacing: 0.22em;
     color: var(--muted);
     text-transform: uppercase;
-    page-break-inside: avoid;
   }
 
-  /* PAGES */
-  .pg { page-break-after: always; break-after: page; }
-  .pg:last-child { page-break-after: auto; break-after: auto; }
+  /* PAGES flow naturally; force-break only where Boubacar wants section start fresh */
+  .pg { break-after: auto; }
+  .force-break { page-break-before: always; break-before: page; }
 
   .pg .kicker {
     font-family: "JetBrains Mono", monospace;
@@ -154,51 +141,51 @@
     letter-spacing: 0.3em;
     color: var(--brick);
     text-transform: uppercase;
-    margin-bottom: 0.18in;
+    margin-bottom: 0.12in;
   }
   .pg h1 {
     font-family: "Fraunces", serif;
     font-weight: 400;
-    font-size: 42pt;
-    line-height: 1;
-    letter-spacing: -0.025em;
+    font-size: 26pt;
+    line-height: 1.05;
+    letter-spacing: -0.022em;
     color: var(--ink);
-    margin-bottom: 0.25in;
+    margin-bottom: 0.15in;
     max-width: 6in;
   }
   .pg h1 em { font-style: italic; font-weight: 500; color: var(--brick); }
   .pg p.deck {
     font-family: "Fraunces", serif;
-    font-size: 14.5pt;
+    font-size: 11.5pt;
     font-style: italic;
     color: var(--ink-2);
     line-height: 1.4;
-    margin-bottom: 0.35in;
+    margin-bottom: 0.18in;
     max-width: 5.5in;
   }
   .pg p {
-    font-size: 11pt;
-    line-height: 1.65;
+    font-size: 10.5pt;
+    line-height: 1.55;
     color: var(--ink);
-    margin-bottom: 0.13in;
+    margin-bottom: 0.1in;
   }
   .pg h2 {
     font-family: "Fraunces", serif;
     font-weight: 500;
-    font-size: 22pt;
+    font-size: 16pt;
     color: var(--ink);
-    margin-top: 0.35in;
-    margin-bottom: 0.12in;
+    margin-top: 0.22in;
+    margin-bottom: 0.08in;
     letter-spacing: -0.015em;
   }
   .pg h2 em { font-style: italic; color: var(--brick); }
   .pg h3 {
     font-family: "Fraunces", serif;
     font-weight: 600;
-    font-size: 14pt;
+    font-size: 13pt;
     color: var(--ink);
-    margin-top: 0.22in;
-    margin-bottom: 0.06in;
+    margin-top: 0.1in;
+    margin-bottom: 0.04in;
   }
 
   /* DROP CAP */
@@ -206,171 +193,168 @@
     font-family: "Fraunces", serif;
     font-weight: 500;
     font-style: italic;
-    font-size: 58pt;
+    font-size: 38pt;
     line-height: 0.88;
     color: var(--brick);
     float: left;
-    padding: 4pt 6pt 0 0;
-    margin-right: 4pt;
+    padding: 3pt 5pt 0 0;
+    margin-right: 3pt;
   }
-  .pg .opener { orphans: 3; widows: 3; }
 
-  /* TWO COLUMN */
-  .twocol {
-    column-count: 2;
-    column-gap: 0.4in;
-    column-rule: 1px solid var(--hair);
-    margin-top: 0.18in;
-  }
-  .twocol h3:first-child { margin-top: 0; }
-  .twocol p { font-size: 10.5pt; line-height: 1.6; }
-
-  /* SCHEDULE — magazine-style sidebar */
+  /* SCHEDULE */
   .sched {
     background: var(--bone);
-    padding: 0.3in 0.32in;
+    padding: 0.18in 0.22in;
     border-radius: 2px;
-    margin: 0.25in 0;
-    page-break-inside: avoid;
+    margin: 0.18in 0;
   }
   .sched .h {
     font-family: "JetBrains Mono", monospace;
-    font-size: 8.5pt;
+    font-size: 8pt;
     letter-spacing: 0.25em;
     color: var(--brick);
     text-transform: uppercase;
-    margin-bottom: 0.18in;
+    margin-bottom: 0.1in;
     border-bottom: 1px solid var(--ink);
-    padding-bottom: 0.08in;
+    padding-bottom: 0.05in;
+    page-break-after: avoid; break-after: avoid;
   }
   .sched .row {
     display: flex;
-    padding: 0.1in 0;
+    padding: 0.06in 0;
     border-bottom: 1px dotted var(--hair);
     align-items: baseline;
+    page-break-inside: avoid; break-inside: avoid;
   }
   .sched .row:last-child { border-bottom: 0; }
   .sched .time {
-    width: 1.5in;
+    width: 1.4in;
     font-family: "JetBrains Mono", monospace;
-    font-size: 9.5pt;
+    font-size: 9pt;
     color: var(--brick);
-    letter-spacing: 0.06em;
+    letter-spacing: 0.04em;
     font-weight: 500;
   }
   .sched .name {
-    width: 1.8in;
+    width: 1.5in;
     font-family: "Fraunces", serif;
     font-weight: 600;
-    font-size: 12pt;
+    font-size: 11pt;
     font-style: italic;
     color: var(--ink);
   }
-  .sched .what { flex: 1; font-size: 10pt; color: var(--ink-2); line-height: 1.45; }
+  .sched .what { flex: 1; font-size: 9.5pt; color: var(--ink-2); line-height: 1.4; }
 
-  /* PULL QUOTE — magazine signature */
+  /* PULL QUOTE */
   .pull-mag {
-    margin: 0.35in 0;
-    padding: 0.35in 0;
-    border-top: 4px double var(--ink);
-    border-bottom: 4px double var(--ink);
+    margin: 0.22in 0;
+    padding: 0.2in 0;
+    border-top: 3px double var(--ink);
+    border-bottom: 3px double var(--ink);
     text-align: center;
-    page-break-inside: avoid;
+    page-break-inside: avoid; break-inside: avoid;
   }
   .pull-mag p {
     font-family: "Fraunces", serif;
     font-weight: 400;
     font-style: italic;
-    font-size: 26pt;
-    line-height: 1.2;
+    font-size: 16pt;
+    line-height: 1.25;
     color: var(--ink);
     letter-spacing: -0.015em;
     max-width: 5.5in;
-    margin: 0 auto 0.15in auto;
+    margin: 0 auto 0.08in auto;
   }
   .pull-mag cite {
     font-family: "JetBrains Mono", monospace;
-    font-size: 8.5pt;
+    font-size: 8pt;
     letter-spacing: 0.3em;
     color: var(--brick);
     font-style: normal;
     text-transform: uppercase;
   }
 
-  /* WORKFLOW STEP — numbered */
+  /* WORKFLOW STEP */
   .step {
     display: flex;
-    gap: 0.3in;
-    margin-bottom: 0.25in;
-    page-break-inside: avoid;
-    break-inside: avoid;
+    gap: 0.2in;
+    margin-bottom: 0.15in;
+    page-break-inside: avoid; break-inside: avoid;
+    align-items: flex-start;
   }
-  .step + .step { page-break-before: auto; }
   .step .num {
-    flex: 0 0 0.8in;
+    flex: 0 0 0.6in;
     font-family: "Fraunces", serif;
     font-weight: 300;
-    font-size: 64pt;
-    line-height: 0.8;
+    font-size: 38pt;
+    line-height: 0.85;
     color: var(--brick);
     letter-spacing: -0.04em;
     font-style: italic;
+    text-align: right;
   }
   .step .body { flex: 1; }
-  .step .body h3 { margin-top: 0.08in; font-size: 18pt; font-weight: 500; }
+  .step .body h3 {
+    margin-top: 0.02in;
+    margin-bottom: 0.04in;
+    font-size: 13pt;
+    font-weight: 500;
+  }
   .step .body .outcome {
     font-family: "JetBrains Mono", monospace;
-    font-size: 8.5pt;
+    font-size: 7.5pt;
     letter-spacing: 0.15em;
     color: var(--brick);
     text-transform: uppercase;
-    margin-bottom: 0.1in;
+    margin-bottom: 0.06in;
   }
+  .step .body p { font-size: 10pt; line-height: 1.5; margin-bottom: 0.06in; }
 
+  /* PROMPT BLOCK */
   .prompt {
     background: var(--ink);
     color: var(--paper);
-    padding: 0.22in 0.25in;
+    padding: 0.15in 0.18in;
     border-left: 4px solid var(--brick);
     font-family: "JetBrains Mono", monospace;
-    font-size: 9pt;
-    line-height: 1.6;
-    margin: 0.18in 0;
+    font-size: 8pt;
+    line-height: 1.5;
+    margin: 0.1in 0;
     white-space: pre-wrap;
-    page-break-inside: avoid;
+    page-break-inside: avoid; break-inside: avoid;
   }
   .prompt::before {
     content: "Paste into any LLM";
     display: block;
     font-family: "Fraunces", serif;
     font-style: italic;
-    font-size: 11pt;
+    font-size: 9.5pt;
     color: var(--gold);
-    margin-bottom: 0.12in;
+    margin-bottom: 0.06in;
     letter-spacing: 0;
     text-transform: none;
   }
 
   /* WORKSHEET */
-  .ws { margin-top: 0.25in; }
-  .ws .field { margin-bottom: 0.22in; page-break-inside: avoid; break-inside: avoid; }
+  .ws { margin-top: 0.12in; }
+  .ws .field { margin-bottom: 0.12in; page-break-inside: avoid; break-inside: avoid; }
   .ws .q {
     font-family: "Fraunces", serif;
     font-weight: 500;
     font-style: italic;
-    font-size: 14pt;
+    font-size: 11.5pt;
     color: var(--ink);
-    margin-bottom: 0.1in;
+    margin-bottom: 0.04in;
     letter-spacing: -0.01em;
   }
   .ws .q::before { content: "§ "; color: var(--brick); font-style: normal; font-weight: 600; }
-  .ws .line { border-bottom: 1px solid var(--ink); height: 0.4in; }
+  .ws .line { border-bottom: 1px solid var(--ink); height: 0.24in; }
   .ws .hint {
     font-family: "Fraunces", serif;
     font-style: italic;
-    font-size: 10pt;
+    font-size: 9pt;
     color: var(--muted);
-    margin-top: 0.05in;
+    margin-top: 0.03in;
   }
 
   /* FAQ */
@@ -378,71 +362,70 @@
     font-family: "Fraunces", serif;
     font-weight: 500;
     font-style: italic;
-    font-size: 13pt;
+    font-size: 11.5pt;
     color: var(--ink);
-    margin-top: 0.2in;
-    margin-bottom: 0.06in;
-    page-break-after: avoid;
-    break-after: avoid;
+    margin-top: 0.12in;
+    margin-bottom: 0.04in;
+    page-break-after: avoid; break-after: avoid;
   }
   .faq-q::before { content: "Q. "; color: var(--brick); font-weight: 600; font-style: normal; }
   .faq-a {
-    font-size: 10.5pt;
+    font-size: 10pt;
     color: var(--ink-2);
-    line-height: 1.55;
-    page-break-inside: avoid;
-    break-inside: avoid;
+    line-height: 1.5;
+    page-break-inside: avoid; break-inside: avoid;
   }
   .faq-a::before { content: "A. "; color: var(--brick); font-weight: 600; }
 
-  /* CTA — bookend */
+  /* CTA */
   .cta {
-    margin-top: 0.45in;
-    padding: 0.4in;
+    margin-top: 0.22in;
+    padding: 0.22in 0.28in;
     background: var(--ink);
     color: var(--paper);
     border-radius: 3px;
-    page-break-inside: avoid;
+    page-break-inside: avoid; break-inside: avoid;
     position: relative;
   }
   .cta::before {
     content: "→";
     position: absolute;
-    top: 0.3in;
-    right: 0.4in;
+    top: 0.16in;
+    right: 0.26in;
     font-family: "Fraunces", serif;
-    font-size: 36pt;
+    font-size: 22pt;
     color: var(--brick);
     line-height: 1;
   }
   .cta .label {
     font-family: "JetBrains Mono", monospace;
-    font-size: 8.5pt;
-    letter-spacing: 0.3em;
+    font-size: 8pt;
+    letter-spacing: 0.28em;
     color: var(--gold);
     text-transform: uppercase;
-    margin-bottom: 0.12in;
+    margin-bottom: 0.08in;
   }
   .cta h2 {
     font-family: "Fraunces", serif;
     font-weight: 400;
-    font-size: 30pt;
+    font-size: 20pt;
     color: var(--paper);
-    margin-bottom: 0.12in;
+    margin-bottom: 0.06in;
     letter-spacing: -0.02em;
   }
   .cta h2 em { font-style: italic; color: var(--gold); }
   .cta p {
     color: rgba(247,242,233,0.85);
-    font-size: 11.5pt;
-    line-height: 1.55;
+    font-size: 10pt;
+    line-height: 1.5;
     max-width: 5in;
+    margin: 0;
   }
   .cta a {
     color: var(--paper);
     text-decoration: underline;
     text-decoration-color: var(--brick);
-    text-underline-offset: 4px;
+    text-underline-offset: 3px;
   }
 </style>
 </head>
@@ -450,39 +433,32 @@
 
 <!-- COVER -->
 <div class="cover">
-  <div class="corner"></div>
-  <div class="corner2"></div>
-
   <div class="header">
     <div class="wordmark"><span class="it">Human</span> at Work<span class="dot">.</span></div>
     <div class="issue">No. 01 · Field Manual · 2026-05</div>
   </div>
-
   <div class="kicker-block">
     <div class="kicker">For the operator who has 24 hours</div>
     <h1>Start AI <em>in 24 hours.</em></h1>
     <p class="deck">Five workflows. One day. From zero account to AI you actually use Monday morning.</p>
   </div>
-
   <div class="dossier">
     <div class="col"><div class="l">Time</div><div class="v">24<em>h</em></div></div>
     <div class="col"><div class="l">Workflows</div><div class="v">5</div></div>
     <div class="col"><div class="l">Cost</div><div class="v">$27</div></div>
     <div class="col"><div class="l">LLM</div><div class="v"><em>any</em></div></div>
   </div>
-
   <div class="footer-strip">
     <span>By Boubacar · ex-Corporate HR</span>
     <span>humanatwork.ai</span>
   </div>
 </div>
 
-<!-- PAGE 2 — NOTE -->
+<!-- PAGE 2: Letter + Schedule (no forced break, flows from cover-after-break) -->
 <div class="pg">
   <div class="kicker">Letter from the author</div>
   <h1>This is the guide I wish I had <em>two years ago.</em></h1>
-
-  <p class="opener">Skip the AI course funnel. Skip the "best 50 AI tools" listicle. Skip the cohort program that starts in three weeks. By tomorrow this time, you will have five workflows running on whatever LLM you already pay for. That's the whole product. The structure below assumes you start tonight at 8pm and have 24 hours. Adjust to your real schedule. The only rule: don't spread it across a week.</p>
+  <p class="opener">Skip the AI course funnel. Skip the "best 50 AI tools" listicle. Skip the cohort that starts in three weeks. By tomorrow this time you will have five workflows running on whatever LLM you already pay for. That's the whole product. The structure below assumes you start tonight at 8pm and have 24 hours. Adjust to your real schedule. Only rule: don't spread it across a week.</p>
 
   <div class="sched">
     <div class="h">The 24-hour schedule</div>
@@ -497,15 +473,15 @@
   </div>
 </div>
 
-<!-- PAGE 3 — WORKFLOW 1 -->
-<div class="pg">
+<!-- PAGE 3: Workflow 1 — force break so it starts fresh -->
+<div class="pg force-break">
   <div class="kicker">Workflow 01 · Email triage</div>
   <h1>Stop reading every email. <em>Triage in four minutes.</em></h1>
 
   <div class="step">
     <div class="num">1</div>
     <div class="body">
-      <div class="outcome">Outcome — paste-ready inbox snapshot</div>
+      <div class="outcome">Outcome: paste-ready inbox snapshot</div>
       <h3>Snapshot your inbox</h3>
       <p>Open your email client. Copy the subject + sender for the last 30-50 unread messages into a scratch doc. That's the input.</p>
     </div>
@@ -514,7 +490,7 @@
   <div class="step">
     <div class="num">2</div>
     <div class="body">
-      <div class="outcome">Outcome — 3 buckets + drafts</div>
+      <div class="outcome">Outcome: 3 buckets + drafts</div>
       <h3>Paste this prompt into any LLM</h3>
       <div class="prompt">You are my email triage assistant. Take the inbox list below and split it into 3 buckets:
 
@@ -532,7 +508,7 @@ Inbox:
   <div class="step">
     <div class="num">3</div>
     <div class="body">
-      <div class="outcome">Outcome — 5-12 emails closed in 30 minutes</div>
+      <div class="outcome">Outcome: 5-12 emails closed in 30 minutes</div>
       <h3>Send the action-needed batch</h3>
       <p>Copy each draft into the reply box. Edit one line for your voice. Send. Move to the next. Don't re-read the LLM output. Trust the draft.</p>
     </div>
@@ -544,11 +520,11 @@ Inbox:
   </div>
 </div>
 
-<!-- PAGE 4 — WORKSHEET + FAQ + CTA -->
-<div class="pg">
+<!-- PAGE 4: Worksheet + FAQ + CTA — force break -->
+<div class="pg force-break">
   <div class="kicker">Monday-morning worksheet · FAQ · next step</div>
   <h1>Fill this in before <em>9:00 AM Monday.</em></h1>
-  <p class="deck">Print the page or fill on a tablet. The act of writing — not the writing itself — locks the decision.</p>
+  <p class="deck">Print the page or fill on a tablet. The act of writing locks the decision.</p>
 
   <div class="ws">
     <div class="field">
