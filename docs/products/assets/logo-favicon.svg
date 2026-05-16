@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <style>
+      .paper { fill: #F4EFE6; }
+      .ink { fill: #161513; }
+      .brick { fill: #A8341F; }
+    </style>
+  </defs>
+  <rect width="64" height="64" class="paper"/>
+  <!-- horizon-line motif: represents "work" environment without using a letter. Three stacked horizontal lines (operator's desk + content lines + ground), with a brick dot as the "human" anchor. -->
+  <line x1="12" y1="22" x2="52" y2="22" stroke="#161513" stroke-width="3" stroke-linecap="round"/>
+  <line x1="12" y1="34" x2="44" y2="34" stroke="#161513" stroke-width="3" stroke-linecap="round"/>
+  <line x1="12" y1="46" x2="52" y2="46" stroke="#161513" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="50" cy="34" r="5" class="brick"/>
+</svg>
