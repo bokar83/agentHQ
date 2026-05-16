@@ -336,3 +336,76 @@ def test_finalize_marks_completed(fake_store, tmp_path):
     ritual_engine.finalize_session(sid, repo_root=tmp_path, dry_run=True)
     final = fake_store.get(sid)
     assert final["status"] == "completed"
+
+
+def test_chain_records_intent_in_dry_run(fake_store, tmp_path):
+    """L-R4 carries on_complete.dispatch_ritual = lr5_conversion_scorecard.
+    In dry_run mode the engine must record chain intent without firing Telegram."""
+    sess = ritual_engine.start_session("lr4_triad_lock", "uChain")
+    cfg = ritual_engine.load_ritual_config("lr4_triad_lock")
+    assert cfg.get("on_complete", {}).get("dispatch_ritual") == "lr5_conversion_scorecard"
+    for step in cfg["steps"]:
+        sess = ritual_engine.record_pick(sess["id"], step["options"][0][1])
+        sess = ritual_engine.record_rationale(sess["id"], "ok")
+    result = ritual_engine.finalize_session(sess["id"], repo_root=tmp_path, dry_run=True)
+    assert result["chain_intent"] == "lr5_conversion_scorecard"
+    assert "chained" not in result  # no Telegram fired in dry mode
+
+
+def test_chain_dispatches_next_ritual_on_real_finalize(fake_store, tmp_path, monkeypatch):
+    """Real-mode path: finalize must call cron_dispatch with the chained ritual_key
+    and the SAME user_chat_id, after the git commit/push succeeds."""
+    calls = []
+
+    def fake_cron_dispatch(ritual_key, user_chat_id=None):
+        calls.append({"ritual_key": ritual_key, "user_chat_id": user_chat_id})
+        return {"chat_id": user_chat_id, "message_id": 9999, "ritual_key": ritual_key}
+
+    def fake_run_git(args, cwd=None):
+        if args[:1] == ["rev-parse"]:
+            return "FAKE_SHA" if "HEAD" in args else "feat/test"
+        return ""
+
+    monkeypatch.setattr(ritual_engine, "cron_dispatch", fake_cron_dispatch)
+    monkeypatch.setattr(ritual_engine, "_run_git", fake_run_git)
+    monkeypatch.setattr(ritual_engine.subprocess, "run", lambda *a, **kw: type(
+        "R", (), {"returncode": 0, "stderr": "", "stdout": ""})())
+
+    sess = ritual_engine.start_session("lr4_triad_lock", "uReal")
+    cfg = ritual_engine.load_ritual_config("lr4_triad_lock")
+    for step in cfg["steps"]:
+        sess = ritual_engine.record_pick(sess["id"], step["options"][0][1])
+        sess = ritual_engine.record_rationale(sess["id"], "ok")
+    result = ritual_engine.finalize_session(sess["id"], repo_root=tmp_path, dry_run=False)
+    assert len(calls) == 1
+    assert calls[0]["ritual_key"] == "lr5_conversion_scorecard"
+    assert calls[0]["user_chat_id"] == "uReal"
+    assert result["chained"]["ritual_key"] == "lr5_conversion_scorecard"
+
+
+def test_chain_failure_does_not_poison_commit(fake_store, tmp_path, monkeypatch):
+    """Chain dispatch errors must be caught; the just-committed work stays committed."""
+    def boom_cron_dispatch(ritual_key, user_chat_id=None):
+        raise RuntimeError("telegram down")
+
+    def fake_run_git(args, cwd=None):
+        if args[:1] == ["rev-parse"]:
+            return "FAKE_SHA" if "HEAD" in args else "feat/test"
+        return ""
+
+    monkeypatch.setattr(ritual_engine, "cron_dispatch", boom_cron_dispatch)
+    monkeypatch.setattr(ritual_engine, "_run_git", fake_run_git)
+    monkeypatch.setattr(ritual_engine.subprocess, "run", lambda *a, **kw: type(
+        "R", (), {"returncode": 0, "stderr": "", "stdout": ""})())
+
+    sess = ritual_engine.start_session("lr4_triad_lock", "uBoom")
+    cfg = ritual_engine.load_ritual_config("lr4_triad_lock")
+    for step in cfg["steps"]:
+        sess = ritual_engine.record_pick(sess["id"], step["options"][0][1])
+        sess = ritual_engine.record_rationale(sess["id"], "ok")
+    result = ritual_engine.finalize_session(sess["id"], repo_root=tmp_path, dry_run=False)
+    # commit fields still present
+    assert result["sha"] == "FAKE_SHA"
+    # chain error surfaced but did not raise
+    assert "chain_error" in result
+    assert "telegram down" in result["chain_error"]

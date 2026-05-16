@@ -2,6 +2,7 @@
   "ritual_key": "lr4_triad_lock",
   "title": "L-R4 Triad Lock",
   "cadence": "Sat 10:00 MDT",
+  "on_complete": {"dispatch_ritual": "lr5_conversion_scorecard"},
   "intro": "L-R4 Triad Lock - 10 items. Pick an option, then send a 1-line rationale. Bot waits between steps.",
   "output_file": "data/lighthouse-decisions.md",
   "roadmap_file": "docs/roadmap/lighthouse.md",
