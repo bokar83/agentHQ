@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Variant 2 — Mono Operator Manual</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAFAF8;
+    --ink: #0A0A0A;
+    --ink-2: #2A2A28;
+    --brick: #C1442C;
+    --line: #1A1A1A;
+    --hair: #CACAC4;
+    --muted: #707068;
+  }
+  @page { size: Letter; margin: 0; }
+  @page body {
+    margin: 0.8in 0.85in 1in 0.85in;
+    @top-left {
+      content: "HUMAN AT WORK";
+      font-family: "JetBrains Mono", monospace;
+      font-size: 8pt;
+      letter-spacing: 0.3em;
+      color: var(--muted);
+    }
+    @top-right {
+      content: "START_AI_24H / v1";
+      font-family: "JetBrains Mono", monospace;
+      font-size: 8pt;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+    }
+    @bottom-left {
+      content: "humanatwork.ai";
+      font-family: "JetBrains Mono", monospace;
+      font-size: 8pt;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+    @bottom-right {
+      content: counter(page) " / 10";
+      font-family: "JetBrains Mono", monospace;
+      font-size: 8pt;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10.5pt;
+    line-height: 1.6;
+  }
+
+  /* COVER */
+  .cover {
+    width: 8.5in;
+    height: 11in;
+    padding: 1in 0.85in 0.9in 0.85in;
+    page-break-after: always;
+    background: var(--bg);
+    border-top: 12px solid var(--ink);
+    position: relative;
+  }
+  .cover .brand {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9.5pt;
+    letter-spacing: 0.3em;
+    color: var(--muted);
+    margin-bottom: 0.4in;
+  }
+  .cover .brand b { color: var(--ink); font-weight: 700; }
+
+  .cover .meta-row {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    padding: 0.18in 0;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8.5pt;
+    letter-spacing: 0.18em;
+    color: var(--ink);
+    margin-bottom: 0.85in;
+  }
+  .cover .meta-row span:nth-child(2) { color: var(--brick); }
+
+  .cover .index {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 22pt;
+    letter-spacing: -0.02em;
+    color: var(--brick);
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 0.25in;
+  }
+  .cover h1 {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-weight: 600;
+    font-size: 78pt;
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+    color: var(--ink);
+    margin-bottom: 0.2in;
+    text-transform: none;
+  }
+  .cover .sub {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11pt;
+    line-height: 1.5;
+    color: var(--ink-2);
+    max-width: 5in;
+    margin-top: 0.35in;
+    padding-top: 0.25in;
+    border-top: 4px solid var(--brick);
+  }
+
+  .cover .stat-grid {
+    margin-top: 0.7in;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.15in;
+  }
+  .cover .stat {
+    border: 1px solid var(--ink);
+    padding: 0.15in 0.18in;
+    background: var(--bg);
+  }
+  .cover .stat .n {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-weight: 600;
+    font-size: 22pt;
+    line-height: 1;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+  }
+  .cover .stat .l {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 7.5pt;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 0.06in;
+  }
+
+  .cover .footer-cover {
+    position: absolute;
+    bottom: 0.9in;
+    left: 0.85in;
+    right: 0.85in;
+    border-top: 1px solid var(--ink);
+    padding-top: 0.2in;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .cover .footer-cover .author {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9pt;
+    letter-spacing: 0.1em;
+    color: var(--ink-2);
+  }
+  .cover .footer-cover .author b { color: var(--brick); }
+  .cover .footer-cover .price-tag {
+    text-align: right;
+    border: 2px solid var(--brick);
+    padding: 0.08in 0.15in;
+    font-family: "IBM Plex Sans", sans-serif;
+    font-weight: 700;
+    font-size: 18pt;
+    color: var(--brick);
+    letter-spacing: -0.01em;
+  }
+
+  /* PAGES */
+  .pg { page: body; page-break-after: always; min-height: 9in; }
+  .pg:last-child { page-break-after: auto; }
+
+  .pg .tag {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8.5pt;
+    letter-spacing: 0.25em;
+    color: var(--brick);
+    text-transform: uppercase;
+    margin-bottom: 0.15in;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 0.08in;
+  }
+
+  .pg h1 {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-weight: 600;
+    font-size: 38pt;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    margin-bottom: 0.25in;
+    max-width: 6.2in;
+  }
+  .pg h2 {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-weight: 500;
+    font-size: 18pt;
+    color: var(--ink);
+    margin-top: 0.35in;
+    margin-bottom: 0.12in;
+    letter-spacing: -0.015em;
+  }
+  .pg h3 {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 600;
+    font-size: 10pt;
+    letter-spacing: 0.15em;
+    color: var(--brick);
+    text-transform: uppercase;
+    margin-top: 0.25in;
+    margin-bottom: 0.08in;
+  }
+  .pg p {
+    margin-bottom: 0.13in;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10pt;
+    line-height: 1.65;
+    color: var(--ink);
+  }
+  .pg p.lead {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 13.5pt;
+    line-height: 1.45;
+    color: var(--ink);
+    margin-bottom: 0.3in;
+    max-width: 5.5in;
+  }
+
+  /* SCHEDULE — table-ish, dense, mono */
+  .sched {
+    margin-top: 0.18in;
+    border-top: 2px solid var(--ink);
+  }
+  .sched .row {
+    display: grid;
+    grid-template-columns: 1.3in 0.2in 1.6in 1fr;
+    padding: 0.12in 0;
+    border-bottom: 1px solid var(--hair);
+    align-items: baseline;
+    page-break-inside: avoid;
+  }
+  .sched .row.ship { background: #FFF5EB; }
+  .sched .row.ship .time { color: var(--brick); font-weight: 700; }
+  .sched .time {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9.5pt;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .sched .num {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8pt;
+    color: var(--muted);
+  }
+  .sched .name {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-weight: 600;
+    font-size: 11pt;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .sched .what {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9pt;
+    color: var(--ink-2);
+    line-height: 1.5;
+  }
+
+  /* STEP CARDS — operator manual style */
+  .step {
+    border: 1px solid var(--ink);
+    background: var(--bg);
+    padding: 0.22in 0.25in;
+    margin-bottom: 0.2in;
+    page-break-inside: avoid;
+    position: relative;
+  }
+  .step::before {
+    content: attr(data-n);
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    background: var(--ink);
+    color: var(--bg);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8pt;
+    letter-spacing: 0.18em;
+    padding: 4px 9px;
+    font-weight: 600;
+  }
+  .step h3 {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 14pt;
+    font-weight: 600;
+    color: var(--ink);
+    margin-top: 0.05in;
+    margin-bottom: 0.06in;
+    text-transform: none;
+    letter-spacing: -0.01em;
+  }
+  .step .outcome {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8.5pt;
+    letter-spacing: 0.15em;
+    color: var(--brick);
+    text-transform: uppercase;
+    margin-bottom: 0.12in;
+  }
+
+  /* PROMPT BLOCK — terminal-ish */
+  .prompt {
+    background: var(--ink);
+    color: #E6E6E0;
+    padding: 0.2in 0.22in 0.2in 0.55in;
+    margin: 0.18in 0;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9pt;
+    line-height: 1.6;
+    page-break-inside: avoid;
+    white-space: pre-wrap;
+    position: relative;
+    border-left: 4px solid var(--brick);
+  }
+  .prompt::before {
+    content: ">_ PROMPT";
+    position: absolute;
+    top: 0.1in;
+    left: 0.18in;
+    font-size: 7.5pt;
+    letter-spacing: 0.2em;
+    color: var(--brick);
+  }
+  .prompt-body { margin-top: 0.18in; display: block; }
+
+  /* PULL QUOTE */
+  .pull {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 0.32in 0.35in;
+    margin: 0.3in 0;
+    page-break-inside: avoid;
+    border-right: 6px solid var(--brick);
+  }
+  .pull p {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 18pt;
+    font-weight: 500;
+    line-height: 1.25;
+    color: var(--bg);
+    letter-spacing: -0.02em;
+    margin-bottom: 0.12in;
+  }
+  .pull cite {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8.5pt;
+    letter-spacing: 0.2em;
+    color: var(--brick);
+    font-style: normal;
+    text-transform: uppercase;
+  }
+
+  /* WORKSHEET */
+  .ws .field { margin-bottom: 0.22in; page-break-inside: avoid; }
+  .ws .q {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-weight: 600;
+    font-size: 12pt;
+    color: var(--ink);
+    margin-bottom: 0.08in;
+    letter-spacing: -0.01em;
+  }
+  .ws .line {
+    border-bottom: 2px solid var(--ink);
+    height: 0.42in;
+  }
+  .ws .hint {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8.5pt;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    margin-top: 0.04in;
+  }
+
+  /* FAQ */
+  .faq-q {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10pt;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    color: var(--ink);
+    margin-top: 0.2in;
+    margin-bottom: 0.04in;
+    text-transform: none;
+  }
+  .faq-q::before { content: "Q. "; color: var(--brick); font-weight: 700; }
+  .faq-a {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9.5pt;
+    color: var(--ink-2);
+    line-height: 1.55;
+  }
+  .faq-a::before { content: "A. "; color: var(--brick); font-weight: 700; }
+
+  /* CTA */
+  .cta {
+    margin-top: 0.4in;
+    padding: 0.3in;
+    border: 2px solid var(--ink);
+    background: var(--bg);
+    page-break-inside: avoid;
+  }
+  .cta .label {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8.5pt;
+    letter-spacing: 0.25em;
+    color: var(--brick);
+    text-transform: uppercase;
+    margin-bottom: 0.1in;
+  }
+  .cta h2 {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 22pt;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.1in;
+    letter-spacing: -0.02em;
+  }
+  .cta p {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10pt;
+    color: var(--ink-2);
+  }
+  .cta .url {
+    display: inline-block;
+    margin-top: 0.12in;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10.5pt;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 0.08in 0.18in;
+    letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="brand">HUMAN <b>AT WORK</b><span style="color:var(--brick)">.</span></div>
+
+  <div class="meta-row">
+    <span>FILE / START_AI_24H</span>
+    <span>TIER / ENTRY · $27</span>
+    <span>v1 / 2026-05</span>
+  </div>
+
+  <div class="index">01.</div>
+  <h1>Start AI<br>in 24 hours.</h1>
+  <p class="sub">A field manual for getting five working AI workflows live by tomorrow morning. No course. No tool-shopping. One LLM tab.</p>
+
+  <div class="stat-grid">
+    <div class="stat"><div class="n">5</div><div class="l">workflows</div></div>
+    <div class="stat"><div class="n">24h</div><div class="l">total time</div></div>
+    <div class="stat"><div class="n">$0</div><div class="l">extra tools</div></div>
+    <div class="stat"><div class="n">1</div><div class="l">LLM tab</div></div>
+  </div>
+
+  <div class="footer-cover">
+    <div class="author">BY <b>BOUBACAR</b> · 14YR CORPORATE HR · BUILDING agentsHQ</div>
+    <div class="price-tag">$27</div>
+  </div>
+</div>
+
+<!-- PAGE 2 -->
+<div class="pg">
+  <div class="tag">FILE / 02 · THE 24-HOUR SCHEDULE</div>
+  <h1>Block it. One day, real moves.</h1>
+  <p class="lead">Timing structure assumes you start tonight at 8pm. Adjust to your day. The only rule: don't spread it across a week.</p>
+
+  <div class="sched">
+    <div class="row"><div class="time">8:00 PM TODAY</div><div class="num">[0]</div><div class="name">Setup</div><div class="what">Pick one LLM you already pay for. One tab. No tool-shopping.</div></div>
+    <div class="row"><div class="time">8:15 PM</div><div class="num">[1]</div><div class="name">Workflow 1</div><div class="what">Email triage. Output: 3 buckets + draft replies.</div></div>
+    <div class="row"><div class="time">9:30 PM</div><div class="num">[2]</div><div class="name">Workflow 2</div><div class="what">Meeting prep. Output: agenda + open questions per meeting.</div></div>
+    <div class="row"><div class="time">10:30 PM</div><div class="num">[—]</div><div class="name">Sleep</div><div class="what">Save 3-5 for morning. Burning out at midnight = no Monday ship.</div></div>
+    <div class="row"><div class="time">6:30 AM</div><div class="num">[3]</div><div class="name">Workflow 3</div><div class="what">Document compression. Output: 1-page brief.</div></div>
+    <div class="row"><div class="time">7:30 AM</div><div class="num">[4]</div><div class="name">Workflow 4</div><div class="what">Decision support. Output: 3 reframes on 1 stuck call.</div></div>
+    <div class="row"><div class="time">8:30 AM</div><div class="num">[5]</div><div class="name">Workflow 5</div><div class="what">Personal ops. Output: written runbook for 1 errand.</div></div>
+    <div class="row ship"><div class="time">9:00 AM</div><div class="num">[★]</div><div class="name">Ship</div><div class="what">Run Workflow 1 on today's actual inbox. Live, not practice.</div></div>
+  </div>
+</div>
+
+<!-- PAGE 3 -->
+<div class="pg">
+  <div class="tag">FILE / 03 · WORKFLOW 1 / EMAIL TRIAGE</div>
+  <h1>4 minutes. Not 2 hours.</h1>
+
+  <div class="step" data-n="STEP 01 OF 03">
+    <h3>Snapshot your inbox</h3>
+    <div class="outcome">→ paste-ready list of 30-50 unread items</div>
+    <p>Open your email client. Copy subject + sender for the last 30-50 unread messages into a scratch doc.</p>
+  </div>
+
+  <div class="step" data-n="STEP 02 OF 03">
+    <h3>Paste this prompt into any LLM</h3>
+    <div class="outcome">→ 3 buckets + drafts for action-needed</div>
+    <div class="prompt"><span class="prompt-body">You are my email triage assistant. Take the inbox list below and split it into 3 buckets:
+
+  1. ACTION NEEDED (under 5 min reply, do today)
+  2. READ LATER (informational, no action)
+  3. ARCHIVE / DELETE (newsletters, junk, FYIs already handled)
+
+For each ACTION NEEDED item, draft a 2-3 sentence reply I can edit and send.
+
+Inbox:
+[paste your 30-50 lines here]</span></div>
+  </div>
+
+  <div class="step" data-n="STEP 03 OF 03">
+    <h3>Send the action-needed batch</h3>
+    <div class="outcome">→ 5-12 emails closed in 30 minutes</div>
+    <p>Copy each draft into the reply box. Edit one line for your voice. Send. Move on.</p>
+  </div>
+
+  <div class="pull">
+    <p>The LLM is not your replacement. It is your first draft. The draft is 80% of the work.</p>
+    <cite>— Boubacar</cite>
+  </div>
+</div>
+
+<!-- PAGE 4 -->
+<div class="pg">
+  <div class="tag">FILE / 07 · MONDAY MORNING WORKSHEET</div>
+  <h1>Fill in before 9:00 AM Monday.</h1>
+  <p class="lead">Print it. Or fill on a tablet. The act of writing locks in the decision.</p>
+
+  <div class="ws">
+    <div class="field">
+      <div class="q">01. Which one workflow am I committing to using on Monday morning?</div>
+      <div class="line"></div>
+      <div class="hint">Pick exactly one. Not five. Other four are next week.</div>
+    </div>
+    <div class="field">
+      <div class="q">02. What is the calendar block I am putting on Monday?</div>
+      <div class="line"></div>
+      <div class="hint">Specific time + duration. e.g., "Mon 8:15-8:45 AM, email triage."</div>
+    </div>
+    <div class="field">
+      <div class="q">03. What would I have to believe for this to fail by Friday?</div>
+      <div class="line"></div>
+      <div class="line"></div>
+      <div class="hint">Pre-mortem. Naming the failure mode is how you avoid it.</div>
+    </div>
+    <div class="field">
+      <div class="q">04. Who am I telling that I did this?</div>
+      <div class="line"></div>
+      <div class="hint">One person. Public commitment = follow-through.</div>
+    </div>
+  </div>
+
+  <h3 style="margin-top: 0.4in;">FAQ</h3>
+  <div class="faq-q">Which LLM should I use?</div>
+  <div class="faq-a">The one you already pay for. Workflows work on Claude, ChatGPT, Gemini, Grok, Perplexity. Brand doesn't matter for 95% of what most people do.</div>
+  <div class="faq-q">Will this work if I am not technical?</div>
+  <div class="faq-a">Yes. You are copy-pasting a prompt and pasting in text. If you can use Gmail, you can do this.</div>
+  <div class="faq-q">Do you offer refunds?</div>
+  <div class="faq-a">No. Digital download. Value is in doing the 24 hours, not returning the file.</div>
+  <div class="faq-q">What is next after these 5 workflows?</div>
+  <div class="faq-a">The $79 Paste Pack adds 25 more prompt bundles. Same one-paste-and-go format.</div>
+
+  <div class="cta">
+    <div class="label">→ NEXT FILE</div>
+    <h2>Ready for 25 more?</h2>
+    <p>Paste Pack · $79 · 25 production-tested prompt bundles. Same 5 categories, deeper plays.</p>
+    <span class="url">humanatwork.ai/start-ai-24h/t2-paste-pack</span>
+  </div>
+</div>
+
+</body>
+</html>
