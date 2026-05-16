@@ -33,11 +33,11 @@
 
   /* COVER */
   .cover {
-    padding: 1in 0.85in 0.9in 0.85in;
+    padding: 0.3in 0 0 0;
     page-break-after: always;
+    break-after: page;
     background: var(--bg);
     border-top: 12px solid var(--ink);
-    position: relative;
   }
   .cover .brand {
     font-family: "JetBrains Mono", monospace;
@@ -53,12 +53,12 @@
     justify-content: space-between;
     border-top: 1px solid var(--ink);
     border-bottom: 1px solid var(--ink);
-    padding: 0.18in 0;
+    padding: 0.14in 0;
     font-family: "JetBrains Mono", monospace;
     font-size: 8.5pt;
     letter-spacing: 0.18em;
     color: var(--ink);
-    margin-bottom: 0.85in;
+    margin-bottom: 0.5in;
   }
   .cover .meta-row span:nth-child(2) { color: var(--brick); }
 
@@ -74,29 +74,31 @@
   .cover h1 {
     font-family: "IBM Plex Sans", sans-serif;
     font-weight: 600;
-    font-size: 78pt;
-    line-height: 0.9;
-    letter-spacing: -0.04em;
+    font-size: 58pt;
+    line-height: 0.95;
+    letter-spacing: -0.035em;
     color: var(--ink);
-    margin-bottom: 0.2in;
+    margin-bottom: 0.15in;
     text-transform: none;
+    page-break-after: avoid; break-after: avoid;
   }
   .cover .sub {
     font-family: "JetBrains Mono", monospace;
-    font-size: 11pt;
+    font-size: 10.5pt;
     line-height: 1.5;
     color: var(--ink-2);
     max-width: 5in;
-    margin-top: 0.35in;
-    padding-top: 0.25in;
+    margin-top: 0.2in;
+    padding-top: 0.18in;
     border-top: 4px solid var(--brick);
   }
 
   .cover .stat-grid {
-    margin-top: 0.7in;
+    margin-top: 0.45in;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 0.15in;
+    page-break-inside: avoid; break-inside: avoid;
   }
   .cover .stat {
     border: 1px solid var(--ink);
@@ -121,15 +123,13 @@
   }
 
   .cover .footer-cover {
-    position: absolute;
-    bottom: 0.9in;
-    left: 0.85in;
-    right: 0.85in;
+    margin-top: 0.45in;
     border-top: 1px solid var(--ink);
     padding-top: 0.2in;
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
+    page-break-inside: avoid; break-inside: avoid;
   }
   .cover .footer-cover .author {
     font-family: "JetBrains Mono", monospace;
@@ -426,6 +426,11 @@
     padding: 0.08in 0.18in;
     letter-spacing: 0.05em;
   }
+
+  @media print {
+    html, body { background: white !important; }
+    .cover { background: white !important; }
+  }
 </style>
 </head>
 <body>
@@ -452,7 +457,7 @@
   </div>
 
   <div class="footer-cover">
-    <div class="author">BY <b>BOUBACAR</b> · 14YR CORPORATE HR · BUILDING agentsHQ</div>
+    <div class="author">BY <b>BOUBACAR</b> · DAILY AI OPERATOR SINCE GPT-3.5 · HUMANATWORK.AI</div>
     <div class="price-tag">$27</div>
   </div>
 </div>
