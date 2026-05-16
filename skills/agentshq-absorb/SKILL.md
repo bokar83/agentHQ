@@ -25,6 +25,48 @@ Since 2026-05-14 the skill runs in one of two modes:
 
 When in doubt: AGENT MODE. The verdict is more thorough on the VPS (analyst LLM has the full SKILL.md as a system prompt and zero turn-budget pressure). Manual mode is for when the agent path is broken.
 
+## Boubacar Lens Pass (mandatory second-pass after Phases 0-5)
+
+The default phase logic (0-5) evaluates artifacts in isolation against the existing 75-skill stack. That misses the cross-absorb synthesis Boubacar does naturally. On 2026-05-16 the default verdict missed three cross-domain plays in a single session (AI-influencer for AIC-faceless variant, French-African gap in AI explainers, layoff-wave-prep channel seeds across 12 previously-archived absorbs). Each miss = a market position not taken.
+
+After Phase 5 produces a verdict, **every artifact flagged ARCHIVE-AND-NOTE or DON'T_PROCEED runs through 4 additional lenses BEFORE final write**:
+
+### Lens 1: Forward-timing
+
+Does this absorb become valuable at any FUTURE trigger Boubacar has named? Check the active strategic lenses (e.g. `[[layoff-wave-2026-strategic-lens]]`). If the absorb feeds a channel that must warm up before a future demand spike, the verdict may flip from ARCHIVE to PROCEED-as-episode-seed or PROCEED-as-spec-feeder.
+
+### Lens 2: Cross-domain leverage
+
+Could this content angle port to a French / African / heritage-cut variant of an existing motion? Boubacar ports infra to new ICPs by changing one dimension (language, geography, heritage). 1stGen Money -> 1stGen-FR diaspora. AIC AI/HR -> AIC-FR-Africa. If the absorb works for a new-ICP variant, the verdict may flip from ARCHIVE to PROCEED-spec-as-variant.
+
+### Lens 3: Audience-pipeline stitching
+
+Does this teach an audience that converts later into one of Boubacar's pipelines (SW website builds, CW consulting, 1stGen money, Studio paid SKUs)? Default phase logic asks "does this become a skill"; this lens asks "does this become top-of-funnel for an existing pipeline". When an absorb's content angle is locked out of Boubacar's personal accounts (voice rules, brand-trust), check whether it fits a faceless Studio channel feeding a DIFFERENT pipeline. Pipeline isolation often unlocks the absorb.
+
+### Lens 4: Defensible-moat selection
+
+Does Boubacar have a heritage / language / geography / lived-experience moat here that the existing covered version lacks? Default logic evaluates novelty in isolation; this lens evaluates novelty against what HE specifically can defend. Guinean operator on Francophone-African AI = first in lane. Mande-folk-instrumental focus music = heritage that a generic Spotify producer cannot fake. For any ARCHIVE flagged "already covered" or "saturated", ask the moat question before finalizing.
+
+### When to apply
+
+- Every ARCHIVE-AND-NOTE or DON'T_PROCEED verdict runs the 4-lens pass before final log write.
+- Every cohort tripwire (creator-economy / quant / Claude-tips listicle / etc) gets a once-per-cohort re-evaluation: does the cohort signal a market gap Boubacar can occupy from a different angle?
+- Every batch of 5+ absorbs in a session gets a synthesis pass: do any 2+ absorbs combine into a new lane neither would unlock alone?
+
+### Flip output
+
+If any of the 4 lenses flips the verdict:
+
+- Write the new verdict to the log alongside the original verdict and the lens that fired (e.g. "ARCHIVE -> PROCEED via Lens 2 cross-domain: AIC-FR-Africa variant").
+- Add to `docs/reviews/absorb-followups.md` per Phase 5 PROCEED rules.
+- Route per existing PROCEED rules: small-tier auto-wire-eligible vs big-surface Telegram-ack.
+
+### Reference files
+
+- `[[layoff-wave-2026-strategic-lens]]` — live forward-timing trigger Boubacar named 2026-05-16.
+- `[[boubacar-synthesis-pattern]]` — the 4 lenses in full + examples + when each fires.
+- `docs/strategy/aic-fr-africa-mande-folk-lofi-channels-2026-05-16.md` — first concrete output of applying these lenses to a session batch.
+
 ## Self-Audit Mode
 
 Run this when the user says "audit my config", "scan our own setup", "check agentsHQ for secrets", or at any Compass-scheduled monthly interval. Turns the Security Scan Gate inward against agentsHQ's own Claude Code configuration — not an external artifact being absorbed.
