@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Start AI Within 24 Hours — Sample PDF Template</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,600&family=Spectral:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F4EFE6;
+    --ink: #161513;
+    --ink-soft: #4A453E;
+    --brick: #A8341F;
+    --sage: #3E4A2E;
+    --bone: #ECE5D6;
+    --muted: #6B655C;
+    --hairline: #D8D1C1;
+  }
+
+  @page {
+    size: Letter;
+    margin: 0;
+  }
+  @page cover { margin: 0; }
+  @page body {
+    margin: 0.85in 0.9in 1.05in 0.9in;
+    @bottom-left {
+      content: "Human at Work";
+      font-family: "JetBrains Mono", monospace;
+      font-size: 8.5pt;
+      letter-spacing: 0.16em;
+      color: var(--muted);
+    }
+    @bottom-right {
+      content: "humanatwork.ai · p. " counter(page);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 8.5pt;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Spectral", "Source Serif Pro", Georgia, serif;
+    font-size: 11pt;
+    line-height: 1.55;
+  }
+
+  /* ============ COVER ============ */
+  .cover {
+    page: cover;
+    width: 8.5in;
+    height: 11in;
+    background: var(--paper);
+    padding: 0.9in 0.95in;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    page-break-after: always;
+    position: relative;
+  }
+  .cover::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: var(--brick);
+  }
+
+  .cover-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 0.5in;
+  }
+  .wordmark {
+    font-family: "Fraunces", serif;
+    font-weight: 600;
+    font-size: 22pt;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .wordmark .it { font-style: italic; }
+  .wordmark .dot { color: var(--brick); }
+
+  .meta-stamp {
+    text-align: right;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8.5pt;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    text-transform: uppercase;
+    line-height: 1.8;
+  }
+
+  .cover-mid {
+    margin-top: 1.2in;
+  }
+  .tier-tag {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9pt;
+    letter-spacing: 0.22em;
+    color: var(--brick);
+    text-transform: uppercase;
+    margin-bottom: 0.18in;
+  }
+  .cover-title {
+    font-family: "Fraunces", serif;
+    font-weight: 500;
+    font-size: 52pt;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    margin-bottom: 0.18in;
+  }
+  .cover-title em { font-style: italic; font-weight: 500; }
+  .cover-sub {
+    font-family: "Spectral", serif;
+    font-size: 16pt;
+    font-style: italic;
+    color: var(--ink-soft);
+    line-height: 1.35;
+    max-width: 6in;
+    margin-top: 0.2in;
+  }
+
+  .cover-promise {
+    margin-top: 0.4in;
+    padding-top: 0.25in;
+    border-top: 1px solid var(--hairline);
+    max-width: 6in;
+  }
+  .cover-promise .label {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8.5pt;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 0.1in;
+  }
+  .cover-promise p {
+    font-size: 12.5pt;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+
+  .cover-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding-top: 0.25in;
+    border-top: 1px solid var(--hairline);
+  }
+  .by-line {
+    font-family: "Spectral", serif;
+    font-size: 11pt;
+    color: var(--ink-soft);
+  }
+  .by-line strong {
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .price-stamp {
+    text-align: right;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9pt;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+  .price-stamp .num {
+    font-family: "Fraunces", serif;
+    font-size: 28pt;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    line-height: 1;
+  }
+
+  /* ============ INSIDE PAGES ============ */
+  .pg {
+    page: body;
+    page-break-after: always;
+    min-height: 9in;
+  }
+  .pg:last-child { page-break-after: auto; }
+
+  .pg h1 {
+    font-family: "Fraunces", serif;
+    font-weight: 500;
+    font-size: 30pt;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin-bottom: 0.18in;
+  }
+  .pg h1 em { font-style: italic; }
+  .pg .eyebrow {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8.5pt;
+    letter-spacing: 0.22em;
+    color: var(--brick);
+    text-transform: uppercase;
+    margin-bottom: 0.15in;
+  }
+  .pg .sub {
+    font-family: "Spectral", serif;
+    font-style: italic;
+    font-size: 14pt;
+    color: var(--ink-soft);
+    margin-bottom: 0.35in;
+    max-width: 5.8in;
+    line-height: 1.4;
+  }
+  .pg h2 {
+    font-family: "Fraunces", serif;
+    font-weight: 500;
+    font-size: 18pt;
+    color: var(--ink);
+    margin-top: 0.32in;
+    margin-bottom: 0.12in;
+    letter-spacing: -0.01em;
+  }
+  .pg h3 {
+    font-family: "Fraunces", serif;
+    font-weight: 600;
+    font-size: 13pt;
+    color: var(--ink);
+    margin-top: 0.22in;
+    margin-bottom: 0.06in;
+  }
+  .pg p {
+    margin-bottom: 0.13in;
+    color: var(--ink);
+  }
+  .pg p.lead {
+    font-size: 12.5pt;
+    color: var(--ink);
+    line-height: 1.55;
+    margin-bottom: 0.2in;
+  }
+  .pg ul, .pg ol {
+    margin: 0.1in 0 0.2in 0.22in;
+  }
+  .pg li {
+    margin-bottom: 0.08in;
+    padding-left: 0.06in;
+  }
+  .pg li::marker { color: var(--brick); }
+
+  .rule {
+    border: 0;
+    border-top: 1px solid var(--hairline);
+    margin: 0.3in 0;
+  }
+  .pull {
+    background: var(--bone);
+    padding: 0.22in 0.28in;
+    border-left: 3px solid var(--brick);
+    margin: 0.25in 0;
+    font-family: "Fraunces", serif;
+    font-style: italic;
+    font-size: 13pt;
+    line-height: 1.4;
+    color: var(--ink);
+  }
+  .pull cite {
+    display: block;
+    margin-top: 0.1in;
+    font-family: "JetBrains Mono", monospace;
+    font-style: normal;
+    font-size: 8pt;
+    letter-spacing: 0.16em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .step-card {
+    background: white;
+    border: 1px solid var(--hairline);
+    border-radius: 2px;
+    padding: 0.22in 0.26in;
+    margin-bottom: 0.18in;
+    page-break-inside: avoid;
+  }
+  .step-card .step-tag {
+    display: inline-block;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8pt;
+    letter-spacing: 0.2em;
+    color: var(--brick);
+    background: var(--paper);
+    padding: 3px 8px;
+    margin-bottom: 0.1in;
+    text-transform: uppercase;
+  }
+  .step-card h3 { margin-top: 0; }
+  .step-card .outcome {
+    font-family: "Spectral", serif;
+    font-style: italic;
+    font-size: 10.5pt;
+    color: var(--ink-soft);
+    margin-bottom: 0.1in;
+  }
+  .step-card .body { font-size: 10.5pt; line-height: 1.5; }
+
+  .prompt-block {
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 2px;
+    padding: 0.2in 0.22in;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9.5pt;
+    line-height: 1.55;
+    margin: 0.18in 0;
+    page-break-inside: avoid;
+    white-space: pre-wrap;
+  }
+  .prompt-block::before {
+    content: "PASTE INTO ANY LLM";
+    display: block;
+    font-size: 7.5pt;
+    letter-spacing: 0.22em;
+    color: rgba(244,239,230,0.55);
+    margin-bottom: 0.1in;
+    text-transform: uppercase;
+  }
+
+  .schedule {
+    margin-top: 0.18in;
+    border-top: 1px solid var(--hairline);
+  }
+  .schedule .row {
+    display: flex;
+    padding: 0.16in 0;
+    border-bottom: 1px solid var(--hairline);
+    page-break-inside: avoid;
+  }
+  .schedule .time {
+    width: 1.5in;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9.5pt;
+    color: var(--brick);
+    letter-spacing: 0.1em;
+    font-weight: 500;
+  }
+  .schedule .label {
+    width: 1.8in;
+    font-family: "Fraunces", serif;
+    font-weight: 600;
+    font-size: 11.5pt;
+    color: var(--ink);
+  }
+  .schedule .what {
+    flex: 1;
+    font-size: 10.5pt;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+
+  .worksheet {
+    margin-top: 0.2in;
+  }
+  .worksheet .field {
+    margin-bottom: 0.22in;
+    page-break-inside: avoid;
+  }
+  .worksheet .q {
+    font-family: "Fraunces", serif;
+    font-weight: 600;
+    font-size: 11.5pt;
+    color: var(--ink);
+    margin-bottom: 0.08in;
+  }
+  .worksheet .line {
+    border-bottom: 1px solid var(--ink-soft);
+    height: 0.36in;
+    margin-bottom: 0.05in;
+  }
+  .worksheet .hint {
+    font-family: "Spectral", serif;
+    font-style: italic;
+    font-size: 9.5pt;
+    color: var(--muted);
+  }
+
+  .faq-q {
+    font-family: "Fraunces", serif;
+    font-weight: 600;
+    font-size: 12pt;
+    color: var(--ink);
+    margin-top: 0.22in;
+    margin-bottom: 0.05in;
+  }
+  .faq-a {
+    font-size: 10.5pt;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin-bottom: 0.1in;
+  }
+
+  .footer-cta {
+    margin-top: 0.5in;
+    padding: 0.3in;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 2px;
+    page-break-inside: avoid;
+  }
+  .footer-cta .eyebrow {
+    color: var(--brick);
+    margin-bottom: 0.12in;
+  }
+  .footer-cta h2 {
+    color: var(--paper);
+    margin-top: 0;
+    margin-bottom: 0.1in;
+    font-size: 22pt;
+  }
+  .footer-cta p {
+    color: rgba(244,239,230,0.85);
+    font-size: 11pt;
+  }
+  .footer-cta a {
+    color: var(--paper);
+    text-decoration: underline;
+    text-decoration-color: var(--brick);
+    text-underline-offset: 3px;
+  }
+
+  /* table of contents */
+  .toc { margin-top: 0.25in; }
+  .toc .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.12in 0;
+    border-bottom: 1px dotted var(--hairline);
+    font-size: 11pt;
+  }
+  .toc .row .num {
+    font-family: "JetBrains Mono", monospace;
+    color: var(--brick);
+    width: 0.4in;
+    font-weight: 500;
+  }
+  .toc .row .name {
+    flex: 1;
+    font-family: "Fraunces", serif;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .toc .row .pg-num {
+    font-family: "JetBrains Mono", monospace;
+    color: var(--muted);
+    font-size: 9.5pt;
+  }
+
+  .author-note {
+    background: var(--bone);
+    padding: 0.3in;
+    border-radius: 2px;
+    margin: 0.3in 0;
+    page-break-inside: avoid;
+  }
+  .author-note .label {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8.5pt;
+    letter-spacing: 0.2em;
+    color: var(--brick);
+    margin-bottom: 0.12in;
+    text-transform: uppercase;
+  }
+  .author-note p {
+    font-family: "Spectral", serif;
+    font-size: 11.5pt;
+    font-style: italic;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+</style>
+</head>
+<body>
+
+<!-- ====== COVER PAGE ====== -->
+<div class="cover">
+  <div class="cover-top">
+    <div class="wordmark"><span class="it">Human</span> at Work<span class="dot">.</span></div>
+    <div class="meta-stamp">
+      v1 · 2026-05<br>
+      OPERATOR-TESTED<br>
+      NOT THEORY
+    </div>
+  </div>
+
+  <div class="cover-mid">
+    <div class="tier-tag">Entry · $27</div>
+    <div class="cover-title">Start AI <em>Within 24 Hours</em></div>
+    <p class="cover-sub">Five workflows. One day. From zero account to AI you actually use Monday morning.</p>
+
+    <div class="cover-promise">
+      <div class="label">The Promise</div>
+      <p>By the end of 24 hours you will have five working AI workflows running on whatever LLM you already have a tab open on. No course. No course-correction. No tab-shopping for the "right" tool.</p>
+    </div>
+  </div>
+
+  <div class="cover-bottom">
+    <div class="by-line">By <strong>Boubacar</strong><br>14 years corporate HR. Now building agentsHQ.</div>
+    <div class="price-stamp">
+      <div class="num">$27</div>
+      single-purchase
+    </div>
+  </div>
+</div>
+
+<!-- ====== PAGE 2: AUTHOR NOTE + TOC ====== -->
+<div class="pg">
+  <div class="eyebrow">A note before you start</div>
+  <h1>This is the guide I wish I had <em>two years ago</em>.</h1>
+
+  <div class="author-note">
+    <div class="label">From Boubacar</div>
+    <p>Skip the AI course funnel. Skip the "best 50 AI tools" listicle. Skip the cohort program that starts in three weeks. By tomorrow this time, you'll have five workflows running. That's the whole product.</p>
+  </div>
+
+  <h2 style="margin-top: 0.5in;">Contents</h2>
+  <div class="toc">
+    <div class="row"><span class="num">01</span><span class="name">The 24-hour schedule</span><span class="pg-num">p. 3</span></div>
+    <div class="row"><span class="num">02</span><span class="name">Workflow 1 — Email triage</span><span class="pg-num">p. 4</span></div>
+    <div class="row"><span class="num">03</span><span class="name">Workflow 2 — Meeting prep</span><span class="pg-num">p. 5</span></div>
+    <div class="row"><span class="num">04</span><span class="name">Workflow 3 — Document compression</span><span class="pg-num">p. 6</span></div>
+    <div class="row"><span class="num">05</span><span class="name">Workflow 4 — Decision support</span><span class="pg-num">p. 7</span></div>
+    <div class="row"><span class="num">06</span><span class="name">Workflow 5 — Personal ops</span><span class="pg-num">p. 8</span></div>
+    <div class="row"><span class="num">07</span><span class="name">The Monday-morning worksheet</span><span class="pg-num">p. 9</span></div>
+    <div class="row"><span class="num">08</span><span class="name">FAQ & next step</span><span class="pg-num">p. 10</span></div>
+  </div>
+</div>
+
+<!-- ====== PAGE 3: SCHEDULE ====== -->
+<div class="pg">
+  <div class="eyebrow">01 · The 24-Hour Schedule</div>
+  <h1>Block it on your calendar. <em>One day, real moves.</em></h1>
+  <p class="lead">Below is the timing structure that works if you start tonight at 8pm. Adjust to your actual schedule — the only rule is don't spread it across a week.</p>
+
+  <div class="schedule">
+    <div class="row">
+      <div class="time">8:00 PM TODAY</div>
+      <div class="label">Setup (15 min)</div>
+      <div class="what">Pick the LLM you already pay for (Claude, ChatGPT, Gemini, Grok, Perplexity — any of them). One tab. No tool-shopping.</div>
+    </div>
+    <div class="row">
+      <div class="time">8:15 PM</div>
+      <div class="label">Workflow 1</div>
+      <div class="what">Email triage. Paste your inbox snapshot. Output: 3 categories + draft replies.</div>
+    </div>
+    <div class="row">
+      <div class="time">9:30 PM</div>
+      <div class="label">Workflow 2</div>
+      <div class="what">Meeting prep on tomorrow's calendar. Output: agenda + open questions per meeting.</div>
+    </div>
+    <div class="row">
+      <div class="time">10:30 PM</div>
+      <div class="label">SLEEP</div>
+      <div class="what">No, really. Save 3 for morning. Burning out at midnight = no Monday-morning ship.</div>
+    </div>
+    <div class="row">
+      <div class="time">6:30 AM</div>
+      <div class="label">Workflow 3</div>
+      <div class="what">Document compression. Paste a long doc you've been avoiding. Output: 1-page brief.</div>
+    </div>
+    <div class="row">
+      <div class="time">7:30 AM</div>
+      <div class="label">Workflow 4</div>
+      <div class="what">Decision support. Stress-test 1 real call you're stuck on. Output: 3 reframes.</div>
+    </div>
+    <div class="row">
+      <div class="time">8:30 AM</div>
+      <div class="label">Workflow 5</div>
+      <div class="what">Personal ops. One household / family / errand process you keep forgetting. Output: a written runbook.</div>
+    </div>
+    <div class="row">
+      <div class="time">9:00 AM</div>
+      <div class="label">SHIP</div>
+      <div class="what">Use Workflow 1 on today's actual inbox. Live, not practice.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== PAGE 4: SAMPLE WORKFLOW ====== -->
+<div class="pg">
+  <div class="eyebrow">02 · Workflow 1 — Email triage</div>
+  <h1>Stop reading every email. <em>Triage in 4 minutes.</em></h1>
+
+  <div class="step-card">
+    <span class="step-tag">Step 1 of 3</span>
+    <h3>Snapshot your inbox</h3>
+    <div class="outcome">Outcome: a paste-ready list of 30-50 unread subject lines + senders.</div>
+    <div class="body">Open your email client. Copy the subject + sender for the last 30-50 unread messages. Paste them into a scratch doc.</div>
+  </div>
+
+  <div class="step-card">
+    <span class="step-tag">Step 2 of 3</span>
+    <h3>Paste this prompt into any LLM</h3>
+    <div class="outcome">Outcome: three buckets with draft replies for the action-needed bucket.</div>
+    <div class="prompt-block">You are my email triage assistant. Take the inbox list below and split it into 3 buckets:
+
+  1. ACTION NEEDED (under 5 min reply, do today)
+  2. READ LATER (informational, no action)
+  3. ARCHIVE / DELETE (newsletters, junk, FYIs already handled elsewhere)
+
+For each ACTION NEEDED item, draft a 2-3 sentence reply I can edit and send.
+
+Inbox:
+[paste your 30-50 lines here]</div>
+  </div>
+
+  <div class="step-card">
+    <span class="step-tag">Step 3 of 3</span>
+    <h3>Send the action-needed batch</h3>
+    <div class="outcome">Outcome: 5-12 emails closed in 30 minutes instead of two hours of inbox grazing.</div>
+    <div class="body">Copy each draft reply into the actual reply box. Edit one line for your voice. Send. Move to the next.</div>
+  </div>
+
+  <div class="pull">
+    The LLM is not your replacement. It is your first draft. The draft is 80% of the work.
+    <cite>— Boubacar</cite>
+  </div>
+</div>
+
+<!-- ====== PAGE 5: WORKSHEET ====== -->
+<div class="pg">
+  <div class="eyebrow">07 · Monday-Morning Worksheet</div>
+  <h1>Fill this in before <em>9:00 AM Monday.</em></h1>
+  <p class="lead">Print this page. Or open it on a tablet. The point: write your answers in your own hand or your own typing. The act of writing locks in the decision.</p>
+
+  <div class="worksheet">
+    <div class="field">
+      <div class="q">1. Which one workflow am I committing to using on Monday morning?</div>
+      <div class="line"></div>
+      <div class="hint">Pick exactly one. Not five. The other four are next week.</div>
+    </div>
+
+    <div class="field">
+      <div class="q">2. What is the calendar block I'm putting on Monday?</div>
+      <div class="line"></div>
+      <div class="hint">Specific time. Specific duration. e.g., "Mon 8:15-8:45 AM — Email triage."</div>
+    </div>
+
+    <div class="field">
+      <div class="q">3. What would I have to believe for this to fail by Friday?</div>
+      <div class="line"></div>
+      <div class="line"></div>
+      <div class="hint">Pre-mortem. Naming the failure mode is how you avoid it.</div>
+    </div>
+
+    <div class="field">
+      <div class="q">4. Who am I telling that I did this?</div>
+      <div class="line"></div>
+      <div class="hint">One person. Spouse, friend, classmate. Public commitment = follow-through.</div>
+    </div>
+  </div>
+
+  <hr class="rule">
+
+  <div class="eyebrow" style="margin-top: 0.3in;">08 · FAQ</div>
+  <h2 style="margin-top: 0.15in;">The four questions everyone asks</h2>
+
+  <div class="faq-q">"Which LLM should I use?"</div>
+  <div class="faq-a">The one you already pay for. If you don't pay for one yet, ChatGPT or Claude. The workflows work on all of them. The brand doesn't matter for 95% of what most people do.</div>
+
+  <div class="faq-q">"Will this work if I'm not technical?"</div>
+  <div class="faq-a">Yes. You're copy-pasting a prompt and pasting in text. If you can use Gmail, you can do this.</div>
+
+  <div class="faq-q">"Do you offer refunds?"</div>
+  <div class="faq-a">No. Digital download. If you don't think it's worth $27, don't buy it. If you bought it, the value is in doing the 24 hours — not in returning the file.</div>
+
+  <div class="faq-q">"What's next after these 5 workflows?"</div>
+  <div class="faq-a">The $79 Paste Pack adds 25 more prompt bundles across the same 5 categories. Same one-paste-and-go format. See the back cover.</div>
+
+  <div class="footer-cta">
+    <div class="eyebrow">Next step</div>
+    <h2>Ready for 25 more?</h2>
+    <p>The Paste Pack — $79 — adds 25 production-tested prompt bundles. Same five categories, deeper plays.<br>
+    <a href="https://humanatwork.ai/start-ai-24h/t2-paste-pack">humanatwork.ai/start-ai-24h/t2-paste-pack</a></p>
+  </div>
+
+</div>
+
+</body>
+</html>
