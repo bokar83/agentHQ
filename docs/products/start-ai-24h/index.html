@@ -205,20 +205,6 @@
 
   <p>I wrote this. Not an AI. Not a ghostwriter. An operator who uses this stack every hour of every workday. Take what helps. Skip what does not.</p>
 
-  <h3>Who this is for</h3>
-  <ul>
-    <li>Mid-career professionals who feel behind on AI</li>
-    <li>Small business operators who tried ChatGPT once and bounced</li>
-    <li>Anyone preparing for AI changes in their role and wanting a head start</li>
-    <li>People who have read about AI but not yet used it for real work</li>
-  </ul>
-
-  <h3>Who this is not for</h3>
-  <ul>
-    <li>Developers building production AI features (different stack)</li>
-    <li>People looking for theory or AI history</li>
-    <li>Anyone wanting a 1,000-prompt swipe file (this is opposite of that)</li>
-  </ul>
 </section>
 
 <!-- ========== TOC ========== -->
@@ -260,30 +246,32 @@
 <section class="page">
   <h2>02. Hour 0 to 1: Pick Your Tool + Set Up Your Account</h2>
 
-  <h3>The decision tree (under 60 seconds)</h3>
+  <h3>The 60-second decision tree</h3>
+  <p>Pick ONE. You can switch in 30 days. Do not set up all five today. Already paying for one of these? Start there. Tool A you use beats Tool B you set up.</p>
   <table>
-    <thead><tr><th>If you mostly...</th><th>Pick this</th><th>Why</th></tr></thead>
+    <thead><tr><th>Your main job</th><th>Pick this</th><th>Why it wins right now</th></tr></thead>
     <tbody>
-      <tr><td>Write emails + documents + memos</td><td>Claude (claude.ai)</td><td>Best long-form writer, handles 200k tokens, lets you build "Projects"</td></tr>
-      <tr><td>Brainstorm + chat + use plugins + voice</td><td>ChatGPT (chat.openai.com)</td><td>Largest plugin ecosystem, voice mode, image gen built in</td></tr>
-      <tr><td>Code + analyze data + technical work</td><td>Claude (claude.ai)</td><td>Best at code reasoning, artifacts feature for live previews</td></tr>
-      <tr><td>You are not sure</td><td>Claude</td><td>Default for most knowledge-worker workflows in 2026</td></tr>
+      <tr><td>Long-form writing, reports, memos, voice match</td><td>Claude (claude.ai)</td><td>200k context, Projects, best editorial voice</td></tr>
+      <tr><td>Brainstorm, voice mode, image gen, plugins</td><td>ChatGPT (chat.openai.com)</td><td>Voice mode, image gen, biggest plugin ecosystem</td></tr>
+      <tr><td>Long-doc + PDF analysis (50+ pages), video</td><td>Gemini 2.5 Pro (gemini.google.com)</td><td>1M+ context. Best at "read this 200-page PDF and find the contradictions."</td></tr>
+      <tr><td>Real-time research, cited sources, fresh data</td><td>Perplexity (perplexity.ai)</td><td>Cited live web answers. Best at "what happened this week + show sources."</td></tr>
+      <tr><td>Speed, low cost, dev sandbox, already pay for X Premium</td><td>Grok (grok.com) or open models (Llama, Mistral, local)</td><td>Cheap inference, dev-friendly, your existing stack</td></tr>
     </tbody>
   </table>
 
-  <p>This guide will use Claude as the primary example. If you pick ChatGPT, the structure is the same; the buttons are in slightly different places.</p>
+  <p>Switching tools is a 60-day rabbit hole that delays getting useful work done. Lock one in, give it two weeks on real work, then evaluate.</p>
 
   <div class="step">
     <div class="step-label">Step 1 of 4</div>
     <h4>Create the account</h4>
-    <p>Go to <code>claude.ai</code>. Sign up with your email or with Google. Verify your email.</p>
-    <p><strong>Pick the paid tier ($20/month).</strong> The free tier limits how much you can use the model in a day and locks you out of "Projects." For 24-hour onboarding you want the paid tier. If you decide AI is not for you after 30 days, cancel. You are out $20.</p>
+    <p>Go to the tool you picked. Sign up with your work email. Verify.</p>
+    <p><strong>Pick the paid tier (typically $20/month).</strong> The free tier limits how much you can use the model in a day and locks you out of saved-context features. For 24-hour onboarding you want the paid tier. If you decide AI is not for you after 30 days, cancel. You are out $20.</p>
   </div>
 
   <div class="step">
     <div class="step-label">Step 2 of 4</div>
     <h4>Turn off training (privacy default)</h4>
-    <p>Settings -> Privacy -> "Help improve Claude" toggle to OFF. This means your conversations are NOT used to train future models. Default ON in some plans. Always check.</p>
+    <p>Every LLM has a "do not train on my data" toggle buried in Settings -> Privacy. Find it before your first real prompt. Some plans default this ON. Always check. This means your conversations are NOT used to train future models.</p>
   </div>
 
   <div class="step">
@@ -354,56 +342,56 @@
   <p>Settings -> Custom Instructions. These apply across all chats. Set yours once with:</p>
   <blockquote>"Default tone: clear, direct, no filler. Never start with sycophancy ('Great question!'). When uncertain, say so. When I make a request, do the thing first and explain second. Match my voice when shown samples."</blockquote>
 
-  <h3>MCP basics (15 minutes, optional but powerful)</h3>
-  <p>MCP (Model Context Protocol) lets Claude connect to tools you already use (Notion, Gmail, Calendly, Drive). For 24-hour onboarding pick ONE that touches your daily work.</p>
+  <h3>Connect your AI to your other tools (15 minutes, optional)</h3>
+  <p>Every major LLM has a way to plug into the apps you already use (Notion, Gmail, Calendly, Drive, Slack). Claude calls it MCP (Model Context Protocol). ChatGPT calls them Actions and GPT Apps. Gemini calls them Extensions. The shape is identical: authorize your AI to read/write a specific tool, then ask it to do work across both. Pick ONE integration that touches your daily work.</p>
   <table>
-    <thead><tr><th>If you use...</th><th>Add MCP for...</th><th>Why</th></tr></thead>
+    <thead><tr><th>If you use...</th><th>Add an integration for...</th><th>Why</th></tr></thead>
     <tbody>
-      <tr><td>Notion daily</td><td>Notion MCP</td><td>Ask Claude to read/write your Notion docs directly</td></tr>
-      <tr><td>Gmail for everything</td><td>Gmail MCP</td><td>Triage inbox, draft replies in your voice</td></tr>
-      <tr><td>Calendly for booking</td><td>Calendly MCP</td><td>Auto-prep for upcoming meetings</td></tr>
+      <tr><td>Notion daily</td><td>Notion</td><td>Ask your AI to read/write your Notion docs directly</td></tr>
+      <tr><td>Gmail for everything</td><td>Gmail</td><td>Triage inbox, draft replies in your voice</td></tr>
+      <tr><td>Calendly for booking</td><td>Calendly</td><td>Auto-prep for upcoming meetings</td></tr>
     </tbody>
   </table>
-  <p><strong>Skip MCP entirely if you are overwhelmed.</strong> Sections 02 and 03 alone are 80% of the value. MCP is the bonus layer.</p>
+  <p><strong>Skip this entirely if you are overwhelmed.</strong> Sections 02 and 03 alone are 80% of the value. Integrations are the bonus layer.</p>
 </section>
 
 <!-- ========== SECTION 5 ========== -->
 <section class="page">
   <h2>05. Hour 8 to 16: Five Workflows For Your Role</h2>
 
-  <p>Pick the row that matches your role. Each row is a Project you build, with 3 pre-loaded prompts and 1 knowledge artifact suggestion.</p>
+  <p>Pick the row that matches your role. Each row is a saved-context surface you build (Claude calls them Projects, ChatGPT Custom GPTs, Gemini Gems), with 3 pre-loaded prompts and 1 knowledge artifact suggestion.</p>
 
   <h3>If you are in HR / People Ops</h3>
   <ul>
-    <li><strong>Project name:</strong> "HR work"</li>
+    <li><strong>Surface name:</strong> "HR work"</li>
     <li><strong>Knowledge to load:</strong> your company's HR handbook + 2 sample severance letters + 5 of your past HR memos</li>
     <li><strong>Prompts to save:</strong> "Draft a difficult-conversation prep doc for [situation]" + "Review this severance letter for completeness" + "Summarize this resume in 3 bullets a hiring manager will actually read"</li>
   </ul>
 
   <h3>If you are in Operations / Small business</h3>
   <ul>
-    <li><strong>Project name:</strong> "Ops + processes"</li>
+    <li><strong>Surface name:</strong> "Ops + processes"</li>
     <li><strong>Knowledge to load:</strong> your SOP doc + 2 customer complaint emails + last month's KPI report</li>
     <li><strong>Prompts to save:</strong> "Find the 3 biggest gaps in this SOP" + "Draft a customer reply for this complaint" + "Pull the 3 anomalies in this KPI report"</li>
   </ul>
 
   <h3>If you are in Sales / Business development</h3>
   <ul>
-    <li><strong>Project name:</strong> "Sales"</li>
+    <li><strong>Surface name:</strong> "Sales"</li>
     <li><strong>Knowledge to load:</strong> 5 of your best past cold emails + your sales script + your top 3 case studies</li>
     <li><strong>Prompts to save:</strong> "Write a cold email to [prospect] referencing [thing about them]" + "Score this lead from 1-10 based on these criteria" + "Prep me for this discovery call"</li>
   </ul>
 
   <h3>If you are a Writer / Marketer / Content</h3>
   <ul>
-    <li><strong>Project name:</strong> "Writing"</li>
+    <li><strong>Surface name:</strong> "Writing"</li>
     <li><strong>Knowledge to load:</strong> 5 of your best past posts + your style guide + the writer you sound like (paste 3 of their posts)</li>
     <li><strong>Prompts to save:</strong> "Draft a LinkedIn post on [topic] in my voice" + "Rewrite this paragraph in my voice" + "Generate 10 hook variants for this post"</li>
   </ul>
 
   <h3>If you are a Trade business owner (HVAC / roofing / flooring / etc)</h3>
   <ul>
-    <li><strong>Project name:</strong> "Shop ops"</li>
+    <li><strong>Surface name:</strong> "Shop ops"</li>
     <li><strong>Knowledge to load:</strong> your service pricing sheet + your top 5 customer-reply scripts + your warranty policy</li>
     <li><strong>Prompts to save:</strong> "Draft a quote reply for [situation]" + "Write a Facebook Marketplace listing for this used equipment" + "Reply to this customer 1-star review in a professional way"</li>
   </ul>
