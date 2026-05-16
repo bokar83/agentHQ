@@ -236,6 +236,20 @@ def _clear_orphaned_publishing(notion, dry_run: bool) -> int:
             continue
         channel = _prop_text(rec, PROP_CHANNEL)
         platform = _prop_text(rec, PROP_PLATFORM)
+        posted_url = _prop_text(rec, PROP_POSTED_URL)
+        if posted_url and posted_url.strip():
+            # False-positive orphan: at least one platform shipped (Posted URL set)
+            # but page-level Status never flipped to "published". Flip to the
+            # authoritative state instead of condemning the row.
+            logger.warning(
+                f"STUDIO PUBLISHER: orphan sweep found stranded row {page_id} "
+                f"({channel}/{platform}, age={age_h:.1f}h) with Posted URL set; "
+                f"flipping to 'published' (false-positive) not 'publish-failed'"
+            )
+            if not dry_run:
+                _flip_status(notion, page_id, "published")
+            promoted += 1
+            continue
         logger.warning(
             f"STUDIO PUBLISHER: orphan {page_id} ({channel}/{platform}, "
             f"age={age_h:.1f}h) → publish-failed"
