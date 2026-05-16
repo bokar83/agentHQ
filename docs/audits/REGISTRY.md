@@ -9,7 +9,7 @@ Append-only ledger of code/system audits. Most recent at top. Every audit MUST a
 ## 2026-05-16 — STOP suppression compliance incident (CW + SW outreach)
 
 **Trigger**: compliance audit -- cold-email bodies invite "reply STOP to unsubscribe", but no suppression pipeline was wired.
-**Scope**: `skills/outreach/sequence_engine.py`, `scripts/sync_replies_from_gmail.py`, `scripts/install_reply_scanner_cron.sh`, `migrations/011_email_suppressions.sql`, `tests/test_stop_intent_classifier.py`, `docs/audits/2026-05-16-stop-suppression-compliance-incident.md`.
+**Scope**: `skills/outreach/sequence_engine.py`, `scripts/sync_replies_from_gmail.py`, `scripts/install_reply_scanner_cron.sh`, `orchestrator/migrations/012_email_suppressions.sql`, `tests/test_stop_intent_classifier.py`, `docs/audits/2026-05-16-stop-suppression-compliance-incident.md`.
 **Method**: searched repo for suppression code (0 hits), queried VPS for cron (none), queried orc-postgres for opt_out rows (0 of all-time), queried Gmail inbox for STOP-intent (1 hit -- Jordan Harbertson, `jordan@catalina.capital`, replied 2026-05-14 to CW T2).
 
 ### Headline findings

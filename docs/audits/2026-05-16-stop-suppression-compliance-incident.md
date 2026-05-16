@@ -73,7 +73,7 @@ the Jordan Harbertson reply.
 
 ## Fix shipped (branch `fix/stop-suppression-2026-05-16`)
 
-1. **Migration `migrations/011_email_suppressions.sql`** -- new canonical
+1. **Migration `orchestrator/migrations/012_email_suppressions.sql`** -- new canonical
    do-not-contact ledger. Brand-aware (cw / sw / studio / NULL=global),
    reason-tagged, immutable except for `unsuppressed_at` (manual reactivation
    only). Includes `v_email_suppressions_active` + `v_suppressions_by_touch`
