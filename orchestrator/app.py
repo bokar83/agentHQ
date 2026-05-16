@@ -226,6 +226,14 @@ async def startup_event():
     except Exception as e:
         logger.warning(f"ensure_chat_artifacts_table failed (non-fatal): {e}")
 
+    # Ritual dispatcher: ensure ritual_sessions table exists (idempotent).
+    try:
+        from handlers_ritual import ensure_startup as _ritual_startup
+        _ritual_startup()
+        logger.info("ritual_sessions table ready.")
+    except Exception as e:
+        logger.warning(f"ritual_sessions bootstrap failed (non-fatal): {e}")
+
     # M9c: ensure session_summaries table exists (idempotent, non-fatal).
     try:
         from db import ensure_session_summaries_table

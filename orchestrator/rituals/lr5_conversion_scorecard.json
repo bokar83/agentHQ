@@ -1,0 +1,70 @@
+{
+  "ritual_key": "lr5_conversion_scorecard",
+  "title": "L-R5 Conversion Scorecard",
+  "cadence": "Sat 10:30 MDT",
+  "intro": "L-R5 Conversion Scorecard - W1 numeric close. 6 items. Pick + 1 line rationale.",
+  "output_file": "data/lighthouse-decisions.md",
+  "roadmap_file": "docs/roadmap/lighthouse.md",
+  "commit_subject_template": "data(lighthouse): L-R5 Conversion Scorecard {date} - W{week} close [READY]",
+  "commit_body_template": "Captured via orchestrator-bot ritual dispatcher.\n\nRitual: {ritual_key}\nDate: {date}\nUser chat: {user_chat_id}\n\nSee data/lighthouse-decisions.md for full decision text.",
+  "steps": [
+    {
+      "id": "v1_sent_count",
+      "prompt": "Step 1/6 - V1 sent this week count? (Then 1 line context.)",
+      "options": [
+        ["0", "0"],
+        ["1-2", "1_2"],
+        ["3-5", "3_5"],
+        ["6+", "6_plus"]
+      ]
+    },
+    {
+      "id": "reply_count",
+      "prompt": "Step 2/6 - Replies received this week? (Then 1 line.)",
+      "options": [
+        ["0", "0"],
+        ["1-2", "1_2"],
+        ["3-5", "3_5"],
+        ["6+", "6_plus"]
+      ]
+    },
+    {
+      "id": "audit_delivered",
+      "prompt": "Step 3/6 - Audits delivered this week? (Then 1 line.)",
+      "options": [
+        ["0", "0"],
+        ["1", "1"],
+        ["2", "2"],
+        ["3+", "3_plus"]
+      ]
+    },
+    {
+      "id": "paid_calls",
+      "prompt": "Step 4/6 - Paid Signal Sessions booked? (Then 1 line.)",
+      "options": [
+        ["0", "0"],
+        ["1", "1"],
+        ["2+", "2_plus"]
+      ]
+    },
+    {
+      "id": "gate_verdict",
+      "prompt": "Step 5/6 - Week gate verdict. (Then 1 line.)",
+      "options": [
+        ["PASS - continue", "pass"],
+        ["WARN - tighten", "warn"],
+        ["MISS - L-reset", "miss"]
+      ]
+    },
+    {
+      "id": "next_week_focus",
+      "prompt": "Step 6/6 - Next week single focus. (Then 1 line.)",
+      "options": [
+        ["More V1 send volume", "volume"],
+        ["Audit quality", "quality"],
+        ["Reply follow-through", "followup"],
+        ["Other (rationale)", "other"]
+      ]
+    }
+  ]
+}
