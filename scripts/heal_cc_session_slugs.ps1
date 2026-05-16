@@ -19,6 +19,15 @@
 # 2026-05-16: created after legacy D:/tmp/wt-X session resume failure.
 # Migration moved worktrees under canonical-sibling but CC --resume
 # stayed broken until slug folders were manually backfilled.
+#
+# 2026-05-16 v2 fix: also copy the UUID subdirectory (CC stores session
+# sidecar files there: tool-use buffers, compaction state, etc.). Without
+# it, the first resume succeeds but the second resume fails with a state-
+# integrity error because the sidecar files are missing.
+#
+# 2026-05-16 v2 safety: never overwrite a destination jsonl that is LARGER
+# than the source (that means a live CC session is appending to it; clobber
+# = data loss). Skip copy if dst.Length > src.Length.
 
 $ErrorActionPreference = 'Continue'
 $projectsDir = "$env:USERPROFILE/.claude/projects"
@@ -87,10 +96,29 @@ foreach ($j in $jsonls) {
     $dst = "$projectsDir/$slug"
     if (-not (Test-Path $dst)) { New-Item -ItemType Directory -Path $dst -Force | Out-Null }
     $dstFile = "$dst/$($j.Name)"
-    if (-not (Test-Path $dstFile) -or (Get-Item $dstFile).Length -ne $j.Length) {
+    $copyJsonl = $false
+    if (-not (Test-Path $dstFile)) {
+      $copyJsonl = $true
+    } else {
+      $dstLen = (Get-Item $dstFile).Length
+      # Skip if dst is LARGER (live session writing there -- don't clobber)
+      # Skip if same size (already in sync)
+      if ($dstLen -lt $j.Length) { $copyJsonl = $true }
+    }
+    if ($copyJsonl) {
       Copy-Item $j.FullName $dstFile -Force
+      Write-Output "healed jsonl: id=$id cwd=$cwd slug=$slug"
       $healed++
-      Write-Output "healed: id=$id cwd=$cwd slug=$slug"
+    }
+
+    # Also copy UUID subdirectory (session sidecar state). CC requires both
+    # the jsonl + the UUID dir, else resume succeeds once then fails with
+    # state-integrity error on next resume.
+    $srcUuid = "$src/$id"
+    $dstUuid = "$dst/$id"
+    if ((Test-Path $srcUuid) -and (-not (Test-Path $dstUuid))) {
+      Copy-Item $srcUuid $dstUuid -Recurse -Force -ErrorAction SilentlyContinue
+      Write-Output "healed uuid-dir: id=$id slug=$slug"
     }
   }
 }
