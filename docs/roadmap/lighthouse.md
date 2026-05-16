@@ -310,6 +310,16 @@ Lighthouse-relevant note only: Studio is a sub-system feeding Lighthouse later (
    - Audit must signal "this is the quality I produce" to anyone the recipient passes it to
    - New tracking: add REFERRAL event type to signal log if a warm lead names someone
    - Mid-cycle review at L5 should track referral conversation count, not just paid call count
+9. **Shareable-audit redesign.** Downstream of #8. Current audit format is Nate-specific and not forwardable. If referral thesis is real, audit needs to be SHAREABLE: a CEO friend Nate forwards it to should see "this is the kind of work this guy does" without exposing Nate's profile internals. Three options to decide between:
+   - **9a. Two-layer artifact:** Nate-specific page (private) + anonymized "audit sample" page (forwardable). Costs ~30 min extra per delivery.
+   - **9b. Companion deck:** keep current audit, ADD a 1-page "here's what I do" companion that's forwardable. Lower friction.
+   - **9c. Verbal-mention path:** accept referrals come via word-of-mouth not artifact forward; double down on follow-up conversations with each warm lead instead of redesigning audit. Cheapest, slowest.
+   Lean: **9b**. Adds shareability without disturbing the personal gesture. Decide today, lock format before W2 sends start Mon.
+10. **Dual-track sprint vs single-track.** Honest timing math: referrals take 4-12 weeks to land. If W1-W3 = warm-leads-only and they all convert via referral path, no cash hits until W6-W8 = half the sprint gone with zero revenue + zero fallback. Decide between:
+    - **10a. Single-track (current):** warm-referral only through L5 mid-cycle review. Risk: W6 arrives with no cash + no fallback prepared.
+    - **10b. Dual-track:** maintain warm-referral track + add direct-buyer track in parallel (CW cold outbound to SMB founders OR SW audit-to-paid funnel). One feeds referral learning + relationship, other feeds revenue. Adds 1 hour/day load.
+    - **10c. Sequenced:** warm-only W1-W3 (per current plan), trigger dual-track W4 if no paid call by L3 gate. Compromise — same cap on parallel work, but adds optionality.
+    Lean: **10c** if L3 looks weak by Day 12 (2026-05-24). Premature 10b in W1-W2 = scope creep. But waiting until L5 (6/23) to add direct-buyer = too late to recover sprint.
 
 **L-R5 agenda (10:30 MDT, Conversion Scorecard):**
 - W1 numbers: 3 V1 sent (Chad text, Nate LinkedIn, Chase email-personal), 1 audit delivered (Nate), 1 ack-defer (Nate), 0 confirmed yes-replies on rewrite quality, 0 paid calls
