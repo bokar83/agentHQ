@@ -8,7 +8,7 @@
 #   bash /root/agentsHQ/scripts/install_reply_scanner_cron.sh
 #
 # What it does:
-#   1. Applies migrations/011_email_suppressions.sql (idempotent)
+#   1. Applies orchestrator/migrations/012_email_suppressions.sql (idempotent)
 #   2. Adds */15 cron line if missing
 #   3. Smoke-tests the script (one immediate dry-run via docker exec)
 #
@@ -20,9 +20,9 @@ set -euo pipefail
 REPO_DIR="${REPO_DIR:-/root/agentsHQ}"
 CRON_LINE='*/15 * * * * docker exec orc-crewai python3 /app/scripts/sync_replies_from_gmail.py >> /var/log/sync_replies.log 2>&1'
 
-echo "==> Applying migration 011_email_suppressions.sql ..."
-docker cp "$REPO_DIR/migrations/011_email_suppressions.sql" orc-postgres:/tmp/
-docker exec orc-postgres psql -U postgres -d postgres -f /tmp/011_email_suppressions.sql
+echo "==> Applying migration 012_email_suppressions.sql ..."
+docker cp "$REPO_DIR/orchestrator/migrations/012_email_suppressions.sql" orc-postgres:/tmp/
+docker exec orc-postgres psql -U postgres -d postgres -f /tmp/012_email_suppressions.sql
 
 echo "==> Installing crontab entry (if missing) ..."
 TMP=$(mktemp)

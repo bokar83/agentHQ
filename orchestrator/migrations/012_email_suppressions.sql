@@ -14,8 +14,8 @@
 -- human action (set unsuppressed_at, ledger remains for compliance audit).
 --
 -- Run on VPS:
---   docker cp migrations/011_email_suppressions.sql orc-postgres:/tmp/
---   docker exec orc-postgres psql -U postgres -d postgres -f /tmp/011_email_suppressions.sql
+--   docker cp orchestrator/migrations/012_email_suppressions.sql orc-postgres:/tmp/
+--   docker exec orc-postgres psql -U postgres -d postgres -f /tmp/012_email_suppressions.sql
 
 CREATE TABLE IF NOT EXISTS email_suppressions (
     id                  BIGSERIAL PRIMARY KEY,
