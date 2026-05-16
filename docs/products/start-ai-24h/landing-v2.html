@@ -270,6 +270,7 @@
     font-size: 22px;
     color: var(--muted);
     text-decoration: line-through;
+    text-decoration-thickness: 2px;
     text-decoration-color: var(--brick);
     text-decoration-thickness: 2px;
   }
@@ -501,7 +502,7 @@
     position: relative;
     overflow: hidden;
   }
-  /* Unused: photo block removed per Boubacar 2026-05-16 — bio is outcome-led, photo not required for $19 SKU */
+  /* Unused: photo block removed per Boubacar 2026-05-16. Bio is outcome-led; photo not required for $19 SKU. */
   .author-photo-placeholder {
     position: absolute;
     inset: 0;
@@ -558,7 +559,7 @@
     color: var(--ink);
   }
   .moat-list li::before {
-    content: "—";
+    content: "/";
     position: absolute;
     left: 0;
     color: var(--brick);
