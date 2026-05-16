@@ -68,3 +68,73 @@ Format: one block per ritual run.
 ### Three lanes locked, all other items deferred
 
 Ritual engine `feat/ritual-bot` SHA `195b937c` is the engine of record for future L-R4 runs. This entry is the bootstrap.
+
+---
+
+## L-R5 Conversion Scorecard — 2026-05-16 (W1 close)
+
+**Ritual:** `lr5_conversion_scorecard`
+**Run mode:** auto-computed from `data/inbound-signal-log.md` + `data/lighthouse-warm-list.md` (Q&A walkthrough deprecated as low-value; engine refactor queued)
+**Window:** W1 = 2026-05-13 → 2026-05-17 (Day 0 Brandon accountability excluded from W1 sprint counts)
+**Owner:** Boubacar Barry
+
+### W1 event counts
+
+| Event | Count | Detail |
+|---|---|---|
+| SENT (V1 first touch) | 3 | Chad 5/13 text · Nate 5/14 LinkedIn · Chase 5/15 email-personal |
+| REPLY (yes/no/maybe) | 1 | Nate yes 5/14 11:30 (on audit offer, not on rewrite quality) |
+| DELIVERED (audit) | 1 | Nate 5/14 13:39 (3hr 21min EARLY on 5 PM SLA) |
+| THURSDAY check-in | 1 | Chad 5/14 (LinkedIn + text bridge after Day 1 silence) |
+| WIN | 0 | (Brandon Day 0 accountability WIN excluded from W1 sprint) |
+| REFERRAL named-with-intro | 0 | New event type per L-R4 reframe; tracking starts now |
+
+### Qualitative signals (NOTE-tagged, not event-counted)
+
+- Chad: Day 1 silent · Day 2 Thursday check-in delivered · no reply through W1 close
+- Nate: yes 5/14 + audit delivered 5/14 + acknowledged audit ~10min after delivery + said full review **next week** (Dad's 70th birthday weekend). Tuesday/Wednesday W2 check-in queued.
+- Chase: V1 sent Sat AM from Lagoon (remote-location stress test); reply window opens M2 (5/19); too early for W1 score.
+- Boubacar momentum signal (logged 5/14 14:11 MDT): "I've never had this much momentum...feels like we're going the right way." → 1 leading-indicator log.
+
+### Gate verdict — three reads
+
+**Original W1 gate (per `L1` roadmap):** ≥3 replies + ≥1 audit
+- Replies: 1/3 → **UNDER**
+- Audits: 1/1 → **MET**
+- Verdict: **HALF-PASS** on raw count
+
+**L-R4 adjusted gate (locked today, applies forward + retroactively to W1):** audit quality + relationship preservation primary; reply velocity softened
+- Audit shipped early on SLA: ✓
+- Audit quality confirmation: 0/1 (Nate review pending Mon/Tue W2)
+- Referrals named-with-intro: 0/1 (early; W2-W3 expected window)
+- Relationship preservation: ✓ (no fabricated pressure, no pitch in audit, friend voice held)
+- Verdict: **ON-TRACK pending Nate W2 review**
+
+**Audit format trigger (per playbook § "When This Playbook Stops Working"):** ≥10 audits sent AND ≤3 yes-replies → format failure → playbook rewrite
+- Audits sent: 1 → **VOLUME TOO LOW TO TRIGGER**
+- L1→L2 reset: **NOT FIRED**
+
+### W1 close — summary
+
+W1 closes with 1 audit delivered (early, peer-pattern variant, Sankofa-stress-tested), 1 yes-reply on offer, 0 yes-confirmations on rewrite quality (pending), 0 referrals (too early), pattern catalog locked (3 variants), channel matrix + bridge mechanic locked Sat L-R4, ritual engine deployed, momentum signal validated by Boubacar self-report.
+
+**Going into W2 (5/19-5/24):**
+- Mon 5/19: Chris V1 send (sister, LinkedIn DM, 48hr bridge family override)
+- Tue 5/20: Benjamin V3 dormant
+- Tue/Wed: Nate audit-quality review check-in (per his stated cadence)
+- Wed 5/21: Brody V3 dormant or V2 business-owner pull-up
+- Thu 5/22: Bruce V3 dormant
+- Fri 5/23: Dawn V3 dormant
+- Sat 5/24: L-R4 + L-R5 (next cycle) + **dual-track gate check fires** (Lane 3 trigger per L-R4 lock)
+- Brandon Mon reciprocity: lean audit (per L-R4 quick-resolve #1)
+- Lane 2 companion deck draft window: this weekend (5/16-5/17 PM); ready for Mon Chris send
+
+### What did NOT happen this week (intentional)
+
+- No paid Signal Session (gate dropped per L-R4 Lane 3 revision)
+- No pitch in any V1 send (held)
+- No em-dash in any deliverable (CTQ self-check clean)
+- No DRAFT badge or letter brand marks (Atlas nav guards)
+
+---
+
