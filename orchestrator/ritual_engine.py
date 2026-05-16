@@ -51,7 +51,13 @@ logger = logging.getLogger("agentsHQ.ritual_engine")
 _HERE = Path(__file__).resolve().parent
 _REPO_ROOT_ENV = os.environ.get("AGENTS_REPO_ROOT")
 REPO_ROOT = Path(_REPO_ROOT_ENV).resolve() if _REPO_ROOT_ENV else _HERE.parent
-RITUALS_DIR = _HERE / "rituals"
+
+# Container entrypoint syncs orchestrator/*.py to /app/ top-level but does NOT
+# recurse into orchestrator/rituals/. So when this module loads as /app/ritual_engine.py,
+# _HERE = /app/ and _HERE/rituals doesn't exist. Fall back to _HERE/orchestrator/rituals/
+# which IS the mount path inside the container.
+_RITUAL_CANDIDATES = [_HERE / "rituals", _HERE / "orchestrator" / "rituals"]
+RITUALS_DIR = next((p for p in _RITUAL_CANDIDATES if p.is_dir()), _RITUAL_CANDIDATES[0])
 
 
 # ──────────────────────────────────────────────────────────
@@ -491,6 +497,7 @@ def finalize_session(session_id: str,
     if dry_run:
         # Mark complete so unit tests can assert the lifecycle terminus.
         _mark_completed(session_id)
+        _maybe_chain_next(sess, cfg, result, dry_run=True)
         return result
 
     # Real git path. Atomic chain.
@@ -518,7 +525,34 @@ def finalize_session(session_id: str,
     _mark_completed(session_id)
     result["sha"] = sha
     result["branch"] = branch
+    _maybe_chain_next(sess, cfg, result, dry_run=False)
     return result
+
+
+def _maybe_chain_next(sess: dict, cfg: dict, result: dict, dry_run: bool) -> None:
+    """Event-driven chain: dispatch on_complete.dispatch_ritual to same chat.
+
+    Wrapped so chain failure never poisons the just-completed commit.
+    In dry_run mode we record intent but do NOT call cron_dispatch.
+    """
+    next_ritual = (cfg.get("on_complete") or {}).get("dispatch_ritual")
+    if not next_ritual:
+        return
+    if dry_run:
+        result["chain_intent"] = next_ritual
+        return
+    try:
+        chained = cron_dispatch(next_ritual, user_chat_id=str(sess["user_chat_id"]))
+        result["chained"] = chained
+        logger.info(
+            f"ritual chain: {sess['ritual_key']} -> {next_ritual} "
+            f"dispatched (msg={chained.get('message_id')})"
+        )
+    except Exception as e:
+        logger.warning(
+            f"ritual chain dispatch failed ({sess['ritual_key']} -> {next_ritual}): {e}"
+        )
+        result["chain_error"] = str(e)
 
 
 def _mark_completed(session_id: str) -> None:
