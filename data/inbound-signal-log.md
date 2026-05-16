@@ -89,7 +89,7 @@
 
 ## Notes
 
-- Reply detection automation: email_events table (orc-postgres) will auto-populate REPLY rows once M8 classifier fix ships Wed/Thu coding session.
+- Reply detection automation: email_events table (orc-postgres) will auto-populate REPLY rows once L-R8 classifier fix ships Wed/Thu coding session.
 - Audit delivery auto-detection from Gmail Sent: deferred to W4.
 - Dashboard render at `agentshq.boubacarbarry.com/atlas/lighthouse` will eventually parse this markdown into a streak/score widget. Build pending W4 if cycle continues.
 - Brandon iMessage pings: NOT logged here. Brandon's reply IS the receipt.

@@ -185,7 +185,7 @@ Pre-write this Wednesday night during the 21:00 ritual so Thursday morning is pr
 
 ## When This Playbook Stops Working
 
-If Week 1 ends with ≥10 audits sent and ≤3 yes-replies to a second touch, the audit format itself is the problem. Triggers Saturday M5 Conversion Scorecard rewrite. Don't iterate on this playbook mid-W1.
+If Week 1 ends with ≥10 audits sent and ≤3 yes-replies to a second touch, the audit format itself is the problem. Triggers Saturday L-R5 Conversion Scorecard rewrite. Don't iterate on this playbook mid-W1.
 
 ---
 
