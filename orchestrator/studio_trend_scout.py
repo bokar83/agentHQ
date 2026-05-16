@@ -457,7 +457,12 @@ def _classify_pick(cand: TrendCandidate) -> TrendCandidate:
             cand.unique_add = parsed["unique_add"]
         if parsed.get("source_spark"):
             cand.twist = parsed["source_spark"]
-        cand.destination = parsed.get("destination", cand.destination)
+        proposed_destination = parsed.get("destination")
+        if proposed_destination and proposed_destination != cand.destination:
+            logger.warning(
+                f"studio_trend_scout: classifier proposed destination={proposed_destination!r} "
+                f"but niche default {cand.destination!r} wins for '{cand.title[:60]}'"
+            )
     except Exception as e:
         logger.warning(f"studio_trend_scout: classifier failed for '{cand.title[:60]}': {e}")
         cand.fit_score = 0

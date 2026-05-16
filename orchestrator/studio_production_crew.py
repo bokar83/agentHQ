@@ -157,7 +157,7 @@ def run_production(notion_id: str, *, dry_run: bool = False) -> dict[str, Any]:
 
 
 _PULSE_STATE_PATH = "/app/workspace/studio_pipeline_pulse.json"
-_PULSE_SILENCE_WARN_SEC = 90 * 60      # alert after 90 min of zero candidates
+_PULSE_SILENCE_WARN_SEC = 25 * 60 * 60  # 25h: aligned to daily trend_scout cadence (05:30 MT). After daily batch drains (~1h) pipeline is empty ~23h until next scout, so a 90-min watchdog produced false alerts every 6h. 25h still catches real scout-stall (scout dead, no fresh picks landed within expected window).
 _PULSE_ALERT_REPEAT_COOLDOWN_SEC = 6 * 60 * 60  # don't repeat alert more than once per 6h
 
 # Pre-check skip-gate state (Pattern 1: content-hash gate). When the set of

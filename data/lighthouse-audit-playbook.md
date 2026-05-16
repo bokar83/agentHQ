@@ -160,6 +160,42 @@ Then mark the warm-list row with `audit delivered YYYY-MM-DD`.
 
 ---
 
+## Bridge Mechanic (locked L-R4 2026-05-16)
+
+**Why this exists:** warm leads vary in channel activity. Single-channel send + silence ≠ reliable "no". Bridge = second-channel nudge on a fixed timer so the recipient sees the offer where they actually live.
+
+**Default flow:** LinkedIn DM first → personal email bridge (`bokar83@gmail.com`) on timer.
+
+**Timing per recipient:**
+
+| Activity class | Bridge fire | Definition |
+|---|---|---|
+| LinkedIn-active | 24hr after V1 send | Posted last 14 days OR replied to a DM last 30 days |
+| Cold-zone friend | 48hr after V1 send | No posts last 90 days AND no DM activity last 90 days |
+| Uncertain | 24hr (default to LinkedIn-active) | When in doubt, treat as active and pre-write the 48hr fallback |
+
+**Bridge body (lock):**
+
+```
+Hey, sent you a quick note Friday - might have buried it in your inbox/LinkedIn. Same offer if you saw it.
+```
+
+Swap "Friday" for whichever day V1 went out. Single line. No re-pitch. No second ask. Subject = re-use V1 subject ("Need a favor" or recipient-specific) or leave blank if the channel allows.
+
+**What does NOT change between V1 channel and bridge channel:**
+- The offer.
+- The deadline (5 PM same day still applies IF recipient replies yes on either channel).
+- The audit pattern selection (Chad-cold / Nate-peer / Chad-friend-voice per `feedback_audit_pattern_catalog.md`).
+
+**What DOES change:**
+- The mailbox of attention.
+
+**Pre-write the bridge during 21:00 ritual** the day V1 ships. Calendar nudge fires 24hr or 48hr later. Press-send when nudge fires. If V1 replied yes before bridge fires, kill the nudge.
+
+**Per-recipient channel matrix** lives in `data/lighthouse-warm-list.md` Channel + Bridge columns.
+
+---
+
 ## Thursday Check-In
 
 Two days after delivery, ping the recipient:
@@ -185,7 +221,7 @@ Pre-write this Wednesday night during the 21:00 ritual so Thursday morning is pr
 
 ## When This Playbook Stops Working
 
-If Week 1 ends with ≥10 audits sent and ≤3 yes-replies to a second touch, the audit format itself is the problem. Triggers Saturday M5 Conversion Scorecard rewrite. Don't iterate on this playbook mid-W1.
+If Week 1 ends with ≥10 audits sent and ≤3 yes-replies to a second touch, the audit format itself is the problem. Triggers Saturday L-R5 Conversion Scorecard rewrite. Don't iterate on this playbook mid-W1.
 
 ---
 

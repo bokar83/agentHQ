@@ -72,7 +72,12 @@ function block(reason) { process.stdout.write(JSON.stringify({ decision: 'block'
 
 function buildReason(target, kind) {
   const sessionId = (process.env.CLAUDE_SESSION_ID || process.env.ANTIGRAVITY_SESSION_ID || `pid-${process.pid}`).slice(0, 12);
-  const wtPath = `D:/tmp/wt-${sessionId}`;
+  // 2026-05-16: worktrees moved from D:/tmp/wt-X to D:/Ai_Sandbox/agentsHQ-worktrees/wt-X.
+  // D:/tmp/ broke `claude --resume` after reboot because CC session jsonl files
+  // embed cwd. Sibling-of-canonical path survives reboot and keeps work under
+  // agentsHQ tree. Old D:/tmp/wt-X paths still resolve via NTFS junctions from
+  // the 2026-05-16 migration; new worktrees go here.
+  const wtPath = `D:/Ai_Sandbox/agentsHQ-worktrees/wt-${sessionId}`;
   return [
     `BLOCKED: ${kind} would mutate the canonical agentsHQ working tree.`,
     '',

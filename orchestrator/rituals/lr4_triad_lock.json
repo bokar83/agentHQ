@@ -1,0 +1,105 @@
+{
+  "ritual_key": "lr4_triad_lock",
+  "title": "L-R4 Triad Lock",
+  "cadence": "Sat 10:00 MDT",
+  "intro": "L-R4 Triad Lock - 10 items. Pick an option, then send a 1-line rationale. Bot waits between steps.",
+  "output_file": "data/lighthouse-decisions.md",
+  "roadmap_file": "docs/roadmap/lighthouse.md",
+  "commit_subject_template": "data(lighthouse): L-R4 Triad Lock {date} - 3-lane lock + decisions [READY]",
+  "commit_body_template": "Captured via orchestrator-bot ritual dispatcher.\n\nRitual: {ritual_key}\nDate: {date}\nUser chat: {user_chat_id}\n\nSee data/lighthouse-decisions.md for full decision text.",
+  "steps": [
+    {
+      "id": "lane_1",
+      "prompt": "Step 1/10 - Lane 1: pick the highest-leverage lane for the week. (Then send 1 line rationale.)",
+      "options": [
+        ["Warm-lead replies", "warm_replies"],
+        ["Audit shipping", "audit_ship"],
+        ["Direct-buyer prep", "direct_prep"],
+        ["Other (rationale)", "other"]
+      ]
+    },
+    {
+      "id": "lane_2",
+      "prompt": "Step 2/10 - Lane 2: pick the second lane. (Then 1 line.)",
+      "options": [
+        ["Warm-lead replies", "warm_replies"],
+        ["Audit shipping", "audit_ship"],
+        ["Direct-buyer prep", "direct_prep"],
+        ["Other (rationale)", "other"]
+      ]
+    },
+    {
+      "id": "lane_3",
+      "prompt": "Step 3/10 - Lane 3: pick the third lane (max). (Then 1 line.)",
+      "options": [
+        ["Warm-lead replies", "warm_replies"],
+        ["Audit shipping", "audit_ship"],
+        ["Direct-buyer prep", "direct_prep"],
+        ["Other (rationale)", "other"]
+      ]
+    },
+    {
+      "id": "brandon_reciprocity",
+      "prompt": "Step 4/10 - Brandon Monday reciprocity: lean audit or LinkedIn Page Analysis Tool pilot? (Then 1 line.)",
+      "options": [
+        ["Lean audit (V5)", "lean_audit"],
+        ["LPA tool pilot", "lpa_tool"],
+        ["Hold to L3 gate", "hold"]
+      ]
+    },
+    {
+      "id": "brandon_lunch",
+      "prompt": "Step 5/10 - Brandon Lunch Reconnect activation: W4+ ritual or hold to L5 mid-cycle? (Then 1 line.)",
+      "options": [
+        ["Activate W4+", "activate_w4"],
+        ["Hold to L5", "hold_l5"],
+        ["Drop", "drop"]
+      ]
+    },
+    {
+      "id": "channel_default",
+      "prompt": "Step 6/10 - Channel default for warm leads. (Then 1 line.)",
+      "options": [
+        ["LinkedIn DM -> email 24-48h", "li_dm_bridge"],
+        ["Per-recipient matrix", "matrix"],
+        ["Keep current split", "current"]
+      ]
+    },
+    {
+      "id": "bridge_timing",
+      "prompt": "Step 7/10 - Bridge timing rule. (Then 1 line.)",
+      "options": [
+        ["24hr (urgency)", "24h"],
+        ["48hr (warm friend)", "48h"],
+        ["Per-recipient", "per_recipient"]
+      ]
+    },
+    {
+      "id": "referral_thesis",
+      "prompt": "Step 8/10 - Referral-thesis reframe: warm leads as referral sources first? (Then 1 line.)",
+      "options": [
+        ["Adopt fully", "adopt"],
+        ["Partial - keep velocity gate", "partial"],
+        ["Reject - warm = direct buyer", "reject"]
+      ]
+    },
+    {
+      "id": "shareable_audit",
+      "prompt": "Step 9/10 - Shareable audit redesign. (Then 1 line.)",
+      "options": [
+        ["9a Two-layer artifact", "9a"],
+        ["9b Companion 1-pager", "9b"],
+        ["9c Verbal-mention path", "9c"]
+      ]
+    },
+    {
+      "id": "dual_track",
+      "prompt": "Step 10/10 - Dual-track vs single-track sprint decision. (Then 1 line.)",
+      "options": [
+        ["10a Single-track warm", "10a"],
+        ["10b Dual-track now", "10b"],
+        ["10c Sequenced (W4 trigger)", "10c"]
+      ]
+    }
+  ]
+}

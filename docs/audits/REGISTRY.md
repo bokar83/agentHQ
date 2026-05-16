@@ -6,6 +6,29 @@ Append-only ledger of code/system audits. Most recent at top. Every audit MUST a
 
 ---
 
+## 2026-05-16 — STOP suppression compliance incident (CW + SW outreach)
+
+**Trigger**: compliance audit -- cold-email bodies invite "reply STOP to unsubscribe", but no suppression pipeline was wired.
+**Scope**: `skills/outreach/sequence_engine.py`, `scripts/sync_replies_from_gmail.py`, `scripts/install_reply_scanner_cron.sh`, `orchestrator/migrations/012_email_suppressions.sql`, `tests/test_stop_intent_classifier.py`, `docs/audits/2026-05-16-stop-suppression-compliance-incident.md`.
+**Method**: searched repo for suppression code (0 hits), queried VPS for cron (none), queried orc-postgres for opt_out rows (0 of all-time), queried Gmail inbox for STOP-intent (1 hit -- Jordan Harbertson, `jordan@catalina.capital`, replied 2026-05-14 to CW T2).
+
+### Headline findings
+- `leads.opt_out` column was checked by `sequence_engine._get_due_leads` but nothing ever wrote to it (0 rows TRUE in Supabase canonical).
+- Reply scanner `scripts/sync_replies_from_gmail.py` existed in the repo but had no body classifier, no cron entry, no log file on VPS.
+- No suppression table existed. ~20% of contacted emails do not have a leads row at all (forwarded replies, aliases).
+- One STOP reply this week: Jordan Harbertson responded to CW T2 with bare `STOP` 2026-05-14 12:59 UTC. T3 due ~2026-05-21 and would have fired without the fix.
+- 0 `unsubscribed` events ever recorded in `email_events` despite the schema enum supporting it (migration 009).
+
+### Fix shipped
+Branch `fix/stop-suppression-2026-05-16`. Migration 011 (email_suppressions canonical ledger + 2 analytics views), rewritten reply scanner with STOP-intent classifier (8 patterns, word-bounded, first-1000-chars only), defense-in-depth suppression filter in sequence_engine that joins against suppressions on every touch regardless of leads.opt_out state, cron installer script for VPS host, 18 pytest cases including real Jordan Harbertson body as regression fixture (all green locally).
+
+### Open
+- Manual SQL remediation for Jordan must run on merge (3 statements documented in `docs/audits/2026-05-16-stop-suppression-compliance-incident.md`).
+- Cron install: `bash /root/agentsHQ/scripts/install_reply_scanner_cron.sh` (idempotent, applies migration + adds cron line + smoke-tests).
+- Future hardening: webhook from Gmail Pub/Sub would replace the 15-min polling cron, but the cron is the floor and works today.
+
+---
+
 ## 2026-05-13 — Gate audit logger silent-fail fix (Solution B, host psycopg2 path)
 
 **Trigger**: Task 2 follow-up. First attempt (flip systemd ExecStart to `docker exec ... gate_agent.py`) failed twice (INVOCATION_ID guard, missing table assumed but actually present). Reverted clean.

@@ -209,12 +209,27 @@ If unsure which role: check whether Boubacar explicitly assigned Gate duty. If n
 
 **Never continuously check status after spawning agents — wait for results.**
 
-## Hard Rule: No work in the canonical agentsHQ tree (2026-05-12)
+## Hard Rule: No work in the canonical agentsHQ tree (2026-05-12, path-updated 2026-05-16)
 
 `D:/Ai_Sandbox/agentsHQ` is the canonical working tree. It hosts shared
 state across every concurrent session. Multiple agents writing here
 flipped each other's HEAD ~5 times in 90 minutes on 2026-05-12, losing
 in-flight work. From now on every editing session MUST run in a worktree.
+
+**Canonical worktree path convention (2026-05-16 update):** Worktrees
+live at `D:/Ai_Sandbox/agentsHQ-worktrees/wt-<id>` (sibling of canonical,
+NOT inside it; NOT in `D:/tmp/`). Rationale: CC session jsonl files
+embed cwd. D:/tmp/ worktrees broke `claude --resume` after reboot or
+via remote-control reconnect (Web/Mobile app). The sibling-of-canonical
+path keeps all agentsHQ work under the agentsHQ directory family and
+survives reboot. Old `D:/tmp/wt-X` paths still resolve via NTFS junctions
+created during the 2026-05-16 migration; do NOT create new worktrees at
+`D:/tmp/`.
+
+Create new worktree:
+```
+git worktree add D:/Ai_Sandbox/agentsHQ-worktrees/wt-<id> -b fix/<branch> origin/main
+```
 
 **Enforcement (two layers, both installed locally — NOT VPS):**
 

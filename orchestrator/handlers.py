@@ -38,6 +38,7 @@ from dream_handler import handle_dream_reply
 from handlers_chat import run_chat, run_chat_with_buttons, handle_feedback
 from handlers_commands import dispatch_command
 from handlers_doc import handle_doc_emoji
+from handlers_ritual import handle_ritual_callback, handle_ritual_rationale
 from state import _active_project
 
 logger = logging.getLogger("agentsHQ.handlers")
@@ -141,6 +142,10 @@ async def process_telegram_update(update: dict) -> None:
       8. praise/critique (gated by MEMORY_LEARNING_ENABLED)
       9. classify + dispatch (chat -> run_chat, task -> _run_background_job)
     """
+    # 1a. Ritual dispatcher callbacks (ritual_start / ritual_pick / ritual_confirm / etc.)
+    if handle_ritual_callback(update):
+        return
+
     # 1. Phase 1 callback_query taps (inline buttons for feedback_tag)
     if handle_callback_query(update):
         return
@@ -181,6 +186,10 @@ async def process_telegram_update(update: dict) -> None:
 
     # 3c. Sunday editorial input capture window.
     if handle_newsletter_editorial_reply(text, chat_id, first_word, reply_to_msg_id):
+        return
+
+    # 3d. Ritual rationale capture (active ritual_sessions awaiting='rationale').
+    if handle_ritual_rationale(text, chat_id, sender_id):
         return
 
     # 4. Reply-to-message approve/reject/edit
