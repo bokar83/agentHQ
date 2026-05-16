@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 140" width="600" height="140" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <style>
+      .ink { fill: #161513; }
+      .brick { fill: #A8341F; }
+      .word { font-family: "Fraunces", "Iowan Old Style", Georgia, serif; font-weight: 600; font-size: 84px; letter-spacing: -0.025em; }
+      .word-italic { font-style: italic; }
+      .word-roman { font-style: normal; }
+    </style>
+  </defs>
+  <text x="20" y="100" class="word word-italic ink">Human</text>
+  <text x="245" y="100" class="word word-roman ink"> at Work</text>
+  <circle cx="558" cy="93" r="9" class="brick"/>
+</svg>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <style>
+      .paper { fill: #F4EFE6; }
+      .ink { fill: #161513; }
+      .brick { fill: #A8341F; }
+      .word { font-family: "Fraunces", "Iowan Old Style", Georgia, serif; font-weight: 600; font-size: 88px; letter-spacing: -0.025em; }
+      .word-italic { font-style: italic; }
+      .word-roman { font-style: normal; }
+      .meta { font-family: "JetBrains Mono", "SF Mono", monospace; font-size: 11px; letter-spacing: 0.18em; fill: #6B655C; }
+    </style>
+  </defs>
+  <rect width="400" height="400" class="paper"/>
+  <text x="50" y="175" class="word word-italic ink">Human</text>
+  <text x="50" y="265" class="word word-roman ink">at Work</text>
+  <circle cx="270" cy="258" r="11" class="brick"/>
+  <text x="50" y="340" class="meta">OPERATOR-TESTED &middot; NOT THEORY</text>
+</svg>

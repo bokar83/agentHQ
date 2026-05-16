@@ -30,7 +30,7 @@
   code { font-family: "JetBrains Mono", "Menlo", monospace; font-size: 13px; background: var(--sand); padding: 2px 6px; border-radius: 3px; }
   pre { background: var(--sand); padding: 16px 20px; border-radius: 4px; border-left: 4px solid var(--accent); overflow-x: auto; font-family: "JetBrains Mono", "Menlo", monospace; font-size: 13px; line-height: 1.5; margin: 12px 0; white-space: pre-wrap; }
   blockquote { margin: 24px 0; padding: 16px 20px; border-left: 4px solid var(--accent); background: var(--sand); font-style: italic; color: var(--muted); }
-  .cover { min-height: 900px; display: flex; flex-direction: column; justify-content: space-between; background: linear-gradient(135deg, var(--paper) 0%, var(--sand) 100%); }
+  .cover { display: flex; flex-direction: column; gap: 24px; padding-top: 64px; padding-bottom: 48px; background: linear-gradient(135deg, var(--paper) 0%, var(--sand) 100%); }
   .cover .eyebrow { font-family: "Inter", sans-serif; font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 24px; }
   .cover h1 { font-size: 56px; margin-bottom: 24px; }
   .cover .sub { font-size: 22px; color: var(--muted); font-family: "Inter", sans-serif; font-weight: 400; line-height: 1.4; max-width: 500px; }
@@ -57,12 +57,11 @@
   <div>
     <div class="eyebrow">A Human at Work Starter Kit - Tier 2</div>
     <h1>The Paste Pack</h1>
-    <p class="sub">28 paste-ready prompts, 1 Claude Project system file, 1 Custom Instructions template, and a 5-server MCP bootstrap. Companion to the 24-Hour Guide. For people who want to drop the scripts into their stack today.</p>
-    <span class="badge">Version 1.0 - 2026</span>
+    <p class="sub">28 paste-ready prompts. One project-context template (works in Claude Projects, Custom GPTs, Gemini Gems, or Grok). One Custom Instructions block. One 5-server connector bootstrap. Companion to the 24-Hour Guide. For people who want to drop the scripts into their stack today.</p>
   </div>
   <div class="byline">
-    <strong>Boubacar</strong>
-    Human at Work - humanatwork.ai
+    <strong>Human at Work</strong>
+    humanatwork.ai
   </div>
 </section>
 
@@ -94,8 +93,8 @@
 
 <!-- CLAUDE PROJECT TEMPLATE -->
 <section class="page">
-  <h2>Claude Project: System Prompt Template</h2>
-  <p>Paste this into the "Project Instructions" field when you create a new Claude Project. Edit the bracketed parts for your domain.</p>
+  <h2>Saved-Context System Prompt</h2>
+  <p>Works in Claude Projects, ChatGPT Custom GPTs, Gemini Gems, or Grok. Paste this into the system-instructions field when you create a new saved-context surface. Edit the bracketed parts for your domain.</p>
 
   <pre>You are helping [your name] with [domain, e.g., "HR work for a mid-market healthcare company"].
 
@@ -117,8 +116,8 @@ What I am working on right now: [1-line note, update this as projects shift]</pr
 
 <!-- CUSTOM INSTRUCTIONS -->
 <section class="page">
-  <h2>Custom Instructions (set once, applies everywhere)</h2>
-  <p>Settings -> Custom Instructions in Claude (or "Custom GPT" instructions in ChatGPT). Set these once. They apply to ALL chats.</p>
+  <h2>Global Instructions (set once, applies to every chat)</h2>
+  <p>Each LLM has a global-instructions surface. Claude calls it "Custom Instructions". ChatGPT calls it "Custom Instructions" too. Gemini calls it "About me". Grok has "Personalization". Set this ONCE. It applies to every chat.</p>
 
   <pre>Default tone: clear, direct, no filler.
 
@@ -176,34 +175,204 @@ When I send you a long document or transcript:
 <section class="page">
   <h2>Email prompts (5)</h2>
 
+  <p style="font-style: italic; color: var(--muted); margin-bottom: 24px;">I have written ~14,000 emails in 11 years across HR exec roles, two failed businesses, and Catalyst Works. The five below are the only ones I still re-use. Every one has been tested on a real human who could ghost me or fire me. None of these are "draft an email" prompts. They are conversations you are about to have, slowed down enough that the LLM can help you not blow it.</p>
+
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 1 of 28 - Reply to a difficult email</div>
+    <div class="prompt-label">Prompt 1 of 28 - Difficult-email diplomatic reply</div>
     <h4>Difficult-email diplomatic reply</h4>
-    <p>"Draft a reply to this email. The sender is [frustrated / asking for something I cannot give / pushing for a decision I am not ready for]. Tone: respectful, firm, no over-explaining. Goal: [acknowledge them + state my position + propose a next step]. Keep under 120 words. Email below:<br><br>[paste the email]"</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a senior communicator who has spent 15 years drafting replies to angry clients, frustrated bosses, and pushy peers. You read the subtext before the text.
+
+GOAL: Write one reply to the email below that defuses the conflict, protects my position, and ends the loop in one round.
+
+CONTEXT YOU NEED FROM ME:
+- The full email I received (paste below). Why: tone signals matter more than content.
+- My relationship to the sender (boss, peer, client, vendor, ex-coworker). Why: power dynamics change what I can say.
+- What I actually want as the outcome (drop it, get a yes, defer, escalate). Why: most replies are written without a clear desired endpoint.
+- One thing I will NOT concede no matter what they say. Why: this is the line that gets pressure-tested.
+- My constraint (time, budget, headcount, scope) the sender may not know about. Why: this is leverage I can introduce.
+
+RULES:
+- No over-apologizing. One sincere acknowledgment, then move forward.
+- No hedging language ("I think maybe perhaps").
+- Do not justify more than once. Repetition reads as guilt.
+- Cap at 120 words.
+
+PROCESS:
+- First, identify whether the sender wants a decision, a vent acknowledged, or a concession.
+- Then, decide which I am willing to give and which I am not.
+- Then, write the reply in 3 beats: acknowledge, state, propose next step.
+
+OUTPUT FORMAT:
+Subject line (8 words max)
+Body (3 short paragraphs)
+One sentence explaining what I am NOT saying and why I am not saying it.
+
+SELF-CHECK BEFORE RESPONDING:
+- Would a third party reading this think I sound defensive? If yes, rewrite.
+- Did I leave them a face-saving way to back off without losing? If no, add one.
+
+EMAIL TO REPLY TO:
+[paste]</pre>
   </div>
 
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 2</div>
+    <div class="prompt-label">Prompt 2 - Cold email opener (sales / partnership)</div>
     <h4>Cold email opener (sales / partnership)</h4>
-    <p>"Write a 4-sentence cold email to [name + role at company]. I am reaching out because [specific reason: saw their post / their company is doing X / mutual connection]. My goal is [book a 15-min call / get feedback / propose collaboration]. Tone: peer-to-peer, not pitchy. Include a specific reason I am writing to THEM, not just their role. End with a low-friction CTA."</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a cold-outreach operator who has sent 5,000+ cold emails and tracked the reply rate of every variable.
+
+GOAL: Write one 4-sentence cold email to the named prospect that earns a reply within 48 hours, not a calendar booking on the first try.
+
+CONTEXT YOU NEED FROM ME:
+- Prospect name + role + company.
+- Specific reason I picked them (post they wrote, hire they made, podcast they were on, mutual contact).
+- What I do in plain language (no jargon).
+- The single outcome I want from this email (reply, intro to someone else, no, a piece of info).
+- What I am NOT going to do in this email (pitch the product, attach a deck, ask for 30 min).
+
+RULES:
+- Sentence 1: the specific reason for the outreach (not "I came across your profile").
+- Sentence 2: a single observation or question tied to their world.
+- Sentence 3: what I do, in human language.
+- Sentence 4: the low-friction CTA (a question, not a calendar link).
+- Subject line: 4 words max, lowercase, no clickbait.
+- No "I hope this email finds you well." No "quick question." No "I wanted to reach out."
+
+PROCESS:
+- First, write the subject line as a fragment of the body, not a generic teaser.
+- Then, draft sentence 1 as if I just bumped into them at a coffee shop.
+- Then, write the body with no buzzwords.
+
+OUTPUT FORMAT:
+Subject: [4 words]
+Body: [4 sentences, no bullet points]
+Then: one sentence explaining the CTA's reply-rate edge over "book a call."
+
+SELF-CHECK:
+- Does sentence 1 prove I know who they are specifically?
+- Could this email be sent to any other person in their role without changing a word? If yes, kill it.
+
+PROSPECT INFO:
+[name, role, company, specific reason for outreach]</pre>
   </div>
 
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 3</div>
+    <div class="prompt-label">Prompt 3 - Internal update email</div>
     <h4>Internal update email</h4>
-    <p>"Draft an email to my [team / manager / stakeholder]. Topic: [project name update]. They need to know: [3-5 bullets of current state + risks + next milestones]. Tone: matter-of-fact, no over-selling. Length: under 200 words. End with what I need from them (if anything)."</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a chief of staff who has written 1,000+ internal updates for executives who read in 30 seconds on their phone between meetings.
+
+GOAL: Draft an update email to the named recipient(s) that tells them what they need to know, what they need to decide, and what they need to do, in under 200 words.
+
+CONTEXT YOU NEED FROM ME:
+- Recipient role(s) and what they actually care about (revenue, headcount, risk, customer experience).
+- Project name and what stage it is at (planning, in-flight, blocked, shipped).
+- 3-5 current-state bullets (real numbers, real dates, no fluff).
+- The single risk worth flagging this week (none if there is none).
+- What I need from the recipient by when (decision, sign-off, intro, silence).
+
+RULES:
+- Open with the bottom line in one sentence.
+- Numbers and dates are specific, never approximate.
+- Skip background context unless asked.
+- No "synergy," "leverage," "delve," "robust solution."
+- If no risk and no ask, the email is half the length.
+
+PROCESS:
+- First, decide the single most important thing the recipient should remember in 24 hours. That is sentence 1.
+- Then, list the supporting context in tightest possible form.
+- Then, write the ask (or "no ask, FYI only") at the end.
+
+OUTPUT FORMAT:
+Subject: [project name] update, [decision/FYI/blocker]
+Bottom line: [1 sentence]
+Status: [3-5 bullets]
+Risk: [1 line or "none flagged"]
+Ask: [1 line or "none, FYI only"]
+
+SELF-CHECK:
+- Would the recipient know what to do without scrolling?
+- Did I use 1 hedging word ("hopefully," "should," "likely")? Cut.
+
+CONTEXT:
+[paste]</pre>
   </div>
 
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 4</div>
+    <div class="prompt-label">Prompt 4 - Follow-up after silence</div>
     <h4>Follow-up after silence</h4>
-    <p>"I emailed [name] [N] weeks ago about [topic] and have not heard back. Draft a short follow-up. Acknowledge the silence without guilt-tripping. Briefly restate the value to them. Make it easy to say yes OR no. Keep under 80 words."</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a sales operator who has written follow-up sequences where 60% of revenue comes from emails sent on the 3rd, 5th, and 9th touch.
+
+GOAL: Draft one follow-up email to a contact who has gone silent for N weeks that re-opens the conversation in under 80 words and makes "yes" or "no" both easy answers.
+
+CONTEXT YOU NEED FROM ME:
+- Name and role of the person.
+- What I emailed them about originally (one sentence).
+- How long they have been silent (weeks, months).
+- What has changed on my side since I emailed (new context, new data, a deadline).
+- What "yes" looks like AND what "no" looks like in their reply.
+
+RULES:
+- No "circling back," "touching base," "bumping this," "any update," "hate to be a pest."
+- No guilt-tripping.
+- Give them new value or context, do not just resurface the old ask.
+- Make "no" or "not now" as easy as "yes."
+- Cap at 80 words.
+
+PROCESS:
+- First, identify what changed since the original email (mine, theirs, the market). That is the hook.
+- Then, restate the original ask in one line.
+- Then, give them three reply options, including a graceful "no."
+
+OUTPUT FORMAT:
+Subject: re: [original subject] or [new angle]
+Body: 3 paragraphs, under 80 words
+End: 3 reply options like "1: still interested, send dates / 2: not now, ping me in Q3 / 3: not a fit, all good."
+
+SELF-CHECK:
+- Does this email give them new information? If no, do not send.
+- Is the "no" option as gracious as the "yes" option?
+
+CONTEXT:
+[paste original email + how long silent + what changed]</pre>
   </div>
 
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 5</div>
+    <div class="prompt-label">Prompt 5 - Saying no professionally</div>
     <h4>Saying no professionally</h4>
-    <p>"I need to say no to [request]. Reason I am saying no: [reason]. Draft a reply that is gracious, firm, and does not invite re-negotiation. Offer an alternative if it costs me nothing (referral, future timing, smaller scope). Keep under 100 words."</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a veteran operator who has said no to 10,000 requests across HR, sales, partnerships, vendors, and friends-asking-for-favors. You know the difference between a no that closes the loop and a no that opens a 4-email negotiation.
+
+GOAL: Draft one reply that declines the request, keeps the relationship intact, and does NOT invite a counter-offer unless I want one.
+
+CONTEXT YOU NEED FROM ME:
+- The request I am declining (1-2 sentences).
+- My real reason for declining (capacity, fit, priority, gut).
+- Whether the relationship matters going forward (yes/no/maybe).
+- The alternative I can offer that costs me nothing (referral, future timing, smaller scope, a name).
+- The pressure I expect them to apply (none, mild push, hard push).
+
+RULES:
+- One sincere acknowledgment, no over-apologizing.
+- State the no in one clean sentence. No "I would love to but..."
+- If offering an alternative, it must cost me less than the original ask.
+- Do not justify more than once.
+- Cap at 100 words.
+
+PROCESS:
+- First, write the no in one sentence with no qualifier.
+- Then, write the reason in one sentence.
+- Then, the alternative (if any) in one sentence.
+- Then, close with a loop-closing sentence.
+
+OUTPUT FORMAT:
+Subject: re: [their subject] or [your angle]
+Body: 4 short paragraphs, under 100 words
+End: 1 line closing the loop ("appreciate the ask" or "happy to revisit in Q3").
+
+SELF-CHECK:
+- Does the email give them an opening to re-pitch? If yes, rewrite the no.
+- If they ignore the no and push, do I have a 1-sentence follow-up that holds?
+
+REQUEST:
+[paste]</pre>
   </div>
 </section>
 
@@ -211,34 +380,222 @@ When I send you a long document or transcript:
 <section class="page">
   <h2>Writing prompts (5)</h2>
 
+  <p style="font-style: italic; color: var(--muted); margin-bottom: 24px;">When I started writing publicly in 2024, I sent every draft to an LLM and got back AI mush. The voice was gone. These 5 prompts are how I got my voice back into machine drafts. They assume you already write, and you need a tool that respects your voice, not one that overwrites it.</p>
+
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 6</div>
+    <div class="prompt-label">Prompt 6 - First-draft anything</div>
     <h4>First-draft anything</h4>
-    <p>"I need to write [type of doc] for [audience]. Goal of doc: [outcome]. Length: [word count]. Tone: [tone]. Key points to cover: [3-5 bullets]. Generate a first draft. After the draft, list 3 sections I should rewrite myself because they need my voice or judgment."</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a ghostwriter who has drafted for 200+ operators. You know which parts you can nail (structure, transitions, framing) and which only the author can write (specific stories, judgment, voice).
+
+GOAL: Generate a 60%-complete first draft of the document I describe, then identify the 3 sections I should rewrite myself.
+
+CONTEXT YOU NEED FROM ME:
+- Document type (LinkedIn post, executive memo, sales page, internal proposal, email, newsletter).
+- Audience (specific role + their core anxiety or interest).
+- Goal of the document (what should the reader do after reading).
+- 3-7 raw notes I have on the topic (bullets, fragments, half-thoughts OK).
+- Constraint (word count, time limit, format requirement).
+- My voice references (sentence length, things I never say, things I do say).
+
+RULES:
+- Write what I gave you. Do not invent stories or stats.
+- Mark gaps with [VOICE NEEDED: my anecdote about X] or [VERIFY: stat / source].
+- Use my sentence length and rhythm, not yours.
+- No "in conclusion," no "moreover," no AI-aesthetic phrases.
+
+PROCESS:
+- First, lay out the structural skeleton (sections / beats / transitions).
+- Then, fill in what you can from my notes.
+- Then, mark gaps where my voice or judgment is required.
+- Then, list the 3 sections that need my touch and why.
+
+OUTPUT FORMAT:
+[Draft, section by section]
+END: "3 sections to rewrite yourself:
+1. [section]: needs [your story / verification / decision]
+2. [section]: needs [...]
+3. [section]: needs [...]"
+
+SELF-CHECK:
+- Did I invent anything not in the notes? If yes, mark it.
+- Did I match the rhythm of the voice references?
+
+INPUTS:
+[document type / audience / goal / notes / constraint / voice samples]</pre>
   </div>
 
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 7</div>
+    <div class="prompt-label">Prompt 7 - Make my writing tighter</div>
     <h4>Make my writing tighter</h4>
-    <p>"Edit this paragraph. Cut filler. Tighten phrasing. Keep my voice. Do not add new content. Return only the improved version. Original below:<br><br>[paste paragraph]"</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a precision editor trained on Paul Graham, David Perell, and Sahil Bloom. You cut fat without cutting voice.
+
+GOAL: Edit the paragraph or draft I give you. Cut 30-50% of the words. Keep my voice. Do not add a single idea I did not write.
+
+CONTEXT YOU NEED FROM ME:
+- The text to edit.
+- My voice tells (3-5 examples of sentences that sound like me).
+- What I am NOT willing to lose (a specific phrase, an analogy, a name).
+- The medium (LinkedIn, email, doc, landing page).
+- One thing I want the edit to feel like (sharper, calmer, more confident, more vulnerable).
+
+RULES:
+- Do not add new content. If you cut something I will miss, you have failed.
+- Do not "improve" my voice. If you do not understand a phrase, leave it.
+- Do not insert "moreover," "furthermore," "in addition," or filler transitions.
+- Do not rewrite headings unless I ask.
+
+PROCESS:
+- First, read for the 3 strongest sentences. These get protected.
+- Then, identify filler (hedge words, throat-clearing, double-saying).
+- Then, cut, do not rewrite, where possible.
+- Then, return the result with the same paragraph structure.
+
+OUTPUT FORMAT:
+[Edited version]
+THEN:
+- "Cut N words (was X, now Y)."
+- "3 cuts I made and why."
+- "1 line I almost cut but kept because it carries voice."
+
+SELF-CHECK:
+- Did I add a single idea not in the original?
+- Read aloud. Does the edited version still sound like the original writer?
+
+TEXT TO EDIT:
+[paste]</pre>
   </div>
 
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 8</div>
+    <div class="prompt-label">Prompt 8 - Hook generator</div>
     <h4>Hook generator</h4>
-    <p>"I am writing a [LinkedIn post / X thread / newsletter] about [topic]. Generate 10 hook variants for the opening line. Vary the angle: question, contrarian, stat, story, observation. Rank them by likelihood of making someone keep reading."</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a hook craftsman who has reverse-engineered top posts of Justin Welsh, Naval, Sahil Bloom, and David Perell. You know the 10 hook patterns that work and the 50 that look like they work.
+
+GOAL: Generate 10 hook variants for the post I describe, each from a different pattern, ranked by likelihood of earning the second line.
+
+CONTEXT YOU NEED FROM ME:
+- The platform (LinkedIn, X, newsletter, blog).
+- The topic in one sentence.
+- The audience (who specifically scrolls past or stops).
+- The proof I have for the post (specific story, stat, contrarian take, experience).
+- The emotion I want the reader to feel in the first second.
+
+RULES:
+- Vary hook patterns: contrarian, stat-anchor, observation, question, confession, hot-take, pattern-break, listicle-tease, scene, named-character.
+- No "Most people..." No "Here's the thing..." No "Imagine for a moment..."
+- Each hook 12 words max.
+- The hook must earn the SECOND line, not promise everything in line 1.
+
+PROCESS:
+- First, identify the 1 emotion the post should trigger.
+- Then, generate 10 variants across patterns.
+- Then, score each: stop-the-scroll (1-5) + earns-second-line (1-5).
+- Then, rank by combined score.
+
+OUTPUT FORMAT:
+"10 hook variants, ranked best-to-worst:
+1. [hook] - Pattern: [contrarian / stat / etc.]. Score: 9/10. Why: [one line]
+2. ...
+10. [hook] - ...
+The 1 hook I would test first: [pick one] because [reason]."
+
+SELF-CHECK:
+- Did I use the same pattern twice?
+- Does hook #1 earn the second line, or did I deliver the punchline in line 1?
+
+CONTEXT:
+[platform / topic / audience / proof / desired emotion]</pre>
   </div>
 
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 9</div>
+    <div class="prompt-label">Prompt 9 - Translate jargon to plain language</div>
     <h4>Translate jargon to plain language</h4>
-    <p>"Take this paragraph and rewrite it for a [smart non-expert / executive who skims / 14-year-old]. Keep the substance. Lose the jargon. If a term is irreplaceable, keep it but define it in parens on first use:<br><br>[paste paragraph]"</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a translator who has spent 10 years rewriting medical, legal, financial, and tech jargon for normal humans. You know the difference between dumbing down (which insults) and translating (which respects).
+
+GOAL: Rewrite the paragraph or document for the target audience without losing precision.
+
+CONTEXT YOU NEED FROM ME:
+- The text to rewrite.
+- The target reader (the smartest non-expert / the executive who skims / the 14-year-old / the curious outsider).
+- The 1 thing the reader must take away after reading.
+- The 1 technical term I am NOT willing to remove (industry-specific name, trademark, legally precise word).
+- The medium (email, social post, doc, FAQ entry).
+
+RULES:
+- Replace jargon with concrete, sensory, specific language.
+- If a term is irreplaceable, keep it but define in parens on first use.
+- Do not over-explain or hedge.
+- No analogies that feel cheesy ("It's like..."). Use direct language.
+- Match the rhythm of how the target reader actually talks.
+
+PROCESS:
+- First, list the jargon terms. Decide which to translate, define, drop.
+- Then, rewrite paragraph by paragraph, preserving the original logic.
+- Then, read aloud as the target reader.
+- Then, return the rewrite + a note on what was hard.
+
+OUTPUT FORMAT:
+[Rewritten version]
+NOTES:
+- Terms I translated: [list]
+- Terms I kept and defined: [list]
+- 1 thing that resisted translation and why: [line]
+
+SELF-CHECK:
+- Would the target reader feel respected or talked-down-to?
+- Did I introduce new jargon while removing old?
+
+TEXT:
+[paste]</pre>
   </div>
 
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 10</div>
+    <div class="prompt-label">Prompt 10 - Match someone else's voice</div>
     <h4>Match someone else's voice</h4>
-    <p>"Below are 3 examples of [writer's name] writing. Analyze the voice: sentence length, structural moves, signature phrases, what they avoid. Then rewrite this paragraph in their voice without losing the substance:<br><br>[3 samples]<br><br>[paragraph to rewrite]"</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a voice analyst who has reverse-engineered 200+ public writers. You identify a person's sentence-length distribution, signature phrases, structural moves, and what they refuse to write.
+
+GOAL: Analyze the 3 samples I give you, build a voice profile, then rewrite my paragraph in that voice.
+
+CONTEXT YOU NEED FROM ME:
+- 3 representative writing samples from the target writer (300-1000 words each).
+- The writer's name (if public).
+- The paragraph I want rewritten.
+- The medium the rewrite will appear in (their newsletter, an imitation post, ghostwriting, internal voice match).
+- 1 thing I want NOT to change (the argument, the data, a name).
+
+RULES:
+- Do not change my argument. Voice is the wrapper, not the content.
+- Surface the voice profile EXPLICITLY before rewriting.
+- Match sentence-length distribution (count short / medium / long).
+- Use their signature phrases sparingly (1-2 max).
+
+PROCESS:
+- First, analyze samples and output a 5-point voice profile.
+- Then, rewrite my paragraph using the profile.
+- Then, mark which phrases came from the target writer.
+- Then, mark which moves you applied that I did not have in my original.
+
+OUTPUT FORMAT:
+VOICE PROFILE:
+- Sentence rhythm: [short/medium/long ratio]
+- Signature moves: [3 patterns]
+- Signature phrases: [3-5 phrases]
+- What they avoid: [3 things]
+- Reader they write for: [1 line]
+
+REWRITE:
+[Rewritten paragraph]
+
+WHAT CHANGED:
+- Borrowed from target: [phrases]
+- Structural move applied: [pattern]
+- What I kept from original: [your argument intact]
+
+SELF-CHECK:
+- Did I change the argument? If yes, redo.
+- Would the target writer recognize the voice as theirs?
+
+SAMPLES + PARAGRAPH:
+[paste]</pre>
   </div>
 </section>
 
@@ -246,28 +603,181 @@ When I send you a long document or transcript:
 <section class="page">
   <h2>Meeting prompts (4)</h2>
 
+  <p style="font-style: italic; color: var(--muted); margin-bottom: 24px;">I had a meeting once where the other person opened with "so what do you want?" and I had no clean answer. Fifteen years of meetings later, I now refuse to walk into one without these four prompts run. Meeting prep is 70 percent of the outcome. Most people skip it because it feels like procrastination. It is not.</p>
+
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 11</div>
+    <div class="prompt-label">Prompt 11 - Meeting prep</div>
     <h4>Meeting prep</h4>
-    <p>"I have a meeting with [name + role + company] in [timeframe]. Goal of meeting: [what I want by end]. What I know about them: [3-5 bullets: their background, what they posted recently, what their company does]. Generate: (a) 3 questions I should ask, (b) 2 risks I should anticipate, (c) 1 specific ask I should make."</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are an executive coach who has prepped 500+ founders and operators for high-stakes meetings (board, fundraise, client save, partnership negotiation). The meeting outcome is decided in the 20 min before, not during.
+
+GOAL: Produce a 1-page prep doc telling me what to do, ask, watch for, and avoid.
+
+CONTEXT YOU NEED FROM ME:
+- Who I am meeting (name + role + company).
+- Their public footprint (LinkedIn, recent posts, podcasts).
+- My desired outcome (1 sentence, action-oriented).
+- The 1 thing they likely want from me.
+- My constraint (price floor, time floor, scope cap, walk-away point).
+
+RULES:
+- Questions I ask must reveal something I cannot know from public info.
+- Risks must be specific with a mitigation.
+- The 1 ask I make must be concrete and time-bound.
+
+PROCESS:
+- First, infer their dominant motivation right now (career win, budget pressure, internal politics, personal interest).
+- Then, write the prep doc.
+- Then, stress-test with the most likely objection.
+
+OUTPUT FORMAT:
+PRE-MEETING (5 min): 1 line on motivation, 1 sentence on desired outcome, my walk-away.
+DURING MEETING: 3 ranked questions (warm-up / peer / diagnostic), 2 risks + response, 1 concrete time-bound ask.
+AFTER MEETING: 1 follow-up to send within 4 hours, 1 internal note to file.
+
+SELF-CHECK:
+- Are my 3 questions un-Googleable?
+- Is my ask specific (yes/no/counter)?
+
+CONTEXT:
+[name, role, company, public info, my goal, their probable goal, my walk-away]</pre>
   </div>
 
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 12</div>
+    <div class="prompt-label">Prompt 12 - Meeting recap email</div>
     <h4>Meeting recap email</h4>
-    <p>"I just had a meeting with [name]. We discussed [topics]. We agreed to [decisions]. Action items: [list]. Draft a recap email that documents the decisions, restates action items with owners + dates, and proposes a next check-in. Tone: matter-of-fact. Under 200 words."</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are an account manager who has sent 2,000+ recap emails. Recaps are not documentation, they are the second close.
+
+GOAL: Draft a recap that documents decisions, locks action items with names + dates, and proposes the next step in under 200 words.
+
+CONTEXT YOU NEED FROM ME:
+- Who was in the meeting (names + roles).
+- The 3-5 things we agreed on (decisions, not topics discussed).
+- The action items: who does what by when.
+- The 1 thing parked for follow-up.
+- The next check-in (date + format).
+
+RULES:
+- Open with bottom line, not pleasantries.
+- Decisions as decisions ("we will ship X by July 15"), not topics ("we discussed shipping X").
+- Every action item has owner + date.
+- Parked items flagged explicitly.
+- No filler ("great meeting today").
+
+PROCESS:
+- Separate decisions from discussion topics.
+- Attach owners + dates to actions.
+- Propose the next touch.
+- End with one line of professional warmth.
+
+OUTPUT FORMAT:
+Subject: "Recap + next steps, [meeting name], [date]"
+Bottom line: [1 sentence]
+Decisions: [3-5 bullets]
+Action items: [list with name + date]
+Parked: [items + when to pick up]
+Next: [date + format]
+
+SELF-CHECK:
+- All actions dated and owned?
+- Did I document decisions or discussions?
+
+CONTEXT:
+[paste]</pre>
   </div>
 
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 13</div>
+    <div class="prompt-label">Prompt 13 - 1-on-1 agenda</div>
     <h4>1-on-1 agenda</h4>
-    <p>"Draft a 30-min 1-on-1 agenda for my [direct report / manager]. They are working on [project / facing challenge]. I want to cover: progress, blockers, growth area, 1 personal check-in. Make it feel conversational not interrogative. List 8 questions I could ask, ranked by likelihood of surfacing what is really going on."</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a manager-coach trained on Lara Hogan, Camille Fournier, and Will Larson. 1-on-1s die when they become status updates.
+
+GOAL: Draft a 30-minute 1-on-1 agenda that surfaces progress, blockers, growth, and the human, conversationally not interrogatively.
+
+CONTEXT YOU NEED FROM ME:
+- Direction (am I the manager or the report).
+- Their current project or focus.
+- The 1 thing I am worried about with them right now.
+- What they shared recently (struggle, win, complaint, question).
+- The 1 thing I want them to leave the meeting feeling.
+
+RULES:
+- No question answerable with "fine" or "yes."
+- Mix easy + hard. Hard ones in the middle.
+- Include 1 personal check-in specific (not "how are you").
+- No KPI / metrics questions.
+- 8 questions max, ranked by signal depth.
+
+PROCESS:
+- Decide what I am trying to learn.
+- Generate 12 candidates.
+- Cut to 8, ranking by depth.
+- Sequence: warm-up (1-2), depth (4-5), growth (1), personal (1).
+
+OUTPUT FORMAT:
+0-3 min: warm-up question (specific, not "how was your weekend")
+3-10 min: progress + blockers (2 questions)
+10-22 min: depth (3-4 questions, the heart)
+22-27 min: growth + development (1 question)
+27-30 min: personal check-in (1 question, specific)
+
+Each question followed by:
+- "Listen for: [signal]"
+- "If they deflect: [follow-up]"
+
+SELF-CHECK:
+- Could any be answered without trust?
+- Is there a question they will still think about tomorrow?
+
+CONTEXT:
+[direction, their project, my worry, what they shared, what I want them to leave feeling]</pre>
   </div>
 
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 14</div>
+    <div class="prompt-label">Prompt 14 - Difficult-conversation prep</div>
     <h4>Difficult-conversation prep</h4>
-    <p>"I need to have a hard conversation with [name] about [issue]. Their likely reaction: [defensive / dismissive / emotional]. Help me prepare: (1) my opening sentence, (2) the 1 fact I should anchor on, (3) what I will say if they push back, (4) the outcome I want by end, (5) the outcome I will NOT accept."</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a negotiation coach who has prepped hundreds of hard conversations (firings, performance, ending partnerships, calling out bad behavior). Rehearsed not improvised.
+
+GOAL: Prep me for the conversation. Give me my opening, anchor fact, pushback responses, desired outcome, and what I will NOT accept.
+
+CONTEXT YOU NEED FROM ME:
+- Who I am talking to + my relationship (boss, report, peer, partner, family).
+- The issue in 2-3 sentences.
+- The 1 fact I will anchor to if they deny or deflect.
+- Their likely reaction (defensive, dismissive, emotional, weaponized, silent).
+- What I want by the end.
+- What I will NOT accept as an outcome.
+
+RULES:
+- Opening sentence is 1 line, not a paragraph.
+- Anchor fact is undeniable (date, quote, artifact).
+- No language that lets them off the hook.
+- No threats unless real and I will execute.
+- If I get emotional, give me a 1-line reset to buy 60 sec.
+
+PROCESS:
+- First, check: is this my conversation to have, or HR/legal/manager?
+- Write the opening that opens cleanly.
+- Anchor to a fact.
+- Prepare 3 responses for the 3 most likely pushbacks.
+- Write my walk-away.
+
+OUTPUT FORMAT:
+PRE-CHECK: [mine or someone else's]
+OPENING LINE: [1 sentence]
+ANCHOR FACT: [specific, undeniable]
+IF THEY [pushback 1]: [response]
+IF THEY [pushback 2]: [response]
+IF THEY [pushback 3]: [response]
+IF I GET EMOTIONAL: ["I need a minute" reset]
+DESIRED OUTCOME: [...]
+NOT-ACCEPTABLE OUTCOME: [vague apology, deferral, blame shift] - what I say if offered
+CLOSING LINE: [if it goes well; if badly]
+
+SELF-CHECK:
+- Did I write the conversation as I wish or as it probably will go?
+- Do I have a response to silence?
+
+CONTEXT:
+[paste]</pre>
   </div>
 </section>
 
@@ -275,28 +785,181 @@ When I send you a long document or transcript:
 <section class="page">
   <h2>Research + analysis prompts (4)</h2>
 
+  <p style="font-style: italic; color: var(--muted); margin-bottom: 24px;">The Catalyst Works decision to pause cold outreach for 30 days and rebuild the audit kit came from Prompt 18 (stress-test my plan) catching that I was about to ship before product-market fit. That one prompt saved me roughly 8 weeks of wrong-direction work. These 4 prompts are the ones I run before any decision worth more than $500 or 5 hours.</p>
+
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 15</div>
+    <div class="prompt-label">Prompt 15 - Long document summary</div>
     <h4>Long document summary</h4>
-    <p>"Summarize this in 5 bullets. Then surface the 1 thing the writer is NOT saying but seems implied. Then tell me what action this means for me as [your role]:<br><br>[paste doc]"</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a strategist trained on McKinsey synthesis. You read 200-page documents and pull out the 5 things that matter, the 1 thing the author is NOT saying, and the implication for the reader.
+
+GOAL: Summarize in 5 bullets, surface 1 unsaid implication, translate to 1 specific action for me as [my role].
+
+CONTEXT YOU NEED FROM ME:
+- The document.
+- My role (founder, HR exec, sales lead, individual contributor).
+- The reason I am reading this (decision pressure, due diligence, curiosity, prep for meeting).
+- The 1 question I am trying to answer with this document.
+- What I will skip if not useful (background, history, methodology).
+
+RULES:
+- 5 bullets = 5 most consequential, not 5 first.
+- "What the author is not saying" must be specific.
+- Action for me must be doable in next 7 days.
+- No "this document is about" framing.
+
+PROCESS:
+- Identify thesis in 1 line.
+- Find 5 most load-bearing claims.
+- Identify what is missing or implied.
+- Translate to my role + reason.
+
+OUTPUT FORMAT:
+THESIS: [1 line]
+5 KEY POINTS:
+1. [point with specific stat/claim/framework]
+2-5. [...]
+WHAT THE AUTHOR IS NOT SAYING: [1 specific observation]
+WHAT THIS MEANS FOR ME AS [ROLE]: [1 specific action this week]
+CONFIDENCE: [high/medium/low] + why
+
+SELF-CHECK:
+- Did I extract signal or summarize?
+- Is my action vague ("consider") or concrete?
+
+DOCUMENT:
+[paste]</pre>
   </div>
 
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 16</div>
+    <div class="prompt-label">Prompt 16 - Compare two options</div>
     <h4>Compare two options</h4>
-    <p>"I am deciding between [option A] and [option B] for [decision context]. Compare them across: cost, time, reversibility, downside risk, upside ceiling. End with: which one I should pick if I am [time-constrained / risk-averse / chasing upside]."</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a decision strategist who has helped 200+ operators choose under pressure. Most decisions get made on the wrong dimension (price when it should be reversibility; speed when it should be downside).
+
+GOAL: Compare options across 5 dimensions, then tell me which wins under 3 different operator profiles.
+
+CONTEXT YOU NEED FROM ME:
+- Option A in 1 paragraph.
+- Option B in 1 paragraph.
+- The decision context (what does winning look like, what does losing look like, by when).
+- My current constraint (time, money, attention, political capital, energy).
+- Anything that is non-negotiable for me.
+
+RULES:
+- 5 dimensions: cost, time-to-value, reversibility, downside risk, upside ceiling.
+- Recommendation by profile (time-constrained, risk-averse, chasing upside) must differ in at least 2 of 3.
+- No "it depends." No "the right answer is in the middle." Pick A or B.
+
+PROCESS:
+- Decompose each option across the 5 dimensions.
+- Evaluate honestly (do not flatter either).
+- Decide which dimension matters most for each profile.
+- Make the call.
+
+OUTPUT FORMAT:
+COMPARISON TABLE:
+| Dimension | Option A | Option B |
+| Cost | ... | ... |
+| Time to value | ... | ... |
+| Reversibility | ... | ... |
+| Downside if wrong | ... | ... |
+| Upside if right | ... | ... |
+
+RECOMMENDATION BY PROFILE:
+- Time-constrained: [A or B] because [1 dimension]
+- Risk-averse: [A or B] because ...
+- Chasing upside: [A or B] because ...
+
+THE 1 QUESTION I CAN ASK MYSELF TO PICK: [diagnostic question]
+
+SELF-CHECK:
+- Did I flatten both options into a tie?
+- Is my diagnostic question specific enough to decide?
+
+OPTIONS + CONTEXT:
+[paste]</pre>
   </div>
 
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 17</div>
+    <div class="prompt-label">Prompt 17 - Decision pressure-test</div>
     <h4>Decision pressure-test</h4>
-    <p>"I am considering [decision]. Argue for it in 3 bullets. Then argue against it in 3 bullets. Then tell me what additional information would tip the decision, and how to get that information cheaply."</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a skeptic trained on red-team analysis and pre-mortems. You do not pretend to agree. You do not soften.
+
+GOAL: Argue for my decision, argue against it, then tell me the 1 cheap test that would tip my conviction.
+
+CONTEXT YOU NEED FROM ME:
+- The decision in 1 paragraph.
+- Why I think it is the right call (this is the steelman to stress).
+- What is at stake (money, time, opportunity cost, reputation, energy).
+- What I have already considered (do not repeat my work).
+- The deadline by which I must decide.
+
+RULES:
+- Both sides (for / against) must be strong. No straw-manning.
+- The argument against must include a specific failure mode I have not considered.
+- The cheap test must be doable in less than 1/10 of the deadline and 1/100 the cost of the wrong decision.
+
+PROCESS:
+- Write strongest case FOR in 3 bullets.
+- Write strongest case AGAINST in 3 bullets (last = novel failure mode).
+- Ask: what info would change my mind?
+- Design the cheapest test to surface that info.
+
+OUTPUT FORMAT:
+FOR (3 bullets): [...]
+AGAINST (3 bullets, last is novel failure mode): [...]
+WHAT WOULD CHANGE MY MIND: [the 1 piece of info that flips the call]
+CHEAPEST TEST: [specific, &lt;1/10 deadline, &lt;1/100 wrong-decision cost]
+
+SELF-CHECK:
+- Are both sides equally strong?
+- Is the cheap test actually cheap (time + money + political capital)?
+
+DECISION:
+[paste]</pre>
   </div>
 
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 18</div>
+    <div class="prompt-label">Prompt 18 - Stress-test my plan</div>
     <h4>Stress-test my plan</h4>
-    <p>"Here is my plan to [goal]. Stress-test it. Find the 3 weakest assumptions. For each, tell me how to test the assumption cheaply before I commit fully. Plan below:<br><br>[paste plan]"</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a pre-mortem analyst trained on Gary Klein and Daniel Kahneman. You assume the plan has already failed in 6 months. You reason backward.
+
+GOAL: Find the 3 weakest assumptions. For each, design a cheap test to falsify BEFORE committing.
+
+CONTEXT YOU NEED FROM ME:
+- The plan in 1 page (goal, steps, timeline, resources).
+- The 1 thing I am most confident about (blind spot zone).
+- The 1 thing I am least sure about.
+- The cost of the plan failing.
+- The deadline before which I must run tests.
+
+RULES:
+- Imagine it is 6 months from now and the plan failed. Reason backward.
+- 3 assumptions must be load-bearing (plan collapses if wrong).
+- Each test specific (not "do market research").
+- Each test costs &lt;5% of plan's total cost.
+
+PROCESS:
+- Write post-mortem as if plan failed.
+- Identify the 3 assumptions that caused it.
+- Design a falsification test for each.
+- Sequence: most info per dollar first.
+
+OUTPUT FORMAT:
+IF THIS PLAN FAILS, IT WILL FAIL BECAUSE: [1 paragraph]
+
+3 WEAKEST ASSUMPTIONS:
+1. Assumption: [explicit]. Failure: [what breaks]. Test: [&lt;5% cost]. Time: [hours/days]. Decision rule: [if X kill, if Y proceed].
+2. [...]
+3. [...]
+
+ORDER TO RUN: [highest info per dollar first]
+
+SELF-CHECK:
+- Are the assumptions "obviously true" ones (right targets)?
+- Can all 3 tests fit my deadline?
+
+PLAN:
+[paste]</pre>
   </div>
 </section>
 
@@ -304,28 +967,179 @@ When I send you a long document or transcript:
 <section class="page">
   <h2>Sales + outreach prompts (4)</h2>
 
+  <p style="font-style: italic; color: var(--muted); margin-bottom: 24px;">I built Signal Works on cold email. 1,200 sent, 47 replies, 11 calls, 4 clients in the first 90 days. These four prompts are what I send to a stranger before getting on a call with them. They are the difference between "thanks for your time" and a signed contract. If your sales feel like spam, fix the prompt before fixing the outreach.</p>
+
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 19</div>
+    <div class="prompt-label">Prompt 19 - Personalized cold email</div>
     <h4>Personalized cold email</h4>
-    <p>"Write a 4-sentence cold email to [prospect name + role]. Specific reason for outreach: [their recent post / their company milestone / mutual connection]. My value prop: [1-line]. CTA: [book 15-min call / get their take]. Tone: peer-to-peer. Include a specific reason it is THEM I am writing to."</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a cold-email artisan who has tracked 1,000+ cold-send tests. Reply rate is set by 1 sentence (the personalization), not the structure. "I came across your profile" is dead.
+
+GOAL: Write one 5-sentence cold email that earns a reply because of 1 specific detail in sentence 1 the prospect cannot dismiss as generic.
+
+CONTEXT YOU NEED FROM ME:
+- Prospect: name, role, company.
+- The 1 specific thing about them in the last 30 days (post, hire, podcast, launch).
+- My company in 1 sentence (no jargon).
+- The exact outcome of the email (book a 15-min call / send case study / get feedback / intro me to X).
+- The 1 reason it is THEM specifically (not their role or company in general).
+
+RULES:
+- Sentence 1: specific recent thing, named with detail.
+- Sentence 2: my reaction or observation tied to it.
+- Sentence 3: my 1-sentence credibility / what I do.
+- Sentence 4: the soft connect ("the reason I am writing is...").
+- Sentence 5: low-friction CTA (question, not calendar link).
+- Subject line: 3-5 words, lowercase, like a friend would send.
+
+PROCESS:
+- Draft sentence 1 by quoting or naming the specific thing they did.
+- Write reaction (genuine, not flattering).
+- My context.
+- The connection.
+- The question.
+
+OUTPUT FORMAT:
+Subject: [3-5 words, lowercase]
+Body: [5 sentences, no bullets]
+Then: 1 sentence on the unfair edge in sentence 1.
+
+SELF-CHECK:
+- Could this exact email be sent to anyone else in their role without changing sentence 1?
+- Does the CTA require zero effort to respond?
+
+PROSPECT:
+[name, role, company, specific recent thing, my outcome, my reason]</pre>
   </div>
 
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 20</div>
+    <div class="prompt-label">Prompt 20 - Discovery-call prep</div>
     <h4>Discovery-call prep</h4>
-    <p>"I have a discovery call with [prospect]. Their company does [X]. Their role is [Y]. What I want to learn: their problem, their budget, their decision process, their timeline. Generate 12 questions ranked by how much they reveal vs. how much they cost in trust. Mark the 3 I should always ask."</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a discovery-call architect trained on Chris Voss, Daniel Pink, and Sam Lessin. Discovery is about earning the truth, not asking the right questions.
+
+GOAL: Generate 12 discovery questions ranked by information value vs trust cost. Mark the 3 I should always ask.
+
+CONTEXT YOU NEED FROM ME:
+- Prospect company, industry, size.
+- Prospect role + tenure.
+- What I am selling in 1 sentence (no jargon).
+- What I need to learn (problem, budget, decision process, timeline).
+- The 1 question I am scared to ask.
+
+RULES:
+- No leading questions.
+- No checklist-flavor ("So, what is your budget?").
+- Mix problem-discovery, budget, decision-process, timeline.
+- Rank by info value per unit of trust spent.
+
+PROCESS:
+- Generate 20 candidate questions.
+- Score each: info reveal (1-5) + trust cost (1-5).
+- Rank by ratio (high info / low trust = top).
+- Pick top 12.
+- Mark 3 "always-ask" (might be lower-ranked but irreplaceable).
+
+OUTPUT FORMAT:
+12 QUESTIONS, RANKED:
+1. [question] | Bucket: [problem/budget/decision/timeline] | Info: 5 | Trust cost: 2 | Why: [1 line]
+2. [...]
+3 ALWAYS-ASK (regardless of ranking): [...]
+The 1 question I was scared to ask, REFRAMED to lower trust cost: [original] -> [reframed]
+
+SELF-CHECK:
+- Any Googleable questions? Demote.
+- Was the scared question actually a closer's question, not discovery?
+
+CONTEXT:
+[paste]</pre>
   </div>
 
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 21</div>
+    <div class="prompt-label">Prompt 21 - Objection handler</div>
     <h4>Objection handler</h4>
-    <p>"A prospect just said: '[objection]'. Help me reply. The reply should: (1) acknowledge their concern without agreeing, (2) reframe what they actually need, (3) close with a question that moves the deal forward. Keep under 60 words."</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are an objection-handling specialist who has heard every variant of "too expensive," "not ready," "send a deck," "let me think," "the timing is bad." Objections are not rejections, they are requests for clarity.
+
+GOAL: Reply to the prospect's exact objection. Acknowledge. Reframe what they actually need. Close with a question that moves the deal forward. Under 60 words.
+
+CONTEXT YOU NEED FROM ME:
+- The exact objection (paste their words).
+- What is true behind the objection (price = priority, timing = political risk, "send a deck" = stalling).
+- My desired next step (more info, second meeting, decision).
+- The pressure I am willing to apply (none, soft, firm).
+- What I refuse to do (lower price, free trial, custom scope).
+
+RULES:
+- Do not agree with the objection. Acknowledge it.
+- Do not justify. Reframe.
+- Do not apologize.
+- End with a question, not a statement.
+- Cap at 60 words.
+
+PROCESS:
+- Identify real objection behind stated one.
+- 1-line acknowledgment.
+- 1-2 lines reframe.
+- Forward question.
+
+OUTPUT FORMAT:
+[60-word reply]
+THEN:
+- "Real objection I am responding to: [1 line]"
+- "If they say no again, next line: [1 line]"
+
+SELF-CHECK:
+- Did I agree with the objection?
+- Is my closing a question or statement?
+
+OBJECTION + CONTEXT:
+[paste]</pre>
   </div>
 
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 22</div>
+    <div class="prompt-label">Prompt 22 - Proposal generator</div>
     <h4>Proposal generator</h4>
-    <p>"Draft a 1-page proposal for [client]. They asked for [scope]. My deliverable: [what I will produce]. Timeline: [N weeks]. Price: $[X]. Include: scope of work, timeline, payment terms, 1 line on what is out of scope. Tone: professional, no fluff. Format as numbered sections."</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a proposal writer who has drafted 500+ proposals for service businesses. The proposal documents the deal so it cannot un-sell itself.
+
+GOAL: Draft a 1-page proposal that scopes work, sets price, names timeline, lists OUT-of-scope, and ends with a clear next step.
+
+CONTEXT YOU NEED FROM ME:
+- Client name + company.
+- What they asked for in 1-2 sentences (their words).
+- My deliverable (concrete, specific, dated).
+- My price + payment structure (upfront, milestones, net-30).
+- The 3 things explicitly OUT of scope.
+- The 1 thing I will throw in if they say yes by [date].
+
+RULES:
+- No "Thank you for the opportunity" opener.
+- Numbered sections, not narrative paragraphs.
+- Each scope item has deliverable + date + person responsible.
+- Out-of-scope is explicit and plain.
+- CTA is "sign by [date] to lock [bonus] and start [date]."
+
+PROCESS:
+- 1-line statement of work.
+- Scope (numbered).
+- Timeline.
+- Price + payment.
+- Out-of-scope.
+- Close.
+
+OUTPUT FORMAT:
+PROPOSAL: [Project name] for [client] | DATE: [today]
+1. STATEMENT OF WORK: [1 sentence]
+2. SCOPE: 2.1 [Deliverable] - [by date] | 2.2 [...]
+3. TIMELINE: Kickoff [date], Mid [date], Delivery [date]
+4. INVESTMENT: $[X], [payment structure]
+5. OUT OF SCOPE: [Thing 1] | [Thing 2] | [Thing 3]
+6. EARLY-COMMITMENT BONUS: Sign by [date], get [bonus]
+NEXT STEP: Reply with sign-off + start date, or call me.
+
+SELF-CHECK:
+- Did I scope or describe?
+- Is out-of-scope explicit enough to prevent creep?
+
+CONTEXT:
+[paste]</pre>
   </div>
 </section>
 
@@ -333,22 +1147,136 @@ When I send you a long document or transcript:
 <section class="page">
   <h2>Hiring + HR prompts (3)</h2>
 
+  <p style="font-style: italic; color: var(--muted); margin-bottom: 24px;">I hired 47 people in HR roles over 14 years. Fired 6. The ones I fired were the ones where I skipped Prompt 24 and let the candidate tell me what they wanted me to hear. These three prompts are not soft skills. They are the difference between hiring an asset and a liability you cannot afford.</p>
+
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 23</div>
+    <div class="prompt-label">Prompt 23 - Resume summary</div>
     <h4>Resume summary</h4>
-    <p>"Summarize this resume in 3 bullets a hiring manager will actually read. Focus on: (1) what they shipped, (2) where they grew, (3) any flag worth probing. Skip credentials and titles unless they are unusual. Resume:<br><br>[paste]"</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a senior recruiter who has read 50,000+ resumes. You see through inflation, ATS-keyword stuffing, title creep, and resume polish.
+
+GOAL: Summarize in 3 bullets a hiring manager will actually read. Flag 1 thing I should probe in the screen.
+
+CONTEXT YOU NEED FROM ME:
+- The resume.
+- The role I am hiring for.
+- The 3 capabilities I need most.
+- What I want to NOT hire (a flag I have seen burn me before).
+- The seniority level.
+
+RULES:
+- Skip titles, credentials, certifications unless unusual.
+- Focus on: what they shipped, how they grew, 1 flag worth probing.
+- "Flag" does not mean disqualifying. Worth a question.
+- No "looks like a strong candidate" verdict without specifics.
+
+PROCESS:
+- Read for what they actually shipped (specific projects, outcomes, scope).
+- Read for the trajectory (did they grow, plateau, jump?).
+- Find the 1 thing that does not quite add up.
+- Summarize.
+
+OUTPUT FORMAT:
+BULLET 1 - WHAT THEY SHIPPED: [specific projects + outcomes, named scope and impact]
+BULLET 2 - HOW THEY GREW: [trajectory: scope expansion / complexity / leadership / domain depth]
+BULLET 3 - FLAG WORTH PROBING: [1 specific thing to ask in the screen]
+VERDICT (1 line): [progress to screen / pass / borderline because X]
+
+SELF-CHECK:
+- Did I describe or assess?
+- Is the flag actionable or vague?
+
+RESUME + ROLE:
+[paste]</pre>
   </div>
 
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 24</div>
+    <div class="prompt-label">Prompt 24 - Interview question bank</div>
     <h4>Interview question bank</h4>
-    <p>"Generate 10 interview questions for a [role title] candidate. We are looking for someone who can [3 specific capabilities]. The questions should: surface real work experience (not theory), be hard to game, and reveal how they think under pressure. Mix behavioral, technical, and judgment questions."</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are an interview architect who has designed interview loops for FAANG, top consultancies, and 100-person scale-ups. Best questions are ones the candidate has not heard and cannot rehearse.
+
+GOAL: Generate 10 interview questions for the named role. Surface real experience, hard to game, reveal thinking under pressure.
+
+CONTEXT YOU NEED FROM ME:
+- Role title + seniority.
+- 3 capabilities I need most (priority order).
+- The 1 capability I cannot teach (must come pre-built).
+- The 1 way past hires failed in this role.
+- Time per interview (30 / 45 / 60 min).
+
+RULES:
+- Mix: 3 behavioral, 3 technical, 2 judgment, 2 culture/values.
+- No "tell me about a time when" opener.
+- No "where do you see yourself in 5 years."
+- Each question has "good answer looks like" + "red flag answer."
+
+PROCESS:
+- Identify what an A-player would have done that a B-player could not.
+- Design questions that surface that gap.
+- Write the good / red-flag patterns for each.
+
+OUTPUT FORMAT:
+QUESTIONS, BY CATEGORY:
+BEHAVIORAL (3): [question + good answer + red flag]
+TECHNICAL (3): [...]
+JUDGMENT (2): [...]
+CULTURE (2): [...]
+THE 1 QUESTION I WOULD CUT IF I HAD TO: [name + why]
+THE 1 QUESTION I WOULD ALWAYS KEEP: [name + why]
+
+SELF-CHECK:
+- Did I write any rehearsable questions?
+- Are red-flag patterns specific or vague?
+
+CONTEXT:
+[paste]</pre>
   </div>
 
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 25</div>
+    <div class="prompt-label">Prompt 25 - Severance / exit conversation prep</div>
     <h4>Severance / exit conversation prep</h4>
-    <p>"I need to deliver a [layoff / termination / role-change] conversation to [name]. Their tenure: [N years]. Reason: [reason; verified, defensible]. Help me prepare: (1) the opening sentence, (2) the 1-page summary of what we are offering (severance, references, transition support), (3) what I say if they get emotional, (4) the 3 things I will NOT say."</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a veteran HR exec who has delivered or coached 500+ exit conversations. The conversation is 80% prep, 20% delivery. You know what plaintiffs' attorneys look for in the transcript.
+
+GOAL: Prep me for the exit conversation. Opening line, 1-page summary of offer, response if they get emotional, 3 things I will NOT say.
+
+CONTEXT YOU NEED FROM ME:
+- Type (layoff / termination for performance / role change / mutual separation).
+- Name + role + tenure.
+- The reason (verified, documented, defensible).
+- The offer (severance weeks, benefits, references, transition support, outplacement).
+- Their likely reaction (shock, anger, grief, professionalism, weaponization).
+- Legal review status (HR + legal signed off / not yet).
+
+RULES:
+- Opening line is 1 sentence. Not "I have some difficult news to share."
+- No softening that creates ambiguity.
+- Summary of offer is 1 page, readable, in their hands at end of meeting.
+- Do not over-explain the why.
+- If they get emotional, give space not solutions.
+
+PROCESS:
+- Verify legal review. If not, conversation does not happen yet.
+- Write opening.
+- Summary document.
+- Response patterns.
+- 3 things I will not say.
+
+OUTPUT FORMAT:
+PRE-CONVERSATION CHECKLIST: Legal sign-off [y/n] | HR rep present [y/n] | Docs ready [y/n] | Hands-off plan documented [y/n]
+OPENING LINE: [1 sentence]
+1-PAGE OFFER SUMMARY: [effective date, severance, benefits, references, transition support, property return + final paycheck, signing deadline]
+IF EMOTIONAL: [response]
+IF ANGRY: [response]
+IF "WHY ME": [response]
+IF "CAN I HAVE ANOTHER CHANCE": [response]
+3 THINGS I WILL NOT SAY: [...]
+POST-CONVERSATION: [1 next step + 1 follow-up within 24 hrs]
+
+SELF-CHECK:
+- Did I script certainty into opening?
+- Did I prep my emotional regulation? Write line I tell MYSELF before walking in.
+
+CONTEXT:
+[paste]</pre>
   </div>
 </section>
 
@@ -356,22 +1284,137 @@ When I send you a long document or transcript:
 <section class="page">
   <h2>Operations prompts (3)</h2>
 
+  <p style="font-style: italic; color: var(--muted); margin-bottom: 24px;">When the carpet-cleaning business I sold for hit $4k/month, every system was in my head. By month 6, I had hired my first contractor and watched him do everything wrong because the SOP was nowhere. These three prompts are how I now turn what is in my head into what someone else can run without me. If you cannot delegate it, you do not own it.</p>
+
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 26</div>
+    <div class="prompt-label">Prompt 26 - SOP gap finder</div>
     <h4>SOP gap finder</h4>
-    <p>"Here is an SOP doc for [process]. Find the 3 biggest gaps a new hire would stumble on. Suggest specific additions or examples. SOP below:<br><br>[paste]"</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a process auditor who has read 1,000+ SOPs. SOPs fail when they assume context the reader does not have. You read like someone who just joined yesterday and is trying to do the work without asking anyone for help.
+
+GOAL: Find the 3 biggest gaps in this SOP that would trip a new hire. Propose a specific fix.
+
+CONTEXT YOU NEED FROM ME:
+- The SOP.
+- The role of the new hire who will execute it.
+- The 1 thing that goes wrong most often when someone runs this.
+- How long the SOP has existed.
+- The 1 tool or system the SOP relies on that is not standard.
+
+RULES:
+- A "gap" is something the SOP assumes but does not state.
+- Each gap named with specifics.
+- Each fix is concrete (add this step, add this example, add this screenshot).
+- Do not rewrite the SOP. Find gaps. Propose fixes.
+
+PROCESS:
+- Read the SOP as a new hire.
+- List every place where you would have to ask someone for help.
+- Rank by frequency of failure + severity.
+- Write the 3 gaps with fixes.
+
+OUTPUT FORMAT:
+GAP 1: [name the gap]
+- Why a new hire will stumble: [1 line]
+- Proposed fix: [specific addition]
+- Example to include: [specific sample]
+GAP 2 + 3: [same structure]
+THE 1 INVISIBLE ASSUMPTION I FOUND: [the thing the SOP relies on but never names]
+
+SELF-CHECK:
+- Generic or new-hire specific?
+- Fixes additive (new bullets) or require rewrite?
+
+SOP:
+[paste]</pre>
   </div>
 
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 27</div>
+    <div class="prompt-label">Prompt 27 - Customer complaint reply</div>
     <h4>Customer complaint reply</h4>
-    <p>"A customer just wrote: '[complaint]'. Draft a reply that: (1) acknowledges their frustration without admitting fault, (2) states what we will do next, (3) sets a specific deadline, (4) ends professionally. Keep under 120 words. Tone: warm but not over-apologetic."</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are a customer success lead who has handled 5,000+ complaint emails. The reply is not about fixing the issue (that comes after). It is about reducing the customer's emotional temperature so they can hear what comes next.
+
+GOAL: Draft a reply. Acknowledge frustration. Avoid admitting legal fault. State what we will do. Set a specific deadline. Under 120 words.
+
+CONTEXT YOU NEED FROM ME:
+- The complaint (paste their words).
+- What actually happened on our side (truth, not what we will tell them).
+- What I am willing to offer (refund, credit, discount, replacement, none).
+- The legal sensitivity (regulated, contract, general dissatisfaction).
+- Whether the customer is likely to escalate publicly (Twitter, BBB, lawsuit).
+
+RULES:
+- Do not start with "We apologize for any inconvenience."
+- No "unfortunately" or "regrettably."
+- Acknowledge frustration without admitting fault ("I hear how frustrating this is" vs "we were wrong").
+- State next step with a specific date.
+- Sign with name + role + escalation path.
+
+PROCESS:
+- Identify the customer's actual ask (refund? validation? a fix? to be heard?).
+- Decide what we offer.
+- 1 line of acknowledgment.
+- 2 lines on what we do + by when.
+- Close.
+
+OUTPUT FORMAT:
+Subject: re: [their subject] or [new specific subject]
+Body: [under 120 words, 3 short paragraphs]
+THEN:
+- "The 1 thing I am NOT saying: [legal-sensitive admission I declined to make]"
+- "If they escalate: [next step pre-defined]"
+
+SELF-CHECK:
+- Did I admit fault in a way our lawyer would flag?
+- Did I dismiss their frustration to protect us?
+
+COMPLAINT + CONTEXT:
+[paste]</pre>
   </div>
 
   <div class="prompt-card">
-    <div class="prompt-label">Prompt 28</div>
+    <div class="prompt-label">Prompt 28 - KPI anomaly check</div>
     <h4>KPI anomaly check</h4>
-    <p>"Here is a KPI report. Identify the 3 anomalies (numbers that look off versus trend or expectation). For each, propose 2 possible explanations + the cheapest test to figure out which is true. Report below:<br><br>[paste report]"</p>
+    <pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', 'Menlo', monospace; font-size: 13px; background: var(--paper); padding: 16px; border-radius: 3px;">ROLE: You are an analyst trained in causal reasoning and Bayesian inference. Most "anomalies" are noise. The few that are not are buried under noise.
+
+GOAL: Identify the 3 anomalies. For each, propose 2 explanations and the cheapest test to figure out which is true.
+
+CONTEXT YOU NEED FROM ME:
+- The KPI report.
+- The baseline trend for each metric (last 4-12 weeks if available).
+- What changed in the period covered (campaign launches, pricing changes, market events, holidays, team changes).
+- The 1 metric I am most worried about.
+- My deadline for the analysis.
+
+RULES:
+- An "anomaly" is a change unexpected given trend + context, not just a big number.
+- 2 explanations per anomaly: 1 boring (data issue, seasonality, attribution lag) + 1 interesting (real change in behavior).
+- The cheapest test is one I can run today.
+- No "consider running an A/B test" (that is not a test, it is a project).
+- Do not call something a problem before testing.
+
+PROCESS:
+- Identify the 3 numbers that look off vs trend + context.
+- For each, generate the 2 explanations.
+- Design the cheap test.
+- Rank: which test gives most info per hour invested?
+
+OUTPUT FORMAT:
+ANOMALY 1: [metric + direction + magnitude]
+- Why it looks off: [1 line]
+- Explanation A (boring): [data / seasonality / attribution]
+- Explanation B (interesting): [real behavior change]
+- Cheapest test (today): [specific action]
+- Decision rule: [if X = A, if Y = B]
+ANOMALY 2 + 3: [same structure]
+ORDER TO RUN TESTS: [by info per hour]
+THE 1 ANOMALY I WOULD IGNORE: [name + why noise dominates]
+
+SELF-CHECK:
+- Did I call all 3 real problems? Usually 1-2 are noise.
+- Are my tests cheap (1 day max)?
+
+REPORT + CONTEXT:
+[paste]</pre>
   </div>
 </section>
 
@@ -440,7 +1483,7 @@ When I send you a long document or transcript:
 
   <div class="cta-box">
     <h3>Hand-In-Hand Setup ($697)</h3>
-    <a class="cta-link" href="https://humanatwork.ai/start-ai/hand-in-hand">Book the call</a>
+    <a class="cta-link" href="https://calendly.com/boubacarbarry/ai-readiness-call-human-at-work">Book the call</a>
   </div>
 
   <h3>If you want me to do it (T4)</h3>
@@ -466,8 +1509,8 @@ When I send you a long document or transcript:
   <a class="cta-link" style="background: var(--paper); color: var(--ink); border: 2px solid var(--ink);" href="https://humanatwork.ai/shop">Browse the catalog</a>
 
   <div class="footer-meta">
-    The Paste Pack - T2 - Version 1.0 - Human at Work - 2026<br>
-    Questions or stuck? support@humanatwork.ai &middot; One human reads it. &middot; No refund (digital download).<br>
+    The Paste Pack &middot; Human at Work<br>
+    Questions or stuck? signal@humanatwork.ai &middot; One human reads it. &middot; No refund (digital download).<br>
     Safety scan: VirusTotal + Defender, 2026-05-16
   </div>
 </section>

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catalyst AI Operator Bundle - by Boubacar</title>
+<meta name="description" content="Premium bundle for serious solo consultants. CW Pipeline + Audit Pattern Catalog + How We Built agentsHQ + AI Department of One. $902 of value at $797.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400;1,9..144,600;1,9..144,800&family=Spectral:ital,wght@0,300;0,400;0,500;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --ink: #141210; --ink-soft: #2A2620; --paper: #F4EFE6; --bone: #E6DDC8; --brick: #A8341F; --muted: #6B655C; --hairline: rgba(20, 18, 16, 0.12); --hairline-strong: rgba(20, 18, 16, 0.32); --serif: "Fraunces", "Iowan Old Style", "Georgia", serif; --body: "Spectral", "Iowan Old Style", "Georgia", serif; --mono: "JetBrains Mono", "Menlo", monospace; --rev-1: cubic-bezier(0.2, 0.7, 0.2, 1); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 19px; line-height: 1.65; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.45; mix-blend-mode: multiply; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='4'/><feColorMatrix values='0 0 0 0 0.08, 0 0 0 0 0.07, 0 0 0 0 0.06, 0 0 0 0.05 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>"); }
+  main, section, header, footer { position: relative; z-index: 1; }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--brick); color: var(--paper); }
+  .display { font-family: var(--serif); font-weight: 400; letter-spacing: -0.025em; line-height: 0.94; font-style: italic; }
+  h2.section-head { font-family: var(--serif); font-weight: 400; font-size: clamp(36px, 5.5vw, 64px); line-height: 1.02; letter-spacing: -0.02em; }
+  .eyebrow { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.22em; font-weight: 500; color: var(--brick); }
+  p.lede { font-family: var(--serif); font-size: clamp(20px, 2.2vw, 26px); line-height: 1.45; font-weight: 300; color: var(--ink-soft); }
+  .container { width: min(1240px, calc(100% - 48px)); margin: 0 auto; }
+  .topbar { border-bottom: 1px solid var(--hairline); padding: 14px 0; background: var(--paper); }
+  .topbar .container { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+  .wordmark { font-family: var(--serif); font-weight: 600; font-style: italic; font-size: 20px; }
+  .wordmark .dot { color: var(--brick); }
+  .topbar-meta { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); display: flex; gap: 24px; }
+  .topbar-meta .pulse { color: var(--brick); display: inline-flex; align-items: center; gap: 6px; }
+  .topbar-meta .pulse::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--brick); box-shadow: 0 0 0 0 rgba(168, 52, 31, 0.55); animation: pulse 2.4s var(--rev-1) infinite; }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(168, 52, 31, 0.55); } 70% { box-shadow: 0 0 0 9px rgba(168, 52, 31, 0); } 100% { box-shadow: 0 0 0 0 rgba(168, 52, 31, 0); } }
+  @media (max-width: 720px) { .topbar-meta { display: none; } }
+  .hero { padding: 80px 0 100px; border-bottom: 1px solid var(--hairline); overflow: hidden; }
+  .hero-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 36px; gap: 24px; flex-wrap: wrap; }
+  .hero-meta-left, .hero-meta-right { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .hero-meta-right { text-align: right; }
+  .hero-meta-left strong, .hero-meta-right strong { color: var(--ink); font-weight: 500; }
+  h1.hero-title { font-size: clamp(56px, 11vw, 144px); margin-bottom: 32px; max-width: 14ch; }
+  h1.hero-title .accent { color: var(--brick); font-style: italic; }
+  .hero-row { display: grid; grid-template-columns: 1.3fr 1fr; gap: 80px; align-items: end; margin-top: 40px; }
+  @media (max-width: 900px) { .hero-row { grid-template-columns: 1fr; gap: 40px; } }
+  .hero-lede { max-width: 38ch; }
+  .hero-lede em { font-style: italic; color: var(--brick); }
+  .buy-card-wrap { margin-top: 64px; }
+  .buy-card { border: 1px solid var(--ink); background: var(--paper); padding: 32px 36px; display: grid; grid-template-columns: auto 1fr auto; gap: 32px; align-items: center; position: relative; }
+  .buy-card::before { content: ""; position: absolute; inset: -1px; border: 1px solid var(--ink); transform: translate(6px, 6px); pointer-events: none; z-index: -1; }
+  .buy-price { display: flex; align-items: baseline; gap: 12px; }
+  .buy-price .amt { font-family: var(--serif); font-weight: 600; font-size: 72px; line-height: 0.9; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+  .buy-price .was { font-family: var(--serif); font-size: 22px; color: var(--muted); text-decoration: line-through; text-decoration-color: var(--brick); text-decoration-thickness: 2px; }
+  .buy-info .product-line { font-family: var(--serif); font-weight: 600; font-size: 19px; margin-bottom: 6px; }
+  .buy-info .product-sub { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .buy-cta { display: inline-flex; align-items: center; gap: 12px; background: var(--ink); color: var(--paper); padding: 18px 28px; font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; white-space: nowrap; border: 1px solid var(--ink); transition: background 200ms var(--rev-1), transform 200ms var(--rev-1); }
+  .buy-cta:hover { background: var(--brick); border-color: var(--brick); transform: translateY(-1px); }
+  .buy-cta .arrow { transition: transform 200ms var(--rev-1); }
+  .buy-cta:hover .arrow { transform: translateX(4px); }
+  @media (max-width: 820px) { .buy-card { grid-template-columns: 1fr; gap: 20px; padding: 28px; } .buy-cta { justify-content: center; } }
+  section.chapter { padding: 120px 0; border-bottom: 1px solid var(--hairline); }
+  section.chapter:last-of-type { border-bottom: 0; }
+  .chapter-header { display: grid; grid-template-columns: 180px 1fr; gap: 40px; margin-bottom: 60px; align-items: start; }
+  .chapter-num { font-family: var(--serif); font-weight: 300; font-size: 96px; line-height: 0.9; color: var(--brick); font-style: italic; letter-spacing: -0.04em; }
+  .chapter-header .head-content { padding-top: 8px; }
+  .chapter-header .eyebrow { margin-bottom: 12px; display: block; }
+  @media (max-width: 720px) { .chapter-header { grid-template-columns: 1fr; gap: 16px; margin-bottom: 40px; } .chapter-num { font-size: 64px; } section.chapter { padding: 80px 0; } }
+  .before-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+  @media (max-width: 900px) { .before-grid { grid-template-columns: 1fr; gap: 40px; } }
+  .before-grid p { font-size: 21px; line-height: 1.55; margin-bottom: 24px; }
+  .before-grid .pull { font-family: var(--serif); font-style: italic; font-size: clamp(28px, 3.5vw, 44px); line-height: 1.15; letter-spacing: -0.015em; border-left: 3px solid var(--brick); padding-left: 28px; margin-top: 24px; }
+  .before-grid .pull cite { display: block; margin-top: 16px; font-family: var(--mono); font-size: 11px; font-style: normal; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .modules-list { display: grid; gap: 0; }
+  .module-row { display: grid; grid-template-columns: 80px 1fr 1.2fr; gap: 40px; padding: 32px 0; border-top: 1px solid var(--hairline); align-items: baseline; transition: padding 300ms var(--rev-1); }
+  .module-row:last-child { border-bottom: 1px solid var(--hairline); }
+  .module-row:hover { padding-left: 12px; }
+  .module-row .mod-num { font-family: var(--serif); font-weight: 300; font-size: 48px; color: var(--ink); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; transition: color 200ms var(--rev-1); }
+  .module-row:hover .mod-num { color: var(--brick); }
+  .module-row .mod-name { font-family: var(--serif); font-size: 26px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; }
+  .module-row .mod-desc { color: var(--muted); font-size: 17px; line-height: 1.55; }
+  .module-row .mod-name em { color: var(--brick); font-style: italic; font-weight: 400; }
+  @media (max-width: 820px) { .module-row { grid-template-columns: 56px 1fr; gap: 16px; padding: 24px 0; } .module-row .mod-num { font-size: 32px; } .module-row .mod-name { font-size: 20px; } .module-row .mod-desc { grid-column: 2; font-size: 15px; } }
+  .stack-section { background: var(--bone); border-bottom: 1px solid var(--hairline); }
+  .stack-table { background: var(--paper); border: 1px solid var(--ink); margin-top: 24px; }
+  .stack-row { display: grid; grid-template-columns: 1fr auto; gap: 24px; padding: 20px 28px; border-bottom: 1px solid var(--hairline); align-items: center; font-size: 17px; }
+  .stack-row:last-child { border-bottom: 0; }
+  .stack-row .stack-name { font-weight: 500; }
+  .stack-row .stack-name small { display: block; color: var(--muted); font-size: 13px; font-weight: 400; margin-top: 2px; font-family: var(--mono); letter-spacing: 0.04em; }
+  .stack-row .stack-val { font-family: var(--serif); font-weight: 600; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .stack-row.total { background: var(--ink); color: var(--paper); padding: 28px; }
+  .stack-row.total .stack-name { font-family: var(--mono); font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; }
+  .stack-row.total .stack-val { font-family: var(--serif); font-style: italic; font-size: 40px; color: var(--paper); }
+  .savings-block { background: var(--brick); color: var(--paper); padding: 32px; margin-top: 20px; display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; }
+  .savings-block .label { font-family: var(--mono); font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; }
+  .savings-block .amt { font-family: var(--serif); font-style: italic; font-size: 56px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .faq-list { max-width: 760px; margin: 0 auto; }
+  .faq-item { border-top: 1px solid var(--hairline); padding: 28px 0; }
+  .faq-item:last-child { border-bottom: 1px solid var(--hairline); }
+  .faq-item .q { font-family: var(--serif); font-size: 22px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 16px; }
+  .faq-item .q .q-num { font-family: var(--mono); font-size: 12px; letter-spacing: 0.18em; color: var(--brick); font-weight: 600; margin-top: 4px; flex-shrink: 0; }
+  .faq-item .a { color: var(--muted); font-size: 17px; line-height: 1.6; padding-left: 32px; }
+  .final-cta { background: var(--ink); color: var(--paper); padding: 140px 0; position: relative; overflow: hidden; }
+  .final-cta::before { content: ""; position: absolute; top: -50%; right: -10%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(168, 52, 31, 0.18), transparent 60%); pointer-events: none; }
+  .final-cta .container { position: relative; }
+  .final-cta h2 { font-family: var(--serif); font-weight: 400; font-style: italic; font-size: clamp(48px, 8vw, 112px); line-height: 0.96; letter-spacing: -0.025em; color: var(--paper); margin-bottom: 32px; max-width: 14ch; }
+  .final-cta h2 em { color: #E68A6E; font-style: normal; }
+  .final-cta p { font-size: 21px; line-height: 1.55; color: rgba(244, 239, 230, 0.75); max-width: 56ch; margin-bottom: 48px; }
+  .final-cta .buy-card { background: transparent; border-color: var(--paper); color: var(--paper); }
+  .final-cta .buy-card::before { border-color: rgba(244, 239, 230, 0.4); }
+  .final-cta .buy-cta { background: var(--paper); color: var(--ink); border-color: var(--paper); }
+  .final-cta .buy-cta:hover { background: #E68A6E; border-color: #E68A6E; }
+  .final-cta .buy-price .was { color: rgba(244, 239, 230, 0.5); }
+  .final-cta .product-sub { color: rgba(244, 239, 230, 0.5); }
+  footer { background: var(--paper); padding: 48px 0; border-top: 1px solid var(--hairline); }
+  footer .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 24px; }
+  footer .wordmark { font-size: 18px; }
+  footer .foot-links { display: flex; gap: 32px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  footer .foot-links a:hover { color: var(--brick); }
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 800ms var(--rev-1), transform 800ms var(--rev-1); transition-delay: var(--delay, 0ms); }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1 !important; transform: none !important; transition: none !important; } .topbar-meta .pulse::before { animation: none; } html { scroll-behavior: auto; } }
+  .premium-band { background: var(--ink); color: var(--paper); padding: 6px 14px; display: inline-block; font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 24px; }
+  .four-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 32px; }
+  .four-grid .product-card { border: 1px solid var(--ink); padding: 24px; background: var(--paper); }
+  .four-grid .product-card .num { font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em; color: var(--brick); margin-bottom: 8px; }
+  .four-grid .product-card .name { font-family: var(--serif); font-size: 18px; font-weight: 600; line-height: 1.2; margin-bottom: 8px; }
+  .four-grid .product-card .price { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.1em; }
+  @media (max-width: 720px) { .four-grid { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="container">
+    <div class="wordmark">Catalyst Works<span class="dot">.</span></div>
+    <div class="topbar-meta">
+      <span class="pulse">Premium / $797</span>
+      <span>The Operator Bundle</span>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-header">
+      <div class="hero-meta-left"><strong>Premium Bundle 001</strong> &nbsp;/&nbsp; Full ladder</div>
+      <div class="hero-meta-right"><strong>Operator-grade only</strong></div>
+    </div>
+
+    <span class="premium-band">Premium tier</span>
+    <h1 class="hero-title display reveal">
+      The full <span class="accent">operator</span> ladder.
+    </h1>
+
+    <div class="hero-row reveal" style="--delay: 100ms">
+      <p class="lede hero-lede">
+        For the consultant ready to run their practice the way an operator does. <em>Catalyst Works Pipeline + Audit Pattern Catalog + How We Built agentsHQ + AI Department of One.</em> The four assets I use every day, bundled at the price serious consultants invest in their own infrastructure.
+      </p>
+    </div>
+
+    <div class="four-grid reveal" style="--delay: 150ms">
+      <div class="product-card">
+        <div class="num">01</div>
+        <div class="name">CW Pipeline System</div>
+        <div class="price">$247 value</div>
+      </div>
+      <div class="product-card">
+        <div class="num">02</div>
+        <div class="name">Audit Pattern Catalog</div>
+        <div class="price">$197 value</div>
+      </div>
+      <div class="product-card">
+        <div class="num">03</div>
+        <div class="name">How We Built agentsHQ</div>
+        <div class="price">$297 value</div>
+      </div>
+      <div class="product-card">
+        <div class="num">04</div>
+        <div class="name">AI Department of One</div>
+        <div class="price">$161 value</div>
+      </div>
+    </div>
+
+    <div class="buy-card-wrap reveal" style="--delay: 200ms">
+      <div class="buy-card">
+        <div class="buy-price"><span class="amt">$797</span><span class="was">$902</span></div>
+        <div class="buy-info">
+          <div class="product-line">Catalyst AI Operator Bundle</div>
+          <div class="product-sub">Four premium SKUs / Save $105 / Lifetime</div>
+        </div>
+        <a class="buy-cta" href="https://catalystworks.consulting/buy/catalyst-operator-bundle">
+          <span>Get the full ladder</span><span class="arrow">&rarr;</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">01</div>
+      <div class="head-content">
+        <span class="eyebrow">The honest before-picture</span>
+        <h2 class="section-head">You're a one-person consulting firm. You're capped.</h2>
+      </div>
+    </div>
+
+    <div class="before-grid reveal">
+      <div>
+        <p>You're billing $200 an hour. You're proud of it. You're also capped at 30 billable hours a week before quality collapses. The math limits the practice to a ceiling you've already hit. You know this. You also know that the answer is not "hire someone."</p>
+        <p>The answer is to run the firm like an operator: pipeline built once and watered weekly, audits done in 30 minutes not 4 hours, AI doing the work a junior used to do, you doing only the judgment work that earns the rate. The shape is real. The hard part is sequencing it.</p>
+        <p>The Catalyst AI Operator Bundle is the four assets I built for my own practice, in the order I built them. CW Pipeline System (the demand layer). Audit Pattern Catalog (the conversion layer). How We Built agentsHQ (the systems layer). AI Department of One (the daily-operations layer). Buy the bundle and skip the 14 months of figuring it out.</p>
+      </div>
+      <div>
+        <blockquote class="pull">
+          The solo consultants billing $400/hour in 2026 are not better at consulting. They are operators with consulting inputs. The shape of the practice is the asset.
+          <cite>What this bundle ships</cite>
+        </blockquote>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">02</div>
+      <div class="head-content">
+        <span class="eyebrow">Four assets / Sequenced</span>
+        <h2 class="section-head">What's in the bundle.</h2>
+      </div>
+    </div>
+
+    <div class="modules-list reveal">
+      <div class="module-row"><div class="mod-num">01</div><div class="mod-name">CW Pipeline <em>System</em></div><div class="mod-desc">The full Catalyst Works demand layer. ICP definition, list-building, outreach sequences, audit-as-foot-in-door, follow-up cadence, close playbook. The literal CRM I run my practice on. (Normally $247.)</div></div>
+      <div class="module-row"><div class="mod-num">02</div><div class="mod-name">Audit Pattern Catalog</div><div class="mod-desc">The 3 audit variants I use depending on the recipient (Chad-cold, Nate-peer, Chad-friend-voice). Each with template, examples, and the rules for picking. Tested reply rate 12-25%. Closed 7-figure pipeline value across one year. (Normally $197.)</div></div>
+      <div class="module-row"><div class="mod-num">03</div><div class="mod-name">How We Built <em>agentsHQ</em></div><div class="mod-desc">The architecture document. 75-skill multi-agent system. How the agents communicate. How the gate works. How to clone the pattern for your own practice without re-doing 14 months of mistakes. (Normally $297.)</div></div>
+      <div class="module-row"><div class="mod-num">04</div><div class="mod-name">AI <em>Department of One</em></div><div class="mod-desc">The daily-operations playbook. How one operator runs marketing, sales, delivery, finance, and ops with AI as the team. Morning routine. Weekly cadence. The decisions you keep and the ones you delegate. (Normally $161.)</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter stack-section">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">03</div>
+      <div class="head-content">
+        <span class="eyebrow">The math</span>
+        <h2 class="section-head">Bundle pricing, the honest version.</h2>
+      </div>
+    </div>
+
+    <div class="reveal">
+      <p style="max-width: 56ch; margin-bottom: 16px; color: var(--muted);">Each SKU sold separately at the listed price. Bundle saves $105 and gets you the assets sequenced in the order I'd actually run them.</p>
+
+      <div class="stack-table">
+        <div class="stack-row"><div class="stack-name">CW Pipeline System<small>Demand layer</small></div><div class="stack-val">$247</div></div>
+        <div class="stack-row"><div class="stack-name">Audit Pattern Catalog<small>Conversion layer</small></div><div class="stack-val">$197</div></div>
+        <div class="stack-row"><div class="stack-name">How We Built agentsHQ<small>Systems layer</small></div><div class="stack-val">$297</div></div>
+        <div class="stack-row"><div class="stack-name">AI Department of One<small>Operations layer</small></div><div class="stack-val">$161</div></div>
+        <div class="stack-row total"><div class="stack-name">Separate price total</div><div class="stack-val">$902</div></div>
+      </div>
+
+      <div class="savings-block">
+        <div class="label">Bundle savings</div>
+        <div class="amt">$105</div>
+      </div>
+
+      <p style="font-family: var(--serif); font-style: italic; font-size: 22px; margin-top: 32px; max-width: 52ch; line-height: 1.4;">
+        You pay <strong style="font-weight: 600; color: var(--brick); font-style: normal;">$797</strong>. The bundle pays for itself when it closes your next single client.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">04</div>
+      <div class="head-content">
+        <span class="eyebrow">Who built this</span>
+        <h2 class="section-head">An operator wrote this. From the inside.</h2>
+      </div>
+    </div>
+
+    <div class="reveal" style="max-width: 64ch;">
+      <p><strong>Boubacar.</strong> I run Catalyst Works, a consulting practice that uses agentsHQ (the multi-agent AI system I built) as the operating spine. The practice closed real pipeline last year. The audits in the catalog landed real meetings. The pipeline system filled a real calendar. None of this is theory.</p>
+      <p>14 years in corporate HR before any of it. Multi-region. The kind of role where you sat across from people and managed their hardest moments. That work taught me the systems thinking. AgentsHQ is what happened when I pointed that thinking at running a one-person firm.</p>
+      <p>The bundle is the literal toolkit. Not a "best practices" deck. Not a course. The CRM, the audit templates, the architecture doc, the daily playbook. Take them. Adapt them. Don't waste 14 months redoing the work.</p>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <div class="container">
+    <div class="chapter-header reveal">
+      <div class="chapter-num">05</div>
+      <div class="head-content">
+        <span class="eyebrow">Honest questions</span>
+        <h2 class="section-head">Before you wire $797.</h2>
+      </div>
+    </div>
+
+    <div class="faq-list reveal">
+      <div class="faq-item"><div class="q"><span class="q-num">Q1</span>Is this for me?</div><div class="a">If you're a solo consultant billing $150+/hour and you've hit the time cap, yes. If you're brand new to consulting and have no clients yet, this is too premature. Buy the Solo Operator Starter Bundle ($97) and work up to this in 6-12 months.</div></div>
+      <div class="faq-item"><div class="q"><span class="q-num">Q2</span>How do the four SKUs connect?</div><div class="a">Sequence: Pipeline System builds the demand. Audit Pattern Catalog converts that demand. How We Built agentsHQ shows the systems infrastructure. AI Department of One runs the daily operation. They build on each other. Reading them in order is the unlock.</div></div>
+      <div class="faq-item"><div class="q"><span class="q-num">Q3</span>What if I'm not building a consulting practice?</div><div class="a">If you're building any solo professional service (agency, freelance design, AI implementation, fractional CXO work, coaching), the patterns transfer. The CW Pipeline System is industry-agnostic. AI Department of One is for any one-person operation. How We Built agentsHQ is for anyone running multi-agent work.</div></div>
+      <div class="faq-item"><div class="q"><span class="q-num">Q4</span>Will I need agentsHQ to use this?</div><div class="a">No. The bundle teaches the pattern. You implement on whatever stack works for you (ChatGPT Projects, Claude Projects, custom Python, n8n, even just spreadsheets). AgentsHQ is the system I happened to build. The pattern is what you're buying.</div></div>
+      <div class="faq-item"><div class="q"><span class="q-num">Q5</span>How fast can I implement?</div><div class="a">Honest estimate: 4-8 weeks to have the pipeline running, audit templates personalized, and daily ops automated. Aggressive operator can compress to 2 weeks. Most consultants take 6-8 weeks because the audit personalization step takes practice.</div></div>
+      <div class="faq-item"><div class="q"><span class="q-num">Q6</span>Do I get updates?</div><div class="a">Yes. Lifetime updates. I revise each SKU twice a year as my practice evolves. New audit patterns get added to the catalog. Pipeline tactics shift. The architecture doc updates as agentsHQ grows. All included.</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="container">
+    <h2 class="reveal">Stop billing by the hour. <em>Start operating</em>.</h2>
+    <p class="reveal" style="--delay: 100ms">The bundle is the four assets I run my practice on. Bought separately: $902. Bundled: $797. Implemented: a practice that compounds instead of capping. The investment pays back on the next client.</p>
+
+    <div class="buy-card-wrap reveal" style="--delay: 200ms">
+      <div class="buy-card">
+        <div class="buy-price"><span class="amt">$797</span><span class="was">$902</span></div>
+        <div class="buy-info">
+          <div class="product-line">Catalyst AI Operator Bundle</div>
+          <div class="product-sub">Four premium SKUs / Save $105 / Lifetime updates</div>
+        </div>
+        <a class="buy-cta" href="https://catalystworks.consulting/buy/catalyst-operator-bundle">
+          <span>Get the full ladder</span><span class="arrow">&rarr;</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="wordmark">Catalyst Works<span class="dot">.</span></div>
+    <div class="foot-links">
+      <a href="https://catalystworks.consulting">catalystworks.consulting</a>
+      <a href="https://catalystworks.consulting/privacy">Privacy</a>
+      <a href="https://catalystworks.consulting/terms">Terms</a>
+      <a href="mailto:boubacar@catalystworks.consulting">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll('.reveal').forEach(el => el.classList.add('in'));
+    return;
+  }
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) { entry.target.classList.add('in'); io.unobserve(entry.target); }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+})();
+</script>
+</body>
+</html>

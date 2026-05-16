@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Human at Work - Logo Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400;1,9..144,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F4EFE6;
+    --ink: #161513;
+    --brick: #A8341F;
+    --bone: #ECE5D6;
+    --muted: #6B655C;
+    --hairline: #D8D1C1;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--paper); color: var(--ink); font-family: "Fraunces", Georgia, serif; padding: 64px 32px; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  h1 { font-style: italic; font-weight: 600; font-size: 48px; margin-bottom: 8px; }
+  .lede { font-family: "JetBrains Mono", monospace; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--brick); margin-bottom: 48px; }
+  .row { margin-bottom: 56px; padding-bottom: 32px; border-bottom: 1px solid var(--hairline); }
+  .row h2 { font-style: normal; font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+  .row .desc { font-family: "Fraunces"; font-size: 15px; color: var(--muted); margin-bottom: 24px; max-width: 600px; }
+  .preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .preview-card { background: white; border: 1px solid var(--hairline); border-radius: 4px; padding: 24px; display: flex; flex-direction: column; align-items: center; }
+  .preview-card.dark { background: var(--ink); }
+  .preview-card.paper { background: var(--paper); }
+  .preview-card .label { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-top: 16px; }
+  .preview-card.dark .label { color: rgba(244,239,230,0.6); }
+
+  /* Inline logo recreations for cross-bg testing */
+  .lo-h { display: flex; align-items: baseline; font-family: "Fraunces", serif; font-weight: 600; font-size: 48px; letter-spacing: -0.025em; }
+  .lo-h .it { font-style: italic; }
+  .lo-h .dot { width: 8px; height: 8px; background: var(--brick); border-radius: 50%; display: inline-block; margin-left: 4px; margin-bottom: 4px; align-self: flex-end; }
+  .lo-h.on-dark { color: var(--paper); }
+  .lo-h.on-paper { color: var(--ink); }
+
+  .lo-stack { font-family: "Fraunces", serif; font-weight: 600; font-size: 56px; line-height: 1; letter-spacing: -0.025em; text-align: center; }
+  .lo-stack .it { font-style: italic; display: block; }
+  .lo-stack .ro { font-style: normal; display: inline-flex; align-items: baseline; }
+  .lo-stack .dot { width: 8px; height: 8px; background: var(--brick); border-radius: 50%; display: inline-block; margin-left: 4px; margin-bottom: 6px; align-self: flex-end; }
+  .lo-stack.on-dark { color: var(--paper); }
+
+  .lo-symbol { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; padding: 16px; }
+  .lo-symbol .line { background: var(--ink); height: 4px; border-radius: 2px; }
+  .lo-symbol .l1 { width: 60px; }
+  .lo-symbol .l2 { width: 48px; position: relative; }
+  .lo-symbol .l2 .dot { position: absolute; right: -16px; top: -4px; width: 12px; height: 12px; background: var(--brick); border-radius: 50%; }
+  .lo-symbol .l3 { width: 60px; }
+  .lo-symbol.on-dark .line { background: var(--paper); }
+
+  .application { background: white; border: 1px solid var(--hairline); border-radius: 4px; padding: 32px; }
+  .application h3 { font-style: italic; font-weight: 600; font-size: 28px; margin-bottom: 16px; }
+  .app-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--hairline); }
+  .app-row:last-child { border-bottom: 0; }
+  .app-label { font-family: "JetBrains Mono", monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="lede">Logo system &middot; v1 &middot; LS store</p>
+  <h1>Human at Work</h1>
+
+  <div class="row">
+    <h2>Wordmark (horizontal)</h2>
+    <p class="desc">Primary mark for LS store header + website nav. "Human" italic, "at Work" roman, brick-red period as signature accent. Period = "we are done talking, here is the work."</p>
+    <div class="preview-grid">
+      <div class="preview-card paper">
+        <div class="lo-h on-paper"><span class="it">Human</span>&nbsp;at Work<span class="dot"></span></div>
+        <p class="label">Paper bg (#F4EFE6)</p>
+      </div>
+      <div class="preview-card">
+        <div class="lo-h on-paper"><span class="it">Human</span>&nbsp;at Work<span class="dot"></span></div>
+        <p class="label">White bg</p>
+      </div>
+      <div class="preview-card dark">
+        <div class="lo-h on-dark"><span class="it">Human</span>&nbsp;at Work<span class="dot"></span></div>
+        <p class="label">Ink bg (#161513)</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <h2>Wordmark (stacked, square)</h2>
+    <p class="desc">For LS store avatar / square social-profile / Apple App Store style icon. Always with paper background; never compressed to a single letter.</p>
+    <div class="preview-grid">
+      <div class="preview-card paper" style="height: 240px; justify-content: center;">
+        <div class="lo-stack"><span class="it">Human</span><span class="ro">at Work<span class="dot"></span></span></div>
+        <p class="label">Paper bg, 400&times;400</p>
+      </div>
+      <div class="preview-card dark" style="height: 240px; justify-content: center;">
+        <div class="lo-stack on-dark"><span class="it">Human</span><span class="ro">at Work<span class="dot"></span></span></div>
+        <p class="label">Ink bg, 400&times;400</p>
+      </div>
+      <div class="preview-card paper" style="height: 240px; justify-content: center;">
+        <div class="lo-stack" style="font-size: 40px; color: var(--ink);"><span class="it">Human</span><span class="ro">at Work<span class="dot"></span></span>
+          <p style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em; color: var(--muted); margin-top: 16px;">OPERATOR-TESTED &middot; NOT THEORY</p>
+        </div>
+        <p class="label">w/ tagline lockup</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <h2>Symbol (favicon / app icon)</h2>
+    <p class="desc">Three horizontal lines + brick-red dot. Reads as "ledger lines of work + one human anchor." NOT a single letter "H" or "HW" mark (banned per logo rules). Works at 16px favicon size.</p>
+    <div class="preview-grid">
+      <div class="preview-card paper" style="height: 180px; justify-content: center; align-items: center;">
+        <div class="lo-symbol"><div class="line l1"></div><div class="line l2"><span class="dot"></span></div><div class="line l3"></div></div>
+        <p class="label">Paper bg, 64&times;64</p>
+      </div>
+      <div class="preview-card dark" style="height: 180px; justify-content: center; align-items: center;">
+        <div class="lo-symbol on-dark"><div class="line l1"></div><div class="line l2"><span class="dot"></span></div><div class="line l3"></div></div>
+        <p class="label">Ink bg, 64&times;64 (LS favicon)</p>
+      </div>
+      <div class="preview-card paper" style="height: 180px; justify-content: center; align-items: center;">
+        <div class="lo-symbol" style="transform: scale(0.5);"><div class="line l1"></div><div class="line l2"><span class="dot"></span></div><div class="line l3"></div></div>
+        <p class="label">32&times;32 thumbnail</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="application">
+    <h3>Live application: LS store header preview</h3>
+    <div class="app-row">
+      <div class="lo-h on-paper" style="font-size: 26px;"><span class="it">Human</span>&nbsp;at Work<span class="dot" style="width: 6px; height: 6px;"></span></div>
+      <p class="app-label">LS store / web nav / 26px height</p>
+    </div>
+    <div class="app-row">
+      <div class="lo-h on-paper" style="font-size: 20px;"><span class="it">Human</span>&nbsp;at Work<span class="dot" style="width: 5px; height: 5px;"></span></div>
+      <p class="app-label">Email signature / receipt header / 20px</p>
+    </div>
+    <div class="app-row">
+      <div style="display: flex; gap: 14px; align-items: center;">
+        <div class="lo-symbol" style="transform: scale(0.5); padding: 0; margin: -16px;"><div class="line l1"></div><div class="line l2"><span class="dot"></span></div><div class="line l3"></div></div>
+        <div class="lo-h on-paper" style="font-size: 22px;"><span class="it">Human</span>&nbsp;at Work<span class="dot" style="width: 5px; height: 5px;"></span></div>
+      </div>
+      <p class="app-label">Symbol + wordmark lockup (rare use)</p>
+    </div>
+  </div>
+
+  <p style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.05em; color: var(--muted); margin-top: 48px; text-align: center;">SVG files: logo-horizontal.svg &middot; logo-square.svg &middot; logo-favicon.svg &middot; All in docs/products/assets/</p>
+
+</div>
+</body>
+</html>
