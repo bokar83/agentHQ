@@ -6,7 +6,7 @@
       .paper { fill: #F4EFE6; }
       .ink { fill: #161513; }
       .brick { fill: #A8341F; }
-      .word { font-family: "Fraunces", "Iowan Old Style", Georgia, serif; font-weight: 600; font-size: 88px; letter-spacing: -0.025em; }
+      .word { font-family: "Fraunces", "Iowan Old Style", Georgia, serif; font-weight: 600; font-size: 78px; letter-spacing: -0.02em; }
       .word-italic { font-style: italic; }
       .word-roman { font-style: normal; }
       .meta { font-family: "JetBrains Mono", "SF Mono", monospace; font-size: 11px; letter-spacing: 0.18em; fill: #6B655C; }
@@ -14,7 +14,6 @@
   </defs>
   <rect width="400" height="400" class="paper"/>
   <text x="50" y="175" class="word word-italic ink">Human</text>
-  <text x="50" y="265" class="word word-roman ink">at Work</text>
-  <circle cx="270" cy="258" r="11" class="brick"/>
+  <text x="50" y="265" class="word word-roman ink">at Work<tspan class="brick" dx="6">.</tspan></text>
   <text x="50" y="340" class="meta">OPERATOR-TESTED &#xB7; NOT THEORY</text>
 </svg>
