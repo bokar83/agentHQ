@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Variant 3 — Magazine Editorial</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,300;1,9..144,500;1,9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F7F2E9;
+    --ink: #1A1714;
+    --ink-2: #534B42;
+    --brick: #B83520;
+    --gold: #C28E26;
+    --sage: #4E5D38;
+    --bone: #EFE7D6;
+    --muted: #8A7F71;
+    --hair: #D5CCB9;
+  }
+  @page { size: Letter; margin: 0; }
+  @page body {
+    margin: 0.9in 1in 1.1in 1in;
+    @bottom-center {
+      content: "humanatwork.ai  ·  " counter(page);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 8.5pt;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Fraunces", "Source Serif Pro", Georgia, serif;
+    font-size: 11pt;
+    line-height: 1.62;
+  }
+
+  /* COVER */
+  .cover {
+    width: 8.5in;
+    height: 11in;
+    padding: 0.85in 1in;
+    page-break-after: always;
+    background: var(--paper);
+    position: relative;
+    overflow: hidden;
+  }
+  .cover .corner {
+    position: absolute;
+    top: 0.85in;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: var(--ink);
+    opacity: 0.15;
+  }
+  .cover .corner2 {
+    position: absolute;
+    bottom: 1.1in;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: var(--ink);
+    opacity: 0.15;
+  }
+  .cover .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.7in;
+  }
+  .cover .wordmark {
+    font-family: "Fraunces", serif;
+    font-weight: 600;
+    font-size: 14pt;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .cover .wordmark .it { font-style: italic; }
+  .cover .wordmark .dot { color: var(--brick); }
+  .cover .issue {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8.5pt;
+    letter-spacing: 0.28em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .cover .kicker-block { margin-top: 0.4in; max-width: 5.5in; }
+  .cover .kicker {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9pt;
+    letter-spacing: 0.3em;
+    color: var(--brick);
+    text-transform: uppercase;
+    margin-bottom: 0.32in;
+  }
+  .cover h1 {
+    font-family: "Fraunces", serif;
+    font-weight: 300;
+    font-size: 84pt;
+    line-height: 0.9;
+    letter-spacing: -0.035em;
+    color: var(--ink);
+    margin-bottom: 0.4in;
+  }
+  .cover h1 em {
+    font-style: italic;
+    font-weight: 500;
+    color: var(--brick);
+  }
+  .cover .deck {
+    font-family: "Fraunces", serif;
+    font-weight: 400;
+    font-style: italic;
+    font-size: 18pt;
+    line-height: 1.35;
+    color: var(--ink-2);
+    max-width: 5in;
+    margin-top: 0.25in;
+  }
+
+  .cover .dossier {
+    position: absolute;
+    bottom: 1.35in;
+    left: 1in;
+    right: 1in;
+    border-top: 1px solid var(--ink);
+    padding-top: 0.25in;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.25in;
+  }
+  .cover .dossier .col .l {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 7.5pt;
+    letter-spacing: 0.22em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 0.06in;
+  }
+  .cover .dossier .col .v {
+    font-family: "Fraunces", serif;
+    font-weight: 500;
+    font-size: 14pt;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .cover .dossier .col .v em { color: var(--brick); font-style: italic; }
+
+  .cover .footer-strip {
+    position: absolute;
+    bottom: 0.4in;
+    left: 1in;
+    right: 1in;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8.5pt;
+    letter-spacing: 0.22em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* PAGES */
+  .pg { page: body; page-break-after: always; min-height: 9in; }
+  .pg:last-child { page-break-after: auto; }
+
+  .pg .kicker {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8.5pt;
+    letter-spacing: 0.3em;
+    color: var(--brick);
+    text-transform: uppercase;
+    margin-bottom: 0.18in;
+  }
+  .pg h1 {
+    font-family: "Fraunces", serif;
+    font-weight: 400;
+    font-size: 42pt;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    margin-bottom: 0.25in;
+    max-width: 6in;
+  }
+  .pg h1 em { font-style: italic; font-weight: 500; color: var(--brick); }
+  .pg p.deck {
+    font-family: "Fraunces", serif;
+    font-size: 14.5pt;
+    font-style: italic;
+    color: var(--ink-2);
+    line-height: 1.4;
+    margin-bottom: 0.35in;
+    max-width: 5.5in;
+  }
+  .pg p {
+    font-size: 11pt;
+    line-height: 1.65;
+    color: var(--ink);
+    margin-bottom: 0.13in;
+  }
+  .pg h2 {
+    font-family: "Fraunces", serif;
+    font-weight: 500;
+    font-size: 22pt;
+    color: var(--ink);
+    margin-top: 0.35in;
+    margin-bottom: 0.12in;
+    letter-spacing: -0.015em;
+  }
+  .pg h2 em { font-style: italic; color: var(--brick); }
+  .pg h3 {
+    font-family: "Fraunces", serif;
+    font-weight: 600;
+    font-size: 14pt;
+    color: var(--ink);
+    margin-top: 0.22in;
+    margin-bottom: 0.06in;
+  }
+
+  /* DROP CAP */
+  .pg .opener::first-letter {
+    font-family: "Fraunces", serif;
+    font-weight: 500;
+    font-style: italic;
+    font-size: 78pt;
+    line-height: 0.85;
+    color: var(--brick);
+    float: left;
+    padding: 6pt 6pt 0 0;
+    margin-right: 4pt;
+  }
+
+  /* TWO COLUMN */
+  .twocol {
+    column-count: 2;
+    column-gap: 0.4in;
+    column-rule: 1px solid var(--hair);
+    margin-top: 0.18in;
+  }
+  .twocol h3:first-child { margin-top: 0; }
+  .twocol p { font-size: 10.5pt; line-height: 1.6; }
+
+  /* SCHEDULE — magazine-style sidebar */
+  .sched {
+    background: var(--bone);
+    padding: 0.3in 0.32in;
+    border-radius: 2px;
+    margin: 0.25in 0;
+    page-break-inside: avoid;
+  }
+  .sched .h {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8.5pt;
+    letter-spacing: 0.25em;
+    color: var(--brick);
+    text-transform: uppercase;
+    margin-bottom: 0.18in;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 0.08in;
+  }
+  .sched .row {
+    display: flex;
+    padding: 0.1in 0;
+    border-bottom: 1px dotted var(--hair);
+    align-items: baseline;
+  }
+  .sched .row:last-child { border-bottom: 0; }
+  .sched .time {
+    width: 1.5in;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9.5pt;
+    color: var(--brick);
+    letter-spacing: 0.06em;
+    font-weight: 500;
+  }
+  .sched .name {
+    width: 1.8in;
+    font-family: "Fraunces", serif;
+    font-weight: 600;
+    font-size: 12pt;
+    font-style: italic;
+    color: var(--ink);
+  }
+  .sched .what { flex: 1; font-size: 10pt; color: var(--ink-2); line-height: 1.45; }
+
+  /* PULL QUOTE — magazine signature */
+  .pull-mag {
+    margin: 0.35in 0;
+    padding: 0.35in 0;
+    border-top: 4px double var(--ink);
+    border-bottom: 4px double var(--ink);
+    text-align: center;
+    page-break-inside: avoid;
+  }
+  .pull-mag p {
+    font-family: "Fraunces", serif;
+    font-weight: 400;
+    font-style: italic;
+    font-size: 26pt;
+    line-height: 1.2;
+    color: var(--ink);
+    letter-spacing: -0.015em;
+    max-width: 5.5in;
+    margin: 0 auto 0.15in auto;
+  }
+  .pull-mag cite {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8.5pt;
+    letter-spacing: 0.3em;
+    color: var(--brick);
+    font-style: normal;
+    text-transform: uppercase;
+  }
+
+  /* WORKFLOW STEP — numbered */
+  .step {
+    display: flex;
+    gap: 0.3in;
+    margin-bottom: 0.3in;
+    page-break-inside: avoid;
+  }
+  .step .num {
+    flex: 0 0 0.8in;
+    font-family: "Fraunces", serif;
+    font-weight: 300;
+    font-size: 64pt;
+    line-height: 0.8;
+    color: var(--brick);
+    letter-spacing: -0.04em;
+    font-style: italic;
+  }
+  .step .body { flex: 1; }
+  .step .body h3 { margin-top: 0.08in; font-size: 18pt; font-weight: 500; }
+  .step .body .outcome {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8.5pt;
+    letter-spacing: 0.15em;
+    color: var(--brick);
+    text-transform: uppercase;
+    margin-bottom: 0.1in;
+  }
+
+  .prompt {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 0.22in 0.25in;
+    border-left: 4px solid var(--brick);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9pt;
+    line-height: 1.6;
+    margin: 0.18in 0;
+    white-space: pre-wrap;
+    page-break-inside: avoid;
+  }
+  .prompt::before {
+    content: "Paste into any LLM";
+    display: block;
+    font-family: "Fraunces", serif;
+    font-style: italic;
+    font-size: 11pt;
+    color: var(--gold);
+    margin-bottom: 0.12in;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  /* WORKSHEET */
+  .ws { margin-top: 0.25in; }
+  .ws .field { margin-bottom: 0.25in; page-break-inside: avoid; }
+  .ws .q {
+    font-family: "Fraunces", serif;
+    font-weight: 500;
+    font-style: italic;
+    font-size: 14pt;
+    color: var(--ink);
+    margin-bottom: 0.1in;
+    letter-spacing: -0.01em;
+  }
+  .ws .q::before { content: "§ "; color: var(--brick); font-style: normal; font-weight: 600; }
+  .ws .line { border-bottom: 1px solid var(--ink); height: 0.4in; }
+  .ws .hint {
+    font-family: "Fraunces", serif;
+    font-style: italic;
+    font-size: 10pt;
+    color: var(--muted);
+    margin-top: 0.05in;
+  }
+
+  /* FAQ */
+  .faq-q {
+    font-family: "Fraunces", serif;
+    font-weight: 500;
+    font-style: italic;
+    font-size: 14pt;
+    color: var(--ink);
+    margin-top: 0.22in;
+    margin-bottom: 0.06in;
+  }
+  .faq-q::before { content: "Q. "; color: var(--brick); font-weight: 600; font-style: normal; }
+  .faq-a {
+    font-size: 10.5pt;
+    color: var(--ink-2);
+    line-height: 1.55;
+  }
+  .faq-a::before { content: "A. "; color: var(--brick); font-weight: 600; }
+
+  /* CTA — bookend */
+  .cta {
+    margin-top: 0.45in;
+    padding: 0.4in;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 3px;
+    page-break-inside: avoid;
+    position: relative;
+  }
+  .cta::before {
+    content: "→";
+    position: absolute;
+    top: 0.3in;
+    right: 0.4in;
+    font-family: "Fraunces", serif;
+    font-size: 36pt;
+    color: var(--brick);
+    line-height: 1;
+  }
+  .cta .label {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 8.5pt;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 0.12in;
+  }
+  .cta h2 {
+    font-family: "Fraunces", serif;
+    font-weight: 400;
+    font-size: 30pt;
+    color: var(--paper);
+    margin-bottom: 0.12in;
+    letter-spacing: -0.02em;
+  }
+  .cta h2 em { font-style: italic; color: var(--gold); }
+  .cta p {
+    color: rgba(247,242,233,0.85);
+    font-size: 11.5pt;
+    line-height: 1.55;
+    max-width: 5in;
+  }
+  .cta a {
+    color: var(--paper);
+    text-decoration: underline;
+    text-decoration-color: var(--brick);
+    text-underline-offset: 4px;
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="corner"></div>
+  <div class="corner2"></div>
+
+  <div class="header">
+    <div class="wordmark"><span class="it">Human</span> at Work<span class="dot">.</span></div>
+    <div class="issue">No. 01 · Field Manual · 2026-05</div>
+  </div>
+
+  <div class="kicker-block">
+    <div class="kicker">For the operator who has 24 hours</div>
+    <h1>Start AI <em>in 24 hours.</em></h1>
+    <p class="deck">Five workflows. One day. From zero account to AI you actually use Monday morning.</p>
+  </div>
+
+  <div class="dossier">
+    <div class="col"><div class="l">Time</div><div class="v">24<em>h</em></div></div>
+    <div class="col"><div class="l">Workflows</div><div class="v">5</div></div>
+    <div class="col"><div class="l">Cost</div><div class="v">$27</div></div>
+    <div class="col"><div class="l">LLM</div><div class="v"><em>any</em></div></div>
+  </div>
+
+  <div class="footer-strip">
+    <span>By Boubacar · ex-Corporate HR</span>
+    <span>humanatwork.ai</span>
+  </div>
+</div>
+
+<!-- PAGE 2 — NOTE -->
+<div class="pg">
+  <div class="kicker">Letter from the author</div>
+  <h1>This is the guide I wish I had <em>two years ago.</em></h1>
+
+  <p class="opener">Skip the AI course funnel. Skip the "best 50 AI tools" listicle. Skip the cohort program that starts in three weeks. By tomorrow this time, you will have five workflows running on whatever LLM you already pay for. That's the whole product. The structure below assumes you start tonight at 8pm and have 24 hours. Adjust to your real schedule. The only rule: don't spread it across a week.</p>
+
+  <div class="sched">
+    <div class="h">The 24-hour schedule</div>
+    <div class="row"><div class="time">8:00 PM TODAY</div><div class="name">Setup (15m)</div><div class="what">Pick the LLM you already pay for. One tab. No tool-shopping.</div></div>
+    <div class="row"><div class="time">8:15 PM</div><div class="name">Workflow 1</div><div class="what">Email triage. 3 buckets + draft replies.</div></div>
+    <div class="row"><div class="time">9:30 PM</div><div class="name">Workflow 2</div><div class="what">Meeting prep. Agenda + open Qs per meeting.</div></div>
+    <div class="row"><div class="time">10:30 PM</div><div class="name">Sleep</div><div class="what">Save 3-5 for morning. Burnout at midnight kills the Monday ship.</div></div>
+    <div class="row"><div class="time">6:30 AM</div><div class="name">Workflow 3</div><div class="what">Document compression. 1-page brief.</div></div>
+    <div class="row"><div class="time">7:30 AM</div><div class="name">Workflow 4</div><div class="what">Decision support. 3 reframes on 1 stuck call.</div></div>
+    <div class="row"><div class="time">8:30 AM</div><div class="name">Workflow 5</div><div class="what">Personal ops. Written runbook for 1 errand.</div></div>
+    <div class="row"><div class="time">9:00 AM</div><div class="name">Ship</div><div class="what">Run Workflow 1 on today's actual inbox. Live, not practice.</div></div>
+  </div>
+</div>
+
+<!-- PAGE 3 — WORKFLOW 1 -->
+<div class="pg">
+  <div class="kicker">Workflow 01 · Email triage</div>
+  <h1>Stop reading every email. <em>Triage in four minutes.</em></h1>
+
+  <div class="step">
+    <div class="num">1</div>
+    <div class="body">
+      <div class="outcome">Outcome — paste-ready inbox snapshot</div>
+      <h3>Snapshot your inbox</h3>
+      <p>Open your email client. Copy the subject + sender for the last 30-50 unread messages into a scratch doc. That's the input.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="num">2</div>
+    <div class="body">
+      <div class="outcome">Outcome — 3 buckets + drafts</div>
+      <h3>Paste this prompt into any LLM</h3>
+      <div class="prompt">You are my email triage assistant. Take the inbox list below and split it into 3 buckets:
+
+  1. ACTION NEEDED (under 5 min reply, do today)
+  2. READ LATER (informational, no action)
+  3. ARCHIVE / DELETE (newsletters, junk, FYIs already handled)
+
+For each ACTION NEEDED item, draft a 2-3 sentence reply I can edit and send.
+
+Inbox:
+[paste your 30-50 lines here]</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="num">3</div>
+    <div class="body">
+      <div class="outcome">Outcome — 5-12 emails closed in 30 minutes</div>
+      <h3>Send the action-needed batch</h3>
+      <p>Copy each draft into the reply box. Edit one line for your voice. Send. Move to the next. Don't re-read the LLM output. Trust the draft.</p>
+    </div>
+  </div>
+
+  <div class="pull-mag">
+    <p>The LLM is not your replacement. It is your first draft. The draft is <em>eighty percent</em> of the work.</p>
+    <cite>— Boubacar</cite>
+  </div>
+</div>
+
+<!-- PAGE 4 — WORKSHEET + FAQ + CTA -->
+<div class="pg">
+  <div class="kicker">Monday-morning worksheet · FAQ · next step</div>
+  <h1>Fill this in before <em>9:00 AM Monday.</em></h1>
+  <p class="deck">Print the page or fill on a tablet. The act of writing — not the writing itself — locks the decision.</p>
+
+  <div class="ws">
+    <div class="field">
+      <div class="q">Which one workflow am I committing to use on Monday morning?</div>
+      <div class="line"></div>
+      <div class="hint">Pick exactly one. Not five.</div>
+    </div>
+    <div class="field">
+      <div class="q">What is the specific calendar block?</div>
+      <div class="line"></div>
+      <div class="hint">e.g., Mon 8:15-8:45 AM, email triage.</div>
+    </div>
+    <div class="field">
+      <div class="q">What would I have to believe for this to fail by Friday?</div>
+      <div class="line"></div>
+      <div class="hint">Pre-mortem. Naming the failure mode is how you avoid it.</div>
+    </div>
+  </div>
+
+  <h2><em>FAQ</em></h2>
+  <div class="faq-q">Which LLM should I use?</div>
+  <div class="faq-a">The one you already pay for. Claude, ChatGPT, Gemini, Grok, Perplexity. Brand doesn't matter for 95% of what most people do.</div>
+  <div class="faq-q">Will this work if I am not technical?</div>
+  <div class="faq-a">Yes. If you can use Gmail, you can do this.</div>
+  <div class="faq-q">Do you offer refunds?</div>
+  <div class="faq-a">No. Digital download. Value is in doing the 24 hours, not returning the file.</div>
+
+  <div class="cta">
+    <div class="label">Next field manual</div>
+    <h2>Ready for <em>25 more</em>?</h2>
+    <p>The Paste Pack adds 25 production-tested prompt bundles across the same five categories. Same one-paste-and-go format. <a href="https://humanatwork.ai/start-ai-24h/t2-paste-pack">humanatwork.ai/start-ai-24h/t2-paste-pack</a></p>
+  </div>
+</div>
+
+</body>
+</html>
