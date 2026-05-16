@@ -18,16 +18,20 @@
 
   @page {
     size: Letter;
-    margin: 0.85in 0.9in 1in 0.9in;
+    margin: 0.7in 0.85in 0.85in 0.85in;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; orphans: 3; widows: 3; }
   html, body {
     background: var(--paper);
     color: var(--ink);
     font-family: "Spectral", "Source Serif Pro", Georgia, serif;
-    font-size: 11pt;
+    font-size: 10.5pt;
     line-height: 1.55;
+    orphans: 3; widows: 3;
   }
+  h1, h2, h3, h4 { page-break-after: avoid; break-after: avoid; }
+  p, li { orphans: 3; widows: 3; }
+  .force-break { page-break-before: always; break-before: page; }
 
   /* ============ COVER ============ */
   .cover {
@@ -160,11 +164,10 @@
   }
 
   /* ============ INSIDE PAGES ============ */
-  .pg {
-    page-break-after: always;
-    min-height: 9in;
+  .pg { break-after: auto; }
+  .step-card, .schedule .row, .worksheet .field, .footer-cta, .author-note, .toc .row {
+    page-break-inside: avoid; break-inside: avoid;
   }
-  .pg:last-child { page-break-after: auto; }
 
   .pg h1 {
     font-family: "Fraunces", serif;
@@ -496,7 +499,7 @@
 <!-- ====== PAGE 2: AUTHOR NOTE + TOC ====== -->
 <div class="pg">
   <div class="eyebrow">A note before you start</div>
-  <h1>This is the guide I wish I had <em>two years ago</em>.</h1>
+  <h1>This is the guide I wish I had <em>two&nbsp;years&nbsp;ago</em>.</h1>
 
   <div class="author-note">
     <div class="label">From Boubacar</div>
@@ -517,16 +520,16 @@
 </div>
 
 <!-- ====== PAGE 3: SCHEDULE ====== -->
-<div class="pg">
+<div class="pg force-break">
   <div class="eyebrow">01 · The 24-Hour Schedule</div>
-  <h1>Block it on your calendar. <em>One day, real moves.</em></h1>
-  <p class="lead">Below is the timing structure that works if you start tonight at 8pm. Adjust to your actual schedule — the only rule is don't spread it across a week.</p>
+  <h1>Block it on your calendar. <em>One day, real&nbsp;moves.</em></h1>
+  <p class="lead">Below is the timing structure that works if you start tonight at 8pm. Adjust to your actual schedule. The only rule: don't spread it across a week.</p>
 
   <div class="schedule">
     <div class="row">
       <div class="time">8:00 PM TODAY</div>
       <div class="label">Setup (15 min)</div>
-      <div class="what">Pick the LLM you already pay for (Claude, ChatGPT, Gemini, Grok, Perplexity — any of them). One tab. No tool-shopping.</div>
+      <div class="what">Pick the LLM you already pay for (Claude, ChatGPT, Gemini, Grok, Perplexity, any of them). One tab. No tool-shopping.</div>
     </div>
     <div class="row">
       <div class="time">8:15 PM</div>
@@ -567,9 +570,9 @@
 </div>
 
 <!-- ====== PAGE 4: SAMPLE WORKFLOW ====== -->
-<div class="pg">
-  <div class="eyebrow">02 · Workflow 1 — Email triage</div>
-  <h1>Stop reading every email. <em>Triage in 4 minutes.</em></h1>
+<div class="pg force-break">
+  <div class="eyebrow">02 · Workflow 1, Email triage</div>
+  <h1>Stop reading every email. <em>Triage in 4&nbsp;minutes.</em></h1>
 
   <div class="step-card">
     <span class="step-tag">Step 1 of 3</span>
@@ -608,9 +611,9 @@ Inbox:
 </div>
 
 <!-- ====== PAGE 5: WORKSHEET ====== -->
-<div class="pg">
+<div class="pg force-break">
   <div class="eyebrow">07 · Monday-Morning Worksheet</div>
-  <h1>Fill this in before <em>9:00 AM Monday.</em></h1>
+  <h1>Fill this in before <em>9:00&nbsp;AM&nbsp;Monday.</em></h1>
   <p class="lead">Print this page. Or open it on a tablet. The point: write your answers in your own hand or your own typing. The act of writing locks in the decision.</p>
 
   <div class="worksheet">
@@ -623,7 +626,7 @@ Inbox:
     <div class="field">
       <div class="q">2. What is the calendar block I'm putting on Monday?</div>
       <div class="line"></div>
-      <div class="hint">Specific time. Specific duration. e.g., "Mon 8:15-8:45 AM — Email triage."</div>
+      <div class="hint">Specific time. Specific duration. e.g., "Mon 8:15-8:45 AM, Email triage."</div>
     </div>
 
     <div class="field">
@@ -652,7 +655,7 @@ Inbox:
   <div class="faq-a">Yes. You're copy-pasting a prompt and pasting in text. If you can use Gmail, you can do this.</div>
 
   <div class="faq-q">"Do you offer refunds?"</div>
-  <div class="faq-a">No. Digital download. If you don't think it's worth $27, don't buy it. If you bought it, the value is in doing the 24 hours — not in returning the file.</div>
+  <div class="faq-a">No. Digital download. If you don't think it's worth $27, don't buy it. If you bought it, the value is in doing the 24 hours, not in returning the file.</div>
 
   <div class="faq-q">"What's next after these 5 workflows?"</div>
   <div class="faq-a">The $79 Paste Pack adds 25 more prompt bundles across the same 5 categories. Same one-paste-and-go format. See the back cover.</div>
@@ -660,7 +663,7 @@ Inbox:
   <div class="footer-cta">
     <div class="eyebrow">Next step</div>
     <h2>Ready for 25 more?</h2>
-    <p>The Paste Pack — $79 — adds 25 production-tested prompt bundles. Same five categories, deeper plays.<br>
+    <p>The Paste Pack, $79, adds 25 production-tested prompt bundles. Same five categories, deeper plays.<br>
     <a href="https://humanatwork.ai/start-ai-24h/t2-paste-pack">humanatwork.ai/start-ai-24h/t2-paste-pack</a></p>
   </div>
 
