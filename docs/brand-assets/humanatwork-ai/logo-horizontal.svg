@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 140" width="600" height="140" preserveAspectRatio="xMidYMid meet">
   <defs>
+    <style>@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,600&amp;family=JetBrains+Mono:wght@500&amp;display=swap");</style>
     <style>
       .ink { fill: #161513; }
       .brick { fill: #A8341F; }

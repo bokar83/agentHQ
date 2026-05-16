@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" preserveAspectRatio="xMidYMid meet">
   <defs>
+    <style>@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,600&amp;family=JetBrains+Mono:wght@500&amp;display=swap");</style>
     <style>
       .paper { fill: #F4EFE6; }
       .ink { fill: #161513; }
@@ -15,5 +16,5 @@
   <text x="50" y="175" class="word word-italic ink">Human</text>
   <text x="50" y="265" class="word word-roman ink">at Work</text>
   <circle cx="270" cy="258" r="11" class="brick"/>
-  <text x="50" y="340" class="meta">OPERATOR-TESTED &middot; NOT THEORY</text>
+  <text x="50" y="340" class="meta">OPERATOR-TESTED &#xB7; NOT THEORY</text>
 </svg>
