@@ -15,6 +15,11 @@ Rules:
   - Default: BOTH are draft-only until Boubacar flips the switch
   - Set AUTO_SEND_CW=true or AUTO_SEND_SW=true in .env to enable
   - Opted-out leads (opt_out = TRUE) are never contacted
+  - Suppressed emails (orc-postgres.email_suppressions, active row) are
+    NEVER contacted -- this is the second gate after leads.opt_out and
+    handles addresses not present in the leads table at all. The reply
+    scanner (scripts/sync_replies_from_gmail.py) populates this table when
+    a prospect replies STOP / unsubscribe / remove me / do not contact.
   - A lead with no sequence_touch is eligible for T1
   - Touches advance only when the gap since last_contacted_at is met
   - niche and city pulled from leads.industry / leads.city for SW templates
@@ -130,6 +135,57 @@ def _ensure_sequence_columns(conn) -> None:
     cur.close()
 
 
+def _filter_suppressed_emails(rows: list[dict], pipeline: str) -> list[dict]:
+    """Drop any lead whose email appears in email_suppressions (active rows).
+    Match is brand-specific (suppression for brand=pipeline OR brand IS NULL).
+    Failure is non-fatal: returns rows unchanged so leads.opt_out remains the
+    only gate when orc-postgres is unreachable.
+    """
+    if not rows:
+        return rows
+    try:
+        import psycopg2  # local import; only needed in this branch
+        orc_conn = psycopg2.connect(
+            host=os.environ.get("POSTGRES_HOST", "orc-postgres"),
+            database=os.environ.get("POSTGRES_DB", "postgres"),
+            user=os.environ.get("POSTGRES_USER", "postgres"),
+            password=os.environ.get("POSTGRES_PASSWORD", ""),
+            port=int(os.environ.get("POSTGRES_PORT", 5432)),
+        )
+        emails = [r.get("email") for r in rows if r.get("email")]
+        if not emails:
+            orc_conn.close()
+            return rows
+        cur = orc_conn.cursor()
+        # brand match: matching brand OR global (brand IS NULL). The pipeline
+        # name maps 1:1 to brand for cw/sw/studio.
+        cur.execute(
+            "SELECT lower(email) FROM email_suppressions "
+            "WHERE unsuppressed_at IS NULL "
+            "  AND lower(email) = ANY(%s) "
+            "  AND (brand IS NULL OR brand = %s)",
+            ([e.lower() for e in emails], pipeline),
+        )
+        suppressed = {row[0] for row in cur.fetchall()}
+        cur.close()
+        orc_conn.close()
+        if not suppressed:
+            return rows
+        kept = [r for r in rows if (r.get("email") or "").lower() not in suppressed]
+        dropped = len(rows) - len(kept)
+        if dropped:
+            logger.warning(
+                f"[{pipeline}] suppression gate: dropped {dropped} lead(s) "
+                f"with active email_suppressions row(s)"
+            )
+        return kept
+    except Exception as e:
+        # Non-fatal: missing table or unreachable orc-postgres means the gate
+        # is skipped this run. leads.opt_out (already applied) is the floor.
+        logger.warning(f"suppression gate: skipped ({e.__class__.__name__}: {e})")
+        return rows
+
+
 def _get_due_leads(conn, pipeline: str, touch: int, limit: int = 10) -> list[dict]:
     """
     Fetch leads due for a specific touch.
@@ -182,6 +238,15 @@ def _get_due_leads(conn, pipeline: str, touch: int, limit: int = 10) -> list[dic
 
     rows = [dict(r) for r in cur.fetchall()]
     cur.close()
+
+    # Defense-in-depth suppression check. Even if leads.opt_out is stale (e.g.
+    # the reply-scanner has not run yet, or the prospect is not in the leads
+    # table at all), email_suppressions blocks the send. The suppression table
+    # lives in orc-postgres (separate from canonical leads in Supabase), so
+    # this is a second query against a second connection. Failure is non-fatal:
+    # if the table is missing or unreachable, we fall back to leads.opt_out
+    # alone (older behavior, no regression).
+    rows = _filter_suppressed_emails(rows, pipeline)
 
     # GMB qualification gate: SW T1 only.
     # Blocks unqualified leads (already well-reviewed, have website) from burning
