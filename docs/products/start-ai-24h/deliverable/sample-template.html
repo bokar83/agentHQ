@@ -18,27 +18,8 @@
 
   @page {
     size: Letter;
-    margin: 0;
+    margin: 0.85in 0.9in 1in 0.9in;
   }
-  @page cover { margin: 0; }
-  @page body {
-    margin: 0.85in 0.9in 1.05in 0.9in;
-    @bottom-left {
-      content: "Human at Work";
-      font-family: "JetBrains Mono", monospace;
-      font-size: 8.5pt;
-      letter-spacing: 0.16em;
-      color: var(--muted);
-    }
-    @bottom-right {
-      content: "humanatwork.ai · p. " counter(page);
-      font-family: "JetBrains Mono", monospace;
-      font-size: 8.5pt;
-      letter-spacing: 0.06em;
-      color: var(--muted);
-    }
-  }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
     background: var(--paper);
@@ -50,9 +31,6 @@
 
   /* ============ COVER ============ */
   .cover {
-    page: cover;
-    width: 8.5in;
-    height: 11in;
     background: var(--paper);
     padding: 0.9in 0.95in;
     display: flex;
@@ -183,7 +161,6 @@
 
   /* ============ INSIDE PAGES ============ */
   .pg {
-    page: body;
     page-break-after: always;
     min-height: 9in;
   }
