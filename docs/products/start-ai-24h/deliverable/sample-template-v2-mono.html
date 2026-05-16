@@ -14,37 +14,9 @@
     --hair: #CACAC4;
     --muted: #707068;
   }
-  @page { size: Letter; margin: 0; }
-  @page body {
-    margin: 0.8in 0.85in 1in 0.85in;
-    @top-left {
-      content: "HUMAN AT WORK";
-      font-family: "JetBrains Mono", monospace;
-      font-size: 8pt;
-      letter-spacing: 0.3em;
-      color: var(--muted);
-    }
-    @top-right {
-      content: "START_AI_24H / v1";
-      font-family: "JetBrains Mono", monospace;
-      font-size: 8pt;
-      letter-spacing: 0.18em;
-      color: var(--muted);
-    }
-    @bottom-left {
-      content: "humanatwork.ai";
-      font-family: "JetBrains Mono", monospace;
-      font-size: 8pt;
-      letter-spacing: 0.12em;
-      color: var(--muted);
-    }
-    @bottom-right {
-      content: counter(page) " / 10";
-      font-family: "JetBrains Mono", monospace;
-      font-size: 8pt;
-      letter-spacing: 0.12em;
-      color: var(--muted);
-    }
+  @page {
+    size: Letter;
+    margin: 0.85in 0.9in 1in 0.9in;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
@@ -57,8 +29,6 @@
 
   /* COVER */
   .cover {
-    width: 8.5in;
-    height: 11in;
     padding: 1in 0.85in 0.9in 0.85in;
     page-break-after: always;
     background: var(--bg);
