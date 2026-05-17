@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>humanatwork.ai - Gumroad / Lemon Squeezy store banner (1600x300)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=JetBrains+Mono:wght@400;500&family=Spectral:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* humanatwork.ai store banner. 1600x300, white background, hairline border, brick accent. */
+
+  :root {
+    --paper: #F4EFE6;
+    --ink: #161513;
+    --brick: #A8341F;
+    --sage: #3E4A2E;
+    --bone: #ECE5D6;
+    --hairline: rgba(22, 21, 19, 0.14);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 1600px;
+    height: 300px;
+    background: #ffffff;
+    font-family: "Spectral", "Iowan Old Style", Georgia, serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: geometricPrecision;
+  }
+
+  .banner {
+    width: 1600px;
+    height: 300px;
+    position: relative;
+    background: #ffffff;
+    border: 1px solid var(--hairline);
+    overflow: hidden;
+  }
+
+  /* Brick accent stripe on top */
+  .stripe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 6px;
+    background: var(--brick);
+  }
+
+  /* Grid: 3 columns */
+  .grid {
+    position: absolute;
+    inset: 0;
+    padding: 40px 64px 36px 64px;
+    display: grid;
+    grid-template-columns: 1fr 1.1fr 1fr;
+    align-items: center;
+    gap: 48px;
+  }
+
+  /* LEFT: wordmark */
+  .left {
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
+
+  .wordmark {
+    font-family: "Fraunces", "Iowan Old Style", Georgia, serif;
+    font-size: 78px;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    display: inline-flex;
+    align-items: baseline;
+    white-space: nowrap;
+  }
+
+  .wordmark .human {
+    font-style: italic;
+    font-weight: 600;
+  }
+
+  .wordmark .at-work {
+    font-style: normal;
+    font-weight: 600;
+    margin-left: 0.22em;
+  }
+
+  /* Brick period -- visually fused to "Work" like in logo-square.svg */
+  .wordmark .period {
+    color: var(--brick);
+    font-style: normal;
+    font-weight: 600;
+    margin-left: 0.02em;
+  }
+
+  /* CENTER: brand line */
+  .center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    height: 100%;
+    padding: 0 16px;
+    border-left: 1px solid var(--hairline);
+    border-right: 1px solid var(--hairline);
+  }
+
+  .center .lede {
+    font-family: "Fraunces", "Iowan Old Style", Georgia, serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 38px;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+
+  .center .lede .roman {
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  .center .kicker {
+    margin-top: 20px;
+    font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
+    font-weight: 500;
+    font-size: 12.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #6B655C; /* matches .meta color from logo-square.svg */
+  }
+
+  .center .kicker .sep {
+    color: var(--brick);
+    margin: 0 10px;
+  }
+
+  /* RIGHT: operator stamp + ledger motif */
+  .right {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    padding-left: 20px;
+  }
+
+  .ledger {
+    width: 84px;
+    height: 56px;
+    position: relative;
+    margin-bottom: 18px;
+  }
+
+  .ledger .line {
+    position: absolute;
+    left: 0;
+    height: 3px;
+    background: var(--ink);
+    border-radius: 2px;
+  }
+
+  .ledger .line.l1 { top: 6px; width: 84px; }
+  .ledger .line.l2 { top: 26px; width: 64px; }
+  .ledger .line.l3 { top: 46px; width: 84px; }
+
+  .ledger .dot {
+    position: absolute;
+    top: 22px;
+    left: 64px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--brick);
+  }
+
+  .stamp {
+    font-family: "JetBrains Mono", "SF Mono", Menlo, monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink);
+    letter-spacing: 0.01em;
+  }
+
+  .stamp .by {
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .stamp .meta {
+    color: var(--ink);
+    opacity: 0.72;
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+  }
+
+  .stamp .url {
+    margin-top: 6px;
+    font-weight: 500;
+    color: var(--brick);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+  <div class="banner">
+    <div class="stripe"></div>
+    <div class="grid">
+
+      <!-- LEFT: wordmark -- matches logo-square.svg: italic Human + roman "at Work" + brick period -->
+      <div class="left">
+        <div class="wordmark">
+          <span class="human">Human</span><span class="at-work">at Work</span><span class="period">.</span>
+        </div>
+      </div>
+
+      <!-- CENTER: brand line -->
+      <div class="center">
+        <div class="lede">
+          Operator-tested AI workflows.<br>
+          <span class="roman">Not theory.</span>
+        </div>
+        <div class="kicker">
+          Operator-tested<span class="sep">&#xB7;</span>Not theory
+        </div>
+      </div>
+
+      <!-- RIGHT: stamp + ledger -->
+      <div class="right">
+        <div class="ledger">
+          <div class="line l1"></div>
+          <div class="line l2"></div>
+          <div class="line l3"></div>
+          <div class="dot"></div>
+        </div>
+        <div class="stamp">
+          <div class="by">by Boubacar</div>
+          <div class="meta">daily AI operator since GPT-3.5</div>
+          <div class="url">humanatwork.ai</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
