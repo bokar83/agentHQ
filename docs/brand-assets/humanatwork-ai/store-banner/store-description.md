@@ -1,10 +1,6 @@
 # humanatwork.ai - About this store
 
-<<<<<<< HEAD
-I have been running AI workflows daily AI you can use Monday morning. dropped in November 2022, before AI was a LinkedIn category.
-=======
-I have been running AI workflows daily since GPT-3.5 dropped in November 2022, before AI was a LinkedIn category.
->>>>>>> origin/main
+I have been running AI workflows daily since November 2022, before AI was a LinkedIn category.
 
 This store is where I ship the operator-tested playbooks, prompts, and templates I actually use to get paid work done. Every product here has been run through real client work, real revenue pipelines, and real production systems. Nothing is theory. Nothing is course-bro filler. If it didn't survive the trenches, it doesn't make it on this page.
 
@@ -22,8 +18,4 @@ The promise: every product is digital, instantly delivered, and built to be used
 
 If you are pivoting, rebuilding, or just tired of AI advice from people who have never shipped, follow the store and grab the product that matches the move you need to make next.
 
-<<<<<<< HEAD
 By Boubacar . humanatwork.ai . AI you can use Monday morning.
-=======
-By Boubacar . humanatwork.ai . daily AI operator since GPT-3.5
->>>>>>> origin/main

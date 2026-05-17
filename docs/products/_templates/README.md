@@ -28,13 +28,10 @@ Shared HTML templates for generating per-SKU PDF deliverables across the humanat
 - **First name only.** "Boubacar" not "Boubacar Barry".
 - **No em-dashes anywhere.** Use commas, colons, periods.
 - **No credential reciting.** No "14 years corporate HR", no "ex-corporate HR". Locked 2026-05-16 per `feedback_boubacar_ai_tenure.md`.
-<<<<<<< HEAD
-- **AI-operator-tenure signal:** use `AI you can use Monday morning.` (or equivalent proxy). Boubacar has been a paying AI user since 2023, ChatGPT user since Nov 2022. Don't use literal years.
-- **Bio line (Option A, approved 2026-05-16):** `By Boubacar · AI you can use Monday morning. · humanatwork.ai`
-=======
-- **AI-operator-tenure signal:** use `daily AI operator since GPT-3.5` (or equivalent proxy). Boubacar has been a paying AI user since 2023, ChatGPT user since Nov 2022. Don't use literal years.
-- **Bio line (Option A, approved 2026-05-16):** `By Boubacar · daily AI operator since GPT-3.5 · humanatwork.ai`
->>>>>>> origin/main
+- **Two-tier bio (locked 2026-05-16):**
+  - **Tier 1 (banner / top-of-funnel):** `By Boubacar · humanatwork.ai · What I run. What I paste. What you take home.`
+  - **Tier 2 (PDF cover + store description sign-off):** `By Boubacar · humanatwork.ai · AI you can use Monday morning.`
+  - Banner and sold-items must NEVER use the same line (real-estate rule).
 - **No DRAFT badges, no single-letter brand-mark blocks.** Per `feedback_no_draft_or_letter_brand_marks.md`.
 - **No fabricated lived moments.** Don't invent Boubacar's location, time, or kitchen-table stories. Per `feedback_never_fabricate_boubacar_lived_moments.md`.
 - **No refund language above the fold.** Refund goes in FAQ tail only.
