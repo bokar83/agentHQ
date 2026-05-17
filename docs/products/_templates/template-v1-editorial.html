@@ -36,28 +36,19 @@
   /* ============ COVER ============ */
   .cover {
     background: var(--paper);
-    padding: 0.9in 0.95in;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    padding: 0.4in 0 0 0;
+    border-top: 6px solid var(--brick);
     page-break-after: always;
-    position: relative;
-  }
-  .cover::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 6px;
-    background: var(--brick);
+    break-after: page;
   }
 
   .cover-top {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-top: 0.5in;
+    margin-top: 0.2in;
+    padding-bottom: 0.25in;
+    border-bottom: 1px solid var(--hairline);
   }
   .wordmark {
     font-family: "Fraunces", serif;
@@ -81,7 +72,7 @@
   }
 
   .cover-mid {
-    margin-top: 1.2in;
+    margin-top: 0.5in;
   }
   .tier-tag {
     font-family: "JetBrains Mono", monospace;
@@ -94,11 +85,13 @@
   .cover-title {
     font-family: "Fraunces", serif;
     font-weight: 500;
-    font-size: 52pt;
-    line-height: 1;
+    font-size: 44pt;
+    line-height: 1.02;
     letter-spacing: -0.025em;
     color: var(--ink);
-    margin-bottom: 0.18in;
+    margin-bottom: 0.12in;
+    page-break-after: avoid;
+    break-after: avoid;
   }
   .cover-title em { font-style: italic; font-weight: 500; }
   .cover-sub {
@@ -112,10 +105,12 @@
   }
 
   .cover-promise {
-    margin-top: 0.4in;
-    padding-top: 0.25in;
+    margin-top: 0.3in;
+    padding-top: 0.2in;
     border-top: 1px solid var(--hairline);
     max-width: 6in;
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
   .cover-promise .label {
     font-family: "JetBrains Mono", monospace;
@@ -135,8 +130,11 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    padding-top: 0.25in;
+    margin-top: 0.3in;
+    padding-top: 0.2in;
     border-top: 1px solid var(--hairline);
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
   .by-line {
     font-family: "Spectral", serif;
@@ -165,9 +163,10 @@
 
   /* ============ INSIDE PAGES ============ */
   .pg { break-after: auto; }
-  .step-card, .schedule .row, .worksheet .field, .footer-cta, .author-note, .toc .row {
+  .step-card, .schedule .row, .worksheet .field, .footer-cta, .author-note, .toc .row, .pull, .faq-q, .faq-a {
     page-break-inside: avoid; break-inside: avoid;
   }
+  .faq-q + .faq-a { page-break-before: avoid; break-before: avoid; }
 
   .pg h1 {
     font-family: "Fraunces", serif;
@@ -461,6 +460,11 @@
     line-height: 1.55;
     color: var(--ink);
   }
+
+  @media print {
+    html, body { background: white !important; }
+    .cover { background: white !important; }
+  }
 </style>
 </head>
 <body>
@@ -488,7 +492,7 @@
   </div>
 
   <div class="cover-bottom">
-    <div class="by-line">By <strong>Boubacar</strong><br>14 years corporate HR. Now building agentsHQ.</div>
+    <div class="by-line">By Boubacar · daily AI operator since GPT-3.5 · humanatwork.ai</div>
     <div class="price-stamp">
       <div class="num">$27</div>
       single-purchase
