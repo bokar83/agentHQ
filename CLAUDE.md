@@ -86,6 +86,29 @@ assert from_hdr.endswith("boubacar@catalystworks.consulting"), f"From rewritten:
 
 See: `~/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/feedback_cw_send_canonical_path.md` for the full context.
 
+### Carve-out (locked 2026-05-16 PM): L-R9 self-digest auto-send
+
+**Auto-send permitted ONLY for self-digests (To = bokar83@gmail.com + boubacar@catalystworks.consulting, From = boubacar@catalystworks.consulting) on locked cron schedule with kill-switch flag check. All outbound-to-prospect / outbound-to-third-party emails still require explicit "send it" per session per batch.**
+
+The narrow scope (any drift = violation of this rule):
+
+- **Recipients:** ONLY the two self addresses above. Any other To/Cc/Bcc = not covered, requires explicit go-ahead.
+- **From:** boubacar@catalystworks.consulting via cw OAuth canonical path (no gws CLI, no MCP draft).
+- **Schedule:** fixed cron `0 0 * * 1` in `/etc/cron.d/lighthouse-rituals` (Sun 18:00 MDT = 00:00 UTC Mon during DST). No on-demand triggers. No "send extra" between scheduled fires.
+- **Kill-switch:** if `data/lighthouse-digest-skip.flag` exists (committed to repo, lives at `/app/data/lighthouse-digest-skip.flag` in container), script skips + Telegram-alerts + exits 0.
+- **Idempotency:** `data/lighthouse-digest-sent-<YYYY-WW>.flag` written after each successful send. If present at next fire, script skips. One send per ISO week, maximum.
+- **Verify-after-send:** MANDATORY. Script fetches sent-message metadata, asserts `From` ends with `boubacar@catalystworks.consulting`. On mismatch: exit non-zero, idempotency flag NOT written, Telegram alert fires.
+
+**Canonical implementation:**
+- Script: `orchestrator/scripts/lighthouse_digest_send.py`
+- Tests: `orchestrator/tests/test_lighthouse_digest_send.py`
+- Cron: line in `scripts/lighthouse_rituals_cron_install.sh` → `/etc/cron.d/lighthouse-rituals` on VPS
+- Memory: `~/.claude/projects/d--Ai-Sandbox-agentsHQ/memory/feedback_cw_send_canonical_path.md` "Carve-out" section
+
+**Why this carve-out is safe:** the only addressable failure mode (sending to wrong recipient) is precluded by the recipient-list being a hardcoded constant in source, not a runtime input. The 2026-05-11 incident was about prospects, not Boubacar's own inbox. Self-digest re-send is recoverable (Boubacar just gets a duplicate email); prospect re-send is not.
+
+**Halting in production:** create `data/lighthouse-digest-skip.flag` in any worktree, commit + push. The next Sunday's fire reads the committed flag and skips. To resume: remove the flag, commit + push.
+
 ---
 
 ## 🚨 HARD RULE: ATOMIC EDIT CHAIN (read every session, no exceptions)

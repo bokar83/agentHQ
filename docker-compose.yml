@@ -231,6 +231,8 @@ services:
       - VIDEO_CREW_ENABLED=${VIDEO_CREW_ENABLED:-}
     volumes:
       - ./agent_outputs:/app/outputs
+      # L-R9 Sunday digest source — read-only, contains w<N>-close-<date>.html
+      - ./output:/app/output:ro
       - ./signal_works:/app/signal_works
       - ./skills:/app/skills
       - ./templates:/app/templates
