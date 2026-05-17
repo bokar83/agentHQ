@@ -21,6 +21,12 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 # L-R5 Conversion Scorecard chains automatically after L-R4 Confirm & Commit
 # via on_complete hook in lr4_triad_lock.json (event-driven, not time-driven).
 0 16 * * 6 root docker exec orc-crewai python /app/orchestrator/scripts/ritual_cron_dispatch.py lr4_triad_lock >> /var/log/lighthouse-rituals.log 2>&1
+
+# Sun 18:00 MDT (DST = 00:00 UTC Mon) - L-R9 Sunday Digest auto-send.
+# Carve-out: self-recipient only (boubacar@cw + bokar83@gmail), cw OAuth From-line,
+# kill-switch (data/lighthouse-digest-skip.flag) + idempotency-flag enforced.
+# DST drift: 01:00 UTC Mon during standard time (Nov-Mar) -- adjust then.
+0 0 * * 1 root docker exec orc-crewai python /app/orchestrator/scripts/lighthouse_digest_send.py >> /var/log/lighthouse-rituals.log 2>&1
 EOF
 
 chmod 644 "$CRON_FILE"
