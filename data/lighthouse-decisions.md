@@ -138,3 +138,37 @@ W1 closes with 1 audit delivered (early, peer-pattern variant, Sankofa-stress-te
 
 ---
 
+## Council Convergence — Weekly Cadence Lock — 2026-05-16 PM
+
+**Trigger:** Sankofa surfaced irreducible tension on W1 digest design (status-report vs decision-instrument). Boubacar approved Council escalation. 5 voices ran cross-review until convergence.
+
+**Convergences locked (apply for next 11 Saturdays of Lighthouse):**
+
+| Question | Convergence |
+|---|---|
+| Role of digest | **Commitment device** (neither pure report nor pure trigger). Keeps founder honest against kill criteria HE set. |
+| Verdict frame | **Never bigger than the data.** AWAITING GRADE / INCOMPLETE / distance-metric. ON-TRACK requires an unrewritten gate. Sankofa Contrarian called ON-TRACK dishonest because L-R4 adjusted gate was invented same day. |
+| Cadence | **Sun PM HTML email + Wed PM Telegram pulse.** Two-channel two-pulse, not one-Saturday-blast. Sun = forward-looking (sets up Mon execution). Wed = mid-cycle check-in. |
+| Codenames | **Two-tier writing + one-line glossary caption.** Headers plain English, body keeps codenames. Caption defines top 3-4 terms under kicker. |
+| Kill criteria | **Digest propagates, doesn't author.** L-R4 = source of truth (decides). L-R5 = scoring (measures). Digest = transmission (broadcasts + adds distance-to-kill column). |
+| Send rule | **No L-R9 email send without Boubacar explicit "send it"** in-session, for THAT specific email. HARD RULE per CLAUDE.md, not Council. |
+
+**12-element canonical template** locked. See `docs/roadmap/lighthouse.md` § Weekly cadence for full element list.
+
+**Sprint kill criteria added by Council (new, distinct from L-R4 Lane 3):**
+
+| Kill criterion | Threshold | Gate date | Action if fires |
+|---|---|---|---|
+| W4 sprint hard-stop | 0 referrals named-with-intro AND 0 audit yes-confirmations on rewrite quality by 2026-06-14 (L4 W4 close, Day 33) | Sat 2026-06-14 | Trigger CW cold outbound IMMEDIATELY. Warm-referral thesis failing on its own terms. |
+
+**Distinct from L-R4 Lane 3 trigger (5/24, AND-gate, <2 referrals + <3 confirmations)** which fires earlier (Day 12, end W2) with lower thresholds. Two checkpoints: W2 (soft, additive) + W4 (hard stop, replaces single-track).
+
+**Insights surfaced by Council that Sankofa missed:**
+1. Cadence is strategic, not operational (one vs two pulses/week changes how founder makes decisions, not just logistics)
+2. "Commitment device" framing dissolves report-vs-trigger dichotomy
+3. Distance metric > verdict word (number forces engagement, word allows skimming)
+
+**Author trail:** Sankofa 5 voices → Council cross-review 3 rounds → Boubacar approval 2026-05-16 PM → roadmap + decisions ledger updated → first digest render `output/lighthouse/w1-close-2026-05-16.html` (held for Sun PM send pending explicit go).
+
+---
+

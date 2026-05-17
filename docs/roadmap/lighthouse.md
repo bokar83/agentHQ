@@ -37,7 +37,7 @@ Land 3 paying clients across SW + GW + CW combined by 2026-08-04. At least 1 in 
 - **Daily tracker:** `data/inbound-signal-log.md`
 - **Memory:** `project_lead_strategy_2026-05-12.md`
 
-## The 8 prevention mechanics (L-R1 through L-R8)
+## The 10 prevention mechanics (L-R1 through L-R10)
 
 > **Naming convention:** Lighthouse Routine milestones use `L-R<n>` prefix. Lifecycle (weekly) milestones use `L<n>` (L0-L7). Future codenames mirror: Ghost = G-R<n> / G<n>, Atlas = A-R<n> / A<n>, etc.
 
@@ -47,10 +47,50 @@ Land 3 paying clients across SW + GW + CW combined by 2026-08-04. At least 1 in 
 | **L-R2** | First Win Ceremony — Telegram 🚀 on first REAL reply | Once, auto | No First Win |
 | **L-R3** | Guilt-Free Reset Trigger | Daily 10:30 if L-R1 missed | Shame Spiral |
 | **L-R4** | Weekly Priority Triad Lock — 3 lanes max | Sat 10:00 MDT | Cognitive Overload |
-| **L-R5** | Conversion Scorecard | Sat 10:30 MDT | Automation as Enabler |
+| **L-R5** | Conversion Scorecard (auto-chains after L-R4 Confirm — no separate cron) | Sat post-L-R4 | Automation as Enabler |
 | **L-R6** | Auto-Close Script — T+24h value, T+72h ask | Post-session | Avoidance of Closure |
 | **L-R7** | Idea Vault Lock | Anytime | Shiny-Drift |
 | **L-R8** | List Hygiene Gate + Reply Classifier Fix | Before any cold send | Sender Reputation Cliff |
+| **L-R9** | Sunday Digest (HTML email) — 12-element commitment-device template | Sun 18:00 MDT | Status-report drift |
+| **L-R10** | Mid-week Pulse (Telegram, 4-line) — Nate status + distance-to-kill + 3-day mistakes + Sun ETA | Wed PM | Sprint blind-spot |
+
+## Weekly cadence (locked Council 2026-05-16 PM)
+
+| Day | Time | Channel | What | Why |
+|---|---|---|---|---|
+| Sat | 10:00 MDT | Telegram (orchestrator bot) | L-R4 Triad Lock — 3-lane decision ritual | Pick the week's 3 highest-leverage lanes |
+| Sat | chained after L-R4 Confirm | Telegram (orchestrator bot) | L-R5 Conversion Scorecard — auto-computed | Score the week's data against gates |
+| Sun | 18:00 MDT | HTML email (cw OAuth send path) | L-R9 Sunday Digest — 12-element commitment-device template | Set up Mon execution + propagate kill criteria + distance metric |
+| Wed | TBD time | Telegram (orchestrator bot) | L-R10 Mid-week Pulse — 4 lines | Mid-cycle accountability + Sun preview ETA |
+| Daily M-F | 10:00 MDT | Self-driven | L-R1 Daily Fast-Feedback Sprint | One V1/V3 send per weekday |
+| Daily M-F | 10:30 MDT | Self-driven (if missed) | L-R3 Guilt-Free Reset | Anti-shame-spiral |
+| Daily | 21:00 MDT | Self-driven ritual | Log + pre-slot tomorrow | EOD discipline |
+
+**Send rule for L-R9 + L-R10:** orchestrator drafts + holds. Boubacar explicit "send it" required for L-R9 email each Sunday (HARD RULE per CLAUDE.md). L-R10 Telegram pulse auto-fires once cron + handler shipped (no email = no explicit-go needed; pure-notification scope).
+
+**Digest template (L-R9) — 12 elements canonical (locked Council 2026-05-16):**
+1. Caption line (codename glossary, 1 line)
+2. CW context sentence (why-this-sprint-exists)
+3. TL;DR (state + 1 sentence, no verdict bigger than data)
+4. Distance-to-kill table (locked columns: criterion · source · current distance · gate date)
+5. Commitment Summary (hypothesis + tested + proved/not + 1 move + 2 not-todos)
+6. Mistake log (1 line, "none but probably blind" allowed)
+7. What did NOT happen (intentional, ABOVE scorecard)
+8. Scorecard (counts + gate verdicts, 3 reads)
+9. Qualitative signals (collapsible)
+10. Agent analysis (pattern recognition + risks + strategic implication + leverage map)
+11. L-R4 lock summary
+12. W<n> prep + Open follow-ups + Infra (collapsible)
+
+**Verdict frame rule:** never bigger than the data. AWAITING GRADE > INCOMPLETE > ON-TRACK when outcome data hasn't arrived. ON-TRACK requires an unrewritten gate to be on-track to.
+
+**Pulse template (L-R10) — 4 lines:**
+1. Most recent warm-lead reply status (silent / yes / no / substantive)
+2. Distance to L-R4 Lane 3 trigger (3 numbers: referrals · audit yes-confirmations · days)
+3. Mon-Wed mistakes (1 line, "none" allowed)
+4. Sun digest preview ETA
+
+**First L-R9 render:** `output/lighthouse/w1-close-2026-05-16.html` (built Sat 5/16 PM, send held Sun 5/17 18:00 MDT pending Boubacar explicit go).
 
 ## Milestones
 
@@ -65,6 +105,7 @@ Land 3 paying clients across SW + GW + CW combined by 2026-08-04. At least 1 in 
 
 **Daily M-F:** 10:00 sprint (V1/V2) + 10:05 Brandon morning ping + 17:30 EOD ledger if landed + 21:00 log+pre-slot.
 **Expected:** ≥3 replies + ≥1 audit delivered. **Gate:** ≥4 of 5 days.
+**W1 actual:** 1 reply (Nate yes) + 1 audit delivered (Nate, 3hr 21min EARLY) → original gate HALF-PASS; L-R4 adjusted gate AWAITING GRADE (Nate substantive review Tue/Wed 5/19-5/20).
 
 ### L2 — Week 2: Open the Funnel (5/19-5/24)
 
