@@ -50,7 +50,7 @@ logger = logging.getLogger(__name__)
 # --------------------------------------------------------------------------
 
 DEFAULT_OUTPUT_DIR = Path(
-    os.environ.get("LIGHTHOUSE_OUTPUT_DIR", "/app/output/lighthouse")
+    os.environ.get("LIGHTHOUSE_OUTPUT_DIR", "/app/data/lighthouse-digests")
 )
 DEFAULT_DATA_DIR = Path(os.environ.get("LIGHTHOUSE_DATA_DIR", "/app/data"))
 DEFAULT_SECRETS_PATH = Path(
@@ -352,7 +352,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help="Override digest output dir (default: /app/output/lighthouse)",
+        help="Override digest output dir (default: /app/data/lighthouse-digests)",
     )
     p.add_argument(
         "--data-dir",

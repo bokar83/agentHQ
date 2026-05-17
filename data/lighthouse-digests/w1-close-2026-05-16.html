@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lighthouse W1 Close · Sat 2026-05-16</title>
+<style>
+  :root {
+    --bg: #0f1419;
+    --card: #1a2027;
+    --line: #2a3441;
+    --ink: #e6edf3;
+    --ink-dim: #94a3b8;
+    --accent: #f5b942;
+    --pass: #10b981;
+    --warn: #f59e0b;
+    --fail: #ef4444;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 24px;
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg); color: var(--ink);
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  header { margin-bottom: 28px; }
+  .kicker { color: var(--accent); font: 600 12px/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; }
+  h1 { margin: 8px 0 6px; font-size: 26px; line-height: 1.2; font-weight: 700; }
+  .sub { color: var(--ink-dim); font-size: 14px; }
+  h2 { font-size: 18px; margin: 32px 0 10px; font-weight: 700; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  h3 { font-size: 15px; margin: 20px 0 8px; font-weight: 600; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.06em; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 18px 22px; margin: 14px 0; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 14px; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--ink-dim); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+  td.num { font: 600 18px var(--mono); color: var(--accent); width: 60px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: 0.05em; }
+  .b-pass { background: rgba(16, 185, 129, 0.15); color: var(--pass); }
+  .b-warn { background: rgba(245, 158, 11, 0.15); color: var(--warn); }
+  .b-fail { background: rgba(239, 68, 68, 0.15); color: var(--fail); }
+  .b-flat { background: rgba(148, 163, 184, 0.15); color: var(--ink-dim); }
+  ul { padding-left: 22px; }
+  ul li { margin: 4px 0; }
+  code { font: 13px var(--mono); background: rgba(245, 185, 66, 0.08); color: var(--accent); padding: 2px 6px; border-radius: 4px; }
+  .small { font-size: 13px; color: var(--ink-dim); }
+  details summary { cursor: pointer; padding: 8px 0; font-weight: 600; color: var(--ink-dim); }
+  details summary:hover { color: var(--ink); }
+  details[open] summary { color: var(--ink); margin-bottom: 8px; }
+  .tldr { background: linear-gradient(135deg, rgba(245, 185, 66, 0.08), rgba(245, 185, 66, 0.02)); border-left: 3px solid var(--accent); padding: 16px 20px; margin: 0 0 24px; border-radius: 0 10px 10px 0; }
+  .tldr p { margin: 0; font-size: 15px; }
+  .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--ink-dim); font-size: 12px; }
+  .glossary { margin-top: 8px; font-size: 12px; color: var(--ink-dim); line-height: 1.5; }
+  .context-line { background: rgba(148, 163, 184, 0.06); border-left: 2px solid var(--ink-dim); padding: 12px 18px; margin: 18px 0; border-radius: 0 8px 8px 0; }
+  .context-line p { margin: 0; font-size: 13px; color: var(--ink-dim); }
+  .mistake-log { background: rgba(239, 68, 68, 0.06); border-left: 3px solid var(--fail); padding: 14px 20px; margin: 18px 0; border-radius: 0 8px 8px 0; }
+  .mistake-log p { margin: 0; font-size: 14px; }
+  .mistake-log strong { color: var(--fail); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">Lighthouse · W1 Close</div>
+  <h1>Sunday 2026-05-17 · W1 close + W2 launch read</h1>
+  <div class="sub">Sprint Day 5 of 84 · 1/12 weeks closed</div>
+  <div class="glossary">Lighthouse = 12-week revenue sprint · L-R4 = Sat Triad Lock ritual · L-R5 = Sat Conversion Scorecard · V1-V5 = warm-message tiers (V1 first-touch, V3 dormant, V5 reciprocity) · CW = Catalyst Works (consulting business this sprint exists to grow).</div>
+</header>
+
+<div class="context-line">
+  <p><strong>Why this sprint exists:</strong> 12 weeks to test whether the warm-lead audit motion can produce 1-2 paying Catalyst Works clients before 2026-08-04. Every Saturday digest is a commitment device against that hypothesis, not a status report.</p>
+</div>
+
+<div class="tldr">
+  <p><strong>TL;DR · State: AWAITING GRADE.</strong> W1 audit landed peer-tier and 3hr 21min early on SLA. The W1 grade is Nate's substantive reply on rewrite quality, due Tue/Wed 5/19-5/20. Until then, effort is high, outcome is unknown. Do not call this on-track yet.</p>
+</div>
+
+<h2>Distance to kill · the 11-week eye-train</h2>
+
+<div class="card">
+  <table>
+    <thead><tr><th>Kill criterion</th><th>Source</th><th>Current distance</th><th>Gate date</th></tr></thead>
+    <tbody>
+      <tr><td>Lane 3 dual-track trigger</td><td>L-R4 2026-05-16</td><td>2 / 2 referrals named-with-intro away · 3 / 3 audit yes-confirmations away</td><td>Sat 2026-05-24 (8 days)</td></tr>
+      <tr><td>Audit format failure</td><td>Playbook · ≥10 sent + ≤3 yes</td><td>9 audits short of trigger threshold (1 sent so far) · 3 yes-replies away from format failure verdict</td><td>Floating, fires when both volume + replies hit</td></tr>
+      <tr><td>W4 sprint hard-stop</td><td>Council 2026-05-16</td><td>0 referrals + 0 yes-confirmations away from CW cold outbound mandate</td><td>Sat 2026-06-14 (29 days)</td></tr>
+      <tr><td>L1→L2 reset</td><td>Playbook · audit format failure</td><td>Not triggered (volume too low to fail format yet)</td><td>End W2 re-check</td></tr>
+    </tbody>
+  </table>
+  <p class="small">Kill criteria authored 2026-05-16 L-R4 + Council; this table propagates them. Authorship updates if revised at a future L-R4.</p>
+</div>
+
+<h2>Commitment Summary · what this week tested against the hypothesis</h2>
+
+<div class="card">
+  <p><strong>The commitment (sprint hypothesis):</strong> warm-lead audit motion can produce 1-2 paying CW clients before 2026-08-04 via the referral path (warm lead → audit → referral → revenue).</p>
+  <p><strong>What W1 tested:</strong> can the audit format land with a peer-tier warm lead, on SLA, with relationship preserved?</p>
+  <p><strong>What W1 proved (partial):</strong> the audit ships at peer-tier quality, on SLA, with friend voice held. Pattern catalog locked. Three audit variants now codified. But the recipient has not yet judged the rewrite quality.</p>
+  <p><strong>What W1 did NOT prove:</strong> (a) whether the audit is good enough that the recipient gives substantive feedback, (b) whether it is good enough that a friend forwards it. (a) is the Nate Tue/Wed signal. (b) is the W2-W3 referral signal.</p>
+  <p><strong>One recommended move (Sun PM):</strong> ship the Lane 2 companion deck v1 (1-page "what I do" forwardable) before Mon 10:00 MDT Chris V1. Single piece of infra that converts W1's audit-quality bet into the referral mechanism. Skipping it = W2 sends with the same forward-friction as W1.</p>
+  <p><strong>Two things to NOT do this weekend:</strong> (1) iterate on the audit format (it works, pattern locked, don't fix what isn't broken), (2) pre-pitch the Signal Session to any warm lead (V1 promise was free + no pitch, honor it through W3).</p>
+</div>
+
+<div class="mistake-log">
+  <p><strong>Mistake log · what would I not do again this week?</strong> Two: (1) L-R5 ritual was designed as Q&A walkthrough when the data already lived in the signal log + warm list — Boubacar called it out mid-fire, refactor queued. (2) Initial cron path bug + RITUALS_DIR fallback bug shipped without smoke-test on actual VPS PATH semantics. Both surfaced only because we fired live. Acceptable per ship-then-adjust rule, but pre-deploy smoke test of just the dispatch path (no Telegram) would have caught both in 5 min. Will add to ritual deploy SOP. (Probably blind on a third — that's the nature of mistake logs.)</p>
+</div>
+
+<h2>What did NOT happen this week (intentional, before what did)</h2>
+<div class="card">
+  <ul>
+    <li>No paid Signal Session attempted (gate dropped per L-R4 Lane 3 revision · re-eval Sat 5/24)</li>
+    <li>No pitch in any V1 send (held · audit IS the pivot)</li>
+    <li>No em-dash in any deliverable (CTQ self-check clean)</li>
+    <li>No DRAFT badge or letter brand mark in audit (Atlas nav guards held)</li>
+    <li>No iteration on the audit template (locked · 2 Sankofa passes ago · do not re-open without trigger)</li>
+    <li>No body-copy announcement of cw email pivot (audit ships from <code>boubacar@catalystworks.consulting</code> = the pivot, no narration needed)</li>
+  </ul>
+</div>
+
+<h2>W1 Scorecard</h2>
+
+<div class="card">
+  <table>
+    <thead><tr><th>Metric</th><th>Count</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>SENT (V1 first touch)</td><td class="num">3</td><td>Chad 5/13 text · Nate 5/14 LinkedIn · Chase 5/15 email-personal</td></tr>
+      <tr><td>REPLY (yes/no/maybe)</td><td class="num">1</td><td>Nate yes 5/14 11:30 (on audit offer, not on rewrite quality)</td></tr>
+      <tr><td>DELIVERED audit</td><td class="num">1</td><td>Nate 5/14 13:39 · 3hr 21min EARLY on 5 PM SLA</td></tr>
+      <tr><td>THURSDAY check-in</td><td class="num">1</td><td>Chad 5/14 (LinkedIn + text bridge after Day 1 silence)</td></tr>
+      <tr><td>WIN</td><td class="num">0</td><td>Brandon Day 0 accountability WIN excluded from W1</td></tr>
+      <tr><td>REFERRAL named-with-intro</td><td class="num">0</td><td>New event type per L-R4 reframe; tracking starts now</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>Gate verdict · three reads</h3>
+
+<div class="card">
+  <table>
+    <thead><tr><th>Gate</th><th>Threshold</th><th>Result</th></tr></thead>
+    <tbody>
+      <tr><td>Original W1</td><td>≥3 replies + ≥1 audit</td><td><span class="badge b-warn">Half-pass</span> 1/3 replies · 1/1 audit</td></tr>
+      <tr><td>L-R4 adjusted (locked today)</td><td>Audit quality + relationship preservation primary</td><td><span class="badge b-pass">On-track</span> pending Nate W2 review</td></tr>
+      <tr><td>Audit format trigger</td><td>≥10 sent + ≤3 yes-replies</td><td><span class="badge b-flat">Not fired</span> volume too low</td></tr>
+      <tr><td>L1→L2 reset</td><td>If format trigger fires</td><td><span class="badge b-flat">Not triggered</span></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<details>
+  <summary>Qualitative signals · individual recipient detail</summary>
+  <ul>
+    <li><strong>Chad:</strong> Day 1 silent · Day 2 Thursday check-in delivered (LinkedIn + text bridge) · no reply through W1 close. Audit drafted v4 + held for trigger.</li>
+    <li><strong>Nate:</strong> yes 5/14 + audit delivered 5/14 + acknowledged audit ~10min after delivery + said full review <strong>next week</strong> (Dad's 70th birthday weekend). Tue/Wed W2 check-in queued.</li>
+    <li><strong>Chase:</strong> V1 sent Sat AM from Lagoon (remote-location stress test). Reply window opens W2 Mon 5/19. Too early for W1 score.</li>
+    <li><strong>Boubacar momentum signal</strong> (logged 5/14 14:11 MDT): "I've never had this much momentum...feels like we're going the right way." → leading-indicator log.</li>
+  </ul>
+</details>
+
+<h2>Agent analysis · what I'm seeing that the data doesn't say directly</h2>
+
+<div class="card">
+  <h3>What's actually working (pattern recognition from W1)</h3>
+  <ul>
+    <li><strong>Channel-fit signal:</strong> n=3 is tiny but the only converter so far is LinkedIn DM (Nate). Text (Chad) silent. Email-personal (Chase) too early. The Lane 1 default (LinkedIn DM first) isn't a guess — it's the only data point that actually replied.</li>
+    <li><strong>SLA discipline pays:</strong> shipping the audit 3hr 21min EARLY (not 5 min late) is the moment Nate's "will reply next week" felt like a real promise rather than a polite deferral. Speed reads as care here.</li>
+    <li><strong>Per-recipient pattern catalog</strong> (Chad-cold / Nate-peer / Chad-friend-voice) emerged organically from doing the work, not from up-front design. That suggests the next variant will surface from Brody or Brandon, not from planning.</li>
+    <li><strong>Boubacar's own momentum quote</strong> ("never had this much momentum...feels like we're going the right way") is the first qualitative signal in 12 weeks of strategy iteration that lands without hedging. Don't dismiss it as feelings — momentum signals lead by ~7-14 days on execution quality.</li>
+  </ul>
+
+  <h3>What I'm watching that could quietly fail</h3>
+  <ul>
+    <li><strong>Nate's "next week" is a soft deadline.</strong> If Tue/Wed check-in lands without a real reply, the W1 audit success becomes "we shipped to someone who never engaged with it." The whole audit-quality thesis hinges on Nate's response within 7 days of delivery. Pre-write the check-in Mon PM so Tue AM is press-send.</li>
+    <li><strong>Chad silence is informative but not yet a signal.</strong> 3 days silent after a Day 1 send + Day 2 check-in. Could be: doesn't care, busy, didn't see, weighing. Treat as data only after W2 close. Don't re-touch this week.</li>
+    <li><strong>Chase fired Sat from Lagoon</strong> was a stress test, not a real send window. Channel-mix violates the L-R4 default (email-personal not LinkedIn DM). Acceptable as legacy continuation per warm-list override rule, but his reply rate is now noisy data — if he doesn't reply, it could be channel choice or timing or him, can't tell.</li>
+    <li><strong>Lane 3 trigger condition is asymmetric.</strong> <code>&lt;2 referrals AND &lt;3 audit yes-confirmations</code> is intentionally lenient (AND-gate, not OR-gate). If only ONE of those misses by 5/24, single-track keeps running. That's the right call, but it means the system has high tolerance for slow-start which could mask a real problem until W4. Set a soft-checkpoint at end W1 (Sun PM look-ahead) just to confirm direction.</li>
+  </ul>
+
+  <h3>Strategic implication of the L-R4 referral-thesis reframe</h3>
+  <ul>
+    <li>The reframe converts the entire W1-W3 sprint from "selling Signal Sessions" to "producing forwardable proof-of-craft." That's a fundamentally different motion: the buyer isn't the V1 recipient, the buyer is whoever the V1 recipient mentions you to.</li>
+    <li><strong>Consequence:</strong> the Lane 2 companion deck isn't an enhancement, it's the actual conversion mechanism. The audit is the bait; the deck is what converts the forward into a call.</li>
+    <li><strong>Consequence:</strong> 21:00 ritual conversation tracking matters more than reply counts. If Nate mentions a friend in passing during his Tue/Wed response, that's a higher-value signal than 3 more V1 sends. Capture it as REFERRAL event regardless of whether intro was made yet.</li>
+    <li><strong>Risk:</strong> the reframe is unfalsifiable for 4-12 weeks (referrals take that long). Confirmation bias risk = "any silence is just referral lag." The 5/24 Lane 3 gate exists specifically to keep this honest. Don't soften it post-facto if W2 numbers look weak.</li>
+  </ul>
+
+  <h3>Three signals to watch (leading indicators per L-R4 reframe)</h3>
+  <ol>
+    <li><strong>Nate's full review reply Tue/Wed 5/19-5/20.</strong> Substantive feedback on the rewrite (not just thanks) = audit-quality confirmation #1. Silence past Wed = soft fail on the audit-format thesis.</li>
+    <li><strong>Any warm lead naming someone during W2 conversations.</strong> Even pre-intro mentions count for pattern-tracking. Log as <code>REFERRAL_MENTION</code> (lighter than full <code>REFERRAL</code> event type — names alone don't trigger the gate but inform direction).</li>
+    <li><strong>Brody pull-up decision Wed 5/21.</strong> If you pull him into a V2 business-owner slot, you're testing the audit on a non-friend tier early. That's the cleanest signal in W2 on whether the format generalizes beyond peer-tier warm leads.</li>
+  </ol>
+
+  <h3>Where I'd bet the founder's time this week (60-min weekly leverage map)</h3>
+  <ul>
+    <li><strong>Highest leverage (30 min, Sun):</strong> Lane 2 companion deck v1. Single piece of infra that compounds W2-W3 referral chance.</li>
+    <li><strong>High leverage (10 min, Mon AM):</strong> Pre-write Tue/Wed Nate check-in script. Friction at the wrong moment = soft fail.</li>
+    <li><strong>Medium leverage (5 min, Tue):</strong> Decide Brody W2 slot before Wed sprint pre-read. Don't decide in the moment.</li>
+    <li><strong>Low leverage (avoid):</strong> Editing the V1 templates, re-running Sankofa on already-shipped audits, re-checking the channel matrix. All locked. Touch only if W2 data forces a re-decision.</li>
+  </ul>
+</div>
+
+<h2>L-R4 Triad Lock · what got decided today</h2>
+
+<h3>Quick-resolves (5)</h3>
+<div class="card">
+  <table>
+    <tbody>
+      <tr><td>#1 Brandon Mon reciprocity</td><td><strong>Lean audit</strong> (Idea Vault Page Tool pilot held to W4+ pending L3 clear)</td></tr>
+      <tr><td>#2 Brandon Lunch Reconnect</td><td><strong>Hold to L5</strong> mid-cycle (2026-06-23)</td></tr>
+      <tr><td>#3 Day 2 momentum signal</td><td><strong>Valid</strong>, track to W2 close</td></tr>
+      <tr><td>#7 Pre-announce cw pivot in V1 body</td><td><strong>NO</strong> · the audit IS the pivot</td></tr>
+      <tr><td>#8 Referral-thesis reframe</td><td><strong>LOCKED</strong> · warm leads = referral sources first</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>Lane 1 · channel + bridge mechanic (items 4+5+6)</h3>
+<div class="card">
+  <ul>
+    <li><strong>Default channel:</strong> LinkedIn DM first → personal email bridge (<code>bokar83@gmail.com</code>)</li>
+    <li><strong>Bridge timing:</strong> 24hr LinkedIn-active · 48hr cold-zone friends</li>
+    <li><strong>LinkedIn-active</strong> = posted last 14 days OR replied to DM last 30 days</li>
+    <li><strong>Cold-zone</strong> = no posts last 90 days AND no DM activity last 90 days</li>
+    <li><strong>Bridge wording (locked):</strong> "Hey, sent you a quick note Friday - might have buried it in your inbox/LinkedIn. Same offer if you saw it."</li>
+    <li><strong>Files updated:</strong> <code>data/lighthouse-warm-list.md</code> channel + bridge columns · <code>data/lighthouse-audit-playbook.md</code> § Bridge Mechanic</li>
+  </ul>
+</div>
+
+<h3>Lane 2 · shareable audit format (item 9)</h3>
+<div class="card">
+  <ul>
+    <li><strong>Pick:</strong> 9b companion deck</li>
+    <li><strong>Format:</strong> 1-page "what I do" companion, forwardable, anonymized example</li>
+    <li><strong>Draft window:</strong> this weekend (Sat 5/16 - Sun 5/17 PM)</li>
+    <li><strong>Lock target:</strong> Sun 5/17 PM · ready for Mon 5/19 Chris V1 + W2 V3 batch</li>
+  </ul>
+</div>
+
+<h3>Lane 3 · dual-track sequencing (item 10 · revised gate)</h3>
+<div class="card">
+  <ul>
+    <li><strong>Pick:</strong> 10c sequenced · single-track W1-W3 · conditional W4 fork</li>
+    <li><strong>Gate date:</strong> Sat 2026-05-24 (L-R4 W2 close · Day 12)</li>
+    <li><strong>Trigger condition:</strong> &lt;2 referrals named-with-intro <strong>AND</strong> &lt;3 audit yes-confirmations on rewrite quality</li>
+    <li><strong>If fire:</strong> build direct-buyer prep in W3 (5/26-5/31) · launch parallel Mon 6/2</li>
+    <li><strong>Direct-buyer track candidates:</strong> CW cold outbound to SMB founders · SW audit-to-paid funnel (pick at trigger fire)</li>
+    <li><strong>Revision rationale:</strong> original "&lt;2 paid calls" threshold too aggressive for warm-only sample · friends rarely book paid Signal Sessions within 2 weeks · referral-intro + audit-quality = honest signal on warm-referral thesis on its own terms</li>
+  </ul>
+</div>
+
+<h2>W2 prep · what needs to happen now</h2>
+
+<h3>This weekend (5/16 PM - 5/17 PM)</h3>
+<div class="card">
+  <ul>
+    <li><strong>Lane 2 companion deck draft</strong> · 1-page "what I do" · forwardable · anonymized example · LOCK by Sun PM (Task #16)</li>
+    <li>Sun PM 21:00 ritual: pre-write Mon Chris V1 (sister · LinkedIn DM · family voice override)</li>
+    <li>Sun PM 21:00 ritual: pre-write Mon Brandon lean-audit</li>
+    <li>Confirm channel matrix per row in warm-list reflects L-R4 lock</li>
+  </ul>
+</div>
+
+<h3>Mon 5/19 · Day 1 of W2</h3>
+<div class="card">
+  <ul>
+    <li><strong>10:00 MDT Chris V1 send</strong> (sister · LinkedIn DM · 48hr bridge family override)</li>
+    <li><strong>Brandon lean-audit delivery</strong> (per L-R4 quick-resolve #1)</li>
+    <li>Watch Nate inbox (audit-quality review per his stated Mon/Tue cadence)</li>
+    <li>Brandon morning ping 10:05 MDT (accountability)</li>
+  </ul>
+</div>
+
+<h3>Tue–Fri 5/20–5/23</h3>
+<div class="card">
+  <table>
+    <thead><tr><th>Day</th><th>Send</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Tue 5/20</td><td>Benjamin V3 (dormant · LinkedIn DM · 48hr bridge)</td><td>Nate audit-quality check-in if needed</td></tr>
+      <tr><td>Wed 5/21</td><td>Brody V3 or V2 (dormant + business owner)</td><td>Decide pull-up at 09:50 sprint pre-read</td></tr>
+      <tr><td>Thu 5/22</td><td>Bruce V3 (dormant · LinkedIn DM · 48hr bridge)</td><td>—</td></tr>
+      <tr><td>Fri 5/23</td><td>Dawn V3 (dormant · LinkedIn DM · 48hr bridge)</td><td>—</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>Sat 5/24 · W2 close · Lane 3 gate fires</h3>
+<div class="card">
+  <ul>
+    <li><strong>10:00 MDT cron autofires L-R4</strong> (ritual engine wired today · LIVE on VPS)</li>
+    <li>You walk L-R4 in Telegram · Confirm & Commit</li>
+    <li>Engine <strong>auto-chains L-R5</strong> in same Telegram thread (event-driven · no second cron)</li>
+    <li><strong>Lane 3 dual-track gate check fires here</strong> · trigger condition evaluated against W2 numbers</li>
+    <li>If trigger fires: dual-track W4 prep begins W3 (5/26-5/31)</li>
+  </ul>
+</div>
+
+<h2>What got built + shipped today (infra)</h2>
+
+<details>
+  <summary>4 commits merged to main · all live on VPS</summary>
+  <div class="card">
+    <ul>
+      <li><code>064fe2ac</code> + <code>b9773419</code> · L-R4 Triad Lock 3-lane lock + decisions ledger bootstrap</li>
+      <li><code>195b937c</code> → merged <code>d1c84eab</code> · ritual-bot engine (orchestrator Telegram polling + state machine + JSON configs)</li>
+      <li><code>cf955416</code> → merged <code>5300ba9e</code> · cron path fix (<code>/app/orchestrator/scripts/</code>)</li>
+      <li><code>f6b67ea6</code> → merged <code>11564521</code> · L-R5 event-chain after L-R4 finalize + RITUALS_DIR fallback</li>
+      <li><code>ecf6242a</code> → merged <code>bb9b40e5</code> · L-R5 W1 scorecard auto-computed (Q&A deprecated mid-session)</li>
+    </ul>
+    <p class="small">VPS HEAD = <code>bb9b40e5</code> · orchestrator restarted clean · Telegram polling loop active · cron live with 1 entry (L-R4 only · L-R5 chains).</p>
+  </div>
+</details>
+
+<details>
+  <summary>3 bugs caught by firing live (test-and-learn loop)</summary>
+  <div class="card">
+    <ul>
+      <li>Cron path mismatch · surfaced on first manual dispatch attempt</li>
+      <li>RITUALS_DIR resolves to <code>/app/rituals/</code> not <code>/app/orchestrator/rituals/</code> · surfaced when you clicked [Start now] on Telegram msg 8062</li>
+      <li>L-R5 Q&A design = low-value busywork · surfaced when you were mid-Q&A and called it out</li>
+    </ul>
+    <p class="small">Memory rule logged: <code>feedback_ship_then_adjust_validated_2026_05_16.md</code> · pattern reinforced.</p>
+  </div>
+</details>
+
+<h2>Open follow-ups</h2>
+<div class="card">
+  <table>
+    <thead><tr><th>#</th><th>Item</th><th>When</th></tr></thead>
+    <tbody>
+      <tr><td>#16</td><td>Lane 2 · 1-page companion deck draft (9b)</td><td>Sun 5/17 PM</td></tr>
+      <tr><td>#15</td><td>Lane 3 · dual-track gate watch</td><td>Sat 5/24 (auto via L-R4 cron)</td></tr>
+      <tr><td>#19</td><td>L-R5 engine refactor → <code>auto_scorecard</code> mode (no Q&A)</td><td>W2 evening when bandwidth</td></tr>
+      <tr><td>#21</td><td>Sun 18:00 MDT W1 digest email send (await Boubacar explicit go)</td><td>Sun 5/17 PM</td></tr>
+      <tr><td>#22</td><td>Wed 5/21 PM Telegram pulse format build (4-line mid-week pulse: Nate status · distance to L3 trigger · 3-day mistakes · Sun ETA)</td><td>Wed 5/21 PM</td></tr>
+      <tr><td>#23</td><td>Nate-as-productizable-proof-point: if Nate W2 review lands warm, harvest quote + sanitized excerpt for CW first testimonial + case study</td><td>Trigger on Nate substantive reply Tue/Wed</td></tr>
+      <tr><td>#24</td><td>Lighthouse share-of-time capture · weekly time-on-task by codename (Lighthouse vs Atlas vs Studio vs Harvest etc.) · surface in W3 digest</td><td>Start capture W2 Mon</td></tr>
+      <tr><td>#25</td><td>Printable/mobile CSS variant of weekly digest (founder reads on phone sometimes)</td><td>W2 polish</td></tr>
+      <tr><td>#26</td><td>Pre-deploy smoke-test SOP for ritual dispatches (catch path bugs without firing Telegram)</td><td>Before next ritual deploy</td></tr>
+      <tr><td>—</td><td>Broader Telegram Q&A vs note-vs-action UX pattern</td><td>Future · design problem · not blocking</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="footer">
+  Generated 2026-05-16 PM · Lighthouse sprint Day 5 of 84 · template locked by Council 2026-05-16 (12-element canonical) · cadence Sun PM HTML + Wed PM Telegram pulse · ritual engine LIVE on VPS · next autonomous fire Sat 2026-05-23 10:00 MDT.
+</div>
+
+</div>
+</body>
+</html>
